@@ -115,16 +115,19 @@ Creates and starts a docker container.
 
 #### Configuration
 
-| Parameter  | Descriptions | Default |
-| ---------- | -------------| ------- |
-| **url**    | URL to the docker daemon | `http://localhost:4242` |
-| **image**  | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | none, required |
-| **ports**  | List of ports to be mapped statically or dynamically. | |
-| **autoPull** | Set to `true` if an unknown image should be automatically pulled (not implemented yet) | `true` |
-| **command** | Command to execute in the docker container | |
-| **portPropertyFile** | Path to a file where dynamically mapped portsare written to | |
-| **wait** | Ramp up time in milliseconds | |
-| **color** | Set to `true` for colored output | `false` |
+| Parameter    | Descriptions             | Default                 |
+| ------------ | -------------------------| ----------------------- |
+| **url**      | URL to the docker daemon | `http://localhost:4242` |
+| **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | none, required |
+| **ports**    | List of ports to be mapped statically or dynamically. | |
+| **autoPull** | Set to `true` if an unknown image
+                 should be automatically pulled
+                 (not implemented yet)    | `true` |
+| **command**  | Command to execute in the docker container | |
+| **portPropertyFile** | Path to a file where dynamically mapped
+                         ports sre written to | |
+| **wait**     | Ramp up time in milliseconds | |
+| **color**    | Set to `true` for colored output  | `false` |
 
 ### `docker:stop`
 
