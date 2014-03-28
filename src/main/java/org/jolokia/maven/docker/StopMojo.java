@@ -21,7 +21,7 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepContainer",defaultValue = "false")
     boolean keepContainer;
 
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         String id = containerId == null ?
                 project.getProperties().getProperty(PROPERTY_CONTAINER_ID) :
                 containerId;
@@ -36,6 +36,6 @@ public class StopMojo extends AbstractDockerMojo {
             access.removeContainer(containerId);
         }
 
-        info(">>> Docker - Stopped " + containerId + (keepContainer ? "" : " and removed") + " container");
+        info(">>> Docker - Stopped " + containerId.substring(0,12) + (keepContainer ? "" : " and removed") + " container");
     }
 }
