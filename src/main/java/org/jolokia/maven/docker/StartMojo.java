@@ -16,6 +16,7 @@ package org.jolokia.maven.docker;
  * limitations under the License.
  */
 
+import java.io.*;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -33,24 +34,33 @@ public class StartMojo extends AbstractDockerMojo {
     @Component
     MavenProject project;
 
+    // Name of the image to use, including potential tag
     @Parameter(property = "docker.image", required = true)
     private String image;
 
+    // Port mapping. Can contain symbolic names in which case dynamic
+    // ports are used
     @Parameter
     private List ports;
 
+    // Whether to pull an image if not yet locally available (not implemented yet)
     @Parameter(property = "docker.autoPull", defaultValue = "true")
     private boolean autoPull;
 
-    @Parameter(property = "docker.tag")
-    private String tag;
-
-    @Parameter(property = "docker.registry")
-    private String registry;
-
+    // Command to execute in contained
     @Parameter(property = "docker.command")
     private String command;
 
+    // Path to a file where the dynamically mapped properties are written to
+    @Parameter(property = "docker.portPropertyFile")
+    private String portPropertyFile;
+
+    // Wait that many milliseconds after starting the container in order to allow the
+    // container to warm up
+    @Parameter(property = "docker.wait", defaultValue = "0")
+    private int wait;
+
+    /** {@inheritDoc} */
     public void doExecute() throws MojoExecutionException {
         DockerAccess access = createDockerAccess();
 
@@ -69,17 +79,57 @@ public class StartMojo extends AbstractDockerMojo {
         // Set id for later stopping the container
         project.getProperties().setProperty(PROPERTY_CONTAINER_ID,containerId);
 
-        // Set maven variables for dynamically assigned ports.
+        // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
             Map<Integer,Integer> realPortMapping = access.getContainerPortMapping(containerId);
-            for (Integer containerPort : realPortMapping.keySet()) {
-                String var = mappedPorts.getVariableForPort(containerPort);
-                if (var != null) {
-                    project.getProperties().setProperty(var,"" + realPortMapping.get(containerPort));
-                }
+            propagatePortVariables(realPortMapping, mappedPorts);
+        }
+
+        // Wait if requested
+        if (wait > 0) {
+            try {
+                Thread.sleep(wait);
+            } catch (InterruptedException e) {
+                // ...
+            }
+        }
+    }
+
+    // Store dynamically mapped ports
+    private void propagatePortVariables(Map<Integer,Integer> realPortMapping,
+                                        PortMapping mappedPorts) throws MojoExecutionException {
+        Properties props = new Properties();
+        for (Integer containerPort : realPortMapping.keySet()) {
+            String var = mappedPorts.getVariableForPort(containerPort);
+            if (var != null) {
+                String val = "" + realPortMapping.get(containerPort);
+                project.getProperties().setProperty(var,val);
+                props.setProperty(var,val);
             }
         }
 
+        // However, this can be to late since properties in pom.xml are resolved during the "validate" phase
+        // (and we are running later probably in "pre-integration" phase. So, in order to bring the dyamically
+        // assigned ports to the integration tests a properties file is written. Not nice, but works. Blame it
+        // to maven to not allow late evaluation or any other easy way to inter-plugin communication
+        if (portPropertyFile != null) {
+            File propFile = new File(portPropertyFile);
+            OutputStream os = null;
+            try {
+                os = new FileOutputStream(propFile);
+                props.store(os,"Docker ports");
+            } catch (IOException e) {
+                throw new MojoExecutionException("Cannot write properties to " + portPropertyFile + ": " + e,e);
+            } finally {
+                if (os != null) {
+                    try {
+                        os.close();
+                    } catch (IOException e) {
+                        // best try ...
+                    }
+                }
+            }
+        }
     }
 
     private PortMapping parsePorts(List<String> ports) throws MojoExecutionException {

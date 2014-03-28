@@ -83,11 +83,8 @@ public class DockerAccess {
                                      .body(getStartConfig(ports));
             HttpResponse<String> resp = request(req);
             checkReturnCode("Starting container with id " + containerId, resp, 204);
-            Thread.sleep(4000);
         } catch (UnirestException e) {
             throw new MojoExecutionException("Cannot start container " + containerId, e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
