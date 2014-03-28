@@ -25,7 +25,7 @@ URL which is unique for this particular test run.
           <artifactId>docker-maven-plugin</artifactId>
           <version>1.0-SNAPSHOT</version>
           <configuration>
-            <!-- Image to use -->
+            <!-- Docker Image -->
             <image>jolokia/tomcat:7.0.52</image>
 
             <!-- Wait 2 seconds after the container has been started to
@@ -35,8 +35,8 @@ URL which is unique for this particular test run.
             <!-- Map ports -->
             <ports>
               <!-- Port 8080 within the container is mapped to an (arbitrary) free port
-                   between 49000 and 49900 by Docker. The chosen port is stored in the Maven property
-                   jolokia.port which can be used later on -->
+                   between 49000 and 49900 by Docker. The chosen port is stored in
+                   the Maven property "jolokia.port" which can be used later on -->
               <port>jolokia.port:8080</port>
             </ports>
           </configuration>
@@ -89,7 +89,7 @@ URL which is unique for this particular test run.
 
             <deployables>
               <!-- Deploy a Jolokia agent -->
-                <deployable>
+              <deployable>
                 <groupId>org.jolokia</groupId>
                 <artifactId>jolokia-agent-war</artifactId>
                 <type>war</type>
@@ -140,7 +140,7 @@ Stops and removes a docker container.
  * **color** Set to `true` for colored output
  * **keepContainer** Set to `true` for not automatically removing the container after stopping it.
 
-# Links
+## Links
 
 * [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
 on OS X
