@@ -138,7 +138,7 @@ Stops and removes a docker container.
 | **color**  | Set to `true` for colored output | `false`                 |
 | **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
 
-## Links
+## Misc
 
 * [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
 on OS X
