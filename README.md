@@ -124,7 +124,7 @@ Creates and starts a docker container.
 | **command** | Command to execute in the docker container | |
 | **portPropertyFile** | Path to a file where dynamically mapped portsare written to | |
 | **wait** | Ramp up time in milliseconds | |
-| **color** Set to `true` for colored output | `false` |
+| **color** | Set to `true` for colored output | `false` |
 
 ### `docker:stop`
 
@@ -135,7 +135,7 @@ Stops and removes a docker container.
 | Parameter  | Descriptions | Default |
 | ---------- | -------------| ------- |
 | **url**    | URL to the docker daemon | `http://localhost:4242` |
-| **color** Set to `true` for colored output | `false` |
+| **color**  | Set to `true` for colored output | `false` |
 | **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
 
 ## Links
