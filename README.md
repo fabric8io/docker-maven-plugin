@@ -115,18 +115,16 @@ Creates and starts a docker container.
 
 #### Configuration
 
- * **url** URL to the docker daemon (default: `http://localhost:4242`) 
- * **image** Name of the docker image to use
-     (e.g. `jolokia/tomcat:7.0.52`). Required 
- * **ports** List of ports to be mapped statically or dynamically. See
-     above for an example. 
- * **autoPull** Set to `true` if an unknown image should be
-     automatically pulled (not implemented yet)
- * **command** Command to execute in the docker container
- * **portPropertyFile** Path to a file where dynamically mapped ports 
-     are written to ,
- * **wait** Ramp up time in milliseconds
- * **color** Set to `true` for colored output
+| Parameter  | Descriptions | Default |
+| ---------- | -------------| ------- |
+| **url**    | URL to the docker daemon | `http://localhost:4242` |
+| **image**  | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | none, required |
+| **ports**  | List of ports to be mapped statically or dynamically. | |
+| **autoPull** | Set to `true` if an unknown image should be automatically pulled (not implemented yet) | `true` |
+| **command** | Command to execute in the docker container | |
+| **portPropertyFile** | Path to a file where dynamically mapped portsare written to | |
+| **wait** | Ramp up time in milliseconds | |
+| **color** Set to `true` for colored output | `false` |
 
 ### `docker:stop`
 
@@ -134,9 +132,11 @@ Stops and removes a docker container.
 
 #### Configuration
 
- * **url** URL to the docker daemon (default: `http://localhost:4242`)
- * **color** Set to `true` for colored output
- * **keepContainer** Set to `true` for not automatically removing the container after stopping it.
+| Parameter  | Descriptions | Default |
+| ---------- | -------------| ------- |
+| **url**    | URL to the docker daemon | `http://localhost:4242` |
+| **color** Set to `true` for colored output | `false` |
+| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
 
 ## Links
 
