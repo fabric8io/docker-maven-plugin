@@ -47,6 +47,9 @@ Stops and removes a docker container.
 | **url**    | URL to the docker daemon         | `http://localhost:4242` |
 | **color**  | Set to `true` for colored output | `false`                 |
 | **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
+| **image** | Which image to stop. All containers for this named image are stopped | `false` |
+| **containerId** | ID of the container to stop | `false` |
+
 
 ## Misc
 
@@ -153,3 +156,25 @@ URL which is unique for this particular test run.
   </executions>
 </plugin>
 ```
+
+
+## Repository
+
+Snapshots of this plugin can be directly obtained from [labs.consol.de](http://labs.consol.de/maven/):
+
+```xml
+
+<pluginRepositories>
+  <pluginRepository>
+    <id>labs-consol-snapshot</id>
+    <name>ConSol* Labs Repository (Snapshots)</name>
+    <url>http://labs.consol.de/maven/snapshots-repository</url>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+    <releases>
+      <enabled>false</enabled>
+    </releases>
+  </pluginRepository>
+</pluginRepositories>
+```  
