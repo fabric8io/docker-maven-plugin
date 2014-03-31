@@ -160,7 +160,7 @@ URL which is unique for this particular test run.
 
 ## Repository
 
-Snapshots of this plugin can be directly obtained from [labs.consol.de](http://labs.consol.de/maven/):
+Snapshots of this plugin can be directly obtained from [labs.consol.de](http://labs.consol.de/maven/snapshots-repository):
 
 ```xml
 
