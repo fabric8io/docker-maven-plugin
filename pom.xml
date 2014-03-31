@@ -53,25 +53,7 @@
       <artifactId>jansi</artifactId>
       <version>1.11</version>
     </dependency>
-
-    <dependency>
-      <groupId>com.jillesvangurp</groupId>
-      <artifactId>jsonj</artifactId>
-      <version>1.33</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.jayway.jsonpath</groupId>
-      <artifactId>json-path</artifactId>
-      <version>0.9.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.kpelykh</groupId>
-      <artifactId>docker-java</artifactId>
-      <version>0.8.1</version>
-    </dependency>
-
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

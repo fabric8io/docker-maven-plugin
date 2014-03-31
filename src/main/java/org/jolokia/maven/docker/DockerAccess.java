@@ -7,9 +7,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.github.jsonj.JsonObject;
 import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.http.options.Options;
 import com.mashape.unirest.http.utils.ClientFactory;
 import com.mashape.unirest.http.utils.URLParamEncoder;
 import com.mashape.unirest.request.BaseRequest;
@@ -22,8 +22,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.json.*;
-
-import static com.github.jsonj.tools.JsonBuilder.*;
 
 /**
  * @author roland
@@ -163,12 +161,6 @@ public class DockerAccess {
         }
     }
 
-    public static void main(String[] args) throws MojoExecutionException, IOException {
-        DockerAccess docker = new DockerAccess("http://localhost:4243",null);
-        docker.pullImage("busybox");
-        Unirest.shutdown();
-    }
-
     public void pullImage(String image) throws MojoExecutionException {
         try {
             HttpClient client = ClientFactory.getHttpClient();
@@ -182,11 +174,15 @@ public class DockerAccess {
         }
     }
 
+    public void start() {
+        Options.refresh();
+    }
+
     public void shutdown() {
         try {
             Unirest.shutdown();
         } catch (IOException e) {
-            log.warn("Couldn properly shutdown Unirest: " + e);
+            log.warn("Couldnt properly shutdown rest interface: " + e);
         }
     }
 
@@ -204,29 +200,39 @@ public class DockerAccess {
     }
 
     private String getContainerConfig(String image, Map<Integer, Integer> ports, String command) {
-        JsonObject ret = object(field("Image", image));
+        JSONObject ret = new JSONObject();
+        ret.put("Image",image);
         if (ports.size() > 0) {
-            JsonObject exposedPorts = new JsonObject();
+            JSONObject exposedPorts = new JSONObject();
             for (Integer port : ports.keySet()) {
-                exposedPorts.put(port.toString() + "/tcp", new JsonObject());
+                exposedPorts.put(port.toString() + "/tcp", new JSONObject());
             }
             ret.put("ExposedPorts", exposedPorts);
         }
         if (command != null) {
-            ret.put("Cmd", array(command.split("\\s+")));
+            JSONArray a = new JSONArray();
+            for (String s : command.split("\\s+")) {
+                a.put(s);
+            }
+            ret.put("Cmd",a);
         }
         return ret.toString();
     }
 
     private String getStartConfig(Map<Integer, Integer> ports) {
         if (ports.size() > 0) {
-            JsonObject c = new JsonObject();
+            JSONObject c = new JSONObject();
             for (Integer containerPort : ports.keySet()) {
                 Integer port = ports.get(containerPort);
-                c.put(containerPort + "/tcp",
-                      array(object(field("HostPort", port != null ? port.toString() : ""))));
+                JSONArray a = new JSONArray();
+                JSONObject o = new JSONObject();
+                o.put("HostPort",port != null ? port.toString() : "");
+                a.put(o);
+                c.put(containerPort + "/tcp",a);
             }
-            return object(field("PortBindings", c)).toString();
+            JSONObject o = new JSONObject();
+            o.put("PortBindings", c);
+            return o.toString();
         } else {
             return "{}";
         }

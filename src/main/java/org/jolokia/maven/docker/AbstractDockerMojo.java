@@ -24,6 +24,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     public void execute() throws MojoExecutionException, MojoFailureException {
         init();
         DockerAccess access = new DockerAccess(url.replace("^tcp://", "http://"), this);
+        access.start();
         try {
             doExecute(access);
         } catch (MojoExecutionException exp) {
