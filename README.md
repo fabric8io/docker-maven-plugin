@@ -9,10 +9,8 @@ With this plugin it is possible to run completely isolated integration
 tests so you don't need to take care of shared resources. Ports can be
 mapped dynamically and made available as Maven properties. 
 
-This plugin is still in a very early stage of development. If you like to
-participate feel free to send me as many pull requests as you can ;-)
-
-**Highlights** of this plugin are:
+This plugin is still in a very early stage of development, but the
+**highlights** are:
 
 * Configurable port mapping
 * Assigning dynamically selected host ports to Maven variables
