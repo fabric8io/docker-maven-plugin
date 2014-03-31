@@ -21,7 +21,7 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepContainer",defaultValue = "false")
     boolean keepContainer;
 
-    protected void doExecute() throws MojoExecutionException, MojoFailureException {
+    protected void doExecute(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         String id = containerId == null ?
                 project.getProperties().getProperty(PROPERTY_CONTAINER_ID) :
                 containerId;
@@ -29,7 +29,6 @@ public class StopMojo extends AbstractDockerMojo {
             throw new MojoFailureException("No container id given");
         }
 
-        DockerAccess access = createDockerAccess();
         access.stopContainer(containerId);
 
         if (!keepContainer) {

@@ -61,16 +61,10 @@ public class StartMojo extends AbstractDockerMojo {
     private int wait;
 
     /** {@inheritDoc} */
-    public void doExecute() throws MojoExecutionException {
-        DockerAccess access = createDockerAccess();
+    public void doExecute(DockerAccess access) throws MojoExecutionException {
 
-        if (!access.hasImage(image)) {
-            if (autoPull) {
-                error("Autopull not implemented yet, please pull image '" + image + "' yourself (docker pull " + image + ")");
-            }
-            throw new MojoExecutionException(this,"No image '" + image + "' found","Please pull image '" + image +
-                                                                                   "' yourself (docker pull " + image + ")");
-        }
+        checkImage(access);
+
         PortMapping mappedPorts = parsePorts(ports);
         String containerId = access.createContainer(image,mappedPorts.getPortsMap(),command);
         info(">>> Docker - Created container " + containerId.substring(0,12) + " from image " + image);
@@ -91,6 +85,18 @@ public class StartMojo extends AbstractDockerMojo {
                 Thread.sleep(wait);
             } catch (InterruptedException e) {
                 // ...
+            }
+        }
+    }
+
+    private void checkImage(DockerAccess access) throws MojoExecutionException {
+        if (!access.hasImage(image)) {
+            if (autoPull) {
+                access.pullImage(image);
+            } else {
+                throw new MojoExecutionException(this, "No image '" + image + "' found",
+                                                 "Please enable 'autoPull' or pull image '" + image +
+                                                 "' yourself (docker pull " + image + ")");
             }
         }
     }

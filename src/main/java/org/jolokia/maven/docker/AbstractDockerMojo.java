@@ -8,9 +8,10 @@ import org.fusesource.jansi.AnsiConsole;
  * @author roland
  * @since 26.03.14
  */
-abstract public class AbstractDockerMojo extends AbstractMojo {
+abstract public class AbstractDockerMojo extends AbstractMojo implements LogHandler {
 
     protected static final String PROPERTY_CONTAINER_ID = "docker.containerId";
+    private static final String LOG_PREFIX = "DOCKER> ";
 
     @Parameter(property = "docker.url",defaultValue = "http://localhost:4243")
     private String url;
@@ -18,25 +19,26 @@ abstract public class AbstractDockerMojo extends AbstractMojo {
     @Parameter(property = "docker.useColor", defaultValue = "false")
     private boolean color;
 
-    private String errorHlColor,infoHlColor,warnHlColor,resetColor;
-
-    protected DockerAccess createDockerAccess() {
-        return new DockerAccess(url.replace("^tcp://","http://"),getLog());
-    }
-
+    private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         init();
+        DockerAccess access = new DockerAccess(url.replace("^tcp://", "http://"), this);
         try {
-            doExecute();
+            doExecute(access);
         } catch (MojoExecutionException exp) {
             throw new MojoExecutionException(errorHlColor + exp.getMessage() + resetColor,exp);
+        } finally {
+            access.shutdown();
         }
+
     }
 
-    protected abstract void doExecute() throws MojoExecutionException, MojoFailureException;
+    protected abstract void doExecute(DockerAccess dockerAccess) throws MojoExecutionException, MojoFailureException;
 
-    protected void init() {
+    // =================================================================================
+
+    private void init() {
         initColorLog();
         if (color) {
 
@@ -44,25 +46,59 @@ abstract public class AbstractDockerMojo extends AbstractMojo {
             infoHlColor = "\u001B[0;32m";
             resetColor = "\u001B[0;39m";
             warnHlColor = "\u001B[0;33m";
+            progressHlColor = "\u001B[0;36m";
         } else {
-            errorHlColor = infoHlColor = resetColor = warnHlColor = "";
+            errorHlColor = infoHlColor = resetColor = warnHlColor = progressHlColor = "";
         }
     }
-    protected void info(String info) {
-        getLog().info(infoHlColor + info + resetColor);
+
+    public void debug(String message) {
+        getLog().debug(LOG_PREFIX + message);
     }
 
-    protected void warn(String warn) {
-        getLog().warn(warnHlColor + warn + resetColor);
+    public void info(String info) {
+        getLog().info(infoHlColor + LOG_PREFIX + info + resetColor);
     }
+
+    public void warn(String warn) {
+        getLog().warn(warnHlColor + LOG_PREFIX + warn + resetColor);
+    }
+
+    public boolean isDebugEnabled() {
+        return getLog().isDebugEnabled();
+    }
+
     private void initColorLog() {
         if (color) {
             AnsiConsole.systemInstall();
         }
     }
 
-    protected void error(String error) {
+    public void error(String error) {
         getLog().error(errorHlColor + error + resetColor);
+    }
+
+
+    int oldProgress = 0;
+
+    public void progressStart(int total) {
+        System.out.print(progressHlColor + "       ");
+        oldProgress = 0;
+    }
+
+    public void progressUpdate(int current, int total, long start) {
+        System.out.print("=");
+        int newProgress = (current * 10 + 5) / total;
+        if (newProgress > oldProgress) {
+            System.out.print(" " + newProgress + "0% ");
+            oldProgress = newProgress;
+        }
+        System.out.flush();
+    }
+
+    public void progressFinished() {
+        System.out.println(resetColor);
+        oldProgress = 0;
     }
 
     protected boolean isColor() {

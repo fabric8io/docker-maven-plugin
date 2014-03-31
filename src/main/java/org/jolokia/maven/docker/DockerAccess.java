@@ -1,6 +1,8 @@
 package org.jolokia.maven.docker;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,14 +10,18 @@ import java.util.regex.Pattern;
 import com.github.jsonj.JsonObject;
 import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.http.utils.ClientFactory;
+import com.mashape.unirest.http.utils.URLParamEncoder;
 import com.mashape.unirest.request.BaseRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.body.Body;
 import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.*;
 
 import static com.github.jsonj.tools.JsonBuilder.*;
 
@@ -27,18 +33,18 @@ public class DockerAccess {
 
     private final static String DOCKER_API_VERSION = "v1.10";
 
-    private final Log log;
+    private final LogHandler log;
     private final String url;
 
-    public DockerAccess(String url, Log log) {
+    public DockerAccess(String url, LogHandler log) {
         this.url = stripSlash(url) + "/" + DOCKER_API_VERSION;
         this.log = log;
+        Unirest.setDefaultHeader("accept", "application/json");
     }
-
 
     public boolean hasImage(String image) throws MojoExecutionException {
         try {
-            Matcher matcher = Pattern.compile("^(.*?):?([^:]+)?$").matcher(image);
+            Matcher matcher = Pattern.compile("^(.*?):([^:]+)?$").matcher(image);
             String base, tag;
             if (matcher.matches()) {
                 base = matcher.group(1);
@@ -47,7 +53,6 @@ public class DockerAccess {
                 base = image;
             }
             BaseRequest req = Unirest.get(url + "/images/json?filter={image}")
-                                     .header("accept", "application/json")
                                      .routeParam("image", base);
             HttpResponse<String> resp = request(req);
             checkReturnCode("Checking for image '" + image + "'", resp, 200);
@@ -158,6 +163,33 @@ public class DockerAccess {
         }
     }
 
+    public static void main(String[] args) throws MojoExecutionException, IOException {
+        DockerAccess docker = new DockerAccess("http://localhost:4243",null);
+        docker.pullImage("busybox");
+        Unirest.shutdown();
+    }
+
+    public void pullImage(String image) throws MojoExecutionException {
+        try {
+            HttpClient client = ClientFactory.getHttpClient();
+            URI createUrl = new URI(url + "/images/create?fromImage=" + URLParamEncoder.encode(image));
+            HttpPost post = new HttpPost(createUrl);
+            processPullResponse(image, client.execute(URIUtils.extractHost(createUrl), post));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Cannot pull image " + image,e);
+        }  catch (URISyntaxException e) {
+            throw new MojoExecutionException("Cannot pull image " + image,e);
+        }
+    }
+
+    public void shutdown() {
+        try {
+            Unirest.shutdown();
+        } catch (IOException e) {
+            log.warn("Couldn properly shutdown Unirest: " + e);
+        }
+    }
+
     // ===========================================================================================================
 
     private HttpResponse<String> request(BaseRequest req) throws UnirestException {
@@ -245,6 +277,47 @@ public class DockerAccess {
     }
 
 
+    private void processPullResponse(String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
+        InputStream is = resp.getEntity().getContent();
+        int len = 0;
+        int size = 8129;
+        byte[] buf = new byte[size];
+        // Data comes in chunkwise
+        boolean downloadInProgress = false;
+        while ((len = is.read(buf, 0, size)) != -1) {
+            String txt = new String(buf,0,len);
+            try {
+                JSONObject json = new JSONObject(txt);
+
+                if (json.has("progressDetail")) {
+                    JSONObject details = json.getJSONObject("progressDetail");
+                    if (details.has("total")) {
+                        if (!downloadInProgress) {
+                            log.progressStart(details.getInt("total"));
+                        }
+                        log.progressUpdate(details.getInt("current"),details.getInt("total"),details.getLong("start"));
+                        downloadInProgress = true;
+                        continue;
+                    } else {
+                        if (downloadInProgress) {
+                            log.progressFinished();
+                        }
+                        downloadInProgress = false;
+                    }
+                }
+                log.info("... " + (json.has("id")? json.getString("id") + ": " : "") + json.getString("status"));
+            } catch (JSONException exp) {
+                log.warn("Couldn't parse answer chunk '" + txt + "': " + exp);
+            }
+        }
+        StatusLine status = resp.getStatusLine();
+        if (status.getStatusCode() != 200) {
+            throw new MojoExecutionException("Error while pulling image '" + image + "' (code: " + status.getStatusCode()
+                                             + ", " + status.getReasonPhrase() + ")");
+        }
+    }
+
+
     private void logWarnings(JSONObject body) {
         Object warningsObj = body.get("Warnings");
         if (warningsObj != JSONObject.NULL) {
@@ -254,7 +327,6 @@ public class DockerAccess {
             }
         }
     }
-
 
     private void checkReturnCode(String msg, HttpResponse resp, int expectedCode) throws MojoExecutionException {
         if (resp.getCode() != expectedCode) {

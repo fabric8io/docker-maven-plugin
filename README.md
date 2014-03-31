@@ -12,7 +12,46 @@ mapped dynamically and made available as Maven properties.
 This plugin is still in a very early stage of development. If you like to
 participate feel free to send me as many pull requests as you can ;-)
 
-Here is an example, which uses a Docker image `jolokia/tomcat:7.0.52`
+
+### `docker:start`
+
+Creates and starts a docker container.
+
+#### Configuration
+
+| Parameter    | Descriptions                                            | Default                 |
+| ------------ | ------------------------------------------------------- | ----------------------- |
+| **url**      | URL to the docker daemon                                | `http://localhost:4242` |
+| **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | none, required          |
+| **ports**    | List of ports to be mapped statically or dynamically.   |                         |
+| **autoPull** | Set to `true` if an unknown image should be automatically pulled | `true` |
+| **command**  | Command to execute in the docker container              |                         |
+| **portPropertyFile** | Path to a file where dynamically mapped ports sre written to |            |
+| **wait**     | Ramp up time in milliseconds                            |                         |
+| **color**    | Set to `true` for colored output                        | `false`                 |
+
+### `docker:stop`
+
+Stops and removes a docker container. 
+
+#### Configuration
+
+| Parameter  | Descriptions                     | Default                 |
+| ---------- | -------------------------------- | ----------------------- |
+| **url**    | URL to the docker daemon         | `http://localhost:4242` |
+| **color**  | Set to `true` for colored output | `false`                 |
+| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
+
+## Misc
+
+* [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
+on OS X
+
+* Use `maven-failsafe-plugin` for integration tests in order to stop the docker container even when the tests are failing.
+
+## Example
+
+Here's an example, which uses a Docker image `jolokia/tomcat:7.0.52`
 (not yet pushed) and Cargo for deploying artifacts to it. Integration
 tests (not shown here) can then access the deployed artifact via an
 URL which is unique for this particular test run.
@@ -108,40 +147,3 @@ URL which is unique for this particular test run.
   </executions>
 </plugin>
 ```
-
-### `docker:start`
-
-Creates and starts a docker container.
-
-#### Configuration
-
-| Parameter    | Descriptions                                            | Default                 |
-| ------------ | ------------------------------------------------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `http://localhost:4242` |
-| **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | none, required          |
-| **ports**    | List of ports to be mapped statically or dynamically.   |                         |
-| **autoPull** | Set to `true` if an unknown image should be automatically pulled (not implemented yet) | `true` |
-| **command**  | Command to execute in the docker container              |                         |
-| **portPropertyFile** | Path to a file where dynamically mapped ports sre written to |            |
-| **wait**     | Ramp up time in milliseconds                            |                         |
-| **color**    | Set to `true` for colored output                        | `false`                 |
-
-### `docker:stop`
-
-Stops and removes a docker container. 
-
-#### Configuration
-
-| Parameter  | Descriptions                     | Default                 |
-| ---------- | -------------------------------- | ----------------------- |
-| **url**    | URL to the docker daemon         | `http://localhost:4242` |
-| **color**  | Set to `true` for colored output | `false`                 |
-| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
-
-## Misc
-
-* [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
-on OS X
-
-* Use `maven-failsafe-plugin` for integration tests in order to stop the docker container even when the tests are failing.
-
