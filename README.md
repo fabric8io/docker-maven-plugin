@@ -12,12 +12,14 @@ mapped dynamically and made available as Maven properties.
 This plugin is still in a very early stage of development. If you like to
 participate feel free to send me as many pull requests as you can ;-)
 
-Highlights of this plugin are:
+**Highlights** of this plugin are:
 
 * Configurable port mapping
 * Assigning dynamically selected host ports to Maven variables
 * Pulling of images (with progress indicator) if not yet downloaded
 * Color output ;-)
+
+## Maven Goals
 
 ### `docker:start`
 
