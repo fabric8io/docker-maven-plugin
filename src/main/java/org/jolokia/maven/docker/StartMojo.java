@@ -67,11 +67,11 @@ public class StartMojo extends AbstractDockerMojo {
 
         PortMapping mappedPorts = parsePorts(ports);
         String containerId = access.createContainer(image,mappedPorts.getPortsMap(),command);
-        info(">>> Docker - Created container " + containerId.substring(0,12) + " from image " + image);
+        info("Created container " + containerId.substring(0,12) + " from image " + image);
         access.startContainer(containerId,mappedPorts.getPortsMap());
 
-        // Set id for later stopping the container
-        project.getProperties().setProperty(PROPERTY_CONTAINER_ID,containerId);
+        // Remember id for later stopping the container
+        registerContainerId(image, containerId);
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
@@ -80,6 +80,10 @@ public class StartMojo extends AbstractDockerMojo {
         }
 
         // Wait if requested
+        waitIfRequested();
+    }
+
+    private void waitIfRequested() {
         if (wait > 0) {
             try {
                 Thread.sleep(wait);

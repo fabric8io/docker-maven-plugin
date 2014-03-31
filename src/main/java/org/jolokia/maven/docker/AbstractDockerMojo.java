@@ -1,5 +1,7 @@
 package org.jolokia.maven.docker;
 
+import java.util.*;
+
 import org.apache.maven.plugin.*;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.fusesource.jansi.AnsiConsole;
@@ -10,7 +12,6 @@ import org.fusesource.jansi.AnsiConsole;
  */
 abstract public class AbstractDockerMojo extends AbstractMojo implements LogHandler {
 
-    protected static final String PROPERTY_CONTAINER_ID = "docker.containerId";
     private static final String LOG_PREFIX = "DOCKER> ";
 
     @Parameter(property = "docker.url",defaultValue = "http://localhost:4243")
@@ -37,8 +38,41 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     protected abstract void doExecute(DockerAccess dockerAccess) throws MojoExecutionException, MojoFailureException;
 
-    // =================================================================================
 
+    // =============================================================================================
+    // Registry for managed containers
+
+    private static final Map<String,Set<String>> containerMap = new HashMap<String, Set<String>>();
+
+    protected static Collection<String> unregisterAllContainer() {
+        synchronized (containerMap) {
+            Set<String> ret = new HashSet<String>();
+            for (String image : containerMap.keySet()) {
+                ret.addAll(containerMap.get(image));
+            }
+            containerMap.clear();
+            return ret;
+        }
+    }
+
+    protected static void registerContainerId(String image, String containerId) {
+        synchronized (containerMap) {
+            Set<String> ids = containerMap.get(image);
+            if (ids == null) {
+                ids = new HashSet<String>();
+                containerMap.put(image,ids);
+            }
+            ids.add(containerId);
+        }
+    }
+
+    protected Set<String> unregisterContainerId(String image) {
+        synchronized (containerMap) {
+            return containerMap.remove(image);
+        }
+    }
+
+    // =================================================================================
     private void init() {
         initColorLog();
         if (color) {

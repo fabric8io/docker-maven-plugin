@@ -1,5 +1,8 @@
 package org.jolokia.maven.docker;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
@@ -12,6 +15,10 @@ import org.apache.maven.project.MavenProject;
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractDockerMojo {
 
+    // Name of the image to stop. If none given, all are removed
+    @Parameter(property = "docker.image", required = false)
+    private String image;
+
     @Component
     MavenProject project;
 
@@ -22,19 +29,31 @@ public class StopMojo extends AbstractDockerMojo {
     boolean keepContainer;
 
     protected void doExecute(DockerAccess access) throws MojoExecutionException, MojoFailureException {
-        String id = containerId == null ?
-                project.getProperties().getProperty(PROPERTY_CONTAINER_ID) :
-                containerId;
-        if (id == null) {
-            throw new MojoFailureException("No container id given");
+
+        Set<String> ids = new HashSet<String>();
+        if (containerId != null) {
+            ids.add(containerId);
+        } else {
+            if (image != null) {
+                Set<String> iIds = unregisterContainerId(image);
+                if (iIds == null) {
+                    throw new MojoFailureException("No container id given");
+                }
+                ids.addAll(iIds);
+            } else {
+                ids.addAll(unregisterAllContainer());
+            }
         }
+        for (String id : ids) {
+            stopContainer(access,id);
+        }
+    }
 
-        access.stopContainer(containerId);
-
+    private void stopContainer(DockerAccess access, String id) throws MojoExecutionException {
+        access.stopContainer(id);
         if (!keepContainer) {
-            access.removeContainer(containerId);
+            access.removeContainer(id);
         }
-
-        info(">>> Docker - Stopped " + containerId.substring(0,12) + (keepContainer ? "" : " and removed") + " container");
+        info("Stopped " + id.substring(0,12) + (keepContainer ? "" : " and removed") + " container");
     }
 }
