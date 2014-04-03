@@ -186,7 +186,7 @@ Spring feelings in 2014 seems to be quite fertile for the Java crowd's
 Docker awareness
 ;-). [Not only I](https://github.com/bibryam/docker-maven-plugin/issues/1)
 counted 5 [maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)
-on GitHub as of April 2014, tenendency increasing. It seems, that all
+on GitHub as of April 2014, tendency increasing. It seems, that all
 of them have a slightly different focus, but all of them can do the
 most important tasks: Starting and stopping containers. 
 
@@ -195,16 +195,16 @@ quite some out here ?
 
 The reason is quite simple: I didn't knew them when I started and if
 you look at the commit history you will see that they all started
-their lifes roughly at the same time (March 2014).
+their life roughly at the same time (March 2014).
 
 I expect there will be some settling soon and even some merging of
 efforts which I would highly appreciate and support.
 
-For what it's worth, here are some of my motivations for this plugins
+For what it's worth, here are some of my motivations for this plugin
 and what I want to achieve:
 
 * I needed a flexible, **dynamic port mapping** from container to host
-  ports so that truely isolated build can be achieved. This should
+  ports so that truly isolated build can be achieved. This should
   work on indirect setups with VMs like
   [boot2docker](https://github.com/boot2docker/boot2docker) for
   running on OS X.
@@ -222,7 +222,7 @@ and what I want to achieve:
   [Cargo](http://cargo.codehaus.org/) so that deployments into
   containers can be easy. 
   
-* I want as **less dependencies** as possible for this plugins. So I
+* I want as **less dependencies** as possible for this plugin. So I
   decided to *not* use the
   Java Docker API [docker-java](https://github.com/kpelykh/docker-java) which is
   external to docker and has a different lifecycle than Docker's
@@ -239,7 +239,7 @@ and what I want to achieve:
   want to write yet another plugin ;-)
 
 For this plugin I still have some ideas to implement (e.g. to bring
-generated artefacts into the container's FS, even when using VMs like
+generated artifacts into the container's FS, even when using VMs like
 for boot2docker), but otherwise this is not my main project (it is the
 result of an internal research project here at ConSol*). 
 So I would be happy to contribute to other projects, too, when the
