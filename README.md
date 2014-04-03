@@ -185,7 +185,7 @@ Snapshots of this plugin can be directly obtained from [labs.consol.de](http://l
 Spring feelings in 2014 seems to be quite fertile for the Java crowd's
 Docker awareness
 ;-). [Not only me](https://github.com/bibryam/docker-maven-plugin/issues/1)
-counted 5 `[maven-docker-plugins]((https://github.com/search?q=docker-maven-plugin)` 
+counted 5 `[maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)` 
 on GitHub as of April 2014, tenendency increasing. It seems, that all
 of them have a slightly different focus, but all of them can do the
 most important tasks: Starting and stopping containers. 
@@ -203,26 +203,26 @@ efforts which I would highly appreciate and support.
 For what it's worth, here are some of my motivations for this plugins
 and what I want to achieve:
 
-* I needed a flexible, dynamic port mapping from container to host
+* I needed a flexible, **dynamic port mapping** from container to host
   ports so that truely isolated build can be achieved. This should
   work on indirect setups with VMs like
   [boot2docker](https://github.com/boot2docker/boot2docker) for
   running on OS X.
   
-* It should be possible to pull images on the fly to get
+* It should be possible to **pull images** on the fly to get
   self-contained and repeatable builds with the only requirement to
   have docker installed. 
   
-* The configuration of the plugin should be easy since usually
+* The configuration of the plugin should be **simple** since usually
   developers don't want to dive into specific Docker details only to
-  start a container. So, only a handfulf options should be exposed
+  start a container. So, only a handful options should be exposed
   which needs not necessarily map directly to docker config setup.
   
 * The plugin should play nicely with
   [Cargo](http://cargo.codehaus.org/) so that deployments into
   containers can be easy. 
   
-* I want as less dependencies as possible for this plugins. So I
+* I want as **less dependencies** as possible for this plugins. So I
   decided to *not* use the
   Java Docker API [docker-java](https://github.com/kpelykh/docker-java) which is
   external to docker and has a different lifecycle than Docker's
@@ -240,9 +240,10 @@ and what I want to achieve:
 
 For this plugin I still have some ideas to implement (e.g. to bring
 generated artefacts into the container's FS, even when using VMs like
-for boot2docker), but otherwise this is not my main project (since I
-do this in spare time anyways). So I would happy to contribute to
-other projects, too, when the dust has been settled a bit. 
+for boot2docker), but otherwise this is not my main project (it is the
+result of an internal research project here at ConSol*). 
+So I would be happy to contribute to other projects, too, when the
+dust has been settled a bit.  
 
 In the meantime, enjoy this plugin, and please use the
 [issue tracker](https://github.com/rhuss/docker-maven-plugin/issues) 
