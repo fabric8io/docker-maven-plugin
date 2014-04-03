@@ -28,8 +28,19 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepContainer",defaultValue = "false")
     boolean keepContainer;
 
-    protected void doExecute(DockerAccess access) throws MojoExecutionException, MojoFailureException {
+    @Parameter(property = "docker.keepRunning", defaultValue = "false")
+    boolean keepRunning;
 
+    protected void doExecute(DockerAccess access) throws MojoExecutionException, MojoFailureException {
+        if (!keepRunning) {
+            Set<String> ids = getContainerIds();
+            for (String id : ids) {
+                stopContainer(access, id);
+            }
+        }
+    }
+
+    private Set<String> getContainerIds() throws MojoFailureException {
         Set<String> ids = new HashSet<String>();
         if (containerId != null) {
             ids.add(containerId);
@@ -44,9 +55,7 @@ public class StopMojo extends AbstractDockerMojo {
                 ids.addAll(unregisterAllContainer());
             }
         }
-        for (String id : ids) {
-            stopContainer(access,id);
-        }
+        return ids;
     }
 
     private void stopContainer(DockerAccess access, String id) throws MojoExecutionException {
