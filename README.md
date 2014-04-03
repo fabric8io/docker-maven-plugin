@@ -185,7 +185,7 @@ Snapshots of this plugin can be directly obtained from [labs.consol.de](http://l
 Spring feelings in 2014 seems to be quite fertile for the Java crowd's
 Docker awareness
 ;-). [Not only me](https://github.com/bibryam/docker-maven-plugin/issues/1)
-counted 5 `[maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)` 
+counted 5 [maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)
 on GitHub as of April 2014, tenendency increasing. It seems, that all
 of them have a slightly different focus, but all of them can do the
 most important tasks: Starting and stopping containers. 
