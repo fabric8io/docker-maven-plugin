@@ -66,7 +66,7 @@ public class StartMojo extends AbstractDockerMojo {
         checkImage(access);
 
         PortMapping mappedPorts = parsePorts(ports);
-        String containerId = access.createContainer(image,mappedPorts.getPortsMap(),command);
+        String containerId = access.createContainer(image,mappedPorts.getExposedPorts(),command);
         info("Created container " + containerId.substring(0,12) + " from image " + image);
         access.startContainer(containerId,mappedPorts.getPortsMap());
 
@@ -75,7 +75,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
-            Map<Integer,Integer> realPortMapping = access.getContainerPortMapping(containerId);
+            Map<Integer,Integer> realPortMapping = access.queryContainerPortMapping(containerId);
             propagatePortVariables(realPortMapping, mappedPorts);
         }
 
@@ -173,6 +173,9 @@ public class StartMojo extends AbstractDockerMojo {
         private final Map<Integer, Integer> portsMap;
 
         PortMapping(Map<Integer, Integer> portsMap, Map<Integer, String> varMap) {
+            if (portsMap == null || varMap == null) {
+                throw new IllegalArgumentException("Arguments must not be null");
+            }
             this.portsMap = portsMap;
             this.varMap = varMap;
         }
@@ -187,6 +190,10 @@ public class StartMojo extends AbstractDockerMojo {
 
         String getVariableForPort(Integer containerPort) {
             return varMap.get(containerPort);
+        }
+
+        public Set<Integer> getExposedPorts() {
+            return portsMap.keySet();
         }
     }
 }

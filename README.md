@@ -32,7 +32,7 @@ Creates and starts a docker container.
 | **ports**    | List of ports to be mapped statically or dynamically.   |                         |
 | **autoPull** | Set to `true` if an unknown image should be automatically pulled | `true` |
 | **command**  | Command to execute in the docker container              |                         |
-| **portPropertyFile** | Path to a file where dynamically mapped ports sre written to |            |
+| **portPropertyFile** | Path to a file where dynamically mapped ports are written to |            |
 | **wait**     | Ramp up time in milliseconds                            |                         |
 | **color**    | Set to `true` for colored output                        | `false`                 |
 
@@ -235,8 +235,9 @@ and what I want to achieve:
   to deal with Docker peculiarities and not also with docker-java's
   one. As a side effect this plugin has less transitive dependencies.
   FYI: There is now yet another Docker Java client library out, which
-  might be used for plugins like this, too: [fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api). (Just in case somebody
-  want to write yet another plugin ;-)
+  might be used for plugins like this, too:
+  [fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api). (Just
+  in case somebody wants to write yet another plugin ;-)
 
 For this plugin I still have some ideas to implement (e.g. to bring
 generated artifacts into the container's FS, even when using VMs like
