@@ -35,7 +35,7 @@ Creates and starts a docker container.
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
-| **httpWait** | URL to which a HTTP HEAD request is send. The plugin will wait until this request succeeds (or the time given with `wait` has been passsed). Dynamic port variables can be given, too | `docker.httpWait` | |
+| **waitHttp** | Wait until this URL is reachable with an HTTP HEAD request. Dynamic port variables can be given, too | `docker.waitHttp` | |
 | **color**    | Set to `true` for colored output                        | `docker.color` | `false`                 |
 
 ### `docker:stop`

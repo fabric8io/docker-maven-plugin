@@ -61,8 +61,8 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.wait", defaultValue = "0")
     private int wait;
 
-    @Parameter(property = "docker.httpWait")
-    private String httpWait;
+    @Parameter(property = "docker.waitHttp")
+    private String waitHttp;
 
     /** {@inheritDoc} */
     public void doExecute(DockerAccess docker) throws MojoExecutionException {
@@ -90,8 +90,8 @@ public class StartMojo extends AbstractDockerMojo {
     // ========================================================================================================
 
     private void waitIfRequested(PortMapping mappedPorts) {
-        if (httpWait != null) {
-            String waitUrl = mappedPorts.replaceVars(httpWait);
+        if (waitHttp != null) {
+            String waitUrl = mappedPorts.replaceVars(waitHttp);
             long waited = EnvUtil.httpPingWait(waitUrl, wait);
             info("Waited on " + waitUrl + " for " + waited + " ms");
         } else if (wait > 0) {
