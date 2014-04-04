@@ -42,14 +42,14 @@ Stops and removes a docker container.
 
 #### Configuration
 
-| Parameter  | Descriptions                     | Default                 |
-| ---------- | -------------------------------- | ----------------------- |
-| **url**    | URL to the docker daemon         | `http://localhost:4243` |
-| **image** | Which image to stop. All containers for this named image are stopped | `false` |
-| **containerId** | ID of the container to stop | `false` |
-| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
-| **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `false` |
-| **color**  | Set to `true` for colored output | `false`                 |
+| Parameter  | Descriptions                     | System Property| Default                 |
+| ---------- | -------------------------------- | -------------- | ----------------------- |
+| **url**    | URL to the docker daemon         | `docker.url`   | `http://localhost:4243` |
+| **image** | Which image to stop. All containers for this named image are stopped | `docker.image` | `false` |
+| **containerId** | ID of the container to stop | `docker.containerId` | `false` |
+| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `docker.keepContainer` | `false` |
+| **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `docker.keepRunning` | `false` |
+| **color**  | Set to `true` for colored output | `docker.color` | `false`                 |
 
 
 ## Misc
