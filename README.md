@@ -25,16 +25,16 @@ Creates and starts a docker container.
 
 #### Configuration
 
-| Parameter    | Descriptions                                            | Default                 |
-| ------------ | ------------------------------------------------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `http://localhost:4243` |
-| **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | none, required          |
-| **ports**    | List of ports to be mapped statically or dynamically.   |                         |
-| **autoPull** | Set to `true` if an unknown image should be automatically pulled | `true` |
-| **command**  | Command to execute in the docker container              |                         |
-| **portPropertyFile** | Path to a file where dynamically mapped ports are written to |            |
-| **wait**     | Ramp up time in milliseconds                            |                         |
-| **color**    | Set to `true` for colored output                        | `false`                 |
+| Parameter    | Descriptions                                            | System Property| Default                 |
+| ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
+| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:4243` |
+| **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
+| **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
+| **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |
+| **command**  | Command to execute in the docker container              |`docker.command`|                         |
+| **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
+| **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
+| **color**    | Set to `true` for colored output                        | `docker.color` | `false`                 |
 
 ### `docker:stop`
 
@@ -45,11 +45,11 @@ Stops and removes a docker container.
 | Parameter  | Descriptions                     | Default                 |
 | ---------- | -------------------------------- | ----------------------- |
 | **url**    | URL to the docker daemon         | `http://localhost:4243` |
-| **color**  | Set to `true` for colored output | `false`                 |
-| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
-| **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `false` |
 | **image** | Which image to stop. All containers for this named image are stopped | `false` |
 | **containerId** | ID of the container to stop | `false` |
+| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `false` |
+| **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `false` |
+| **color**  | Set to `true` for colored output | `false`                 |
 
 
 ## Misc
