@@ -16,12 +16,13 @@ package org.jolokia.maven.docker;
  * limitations under the License.
  */
 
-import java.io.*;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
+import org.jolokia.maven.docker.util.EnvUtil;
+import org.jolokia.maven.docker.util.PortMapping;
 
 /**
  * Goal for creating and starting a docker container
@@ -41,7 +42,7 @@ public class StartMojo extends AbstractDockerMojo {
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
     @Parameter
-    private List ports;
+    private List<String> ports;
 
     // Whether to pull an image if not yet locally available (not implemented yet)
     @Parameter(property = "docker.autoPull", defaultValue = "true")
@@ -60,43 +61,50 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.wait", defaultValue = "0")
     private int wait;
 
+    @Parameter(property = "docker.httpWait")
+    private String httpWait;
+
     /** {@inheritDoc} */
-    public void doExecute(DockerAccess access) throws MojoExecutionException {
+    public void doExecute(DockerAccess docker) throws MojoExecutionException {
 
-        checkImage(access);
+        checkImage(docker);
 
-        PortMapping mappedPorts = parsePorts(ports);
-        String containerId = access.createContainer(image,mappedPorts.getExposedPorts(),command);
-        info("Created container " + containerId.substring(0,12) + " from image " + image);
-        access.startContainer(containerId,mappedPorts.getPortsMap());
+        PortMapping mappedPorts = new PortMapping(ports);
+        String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
+        info("Created container " + containerId.substring(0, 12) + " from image " + image);
+        docker.startContainer(containerId, mappedPorts.getPortsMap());
 
         // Remember id for later stopping the container
         registerContainerId(image, containerId);
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
-            Map<Integer,Integer> realPortMapping = access.queryContainerPortMapping(containerId);
-            propagatePortVariables(realPortMapping, mappedPorts);
+            mappedPorts.updateVarsForDynamicPorts(docker.queryContainerPortMapping(containerId));
+            propagatePortVariables(mappedPorts);
         }
 
         // Wait if requested
-        waitIfRequested();
+        waitIfRequested(mappedPorts);
     }
 
-    private void waitIfRequested() {
-        if (wait > 0) {
-            try {
-                Thread.sleep(wait);
-            } catch (InterruptedException e) {
-                // ...
-            }
+    // ========================================================================================================
+
+    private void waitIfRequested(PortMapping mappedPorts) {
+        if (httpWait != null) {
+            String waitUrl = mappedPorts.replaceVars(httpWait);
+            long waited = EnvUtil.httpPingWait(waitUrl, wait);
+            info("Waited on " + waitUrl + " for " + waited + " ms");
+        } else if (wait > 0) {
+            EnvUtil.sleep(wait);
+            info("Waited " + wait + " ms");
         }
     }
 
-    private void checkImage(DockerAccess access) throws MojoExecutionException {
-        if (!access.hasImage(image)) {
+
+    private void checkImage(DockerAccess docker) throws MojoExecutionException {
+        if (!docker.hasImage(image)) {
             if (autoPull) {
-                access.pullImage(image);
+                docker.pullImage(image);
             } else {
                 throw new MojoExecutionException(this, "No image '" + image + "' found",
                                                  "Please enable 'autoPull' or pull image '" + image +
@@ -106,94 +114,25 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     // Store dynamically mapped ports
-    private void propagatePortVariables(Map<Integer,Integer> realPortMapping,
-                                        PortMapping mappedPorts) throws MojoExecutionException {
+    private void propagatePortVariables(PortMapping mappedPorts) throws MojoExecutionException {
         Properties props = new Properties();
-        for (Integer containerPort : realPortMapping.keySet()) {
-            String var = mappedPorts.getVariableForPort(containerPort);
-            if (var != null) {
-                String val = "" + realPortMapping.get(containerPort);
-                project.getProperties().setProperty(var,val);
-                props.setProperty(var,val);
-            }
+        Map<String,Integer> dynamicPorts = mappedPorts.getDynamicPorts();
+        for (Map.Entry<String,Integer> entry : dynamicPorts.entrySet()) {
+            String var = entry.getKey();
+            String val = "" + entry.getValue();
+            project.getProperties().setProperty(var,val);
+            props.setProperty(var,val);
         }
 
         // However, this can be to late since properties in pom.xml are resolved during the "validate" phase
-        // (and we are running later probably in "pre-integration" phase. So, in order to bring the dyamically
+        // (and we are running later probably in "pre-integration" phase. So, in order to bring the dynamically
         // assigned ports to the integration tests a properties file is written. Not nice, but works. Blame it
         // to maven to not allow late evaluation or any other easy way to inter-plugin communication
         if (portPropertyFile != null) {
-            File propFile = new File(portPropertyFile);
-            OutputStream os = null;
-            try {
-                os = new FileOutputStream(propFile);
-                props.store(os,"Docker ports");
-            } catch (IOException e) {
-                throw new MojoExecutionException("Cannot write properties to " + portPropertyFile + ": " + e,e);
-            } finally {
-                if (os != null) {
-                    try {
-                        os.close();
-                    } catch (IOException e) {
-                        // best try ...
-                    }
-                }
-            }
+            EnvUtil.writePortProperties(props, portPropertyFile);
         }
     }
 
-    private PortMapping parsePorts(List<String> ports) throws MojoExecutionException {
-        Map<Integer,Integer> ret = new HashMap<Integer, Integer>();
-        Map<Integer,String> varMap = new HashMap<Integer, String>();
-        if (ports != null) {
-            for (String port : ports) {
-                try {
-                    String ps[] = port.split(":", 2);
-                    Integer containerPort = Integer.parseInt(ps[1]);
-                    Integer hostPort;
-                    try {
-                        hostPort = Integer.parseInt(ps[0]);
-                    } catch (NumberFormatException exp) {
-                        // Port should be dynamically assigned and set to the variable give in ps[0]
-                        hostPort = null;
-                        varMap.put(containerPort,ps[0]);
-                    }
-                    ret.put(containerPort, hostPort);
-                } catch (NumberFormatException exp) {
-                    throw new MojoExecutionException("Port mappings must be given in the format <hostPort>:<mappedPort> (e.g. 8080:8080). " +
-                                                     "The given config '" + port + "' doesn't match this");
-                }
-            }
-        }
-        return new PortMapping(ret,varMap);
-    }
 
-    private static class PortMapping {
-        private final Map<Integer, String> varMap;
-        private final Map<Integer, Integer> portsMap;
 
-        PortMapping(Map<Integer, Integer> portsMap, Map<Integer, String> varMap) {
-            if (portsMap == null || varMap == null) {
-                throw new IllegalArgumentException("Arguments must not be null");
-            }
-            this.portsMap = portsMap;
-            this.varMap = varMap;
-        }
-
-        Map<Integer, Integer> getPortsMap() {
-            return portsMap;
-        }
-
-        boolean containsDynamicPorts() {
-            return varMap.size() > 0;
-        }
-
-        String getVariableForPort(Integer containerPort) {
-            return varMap.get(containerPort);
-        }
-
-        public Set<Integer> getExposedPorts() {
-            return portsMap.keySet();
-        }
-    }
 }

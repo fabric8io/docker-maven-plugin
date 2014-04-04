@@ -9,12 +9,13 @@ With this plugin it is possible to run completely isolated integration
 tests so you don't need to take care of shared resources. Ports can be
 mapped dynamically and made available as Maven properties. 
 
-This plugin is still in a very early stage of development, but the
+This plugin is still in an early stage of development, but the
 **highlights** are:
 
 * Configurable port mapping
 * Assigning dynamically selected host ports to Maven variables
 * Pulling of images (with progress indicator) if not yet downloaded
+* Optional waiting on a successful HTTP ping to the container
 * Color output ;-)
 
 ## Maven Goals
@@ -25,7 +26,7 @@ Creates and starts a docker container.
 
 #### Configuration
 
-| Parameter    | Descriptions                                            | System Property| Default                 |
+| Parameter    | Descriptions                                            | Property       | Default                 |
 | ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
 | **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:4243` |
 | **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
@@ -34,6 +35,7 @@ Creates and starts a docker container.
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
+| **httpWait** | URL to which a HTTP HEAD request is send. The plugin will wait until this request succeeds (or the time given with `wait` has been passsed). Dynamic port variables can be given, too | `docker.httpWait` | |
 | **color**    | Set to `true` for colored output                        | `docker.color` | `false`                 |
 
 ### `docker:stop`
@@ -42,7 +44,7 @@ Stops and removes a docker container.
 
 #### Configuration
 
-| Parameter  | Descriptions                     | System Property| Default                 |
+| Parameter  | Descriptions                     | Property       | Default                 |
 | ---------- | -------------------------------- | -------------- | ----------------------- |
 | **url**    | URL to the docker daemon         | `docker.url`   | `http://localhost:4243` |
 | **image** | Which image to stop. All containers for this named image are stopped | `docker.image` | `false` |
@@ -57,7 +59,8 @@ Stops and removes a docker container.
 * [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
 on OS X
 
-* Use `maven-failsafe-plugin` for integration tests in order to stop the docker container even when the tests are failing.
+* It is recommended to use the `maven-failsafe-plugin` for integration testing in order to
+stop the docker container even when the tests are failing.
 
 ## Example
 
@@ -72,12 +75,9 @@ URL which is unique for this particular test run.
   <artifactId>docker-maven-plugin</artifactId>
   <version>1.0-SNAPSHOT</version>
   <configuration>
+
     <!-- Docker Image -->
     <image>jolokia/tomcat:7.0.52</image>
-
-    <!-- Wait 2 seconds after the container has been started to
-         warm up tomcat -->
-    <wait>2000</wait>
 
     <!-- Map ports -->
     <ports>
@@ -86,6 +86,13 @@ URL which is unique for this particular test run.
            the Maven property "jolokia.port" which can be used later on -->
       <port>jolokia.port:8080</port>
     </ports>
+
+    <!-- Wait until the given HTTP URL response on an HEAD request ... -->
+    <wait>http://localhost:${jolokia.port}/jolokia</wait>
+
+    <!-- ... but not longer than 2 seconds -->
+    <wait>2000</wait>
+
   </configuration>
 
   <executions>
