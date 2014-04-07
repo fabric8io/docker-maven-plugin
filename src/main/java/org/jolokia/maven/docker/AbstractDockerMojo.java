@@ -115,13 +115,15 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
 
     int oldProgress = 0;
+    int total = 0;
 
-    public void progressStart(int total) {
+    public void progressStart(int t) {
         System.out.print(progressHlColor + "       ");
         oldProgress = 0;
+        total = t;
     }
 
-    public void progressUpdate(int current, int total, long start) {
+    public void progressUpdate(int current) {
         System.out.print("=");
         int newProgress = (current * 10 + 5) / total;
         if (newProgress > oldProgress) {
@@ -134,6 +136,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     public void progressFinished() {
         System.out.println(resetColor);
         oldProgress = 0;
+        total = 0;
     }
 
     protected boolean isColor() {

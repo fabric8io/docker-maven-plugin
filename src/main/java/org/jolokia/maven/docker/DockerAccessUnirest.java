@@ -324,7 +324,7 @@ public class DockerAccessUnirest implements DockerAccess {
                         if (!downloadInProgress) {
                             log.progressStart(details.getInt("total"));
                         }
-                        log.progressUpdate(details.getInt("current"),details.getInt("total"),details.getLong("start"));
+                        log.progressUpdate(details.getInt("current"));
                         downloadInProgress = true;
                         continue;
                     } else {

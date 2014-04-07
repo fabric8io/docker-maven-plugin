@@ -39,6 +39,9 @@ public class PortMapping {
             for (String port : config) {
                 try {
                     String ps[] = port.split(":", 2);
+                    if (ps.length != 2) {
+                        throw new MojoExecutionException("Invalid mapping '" + port + "' (must contain at least one :)");
+                    }
                     Integer containerPort = Integer.parseInt(ps[1]);
                     Integer hostPort;
                     try {
@@ -46,7 +49,11 @@ public class PortMapping {
                     } catch (NumberFormatException exp) {
                         // Port should be dynamically assigned and set to the variable give in ps[0]
                         hostPort = getPortFromVariable(variables, ps[0]);
-                        varMap.put(containerPort,ps[0]);
+                        if (hostPort != null) {
+                            dynamicPorts.put(ps[0],hostPort);
+                        } else {
+                            varMap.put(containerPort,ps[0]);
+                        }
                     }
                     portsMap.put(containerPort, hostPort);
                 } catch (NumberFormatException exp) {
