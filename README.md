@@ -54,6 +54,32 @@ Stops and removes a docker container.
 | **color**  | Set to `true` for colored output | `docker.color` | `false`                 |
 
 
+## Dynamic Port mapping
+
+For the `start` goal the mapping which container ports are mapped to which host ports can be configured with
+the `ports` section, which can contain several `port` directives
+
+```xml
+<ports>
+  <port>18080:8080</port>
+  <port>host.port:80</port>
+<ports>
+```
+
+Each port config contains two parts separated by colons. The first part is the mapped port on the host. This can
+be either a numeric value, in which case this port is taken literally. Or it can be a variable identifier which
+is takend as a maven variable. If this variable is not set when the `start` task executes, a port will be dynamically
+selected by Docker in the range 49000 ... 49900. If the variable already contains a numeric value, this port is used.
+This can be used to pin a port from the outsied when doing some initial testing like in
+
+    mvn -Dhost.port=10080 docker:start
+
+Another useful configuration option is `portPropertyFile` with which a file can be specified to which the real port
+mapping is written after all dynamic ports has been resolved. The keys of this property file are the variable names,
+the values are the dynamically assgined host ports. This property file might be useful together with other maven
+plugins which already resolved their maven variables earlier in the lifecycle than this plugin so that the port variables
+might not be available to them.
+
 ## Misc
 
 * [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
