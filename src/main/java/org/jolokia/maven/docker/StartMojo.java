@@ -65,7 +65,7 @@ public class StartMojo extends AbstractDockerMojo {
     private String waitHttp;
 
     /** {@inheritDoc} */
-    public void doExecute(DockerAccess docker) throws MojoExecutionException {
+    public void executeInternal(DockerAccess docker) throws MojoExecutionException {
 
         checkImage(docker);
 

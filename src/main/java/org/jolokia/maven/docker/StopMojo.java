@@ -31,7 +31,7 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
     boolean keepRunning;
 
-    protected void doExecute(DockerAccess access) throws MojoExecutionException, MojoFailureException {
+    protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         if (!keepRunning) {
             Set<String> ids = getContainerIds();
             for (String id : ids) {
