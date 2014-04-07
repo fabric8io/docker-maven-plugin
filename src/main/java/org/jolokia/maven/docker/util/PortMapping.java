@@ -28,9 +28,10 @@ public class PortMapping {
      * @param config a list of configuration strings where each string hast the format <code>host-port:container-port</code>. If
      *               the <code>host-port</code> is non-numeric it is assumed to be a maven variable (which later might be filled in with
      *               the dynamically created port)
+     * @param variables project variables which could contain properties
      * @throws MojoExecutionException if the format doesn't fit
      */
-    public PortMapping(List<String> config) throws MojoExecutionException {
+    public PortMapping(List<String> config, Properties variables) throws MojoExecutionException {
         portsMap = new HashMap<Integer, Integer>();
         varMap = new HashMap<Integer, String>();
         dynamicPorts = new HashMap<String, Integer>();
@@ -44,7 +45,7 @@ public class PortMapping {
                         hostPort = Integer.parseInt(ps[0]);
                     } catch (NumberFormatException exp) {
                         // Port should be dynamically assigned and set to the variable give in ps[0]
-                        hostPort = null;
+                        hostPort = getPortFromVariable(variables, ps[0]);
                         varMap.put(containerPort,ps[0]);
                     }
                     portsMap.put(containerPort, hostPort);
@@ -138,5 +139,18 @@ public class PortMapping {
 
     public Map<String, Integer> getDynamicPorts() {
         return dynamicPorts;
+    }
+
+    // Check for a variable containing a port, return it as integer or <code>null</code> is not found or not a number
+    private Integer getPortFromVariable(Properties variables, String var) {
+        if (variables.containsKey(var)) {
+            try {
+                return Integer.parseInt(variables.getProperty(var));
+            } catch (NumberFormatException exp) {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }

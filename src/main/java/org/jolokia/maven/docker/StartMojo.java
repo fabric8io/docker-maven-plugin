@@ -69,7 +69,8 @@ public class StartMojo extends AbstractDockerMojo {
 
         checkImage(docker);
 
-        PortMapping mappedPorts = new PortMapping(ports);
+
+        PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
         String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
         info("Created container " + containerId.substring(0, 12) + " from image " + image);
         docker.startContainer(containerId, mappedPorts.getPortsMap());

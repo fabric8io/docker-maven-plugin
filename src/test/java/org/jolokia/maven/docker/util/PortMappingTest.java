@@ -17,7 +17,7 @@ public class PortMappingTest {
 
     @Test
     public void variableReplacement() throws MojoExecutionException {
-        PortMapping mapping = new PortMapping(Arrays.asList("jolokia.port:8080"));
+        PortMapping mapping = new PortMapping(Arrays.asList("jolokia.port:8080"), project.getProperties());
         Map<Integer,Integer> dynMapping = new HashMap<Integer, Integer>();
         dynMapping.put(8080,49900);
         mapping.updateVarsForDynamicPorts(dynMapping);
