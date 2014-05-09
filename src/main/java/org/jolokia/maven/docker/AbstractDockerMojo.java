@@ -22,7 +22,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     private String url;
 
     // Whether to use color
-    @Parameter(property = "docker.useColor", defaultValue = "false")
+    @Parameter(property = "docker.useColor", defaultValue = "true")
     private boolean color;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
@@ -67,7 +67,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     private static final Map<String,Set<String>> containerMap = new HashMap<String, Set<String>>();
 
     /**
-     * Unregister all containers and return thier IDs
+     * Unregister all containers and return their IDs
      */
     protected static Collection<String> unregisterAllContainer() {
         synchronized (containerMap) {
@@ -113,9 +113,8 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // Color init
     private void colorInit() {
-        if (color) {
+        if (color && System.console() != null) {
             AnsiConsole.systemInstall();
-
             errorHlColor = "\u001B[0;31m";
             infoHlColor = "\u001B[0;32m";
             resetColor = "\u001B[0;39m";

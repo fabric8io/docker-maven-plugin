@@ -1,0 +1,112 @@
+package org.jolokia.maven.docker.util;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author roland
+ * @since 17.04.14
+ */
+public class DockerFileBuilder {
+
+    // Defaults, shouldnt be overwritten
+    private String baseImage = "busybox";
+
+    // Maintainer of this image
+    private String maintainer = "docker-maven-plugin@jolokia.org";
+
+    // Basedir to be export
+    private String exportDir = "/maven";
+
+    // Default command and arguments
+    private String command = "true";
+    private String[] arguments = new String[0];
+
+    // List of files to add. Source and destination follow except that destination
+    // in interpreted as a relative path to the exportDir
+    // See also http://docs.docker.io/reference/builder/#add
+    private List<AddEntry> addEntries;
+
+    // Image and tag name
+    private String tag;
+
+    /**
+     * Create a Dockerfile following the format described in the
+     * <a href="http://docs.docker.io/reference/builder/#usage">Docker reference manual</a>
+     *
+     * @return the dockerfile create
+     */
+    public String build() {
+        if (addEntries.size() == 0) {
+            throw new IllegalArgumentException("No entries added");
+        }
+        StringBuilder b = new StringBuilder();
+        b.append("FROM ").append(baseImage).append("\n");
+        b.append("MAINTAINER ").append(maintainer).append("\n");
+
+        // Default command mit args
+        b.append("CMD [\"").append(command).append("\"");
+        for (String arg : arguments) {
+            b.append(",\"").append(arg).append("\"");
+        }
+        b.append("]").append("\n");
+
+        // Entries
+        for (AddEntry entry : addEntries) {
+            b.append("ADD ").append(entry.source).append(" ")
+             .append(exportDir).append("/").append(entry.destination).append("\n");
+        }
+
+        return b.toString();
+    }
+
+    // ==========================================================================
+    // Builder stuff ....
+    public DockerFileBuilder() {
+        addEntries = new ArrayList<AddEntry>();
+    }
+
+    public DockerFileBuilder baseImage(String baseImage) {
+        this.baseImage = baseImage;
+        return this;
+    }
+
+    private DockerFileBuilder maintainer(String maintainer) {
+        this.maintainer = maintainer;
+        return this;
+    }
+
+    private DockerFileBuilder exportDir(String exportDir) {
+        this.exportDir = exportDir;
+        return this;
+    }
+
+    private DockerFileBuilder command(String command, String ... args) {
+        this.command = command;
+        this.arguments = args;
+        return this;
+    }
+
+    private DockerFileBuilder add(String source,String destination) {
+        this.addEntries.add(new AddEntry(source, destination));
+        return this;
+    }
+
+    // All entries required, destination is relative to exportDir
+    private class AddEntry {
+        String source,destination;
+
+        private AddEntry(String src, String dest) {
+            source = src;
+
+            // Strip leading slashes
+            destination = dest;
+
+            // squeeze slashes
+            while (destination.startsWith("/")) {
+                destination = destination.substring(1);
+            }
+        }
+
+    }
+}

@@ -16,13 +16,18 @@ package org.jolokia.maven.docker;
  * limitations under the License.
  */
 
+import java.io.File;
 import java.util.*;
 
+import org.apache.maven.archiver.MavenArchiveConfiguration;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
-import org.jolokia.maven.docker.util.EnvUtil;
-import org.jolokia.maven.docker.util.PortMapping;
+import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.jolokia.maven.docker.util.*;
 
 /**
  * Goal for creating and starting a docker container
@@ -32,8 +37,9 @@ import org.jolokia.maven.docker.util.PortMapping;
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartMojo extends AbstractDockerMojo {
 
+    // Current maven project
     @Component
-    MavenProject project;
+    private MavenProject project;
 
     // Name of the image to use, including potential tag
     @Parameter(property = "docker.image", required = true)
@@ -64,11 +70,40 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.waitHttp")
     private String waitHttp;
 
-    /** {@inheritDoc} */
-    public void executeInternal(DockerAccess docker) throws MojoExecutionException {
+    /**
+     * A descriptor to use for building the data assembly to be exported
+     * in an Docker image
+     */
+    @Parameter
+    private String assemblyDescriptor;
 
+    /**
+     * Reference to an assembly descriptor included.
+     */
+    @Parameter
+    private String assemblyDescriptorRef;
+
+    @Component
+    private DockerAssemblyCreator assemblyCreator;
+
+    /** {@inheritDoc} */
+    public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
         checkImage(docker);
 
+        if ( assemblyDescriptor != null || assemblyDescriptorRef != null) {
+            if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
+                throw new MojoFailureException("Either a assemblyDescriptor '" + assemblyDescriptor +
+                                               "' or a assemblyDescriptorRef '" + assemblyDescriptorRef +
+                                               "' can be used");
+            }
+            MojoParameters params =
+                    new MojoParameters(session, project, archive, mavenFileFilter);
+
+            File dockerDir = assemblyCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
+//        if (data != null) {
+//            buildDataVolume(data);
+//        }
+        }
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
         String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
@@ -86,6 +121,14 @@ public class StartMojo extends AbstractDockerMojo {
 
         // Wait if requested
         waitIfRequested(mappedPorts);
+    }
+
+    private void buildDataVolume(FileSet data) {
+        //StringBuffer dockerfile = new StringBuffer(IOUtil.toString(getClass().getResourceAsStream("Dockerfile.template")));
+    }
+
+    private boolean containsElements(String[] elements) {
+        return elements != null && elements.length > 0;
     }
 
     // ========================================================================================================
@@ -134,6 +177,16 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-
+    // =======================================================================================================
+    // ==============================================================================================================
+    // Parameters required from Maven when building an assembly. They cannot be injected directly
+    // into DockerAssemblyCreator.
+    // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
+    @Parameter
+    private MavenArchiveConfiguration archive;
+    @Component
+    private MavenSession session;
+    @Component
+    private MavenFileFilter mavenFileFilter;
 
 }

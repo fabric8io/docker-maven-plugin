@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<component-set>
+  <components>
+    <component>
+      <role>org.jolokia.maven.docker.DockerAssemblyCreator</role>
+      <implementation>org.jolokia.maven.docker.DockerAssemblyCreator</implementation>
+      <instantiation-strategy>per-lookup</instantiation-strategy>
+    </component>
+  </components>
+</component-set>
