@@ -1,9 +1,15 @@
-package org.jolokia.maven.docker.util;
+package org.jolokia.maven.docker.assembly;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.plexus.util.FileUtils;
+
 /**
+ * Create a dockerfile
+ *
  * @author roland
  * @since 17.04.14
  */
@@ -27,8 +33,17 @@ public class DockerFileBuilder {
     // See also http://docs.docker.io/reference/builder/#add
     private List<AddEntry> addEntries;
 
-    // Image and tag name
-    private String tag;
+    /**
+     * Cretate a DockerFile in the given directory
+     * @param  destDir directory where to store the dockerfile
+     * @return the full path to the docker file
+     * @throws IOException if writing fails
+     */
+    public File create(File destDir) throws IOException {
+        File target = new File(destDir,"Dockerfile");
+        FileUtils.fileWrite(target, content());
+        return target;
+    }
 
     /**
      * Create a Dockerfile following the format described in the
@@ -36,7 +51,7 @@ public class DockerFileBuilder {
      *
      * @return the dockerfile create
      */
-    public String build() {
+    public String content() {
         if (addEntries.size() == 0) {
             throw new IllegalArgumentException("No entries added");
         }
@@ -57,6 +72,9 @@ public class DockerFileBuilder {
              .append(exportDir).append("/").append(entry.destination).append("\n");
         }
 
+        // Volume export
+        b.append("VOLUME [\"").append(exportDir).append("\"]\n");
+
         return b.toString();
     }
 
@@ -71,23 +89,23 @@ public class DockerFileBuilder {
         return this;
     }
 
-    private DockerFileBuilder maintainer(String maintainer) {
+    public DockerFileBuilder maintainer(String maintainer) {
         this.maintainer = maintainer;
         return this;
     }
 
-    private DockerFileBuilder exportDir(String exportDir) {
+    public DockerFileBuilder exportDir(String exportDir) {
         this.exportDir = exportDir;
         return this;
     }
 
-    private DockerFileBuilder command(String command, String ... args) {
+    public DockerFileBuilder command(String command, String ... args) {
         this.command = command;
         this.arguments = args;
         return this;
     }
 
-    private DockerFileBuilder add(String source,String destination) {
+    public DockerFileBuilder add(String source,String destination) {
         this.addEntries.add(new AddEntry(source, destination));
         return this;
     }

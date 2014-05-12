@@ -305,7 +305,6 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
-
     private void processPullResponse(String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
         InputStream is = resp.getEntity().getContent();
         int len = 0;

@@ -26,7 +26,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
-import org.apache.maven.shared.model.fileset.FileSet;
+import org.jolokia.maven.docker.assembly.DockerArchiveCreator;
+import org.jolokia.maven.docker.assembly.DockerFileBuilder;
 import org.jolokia.maven.docker.util.*;
 
 /**
@@ -84,7 +85,7 @@ public class StartMojo extends AbstractDockerMojo {
     private String assemblyDescriptorRef;
 
     @Component
-    private DockerAssemblyCreator assemblyCreator;
+    private DockerArchiveCreator dockerArchiveCreator;
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
@@ -99,10 +100,8 @@ public class StartMojo extends AbstractDockerMojo {
             MojoParameters params =
                     new MojoParameters(session, project, archive, mavenFileFilter);
 
-            File dockerDir = assemblyCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
-//        if (data != null) {
-//            buildDataVolume(data);
-//        }
+            File dockerArchive = dockerArchiveCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
+            info("Created docker archive in " + dockerArchive);
         }
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
@@ -123,13 +122,6 @@ public class StartMojo extends AbstractDockerMojo {
         waitIfRequested(mappedPorts);
     }
 
-    private void buildDataVolume(FileSet data) {
-        //StringBuffer dockerfile = new StringBuffer(IOUtil.toString(getClass().getResourceAsStream("Dockerfile.template")));
-    }
-
-    private boolean containsElements(String[] elements) {
-        return elements != null && elements.length > 0;
-    }
 
     // ========================================================================================================
 

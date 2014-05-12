@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker.util;
+package org.jolokia.maven.docker.assembly;
 
 import java.io.File;
 import java.util.Collections;
@@ -10,12 +10,13 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.jolokia.maven.docker.util.MojoParameters;
 
 /**
  * @author roland
  * @since 07.05.14
  */
-public class DockerAssemblerConfigurationSource implements AssemblerConfigurationSource {
+public class DockerArchiveConfigurationSource implements AssemblerConfigurationSource {
 
 
     private String[] descriptors;
@@ -23,7 +24,7 @@ public class DockerAssemblerConfigurationSource implements AssemblerConfiguratio
 
     private MojoParameters params;
 
-    public DockerAssemblerConfigurationSource(MojoParameters params, String descriptor, String descriptorRef) {
+    public DockerArchiveConfigurationSource(MojoParameters params, String descriptor, String descriptorRef) {
         this.descriptors = descriptor != null ? new String[] { descriptor } : null;
         this.descriptorRefs = descriptorRef != null ? new String[] { descriptorRef } : null;
         this.params = params;
