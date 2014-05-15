@@ -27,7 +27,6 @@ import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.maven.docker.assembly.DockerArchiveCreator;
-import org.jolokia.maven.docker.assembly.DockerFileBuilder;
 import org.jolokia.maven.docker.util.*;
 
 /**
@@ -68,8 +67,13 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.wait", defaultValue = "0")
     private int wait;
 
+    // Wait until the given URL is accessible
     @Parameter(property = "docker.waitHttp")
     private String waitHttp;
+
+    // Whether the data container & image should be kept if an assembly is used
+    @Parameter(property = "docker.keepData", defaultValue = "false")
+    private boolean keepData;
 
     /**
      * A descriptor to use for building the data assembly to be exported
@@ -91,26 +95,15 @@ public class StartMojo extends AbstractDockerMojo {
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
         checkImage(docker);
 
-        if ( assemblyDescriptor != null || assemblyDescriptorRef != null) {
-            if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
-                throw new MojoFailureException("Either a assemblyDescriptor '" + assemblyDescriptor +
-                                               "' or a assemblyDescriptorRef '" + assemblyDescriptorRef +
-                                               "' can be used");
-            }
-            MojoParameters params =
-                    new MojoParameters(session, project, archive, mavenFileFilter);
-
-            File dockerArchive = dockerArchiveCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
-            info("Created docker archive in " + dockerArchive);
-        }
-
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
+        String dataContainerId = createDataContainer(docker);
+
         String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
         info("Created container " + containerId.substring(0, 12) + " from image " + image);
-        docker.startContainer(containerId, mappedPorts.getPortsMap());
+        docker.startContainer(containerId, mappedPorts.getPortsMap(),dataContainerId);
 
         // Remember id for later stopping the container
-        registerContainerId(image, containerId);
+        registerContainerForDeletion(image, containerId);
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
@@ -122,8 +115,39 @@ public class StartMojo extends AbstractDockerMojo {
         waitIfRequested(mappedPorts);
     }
 
-
     // ========================================================================================================
+
+    // Create a data container and return its ID. Return the ID or null if no data containe is created
+    private String createDataContainer(DockerAccess docker) throws MojoFailureException, MojoExecutionException {
+        if (assemblyDescriptor != null || assemblyDescriptorRef != null) {
+            String dataContainerId = null;
+            String dataImage;
+            if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
+                throw new MojoFailureException("Either a assemblyDescriptor '" + assemblyDescriptor +
+                                               "' or a assemblyDescriptorRef '" + assemblyDescriptorRef +
+                                               "' can be used");
+            }
+            MojoParameters params =
+                    new MojoParameters(session, project, archive, mavenFileFilter);
+
+            File dockerArchive = dockerArchiveCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
+            info("Created docker archive " + dockerArchive);
+            dataImage = getDataImageName();
+            docker.buildImage(dataImage,dockerArchive);
+            dataContainerId = docker.createContainer(dataImage,null,null);
+            docker.startContainer(dataContainerId,null,null);
+            if (!keepData) {
+                registerContainerForDeletion(dataImage, dataContainerId);
+            }
+            return dataContainerId;
+        }
+        return null;
+    }
+
+    // Data image
+    private String getDataImageName() {
+        return project.getGroupId() + "/" + project.getArtifactId() + ":" + project.getVersion();
+    }
 
     private void waitIfRequested(PortMapping mappedPorts) {
         if (waitHttp != null) {

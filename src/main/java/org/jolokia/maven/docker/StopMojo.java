@@ -15,19 +15,22 @@ import org.apache.maven.project.MavenProject;
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractDockerMojo {
 
-    // Name of the image to stop. If none given, all are removed
-    @Parameter(property = "docker.image", required = false)
-    private String image;
-
     @Component
     MavenProject project;
 
+    // Name of the image for which to stop its containers. If none given, all are removed
+    @Parameter(property = "docker.image", required = false)
+    private String image;
+
+    // The container id to stop. If not given, the containers started with 'docker:start' are stopped
     @Parameter(property = "docker.containerId")
     String containerId;
 
+    // Whether to keep the containers afters stopping
     @Parameter(property = "docker.keepContainer",defaultValue = "false")
     boolean keepContainer;
 
+    // Whether to *not* stop the container. Mostly useful as a command line param
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
     boolean keepRunning;
 

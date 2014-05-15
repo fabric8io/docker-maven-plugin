@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.mashape.unirest.http.*;
+import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.http.options.Options;
 import com.mashape.unirest.http.utils.ClientFactory;
@@ -15,11 +16,11 @@ import com.mashape.unirest.http.utils.URLParamEncoder;
 import com.mashape.unirest.request.BaseRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.body.Body;
-import org.apache.http.HttpEntity;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
+import org.apache.http.entity.FileEntity;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.json.*;
 
@@ -93,13 +94,13 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void startContainer(String containerId, Map<Integer, Integer> ports) throws MojoExecutionException {
+    public void startContainer(String containerId, Map<Integer, Integer> ports, String volumesFrom) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/{id}/start")
                                      .header("Accept", "*/*")
                                      .header("Content-Type", "application/json")
                                      .routeParam("id", containerId)
-                                     .body(getStartConfig(ports));
+                                     .body(getStartConfig(ports,volumesFrom));
             HttpResponse<String> resp = request(req);
             checkReturnCode("Starting container with id " + containerId, resp, 204);
         } catch (UnirestException e) {
@@ -209,6 +210,21 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
+    /** {@inheritDoc} */
+    public void buildImage(String image, File dockerArchive) throws MojoExecutionException {
+        try {
+            HttpClient client = ClientFactory.getHttpClient();
+            URI buildUrl = new URI(url + "/build" + (image != null ? "?t=" + URLParamEncoder.encode(image) : ""));
+            HttpPost post = new HttpPost(buildUrl);
+            post.setEntity(new FileEntity(dockerArchive));
+            processBuildResponse(image, client.execute(URIUtils.extractHost(buildUrl), post));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Cannot build image " + image + " from " + dockerArchive,e);
+        }  catch (URISyntaxException e) {
+            throw new MojoExecutionException("Cannot build image " + image + " from " + dockerArchive,e);
+        }
+    }
+
     // ===========================================================================================================
 
     private HttpResponse<String> request(BaseRequest req) throws UnirestException {
@@ -225,7 +241,7 @@ public class DockerAccessUnirest implements DockerAccess {
     private String getContainerConfig(String image, Set<Integer> ports, String command) {
         JSONObject ret = new JSONObject();
         ret.put("Image",image);
-        if (ports.size() > 0) {
+        if (ports != null && ports.size() > 0) {
             JSONObject exposedPorts = new JSONObject();
             for (Integer port : ports) {
                 exposedPorts.put(port.toString() + "/tcp", new JSONObject());
@@ -239,11 +255,13 @@ public class DockerAccessUnirest implements DockerAccess {
             }
             ret.put("Cmd",a);
         }
+        log.debug("Container create config: " + ret.toString());
         return ret.toString();
     }
 
-    private String getStartConfig(Map<Integer, Integer> ports) {
-        if (ports.size() > 0) {
+    private String getStartConfig(Map<Integer, Integer> ports, String volumesFrom) {
+        JSONObject ret = new JSONObject();
+        if (ports != null && ports.size() > 0) {
             JSONObject c = new JSONObject();
             for (Integer containerPort : ports.keySet()) {
                 Integer port = ports.get(containerPort);
@@ -253,12 +271,15 @@ public class DockerAccessUnirest implements DockerAccess {
                 a.put(o);
                 c.put(containerPort + "/tcp",a);
             }
-            JSONObject o = new JSONObject();
-            o.put("PortBindings", c);
-            return o.toString();
-        } else {
-            return "{}";
+            ret.put("PortBindings", c);
         }
+        if (volumesFrom != null) {
+            JSONArray a = new JSONArray();
+            a.put(volumesFrom);
+            ret.put("VolumesFrom",a);
+        }
+        log.debug("Container start config: " + ret.toString());
+        return ret.toString();
     }
 
     // ======================================================================================================
@@ -305,18 +326,12 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
-    private void processPullResponse(String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
-        InputStream is = resp.getEntity().getContent();
-        int len = 0;
-        int size = 8129;
-        byte[] buf = new byte[size];
-        // Data comes in chunkwise
-        boolean downloadInProgress = false;
-        while ((len = is.read(buf, 0, size)) != -1) {
-            String txt = new String(buf,0,len);
-            try {
-                JSONObject json = new JSONObject(txt);
+    private void processPullResponse(final String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
+        processChunkedResponse(resp, new ChunkedCallback() {
 
+            private boolean downloadInProgress = false;
+
+            public void process(JSONObject json) {
                 if (json.has("progressDetail")) {
                     JSONObject details = json.getJSONObject("progressDetail");
                     if (details.has("total")) {
@@ -325,7 +340,6 @@ public class DockerAccessUnirest implements DockerAccess {
                         }
                         log.progressUpdate(details.getInt("current"));
                         downloadInProgress = true;
-                        continue;
                     } else {
                         if (downloadInProgress) {
                             log.progressFinished();
@@ -333,18 +347,62 @@ public class DockerAccessUnirest implements DockerAccess {
                         downloadInProgress = false;
                     }
                 }
-                log.info("... " + (json.has("id")? json.getString("id") + ": " : "") + json.getString("status"));
+                log.info("... " + (json.has("id") ? json.getString("id") + ": " : "") + json.getString("status"));
+            }
+
+            public String getErrorMessage(StatusLine status) {
+                return "Error while pulling image '" + image + "' (code: " + status.getStatusCode() + ", " + status.getReasonPhrase() + ")";
+            }
+        });
+    }
+
+    private void processBuildResponse(final String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
+
+        processChunkedResponse(resp, new ChunkedCallback() {
+            public void process(JSONObject json) {
+                if (json.has("error")) {
+                    log.error("Error building image: " + json.get("error"));
+                    JSONObject details = json.getJSONObject("errorDetail");
+                    if (details != null) {
+                        log.error(details.get("code") + ": " + details.get("message"));
+                    }
+                } else if (json.has("stream")) {
+                    String message = json.getString("stream");
+                    while (message.endsWith("\n")) {
+                        message = message.substring(0,message.length() - 1);
+                    }
+                    log.debug(message);
+                }
+            }
+
+            public String getErrorMessage(StatusLine status) {
+                return "Error while building image '" + image + "' (code: " + status.getStatusCode()
+                       + ", " + status.getReasonPhrase() + ")";
+            }
+        });
+
+    }
+
+    private void processChunkedResponse(org.apache.http.HttpResponse resp, ChunkedCallback cb) throws IOException, MojoExecutionException {
+        InputStream is = resp.getEntity().getContent();
+        int len;
+        int size = 8129;
+        byte[] buf = new byte[size];
+        // Data comes in chunkwise
+        while ((len = is.read(buf, 0, size)) != -1) {
+            String txt = new String(buf,0,len);
+            try {
+                JSONObject json = new JSONObject(txt);
+                cb.process(json);
             } catch (JSONException exp) {
                 log.warn("Couldn't parse answer chunk '" + txt + "': " + exp);
             }
         }
         StatusLine status = resp.getStatusLine();
         if (status.getStatusCode() != 200) {
-            throw new MojoExecutionException("Error while pulling image '" + image + "' (code: " + status.getStatusCode()
-                                             + ", " + status.getReasonPhrase() + ")");
+            throw new MojoExecutionException(cb.getErrorMessage(status));
         }
     }
-
 
     private void logWarnings(JSONObject body) {
         Object warningsObj = body.get("Warnings");
@@ -370,5 +428,13 @@ public class DockerAccessUnirest implements DockerAccess {
             ret = ret.substring(0, ret.length() - 1);
         }
         return ret;
+    }
+
+    // ================================================================================================
+    // Callback for processing response chunks
+
+    private interface ChunkedCallback {
+        public void process(JSONObject json);
+        String getErrorMessage(StatusLine status);
     }
 }

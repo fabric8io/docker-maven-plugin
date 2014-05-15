@@ -86,7 +86,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
      * @param image image from which the container has been created
      * @param containerId the container id to register
      */
-    protected static void registerContainerId(String image, String containerId) {
+    protected static void registerContainerForDeletion(String image, String containerId) {
         synchronized (containerMap) {
             Set<String> ids = containerMap.get(image);
             if (ids == null) {

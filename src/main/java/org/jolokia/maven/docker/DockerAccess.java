@@ -1,5 +1,6 @@
 package org.jolokia.maven.docker;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ public interface DockerAccess {
      * Create a container from the given image.
      *
      * @param image the image from which the container should be created
-     * @param ports ports to expose, must not be null
+     * @param ports ports to expose, can be null
      * @param command an optional command which gets executed when starting the container. might be null.
      * @return the container id
      * @throws MojoExecutionException if the container could not be created.
@@ -42,9 +43,10 @@ public interface DockerAccess {
      *              while the values are the host ports to use. If a value is <code>null</code> a port is dynamically selected
      *              by docker. The value of a dynamically selected port can be obtained via {@link #queryContainerPortMapping(String)}
      *              This map must not be null (but can be empty)
+     * @param volumesFrom mount volumes from the given container id. Can be null.
      * @throws MojoExecutionException if the container could not be started.
      */
-    void startContainer(String containerId, Map<Integer, Integer> ports) throws MojoExecutionException;
+    void startContainer(String containerId, Map<Integer, Integer> ports, String volumesFrom) throws MojoExecutionException;
 
     /**
      * Stop a container.
@@ -90,4 +92,12 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+
+    /**
+     * Create an docker image from a given archive
+     *
+     * @param image name of the image to build or <code>null</code> if none should be used
+     * @param dockerArchive from which the docker image should be build
+     */
+    void buildImage(String image, File dockerArchive) throws MojoExecutionException;
 }
