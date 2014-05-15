@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker;
+package org.jolokia.docker.maven;
 
 /*
  * Copyright 2001-2005 The Apache Software Foundation.
@@ -26,8 +26,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
-import org.jolokia.maven.docker.assembly.DockerArchiveCreator;
-import org.jolokia.maven.docker.util.*;
+import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * Goal for creating and starting a docker container

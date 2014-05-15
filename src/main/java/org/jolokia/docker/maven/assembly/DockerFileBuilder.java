@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker.assembly;
+package org.jolokia.docker.maven.assembly;
 
 import java.io.File;
 import java.io.IOException;

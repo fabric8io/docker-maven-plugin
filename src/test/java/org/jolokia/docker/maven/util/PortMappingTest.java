@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker.util;
+package org.jolokia.docker.maven.util;
 
 import java.util.*;
 

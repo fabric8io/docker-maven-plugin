@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker;
+package org.jolokia.docker.maven;
 
 import java.util.HashSet;
 import java.util.Set;

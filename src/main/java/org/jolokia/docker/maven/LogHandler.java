@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker;
+package org.jolokia.docker.maven;
 
 /**
  * Simple log handler for printing used during the maven build

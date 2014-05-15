@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker;
+package org.jolokia.docker.maven;
 
 import java.io.File;
 import java.util.Map;

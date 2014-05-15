@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker.util;
+package org.jolokia.docker.maven.util;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;

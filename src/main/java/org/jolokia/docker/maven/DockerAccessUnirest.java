@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker;
+package org.jolokia.docker.maven;
 
 import java.io.*;
 import java.net.URI;
@@ -276,7 +276,7 @@ public class DockerAccessUnirest implements DockerAccess {
         if (volumesFrom != null) {
             JSONArray a = new JSONArray();
             a.put(volumesFrom);
-            ret.put("VolumesFrom",a);
+            ret.put("VolumesFrom", a);
         }
         log.debug("Container start config: " + ret.toString());
         return ret.toString();

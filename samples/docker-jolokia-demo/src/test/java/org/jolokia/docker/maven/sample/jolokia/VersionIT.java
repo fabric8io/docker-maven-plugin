@@ -27,8 +27,8 @@ public class VersionIT {
 
         // Need to do it that way since Jolokia doesnt return application/json as mimetype by default
         JsonPath json = with(get("/version").asString());
-        System.out.println(json);
-        assertEquals(versionExpected,json.get("value.agent"));
+        json.prettyPrint();
+        assertEquals(versionExpected, json.get("value.agent"));
 
         // Alternatively, set the mime type before, then Rest-assured's fluent API can be used
         given()

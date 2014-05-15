@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker.assembly;
+package org.jolokia.docker.maven.assembly;
 
 import java.io.File;
 import java.util.Collections;
@@ -10,7 +10,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
-import org.jolokia.maven.docker.util.MojoParameters;
+import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
  * @author roland

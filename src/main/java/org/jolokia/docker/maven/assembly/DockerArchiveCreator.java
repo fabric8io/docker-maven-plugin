@@ -1,4 +1,4 @@
-package org.jolokia.maven.docker.assembly;
+package org.jolokia.docker.maven.assembly;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
-import org.jolokia.maven.docker.util.MojoParameters;
+import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
