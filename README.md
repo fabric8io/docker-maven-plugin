@@ -96,7 +96,8 @@ Let's have a look at an example. In this case, we are deploying a war-dependency
 ````xml
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 
+                        http://maven.apache.org/xsd/assembly-1.1.2.xsd">
   <dependencySets>
     <dependencySet>
       <includes>
@@ -165,7 +166,7 @@ For a complete example please refer to `samples/data-jolokia-demo/pom.xml`.
 In order to prove, that self contained builds are not a fiction, you might convince yourself by trying out this (on a UN*X like system):
 
 ````bash
-# Move away you local maven repository for a moment
+# Move away your local maven repository for a moment
 cd ~/.m2/
 mv repository repository.bak
 
@@ -200,10 +201,6 @@ on OS X
 
 * It is recommended to use the `maven-failsafe-plugin` for integration testing in order to
 stop the docker container even when the tests are failing.
-
-## Maven Repository
-
-Snapshots of this plugin can be directly obtained from [Maven central] as well as of course the final releases. 
 
 ## Why another docker-maven-plugin ? 
 
