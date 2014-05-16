@@ -115,25 +115,6 @@
           </execution>
         </executions>
       </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>1.4</version>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <useAgent>true</useAgent>
-          <keyname>roland@jolokia.org</keyname>
-        </configuration>
-      </plugin>
     </plugins>
 
     <extensions>
@@ -179,4 +160,32 @@
     </license>
   </licenses>
 
+  <profiles>
+    <!-- "dist" profiles used for deploying -->
+    <profile>
+      <id>dist</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.4</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <useAgent>true</useAgent>
+              <keyname>roland@jolokia.org</keyname>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
