@@ -17,6 +17,41 @@ This plugin is still in an early stage of development, but the
 * On-the-fly creation of Docker data container with Maven artifacts and dependencies linked into started containers. 
 * Color output ;-)
 
+This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
+Please refer also to the examples provided in the `samples/` directory.
+
+
+````xml
+<plugin>
+  <groupId>org.jolokia</groupId>
+  <artifactId>docker-maven-plugin</artifactId>
+  <version>0.9.1</version>
+
+  <configuration>
+     <!-- For possible options, see below -->
+  </configuration>
+
+  <!-- Connect start/stop to pre- and
+       post-integration-test phase, respectively -->
+  <executions>
+    <execution>
+       <id>start</id>
+       <phase>pre-integration-test</phase>
+       <goals>
+         <goal>start</goal>
+       </goals>
+    </execution>
+    <execution>
+       <id>stop</id>
+       <phase>post-integration-test</phase>
+       <goals>
+         <goal>stop</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+````
+
 ## Maven Goals
 
 ### `docker:start`
