@@ -3,12 +3,24 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.9.1-SNAPSHOT</version>
+  <version>0.9.1</version>
   <packaging>maven-plugin</packaging>
 
   <name>maven-docker-plugin Maven Plugin</name>
+  <description>Docker Maven Plugin</description>
 
-  <url>http://www.jolokia.org</url>
+  <url>http://github.com/rhuss/docker-maven-plugin</url>
+
+  <developers>
+    <developer>
+      <name>Roland Huss</name>
+      <id>roland</id>
+      <email>roland@jolokia.org</email>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -102,6 +114,25 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <useAgent>true</useAgent>
+          <keyname>roland@jolokia.org</keyname>
+        </configuration>
       </plugin>
     </plugins>
 
