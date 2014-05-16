@@ -1,0 +1,159 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Integration test demo which makes some small tests for Jolokia
+
+  Call it with: 'mvn verify'
+
+  The test does the following:
+
+  * Creates a Docker data container with 'jolokia.war' and 'jolokia-it.war' as described in
+    assembly descriptor src/main/docker-assembly.xml
+  * Starts (and optionally pull) the jolokia/tomcat-7.0 container with the data container linked to it
+  * Waits until Tomcat is up (i.e. until it is reachable via an HTTP request)
+  * Runs an integration test via maven-failsafe-plugin, using rest-assured for accessing the deployed app.
+  * Prints out some version information about the contaner running (in order prove that's not a fake ;-)
+  * Stops and removes the containers.
+
+  -->
+
+  <groupId>org.jolokia</groupId>
+  <artifactId>docker-jolokia-demo</artifactId>
+  <version>0.9.0-SNAPSHOT</version>
+
+  <url>http://www.jolokia.org</url>
+
+  <properties>
+    <jolokia.version>1.2.1</jolokia.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
+  <dependencies>
+    <!-- Dependencies with their version which are referenced from the
+       src/main/docker-assembly.xml descriptor. These are the WAR files which gets
+       stored in the data docker container which then is linked into tomcat container for
+       deployment -->
+    <!-- Jolokia Agent -->
+    <dependency>
+      <groupId>org.jolokia</groupId>
+        <artifactId>jolokia-war</artifactId>
+      <version>${jolokia.version}</version>
+      <type>war</type>
+    </dependency>
+    <!-- Jolokia Integration Test Setup (registers some Test MBeans) -->
+    <dependency>
+      <groupId>org.jolokia</groupId>
+        <artifactId>jolokia-it-war</artifactId>
+        <version>${jolokia.version}</version>
+        <type>war</type>
+    </dependency>
+
+    <!-- ======================================================================================  -->
+    <!-- Used for the integration tests -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.11</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.jayway.restassured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <configuration>
+          <!-- Docker Image to use -->
+          <image>jolokia/tomcat-7.0</image>
+          <ports>
+            <!-- Port mappings: Container internal port (which must be exposed) will be
+                 dynamically mapped and this (random) port will be assigned to the maven variable
+                 ${tomcat.port}. Multiple port mapping can be specified here-->
+            <port>jolokia.port:8080</port>
+          </ports>
+          <!-- The plugin waits until this URL is reachable via HTTP ... -->
+          <waitHttp>http://localhost:${jolokia.port}/jolokia</waitHttp>
+          <!-- ... but at max 2 seconds -->
+          <wait>2000</wait>
+          <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
+               container which will be made available to the specified container. The startup script in the
+               container (jolokia/tomcat-7.0) should check for files in this directory and use them
+               for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
+               does this. -->
+          <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
+        </configuration>
+        <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
+             in pre-integration-test and stop it in post-integration-test. -->
+        <executions>
+            <execution>
+              <id>start</id>
+              <phase>pre-integration-test</phase>
+              <goals>
+                <goal>start</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>stop</id>
+              <phase>post-integration-test</phase>
+              <goals>
+                <goal>stop</goal>
+              </goals>
+            </execution>
+        </executions>
+      </plugin>
+
+      <!-- fails-safe-plugin should be used instead of surefire so that the container gets stopped even
+           when the tests fail -->
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.17</version>
+        <executions>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>integration-test</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>verify</id>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <systemPropertyVariables>
+            <!-- Needs to be repeated here (the following two lines strangely doesn't work when the next line is omitted although)
+                 Maven, you little sneaky beast ... -->
+            <jolokia.port>${jolokia.port}</jolokia.port>
+
+            <!-- Map maven variables to system properties which in turn can be used in the test classes -->
+            <jolokia.url>http://localhost:${jolokia.port}/jolokia</jolokia.url>
+            <jolokia.version>${jolokia.version}</jolokia.version>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+
+
+      <!-- Tell surefire to skip test, we are using the failsafe plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.10</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
