@@ -1,14 +1,12 @@
 # docker-maven-plugin
 
-This is Maven plugin for managing Docker images and containers which
-is especially useful during integration tests. It plays nicely with
-[Cargo](http://cargo.codehaus.org/)'s remote deployment model, which
-is available for most of the supported containers. 
+This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
-With this plugin it is possible to run completely isolated integration
-tests so you don't need to take care of shared resources. Ports can be
-mapped dynamically and made available as Maven properties. 
+With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
+Build artifacts and dependencies can be accessed from within 
+running containers, so that a file based deployment is easily possible and there is no need to use dedicated deployment support from plugins like [Cargo](http://cargo.codehaus.org/).
+ 
 This plugin is still in an early stage of development, but the
 **highlights** are:
 
@@ -16,6 +14,7 @@ This plugin is still in an early stage of development, but the
 * Assigning dynamically selected host ports to Maven variables
 * Pulling of images (with progress indicator) if not yet downloaded
 * Optional waiting on a successful HTTP ping to the container
+* On-the-fly creation of Docker data container with Maven artifacts and dependencies linked into started containers. 
 * Color output ;-)
 
 ## Maven Goals
@@ -33,10 +32,11 @@ Creates and starts a docker container.
 | **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
 | **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
+| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
 | **waitHttp** | Wait until this URL is reachable with an HTTP HEAD request. Dynamic port variables can be given, too | `docker.waitHttp` | |
-| **color**    | Set to `true` for colored output                        | `docker.color` | `false`                 |
+| **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 
 ### `docker:stop`
 
@@ -51,7 +51,8 @@ Stops and removes a docker container.
 | **containerId** | ID of the container to stop | `docker.containerId` | `false` |
 | **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `docker.keepContainer` | `false` |
 | **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `docker.keepRunning` | `false` |
-| **color**  | Set to `true` for colored output | `docker.color` | `false`                 |
+| **keepData**  | Keep the data container and image after the build if set to `true` | `docker.keepData` |  `false`                       |
+| **color**  | Set to `true` for colored output | `docker.color` | `true` if TTY connected |
 
 
 ## Dynamic Port mapping
@@ -80,6 +81,118 @@ the values are the dynamically assgined host ports. This property file might be 
 plugins which already resolved their maven variables earlier in the lifecycle than this plugin so that the port variables
 might not be available to them.
 
+## Data container
+
+With using the `assemblyDescriptor` option it is possible to bring local files, artifacts and dependencies into the running Docker container. This works as follows:
+
+* `assemblyDescriptor` points to a file describing the data to transport. It has the same format as for creating assemblies with the [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/) , with some restrictions (see below).
+* This plugin will create the assembly and create a Docker image (based on the `busybox` image) on the fly which exports the assembly below a directory `/maven`.
+* From this image a (data) container is created and the 'real' container is started with a `volumesFrom` option pointing to this data container.
+* That way, the container started has access to all the data created from the directory `/maven/` within the container.
+* The container command can check for the existence of this directory and deploy everything within this directory.
+
+Let's have a look at an example. In this case, we are deploying a war-dependency into a Tomcat container. The assembly descriptor `src/main/docker-assembly.xml` option may look like
+
+````xml
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+  <dependencySets>
+    <dependencySet>
+      <includes>
+        <include>org.jolokia:jolokia-war</include>
+      </includes>
+      <outputDirectory>.</outputDirectory>
+      <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+    </dependencySet>
+</assembly>
+````
+
+Then you will end up with a data container which contains with a file `/maven/jolokia.war` which is mirrored into the main container.
+
+The plugin configuration could look like
+
+````xml
+<plugin>
+    <groupId>org.jolokia</groupId>
+    <artifactId>docker-maven-plugin</artifactId>
+    ....
+    <configuration>
+      <image>jolokia/tomcat-7.0</image>
+      <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
+      ...
+    </configuration>
+</plugin>
+````
+
+The image `jolokia/tomcat-7.0` is a [trusted build](https://github.com/rhuss/jolokia-it/tree/master/docker/tomcat/7.0) available from the central docker registry which uses a command `deploy-and-run.sh` that looks like this:
+
+````bash
+#!/bin/sh
+
+DIR=${DEPLOY_DIR:-/maven}
+echo "Checking *.war in $DIR"
+if [ -d $DIR ]; then
+  for i in $DIR/*.war; do
+     file=$(basename $i)
+     echo "Linking $i --> /opt/tomcat/webapps/$file"
+     ln -s $i /opt/tomcat/webapps/$file
+  done
+fi
+/opt/tomcat/bin/catalina.sh run
+````
+
+Before starting tomcat, this script will link every .war file it finds in `/maven` to `/opt/tomcat/webapps` which effectively will deploy them. 
+
+It is really that easy to deploy your artifacts. And it's fast (less than 10s for starting, deploying, testing (1 test) and stopping the container on my 4years old MBP using boot2docker).
+
+### Assembly Descriptor
+
+The assembly descriptor has the same [format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html) as the the maven-assembly-plugin with the following exceptions:
+
+* `<formats>` are ignored, the assembly will allways use a directory when preparing the data container (i.e. the format is fixed to `dir`)
+* The `<id>` is ignored since only a single assembly descriptor is used (no need to distinguish multiple descriptors)
+
+## Examples
+
+This plugin comes with some commented examples in the `samples/` directory:
+
+* `data-jolokia-demo` is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX bridge in a tomcat. It uses a Docker data container which is linked into the Tomcat container and contains the WAR files to deply
+* `cargo-jolokia-demo` is the same as above except that Jolokia gets deployed via [Cargo](http://cargo.codehaus.org/Maven2+plugin)
+
+For a complete example please refer to `samples/data-jolokia-demo/pom.xml`.
+
+In order to prove, that self contained builds are not a fiction, you might convince yourself by trying out this (on a UN*X like system):
+
+````bash
+# Move away you local maven repository for a moment
+cd ~/.m2/
+mv repository repository.bak
+
+# Fetch docker-maven-plugin
+cd /tmp/
+git clone https://github.com/rhuss/docker-maven-plugin.git
+cd docker-maven-plugin/
+
+# Install plugin
+# (This is only needed until the plugin makes it to maven central)
+mvn install
+
+# Goto the sample
+cd samples/data-jolokia-demo
+
+# Run the integration test
+mvn verify
+
+# Please note, that first it will take some time to fetch the image
+# from docker.io. The next time running it will be much faster. 
+
+# Restore back you .m2 repo
+cd ~/.m2
+mv repository /tmp/
+mv repository.bak repository
+```` 
+
 ## Misc
 
 * [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
@@ -88,130 +201,9 @@ on OS X
 * It is recommended to use the `maven-failsafe-plugin` for integration testing in order to
 stop the docker container even when the tests are failing.
 
-## Example
-
-Here's an example, which uses a Docker image `jolokia/tomcat:7.0.52`
-(not yet pushed) and Cargo for deploying artifacts to it. Integration
-tests (not shown here) can then access the deployed artifact via an
-URL which is unique for this particular test run.
-
-````xml
-<plugin>
-  <groupId>org.jolokia</groupId>
-  <artifactId>docker-maven-plugin</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <configuration>
-
-    <!-- Docker Image -->
-    <image>jolokia/tomcat:7.0.52</image>
-
-    <!-- Map ports -->
-    <ports>
-      <!-- Port 8080 within the container is mapped to an (arbitrary) free port
-           between 49000 and 49900 by Docker. The chosen port is stored in
-           the Maven property "jolokia.port" which can be used later on -->
-      <port>jolokia.port:8080</port>
-    </ports>
-
-    <!-- Wait until the given HTTP URL response on an HEAD request ... -->
-    <wait>http://localhost:${jolokia.port}/jolokia</wait>
-
-    <!-- ... but not longer than 2 seconds -->
-    <wait>2000</wait>
-
-  </configuration>
-
-  <executions>
-    <execution>
-      <id>start</id>
-      <!-- Start before the integration test ... -->
-      <phase>pre-integration-test</phase>
-      <goals>
-        <goal>start</goal>
-      </goals>
-    </execution>
-    <execution>
-      <id>stop</id>
-      <!-- ... and stop afterwards. -->
-      <phase>post-integration-test</phase>
-      <goals>
-        <goal>stop</goal>
-      </goals>
-    </execution>
-  </executions>
-</plugin>
-
-<plugin>
-  <groupId>org.codehaus.cargo</groupId>
-  <artifactId>cargo-maven2-plugin</artifactId>
-  <configuration>
-
-    <!-- Use Tomcat 7 as server -->
-    <container>
-       <containerId>tomcat7x</containerId>
-       <type>remote</type>
-    </container>
-
-    <!-- Server specific configuration -->
-    <configuration>
-      <type>runtime</type>
-      <properties>
-        <cargo.hostname>localhost</cargo.hostname>
-
-        <!-- This is the port chosen by Docker -->
-        <cargo.servlet.port>${jolokia.port}</cargo.servlet.port>
-
-        <!-- User as configured in the Docker image -->
-        <cargo.remote.username>admin</cargo.remote.username>
-        <cargo.remote.password>admin</cargo.remote.password>
-      </properties>
-    </configuration>
-
-    <deployables>
-      <!-- Deploy a Jolokia agent -->
-      <deployable>
-        <groupId>org.jolokia</groupId>
-        <artifactId>jolokia-agent-war</artifactId>
-        <type>war</type>
-        <properties>
-          <context>/jolokia</context>
-        </properties>
-      </deployable>
-    </deployables>
-  </configuration>
-  <executions>
-    <execution>
-      <id>start-server</id>
-      <phase>pre-integration-test</phase>
-      <goals>
-        <goal>deploy</goal>
-      </goals>
-    </execution>
-  </executions>
-</plugin>
-```
-
-
 ## Maven Repository
 
-Snapshots of this plugin can be directly obtained from [labs.consol.de](http://labs.consol.de/maven/snapshots-repository):
-
-```xml
-
-<pluginRepositories>
-  <pluginRepository>
-    <id>labs-consol-snapshot</id>
-    <name>ConSol* Labs Repository (Snapshots)</name>
-    <url>http://labs.consol.de/maven/snapshots-repository</url>
-    <snapshots>
-      <enabled>true</enabled>
-    </snapshots>
-    <releases>
-      <enabled>false</enabled>
-    </releases>
-  </pluginRepository>
-</pluginRepositories>
-```  
+Snapshots of this plugin can be directly obtained from [Maven central] as well as of course the final releases. 
 
 ## Why another docker-maven-plugin ? 
 
