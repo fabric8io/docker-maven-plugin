@@ -26,6 +26,8 @@
   <url>http://www.jolokia.org</url>
 
   <properties>
+    <tomcat>7.0</tomcat>
+    <image>jolokia/tomcat-${tomcat}</image>
     <jolokia.version>1.2.1</jolokia.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -67,7 +69,7 @@
         <version>${project.version}</version>
         <configuration>
           <!-- Docker Image to use -->
-          <image>jolokia/tomcat-7.0</image>
+          <image>${image}</image>
           <ports>
             <!-- Port mappings: Container internal port (which must be exposed) will be
                  dynamically mapped and this (random) port will be assigned to the maven variable
