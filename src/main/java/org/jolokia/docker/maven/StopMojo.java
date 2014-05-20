@@ -36,20 +36,18 @@ public class StopMojo extends AbstractDockerMojo {
 
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         if (!keepRunning) {
-            Set<String> ids = getContainerIds();
-            for (String id : ids) {
-                stopContainer(access, id);
-            }
+            stopAndCleanupContainers(access);
+            cleanupImages(access);
         }
     }
 
-    private Set<String> getContainerIds() throws MojoFailureException {
+    private Set<String> getContainersToRemove() throws MojoFailureException {
         Set<String> ids = new HashSet<String>();
         if (containerId != null) {
             ids.add(containerId);
         } else {
             if (image != null) {
-                Set<String> iIds = unregisterContainerId(image);
+                Set<String> iIds = unregisterContainersOfImage(image);
                 if (iIds == null) {
                     throw new MojoFailureException("No container id given");
                 }
@@ -61,11 +59,33 @@ public class StopMojo extends AbstractDockerMojo {
         return ids;
     }
 
-    private void stopContainer(DockerAccess access, String id) throws MojoExecutionException {
-        access.stopContainer(id);
-        if (!keepContainer) {
-            access.removeContainer(id);
+    private Set<String> getImagesToRemove() {
+        Set<String> ret = new HashSet<String>();
+        if (image != null && unregisterImage(image)) {
+            ret.add(image);
+        } else {
+            ret.addAll(unregisterAllImages());
         }
-        info("Stopped " + id.substring(0,12) + (keepContainer ? "" : " and removed") + " container");
+        return ret;
+    }
+
+    private void stopAndCleanupContainers(DockerAccess access) throws MojoFailureException, MojoExecutionException {
+        for (String id : getContainersToRemove()) {
+            access.stopContainer(id);
+            if (!keepContainer) {
+                access.removeContainer(id);
+            }
+            info("Stopped " + id.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
+        }
+    }
+
+    // Should be called after cleaning up the containers, otherwise deletion might fail
+    private void cleanupImages(DockerAccess access) throws MojoExecutionException {
+        if (!keepContainer) {
+            for (String id : getImagesToRemove()) {
+                access.removeImage(id);
+                info("Removed image " + id.substring(0, 12));
+            }
+        }
     }
 }

@@ -100,4 +100,11 @@ public interface DockerAccess {
      * @param dockerArchive from which the docker image should be build
      */
     void buildImage(String image, File dockerArchive) throws MojoExecutionException;
+
+    /**
+     * Remove an image from this docker installation
+     *
+     * @param image image to remove
+     */
+    void removeImage(String image) throws MojoExecutionException;
 }

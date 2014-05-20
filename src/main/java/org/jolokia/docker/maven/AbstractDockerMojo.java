@@ -62,9 +62,14 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // =============================================================================================
     // Registry for managed containers
 
-    // Map with image names as keys and containerId as values (mulitple if multiple containers
+    // Map with image names as keys and containerId as values (more than one if multiple containers
     // for a single image has been started)
     private static final Map<String,Set<String>> containerMap = new HashMap<String, Set<String>>();
+
+    // Set of image ids which should be removed
+    private static final Set<String> imageSet = new HashSet<String>();
+
+
 
     /**
      * Unregister all containers and return their IDs
@@ -80,13 +85,27 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         }
     }
 
+
     /**
-     * Register a container for later cleanup
+     * Unregister all images and return their IDs
+     *
+     * @return ids of registered images
+     */
+    protected static Collection<String> unregisterAllImages() {
+        synchronized (imageSet) {
+            Collection<String> ret = new HashSet<String>(imageSet);
+            imageSet.clear();
+            return ret;
+        }
+    }
+
+    /**
+     * Register a container, used for later cleanup
      *
      * @param image image from which the container has been created
      * @param containerId the container id to register
      */
-    protected static void registerContainerForDeletion(String image, String containerId) {
+    protected static void registerContainer(String image, String containerId) {
         synchronized (containerMap) {
             Set<String> ids = containerMap.get(image);
             if (ids == null) {
@@ -98,17 +117,39 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
 
     /**
+     * Register and remember image
+     *
+     * @param image id of image to remember for deletion.
+     */
+    protected static void registerImage(String image) {
+        synchronized (imageSet) {
+            imageSet.add(image);
+        }
+    }
+
+    /**
      * Unregister all containers for a single image and return their ids.
      *
-     * @param image
+     * @param image the image for which the containers should be unregistered
+     *
      * @return id of containers created from this image
      */
-    protected Set<String> unregisterContainerId(String image) {
+    protected Set<String> unregisterContainersOfImage(String image) {
         synchronized (containerMap) {
             return containerMap.remove(image);
         }
     }
 
+    /**
+     * Unregister a single image from the registry
+     *
+     * @param image image to unregister
+     */
+    protected boolean unregisterImage(String image) {
+        synchronized (imageSet) {
+            return imageSet.remove(image);
+        }
+    }
     // =================================================================================
 
     // Color init

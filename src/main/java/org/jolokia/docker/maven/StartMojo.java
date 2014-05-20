@@ -103,7 +103,7 @@ public class StartMojo extends AbstractDockerMojo {
         docker.startContainer(containerId, mappedPorts.getPortsMap(),dataContainerId);
 
         // Remember id for later stopping the container
-        registerContainerForDeletion(image, containerId);
+        registerContainer(image, containerId);
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
@@ -137,7 +137,8 @@ public class StartMojo extends AbstractDockerMojo {
             dataContainerId = docker.createContainer(dataImage,null,null);
             docker.startContainer(dataContainerId,null,null);
             if (!keepData) {
-                registerContainerForDeletion(dataImage, dataContainerId);
+                registerContainer(dataImage, dataContainerId);
+                registerImage(dataImage);
             }
             return dataContainerId;
         }

@@ -196,6 +196,19 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
+    public void removeImage(String image) throws MojoExecutionException {
+        try {
+            HttpClient client = ClientFactory.getHttpClient();
+            URI createUrl = new URI(url + "/images/create?fromImage=" + URLParamEncoder.encode(image));
+            HttpPost post = new HttpPost(createUrl);
+            processPullResponse(image, client.execute(URIUtils.extractHost(createUrl), post));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Cannot pull image " + image,e);
+        }  catch (URISyntaxException e) {
+            throw new MojoExecutionException("Cannot pull image " + image,e);
+        }
+    }
+
     /** {@inheritDoc} */
     public void start() {
         Options.refresh();
