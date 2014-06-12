@@ -1,6 +1,10 @@
 
 # Release instructions
 
+## Preparation
+
+* Increase version number in README.md example
+
 ## Building and deploying
 
 The release process uses the maven release plugin:
