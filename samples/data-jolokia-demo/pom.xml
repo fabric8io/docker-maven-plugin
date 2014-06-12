@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.9.2</version>
+  <version>0.9.3-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -86,7 +86,7 @@
           <!-- The plugin waits until this URL is reachable via HTTP ... -->
           <waitHttp>http://localhost:${jolokia.port}/jolokia</waitHttp>
           <!-- ... but at max 2 seconds -->
-          <wait>2000</wait>
+          <wait>10000</wait>
           <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
                container which will be made available to the specified container. The startup script in the
                container (jolokia/tomcat-7.0) should check for files in this directory and use them

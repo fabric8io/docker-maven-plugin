@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.mashape.unirest.http.*;
-import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.http.options.Options;
 import com.mashape.unirest.http.utils.ClientFactory;
@@ -16,7 +15,8 @@ import com.mashape.unirest.http.utils.URLParamEncoder;
 import com.mashape.unirest.request.BaseRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.body.Body;
-import org.apache.http.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
@@ -169,6 +169,29 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    public List<String> getContainersForImage(String image) throws MojoExecutionException {
+        try {
+            List<String> ret = new ArrayList<String>();
+            BaseRequest req = Unirest.get(url + "/containers/json?limit=100")
+                                     .header("Accept", "*/*");
+            HttpResponse<String> resp = null;
+            resp = request(req);
+            checkReturnCode("Fetching container information", resp, 200);
+            JSONArray configs = new JSONArray(resp.getBody());
+            for (int i = 0; i < configs.length(); i ++) {
+                JSONObject config = configs.getJSONObject(i);
+                String containerImage = config.getString("Image");
+                if (image.equals(containerImage)) {
+                    ret.add(config.getString("Id"));
+                }
+            }
+            return ret;
+        } catch (UnirestException e) {
+            throw new MojoExecutionException("Cannot get container information", e);
+        }
+    }
+
+    /** {@inheritDoc} */
     public void removeContainer(String containerId) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.delete(url + "/containers/{id}")
@@ -196,16 +219,20 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
+    /** {@inheritDoc} */
     public void removeImage(String image) throws MojoExecutionException {
         try {
-            HttpClient client = ClientFactory.getHttpClient();
-            URI createUrl = new URI(url + "/images/create?fromImage=" + URLParamEncoder.encode(image));
-            HttpPost post = new HttpPost(createUrl);
-            processPullResponse(image, client.execute(URIUtils.extractHost(createUrl), post));
-        } catch (IOException e) {
-            throw new MojoExecutionException("Cannot pull image " + image,e);
-        }  catch (URISyntaxException e) {
-            throw new MojoExecutionException("Cannot pull image " + image,e);
+            BaseRequest req = Unirest.delete(url + "/images/{id}")
+                                     .header("Accept", "*/*")
+                                     .routeParam("id", image);
+
+            HttpResponse<String> resp = request(req);
+            checkReturnCode("Removing image " + image, resp, 200);
+            if (log.isDebugEnabled()) {
+                logRemoveResponse(resp.getBody());
+            }
+        } catch (UnirestException e) {
+            throw new MojoExecutionException("Cannot remove image " + image,e);
         }
     }
 
@@ -227,7 +254,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public void buildImage(String image, File dockerArchive) throws MojoExecutionException {
         try {
             HttpClient client = ClientFactory.getHttpClient();
-            URI buildUrl = new URI(url + "/build" + (image != null ? "?t=" + URLParamEncoder.encode(image) : ""));
+            URI buildUrl = new URI(url + "/build?rm=true" + (image != null ? "&t=" + URLParamEncoder.encode(image) : ""));
             HttpPost post = new HttpPost(buildUrl);
             post.setEntity(new FileEntity(dockerArchive));
             processBuildResponse(image, client.execute(URIUtils.extractHost(buildUrl), post));
@@ -317,7 +344,6 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
-
     private String convert(HttpEntity entity) {
         try {
             if (entity.isStreaming()) {
@@ -338,6 +364,7 @@ public class DockerAccessUnirest implements DockerAccess {
             return "[error serializing inputstream for debugging]";
         }
     }
+
 
     private void processPullResponse(final String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
         processChunkedResponse(resp, new ChunkedCallback() {
@@ -444,8 +471,18 @@ public class DockerAccessUnirest implements DockerAccess {
         return ret;
     }
 
-    // ================================================================================================
     // Callback for processing response chunks
+    private void logRemoveResponse(String pResp) {
+        JSONArray logElements = new JSONArray(pResp);
+        for (int i = 0; i < logElements.length(); i++) {
+            JSONObject entry = logElements.getJSONObject(i);
+            for (Object key : entry.keySet()) {
+                log.debug(key + ": " + entry.get(key.toString()));
+            }
+        }
+    }
+
+    // ================================================================================================
 
     private interface ChunkedCallback {
         public void process(JSONObject json);

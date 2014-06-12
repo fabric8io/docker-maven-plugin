@@ -18,7 +18,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     private static final String LOG_PREFIX = "DOCKER> ";
 
     // URL to docker daemon
-    @Parameter(property = "docker.url",defaultValue = "http://localhost:4243")
+    @Parameter(property = "docker.url",defaultValue = "http://localhost:2375")
     private String url;
 
     // Whether to use color
@@ -62,68 +62,40 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // =============================================================================================
     // Registry for managed containers
 
+    // Remember data created during start
+    private static class ImageStartData {
+        private String image;
+        private String container;
+        private String dataImage;
+        private String dataContainer;
+
+        private ImageStartData(String image, String container, String dataImage, String dataContainer) {
+            this.image = image;
+            this.container = container;
+            this.dataImage = dataImage;
+            this.dataContainer = dataContainer;
+        }
+    }
+
     // Map with image names as keys and containerId as values (more than one if multiple containers
     // for a single image has been started)
-    private static final Map<String,Set<String>> containerMap = new HashMap<String, Set<String>>();
-
-    // Set of image ids which should be removed
-    private static final Set<String> imageSet = new HashSet<String>();
-
-
-
-    /**
-     * Unregister all containers and return their IDs
-     */
-    protected static Collection<String> unregisterAllContainer() {
-        synchronized (containerMap) {
-            Set<String> ret = new HashSet<String>();
-            for (String image : containerMap.keySet()) {
-                ret.addAll(containerMap.get(image));
-            }
-            containerMap.clear();
-            return ret;
-        }
-    }
-
-
-    /**
-     * Unregister all images and return their IDs
-     *
-     * @return ids of registered images
-     */
-    protected static Collection<String> unregisterAllImages() {
-        synchronized (imageSet) {
-            Collection<String> ret = new HashSet<String>(imageSet);
-            imageSet.clear();
-            return ret;
-        }
-    }
+    private static final Map<String,Set<ImageStartData>> containerMap = new HashMap<String, Set<ImageStartData>>();
 
     /**
      * Register a container, used for later cleanup
-     *
-     * @param image image from which the container has been created
+     *  @param image image from which the container has been created
      * @param containerId the container id to register
+     * @param dataImage
+     * @param dataContainerId
      */
-    protected static void registerContainer(String image, String containerId) {
+    protected static void registerStartData(String image, String containerId, String dataImage, String dataContainerId) {
         synchronized (containerMap) {
-            Set<String> ids = containerMap.get(image);
+            Set<ImageStartData> ids = containerMap.get(image);
             if (ids == null) {
-                ids = new HashSet<String>();
+                ids = new HashSet<ImageStartData>();
                 containerMap.put(image,ids);
             }
-            ids.add(containerId);
-        }
-    }
-
-    /**
-     * Register and remember image
-     *
-     * @param image id of image to remember for deletion.
-     */
-    protected static void registerImage(String image) {
-        synchronized (imageSet) {
-            imageSet.add(image);
+            ids.add(new ImageStartData(image, containerId, dataImage, dataContainerId));
         }
     }
 
@@ -134,22 +106,52 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
      *
      * @return id of containers created from this image
      */
-    protected Set<String> unregisterContainersOfImage(String image) {
+    protected Set<String> getContainersForImage(String image) throws MojoFailureException {
         synchronized (containerMap) {
-            return containerMap.remove(image);
+            Set<ImageStartData> dataSet = extractDataForImage(image);
+            Set<String> iIds = extractContainerIds(dataSet);
+            if (iIds == null) {
+                throw new MojoFailureException("No container id given");
+            }
+            return iIds;
         }
     }
 
-    /**
-     * Unregister a single image from the registry
-     *
-     * @param image image to unregister
-     */
-    protected boolean unregisterImage(String image) {
-        synchronized (imageSet) {
-            return imageSet.remove(image);
+    protected Set<String> getDataImagesForImage(String image) {
+        synchronized (containerMap) {
+            Set<ImageStartData> dataSet = extractDataForImage(image);
+            Set<String> imageIds = new HashSet<String>();
+            for (ImageStartData data : dataSet) {
+                if (data.dataImage != null) {
+                    imageIds.add(data.dataImage);
+                }
+            }
+            return imageIds;
         }
     }
+
+    private Set<ImageStartData> extractDataForImage(String image) {
+        Set<ImageStartData> dataSet = new HashSet<ImageStartData>();
+        if (image != null) {
+            if (containerMap.containsKey(image)) {
+                dataSet.addAll(containerMap.get(image));
+            }
+        } else {
+            for (Map.Entry<String,Set<ImageStartData>> entry : containerMap.entrySet()) {
+                dataSet.addAll(entry.getValue());
+            }
+        }
+        return dataSet;
+    }
+
+    private Set<String> extractContainerIds(Set<ImageStartData> pDataSet) {
+        Set<String> containerIds = new HashSet<String>();
+        for (ImageStartData data : pDataSet) {
+            containerIds.add(data.container);
+        }
+        return containerIds;
+    }
+
     // =================================================================================
 
     // Color init

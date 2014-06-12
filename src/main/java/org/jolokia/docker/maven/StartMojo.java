@@ -71,10 +71,6 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.waitHttp")
     private String waitHttp;
 
-    // Whether the data container & image should be kept if an assembly is used
-    @Parameter(property = "docker.keepData", defaultValue = "false")
-    private boolean keepData;
-
     /**
      * A descriptor to use for building the data assembly to be exported
      * in an Docker image
@@ -96,14 +92,15 @@ public class StartMojo extends AbstractDockerMojo {
         checkImage(docker);
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
-        String dataContainerId = createDataContainer(docker);
+        String dataImage = getDataImageName();
+        String dataContainerId = createDataContainer(docker,dataImage);
 
         String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
         info("Created container " + containerId.substring(0, 12) + " from image " + image);
         docker.startContainer(containerId, mappedPorts.getPortsMap(),dataContainerId);
 
         // Remember id for later stopping the container
-        registerContainer(image, containerId);
+        registerStartData(image, containerId, dataImage, dataContainerId);
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
@@ -115,13 +112,14 @@ public class StartMojo extends AbstractDockerMojo {
         waitIfRequested(mappedPorts);
     }
 
+
+
     // ========================================================================================================
 
     // Create a data container and return its ID. Return the ID or null if no data containe is created
-    private String createDataContainer(DockerAccess docker) throws MojoFailureException, MojoExecutionException {
+    private String createDataContainer(DockerAccess docker, String dataImage) throws MojoFailureException, MojoExecutionException {
         if (assemblyDescriptor != null || assemblyDescriptorRef != null) {
             String dataContainerId = null;
-            String dataImage;
             if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
                 throw new MojoFailureException("Either a assemblyDescriptor '" + assemblyDescriptor +
                                                "' or a assemblyDescriptorRef '" + assemblyDescriptorRef +
@@ -132,14 +130,9 @@ public class StartMojo extends AbstractDockerMojo {
 
             File dockerArchive = dockerArchiveCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
             info("Created docker archive " + dockerArchive);
-            dataImage = getDataImageName();
             docker.buildImage(dataImage,dockerArchive);
             dataContainerId = docker.createContainer(dataImage,null,null);
             docker.startContainer(dataContainerId,null,null);
-            if (!keepData) {
-                registerContainer(dataImage, dataContainerId);
-                registerImage(dataImage);
-            }
             return dataContainerId;
         }
         return null;

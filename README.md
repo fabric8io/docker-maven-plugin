@@ -66,7 +66,7 @@ Creates and starts a docker container.
 
 | Parameter    | Descriptions                                            | Property       | Default                 |
 | ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:4243` |
+| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
 | **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
 | **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
 | **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |

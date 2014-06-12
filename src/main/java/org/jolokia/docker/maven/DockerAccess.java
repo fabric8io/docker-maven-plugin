@@ -1,8 +1,7 @@
 package org.jolokia.docker.maven;
 
 import java.io.File;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -65,6 +64,15 @@ public interface DockerAccess {
      * @throws MojoExecutionException if the query failed.
      */
     Map<Integer, Integer> queryContainerPortMapping(String containerId) throws MojoExecutionException;
+
+    /**
+     * Get all containers which are build from an image. Only the last 100 containers are considered
+     *
+     * @param image for which its container are looked up
+     * @return list of container ids
+     * @throws MojoExecutionException if the request fails
+     */
+    List<String> getContainersForImage(String image) throws MojoExecutionException;
 
     /**
      * Remove a container with the given id

@@ -1,7 +1,6 @@
 package org.jolokia.docker.maven;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -34,43 +33,22 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
     boolean keepRunning;
 
+    // Whether the data container & image should be kept if an assembly is used
+    @Parameter(property = "docker.keepData", defaultValue = "false")
+    private boolean keepData;
+
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         if (!keepRunning) {
-            stopAndCleanupContainers(access);
-            cleanupImages(access);
-        }
-    }
-
-    private Set<String> getContainersToRemove() throws MojoFailureException {
-        Set<String> ids = new HashSet<String>();
-        if (containerId != null) {
-            ids.add(containerId);
-        } else {
-            if (image != null) {
-                Set<String> iIds = unregisterContainersOfImage(image);
-                if (iIds == null) {
-                    throw new MojoFailureException("No container id given");
-                }
-                ids.addAll(iIds);
-            } else {
-                ids.addAll(unregisterAllContainer());
+            stopAndRemoveContainers(access);
+            if (!keepData) {
+                cleanupData(access);
             }
         }
-        return ids;
     }
 
-    private Set<String> getImagesToRemove() {
-        Set<String> ret = new HashSet<String>();
-        if (image != null && unregisterImage(image)) {
-            ret.add(image);
-        } else {
-            ret.addAll(unregisterAllImages());
-        }
-        return ret;
-    }
-
-    private void stopAndCleanupContainers(DockerAccess access) throws MojoFailureException, MojoExecutionException {
-        for (String id : getContainersToRemove()) {
+    private void stopAndRemoveContainers(DockerAccess access) throws MojoFailureException, MojoExecutionException {
+        Set<String> ids = getContainersToRemove();
+        for (String id : ids) {
             access.stopContainer(id);
             if (!keepContainer) {
                 access.removeContainer(id);
@@ -79,13 +57,24 @@ public class StopMojo extends AbstractDockerMojo {
         }
     }
 
-    // Should be called after cleaning up the containers, otherwise deletion might fail
-    private void cleanupImages(DockerAccess access) throws MojoExecutionException {
-        if (!keepContainer) {
-            for (String id : getImagesToRemove()) {
-                access.removeImage(id);
-                info("Removed image " + id.substring(0, 12));
+
+    private void cleanupData(DockerAccess access) throws MojoExecutionException {
+        Set<String> imageIds = getDataImagesForImage(image);
+        for (String id : imageIds) {
+            List<String> containers = access.getContainersForImage(id);
+            for (String container : containers) {
+                access.removeContainer(container);
+                info("Removed data container " + container);
             }
+            access.removeImage(id);
+            info("Removed data image " + id);
         }
     }
+
+    private Set<String> getContainersToRemove() throws MojoFailureException {
+        return containerId != null ?
+                Collections.singleton(containerId) :
+                getContainersForImage(image);
+    }
+
 }
