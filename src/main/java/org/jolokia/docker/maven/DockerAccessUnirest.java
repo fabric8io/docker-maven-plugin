@@ -207,15 +207,25 @@ public class DockerAccessUnirest implements DockerAccess {
 
     /** {@inheritDoc} */
     public void pullImage(String image) throws MojoExecutionException {
+        String pullUrl = url + "/images/create?fromImage=" + URLParamEncoder.encode(image);
+        pullOrPushImage(image,pullUrl,"pulling");
+    }
+
+    /** {@inheritDoc} */
+    public void pushImage(String image, String registry) throws MojoExecutionException {
+        String pushUrl = url + "/images/" + URLParamEncoder.encode(image) + "/push" +
+                         (registry != null ? "?registry" + registry : "");
+        pullOrPushImage(image,pushUrl,"pushing");
+    }
+
+    private void pullOrPushImage(String image, String uriString,String what) throws MojoExecutionException {
         try {
             HttpClient client = ClientFactory.getHttpClient();
-            URI createUrl = new URI(url + "/images/create?fromImage=" + URLParamEncoder.encode(image));
-            HttpPost post = new HttpPost(createUrl);
-            processPullResponse(image, client.execute(URIUtils.extractHost(createUrl), post));
-        } catch (IOException e) {
-            throw new MojoExecutionException("Cannot pull image " + image,e);
-        }  catch (URISyntaxException e) {
-            throw new MojoExecutionException("Cannot pull image " + image,e);
+            URI uri = new URI(uriString);
+            HttpPost post = new HttpPost(uri);
+            processPullOrPushResponse(image, client.execute(URIUtils.extractHost(uri), post), what);
+        } catch (IOException | URISyntaxException e) {
+            throw new MojoExecutionException("Error while " + what + " " + image + ": ",e);
         }
     }
 
@@ -366,7 +376,7 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
 
-    private void processPullResponse(final String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
+    private void processPullOrPushResponse(final String image, org.apache.http.HttpResponse resp, final String action) throws IOException, MojoExecutionException {
         processChunkedResponse(resp, new ChunkedCallback() {
 
             private boolean downloadInProgress = false;
@@ -392,7 +402,7 @@ public class DockerAccessUnirest implements DockerAccess {
             }
 
             public String getErrorMessage(StatusLine status) {
-                return "Error while pulling image '" + image + "' (code: " + status.getStatusCode() + ", " + status.getReasonPhrase() + ")";
+                return "Error while " + action + " image '" + image + "' (code: " + status.getStatusCode() + ", " + status.getReasonPhrase() + ")";
             }
         });
     }

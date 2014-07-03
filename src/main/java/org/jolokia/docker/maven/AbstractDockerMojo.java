@@ -3,7 +3,9 @@ package org.jolokia.docker.maven;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.fusesource.jansi.AnsiConsole;
 
 /**
@@ -16,6 +18,10 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
+
+    // Current maven project
+    @Component
+    protected MavenProject project;
 
     // URL to docker daemon
     @Parameter(property = "docker.url",defaultValue = "http://localhost:2375")
@@ -92,7 +98,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         synchronized (containerMap) {
             Set<ImageStartData> ids = containerMap.get(image);
             if (ids == null) {
-                ids = new HashSet<ImageStartData>();
+                ids = new HashSet<>();
                 containerMap.put(image,ids);
             }
             ids.add(new ImageStartData(image, containerId, dataImage, dataContainerId));

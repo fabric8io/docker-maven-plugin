@@ -16,18 +16,13 @@ package org.jolokia.docker.maven;
  * limitations under the License.
  */
 
-import java.io.File;
 import java.util.*;
 
-import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.filtering.MavenFileFilter;
-import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.util.PortMapping;
 
 /**
  * Goal for creating and starting a docker container
@@ -35,11 +30,7 @@ import org.jolokia.docker.maven.util.*;
  * @author roland
  */
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
-public class StartMojo extends AbstractDockerMojo {
-
-    // Current maven project
-    @Component
-    private MavenProject project;
+public class StartMojo extends AbstractDataSupportedDockerMojo {
 
     // Name of the image to use, including potential tag
     @Parameter(property = "docker.image", required = true)
@@ -54,7 +45,7 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.autoPull", defaultValue = "true")
     private boolean autoPull;
 
-    // Command to execute in contained
+    // Command to execute in container
     @Parameter(property = "docker.command")
     private String command;
 
@@ -71,36 +62,19 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.waitHttp")
     private String waitHttp;
 
-    /**
-     * A descriptor to use for building the data assembly to be exported
-     * in an Docker image
-     */
-    @Parameter
-    private String assemblyDescriptor;
-
-    /**
-     * Reference to an assembly descriptor included.
-     */
-    @Parameter
-    private String assemblyDescriptorRef;
-
-    @Component
-    private DockerArchiveCreator dockerArchiveCreator;
-
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
         checkImage(docker);
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
-        String dataImage = getDataImageName();
-        String dataContainerId = createDataContainer(docker,dataImage);
+        String dataContainerId = createDataContainer(docker);
 
         String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
         info("Created container " + containerId.substring(0, 12) + " from image " + image);
         docker.startContainer(containerId, mappedPorts.getPortsMap(),dataContainerId);
 
         // Remember id for later stopping the container
-        registerStartData(image, containerId, dataImage, dataContainerId);
+        registerStartData(image, containerId, getDataImageName(), dataContainerId);
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
@@ -117,30 +91,15 @@ public class StartMojo extends AbstractDockerMojo {
     // ========================================================================================================
 
     // Create a data container and return its ID. Return the ID or null if no data containe is created
-    private String createDataContainer(DockerAccess docker, String dataImage) throws MojoFailureException, MojoExecutionException {
+    private String createDataContainer(DockerAccess docker) throws MojoFailureException, MojoExecutionException {
         if (assemblyDescriptor != null || assemblyDescriptorRef != null) {
-            String dataContainerId = null;
-            if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
-                throw new MojoFailureException("Either a assemblyDescriptor '" + assemblyDescriptor +
-                                               "' or a assemblyDescriptorRef '" + assemblyDescriptorRef +
-                                               "' can be used");
-            }
-            MojoParameters params =
-                    new MojoParameters(session, project, archive, mavenFileFilter);
-
-            File dockerArchive = dockerArchiveCreator.create(params, assemblyDescriptor, assemblyDescriptorRef);
-            info("Created docker archive " + dockerArchive);
-            docker.buildImage(dataImage,dockerArchive);
-            dataContainerId = docker.createContainer(dataImage,null,null);
+            String dataImage = createDataImage(docker);
+            String dataContainerId = docker.createContainer(dataImage,null,null);
             docker.startContainer(dataContainerId,null,null);
             return dataContainerId;
+        } else {
+            return null;
         }
-        return null;
-    }
-
-    // Data image
-    private String getDataImageName() {
-        return project.getGroupId() + "/" + project.getArtifactId() + ":" + project.getVersion();
     }
 
     private void waitIfRequested(PortMapping mappedPorts) {
@@ -186,17 +145,5 @@ public class StartMojo extends AbstractDockerMojo {
             EnvUtil.writePortProperties(props, portPropertyFile);
         }
     }
-
-    // =======================================================================================================
-    // ==============================================================================================================
-    // Parameters required from Maven when building an assembly. They cannot be injected directly
-    // into DockerAssemblyCreator.
-    // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
-    @Parameter
-    private MavenArchiveConfiguration archive;
-    @Component
-    private MavenSession session;
-    @Component
-    private MavenFileFilter mavenFileFilter;
 
 }

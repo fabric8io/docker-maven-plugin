@@ -91,6 +91,14 @@ public interface DockerAccess {
     void pullImage(String image) throws MojoExecutionException;
 
     /**
+     * Push an image to a registry.
+     * @param image image name to push (can be an alias)
+     * @param registry registry to push to or <code>null</code> if the default registry
+     *                 (<a href="http://registry.hub.docker.com">registry.hub.docker.com</a>) should be used.
+     */
+    void pushImage(String image, String registry) throws MojoExecutionException;
+
+    /**
      * Lifecycle method for this access class which must be called before any other method is called.
      */
     void start();
