@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -41,16 +41,16 @@
     <!-- Jolokia Agent -->
     <dependency>
       <groupId>org.jolokia</groupId>
-        <artifactId>jolokia-war</artifactId>
+      <artifactId>jolokia-war</artifactId>
       <version>${jolokia.version}</version>
       <type>war</type>
     </dependency>
     <!-- Jolokia Integration Test Setup (registers some Test MBeans) -->
     <dependency>
       <groupId>org.jolokia</groupId>
-        <artifactId>jolokia-it-war</artifactId>
-        <version>${jolokia.version}</version>
-        <type>war</type>
+      <artifactId>jolokia-it-war</artifactId>
+      <version>${jolokia.version}</version>
+      <type>war</type>
     </dependency>
 
     <!-- ======================================================================================  -->
@@ -97,20 +97,20 @@
         <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
              in pre-integration-test and stop it in post-integration-test. -->
         <executions>
-            <execution>
-              <id>start</id>
-              <phase>pre-integration-test</phase>
-              <goals>
-                <goal>start</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>stop</id>
-              <phase>post-integration-test</phase>
-              <goals>
-                <goal>stop</goal>
-              </goals>
-            </execution>
+          <execution>
+            <id>start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
 
@@ -158,4 +158,23 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>merge-data</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <dataBaseImage>${image}</dataBaseImage>
+              <mergeData>true</mergeData>
+              <keepContainer>true</keepContainer>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

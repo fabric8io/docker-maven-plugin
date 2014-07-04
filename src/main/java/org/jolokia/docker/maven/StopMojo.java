@@ -17,10 +17,6 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.image", required = false)
     private String image;
 
-    // The container id to stop. If not given, the containers started with 'docker:start' are stopped
-    @Parameter(property = "docker.containerId")
-    String containerId;
-
     // Whether to keep the containers afters stopping
     @Parameter(property = "docker.keepContainer",defaultValue = "false")
     boolean keepContainer;
@@ -35,42 +31,14 @@ public class StopMojo extends AbstractDockerMojo {
 
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         if (!keepRunning) {
-            stopAndRemoveContainers(access);
-            if (!keepData) {
-                cleanupData(access);
+            List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
+            for (ShutdownAction action : getShutdownActions()) {
+                if (action.applies(image)) {
+                    action.shutdown(access, this, keepContainer, keepData);
+                    appliedShutdownActions.add(action);
+                }
             }
+            removeShutdownActions(appliedShutdownActions);
         }
     }
-
-    private void stopAndRemoveContainers(DockerAccess access) throws MojoFailureException, MojoExecutionException {
-        Set<String> ids = getContainersToRemove();
-        for (String id : ids) {
-            access.stopContainer(id);
-            if (!keepContainer) {
-                access.removeContainer(id);
-            }
-            info("Stopped " + id.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
-        }
-    }
-
-
-    private void cleanupData(DockerAccess access) throws MojoExecutionException {
-        Set<String> imageIds = getDataImagesForImage(image);
-        for (String id : imageIds) {
-            List<String> containers = access.getContainersForImage(id);
-            for (String container : containers) {
-                access.removeContainer(container);
-                info("Removed data container " + container);
-            }
-            access.removeImage(id);
-            info("Removed data image " + id);
-        }
-    }
-
-    private Set<String> getContainersToRemove() throws MojoFailureException {
-        return containerId != null ?
-                Collections.singleton(containerId) :
-                getContainersForImage(image);
-    }
-
 }

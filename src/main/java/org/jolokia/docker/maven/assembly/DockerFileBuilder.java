@@ -60,11 +60,13 @@ public class DockerFileBuilder {
         b.append("MAINTAINER ").append(maintainer).append("\n");
 
         // Default command mit args
-        b.append("CMD [\"").append(command).append("\"");
-        for (String arg : arguments) {
-            b.append(",\"").append(arg).append("\"");
+        if (command != null) {
+            b.append("CMD [\"").append(command).append("\"");
+            for (String arg : arguments) {
+                b.append(",\"").append(arg).append("\"");
+            }
+            b.append("]").append("\n");
         }
-        b.append("]").append("\n");
 
         // Entries
         for (AddEntry entry : addEntries) {

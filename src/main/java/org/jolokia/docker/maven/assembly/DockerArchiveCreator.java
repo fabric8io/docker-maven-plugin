@@ -71,6 +71,7 @@ public class DockerArchiveCreator {
             DockerFileBuilder builder = new DockerFileBuilder().exportDir("/maven").add("maven","");
             if (baseImage != null) {
                 builder.baseImage(baseImage);
+                builder.command(null); // Use command from base image
             }
             return builder.create(destDir);
         } catch (IOException e) {

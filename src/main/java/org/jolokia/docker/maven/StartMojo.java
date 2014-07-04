@@ -36,6 +36,10 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
     @Parameter(property = "docker.image", required = true)
     private String image;
 
+    // Whether to merge the data in the original image or use a separate data image
+    @Parameter(property = "docker.mergeData", required = false, defaultValue = "false")
+    private boolean mergeData;
+
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
     @Parameter
@@ -67,18 +71,40 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
         checkImage(docker);
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
-        String dataContainerId = createDataContainer(docker);
 
-        String containerId = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
-        info("Created container " + containerId.substring(0, 12) + " from image " + image);
-        docker.startContainer(containerId, mappedPorts.getPortsMap(),dataContainerId);
+        String container,dataImage,dataContainer;
+
+        if (useDataContainer()) {
+            if (mergeData) {
+                // Image created on the fly and used for action
+                dataImage = createDataImage(image, docker);
+                dataContainer = null;
+
+                container = docker.createContainer(dataImage,mappedPorts.getContainerPorts(),command);
+            } else {
+                dataImage = createDataImage(null, docker);
+                dataContainer = docker.createContainer(dataImage, null, null);
+                docker.startContainer(dataContainer, null, null);
+
+                container = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
+            }
+        } else {
+            dataImage = null;
+            dataContainer = null;
+            mergeData = false; // Force to false, doesnt have any effect anyways when not using data container
+
+            container = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
+        }
+
+        docker.startContainer(container, mappedPorts.getPortsMap(), dataContainer);
+        info("Created and started container " + container.substring(0, 12) + " from image " + (useDataContainer() && mergeData ? dataImage : image));
 
         // Remember id for later stopping the container
-        registerStartData(image, containerId, getDataImageName(), dataContainerId);
+        registerShutdownAction(new ShutdownAction(image,container,dataImage,mergeData));
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {
-            mappedPorts.updateVarsForDynamicPorts(docker.queryContainerPortMapping(containerId));
+            mappedPorts.updateVarsForDynamicPorts(docker.queryContainerPortMapping(container));
             propagatePortVariables(mappedPorts);
         }
 
@@ -87,19 +113,10 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
     }
 
 
-
     // ========================================================================================================
 
-    // Create a data container and return its ID. Return the ID or null if no data containe is created
-    private String createDataContainer(DockerAccess docker) throws MojoFailureException, MojoExecutionException {
-        if (assemblyDescriptor != null || assemblyDescriptorRef != null) {
-            String dataImage = createDataImage(docker);
-            String dataContainerId = docker.createContainer(dataImage,null,null);
-            docker.startContainer(dataContainerId,null,null);
-            return dataContainerId;
-        } else {
-            return null;
-        }
+    private boolean useDataContainer() {
+        return assemblyDescriptor != null || assemblyDescriptorRef != null;
     }
 
     private void waitIfRequested(PortMapping mappedPorts) {

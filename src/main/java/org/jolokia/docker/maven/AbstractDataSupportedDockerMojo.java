@@ -59,14 +59,16 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
     /**
      * Create a docker image with the given name from the assembly descriptors configured.
      *
+     * @param baseImage a base image to use. If null, check the property "dataBaseImage"
      * @param dockerAccess access to docker
      * @throws MojoFailureException
      * @throws MojoExecutionException
      */
-    protected String createDataImage(DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
+    protected String createDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
         String dataImage = getDataImageName();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
-        File dockerArchive = dockerArchiveCreator.create(params, dataBaseImage, assemblyDescriptor, assemblyDescriptorRef);
+        String base = baseImage != null ? baseImage : dataBaseImage;
+        File dockerArchive = dockerArchiveCreator.create(params, base, assemblyDescriptor, assemblyDescriptorRef);
         info("Created docker archive " + dockerArchive);
         dockerAccess.buildImage(dataImage, dockerArchive);
         return dataImage;

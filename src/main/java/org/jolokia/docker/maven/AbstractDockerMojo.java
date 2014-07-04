@@ -68,96 +68,35 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // =============================================================================================
     // Registry for managed containers
 
-    // Remember data created during start
-    private static class ImageStartData {
-        private String image;
-        private String container;
-        private String dataImage;
-        private String dataContainer;
-
-        private ImageStartData(String image, String container, String dataImage, String dataContainer) {
-            this.image = image;
-            this.container = container;
-            this.dataImage = dataImage;
-            this.dataContainer = dataContainer;
-        }
-    }
-
-    // Map with image names as keys and containerId as values (more than one if multiple containers
-    // for a single image has been started)
-    private static final Map<String,Set<ImageStartData>> containerMap = new HashMap<String, Set<ImageStartData>>();
+    // Set with all registered shutdown actions
+    private static Set<ShutdownAction> shutdownActions =
+            Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
 
     /**
-     * Register a container, used for later cleanup
-     *  @param image image from which the container has been created
-     * @param containerId the container id to register
-     * @param dataImage
-     * @param dataContainerId
+     * Register a shutdown action executed during "stop"
+     * @param shutdownAction action to register
      */
-    protected static void registerStartData(String image, String containerId, String dataImage, String dataContainerId) {
-        synchronized (containerMap) {
-            Set<ImageStartData> ids = containerMap.get(image);
-            if (ids == null) {
-                ids = new HashSet<>();
-                containerMap.put(image,ids);
-            }
-            ids.add(new ImageStartData(image, containerId, dataImage, dataContainerId));
-        }
+    protected static void registerShutdownAction(ShutdownAction shutdownAction) {
+        shutdownActions.add(shutdownAction);
     }
 
     /**
-     * Unregister all containers for a single image and return their ids.
-     *
-     * @param image the image for which the containers should be unregistered
-     *
-     * @return id of containers created from this image
+     * Return shutdown actions in reverse registration order
+     * @return registered shutdown actions
      */
-    protected Set<String> getContainersForImage(String image) throws MojoFailureException {
-        synchronized (containerMap) {
-            Set<ImageStartData> dataSet = extractDataForImage(image);
-            Set<String> iIds = extractContainerIds(dataSet);
-            if (iIds == null) {
-                throw new MojoFailureException("No container id given");
-            }
-            return iIds;
-        }
+    protected static List<ShutdownAction> getShutdownActions() {
+        List<ShutdownAction> ret = new ArrayList<ShutdownAction>(shutdownActions);
+        Collections.reverse(ret);
+        return ret;
     }
 
-    protected Set<String> getDataImagesForImage(String image) {
-        synchronized (containerMap) {
-            Set<ImageStartData> dataSet = extractDataForImage(image);
-            Set<String> imageIds = new HashSet<String>();
-            for (ImageStartData data : dataSet) {
-                if (data.dataImage != null) {
-                    imageIds.add(data.dataImage);
-                }
-            }
-            return imageIds;
-        }
+    /**
+     * Remove a list of shutdown actions
+     * @param actions actions to remove
+     */
+    protected static void removeShutdownActions(List<ShutdownAction> actions) {
+        shutdownActions.removeAll(actions);
     }
-
-    private Set<ImageStartData> extractDataForImage(String image) {
-        Set<ImageStartData> dataSet = new HashSet<ImageStartData>();
-        if (image != null) {
-            if (containerMap.containsKey(image)) {
-                dataSet.addAll(containerMap.get(image));
-            }
-        } else {
-            for (Map.Entry<String,Set<ImageStartData>> entry : containerMap.entrySet()) {
-                dataSet.addAll(entry.getValue());
-            }
-        }
-        return dataSet;
-    }
-
-    private Set<String> extractContainerIds(Set<ImageStartData> pDataSet) {
-        Set<String> containerIds = new HashSet<String>();
-        for (ImageStartData data : pDataSet) {
-            containerIds.add(data.container);
-        }
-        return containerIds;
-    }
-
     // =================================================================================
 
     // Color init
