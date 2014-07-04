@@ -91,7 +91,6 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
         } else {
             dataImage = null;
             dataContainer = null;
-            mergeData = false; // Force to false, doesnt have any effect anyways when not using data container
 
             container = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
         }
@@ -100,7 +99,7 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
         info("Created and started container " + container.substring(0, 12) + " from image " + (useDataContainer() && mergeData ? dataImage : image));
 
         // Remember id for later stopping the container
-        registerShutdownAction(new ShutdownAction(image,container,dataImage,mergeData));
+        registerShutdownAction(new ShutdownAction(image,container,dataImage));
 
         // Set maven properties for dynamically assigned ports.
         if (mappedPorts.containsDynamicPorts()) {

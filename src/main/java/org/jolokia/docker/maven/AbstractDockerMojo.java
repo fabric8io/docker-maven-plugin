@@ -161,4 +161,84 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         oldProgress = 0;
         total = 0;
     }
+
+    // ==========================================================================================
+    // Class for registering a shutdown action
+
+    protected static class ShutdownAction {
+
+        // The image used
+        private String image;
+
+        // Data container create from image
+        private String container;
+
+        // Name of the data image create on-the-fly
+        private String dataImage;
+
+        protected ShutdownAction(String image, String container, String dataImage) {
+            this.image = image;
+            this.container = container;
+            this.dataImage = dataImage;
+        }
+
+        /**
+         * Check whether this shutdown actions applies to the given image and/or container
+         *
+         * @param pImage image to check
+         * @return true if this action should be applied
+         */
+        public boolean applies(String pImage) {
+            return pImage == null || pImage.equals(image);
+        }
+
+        /**
+         * Clean up according to the given parameters
+         *
+         * @param access access object for reaching docker
+         * @param log logger to use
+         * @param keepContainer whether to keep the container (and its data container)
+         * @param keepData whether to keep the data
+         */
+        public void shutdown(DockerAccess access, LogHandler log,
+                             boolean keepContainer, boolean keepData) throws MojoExecutionException {
+            // Stop the container
+            access.stopContainer(container);
+            if (!keepContainer) {
+                // Remove the container
+                access.removeContainer(container);
+                if (!keepData) {
+                    removeDataImageAndItsContainers(dataImage,access,log);
+                }
+            }
+            log.info("Stopped " + container.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
+        }
+
+        private void removeDataImageAndItsContainers(String imageToRemove, DockerAccess access, LogHandler log) throws MojoExecutionException {
+            List<String> containers = access.getContainersForImage(imageToRemove);
+            for (String container : containers) {
+                access.removeContainer(container);
+                log.info("Removed data container " + container);
+            }
+            access.removeImage(dataImage);
+            log.info("Removed data image " + imageToRemove);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ShutdownAction that = (ShutdownAction) o;
+
+            if (!container.equals(that.container)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return container.hashCode();
+        }
+    }
 }
