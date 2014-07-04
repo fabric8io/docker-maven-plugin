@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/${mdoVersion}"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/${mdoVersion} http://maven.apache.org/xsd/assembly-${mdoVersion}.xsd">
+  <id>project</id>
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}</directory>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <excludes>
+        <exclude>**/*.log</exclude>
+        <exclude>**/${project.build.directory}/**</exclude>
+      </excludes>
+    </fileSet>
+  </fileSets>
+</assembly>
