@@ -72,6 +72,7 @@ Creates and starts a docker container.
 | **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
+| **assemblyDescriptorRef** | Predefined assemblies which can be directly used | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | busybox |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
@@ -122,12 +123,13 @@ the values are the dynamically assgined host ports. This property file might be 
 plugins which already resolved their maven variables earlier in the lifecycle than this plugin so that the port variables
 might not be available to them.
 
-## Data container
+## Getting your assembly into the container
 
-With using the `assemblyDescriptor` option it is possible to bring local files, artifacts and dependencies into the running Docker container. This works as follows:
+With using the `assemblyDescriptor` or `assemblyDescriptorRef` option it is possible to bring local files, artifacts and dependencies into the running Docker container. This works as follows:
 
 * `assemblyDescriptor` points to a file describing the data to assemble. It has the same format as for creating assemblies with the [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/) , with some restrictions (see below).
-* This plugin will create the assembly and create a Docker image on the fly which exports the assembly below a directory `/maven`. Typically this will be an extra image, but if the configuration parameter `mergeData` is set then image which was configured for the `start` goal is used as a base image so that the data and e.g. application server are contained in the same image. This is useful for distributing a complete image where artifacts and the server are baked together.
+* Alternatively `assemblyDescriptorRef` can be used with the name of a predefined assembly. See below for possible values.
+* This plugin will create the assembly and create a Docker image on the fly which exports the assembly below a directory `/maven`. Typically this will be an extra image, but if the configuration parameter `mergeData` is set then the image which was configured for the `start` goal is used as a base image so that the data and e.g. application server are contained in the same image. This is useful for distributing a complete image where artifacts and the server are baked together.
 * From this image a (data) container is created and the 'real' container is started with a `volumesFrom` option pointing to this data container (if `mergeData` is not used).
 * That way, the container started has access to all the data created from the directory `/maven/` within the container.
 * The container command can check for the existence of this directory and deploy everything within this directory.
@@ -196,6 +198,12 @@ The assembly descriptor has the same [format](http://maven.apache.org/plugins/ma
 
 * `<formats>` are ignored, the assembly will allways use a directory when preparing the data container (i.e. the format is fixed to `dir`)
 * The `<id>` is ignored since only a single assembly descriptor is used (no need to distinguish multiple descriptors)
+
+This `docker-maven-plugin` comes with some predefined assembly which can be used with `assemblyDescritproRef`:
+
+* **artifact-with-dependencies** will copy your project's artifact and all its dependencies
+* **artifact** will copy only the project's artifact but no dependencies.
+* **project** will copy over the whole Maven project but with out `target/` directory.
 
 ## Cleanup
 
