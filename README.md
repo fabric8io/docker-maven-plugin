@@ -73,7 +73,7 @@ Creates and starts a docker container.
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
-| **dataBaseImage** | By default, if a separate data container is used, the data image created on the fly is based on `busy box`. With this option the base image can be selected. This has only an effect, if `mergeData` is not used (otherwise **image** is used as based for the combined image) | `docker.baseImage` | |
+| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | busybox |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
