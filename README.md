@@ -72,6 +72,9 @@ Creates and starts a docker container.
 | **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
+| **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
+| **dataBaseImage** | By default, if a separate data container is used, the data image created on the fly is based on `busy box`. With this option the base image can be selected. This has only an effect, if `mergeData` is not used (otherwise **image** is used as based for the combined image) | `docker.baseImage` | |
+| **dataImage** | Name to use for the created data image | `docker.dataImage` | <group>/<artefact>:<version> |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
 | **waitHttp** | Wait until this URL is reachable with an HTTP HEAD request. Dynamic port variables can be given, too | `docker.waitHttp` | |
@@ -86,9 +89,8 @@ Stops and removes a docker container.
 | Parameter  | Descriptions                     | Property       | Default                 |
 | ---------- | -------------------------------- | -------------- | ----------------------- |
 | **url**    | URL to the docker daemon         | `docker.url`   | `http://localhost:4243` |
-| **image** | Which image to stop. All containers for this named image are stopped | `docker.image` | `false` |
-| **containerId** | ID of the container to stop | `docker.containerId` | `false` |
-| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `docker.keepContainer` | `false` |
+| **image** | Which image to stop. All containers for this named image are stopped | `docker.image` |  |
+| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `docker.keepContainer` | |
 | **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `docker.keepRunning` | `false` |
 | **keepData**  | Keep the data container and image after the build if set to `true` | `docker.keepData` |  `false`                       |
 | **color**  | Set to `true` for colored output | `docker.color` | `true` if TTY connected |
@@ -124,9 +126,9 @@ might not be available to them.
 
 With using the `assemblyDescriptor` option it is possible to bring local files, artifacts and dependencies into the running Docker container. This works as follows:
 
-* `assemblyDescriptor` points to a file describing the data to transport. It has the same format as for creating assemblies with the [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/) , with some restrictions (see below).
-* This plugin will create the assembly and create a Docker image (based on the `busybox` image) on the fly which exports the assembly below a directory `/maven`.
-* From this image a (data) container is created and the 'real' container is started with a `volumesFrom` option pointing to this data container.
+* `assemblyDescriptor` points to a file describing the data to assemble. It has the same format as for creating assemblies with the [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/) , with some restrictions (see below).
+* This plugin will create the assembly and create a Docker image on the fly which exports the assembly below a directory `/maven`. Typically this will be an extra image, but if the configuration parameter `mergeData` is set then image which was configured for the `start` goal is used as a base image so that the data and e.g. application server are contained in the same image. This is useful for distributing a complete image where artifacts and the server are baked together.
+* From this image a (data) container is created and the 'real' container is started with a `volumesFrom` option pointing to this data container (if `mergeData` is not used).
 * That way, the container started has access to all the data created from the directory `/maven/` within the container.
 * The container command can check for the existence of this directory and deploy everything within this directory.
 
@@ -184,6 +186,8 @@ fi
 
 Before starting tomcat, this script will link every .war file it finds in `/maven` to `/opt/tomcat/webapps` which effectively will deploy them. 
 
+Alternatively, the parameter `mergeData` could have been set to `true` in the plugin configuration. In this case no separate data image is created but an image which is based on the specified image (`jolokia/tomcat-7.0` in this example) and the assembly are directly available from `/maven`. This has the advantage that only a single image needs to be pushed containing  both, the created artifact and application server.
+
 It is really that easy to deploy your artifacts. And it's fast (less than 10s for starting, deploying, testing (1 test) and stopping the container on my 4years old MBP using boot2docker).
 
 ### Assembly Descriptor
@@ -192,6 +196,16 @@ The assembly descriptor has the same [format](http://maven.apache.org/plugins/ma
 
 * `<formats>` are ignored, the assembly will allways use a directory when preparing the data container (i.e. the format is fixed to `dir`)
 * The `<id>` is ignored since only a single assembly descriptor is used (no need to distinguish multiple descriptors)
+
+## Cleanup
+
+Various configuration parameters of this plugin are available for cleaning up after a build:
+
+* `keepRunning` specifies that the container should not be stopped after the build. Obviously, the container and any data image created will be left alone as well. This option is especially useful when given as command line option `-Ddocker.keepRunning` for doing some debugging or developing integration tests.
+
+* `keepContainer` tells the plugin to not remove the container created from the image after the build (the container is stopped, though). If a merged container was created via the option `mergeData` then this container will remain as well as the on-the-fly created image this container belongs to. This is useful for post-mortem analysis of the container by e.g. looking at the logs. This option can be switched on with `-Ddocker.keepContainer`. If a separate data container is used, this data container and its image will stay as well.
+
+* `keepData` finally can be used to keep only the data container, but the other container should be be removed. This option has only an effect if `keepContainer` is `false`. That way, the created artifacts can be kept even after the build.
 
 ## Examples
 
