@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.9.4-SNAPSHOT</version>
+  <version>0.9.5-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -92,8 +92,7 @@
                container (jolokia/tomcat-7.0) should check for files in this directory and use them
                for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
                does this. -->
-          <!--<assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>-->
-          <assemblyDescriptorRef>artifact</assemblyDescriptorRef>
+          <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
         </configuration>
         <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
              in pre-integration-test and stop it in post-integration-test. -->

@@ -53,7 +53,6 @@ public class DockerAccessUnirest implements DockerAccess {
         this.log = log;
         Unirest.setDefaultHeader("accept", "application/json");
     }
-
     /** {@inheritDoc} */
     public boolean hasImage(String image) throws MojoExecutionException {
         try {
@@ -139,26 +138,29 @@ public class DockerAccessUnirest implements DockerAccess {
     /** {@inheritDoc} */
     private Map<Integer, Integer> extractPorts(JSONObject info) {
         Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
+
         JSONObject networkSettings = info.getJSONObject("NetworkSettings");
         if (networkSettings != null) {
             JSONObject ports = networkSettings.getJSONObject("Ports");
             if (ports != null) {
                 for (Object portSpecO : ports.keySet()) {
                     String portSpec = portSpecO.toString();
-                    JSONArray hostSpecs = ports.getJSONArray(portSpec);
-                    if (hostSpecs != null && hostSpecs.length() > 0) {
-                        // We take only the first
-                        JSONObject hostSpec = hostSpecs.getJSONObject(0);
-                        Object hostPortO = hostSpec.get("HostPort");
-                        if (hostPortO != null) {
-                            try {
-                                Integer hostPort = (Integer.parseInt(hostPortO.toString()));
-                                int idx = portSpec.indexOf('/');
-                                String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
-                                Integer containerPort = Integer.parseInt(p);
-                                ret.put(containerPort, hostPort);
-                            } catch (NumberFormatException exp) {
-                                log.warn("Cannot parse " + hostPortO + " or " + portSpec + " as a port number. Ignoring in mapping");
+                    if (!ports.isNull(portSpec)) {
+                        JSONArray hostSpecs = ports.getJSONArray(portSpec);
+                        if (hostSpecs != null && hostSpecs.length() > 0) {
+                            // We take only the first
+                            JSONObject hostSpec = hostSpecs.getJSONObject(0);
+                            Object hostPortO = hostSpec.get("HostPort");
+                            if (hostPortO != null) {
+                                try {
+                                    Integer hostPort = (Integer.parseInt(hostPortO.toString()));
+                                    int idx = portSpec.indexOf('/');
+                                    String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
+                                    Integer containerPort = Integer.parseInt(p);
+                                    ret.put(containerPort, hostPort);
+                                } catch (NumberFormatException exp) {
+                                    log.warn("Cannot parse " + hostPortO + " or " + portSpec + " as a port number. Ignoring in mapping");
+                                }
                             }
                         }
                     }
@@ -181,6 +183,7 @@ public class DockerAccessUnirest implements DockerAccess {
             for (int i = 0; i < configs.length(); i ++) {
                 JSONObject config = configs.getJSONObject(i);
                 String containerImage = config.getString("Image");
+
                 if (image.equals(containerImage)) {
                     ret.add(config.getString("Id"));
                 }
@@ -218,11 +221,12 @@ public class DockerAccessUnirest implements DockerAccess {
         pullOrPushImage(image,pushUrl,"pushing");
     }
 
-    private void pullOrPushImage(String image, String uriString,String what) throws MojoExecutionException {
+    private void pullOrPushImage(String image, String uriString, String what) throws MojoExecutionException {
         try {
             HttpClient client = ClientFactory.getHttpClient();
             URI uri = new URI(uriString);
             HttpPost post = new HttpPost(uri);
+
             processPullOrPushResponse(image, client.execute(URIUtils.extractHost(uri), post), what);
         } catch (IOException | URISyntaxException e) {
             throw new MojoExecutionException("Error while " + what + " " + image + ": ",e);

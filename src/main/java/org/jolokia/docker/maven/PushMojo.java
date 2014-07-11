@@ -40,7 +40,7 @@ public class PushMojo extends AbstractDataSupportedDockerMojo {
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
         if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
-            throw new MojoExecutionException("Nor assemblyDescriptor neither assemblyDescriptorRef have been given");
+            throw new MojoExecutionException("No assemblyDescriptor or assemblyDescriptorRef have been given");
         }
         String image = createDataImage(null,docker);
         docker.pushImage(image,registry);

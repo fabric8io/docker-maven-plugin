@@ -69,7 +69,7 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
         File dockerArchive = dockerArchiveCreator.create(params, base, assemblyDescriptor, assemblyDescriptorRef);
-        info("Created docker archive " + dockerArchive);
+        info("Created data image " + dataImage);
         dockerAccess.buildImage(dataImage, dockerArchive);
         return dataImage;
     }

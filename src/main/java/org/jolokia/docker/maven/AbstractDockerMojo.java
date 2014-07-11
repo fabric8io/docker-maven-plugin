@@ -207,7 +207,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
             if (!keepContainer) {
                 // Remove the container
                 access.removeContainer(container);
-                if (!keepData) {
+                if (dataImage != null && !keepData) {
                     removeDataImageAndItsContainers(dataImage,access,log);
                 }
             }
