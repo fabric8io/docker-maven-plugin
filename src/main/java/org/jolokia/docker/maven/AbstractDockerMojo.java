@@ -31,6 +31,10 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     @Parameter(property = "docker.useColor", defaultValue = "true")
     private boolean color;
 
+    // Whether to skip docker alltogether
+    @Parameter(property = "docker.skip", defaultValue = "false")
+    private boolean skip;
+
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
 
@@ -42,17 +46,18 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
      * @throws MojoFailureException
      */
     public void execute() throws MojoExecutionException, MojoFailureException {
-        colorInit();
-        DockerAccess access = new DockerAccessUnirest(url.replace("^tcp://", "http://"), this);
-        access.start();
-        try {
-            executeInternal(access);
-        } catch (MojoExecutionException exp) {
-            throw new MojoExecutionException(errorHlColor + exp.getMessage() + resetColor,exp);
-        } finally {
-            access.shutdown();
+        if (!skip) {
+            colorInit();
+            DockerAccess access = new DockerAccessUnirest(url.replace("^tcp://", "http://"), this);
+            access.start();
+            try {
+                executeInternal(access);
+            } catch (MojoExecutionException exp) {
+                throw new MojoExecutionException(errorHlColor + exp.getMessage() + resetColor, exp);
+            } finally {
+                access.shutdown();
+            }
         }
-
     }
 
     /**

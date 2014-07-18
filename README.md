@@ -82,6 +82,7 @@ Creates and starts a docker container.
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
 | **waitHttp** | Wait until this URL is reachable with an HTTP HEAD request. Dynamic port variables can be given, too | `docker.waitHttp` | |
 | **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
+| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
 ### `docker:stop`
 
@@ -97,7 +98,7 @@ Stops and removes a docker container.
 | **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `docker.keepRunning` | `false` |
 | **keepData**  | Keep the data container and image after the build if set to `true` | `docker.keepData` |  `false`                       |
 | **color**  | Set to `true` for colored output | `docker.color` | `true` if TTY connected |
-
+| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
 ## Dynamic Port mapping
 
