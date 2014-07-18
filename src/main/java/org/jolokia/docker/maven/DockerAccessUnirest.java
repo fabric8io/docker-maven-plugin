@@ -76,12 +76,12 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public String createContainer(String image, Set<Integer> ports, String command) throws MojoExecutionException {
+    public String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/create")
                                      .header("Accept", "*/*")
                                      .header("Content-Type", "application/json")
-                                     .body(getContainerConfig(image, ports, command));
+                                     .body(getContainerConfig(image, ports, command, env));
             HttpResponse<String> resp = request(req);
             checkReturnCode("Creating container for image '" + image + "'", resp, 201);
             JSONObject json = new JSONObject(resp.getBody());
@@ -292,7 +292,7 @@ public class DockerAccessUnirest implements DockerAccess {
         return resp;
     }
 
-    private String getContainerConfig(String image, Set<Integer> ports, String command) {
+    private String getContainerConfig(String image, Set<Integer> ports, String command, Map<String, String> env) {
         JSONObject ret = new JSONObject();
         ret.put("Image",image);
         if (ports != null && ports.size() > 0) {
@@ -308,6 +308,13 @@ public class DockerAccessUnirest implements DockerAccess {
                 a.put(s);
             }
             ret.put("Cmd",a);
+        }
+        if (env != null && env.size() > 0) {
+            JSONArray a = new JSONArray();
+            for (Map.Entry<String,String> entry : env.entrySet()) {
+                a.put(entry.getKey() + "=" + entry.getValue());
+            }
+            ret.put("Env",a);
         }
         log.debug("Container create config: " + ret.toString());
         return ret.toString();

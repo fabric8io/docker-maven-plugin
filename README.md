@@ -18,7 +18,8 @@ This plugin is still in an early stage of development, but the
 * Assigning dynamically selected host ports to Maven variables
 * Pulling of images (with progress indicator) if not yet downloaded
 * Optional waiting on a successful HTTP ping to the container
-* On-the-fly creation of Docker data container with Maven artifacts and dependencies linked into started containers. 
+* On-the-fly creation of Docker data container with Maven artifacts and dependencies linked into started containers.
+* Setting of environment variables when creating the container
 * Color output ;-)
 
 This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
@@ -69,12 +70,13 @@ Creates and starts a docker container.
 | **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
 | **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
 | **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
+| **env**      | Additional environment variables used when creating a container |        |                         | 
 | **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
 | **assemblyDescriptorRef** | Predefined assemblies which can be directly used | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
-| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | busybox |
+| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
@@ -122,6 +124,20 @@ mapping is written after all dynamic ports has been resolved. The keys of this p
 the values are the dynamically assgined host ports. This property file might be useful together with other maven
 plugins which already resolved their maven variables earlier in the lifecycle than this plugin so that the port variables
 might not be available to them.
+
+## Setting environment variables
+
+When creating a container one or more environment variables can be set via configuration with the `env` parameter
+ 
+```xml
+<env>
+  <JAVA_HOME>/opt/jdk8</JAVA_HOME>
+  <CATALINA_OPTS>-Djava.security.egd=file:/dev/./urandom</CATALINA_OPTS>
+</env>
+```
+
+If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by 
+switching the JDK or whatever).
 
 ## Getting your assembly into the container
 

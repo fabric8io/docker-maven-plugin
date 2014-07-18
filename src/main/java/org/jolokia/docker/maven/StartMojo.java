@@ -45,6 +45,10 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
     @Parameter
     private List<String> ports;
 
+    // Environment variables to set when starting the container. key: variable name, value: env value
+    @Parameter
+    private Map<String,String> env;
+
     // Whether to pull an image if not yet locally available (not implemented yet)
     @Parameter(property = "docker.autoPull", defaultValue = "true")
     private boolean autoPull;
@@ -80,19 +84,19 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
                 dataImage = createDataImage(image, docker);
                 dataContainer = null;
 
-                container = docker.createContainer(dataImage,mappedPorts.getContainerPorts(),command);
+                container = docker.createContainer(dataImage,mappedPorts.getContainerPorts(),command,env);
             } else {
                 dataImage = createDataImage(null, docker);
-                dataContainer = docker.createContainer(dataImage, null, null);
+                dataContainer = docker.createContainer(dataImage, null, null, env);
                 docker.startContainer(dataContainer, null, null);
 
-                container = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
+                container = docker.createContainer(image,mappedPorts.getContainerPorts(),command,env);
             }
         } else {
             dataImage = null;
             dataContainer = null;
 
-            container = docker.createContainer(image,mappedPorts.getContainerPorts(),command);
+            container = docker.createContainer(image,mappedPorts.getContainerPorts(),command,env);
         }
 
         docker.startContainer(container, mappedPorts.getPortsMap(), dataContainer);

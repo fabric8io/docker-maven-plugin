@@ -237,5 +237,37 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <!-- Distribution to labs.consol.de, for artefacts and site -->
+      <id>labs</id>
+      <distributionManagement>
+        <repository>
+          <id>consol-labs-release</id>
+          <url>scpexe://labs.consol.de/home/maven-repository/www/htdocs/repository</url>
+        </repository>
+        <snapshotRepository>
+          <id>consol-labs-snapshots</id>
+          <url>scpexe://labs.consol.de/home/maven-repository/www/htdocs/snapshots-repository</url>
+        </snapshotRepository>
+        <site>
+          <id>jolokia-site</id>
+          <url>scpexe://labs.consol.de/home/jolokia/www/htdocs</url>
+        </site>
+      </distributionManagement>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <configuration>
+                <remoteOBR>true</remoteOBR>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
   </profiles>
 </project>

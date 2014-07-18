@@ -16,7 +16,7 @@ import org.codehaus.plexus.util.FileUtils;
 public class DockerFileBuilder {
 
     // Defaults, shouldnt be overwritten
-    private String baseImage = "busybox";
+    private String baseImage = "busybox:latest";
 
     // Maintainer of this image
     private String maintainer = "docker-maven-plugin@jolokia.org";

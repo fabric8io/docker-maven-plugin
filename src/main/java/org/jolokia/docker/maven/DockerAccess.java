@@ -29,16 +29,17 @@ public interface DockerAccess {
      * @param image the image from which the container should be created
      * @param ports ports to expose, can be null
      * @param command an optional command which gets executed when starting the container. might be null.
+     * @param env map with environment variables to use
      * @return the container id
      * @throws MojoExecutionException if the container could not be created.
      */
-    String createContainer(String image, Set<Integer> ports, String command) throws MojoExecutionException;
+    String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException;
 
     /**
      * Start a container.
      *
      * @param containerId id of container to start
-     * @param ports ports to map. The keys of this map must be ports which were exposed via {@link #createContainer(String, Set, String)}
+     * @param ports ports to map. The keys of this map must be ports which were exposed via {@link #createContainer(String, Set, String, Map)}
      *              while the values are the host ports to use. If a value is <code>null</code> a port is dynamically selected
      *              by docker. The value of a dynamically selected port can be obtained via {@link #queryContainerPortMapping(String)}
      *              This map must not be null (but can be empty)
