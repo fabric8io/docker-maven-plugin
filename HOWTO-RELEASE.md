@@ -4,6 +4,7 @@
 ## Preparation
 
 * Increase version number in README.md example
+* Increase version numbers in the poms below samples/ (they are not automatically updated)
 
 ## Building and deploying
 
