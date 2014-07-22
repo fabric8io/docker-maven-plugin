@@ -11,8 +11,7 @@ With this plugin it is possible to run completely isolated integration tests so 
 Build artifacts and dependencies can be accessed from within 
 running containers, so that a file based deployment is easily possible and there is no need to use dedicated deployment support from plugins like [Cargo](http://cargo.codehaus.org/).
  
-This plugin is still in an early stage of development, but the
-**highlights** are:
+This plugin's **highlights** are:
 
 * Configurable port mapping
 * Assigning dynamically selected host ports to Maven variables
@@ -62,7 +61,8 @@ Please refer also to the examples provided in the `samples/` directory.
 
 ### `docker:start`
 
-Creates and starts a docker container.
+Creates and starts a specified docker container with the additional possibility to link artifacts and dependencies to this 
+  container, or, if `mergeData` is set to `true`, create a new image based on the given image and the assembly artifacts specified. 
 
 #### Configuration
 
@@ -74,8 +74,8 @@ Creates and starts a docker container.
 | **env**      | Additional environment variables used when creating a container |        |                         | 
 | **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
-| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
-| **assemblyDescriptorRef** | Predefined assemblies which can be directly used | | |
+| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example.              |                |                         |
+| **assemblyDescriptorRef** | Predefined assemblies which can be directly used. For possible values, see below. | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
@@ -117,7 +117,7 @@ the registry `docker.test.org` at port `5000`. Security information (i.e. user a
 | **image**    | Name of the docker base image (e.g. `consol/tomcat:7.0.52`) | `docker.image` | none         |
 | **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
-| **assemblyDescriptorRef** | Predefined assemblies which can be directly used | | |
+| **assemblyDescriptorRef** | Predefined assemblies which can be directly used. Possible values are given below | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
