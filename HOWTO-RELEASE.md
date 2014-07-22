@@ -10,7 +10,7 @@
 The release process uses the maven release plugin:
 
      mvn -DdevelopmentVersion=1.0.1-SNAPSHOT -DreleaseVersion=1.0.0 -Dtag=v1.0.0 -Pdist release:prepare
-     mvn release:perform
+     mvn -Pdist release:perform
  
 This will deploy to Maven central. The profile "dist" enables signing
 of artefacts and uses a running GPG agent.
