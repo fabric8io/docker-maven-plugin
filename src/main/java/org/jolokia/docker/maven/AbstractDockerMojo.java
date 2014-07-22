@@ -137,7 +137,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Extract authentication information
 
     protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
-        Properties props = project.getProperties();
+        Properties props = System.getProperties();
         if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
             return getAuthConfigFromProperties(props);
         }
@@ -155,7 +155,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
             throw new MojoFailureException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
         }
         return new AuthConfig(props.getProperty(DOCKER_USERNAME),
-                              props.getProperty(DOCKER_PASSWORD),
+                              decrypt(props.getProperty(DOCKER_PASSWORD)),
                               props.getProperty(DOCKER_EMAIL),
                               props.getProperty(DOCKER_AUTH));
     }
@@ -166,7 +166,9 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
                 throw new MojoFailureException("No '" + key + "' given while using <authConfig> in configuration");
             }
         }
-        return new AuthConfig(authConfig);
+        Map<String,String> cloneConfig = new HashMap<String,String>(authConfig);
+        cloneConfig.put("password",decrypt(cloneConfig.get("password")));
+        return new AuthConfig(cloneConfig);
     }
 
     private AuthConfig getAuthConfigFromSettings(String image) throws MojoFailureException {
@@ -175,7 +177,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         if (server != null) {
             return new AuthConfig(
                     server.getUsername(),
-                    decrypt(registry, server.getPassword()),
+                    decrypt(server.getPassword()),
                     extractFromServerConfiguration(server.getConfiguration(), "email"),
                     extractFromServerConfiguration(server.getConfiguration(), "auth")
             );
@@ -183,7 +185,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         return null;
     }
 
-    private String decrypt(String registry, String password) throws MojoFailureException {
+    private String decrypt(String password) throws MojoFailureException {
         try {
             // Done by reflection since I have classloader issues otherwise
             Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
@@ -192,7 +194,7 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         } catch (ComponentLookupException e) {
             throw new MojoFailureException("Error looking security dispatcher");
         } catch (ReflectiveOperationException e) {
-            throw new MojoFailureException("Cannot decrypt password for registry " + registry + ": " + e);
+            throw new MojoFailureException("Cannot decrypt password: " + e);
         }
     }
 

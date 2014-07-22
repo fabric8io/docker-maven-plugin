@@ -30,7 +30,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class PushMojo extends AbstractDataSupportedDockerMojo {
 
     // Name of the image to use, including potential tag
-    @Parameter(property = "docker.image", required = true)
+    @Parameter(property = "docker.image", required = false)
     private String image;
 
     // Whether to merge the data in the original image or use a separate data image
@@ -46,7 +46,16 @@ public class PushMojo extends AbstractDataSupportedDockerMojo {
         if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
             throw new MojoExecutionException("No assemblyDescriptor or assemblyDescriptorRef has been given");
         }
-        String dataImage = createDataImage(mergeData ? image : null,docker);
+        String dataImage;
+        if (mergeData) {
+            if (image == null) {
+                throw new MojoExecutionException("mergeData requires an image to be set");
+            }
+            checkImage(docker,image);
+            dataImage = createDataImage(image,docker);
+        } else {
+            dataImage = createDataImage(null,docker);
+        }
         docker.pushImage(dataImage,prepareAuthConfig(dataImage));
         if (!keepData) {
             docker.removeImage(dataImage);

@@ -48,6 +48,10 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
     @Parameter(property = "docker.registry")
     protected String registry;
 
+    // Whether to pull an image if not yet locally available (not implemented yet)
+    @Parameter(property = "docker.autoPull", defaultValue = "true")
+    private boolean autoPull;
+
     @Component
     private DockerArchiveCreator dockerArchiveCreator;
 
@@ -63,6 +67,7 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
 
     @Component
     private MavenFileFilter mavenFileFilter;
+
 
     /**
      * Create a docker image with the given name from the assembly descriptors configured.
@@ -87,5 +92,17 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
                 dataImage :
                 project.getGroupId() + "/" + project.getArtifactId() + ":" + project.getVersion();
         return registry != null ? registry + "/" + name : name;
+    }
+
+    protected void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {
+        if (!docker.hasImage(image)) {
+            if (autoPull) {
+                docker.pullImage(image,prepareAuthConfig(image));
+            } else {
+                throw new MojoExecutionException(this, "No image '" + image + "' found",
+                                                 "Please enable 'autoPull' or pull image '" + image +
+                                                 "' yourself (docker pull " + image + ")");
+            }
+        }
     }
 }

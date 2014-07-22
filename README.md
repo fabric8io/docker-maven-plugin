@@ -72,13 +72,15 @@ Creates and starts a docker container.
 | **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
 | **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
 | **env**      | Additional environment variables used when creating a container |        |                         | 
-| **autoPull** | Set to `true` if an unknown image should be automatically pulled | `docker.autoPull` | `true`      |
+| **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
 | **assemblyDescriptorRef** | Predefined assemblies which can be directly used | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
+| **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
+| **authConfig** | Authentication configuration when autopulling images. See below for details. | | |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
 | **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
 | **waitHttp** | Wait until this URL is reachable with an HTTP HEAD request. Dynamic port variables can be given, too | `docker.waitHttp` | |
@@ -99,6 +101,29 @@ Stops and removes a docker container.
 | **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `docker.keepRunning` | `false` |
 | **keepData**  | Keep the data container and image after the build if set to `true` | `docker.keepData` |  `false`                       |
 | **color**  | Set to `true` for colored output | `docker.color` | `true` if TTY connected |
+| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
+
+### `docker:push`
+
+Push a data image to the registry. The data image is the same created during the `start` goal. See below for more information about how the data image is created. The registry to push is by 
+default `registry.hub.docker.io` but can be specified as part of the `dataImage` name the Docker way. E.g. `docker.test.org:5000/data:1.5` will push the repository `data` with tag `1.5` to 
+the registry `docker.test.org` at port `5000`. Security information (i.e. user and password) can be specified in multiple ways as described in an extra section. 
+
+#### Configuration
+
+| Parameter    | Descriptions                                            | Property       | Default                 |
+| ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
+| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
+| **image**    | Name of the docker base image (e.g. `consol/tomcat:7.0.52`) | `docker.image` | none         |
+| **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
+=| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
+| **assemblyDescriptorRef** | Predefined assemblies which can be directly used | | |
+| **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
+| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
+| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
+| **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
+| **authConfig** | Authentication configuration when pushing images. See below for details. | | |
+| **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 | **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
 ## Dynamic Port mapping
@@ -233,6 +258,62 @@ Various configuration parameters of this plugin are available for cleaning up af
 
 * `keepData` finally can be used to keep only the data container, but the other container should be be removed. This option has only an effect if `keepContainer` is `false`. That way, the created artifacts can be kept even after the build.
 
+## Authentication
+
+When pulling (via the `autoPull` mode of `docker:start` and `docker:push`) or pushing image, it might be necessary to authenticate against a Docker registry.  
+
+There are three different ways for providing credentials:
+
+* Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
+* Providing system properties `docker.username` and `docker.password` from the outside
+* Using a `<server>` configuration in the the `~/.m2/settings.xml` settings
+
+Using the username and password directly in the `pom.xml` is not recommended since this is widely visible. This is most easiest and transparent way, though. Using an `<authConfig>` is straight forward:
+
+````xml
+<plugin>
+  <configuration>
+     <image>consol/tomcat-7.0</image>
+     ...
+     <authConfig>
+         <username>jolokia</username>
+         <password>s!cr!t</password>
+     </authConfig>
+  </configuration>
+</plugin>
+````
+
+The system property provided credentials are a good compromise when using CI servers like Jenkins. You simply provide the credentials from the outside:
+
+	mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
+
+The most secure and also the most *mavenish* way is to add a server to the Maven settings file `~/.m2/settings.xml`: 
+
+````xml
+<servers>
+  <server>
+    <id>registry.hub.docker.io</id>
+    <username>jolokia</username>
+    <password>s!cr!t</password>
+  </server>
+  ....
+</servers>
+````
+
+The server id must specify the registry to push to/pull from, which by default is central index `registry.hub.docker.io`. Here you should add you docker.io account for your repositories.
+
+### Password encryption
+
+Regardless which mode you choose you can encrypt password as described in the [Maven documentation](http://maven.apache.org/guides/mini/guide-encryption.html). Assuming that you have setup a *master password* in `~/.m2/security-settings.xml` you can create easily create encrypted passwords:
+
+````bash
+	$ mvn --encrypt-password
+	Password:
+	{QJ6wvuEfacMHklqsmrtrn1/ClOLqLm8hB7yUL23KOKo=}
+````
+
+This password then can be used in `authConfig`, `docker.password` and/or the `<server>` setting configuration. However, putting an encrypted password into `authConfig` in the `pom.xml` doesn't make much sense, since this password is encrypted with an individual master password.
+
 ## Examples
 
 This plugin comes with some commented examples in the `samples/` directory:
@@ -264,6 +345,12 @@ cd samples/data-jolokia-demo
 # Run the integration test
 mvn verify
 
+# Use a 'merged' data image
+mvn -Pmerge-data verify
+
+# Push the data image
+mvn docker:push
+ 
 # Please note, that first it will take some time to fetch the image
 # from docker.io. The next time running it will be much faster. 
 

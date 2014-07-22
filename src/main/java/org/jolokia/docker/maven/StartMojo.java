@@ -49,10 +49,6 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
     @Parameter
     private Map<String,String> env;
 
-    // Whether to pull an image if not yet locally available (not implemented yet)
-    @Parameter(property = "docker.autoPull", defaultValue = "true")
-    private boolean autoPull;
-
     // Command to execute in container
     @Parameter(property = "docker.command")
     private String command;
@@ -72,7 +68,7 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
-        checkImage(docker);
+        checkImage(docker,image);
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
 
@@ -133,18 +129,6 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
         }
     }
 
-
-    private void checkImage(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
-        if (!docker.hasImage(image)) {
-            if (autoPull) {
-                docker.pullImage(image,prepareAuthConfig(image));
-            } else {
-                throw new MojoExecutionException(this, "No image '" + image + "' found",
-                                                 "Please enable 'autoPull' or pull image '" + image +
-                                                 "' yourself (docker pull " + image + ")");
-            }
-        }
-    }
 
     // Store dynamically mapped ports
     private void propagatePortVariables(PortMapping mappedPorts) throws MojoExecutionException {
