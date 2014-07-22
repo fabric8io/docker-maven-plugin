@@ -373,8 +373,8 @@ stop the docker container even when the tests are failing.
 Spring feelings in 2014 seems to be quite fertile for the Java crowd's
 Docker awareness
 ;-). [Not only I](https://github.com/bibryam/docker-maven-plugin/issues/1)
-counted 5 [maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)
-on GitHub as of April 2014, tendency increasing. It seems, that all
+counted ~~5~~ 10 [maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)
+on GitHub as of ~~April~~ July 2014, tendency increasing. It seems, that all
 of them have a slightly different focus, but all of them can do the
 most important tasks: Starting and stopping containers. 
 
