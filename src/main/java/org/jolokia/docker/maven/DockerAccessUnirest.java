@@ -22,6 +22,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.FileEntity;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.jolokia.docker.maven.util.AuthConfig;
 import org.json.*;
 
 /**
@@ -209,23 +210,27 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void pullImage(String image) throws MojoExecutionException {
+    public void pullImage(String image,AuthConfig authConfig) throws MojoExecutionException {
         String pullUrl = url + "/images/create?fromImage=" + URLParamEncoder.encode(image);
-        pullOrPushImage(image,pullUrl,"pulling");
+        pullOrPushImage(image,pullUrl,"pulling",authConfig);
     }
 
     /** {@inheritDoc} */
-    public void pushImage(String image, String registry) throws MojoExecutionException {
+    public void pushImage(String image, String registry, AuthConfig authConfig) throws MojoExecutionException {
         String pushUrl = url + "/images/" + URLParamEncoder.encode(image) + "/push" +
-                         (registry != null ? "?registry" + registry : "");
-        pullOrPushImage(image,pushUrl,"pushing");
+                         (registry != null ? "?registry=" + registry : "");
+        pullOrPushImage(image,pushUrl,"pushing",authConfig);
     }
 
-    private void pullOrPushImage(String image, String uriString, String what) throws MojoExecutionException {
+    private void pullOrPushImage(String image, String uriString, String what, AuthConfig authConfig)
+            throws MojoExecutionException {
         try {
             HttpClient client = ClientFactory.getHttpClient();
             URI uri = new URI(uriString);
             HttpPost post = new HttpPost(uri);
+            if (authConfig != null) {
+                post.addHeader("X-Registry-Auth",authConfig.toHeaderValue());
+            }
 
             processPullOrPushResponse(image, client.execute(URIUtils.extractHost(uri), post), what);
         } catch (IOException | URISyntaxException e) {

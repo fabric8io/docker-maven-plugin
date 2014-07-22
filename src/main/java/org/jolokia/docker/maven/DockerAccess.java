@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.jolokia.docker.maven.util.AuthConfig;
 
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
@@ -87,9 +88,10 @@ public interface DockerAccess {
      * Pull an image from a remote registry and store it locally.
      *
      * @param image the image to pull.
+     * @param authConfig authentication configuration used when pulling an image
      * @throws MojoExecutionException if the image couldn't be pulled.
      */
-    void pullImage(String image) throws MojoExecutionException;
+    void pullImage(String image, AuthConfig authConfig) throws MojoExecutionException;
 
     /**
      * Push an image to a registry.
@@ -97,7 +99,7 @@ public interface DockerAccess {
      * @param registry registry to push to or <code>null</code> if the default registry
      *                 (<a href="http://registry.hub.docker.com">registry.hub.docker.com</a>) should be used.
      */
-    void pushImage(String image, String registry) throws MojoExecutionException;
+    void pushImage(String image, String registry, AuthConfig authConfig) throws MojoExecutionException;
 
     /**
      * Lifecycle method for this access class which must be called before any other method is called.

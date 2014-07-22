@@ -7,6 +7,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.fusesource.jansi.AnsiConsole;
+import org.jolokia.docker.maven.util.AuthConfig;
 
 /**
  * Base class for this plugin.
@@ -34,6 +35,10 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Whether to skip docker alltogether
     @Parameter(property = "docker.skip", defaultValue = "false")
     private boolean skip;
+
+    // Authentication information
+    @Parameter
+    Map authConfig;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
@@ -102,6 +107,35 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     protected static void removeShutdownActions(List<ShutdownAction> actions) {
         shutdownActions.removeAll(actions);
     }
+
+    // =================================================================================
+    // Extract authentication information
+
+    protected AuthConfig prepareAuthConfig() throws MojoFailureException {
+        Properties props = project.getProperties();
+        if (props.containsKey("docker.user") || props.containsKey("docker.password")) {
+            if (!props.containsKey("docker.user")) {
+                throw new MojoFailureException("No docker.user given when using authentication");
+            }
+            if (!props.containsKey("docker.password")) {
+                throw new MojoFailureException("No docker.password provided for user " + props.getProperty("docker.user"));
+            }
+            return new AuthConfig(props.getProperty("docker.user"),
+                                  props.getProperty("docker.password"),
+                                  props.getProperty("docker.email"));
+        } else if (authConfig != null) {
+            for (String key : new String[] { "user", "password"}) {
+                if (!authConfig.containsKey(key)) {
+                    throw new MojoFailureException("No '" + key + "' given while using <authConfig> in configuration");
+                }
+            }
+            return new AuthConfig(authConfig);
+        } else {
+            return null;
+        }
+    }
+
+
     // =================================================================================
 
     // Color init
@@ -166,6 +200,8 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         oldProgress = 0;
         total = 0;
     }
+
+
 
     // ==========================================================================================
     // Class for registering a shutdown action
