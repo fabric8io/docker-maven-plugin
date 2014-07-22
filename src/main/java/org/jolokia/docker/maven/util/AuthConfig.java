@@ -21,20 +21,25 @@ public class AuthConfig {
         this.params = params;
     }
 
-    public AuthConfig(String user, String password, String email) {
+    public AuthConfig(String user, String password, String email,String auth) {
         params = new HashMap<String,String>();
-        putNonNull(params, "user", user);
+        putNonNull(params, "username", user);
         putNonNull(params, "password", password);
         putNonNull(params, "email", email);
+        putNonNull(params, "auth",auth);
     }
 
     public String toHeaderValue() {
         JSONObject ret = new JSONObject();
-        add(ret,"user");
+        add(ret,"username");
         add(ret,"password");
         add(ret,"email");
+        add(ret,"auth");
         return Base64.encodeBase64String(ret.toString().getBytes());
     }
+
+
+    // ======================================================================================================
 
     private void add(JSONObject ret, String key) {
         if (params.containsKey(key)) {
@@ -47,6 +52,4 @@ public class AuthConfig {
             ret.put(key,value);
         }
     }
-
-
 }

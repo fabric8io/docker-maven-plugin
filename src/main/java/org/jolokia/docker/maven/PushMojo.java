@@ -29,23 +29,27 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "push")
 public class PushMojo extends AbstractDataSupportedDockerMojo {
 
+    // Name of the image to use, including potential tag
+    @Parameter(property = "docker.image", required = true)
+    private String image;
+
+    // Whether to merge the data in the original image or use a separate data image
+    @Parameter(property = "docker.mergeData", required = false, defaultValue = "false")
+    private boolean mergeData;
+
     // Whether the data image should be kept if an assembly is used
     @Parameter(property = "docker.keepData", defaultValue = "false")
     private boolean keepData;
-
-    // Registry to push image to
-    @Parameter(property = "docker.registry")
-    String registry;
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
         if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
             throw new MojoExecutionException("No assemblyDescriptor or assemblyDescriptorRef has been given");
         }
-        String image = createDataImage(null,docker);
-        docker.pushImage(image,registry,prepareAuthConfig());
+        String dataImage = createDataImage(mergeData ? image : null,docker);
+        docker.pushImage(dataImage,prepareAuthConfig(dataImage));
         if (!keepData) {
-            docker.removeImage(image);
+            docker.removeImage(dataImage);
         }
     }
 }

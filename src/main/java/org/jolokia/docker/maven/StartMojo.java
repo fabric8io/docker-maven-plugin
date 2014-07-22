@@ -137,7 +137,7 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
     private void checkImage(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
         if (!docker.hasImage(image)) {
             if (autoPull) {
-                docker.pullImage(image,prepareAuthConfig());
+                docker.pullImage(image,prepareAuthConfig(image));
             } else {
                 throw new MojoExecutionException(this, "No image '" + image + "' found",
                                                  "Please enable 'autoPull' or pull image '" + image +

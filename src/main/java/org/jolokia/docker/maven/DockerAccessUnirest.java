@@ -23,6 +23,7 @@ import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.FileEntity;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.util.AuthConfig;
+import org.jolokia.docker.maven.util.ImageName;
 import org.json.*;
 
 /**
@@ -35,7 +36,7 @@ import org.json.*;
 public class DockerAccessUnirest implements DockerAccess {
 
     // Used Docker API
-    private final static String DOCKER_API_VERSION = "v1.10";
+    private final static String DOCKER_API_VERSION = "v1.13";
 
     // Logging
     private final LogHandler log;
@@ -100,7 +101,7 @@ public class DockerAccessUnirest implements DockerAccess {
                                      .header("Accept", "*/*")
                                      .header("Content-Type", "application/json")
                                      .routeParam("id", containerId)
-                                     .body(getStartConfig(ports,volumesFrom));
+                                     .body(getStartConfig(ports, volumesFrom));
             HttpResponse<String> resp = request(req);
             checkReturnCode("Starting container with id " + containerId, resp, 204);
         } catch (UnirestException e) {
@@ -211,14 +212,17 @@ public class DockerAccessUnirest implements DockerAccess {
 
     /** {@inheritDoc} */
     public void pullImage(String image,AuthConfig authConfig) throws MojoExecutionException {
-        String pullUrl = url + "/images/create?fromImage=" + URLParamEncoder.encode(image);
+        ImageName name = new ImageName(image);
+        String pullUrl = url + "/images/create?fromImage=" + URLParamEncoder.encode(name.getRepository());
+        pullUrl = addTagAndRegistry(pullUrl, name);
         pullOrPushImage(image,pullUrl,"pulling",authConfig);
     }
 
     /** {@inheritDoc} */
-    public void pushImage(String image, String registry, AuthConfig authConfig) throws MojoExecutionException {
-        String pushUrl = url + "/images/" + URLParamEncoder.encode(image) + "/push" +
-                         (registry != null ? "?registry=" + registry : "");
+    public void pushImage(String image, AuthConfig authConfig) throws MojoExecutionException {
+        ImageName name = new ImageName(image);
+        String pushUrl = url + "/images/" + URLParamEncoder.encode(name.getRepository()) + "/push";
+        pushUrl = addTagAndRegistry(pushUrl,name);
         pullOrPushImage(image,pushUrl,"pushing",authConfig);
     }
 
@@ -235,6 +239,29 @@ public class DockerAccessUnirest implements DockerAccess {
             processPullOrPushResponse(image, client.execute(URIUtils.extractHost(uri), post), what);
         } catch (IOException | URISyntaxException e) {
             throw new MojoExecutionException("Error while " + what + " " + image + ": ",e);
+        }
+    }
+
+    private String addTagAndRegistry(String url, ImageName name) {
+        List<String> params = new ArrayList<>();
+        if (name.getTag() != null) {
+            params.add("tag=" + name.getTag());
+        }
+        if (name.getRegistry() != null) {
+            params.add("registry=" + name.getRegistry());
+        }
+        if (params.size() > 0) {
+            StringBuilder addOn = new StringBuilder();
+
+            for (int i = 0; i < params.size(); i ++) {
+                addOn.append(params.get(i));
+                if (i < params.size() - 1) {
+                    addOn.append("&");
+                }
+            }
+            return url + (url.contains("?") ? "&" : "?") + addOn.toString();
+        } else {
+            return url;
         }
     }
 
@@ -390,8 +417,6 @@ public class DockerAccessUnirest implements DockerAccess {
             return "[error serializing inputstream for debugging]";
         }
     }
-
-
     private void processPullOrPushResponse(final String image, org.apache.http.HttpResponse resp, final String action) throws IOException, MojoExecutionException {
         processChunkedResponse(resp, new ChunkedCallback() {
 
@@ -414,7 +439,13 @@ public class DockerAccessUnirest implements DockerAccess {
                         downloadInProgress = false;
                     }
                 }
-                log.info("... " + (json.has("id") ? json.getString("id") + ": " : "") + json.getString("status"));
+                if (json.has("error")) {
+                    String msg = json.getString("error").trim();
+                    String details = json.getJSONObject("errorDetail").getString("message").trim();
+                    log.error("!!! " +  msg + (msg.equals(details) ? "" : "(" + details + ")"));
+                } else {
+                    log.info("... " + (json.has("id") ? json.getString("id") + ": " : "") + json.getString("status"));
+                }
             }
 
             public String getErrorMessage(StatusLine status) {

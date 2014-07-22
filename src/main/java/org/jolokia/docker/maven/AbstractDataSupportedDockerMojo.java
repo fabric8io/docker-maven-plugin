@@ -32,13 +32,17 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
     @Parameter
     protected String assemblyDescriptorRef;
 
-    // Name of the data image. By default it is created as "group/artefact:version"
+    // Name of the data image. By default it is created as "group/artifact:version"
     @Parameter(property = "docker.dataImage", required = false)
-    private String dataImageName;
+    private String dataImage;
 
     // Base Image name of the data image to use.
     @Parameter(property = "docker.dataBaseImage", required = false, defaultValue = "busybox")
     private String dataBaseImage;
+
+    // Registry for data image
+    @Parameter(property = "docker.registry")
+    protected String registry;
 
     @Component
     private DockerArchiveCreator dockerArchiveCreator;
@@ -65,7 +69,7 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
      * @throws MojoExecutionException
      */
     protected String createDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
-        String dataImage = getDataImageName();
+        String dataImage = getDataImage();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
         File dockerArchive = dockerArchiveCreator.create(params, base, assemblyDescriptor, assemblyDescriptorRef);
@@ -74,9 +78,10 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
         return dataImage;
     }
 
-    protected String getDataImageName() {
-        return dataImageName != null ?
-                dataImageName :
+    protected String getDataImage() {
+        String name = dataImage != null ?
+                dataImage :
                 project.getGroupId() + "/" + project.getArtifactId() + ":" + project.getVersion();
+        return registry != null ? registry + "/" + name : name;
     }
 }

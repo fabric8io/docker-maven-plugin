@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.9.5-SNAPSHOT</version>
+  <version>0.9.6-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -77,6 +77,7 @@
         <configuration>
           <!-- Docker Image to use -->
           <image>${image}</image>
+          <dataImage>jolokia/${project.artifactId}:${project.version}</dataImage>
           <env>
             <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
           </env>
@@ -171,7 +172,6 @@
             <groupId>org.jolokia</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration>
-              <dataBaseImage>${image}</dataBaseImage>
               <mergeData>true</mergeData>
               <keepContainer>true</keepContainer>
             </configuration>
