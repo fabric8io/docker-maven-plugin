@@ -31,7 +31,7 @@ Please refer also to the examples provided in the `samples/` directory.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.9.5</version>
+  <version>0.9.6</version>
 
   <configuration>
      <!-- For possible options, see below -->

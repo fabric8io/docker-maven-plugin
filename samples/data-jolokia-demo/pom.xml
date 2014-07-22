@@ -99,10 +99,6 @@
                for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
                does this. -->
           <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
-          <authConfig>
-            <username>jolokia</username>
-            <password>{zZ/00XIxPHYHsYQWQy7nJ8B+8PcP3X2UCJGib6RJjnVcFVlYYYw9gHeSUxHf9lC5}</password>
-          </authConfig>
         </configuration>
         <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
              in pre-integration-test and stop it in post-integration-test. -->
