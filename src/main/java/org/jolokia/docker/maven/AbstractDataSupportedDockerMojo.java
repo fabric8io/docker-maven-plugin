@@ -40,6 +40,10 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
     @Parameter(property = "docker.dataBaseImage", required = false, defaultValue = "busybox")
     private String dataBaseImage;
 
+    // Directory as it is exported
+    @Parameter(property = "docker.dataExportDir", required = false, defaultValue = "/maven")
+    private String dataExportDir;
+
     // Registry for data image
     @Parameter(property = "docker.registry")
     protected String registry;
@@ -72,7 +76,7 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
         String dataImage = getDataImage();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
-        File dockerArchive = dockerArchiveCreator.create(params, base, assemblyDescriptor, assemblyDescriptorRef);
+        File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef);
         info("Created data image " + dataImage);
         dockerAccess.buildImage(dataImage, dockerArchive);
         return dataImage;

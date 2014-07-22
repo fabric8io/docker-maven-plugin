@@ -40,14 +40,14 @@ public class DockerArchiveCreator {
     @Requirement
     private ArchiverManager archiverManager;
 
-    public File create(MojoParameters params, String baseImage, String assemblyDescriptor, String assemblyDescriptorRef)
+    public File create(MojoParameters params, String baseImage, String exportDir, String assemblyDescriptor, String assemblyDescriptorRef)
             throws MojoFailureException, MojoExecutionException {
         File target = new File(params.getProject().getBasedir(),"target/");
         File dockerDir = new File(target,"docker");
         File destFile = new File(target,"docker-tmp/docker-build.tar");
 
         createAssembly(params,assemblyDescriptor,assemblyDescriptorRef);
-        writeDockerFile(baseImage,dockerDir);
+        writeDockerFile(baseImage,exportDir,dockerDir);
         return createDockerBuildArchive(destFile,dockerDir);
     }
 
@@ -66,9 +66,9 @@ public class DockerArchiveCreator {
 
     }
 
-    private File writeDockerFile(String baseImage, File destDir) throws MojoExecutionException {
+    private File writeDockerFile(String baseImage, String exportDir, File destDir) throws MojoExecutionException {
         try {
-            DockerFileBuilder builder = new DockerFileBuilder().exportDir("/maven").add("maven","");
+            DockerFileBuilder builder = new DockerFileBuilder().exportDir(exportDir).add("maven","");
             if (baseImage != null) {
                 builder.baseImage(baseImage);
                 builder.command(null); // Use command from base image

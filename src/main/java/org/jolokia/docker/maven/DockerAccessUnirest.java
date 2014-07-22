@@ -36,7 +36,7 @@ import org.json.*;
 public class DockerAccessUnirest implements DockerAccess {
 
     // Used Docker API
-    private final static String DOCKER_API_VERSION = "v1.13";
+    private final static String DOCKER_API_VERSION = "v1.10";
 
     // Logging
     private final LogHandler log;
@@ -460,9 +460,9 @@ public class DockerAccessUnirest implements DockerAccess {
             public void process(JSONObject json) {
                 if (json.has("error")) {
                     log.error("Error building image: " + json.get("error"));
-                    JSONObject details = json.getJSONObject("errorDetail");
-                    if (details != null) {
-                        log.error(details.get("code") + ": " + details.get("message"));
+                    if (json.has("errorDetail")) {
+                        JSONObject details = json.getJSONObject("errorDetail");
+                        log.error(details.getString("message"));
                     }
                 } else if (json.has("stream")) {
                     String message = json.getString("stream");

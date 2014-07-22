@@ -18,7 +18,8 @@ This plugin is still in an early stage of development, but the
 * Assigning dynamically selected host ports to Maven variables
 * Pulling of images (with progress indicator) if not yet downloaded
 * Optional waiting on a successful HTTP ping to the container
-* On-the-fly creation of Docker data container with Maven artifacts and dependencies linked into started containers.
+* On-the-fly creation of Docker data images and containers with Maven artifacts and dependencies linked or merged into the containers under test.
+* Pushing data images to a registry
 * Setting of environment variables when creating the container
 * Color output ;-)
 
