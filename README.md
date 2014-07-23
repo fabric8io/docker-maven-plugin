@@ -30,7 +30,7 @@ Please refer also to the examples provided in the `samples/` directory.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.9.6</version>
+  <version>0.9.7</version>
 
   <configuration>
      <!-- For possible options, see below -->
@@ -304,7 +304,7 @@ The server id must specify the registry to push to/pull from, which by default i
 
 ### Password encryption
 
-Regardless which mode you choose you can encrypt password as described in the [Maven documentation](http://maven.apache.org/guides/mini/guide-encryption.html). Assuming that you have setup a *master password* in `~/.m2/security-settings.xml` you can create easily create encrypted passwords:
+Regardless which mode you choose you can encrypt password as described in the [Maven documentation](http://maven.apache.org/guides/mini/guide-encryption.html). Assuming that you have setup a *master password* in `~/.m2/security-settings.xml` you can create easily encrypted passwords:
 
 ````bash
 	$ mvn --encrypt-password
@@ -412,10 +412,9 @@ and what I want to achieve:
   
 * I want as **less dependencies** as possible for this plugin. So I
   decided to *not* use the
-  Java Docker API [docker-java](https://github.com/kpelykh/docker-java) which is
+  Java Docker API [docker-java](https://github.com/docker-java/docker-java) which is
   external to docker and has a different lifecycle than Docker's
   [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/). 
-  (currently v1.8 (docker-java) vs. v1.10 (docker) API version)
   That is probably the biggest difference to the other
   docker-maven-plugins since AFAIK they all rely on this API. Since
   for this plugin I really need only a small subset of the whole API,
@@ -426,13 +425,6 @@ and what I want to achieve:
   might be used for plugins like this, too:
   [fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api). (Just
   in case somebody wants to write yet another plugin ;-)
-
-For this plugin I still have some ideas to implement (e.g. to bring
-generated artifacts into the container's FS, even when using VMs like
-for boot2docker), but otherwise this is not my main project (it is the
-result of an internal research project here at ConSol*). 
-So I would be happy to contribute to other projects, too, when the
-dust has been settled a bit.  
 
 In the meantime, enjoy this plugin, and please use the
 [issue tracker](https://github.com/rhuss/docker-maven-plugin/issues) 
