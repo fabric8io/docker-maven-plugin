@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  *     <li>docker.consol.de:5000/tomcat-8.0</li>
  *     <li>docker.consol.de:5000/jolokia/tomcat-8.0:8.0.9</li>
  * </ul>
- * 
+ *
  * @author roland
  * @since 22.07.14
  */
@@ -58,9 +58,6 @@ public class ImageName {
             }
         } else {
             throw new IllegalArgumentException("Invalid name " + fullName);
-        }
-        if (isRegistry(repository)) {
-            throw new IllegalArgumentException("Invalid repository name for " + fullName);
         }
     }
 

@@ -16,7 +16,8 @@ public class ImageNameTest {
                 "test.org/jolokia/jolokia_demo",        "test.org", "jolokia/jolokia_demo", null,
                 "test.org:8000/jolokia/jolokia_demo:8.0",        "test.org:8000", "jolokia/jolokia_demo", "8.0",
                 "jolokia_demo",                             null, "jolokia_demo", null,
-                "jolokia_demo:0.9.6",                       null, "jolokia_demo", "0.9.6"
+                "jolokia_demo:0.9.6",                       null, "jolokia_demo", "0.9.6",
+                "consol/tomcat-8.0:8.0.9",                  null,"consol/tomcat-8.0","8.0.9"
         };
 
         for (int i = 0; i < data.length; i += 4) {
@@ -26,11 +27,6 @@ public class ImageNameTest {
             assertEquals("" + i,data[i+3],name.getTag());
         }
 
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void illegalFormat() {
-        new ImageName("bal:xx:xxx");
     }
 
 }
