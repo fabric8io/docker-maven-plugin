@@ -18,7 +18,7 @@ import org.jolokia.docker.maven.util.MojoParameters;
  * @author roland
  * @since 12.06.14
  */
-public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo {
+public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
     /**
      * A descriptor to use for building the data assembly to be exported
      * in an Docker image
@@ -31,6 +31,10 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
      */
     @Parameter
     protected String assemblyDescriptorRef;
+
+    // Name of the image to use, including potential tag
+    @Parameter(property = "docker.image", required = false)
+    protected String image;
 
     // Name of the data image. By default it is created as "group/artifact:version"
     @Parameter(property = "docker.dataImage", required = false)
@@ -52,6 +56,10 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
     @Parameter(property = "docker.autoPull", defaultValue = "true")
     private boolean autoPull;
 
+    // Whether to merge the data in the original image or use a separate data image
+    @Parameter(property = "docker.mergeData", required = false, defaultValue = "false")
+    protected boolean mergeData;
+
     @Component
     private DockerArchiveCreator dockerArchiveCreator;
 
@@ -67,17 +75,17 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
 
     @Component
     private MavenFileFilter mavenFileFilter;
-
+    // Whether the data image should be kept if an assembly is used
 
     /**
-     * Create a docker image with the given name from the assembly descriptors configured.
+     * Build a docker image with the given name from the assembly descriptors configured.
      *
-     * @param baseImage a base image to use. If null, check the property "dataBaseImage"
+     * @param baseImage a base image to use. If null, check the property "dataBaseImage" and then finally use the default
      * @param dockerAccess access to docker
      * @throws MojoFailureException
      * @throws MojoExecutionException
      */
-    protected String createDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
+    protected String buildDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
         String dataImage = getDataImage();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
@@ -87,6 +95,30 @@ public abstract class AbstractDataSupportedDockerMojo extends AbstractDockerMojo
         return dataImage;
     }
 
+    /**
+     * Create a data image according to the configuration: If "mergeData" is true, the data is merged into the configured
+     * image (by using it as a base image), otherwise either the configured data base image is used or the default
+     * ("busybox:latest")
+     *
+     * @param dockerAccess docker access object
+     * @return name of the create image
+     * @throws MojoExecutionException
+     * @throws MojoFailureException
+     */
+    protected String createDataImage(DockerAccess dockerAccess) throws MojoExecutionException, MojoFailureException {
+        if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
+            throw new MojoExecutionException("No assemblyDescriptor or assemblyDescriptorRef has been given");
+        }
+        if (mergeData) {
+            if (image == null) {
+                throw new MojoExecutionException("mergeData requires an image to be set");
+            }
+            checkImage(dockerAccess,image);
+            return buildDataImage(image, dockerAccess);
+        } else {
+            return buildDataImage(null, dockerAccess);
+        }
+    }
     protected String getDataImage() {
         String name = dataImage != null ?
                 dataImage :

@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.9.8</version>
+  <version>0.9.9-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -79,7 +79,7 @@
           <!-- Docker Image to use -->
           <image>${image}</image>
           <dataImage>jolokia/${project.artifactId}:${project.version}</dataImage>
-          <mergeData>false</mergeData>
+          <mergeData>true</mergeData>
           <env>
             <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
           </env>

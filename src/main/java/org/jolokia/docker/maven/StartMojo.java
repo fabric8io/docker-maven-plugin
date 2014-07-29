@@ -30,15 +30,7 @@ import org.jolokia.docker.maven.util.PortMapping;
  * @author roland
  */
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
-public class StartMojo extends AbstractDataSupportedDockerMojo {
-
-    // Name of the image to use, including potential tag
-    @Parameter(property = "docker.image", required = true)
-    private String image;
-
-    // Whether to merge the data in the original image or use a separate data image
-    @Parameter(property = "docker.mergeData", required = false, defaultValue = "false")
-    private boolean mergeData;
+public class StartMojo extends AbstractDataImageSupportMojo {
 
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
@@ -68,6 +60,9 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
+        if (image == null) {
+            throw new MojoFailureException("Image must not be null when using docker:start");
+        }
         checkImage(docker,image);
 
         PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
@@ -75,14 +70,12 @@ public class StartMojo extends AbstractDataSupportedDockerMojo {
         String container,dataImage,dataContainer;
 
         if (useDataContainer()) {
+            dataImage = createDataImage(docker);
             if (mergeData) {
                 // Image created on the fly and used for action
-                dataImage = createDataImage(image, docker);
                 dataContainer = null;
-
                 container = docker.createContainer(dataImage,mappedPorts.getContainerPorts(),command,env);
             } else {
-                dataImage = createDataImage(null, docker);
                 dataContainer = docker.createContainer(dataImage, null, null, env);
                 docker.startContainer(dataContainer, null, null);
 

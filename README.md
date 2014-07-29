@@ -122,7 +122,29 @@ the registry `docker.test.org` at port `5000`. Security information (i.e. user a
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
+| **keepData**  | Keep the data image after the build if set to `true` | `docker.keepData` |  `true`                       |
 | **authConfig** | Authentication configuration when pushing images. See below for details. | | |
+| **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
+| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
+
+### `docker:build`
+
+Build a data image without pushing. It works essentially the same as `docker:push` but does not push to a registry
+and does not delete the image afterwards. 
+
+#### Configuration
+
+| Parameter    | Descriptions                                            | Property       | Default                 |
+| ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
+| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
+| **image**    | Name of the docker base image (e.g. `consol/tomcat:7.0.52`) | `docker.image` | none         |
+| **autoPull** | Set to `true` if an yet unloaded base image should be automatically pulled | `docker.autoPull` | `true`      |
+| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
+| **assemblyDescriptorRef** | Predefined assemblies which can be directly used. Possible values are given below | | |
+| **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
+| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
+| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
+| **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
 | **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 | **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
