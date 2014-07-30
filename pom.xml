@@ -6,7 +6,7 @@
   <version>0.9.9-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
-  <name>maven-docker-plugin Maven Plugin</name>
+  <name>maven-docker-plugin</name>
   <description>Docker Maven Plugin</description>
 
   <url>http://github.com/rhuss/docker-maven-plugin</url>
