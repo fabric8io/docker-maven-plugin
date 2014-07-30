@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven;
+package org.jolokia.docker.maven.util;
 
 /**
  * Simple log handler for printing used during the maven build
@@ -6,7 +6,7 @@ package org.jolokia.docker.maven;
  * @author roland
  * @since 31.03.14
  */
-interface LogHandler {
+public interface LogHandler {
 
     /**
      * Debug message if debugging is enabled.

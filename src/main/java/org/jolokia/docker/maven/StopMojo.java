@@ -5,6 +5,7 @@ import java.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
+import org.jolokia.docker.maven.access.DockerAccess;
 
 /**
  * @author roland
@@ -12,10 +13,6 @@ import org.apache.maven.plugins.annotations.*;
  */
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractDockerMojo {
-
-    // Name of the image for which to stop its containers. If none given, all are removed
-    @Parameter(property = "docker.image", required = false)
-    private String image;
 
     // Whether to keep the containers afters stopping
     @Parameter(property = "docker.keepContainer",defaultValue = "false")

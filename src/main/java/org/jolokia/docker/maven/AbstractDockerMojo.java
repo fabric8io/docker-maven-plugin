@@ -1,25 +1,21 @@
 package org.jolokia.docker.maven;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.fusesource.jansi.AnsiConsole;
-import org.jolokia.docker.maven.util.AuthConfig;
-import org.jolokia.docker.maven.util.ImageName;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessUnirest;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * Base class for this plugin.
@@ -32,12 +28,6 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
 
-    // Authentication related
-    private static final String DOCKER_USERNAME = "docker.username";
-    private static final String DOCKER_PASSWORD = "docker.password";
-    private static final String DOCKER_EMAIL = "docker.email";
-    private static final String DOCKER_AUTH = "docker.authToken";
-
     // Current maven project
     @Component
     protected MavenProject project;
@@ -49,6 +39,10 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // URL to docker daemon
     @Parameter(property = "docker.url",defaultValue = "http://localhost:2375")
     private String url;
+
+    // Name of the image for which to stop its containers. If none given, all are removed
+    @Parameter(property = "docker.image", required = false)
+    protected String image;
 
     // Whether to use color
     @Parameter(property = "docker.useColor", defaultValue = "true")
@@ -67,6 +61,9 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // Container for looking up the SecDispatcher
     private PlexusContainer container;
+
+    // Handler dealing with authentication credentials
+    private AuthConfigFactory authConfigFactory;
 
     /**
      * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
@@ -137,86 +134,12 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Extract authentication information
 
     protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
-        Properties props = System.getProperties();
-        if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
-            return getAuthConfigFromProperties(props);
-        }
-        if (authConfig != null) {
-            return getAuthConfigFromPluginConfiguration();
-        }
-        return getAuthConfigFromSettings(image);
-    }
-
-    private AuthConfig getAuthConfigFromProperties(Properties props) throws MojoFailureException {
-        if (!props.containsKey(DOCKER_USERNAME)) {
-            throw new MojoFailureException("No " + DOCKER_USERNAME + " given when using authentication");
-        }
-        if (!props.containsKey(DOCKER_PASSWORD)) {
-            throw new MojoFailureException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
-        }
-        return new AuthConfig(props.getProperty(DOCKER_USERNAME),
-                              decrypt(props.getProperty(DOCKER_PASSWORD)),
-                              props.getProperty(DOCKER_EMAIL),
-                              props.getProperty(DOCKER_AUTH));
-    }
-
-    private AuthConfig getAuthConfigFromPluginConfiguration() throws MojoFailureException {
-        for (String key : new String[] { "username", "password"}) {
-            if (!authConfig.containsKey(key)) {
-                throw new MojoFailureException("No '" + key + "' given while using <authConfig> in configuration");
-            }
-        }
-        Map<String,String> cloneConfig = new HashMap<String,String>(authConfig);
-        cloneConfig.put("password",decrypt(cloneConfig.get("password")));
-        return new AuthConfig(cloneConfig);
-    }
-
-    private AuthConfig getAuthConfigFromSettings(String image) throws MojoFailureException {
-        String registry = getRegistryFromImageNameOrDefault(image);
-        Server server = settings.getServer(registry);
-        if (server != null) {
-            return new AuthConfig(
-                    server.getUsername(),
-                    decrypt(server.getPassword()),
-                    extractFromServerConfiguration(server.getConfiguration(), "email"),
-                    extractFromServerConfiguration(server.getConfiguration(), "auth")
-            );
-        }
-        return null;
-    }
-
-    private String decrypt(String password) throws MojoFailureException {
-        try {
-            // Done by reflection since I have classloader issues otherwise
-            Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
-            Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
-            return (String) method.invoke(secDispatcher,password);
-        } catch (ComponentLookupException e) {
-            throw new MojoFailureException("Error looking security dispatcher");
-        } catch (ReflectiveOperationException e) {
-            throw new MojoFailureException("Cannot decrypt password: " + e);
-        }
+        return authConfigFactory.createAuthConfig(authConfig, image,settings);
     }
 
     @Override
     public void contextualize(Context context) throws ContextException {
-        container = (PlexusContainer) context.get( PlexusConstants.PLEXUS_KEY );
-    }
-
-    private String extractFromServerConfiguration(Object configuration, String prop) {
-        if (configuration != null) {
-            Xpp3Dom dom = (Xpp3Dom) configuration;
-            Xpp3Dom element = dom.getChild(prop);
-            if (element != null) {
-                return element.getValue();
-            }
-        }
-        return null;
-    }
-
-    private String getRegistryFromImageNameOrDefault(String image) {
-        ImageName name = new ImageName(image);
-        return name.getRegistry() != null ? name.getRegistry() : "registry.hub.docker.io";
+        authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
     }
 
     // =================================================================================

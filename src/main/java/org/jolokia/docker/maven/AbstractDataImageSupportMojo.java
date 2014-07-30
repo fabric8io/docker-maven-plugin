@@ -9,6 +9,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
 import org.jolokia.docker.maven.util.MojoParameters;
 
@@ -31,10 +32,6 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
      */
     @Parameter
     protected String assemblyDescriptorRef;
-
-    // Name of the image to use, including potential tag
-    @Parameter(property = "docker.image", required = false)
-    protected String image;
 
     // Name of the data image. By default it is created as "group/artifact:version"
     @Parameter(property = "docker.dataImage", required = false)
@@ -86,7 +83,7 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
      * @throws MojoExecutionException
      */
     protected String buildDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
-        String dataImage = getDataImage();
+        String dataImage = getDataImageName();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
         File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef);
@@ -119,11 +116,16 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
             return buildDataImage(null, dockerAccess);
         }
     }
-    protected String getDataImage() {
+    protected String getDataImageName() {
         String name = dataImage != null ?
                 dataImage :
-                project.getGroupId() + "/" + project.getArtifactId() + ":" + project.getVersion();
+                sanitizeDockerRepo(project.getGroupId()) + "/" + project.getArtifactId() + ":" + project.getVersion();
         return registry != null ? registry + "/" + name : name;
+    }
+
+    // Repo names with '.' are considered to be remote registries
+    private String sanitizeDockerRepo(String groupId) {
+        return null;
     }
 
     protected void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {

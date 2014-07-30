@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven;
+package org.jolokia.docker.maven.access;
 
 import java.io.*;
 import java.net.URI;
@@ -22,8 +22,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.FileEntity;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jolokia.docker.maven.util.AuthConfig;
-import org.jolokia.docker.maven.util.ImageName;
+import org.jolokia.docker.maven.util.*;
 import org.json.*;
 
 /**
@@ -55,6 +54,7 @@ public class DockerAccessUnirest implements DockerAccess {
         this.log = log;
         Unirest.setDefaultHeader("accept", "application/json");
     }
+
     /** {@inheritDoc} */
     public boolean hasImage(String image) throws MojoExecutionException {
         try {

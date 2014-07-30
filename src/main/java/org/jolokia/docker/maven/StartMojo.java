@@ -21,6 +21,7 @@ import java.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
+import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.PortMapping;
 
