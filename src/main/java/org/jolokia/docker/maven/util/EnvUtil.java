@@ -22,6 +22,7 @@ public class EnvUtil {
     // Timeout for ping
     private static final int PING_TIMEOUT = 500;
 
+    private EnvUtil() {}
 
     /**
      * Wait on a given URL that an HTTP head requests succeeds, but not longer than

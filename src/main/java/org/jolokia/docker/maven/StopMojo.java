@@ -16,11 +16,11 @@ public class StopMojo extends AbstractDockerMojo {
 
     // Whether to keep the containers afters stopping
     @Parameter(property = "docker.keepContainer",defaultValue = "false")
-    boolean keepContainer;
+    private boolean keepContainer;
 
     // Whether to *not* stop the container. Mostly useful as a command line param
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
-    boolean keepRunning;
+    private boolean keepRunning;
 
     // Whether the data container & image should be kept if an assembly is used
     @Parameter(property = "docker.keepData", defaultValue = "false")

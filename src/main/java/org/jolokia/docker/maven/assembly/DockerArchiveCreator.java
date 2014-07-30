@@ -96,9 +96,9 @@ public class DockerArchiveCreator {
             throw new MojoExecutionException( "Failed to create assembly for docker image: " + e.getMessage(), e );
         }
         catch (InvalidAssemblerConfigurationException e) {
-            throw new MojoFailureException( assembly, "Assembly is incorrectly configured: " + assembly.getId(),
+            throw new MojoFailureException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
                                             "Assembly: " + assembly.getId() + " is not configured correctly: "
-                                            + e.getMessage() );
+                                            + e.getMessage());
         }
     }
 

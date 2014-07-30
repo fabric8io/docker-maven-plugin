@@ -58,7 +58,7 @@ public class PortMapping {
                     portsMap.put(containerPort, hostPort);
                 } catch (NumberFormatException exp) {
                     throw new MojoExecutionException("Port mappings must be given in the format <hostPort>:<mappedPort> (e.g. 8080:8080). " +
-                                                     "The given config '" + port + "' doesn't match this");
+                                                     "The given config '" + port + "' doesn't match this",exp);
                 }
             }
         }
@@ -109,7 +109,7 @@ public class PortMapping {
         return dynamicPorts.get(var);
     }
 
-    private final static Pattern VAR_PATTERN = Pattern.compile("\\$\\{\\s*([^\\s]+)\\s*}");
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{\\s*([^\\s]+)\\s*}");
 
     /**
      * Replace all variable expressions with the respective port

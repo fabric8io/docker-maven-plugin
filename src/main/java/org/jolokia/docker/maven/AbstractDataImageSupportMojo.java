@@ -83,13 +83,13 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
      * @throws MojoExecutionException
      */
     protected String buildDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
-        String dataImage = getDataImageName();
+        String dataImageName = getDataImageName();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
         File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef);
-        info("Created data image " + dataImage);
-        dockerAccess.buildImage(dataImage, dockerArchive);
-        return dataImage;
+        info("Created data image " + dataImageName);
+        dockerAccess.buildImage(dataImageName, dockerArchive);
+        return dataImageName;
     }
 
     /**
@@ -125,7 +125,7 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
 
     // Repo names with '.' are considered to be remote registries
     private String sanitizeDockerRepo(String groupId) {
-        return null;
+        return groupId.replace('.','-');
     }
 
     protected void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {

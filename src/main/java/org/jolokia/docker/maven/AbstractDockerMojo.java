@@ -23,7 +23,7 @@ import org.jolokia.docker.maven.util.*;
  * @author roland
  * @since 26.03.14
  */
-abstract public class AbstractDockerMojo extends AbstractMojo implements LogHandler, Contextualizable {
+public abstract class AbstractDockerMojo extends AbstractMojo implements LogHandler, Contextualizable {
 
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
@@ -58,9 +58,6 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
-
-    // Container for looking up the SecDispatcher
-    private PlexusContainer container;
 
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
@@ -154,7 +151,11 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
             warnHlColor = "\u001B[0;33m";
             progressHlColor = "\u001B[0;36m";
         } else {
-            errorHlColor = infoHlColor = resetColor = warnHlColor = progressHlColor = "";
+            errorHlColor = "";
+            infoHlColor = "";
+            resetColor = "";
+            warnHlColor = "";
+            progressHlColor = "";
         }
     }
 
@@ -179,34 +180,41 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
         getLog().error(errorHlColor + error + resetColor);
     }
 
-    int oldProgress = 0;
-    int total = 0;
+    private int oldProgress = 0;
+    private int total = 0;
 
     /** {@inheritDoc} */
     public void progressStart(int t) {
-        System.out.print(progressHlColor + "       ");
+        print(progressHlColor + "       ");
         oldProgress = 0;
         total = t;
     }
 
     /** {@inheritDoc} */
     public void progressUpdate(int current) {
-        System.out.print("=");
+        print("=");
         int newProgress = (current * 10 + 5) / total;
         if (newProgress > oldProgress) {
-            System.out.print(" " + newProgress + "0% ");
+            print(" " + newProgress + "0% ");
             oldProgress = newProgress;
         }
-        System.out.flush();
+        flush();
     }
 
     /** {@inheritDoc} */
     public void progressFinished() {
-        System.out.println(resetColor);
+        print(resetColor);
         oldProgress = 0;
         total = 0;
     }
 
+    private void print(String txt) {
+        System.out.println(txt);
+    }
+
+    private void flush() {
+        System.out.flush();
+    }
 
 
     // ==========================================================================================
@@ -263,9 +271,9 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
         private void removeDataImageAndItsContainers(String imageToRemove, DockerAccess access, LogHandler log) throws MojoExecutionException {
             List<String> containers = access.getContainersForImage(imageToRemove);
-            for (String container : containers) {
-                access.removeContainer(container);
-                log.info("Removed data container " + container);
+            for (String c : containers) {
+                access.removeContainer(c);
+                log.info("Removed data container " + c);
             }
             access.removeImage(dataImage);
             log.info("Removed data image " + imageToRemove);
@@ -273,14 +281,13 @@ abstract public class AbstractDockerMojo extends AbstractMojo implements LogHand
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) { return true; }
+            if (o == null || getClass() != o.getClass()) {return false;}
 
             ShutdownAction that = (ShutdownAction) o;
 
-            if (!container.equals(that.container)) return false;
+            return container.equals(that.container);
 
-            return true;
         }
 
         @Override

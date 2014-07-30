@@ -35,7 +35,9 @@ import org.json.*;
 public class DockerAccessUnirest implements DockerAccess {
 
     // Used Docker API
-    private final static String DOCKER_API_VERSION = "v1.10";
+    static private final String DOCKER_API_VERSION = "v1.10";
+    public static final String HEADER_ACCEPT = "Accept";
+    public static final String HEADER_ACCEPT_ALL = "*/*";
 
     // Logging
     private final LogHandler log;
@@ -59,10 +61,9 @@ public class DockerAccessUnirest implements DockerAccess {
     public boolean hasImage(String image) throws MojoExecutionException {
         try {
             Matcher matcher = Pattern.compile("^(.*?):([^:]+)?$").matcher(image);
-            String base, tag;
+            String base;
             if (matcher.matches()) {
                 base = matcher.group(1);
-                tag = matcher.group(2);
             } else {
                 base = image;
             }
@@ -81,7 +82,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/create")
-                                     .header("Accept", "*/*")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .header("Content-Type", "application/json")
                                      .body(getContainerConfig(image, ports, command, env));
             HttpResponse<String> resp = request(req);
@@ -98,7 +99,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public void startContainer(String containerId, Map<Integer, Integer> ports, String volumesFrom) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/{id}/start")
-                                     .header("Accept", "*/*")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .header("Content-Type", "application/json")
                                      .routeParam("id", containerId)
                                      .body(getStartConfig(ports, volumesFrom));
@@ -113,7 +114,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public void stopContainer(String containerId) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/{id}/stop")
-                                     .header("Accept", "*/*")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .routeParam("id", containerId);
             HttpResponse<String> resp = request(req);
             checkReturnCode("Stopping container with id " + containerId, resp, 204);
@@ -127,7 +128,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public Map<Integer, Integer> queryContainerPortMapping(String containerId) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.get(url + "/containers/{id}/json")
-                                     .header("Accept", "*/*")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .routeParam("id", containerId);
             HttpResponse<String> resp = request(req);
             checkReturnCode("Getting container information for " + containerId, resp, 200);
@@ -177,7 +178,7 @@ public class DockerAccessUnirest implements DockerAccess {
         try {
             List<String> ret = new ArrayList<String>();
             BaseRequest req = Unirest.get(url + "/containers/json?limit=100")
-                                     .header("Accept", "*/*");
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
             HttpResponse<String> resp = null;
             resp = request(req);
             checkReturnCode("Fetching container information", resp, 200);
@@ -200,7 +201,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public void removeContainer(String containerId) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.delete(url + "/containers/{id}")
-                                     .header("Accept", "*/*")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .routeParam("id", containerId);
             HttpResponse<String> resp = request(req);
             checkReturnCode("Stopping container with id " + containerId, resp, 204);
@@ -269,7 +270,7 @@ public class DockerAccessUnirest implements DockerAccess {
     public void removeImage(String image) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.delete(url + "/images/{id}")
-                                     .header("Accept", "*/*")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .routeParam("id", image);
 
             HttpResponse<String> resp = request(req);
@@ -356,13 +357,13 @@ public class DockerAccessUnirest implements DockerAccess {
         JSONObject ret = new JSONObject();
         if (ports != null && ports.size() > 0) {
             JSONObject c = new JSONObject();
-            for (Integer containerPort : ports.keySet()) {
-                Integer port = ports.get(containerPort);
+            for (Map.Entry<Integer,Integer> entry : ports.entrySet()) {
+                Integer port = entry.getValue();
                 JSONArray a = new JSONArray();
                 JSONObject o = new JSONObject();
                 o.put("HostPort",port != null ? port.toString() : "");
                 a.put(o);
-                c.put(containerPort + "/tcp",a);
+                c.put(entry.getKey() + "/tcp",a);
             }
             ret.put("PortBindings", c);
         }
@@ -387,8 +388,8 @@ public class DockerAccessUnirest implements DockerAccess {
         log.debug(">>>> " + hReq.getUrl());
         Map<String, List<String>> headers = hReq.getHeaders();
         if (headers != null) {
-            for (String h : headers.keySet()) {
-                log.debug("|||| " + h + "=" + headers.get(h));
+            for (Map.Entry<String,List<String>> h : headers.entrySet()) {
+                log.debug("|||| " + h.getKey() + "=" + h.getValue());
             }
         }
         if (hReq.getHttpMethod() == HttpMethod.POST) {
@@ -402,17 +403,18 @@ public class DockerAccessUnirest implements DockerAccess {
             if (entity.isStreaming()) {
                 return entity.toString();
             }
-            InputStreamReader is = new InputStreamReader(entity.getContent());
+            InputStreamReader is = new InputStreamReader(entity.getContent(),"UTF-8");
             StringBuilder sb = new StringBuilder();
-            BufferedReader br = new BufferedReader(is);
-            String read = br.readLine();
+            try (BufferedReader br = new BufferedReader(is)) {
+                String read = br.readLine();
 
-            while (read != null) {
-                //System.out.println(read);
-                sb.append(read);
-                read = br.readLine();
+                while (read != null) {
+                    //System.out.println(read);
+                    sb.append(read);
+                    read = br.readLine();
+                }
+                return sb.toString();
             }
-            return sb.toString();
         } catch (IOException e) {
             return "[error serializing inputstream for debugging]";
         }
@@ -488,7 +490,7 @@ public class DockerAccessUnirest implements DockerAccess {
         byte[] buf = new byte[size];
         // Data comes in chunkwise
         while ((len = is.read(buf, 0, size)) != -1) {
-            String txt = new String(buf,0,len);
+            String txt = new String(buf,0,len,"UTF-8");
             try {
                 JSONObject json = new JSONObject(txt);
                 cb.process(json);
@@ -542,7 +544,7 @@ public class DockerAccessUnirest implements DockerAccess {
     // ================================================================================================
 
     private interface ChunkedCallback {
-        public void process(JSONObject json);
+        void process(JSONObject json);
         String getErrorMessage(StatusLine status);
     }
 }

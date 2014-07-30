@@ -113,8 +113,8 @@ public class DockerFileBuilder {
     }
 
     // All entries required, destination is relative to exportDir
-    private class AddEntry {
-        String source,destination;
+    private static final class AddEntry {
+        private String source,destination;
 
         private AddEntry(String src, String dest) {
             source = src;

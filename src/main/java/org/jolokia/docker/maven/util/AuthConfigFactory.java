@@ -121,9 +121,9 @@ public class AuthConfigFactory {
             Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
             return (String) method.invoke(secDispatcher,password);
         } catch (ComponentLookupException e) {
-            throw new MojoFailureException("Error looking security dispatcher");
+            throw new MojoFailureException("Error looking security dispatcher",e);
         } catch (ReflectiveOperationException e) {
-            throw new MojoFailureException("Cannot decrypt password: " + e.getCause(),e.getCause());
+            throw new MojoFailureException("Cannot decrypt password: " + e.getCause(),e);
         }
     }
 

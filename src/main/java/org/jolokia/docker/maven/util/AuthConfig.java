@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +36,11 @@ public class AuthConfig {
         add(ret,"password");
         add(ret,"email");
         add(ret,"auth");
-        return Base64.encodeBase64String(ret.toString().getBytes());
+        try {
+            return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            return Base64.encodeBase64String(ret.toString().getBytes());
+        }
     }
 
 
