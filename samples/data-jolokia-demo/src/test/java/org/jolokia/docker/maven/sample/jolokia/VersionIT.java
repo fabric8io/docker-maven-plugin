@@ -37,7 +37,7 @@ public class VersionIT {
         .then().assertThat()
                 .header("content-type", containsString("application/json"))
                 .body("value.agent", equalTo(versionExpected))
-                .body("timestamp", lessThan((int) (System.currentTimeMillis() / 1000)))
+                .body("timestamp", lessThanOrEqualTo((int) (System.currentTimeMillis() / 1000)))
                 .body("status", equalTo(200))
                 .body("value.protocol", equalTo("7.2"))
                 .body("value.config",notNullValue());
