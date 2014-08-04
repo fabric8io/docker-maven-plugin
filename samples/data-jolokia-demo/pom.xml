@@ -26,9 +26,9 @@
   <url>http://www.jolokia.org</url>
 
   <properties>
-    <tomcat>7.0</tomcat>
-    <tomcat.version>7.0.54</tomcat.version>
-    <image>consol/tomcat-${tomcat}:${tomcat.version}</image>
+    <server.version>7.0</server.version>
+    <server.name>tomcat</server.name>
+    <image>consol/${server.name}-${server.version}:latest</image>
     <jolokia.version>1.2.2</jolokia.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -79,7 +79,7 @@
           <!-- Docker Image to use -->
           <image>${image}</image>
           <dataImage>jolokia/${project.artifactId}:${project.version}</dataImage>
-          <mergeData>true</mergeData>
+          <mergeData>false</mergeData>
           <env>
             <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
           </env>
@@ -181,5 +181,23 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>tomcat</id>
+      <properties>
+        <server.name>tomcat</server.name>
+        <server.version>7.0</server.version>
+      </properties>
+      <activation><activeByDefault/></activation>
+    </profile>
+
+    <profile>
+      <id>jetty</id>
+      <properties>
+        <server.name>jetty</server.name>
+        <server.version>8</server.version>
+      </properties>
+    </profile>
+
   </profiles>
 </project>
