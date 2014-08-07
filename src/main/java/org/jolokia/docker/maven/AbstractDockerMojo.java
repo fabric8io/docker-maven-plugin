@@ -183,33 +183,47 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     private int oldProgress = 0;
     private int total = 0;
 
+
+    // A progress indicator is always written out to standard out if a tty is enabled.
+
     /** {@inheritDoc} */
     public void progressStart(int t) {
-        print(progressHlColor + "       ");
-        oldProgress = 0;
-        total = t;
+        if (getLog().isInfoEnabled()) {
+            print(progressHlColor + "       ");
+            oldProgress = 0;
+            total = t;
+        }
     }
 
     /** {@inheritDoc} */
     public void progressUpdate(int current) {
-        print("=");
-        int newProgress = (current * 10 + 5) / total;
-        if (newProgress > oldProgress) {
-            print(" " + newProgress + "0% ");
-            oldProgress = newProgress;
+        if (getLog().isInfoEnabled()) {
+            print("=");
+            int newProgress = (current * 10 + 5) / total;
+            if (newProgress > oldProgress) {
+                print(" " + newProgress + "0% ");
+                oldProgress = newProgress;
+            }
+            flush();
         }
-        flush();
     }
+
 
     /** {@inheritDoc} */
     public void progressFinished() {
-        print(resetColor);
-        oldProgress = 0;
-        total = 0;
+        if (getLog().isInfoEnabled()) {
+            println(resetColor);
+            oldProgress = 0;
+            total = 0;
+        }
+    }
+
+    private void println(String txt) {
+        System.out.println(txt);
     }
 
     private void print(String txt) {
-        System.out.println(txt);
+        System.out.print(txt);
     }
 
     private void flush() {
