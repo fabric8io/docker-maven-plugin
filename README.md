@@ -30,7 +30,7 @@ Please refer also to the examples provided in the `samples/` directory.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.9.8</version>
+  <version>0.9.9</version>
 
   <configuration>
      <!-- For possible options, see below -->
