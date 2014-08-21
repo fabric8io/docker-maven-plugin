@@ -150,8 +150,7 @@ and does not delete the image afterwards.
 
 ## Dynamic Port mapping
 
-For the `start` goal the mapping which container ports are mapped to which host ports can be configured with
-the `ports` section, which can contain several `port` directives
+For the `start` goal, container port mapping may be configured using a `ports` declaration.
 
 ```xml
 <ports>
@@ -160,11 +159,9 @@ the `ports` section, which can contain several `port` directives
 <ports>
 ```
 
-Each port config contains two parts separated by colons. The first part is the mapped port on the host. This can
-be either a numeric value, in which case this port is taken literally. Or it can be a variable identifier which
-is takend as a maven variable. If this variable is not set when the `start` task executes, a port will be dynamically
-selected by Docker in the range 49000 ... 49900. If the variable already contains a numeric value, this port is used.
-This can be used to pin a port from the outsied when doing some initial testing like in
+A `port` stanza may take one of two forms:
+* A tuple consisting of two numeric values separated by a `:`. This form will result in an explicit mapping between the docker host and the corresponding port inside the container. In the above example, port 18080 would be exposed on the docker host and mapped to port 8080 in the running container.
+* A tuple consisting of a string and a numeric value separated by a `:`. In this form, the string portion of the tuple will correspond to a Maven property. If the property is undefined when the `start` task executes, a port will be dynamically selected by Docker in the range 49000 ... 49900 and assigned to the property which may then be used later in the same POM file. If the property exists and has a numeric value, that value will be used as the exposed port on the docker host as in the previous form. In the above example, the docker service will elect a new port and assign the value to the property `host.port` which may then later be used in a property expression similar to `<value>${host.port}</value>`. This can be used to pin a port from the outside when doing some initial testing similar to:
 
     mvn -Dhost.port=10080 docker:start
 
