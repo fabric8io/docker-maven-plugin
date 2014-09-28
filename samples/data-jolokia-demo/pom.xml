@@ -77,29 +77,41 @@
         <version>${project.version}</version>
         <configuration>
           <!-- Docker Image to use -->
-          <image>${image}</image>
-          <dataImage>jolokia/${project.artifactId}:${project.version}</dataImage>
-          <mergeData>false</mergeData>
-          <env>
-            <JOLOKIA_OFF>true</JOLOKIA_OFF>
-            <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
-          </env>
-          <ports>
-            <!-- Port mappings: Container internal port (which must be exposed) will be
+          <image>
+            <!-- App-Server Image -->
+            <name>${image}</name>
+            <run>
+              <volumes>
+                <from>jolokia/${project.artifactId}:${project.version}</from>
+              </volumes>
+              <env>
+                <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
+              </env>
+              <ports>
+                <!-- Port mappings: Container internal port (which must be exposed) will be
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${tomcat.port}. Multiple port mapping can be specified here-->
-            <port>jolokia.port:8080</port>
-          </ports>
-          <!-- The plugin waits until this URL is reachable via HTTP ... -->
-          <waitHttp>http://localhost:${jolokia.port}/jolokia</waitHttp>
-          <!-- ... but at max 2 seconds -->
-          <wait>10000</wait>
-          <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
-               container which will be made available to the specified container. The startup script in the
-               container (jolokia/tomcat-7.0) should check for files in this directory and use them
-               for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
-               does this. -->
-          <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
+                <port>jolokia.port:8080</port>
+              </ports>
+              <wait>
+                <!-- The plugin waits until this URL is reachable via HTTP ... -->
+                <http>http://localhost:${jolokia.port}/jolokia</http>
+                <time>10000</time>
+              </wait>
+            </run>
+          </image>
+          <image>
+            <!-- Artefact Image-->
+            <name>jolokia/${project.artifactId}:${project.version}</name>
+            <build>
+              <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
+                   container which will be made available to the specified container. The startup script in the
+                   container (jolokia/tomcat-7.0) should check for files in this directory and use them
+                   for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
+                   does this. -->
+              <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
+            </build>
+          </image>
         </configuration>
         <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
              in pre-integration-test and stop it in post-integration-test. -->
@@ -168,15 +180,37 @@
 
   <profiles>
     <profile>
-      <id>merge-data</id>
+      <id>merge-image</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.jolokia</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration>
-              <mergeData>true</mergeData>
-              <keepContainer>true</keepContainer>
+              <image>
+                <!-- Artefact Image-->
+                <name>jolokia/${project.artifactId}:${project.version}</name>
+                <build>
+                  <baseImage>${image}</baseImage>
+                  <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
+                </build>
+                <run>
+                  <env>
+                    <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
+                  </env>
+                  <ports>
+                    <!-- Port mappings: Container internal port (which must be exposed) will be
+                         dynamically mapped and this (random) port will be assigned to the maven variable
+                         ${tomcat.port}. Multiple port mapping can be specified here-->
+                    <port>jolokia.port:8080</port>
+                  </ports>
+                  <wait>
+                    <!-- The plugin waits until this URL is reachable via HTTP ... -->
+                    <http>http://localhost:${jolokia.port}/jolokia</http>
+                    <time>10000</time>
+                  </wait>
+                </run>
+              </image>
             </configuration>
           </plugin>
         </plugins>

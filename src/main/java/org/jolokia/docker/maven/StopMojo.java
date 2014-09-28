@@ -30,10 +30,8 @@ public class StopMojo extends AbstractDockerMojo {
         if (!keepRunning) {
             List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
             for (ShutdownAction action : getShutdownActions()) {
-                if (action.applies(image)) {
-                    action.shutdown(access, this, keepContainer, keepData);
-                    appliedShutdownActions.add(action);
-                }
+                action.shutdown(access, this, keepContainer);
+                appliedShutdownActions.add(action);
             }
             removeShutdownActions(appliedShutdownActions);
         }

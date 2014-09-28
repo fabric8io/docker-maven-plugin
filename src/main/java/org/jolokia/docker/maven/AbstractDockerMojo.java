@@ -15,6 +15,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.fusesource.jansi.AnsiConsole;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessUnirest;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -40,10 +41,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     @Parameter(property = "docker.url")
     private String url;
 
-    // Name of the image for which to stop its containers. If none given, all are removed
-    @Parameter(property = "docker.image", required = false)
-    protected String image;
-
     // Whether to use color
     @Parameter(property = "docker.useColor", defaultValue = "true")
     private boolean color;
@@ -55,6 +52,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Authentication information
     @Parameter
     Map authConfig;
+
+    // Relevant configuration to use
+    @Parameter(required = true)
+    protected List<ImageConfiguration> images;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
@@ -139,10 +140,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // =================================================================================
     // Extract authentication information
 
-    protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
-        return authConfigFactory.createAuthConfig(authConfig, image,settings);
-    }
-
     @Override
     public void contextualize(Context context) throws ContextException {
         authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
@@ -192,7 +189,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     private int oldProgress = 0;
     private int total = 0;
 
-
     // A progress indicator is always written out to standard out if a tty is enabled.
 
     /** {@inheritDoc} */
@@ -239,6 +235,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         System.out.flush();
     }
 
+    protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
+        return authConfigFactory.createAuthConfig(authConfig, image,settings);
+    }
 
     // ==========================================================================================
     // Class for registering a shutdown action
@@ -251,13 +250,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         // Data container create from image
         private String container;
 
-        // Name of the data image create on-the-fly
-        private String dataImage;
-
-        protected ShutdownAction(String image, String container, String dataImage) {
+        protected ShutdownAction(String image, String container) {
             this.image = image;
             this.container = container;
-            this.dataImage = dataImage;
         }
 
         /**
@@ -276,30 +271,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
          * @param access access object for reaching docker
          * @param log logger to use
          * @param keepContainer whether to keep the container (and its data container)
-         * @param keepData whether to keep the data
          */
-        public void shutdown(DockerAccess access, LogHandler log,
-                             boolean keepContainer, boolean keepData) throws MojoExecutionException {
+        public void shutdown(DockerAccess access, LogHandler log,boolean keepContainer)
+                throws MojoExecutionException {
             // Stop the container
             access.stopContainer(container);
             if (!keepContainer) {
                 // Remove the container
                 access.removeContainer(container);
-                if (dataImage != null && !keepData) {
-                    removeDataImageAndItsContainers(dataImage,access,log);
-                }
             }
             log.info("Stopped " + container.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
-        }
-
-        private void removeDataImageAndItsContainers(String imageToRemove, DockerAccess access, LogHandler log) throws MojoExecutionException {
-            List<String> containers = access.getContainersForImage(imageToRemove);
-            for (String c : containers) {
-                access.removeContainer(c);
-                log.info("Removed data container " + c);
-            }
-            access.removeImage(dataImage);
-            log.info("Removed data image " + imageToRemove);
         }
 
         @Override

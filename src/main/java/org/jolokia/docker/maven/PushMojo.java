@@ -12,7 +12,7 @@ import org.jolokia.docker.maven.access.DockerAccess;
  * @author roland
  */
 @Mojo(name = "push")
-public class PushMojo extends AbstractDataImageSupportMojo {
+public class PushMojo extends DataImageBuilder {
 
     @Parameter(property = "docker.keepData", defaultValue = "true")
     private boolean keepData;

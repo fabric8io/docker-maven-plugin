@@ -10,9 +10,12 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
+import org.jolokia.docker.maven.config.BuildImageConfiguration;
+import org.jolokia.docker.maven.util.AuthConfig;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -21,53 +24,7 @@ import org.jolokia.docker.maven.util.MojoParameters;
  * @author roland
  * @since 12.06.14
  */
-public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
-    /**
-     * A descriptor to use for building the data assembly to be exported
-     * in an Docker image
-     */
-    @Parameter
-    protected String assemblyDescriptor;
-
-    /**
-     * Reference to an assembly descriptor included.
-     */
-    @Parameter
-    protected String assemblyDescriptorRef;
-
-    // Name of the data image. By default it is created as "group/artifact:version"
-    @Parameter(property = "docker.dataImage", required = false)
-    private String dataImage;
-
-    // Base Image name of the data image to use.
-    @Parameter(property = "docker.dataBaseImage", required = false, defaultValue = "busybox")
-    private String dataBaseImage;
-
-    // Directory as it is exported
-    @Parameter(property = "docker.dataExportDir", required = false, defaultValue = "/maven")
-    private String dataExportDir;
-
-    // Registry for data image
-    @Parameter(property = "docker.registry")
-    protected String registry;
-
-    // Whether to pull an image if not yet locally available (not implemented yet)
-    @Parameter(property = "docker.autoPull", defaultValue = "true")
-    private boolean autoPull;
-
-    // Whether to merge the data in the original image or use a separate data image
-    @Parameter(property = "docker.mergeData", required = false, defaultValue = "false")
-    protected boolean mergeData;
-
-    // The ports to expose
-    @Parameter()
-    private List<Integer> ports;
-
-    @Parameter()
-    protected Map<String,String> env = null;
-
-    @Component
-    private DockerArchiveCreator dockerArchiveCreator;
+public abstract class DataImageBuilder {
 
     // ==============================================================================================================
     // Parameters required from Maven when building an assembly. They cannot be injected directly
@@ -81,24 +38,28 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
 
     @Component
     private MavenFileFilter mavenFileFilter;
-    // Whether the data image should be kept if an assembly is used
+
+    @Component
+    protected MavenProject project;
+
+    @Component
+    private DockerArchiveCreator dockerArchiveCreator;
 
     /**
      * Build a docker image with the given name from the assembly descriptors configured.
      *
-     * @param baseImage a base image to use. If null, check the property "dataBaseImage" and then finally use the default
+     * @param config build configuration
      * @param dockerAccess access to docker
      * @throws MojoFailureException
      * @throws MojoExecutionException
      */
-    protected String buildDataImage(String baseImage, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
-        String dataImageName = getDataImageName();
+    protected String buildDataImage(String name, BuildImageConfiguration config, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
-        String base = baseImage != null ? baseImage : dataBaseImage;
+        String base = config.getBaseImage() != null ? baseImage : dataBaseImage;
         File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef, ports, env);
-        info("Created data image " + dataImageName);
-        dockerAccess.buildImage(dataImageName, dockerArchive);
-        return dataImageName;
+        info("Created data image " + name);
+        dockerAccess.buildImage(name, dockerArchive);
+        return name;
     }
 
     /**
@@ -150,15 +111,4 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
         return repo.length() > 30 ? repo.substring(0,30) : repo;
     }
 
-    protected void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {
-        if (!docker.hasImage(image)) {
-            if (autoPull) {
-                docker.pullImage(image,prepareAuthConfig(image));
-            } else {
-                throw new MojoExecutionException(this, "No image '" + image + "' found",
-                                                 "Please enable 'autoPull' or pull image '" + image +
-                                                 "' yourself (docker pull " + image + ")");
-            }
-        }
-    }
 }
