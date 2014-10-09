@@ -3,7 +3,9 @@ package org.jolokia.docker.maven.assembly;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.plexus.util.FileUtils;
 
@@ -32,6 +34,8 @@ public class DockerFileBuilder {
     // in interpreted as a relative path to the exportDir
     // See also http://docs.docker.io/reference/builder/#add
     private List<AddEntry> addEntries;
+
+    private Map<String,String> envEntries;
 
     /**
      * Cretate a DockerFile in the given directory
@@ -77,6 +81,12 @@ public class DockerFileBuilder {
         // Volume export
         b.append("VOLUME [\"").append(exportDir).append("\"]\n");
 
+        // Environment variable support
+        for (Map.Entry<String,String> entry : envEntries.entrySet()) {
+            b.append("ENV ").append(entry.getKey()).append(" ")
+             .append(entry.getValue()).append("\n");
+        }
+
         return b.toString();
     }
 
@@ -84,6 +94,7 @@ public class DockerFileBuilder {
     // Builder stuff ....
     public DockerFileBuilder() {
         addEntries = new ArrayList<AddEntry>();
+        envEntries = new HashMap<String, String>();
     }
 
     public DockerFileBuilder baseImage(String baseImage) {
@@ -107,8 +118,13 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder add(String source,String destination) {
+    public DockerFileBuilder add(String source, String destination) {
         this.addEntries.add(new AddEntry(source, destination));
+        return this;
+    }
+
+    public DockerFileBuilder environmentVariables(Map<String, String> values) {
+        this.envEntries = values;
         return this;
     }
 

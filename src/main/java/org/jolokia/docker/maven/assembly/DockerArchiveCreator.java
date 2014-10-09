@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.assembly;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -40,14 +41,14 @@ public class DockerArchiveCreator {
     @Requirement
     private ArchiverManager archiverManager;
 
-    public File create(MojoParameters params, String baseImage, String exportDir, String assemblyDescriptor, String assemblyDescriptorRef)
+    public File create(MojoParameters params, String baseImage, String exportDir, String assemblyDescriptor, String assemblyDescriptorRef, Map<String, String> envVars)
             throws MojoFailureException, MojoExecutionException {
         File target = new File(params.getProject().getBasedir(),"target/");
         File dockerDir = new File(target,"docker");
         File destFile = new File(target,"docker-tmp/docker-build.tar");
 
         createAssembly(params,assemblyDescriptor,assemblyDescriptorRef);
-        writeDockerFile(baseImage,exportDir,dockerDir);
+        writeDockerFile(baseImage,exportDir,dockerDir,envVars);
         return createDockerBuildArchive(destFile,dockerDir);
     }
 
@@ -66,9 +67,9 @@ public class DockerArchiveCreator {
 
     }
 
-    private File writeDockerFile(String baseImage, String exportDir, File destDir) throws MojoExecutionException {
+    private File writeDockerFile(String baseImage, String exportDir, File destDir, Map<String, String> envVars) throws MojoExecutionException {
         try {
-            DockerFileBuilder builder = new DockerFileBuilder().exportDir(exportDir).add("maven","");
+            DockerFileBuilder builder = new DockerFileBuilder().exportDir(exportDir).add("maven","").environmentVariables(envVars);
             if (baseImage != null) {
                 builder.baseImage(baseImage);
                 builder.command(null); // Use command from base image
