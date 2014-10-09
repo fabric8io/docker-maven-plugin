@@ -124,6 +124,9 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder environmentVariables(Map<String, String> values) {
+        if (values == null) {
+            values = new HashMap<>();
+        }
         this.envEntries = values;
         return this;
     }
