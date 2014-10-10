@@ -146,6 +146,7 @@ and does not delete the image afterwards.
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
 | **ports**    | List of ports to be exposed                             |                |  | 
+| **env**      | List of environment variables to use for building       |                |  | 
 | **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 | **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
