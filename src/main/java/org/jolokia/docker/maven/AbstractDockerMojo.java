@@ -37,7 +37,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     protected Settings settings;
 
     // URL to docker daemon
-    @Parameter(property = "docker.url",defaultValue = "http://localhost:2375")
+    @Parameter(property = "docker.url")
     private String url;
 
     // Name of the image for which to stop its containers. If none given, all are removed
@@ -72,7 +72,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             colorInit();
-            DockerAccess access = new DockerAccessUnirest(url.replaceFirst("^tcp:", "http:"), this);
+            DockerAccess access = new DockerAccessUnirest(extractUrl(), this);
             access.start();
             try {
                 executeInternal(access);
@@ -82,6 +82,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
                 access.shutdown();
             }
         }
+    }
+
+    // Check both, url and env DOCKER_HOST (first takes precedence)
+    private String extractUrl() {
+        String connect = url != null ? url : System.getenv("DOCKER_HOST");
+        if (connect == null) {
+            throw new IllegalArgumentException("No url given and now DOCKER_HOST environment variable set");
+        }
+        return connect.replaceFirst("^tcp:", "http:");
     }
 
     /**
