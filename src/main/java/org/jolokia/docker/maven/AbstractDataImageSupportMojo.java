@@ -126,14 +126,26 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
         }
     }
     protected String getDataImageName() {
-        String name = dataImage != null ?
-                dataImage :
-                sanitizeDockerRepo(project.getGroupId()) + "/" + project.getArtifactId() + ":" + project.getVersion();
-        return registry != null ? registry + "/" + name : name;
+        if (dataImage != null) {
+            return dataImage;
+        } else {
+            String name = getDefaultUserName() + "/" + getDefaultRepoName() + ":" + project.getVersion();
+            return registry != null ? registry + "/" + name : name;
+        }
     }
 
+    private String getDefaultRepoName() {
+        String repoName = project.getBuild().getFinalName();
+        if (repoName == null || repoName.length() == 0) {
+            repoName = project.getArtifactId();
+        }
+        return repoName;
+    }
+
+
     // Repo names with '.' are considered to be remote registries
-    private String sanitizeDockerRepo(String groupId) {
+    private String getDefaultUserName() {
+        String groupId = project.getGroupId();
         String repo = groupId.replace('.','_').replace('-','_');
         return repo.length() > 30 ? repo.substring(0,30) : repo;
     }
