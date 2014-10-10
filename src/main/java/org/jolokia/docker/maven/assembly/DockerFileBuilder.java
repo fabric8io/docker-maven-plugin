@@ -131,9 +131,11 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder expose(List<Integer> ports) {
-        for (Integer port : ports) {
-            if (port != null) {
-                expose(port);
+        if (ports != null) {
+            for (Integer port : ports) {
+                if (port != null) {
+                    expose(port);
+                }
             }
         }
         return this;
