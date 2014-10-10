@@ -33,6 +33,9 @@ public class DockerFileBuilder {
     // See also http://docs.docker.io/reference/builder/#add
     private List<AddEntry> addEntries;
 
+    // list of ports to expose
+    private List<Integer> ports;
+
     /**
      * Cretate a DockerFile in the given directory
      * @param  destDir directory where to store the dockerfile
@@ -74,6 +77,15 @@ public class DockerFileBuilder {
              .append(exportDir).append("/").append(entry.destination).append("\n");
         }
 
+        // Ports
+        if (ports.size() > 0) {
+            b.append("EXPOSE");
+            for (Integer port : ports) {
+                b.append(" " + port);
+            }
+            b.append("\n");
+        }
+
         // Volume export
         b.append("VOLUME [\"").append(exportDir).append("\"]\n");
 
@@ -84,6 +96,7 @@ public class DockerFileBuilder {
     // Builder stuff ....
     public DockerFileBuilder() {
         addEntries = new ArrayList<AddEntry>();
+        ports = new ArrayList<Integer>();
     }
 
     public DockerFileBuilder baseImage(String baseImage) {
@@ -109,6 +122,20 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder add(String source,String destination) {
         this.addEntries.add(new AddEntry(source, destination));
+        return this;
+    }
+
+    public DockerFileBuilder expose(int port) {
+        this.ports.add(port);
+        return this;
+    }
+
+    public DockerFileBuilder expose(List<Integer> ports) {
+        for (Integer port : ports) {
+            if (port != null) {
+                expose(port);
+            }
+        }
         return this;
     }
 
