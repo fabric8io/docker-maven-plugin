@@ -78,9 +78,11 @@
         <configuration>
           <!-- Docker Image to use -->
           <image>${image}</image>
+          <url>http://192.168.59.104:2375</url>
           <dataImage>jolokia/${project.artifactId}:${project.version}</dataImage>
           <mergeData>false</mergeData>
           <env>
+            <JOLOKIA_DISABLE>true</JOLOKIA_DISABLE>
             <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
           </env>
           <ports>
@@ -88,6 +90,7 @@
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${tomcat.port}. Multiple port mapping can be specified here-->
             <port>jolokia.port:8080</port>
+            <port>jolokia.int.port:8778</port>
           </ports>
           <!-- The plugin waits until this URL is reachable via HTTP ... -->
           <waitHttp>http://localhost:${jolokia.port}/jolokia</waitHttp>

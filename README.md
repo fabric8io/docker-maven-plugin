@@ -145,6 +145,7 @@ and does not delete the image afterwards.
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
+| **ports**    | List of ports to be exposed                             |                |  | 
 | **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 | **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
@@ -266,6 +267,7 @@ This `docker-maven-plugin` comes with some predefined assembly descriptors which
 * **artifact-with-dependencies** will copy your project's artifact and all its dependencies
 * **artifact** will copy only the project's artifact but no dependencies.
 * **project** will copy over the whole Maven project but with out `target/` directory.
+* **rootWar** will copy the artifact as `ROOT.war` to the exposed directory. I.e. Tomcat will then deploy the war under the root context.
 
 ## Cleanup
 

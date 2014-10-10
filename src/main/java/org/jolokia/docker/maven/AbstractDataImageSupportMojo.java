@@ -2,6 +2,7 @@ package org.jolokia.docker.maven;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
@@ -62,6 +63,9 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
     @Parameter()
     private List<Integer> ports;
 
+    @Parameter()
+    protected Map<String,String> env = null;
+
     @Component
     private DockerArchiveCreator dockerArchiveCreator;
 
@@ -91,7 +95,7 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
         String dataImageName = getDataImageName();
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         String base = baseImage != null ? baseImage : dataBaseImage;
-        File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef, ports);
+        File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef, ports, env);
         info("Created data image " + dataImageName);
         dockerAccess.buildImage(dataImageName, dockerArchive);
         return dataImageName;
