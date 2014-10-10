@@ -134,7 +134,8 @@ public abstract class AbstractDataImageSupportMojo extends AbstractDockerMojo {
 
     // Repo names with '.' are considered to be remote registries
     private String sanitizeDockerRepo(String groupId) {
-        return groupId.replace('.','-');
+        String repo = groupId.replace('.','_').replace('-','_');
+        return repo.length() > 30 ? repo.substring(0,30) : repo;
     }
 
     protected void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {
