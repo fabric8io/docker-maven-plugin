@@ -53,15 +53,12 @@ public class BuildMojo extends AbstractDockerMojo {
         }
     }
 
-
-    protected void buildImage(String name, BuildImageConfiguration buildConfig, DockerAccess dockerAccess)
-             throws MojoExecutionException, MojoFailureException {
+    private void buildImage(String name, BuildImageConfiguration buildConfig, DockerAccess dockerAccess)
+            throws MojoExecutionException, MojoFailureException {
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         File dockerArchive = dockerArchiveCreator.create(params, buildConfig);
         String imageName = getImageName(name);
         info("Created image " + imageName);
         dockerAccess.buildImage(imageName, dockerArchive);
     }
-
-
 }

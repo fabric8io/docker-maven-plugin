@@ -28,6 +28,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
+
     public static final String DOCKER_SHUTDOWN_ACTIONS = "DOCKER_SHUTDOWN_ACTIONS";
 
     // Current maven project

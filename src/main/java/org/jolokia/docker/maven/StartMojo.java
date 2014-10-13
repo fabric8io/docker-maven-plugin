@@ -74,30 +74,6 @@ public class StartMojo extends AbstractDockerMojo {
             // Wait if requested
             waitIfRequested(runConfig,mappedPorts);
         }
-
-        /*
-        String container,dataImage,dataContainer;
-
-        if (useDataContainer()) {
-            dataImage = createDataImage(docker);
-            if (mergeData) {
-                // Image created on the fly and used for action
-                dataContainer = null;
-                container = docker.createContainer(dataImage,mappedPorts.getContainerPorts(),command,env);
-            } else {
-                dataContainer = docker.createContainer(dataImage, null, null, env);
-                docker.startContainer(dataContainer, null, null);
-
-                container = docker.createContainer(image,mappedPorts.getContainerPorts(),command,env);
-            }
-        } else {
-            dataImage = null;
-            dataContainer = null;
-
-            container = docker.createContainer(image,mappedPorts.getContainerPorts(),command,env);
-        }
-        */
-
     }
 
     private List<String> extractVolumesFrom(RunImageConfiguration runConfig) throws MojoFailureException {
