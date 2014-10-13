@@ -13,7 +13,7 @@
       <includes>
         <include>org.jolokia:jolokia-it-war</include>
       </includes>
-      <outputDirectory>/opt/tomcat/webapps</outputDirectory>
+      <outputDirectory>.</outputDirectory>
       <outputFileNameMapping>jolokia-it.war</outputFileNameMapping>
     </dependencySet>
   </dependencySets>

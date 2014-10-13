@@ -1,5 +1,8 @@
 package org.jolokia.docker.maven.config;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -9,21 +12,29 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class BuildImageConfiguration {
 
     // Base Image name of the data image to use.
-    @Parameter(required = false, defaultValue = "busybox")
+    @Parameter
     private String baseImage;
 
-    @Parameter(required = false, defaultValue = "/maven")
+    @Parameter
     private String exportDir;
 
-    @Parameter(required = false)
+    @Parameter
     private String registry;
 
-    @Parameter(required = false)
+    @Parameter
     private String assemblyDescriptor;
 
-    @Parameter(required = false)
+    @Parameter
     private String assemblyDescriptorRef;
 
+    @Parameter
+    private List<String> ports;
+
+    @Parameter
+    private Map<String,String> env;
+
+    @Parameter(defaultValue = "true")
+    private boolean doNotPush;
 
     public String getBaseImage() {
         return baseImage;
@@ -43,5 +54,17 @@ public class BuildImageConfiguration {
 
     public String getAssemblyDescriptorRef() {
         return assemblyDescriptorRef;
+    }
+
+    public List<String> getPorts() {
+        return ports;
+    }
+
+    public Map<String, String> getEnv() {
+        return env;
+    }
+
+    public boolean isDoNotPush() {
+        return doNotPush;
     }
 }

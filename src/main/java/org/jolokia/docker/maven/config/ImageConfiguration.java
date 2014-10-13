@@ -12,20 +12,20 @@ public class ImageConfiguration {
     private String name;
 
     @Parameter
-    private RunImageConfiguration runConfiguration;
+    private RunImageConfiguration run;
 
     @Parameter
-    private BuildImageConfiguration buildConfiguration;
+    private BuildImageConfiguration build;
 
     public String getName() {
         return name;
     }
 
     public RunImageConfiguration getRunConfiguration() {
-        return runConfiguration;
+        return run;
     }
 
     public BuildImageConfiguration getBuildConfiguration() {
-        return buildConfiguration;
+        return build;
     }
 }

@@ -37,10 +37,7 @@ public class RunImageConfiguration {
     // Wait that many milliseconds after starting the container in order to allow the
     // container to warm up
     @Parameter
-    private int wait;
-
-    @Parameter
-    private String volumesFrom;
+    private WaitConfiguration wait;
 
     // Wait until the given URL is accessible
     @Parameter
@@ -62,7 +59,7 @@ public class RunImageConfiguration {
         return portPropertyFile;
     }
 
-    public int getWait() {
+    public WaitConfiguration getWaitConfiguration() {
         return wait;
     }
 
@@ -70,7 +67,7 @@ public class RunImageConfiguration {
         return waitHttp;
     }
 
-    public String getVolumesFrom() {
-        return volumesFrom;
+    public List<String> getVolumesFrom() {
+        return volumes;
     }
 }

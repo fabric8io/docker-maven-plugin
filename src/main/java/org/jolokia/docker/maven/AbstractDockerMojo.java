@@ -28,6 +28,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
+    public static final String DOCKER_SHUTDOWN_ACTIONS = "DOCKER_SHUTDOWN_ACTIONS";
 
     // Current maven project
     @Component
@@ -107,24 +108,21 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // =============================================================================================
     // Registry for managed containers
 
-    // Set with all registered shutdown actions
-    private static Set<ShutdownAction> shutdownActions =
-            Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
 
     /**
      * Register a shutdown action executed during "stop"
      * @param shutdownAction action to register
      */
-    protected static void registerShutdownAction(ShutdownAction shutdownAction) {
-        shutdownActions.add(shutdownAction);
+    protected void registerShutdownAction(ShutdownAction shutdownAction) {
+        getShutdownActions().add(shutdownAction);
     }
 
     /**
      * Return shutdown actions in reverse registration order
      * @return registered shutdown actions
      */
-    protected static List<ShutdownAction> getShutdownActions() {
-        List<ShutdownAction> ret = new ArrayList<ShutdownAction>(shutdownActions);
+    protected List<ShutdownAction> getShutdownActionsInExecutionOrder() {
+        List<ShutdownAction> ret = new ArrayList<ShutdownAction>(getShutdownActions());
         Collections.reverse(ret);
         return ret;
     }
@@ -133,8 +131,19 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      * Remove a list of shutdown actions
      * @param actions actions to remove
      */
-    protected static void removeShutdownActions(List<ShutdownAction> actions) {
-        shutdownActions.removeAll(actions);
+    protected void removeShutdownActions(List<ShutdownAction> actions) {
+        getShutdownActions().removeAll(actions);
+    }
+
+    private Set<ShutdownAction> getShutdownActions() {
+        Object obj = getPluginContext().get(DOCKER_SHUTDOWN_ACTIONS);
+        if (obj == null) {
+            Set<ShutdownAction> actions = Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
+            getPluginContext().put(DOCKER_SHUTDOWN_ACTIONS, actions);
+            return actions;
+        } else {
+            return (Set<ShutdownAction>) obj;
+        }
     }
 
     // =================================================================================
@@ -143,6 +152,31 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     @Override
     public void contextualize(Context context) throws ContextException {
         authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
+    }
+
+    // =================================================================================
+
+     protected String getImageName(String name) {
+        if (name != null) {
+            return name;
+        } else {
+            return getDefaultUserName() + "/" + getDefaultRepoName() + ":" + project.getVersion();
+        }
+    }
+
+    private String getDefaultRepoName() {
+        String repoName = project.getBuild().getFinalName();
+        if (repoName == null || repoName.length() == 0) {
+            repoName = project.getArtifactId();
+        }
+        return repoName;
+    }
+
+    // Repo names with '.' are considered to be remote registries
+    private String getDefaultUserName() {
+        String groupId = project.getGroupId();
+        String repo = groupId.replace('.','_').replace('-','_');
+        return repo.length() > 30 ? repo.substring(0,30) : repo;
     }
 
     // =================================================================================

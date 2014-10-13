@@ -24,7 +24,7 @@ import org.jolokia.docker.maven.util.MojoParameters;
 @Mojo(name = "build")
 public class BuildMojo extends AbstractDockerMojo {
 
-        // ==============================================================================================================
+    // ==============================================================================================================
     // Parameters required from Maven when building an assembly. They cannot be injected directly
     // into DockerAssemblyCreator.
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
@@ -48,37 +48,20 @@ public class BuildMojo extends AbstractDockerMojo {
         for (ImageConfiguration imageConfig : images) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
-                createDataImage(buildConfig,dockerAccess);
+                buildImage(imageConfig.getName(),buildConfig, dockerAccess);
             }
         }
     }
 
 
-     protected String createDataImage(BuildImageConfiguration buildConfig, DockerAccess dockerAccess)
+    protected void buildImage(String name, BuildImageConfiguration buildConfig, DockerAccess dockerAccess)
              throws MojoExecutionException, MojoFailureException {
-         String assemblyDescriptor = buildConfig.getAssemblyDescriptor();
-         String assemblyDescriptorRef = buildConfig.getAssemblyDescriptorRef();
-         if (assemblyDescriptor != null && assemblyDescriptorRef != null) {
-             throw new MojoExecutionException("No assemblyDescriptor or assemblyDescriptorRef has been given");
-         }
-         if (mergeData) {
-             if (image == null) {
-                 throw new MojoExecutionException("mergeData requires an image to be set");
-             }
-             checkImage(dockerAccess,image);
-             return buildDataImage(image, dockerAccess);
-         } else {
-             return buildDataImage(null, dockerAccess);
-         }
-     }
-
-    protected String buildDataImage(String name, BuildImageConfiguration config, DockerAccess dockerAccess) throws MojoFailureException, MojoExecutionException {
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
-        String base = config.getBaseImage() != null ? baseImage : dataBaseImage;
-        File dockerArchive = dockerArchiveCreator.create(params, base, dataExportDir, assemblyDescriptor, assemblyDescriptorRef);
-        info("Created data image " + name);
-        dockerAccess.buildImage(name, dockerArchive);
-        return name;
+        File dockerArchive = dockerArchiveCreator.create(params, buildConfig);
+        String imageName = getImageName(name);
+        info("Created image " + imageName);
+        dockerAccess.buildImage(imageName, dockerArchive);
     }
+
 
 }

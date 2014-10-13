@@ -96,7 +96,7 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void startContainer(String containerId, Map<Integer, Integer> ports, String volumesFrom) throws MojoExecutionException {
+    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/{id}/start")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
@@ -117,7 +117,7 @@ public class DockerAccessUnirest implements DockerAccess {
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .routeParam("id", containerId);
             HttpResponse<String> resp = request(req);
-            checkReturnCode("Stopping container with id " + containerId, resp, 204);
+            checkReturnCode("Stopping container with id " + containerId, resp, 204, 304);
 
         } catch (UnirestException e) {
             throw new MojoExecutionException("Cannot stop container " + containerId, e);
@@ -353,7 +353,7 @@ public class DockerAccessUnirest implements DockerAccess {
         return ret.toString();
     }
 
-    private String getStartConfig(Map<Integer, Integer> ports, String volumesFrom) {
+    private String getStartConfig(Map<Integer, Integer> ports, List<String> volumesFrom) {
         JSONObject ret = new JSONObject();
         if (ports != null && ports.size() > 0) {
             JSONObject c = new JSONObject();
@@ -368,8 +368,7 @@ public class DockerAccessUnirest implements DockerAccess {
             ret.put("PortBindings", c);
         }
         if (volumesFrom != null) {
-            JSONArray a = new JSONArray();
-            a.put(volumesFrom);
+            JSONArray a = new JSONArray(volumesFrom);
             ret.put("VolumesFrom", a);
         }
         log.debug("Container start config: " + ret.toString());
@@ -514,12 +513,14 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
-    private void checkReturnCode(String msg, HttpResponse resp, int expectedCode) throws MojoExecutionException {
-        if (resp.getCode() != expectedCode) {
-            throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + resp.getCode() + ", " +
-                                             resp.getBody().toString().trim() + ")");
-
+    private void checkReturnCode(String msg, HttpResponse resp, int ... expectedCodes) throws MojoExecutionException {
+        for (int code : expectedCodes) {
+            if (resp.getCode() == code) {
+                return;
+            }
         }
+        throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + resp.getCode() + ", " +
+                                         (resp.getBody() != null ? resp.getBody().toString().trim() : "") + ")");
     }
 
     private String stripSlash(String url) {

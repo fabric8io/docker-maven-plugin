@@ -29,7 +29,7 @@ public class StopMojo extends AbstractDockerMojo {
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         if (!keepRunning) {
             List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
-            for (ShutdownAction action : getShutdownActions()) {
+            for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
                 action.shutdown(access, this, keepContainer);
                 appliedShutdownActions.add(action);
             }

@@ -112,7 +112,9 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder baseImage(String baseImage) {
-        this.baseImage = baseImage;
+        if (baseImage != null) {
+            this.baseImage = baseImage;
+        }
         return this;
     }
 
@@ -122,7 +124,9 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder exportDir(String exportDir) {
-        this.exportDir = exportDir;
+        if (exportDir != null) {
+            this.exportDir = exportDir;
+        }
         return this;
     }
 
@@ -142,18 +146,18 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder expose(List<Integer> ports) {
+    public DockerFileBuilder expose(List<String> ports) {
         if (ports != null) {
-            for (Integer port : ports) {
+            for (String port : ports) {
                 if (port != null) {
-                    expose(port);
+                    expose(Integer.parseInt(port));
                 }
             }
         }
         return this;
     }
 
-    public DockerFileBuilder environmentVariables(Map<String, String> values) {
+    public DockerFileBuilder env(Map<String, String> values) {
         this.envEntries = values != null ? values : new HashMap<String,String>();
         return this;
     }

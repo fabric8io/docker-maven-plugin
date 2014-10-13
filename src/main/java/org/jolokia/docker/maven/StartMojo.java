@@ -22,8 +22,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.config.RunImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.PortMapping;
 
@@ -58,15 +57,8 @@ public class StartMojo extends AbstractDockerMojo {
                                                       mappedPorts.getContainerPorts(),
                                                       runConfig.getCommand(),
                                                       runConfig.getEnv());
-            String volumesFromImage = runConfig.getVolumesFrom();
-            String volumesFromContainer = null;
-            if (volumesFromImage != null) {
-                volumesFromContainer = containerImageMap.get(volumesFromImage);
-                if (volumesFromContainer == null) {
-                    throw new MojoFailureException("No container for image " + volumesFromImage + " started.");
-                }
-            }
-            docker.startContainer(container, mappedPorts.getPortsMap(), volumesFromContainer);
+            List<String> containersHoldingVolumes = extractVolumesFrom(runConfig);
+            docker.startContainer(container, mappedPorts.getPortsMap(), containersHoldingVolumes);
             containerImageMap.put(image,container);
             info("Created and started container " + container.substring(0, 12) + " from image " + image);
 
@@ -108,13 +100,87 @@ public class StartMojo extends AbstractDockerMojo {
 
     }
 
+    private List<String> extractVolumesFrom(RunImageConfiguration runConfig) throws MojoFailureException {
+        List<String> volumesFromImages = runConfig.getVolumesFrom();
+        List<String> containers = new ArrayList<>();
+        if (volumesFromImages != null) {
+            for (String volumesFrom : volumesFromImages) {
+                String container = containerImageMap.get(volumesFrom);
+                if (container  == null) {
+                    throw new MojoFailureException("No container for image " + volumesFrom + " started.");
+                }
+                containers.add(container);
+            }
+        }
+        return containers;
+    }
+
     // Check images for volume / link dependencies and return it in the right order.
     // Only return images which should be run
     // Images references via volumes but with no run configuration are started once to create
     // an appropriate container which can be linked into the image
-    private List<ImageConfiguration> getRunImageConfigsInOrder() {
-        // TODO.
-        return images;
+    private List<ImageConfiguration> getRunImageConfigsInOrder() throws MojoFailureException {
+        List<ImageConfiguration> ret = new ArrayList<>();
+        List<ImageConfiguration> secondPass = new ArrayList<>();
+        Set<String> processedImageNames = new HashSet<>();
+
+        // First pass: Pick all data images and all without dependencies
+        for (ImageConfiguration config : images) {
+            RunImageConfiguration runConfig = config.getRunConfiguration();
+            if (runConfig == null || runConfig.getVolumesFrom() == null || runConfig.getVolumesFrom().size() == 0) {
+                // A data image only or no dependency. Add it to the list of data image which can be always
+                // created first.
+                ret.add(imageProcessed(processedImageNames, config));
+            } else {
+                secondPass.add(config);
+            }
+        }
+
+        // Next passes: Those with dependencies are checked whether they already have been visited.
+        List<ImageConfiguration> remaining = secondPass;
+        int retries = 10;
+        do {
+            remaining = resolveImageDependencies(ret,remaining,processedImageNames);
+        } while (remaining.size() > 0  && retries-- > 0);
+        if (retries == 0 && remaining.size() > 0) {
+            error("Cannot resolve image dependencies for volumes after 10 passes");
+            error("Unresolved images:");
+            for (ImageConfiguration config : remaining) {
+                error("     " + config.getName());
+            }
+            throw new MojoFailureException("Invalid image configuration for volumesFrom: Cyclic dependencies");
+        }
+        return ret;
+    }
+
+    private List<ImageConfiguration> resolveImageDependencies(List<ImageConfiguration> ret,
+                                                              List<ImageConfiguration> secondPass,
+                                                              Set<String> processedImageNames) {
+        List<ImageConfiguration> nextPass = new ArrayList<>();
+        for (ImageConfiguration config : secondPass) {
+            List<String> volumesFrom = config.getRunConfiguration().getVolumesFrom();
+            if (allDependentImagesProcessed(processedImageNames, volumesFrom)) {
+                ret.add(imageProcessed(processedImageNames, config));
+            } else {
+                // Still unresolved dependencies
+                nextPass.add(config);
+            }
+        }
+        return nextPass;
+    }
+
+    private ImageConfiguration imageProcessed(Set<String> processedImageNames, ImageConfiguration config) {
+        processedImageNames.add(config.getName());
+        return config;
+    }
+
+    private boolean allDependentImagesProcessed(Set<String> dataImages, List<String> volumesFrom) {
+        for (String volumeFrom : volumesFrom) {
+            if (!dataImages.contains(volumeFrom)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
@@ -133,15 +199,17 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts) {
-        int wait = runConfig.getWait();
-        String waitHttp = runConfig.getWaitHttp();
-        if (waitHttp != null) {
-            String waitUrl = mappedPorts.replaceVars(waitHttp);
-            long waited = EnvUtil.httpPingWait(waitUrl, wait);
-            info("Waited on " + waitUrl + " for " + waited + " ms");
-        } else if (wait > 0) {
-            EnvUtil.sleep(wait);
-            info("Waited " + wait + " ms");
+        WaitConfiguration wait = runConfig.getWaitConfiguration();
+        if (wait != null) {
+            String waitHttp = wait.getHttp();
+            if (waitHttp != null) {
+                String waitUrl = mappedPorts.replaceVars(waitHttp);
+                long waited = EnvUtil.httpPingWait(waitUrl, wait.getTime());
+                info("Waited on " + waitUrl + " for " + waited + " ms");
+            } else if (wait.getTime() > 0) {
+                EnvUtil.sleep(wait.getTime());
+                info("Waited " + wait + " ms");
+            }
         }
     }
 
