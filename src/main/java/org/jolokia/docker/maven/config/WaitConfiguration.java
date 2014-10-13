@@ -12,13 +12,13 @@ public class WaitConfiguration {
     int time;
 
     @Parameter
-    String http;
+    String url;
 
     public int getTime() {
         return time;
     }
 
-    public String getHttp() {
-        return http;
+    public String getUrl() {
+        return url;
     }
 }

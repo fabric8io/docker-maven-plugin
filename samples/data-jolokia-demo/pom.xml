@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.9.11-SNAPSHOT</version>
+  <version>0.10.1-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -98,7 +98,7 @@
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                  <http>http://localhost:${jolokia.port}/jolokia</http>
+                  <url>http://localhost:${jolokia.port}/jolokia</url>
                   <time>10000</time>
                 </wait>
               </run>
@@ -212,7 +212,7 @@
                     </ports>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <http>http://localhost:${jolokia.port}/jolokia</http>
+                      <url>http://localhost:${jolokia.port}/jolokia</url>
                       <time>10000</time>
                     </wait>
                   </run>

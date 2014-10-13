@@ -201,7 +201,7 @@ public class StartMojo extends AbstractDockerMojo {
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
-            String waitHttp = wait.getHttp();
+            String waitHttp = wait.getUrl();
             if (waitHttp != null) {
                 String waitUrl = mappedPorts.replaceVars(waitHttp);
                 long waited = EnvUtil.httpPingWait(waitUrl, wait.getTime());
