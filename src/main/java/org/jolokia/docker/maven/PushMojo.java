@@ -4,8 +4,7 @@ import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -15,7 +14,7 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  *
  * @author roland
  */
-@Mojo(name = "push")
+@Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
 public class PushMojo extends AbstractDockerMojo {
 
     // Comma separated list of images names to push

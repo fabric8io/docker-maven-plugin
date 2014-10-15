@@ -13,7 +13,7 @@ public class BuildImageConfiguration {
 
     // Base Image name of the data image to use.
     @Parameter
-    private String baseImage;
+    private String from;
 
     @Parameter
     private String exportDir;
@@ -36,8 +36,8 @@ public class BuildImageConfiguration {
     @Parameter(defaultValue = "true")
     private boolean doNotPush;
 
-    public String getBaseImage() {
-        return baseImage;
+    public String getFrom() {
+        return from;
     }
 
     public String getExportDir() {

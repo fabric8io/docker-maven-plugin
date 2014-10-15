@@ -196,7 +196,7 @@
                   <!-- Artefact Image-->
                   <name>jolokia/${project.artifactId}:${project.version}</name>
                   <build>
-                    <baseImage>${image}</baseImage>
+                    <from>${image}</from>
                     <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
                   </build>
                   <run>

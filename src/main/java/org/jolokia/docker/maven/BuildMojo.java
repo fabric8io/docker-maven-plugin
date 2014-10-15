@@ -21,7 +21,7 @@ import org.jolokia.docker.maven.util.MojoParameters;
  * @author roland
  * @since 28.07.14
  */
-@Mojo(name = "build")
+@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
 public class BuildMojo extends AbstractDockerMojo {
 
     // ==============================================================================================================

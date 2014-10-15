@@ -9,10 +9,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class WaitConfiguration {
 
     @Parameter
-    int time;
+    private int time;
 
     @Parameter
-    String url;
+    private String url;
 
     public int getTime() {
         return time;

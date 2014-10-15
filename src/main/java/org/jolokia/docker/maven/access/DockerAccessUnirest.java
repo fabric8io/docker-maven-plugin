@@ -140,37 +140,49 @@ public class DockerAccessUnirest implements DockerAccess {
 
     /** {@inheritDoc} */
     private Map<Integer, Integer> extractPorts(JSONObject info) {
-        Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
-
         JSONObject networkSettings = info.getJSONObject("NetworkSettings");
         if (networkSettings != null) {
             JSONObject ports = networkSettings.getJSONObject("Ports");
             if (ports != null) {
-                for (Object portSpecO : ports.keySet()) {
-                    String portSpec = portSpecO.toString();
-                    if (!ports.isNull(portSpec)) {
-                        JSONArray hostSpecs = ports.getJSONArray(portSpec);
-                        if (hostSpecs != null && hostSpecs.length() > 0) {
-                            // We take only the first
-                            JSONObject hostSpec = hostSpecs.getJSONObject(0);
-                            Object hostPortO = hostSpec.get("HostPort");
-                            if (hostPortO != null) {
-                                try {
-                                    Integer hostPort = (Integer.parseInt(hostPortO.toString()));
-                                    int idx = portSpec.indexOf('/');
-                                    String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
-                                    Integer containerPort = Integer.parseInt(p);
-                                    ret.put(containerPort, hostPort);
-                                } catch (NumberFormatException exp) {
-                                    log.warn("Cannot parse " + hostPortO + " or " + portSpec + " as a port number. Ignoring in mapping");
-                                }
-                            }
-                        }
-                    }
-                }
+                return createPortMapping(ports);
             }
         }
-        return ret;
+        return Collections.emptyMap();
+    }
+
+    private Map<Integer, Integer> createPortMapping(JSONObject ports) {
+        Map<Integer, Integer> portMapping = new HashMap<Integer, Integer>();
+        for (Object portSpecO : ports.keySet()) {
+            String portSpec = portSpecO.toString();
+            if (!ports.isNull(portSpec)) {
+                JSONArray hostSpecs = ports.getJSONArray(portSpec);
+                parseHostSpecsAndUpdateMapping(portMapping, hostSpecs, portSpec);
+            }
+        }
+        return portMapping;
+    }
+
+    private void parseHostSpecsAndUpdateMapping(Map<Integer, Integer> portMapping, JSONArray hostSpecs, String portSpec) {
+        if (hostSpecs != null && hostSpecs.length() > 0) {
+            // We take only the first
+            JSONObject hostSpec = hostSpecs.getJSONObject(0);
+            Object hostPortO = hostSpec.get("HostPort");
+            if (hostPortO != null) {
+                parsePortSpecAndUpdateMapping(portMapping, hostPortO, portSpec);
+            }
+        }
+    }
+
+    private void parsePortSpecAndUpdateMapping(Map<Integer, Integer> portMapping, Object hostPort, String portSpec) {
+        try {
+            Integer hostP = (Integer.parseInt(hostPort.toString()));
+            int idx = portSpec.indexOf('/');
+            String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
+            Integer containerPort = Integer.parseInt(p);
+            portMapping.put(containerPort, hostP);
+        } catch (NumberFormatException exp) {
+            log.warn("Cannot parse " + hostPort + " or " + portSpec + " as a port number. Ignoring in mapping");
+        }
     }
 
     /** {@inheritDoc} */
@@ -179,8 +191,7 @@ public class DockerAccessUnirest implements DockerAccess {
             List<String> ret = new ArrayList<String>();
             BaseRequest req = Unirest.get(url + "/containers/json?limit=100")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
-            HttpResponse<String> resp = null;
-            resp = request(req);
+            HttpResponse<String> resp = request(req);
             checkReturnCode("Fetching container information", resp, 200);
             JSONArray configs = new JSONArray(resp.getBody());
             for (int i = 0; i < configs.length(); i ++) {

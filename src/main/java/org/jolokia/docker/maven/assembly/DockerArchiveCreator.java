@@ -82,11 +82,11 @@ public class DockerArchiveCreator {
             DockerFileBuilder builder =
                     new DockerFileBuilder()
                             .exportDir(config.getExportDir())
-                            .add("maven","")
+                            .add("maven", "")
                             .expose(config.getPorts())
                             .env(config.getEnv());
-            if (config.getBaseImage() != null) {
-                builder.baseImage(config.getBaseImage());
+            if (config.getFrom() != null) {
+                builder.baseImage(config.getFrom());
                 builder.command(null); // Use command from base image
             }
             return builder.create(destDir);
