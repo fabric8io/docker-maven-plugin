@@ -21,10 +21,10 @@ import java.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
+import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.util.EnvUtil;
-import org.jolokia.docker.maven.util.PortMapping;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * Goal for creating and starting a docker container
@@ -37,15 +37,17 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(defaultValue = "true")
     private boolean autoPull;
 
-    // Map holding associations between started containers and their images
-    private Map<String, String> containerImageMap = new HashMap<>();
+    // Map holding associations between started containers and their images via name and aliases
+    private Map<String, String> containerImageNameMap = new HashMap<>();
+    private Map<String, String> containerImageAliasMap = new HashMap<>();
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
 
-        for (ImageConfiguration imageConfig : getRunImageConfigsInOrder()) {
-            String image = imageConfig.getName();
-            checkImage(docker,image);
+        for (StartOrderResolver.Resolvable resolvable : StartOrderResolver.resolve(convertToResolvables(images))) {
+            ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+            String imageName = imageConfig.getName();
+            checkImage(docker,imageName);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             if (runConfig == null) {
@@ -53,17 +55,19 @@ public class StartMojo extends AbstractDockerMojo {
                 runConfig = RunImageConfiguration.DEFAULT;
             }
             PortMapping mappedPorts = new PortMapping(runConfig.getPorts(),project.getProperties());
-            String container = docker.createContainer(image,
+            String container = docker.createContainer(imageName,
                                                       mappedPorts.getContainerPorts(),
                                                       runConfig.getCommand(),
                                                       runConfig.getEnv());
-            List<String> containersHoldingVolumes = extractVolumesFrom(runConfig);
-            docker.startContainer(container, mappedPorts.getPortsMap(), containersHoldingVolumes);
-            containerImageMap.put(image,container);
-            info("Created and started container " + container.substring(0, 12) + " from image " + image);
+            docker.startContainer(container,
+                                  mappedPorts.getPortsMap(),
+                                  findContainersForImages(runConfig.getVolumesFrom()),
+                                  findLinksWithContainerNames(runConfig.getLinks()));
+            registerContainer(container, imageConfig);
+            info("Created and started container " + container.substring(0, 12) + " from image " + imageName);
 
             // Remember id for later stopping the container
-            registerShutdownAction(new ShutdownAction(image,container));
+            registerShutdownAction(new ShutdownAction(imageName,container));
 
             // Set maven properties for dynamically assigned ports.
             if (mappedPorts.containsDynamicPorts()) {
@@ -76,14 +80,31 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private List<String> extractVolumesFrom(RunImageConfiguration runConfig) throws MojoFailureException {
-        List<String> volumesFromImages = runConfig.getVolumesFrom();
+    private List<String> findLinksWithContainerNames(List<String> links) throws MojoExecutionException {
+        List<String> ret = new ArrayList<>();
+        for (String link : links) {
+            // Support also image name with tags (which are also added with ':')
+            // Either an alias can be used or the image name
+            String[] p = link.split(":");
+            String linkAlias = p[p.length-1];
+            String[] nameParts = Arrays.copyOfRange(p,0,p.length - 1);
+            String lookup = StringUtils.join(nameParts,":");
+            String container = lookupContainer(lookup);
+            if (container == null) {
+                throw new MojoExecutionException("Cannot find container for " + lookup + " while preparing links");
+            }
+            ret.add(container + ":" + linkAlias);
+        }
+        return ret;
+    }
+
+    private List<String> findContainersForImages(List<String> images) throws MojoFailureException {
         List<String> containers = new ArrayList<>();
-        if (volumesFromImages != null) {
-            for (String volumesFrom : volumesFromImages) {
-                String container = containerImageMap.get(volumesFrom);
+        if (images != null) {
+            for (String image : images) {
+                String container = lookupContainer(image);
                 if (container  == null) {
-                    throw new MojoFailureException("No container for image " + volumesFrom + " started.");
+                    throw new MojoFailureException("No container for image " + image + " started.");
                 }
                 containers.add(container);
             }
@@ -91,74 +112,29 @@ public class StartMojo extends AbstractDockerMojo {
         return containers;
     }
 
-    // Check images for volume / link dependencies and return it in the right order.
-    // Only return images which should be run
-    // Images references via volumes but with no run configuration are started once to create
-    // an appropriate container which can be linked into the image
-    private List<ImageConfiguration> getRunImageConfigsInOrder() throws MojoFailureException {
-        List<ImageConfiguration> ret = new ArrayList<>();
-        List<ImageConfiguration> secondPass = new ArrayList<>();
-        Set<String> processedImageNames = new HashSet<>();
-
-        // First pass: Pick all data images and all without dependencies
-        for (ImageConfiguration config : images) {
-            RunImageConfiguration runConfig = config.getRunConfiguration();
-            if (runConfig == null || runConfig.getVolumesFrom() == null || runConfig.getVolumesFrom().size() == 0) {
-                // A data image only or no dependency. Add it to the list of data image which can be always
-                // created first.
-                ret.add(imageProcessed(processedImageNames, config));
-            } else {
-                secondPass.add(config);
+    private String lookupContainer(String lookup) {
+        for (Map<String,String> map : new Map[] { containerImageAliasMap, containerImageNameMap}) {
+            if (map.containsKey(lookup)) {
+                return map.get(lookup);
             }
         }
+        return null;
+    }
 
-        // Next passes: Those with dependencies are checked whether they already have been visited.
-        List<ImageConfiguration> remaining = secondPass;
-        int retries = 10;
-        do {
-            remaining = resolveImageDependencies(ret,remaining,processedImageNames);
-        } while (remaining.size() > 0  && retries-- > 0);
-        if (retries == 0 && remaining.size() > 0) {
-            error("Cannot resolve image dependencies for volumes after 10 passes");
-            error("Unresolved images:");
-            for (ImageConfiguration config : remaining) {
-                error("     " + config.getName());
-            }
-            throw new MojoFailureException("Invalid image configuration for volumesFrom: Cyclic dependencies");
+    private void registerContainer(String container, ImageConfiguration imageConfig) {
+        containerImageNameMap.put(imageConfig.getName(), container);
+        if (imageConfig.getAlias() != null) {
+            containerImageAliasMap.put(imageConfig.getAlias(),container);
+        }
+    }
+
+    private List<StartOrderResolver.Resolvable> convertToResolvables(List<ImageConfiguration> images) {
+        List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
+        for (ImageConfiguration config : images) {
+            ret.add(config);
         }
         return ret;
     }
-
-    private List<ImageConfiguration> resolveImageDependencies(List<ImageConfiguration> ret,
-                                                              List<ImageConfiguration> secondPass,
-                                                              Set<String> processedImageNames) {
-        List<ImageConfiguration> nextPass = new ArrayList<>();
-        for (ImageConfiguration config : secondPass) {
-            List<String> volumesFrom = config.getRunConfiguration().getVolumesFrom();
-            if (allDependentImagesProcessed(processedImageNames, volumesFrom)) {
-                ret.add(imageProcessed(processedImageNames, config));
-            } else {
-                // Still unresolved dependencies
-                nextPass.add(config);
-            }
-        }
-        return nextPass;
-    }
-
-    private ImageConfiguration imageProcessed(Set<String> processedImageNames, ImageConfiguration config) {
-        processedImageNames.add(config.getName());
-        return config;
-    }
-
-    private boolean allDependentImagesProcessed(Set<String> dataImages, List<String> volumesFrom) {
-        for (String volumeFrom : volumesFrom) {
-            if (!dataImages.contains(volumeFrom)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
 
     // ========================================================================================================
 

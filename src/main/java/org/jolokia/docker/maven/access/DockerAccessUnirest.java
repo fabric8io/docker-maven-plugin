@@ -96,13 +96,13 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom) throws MojoExecutionException {
+    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom,List<String> links) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/{id}/start")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .header("Content-Type", "application/json")
                                      .routeParam("id", containerId)
-                                     .body(getStartConfig(ports, volumesFrom));
+                                     .body(getStartConfig(ports, volumesFrom, links));
             HttpResponse<String> resp = request(req);
             checkReturnCode("Starting container with id " + containerId, resp, 204);
         } catch (UnirestException e) {
@@ -364,7 +364,7 @@ public class DockerAccessUnirest implements DockerAccess {
         return ret.toString();
     }
 
-    private String getStartConfig(Map<Integer, Integer> ports, List<String> volumesFrom) {
+    private String getStartConfig(Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) {
         JSONObject ret = new JSONObject();
         if (ports != null && ports.size() > 0) {
             JSONObject c = new JSONObject();
@@ -379,8 +379,10 @@ public class DockerAccessUnirest implements DockerAccess {
             ret.put("PortBindings", c);
         }
         if (volumesFrom != null) {
-            JSONArray a = new JSONArray(volumesFrom);
-            ret.put("VolumesFrom", a);
+            ret.put("VolumesFrom", new JSONArray(volumesFrom));
+        }
+        if (links != null) {
+            ret.put("Links", new JSONArray(links));
         }
         log.debug("Container start config: " + ret.toString());
         return ret.toString();

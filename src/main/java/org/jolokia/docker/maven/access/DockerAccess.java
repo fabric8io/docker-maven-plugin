@@ -47,7 +47,7 @@ public interface DockerAccess {
      * @param volumesFrom mount volumes from the given container id. Can be null.
      * @throws MojoExecutionException if the container could not be started.
      */
-    void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom) throws MojoExecutionException;
+    void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) throws MojoExecutionException;
 
     /**
      * Stop a container.

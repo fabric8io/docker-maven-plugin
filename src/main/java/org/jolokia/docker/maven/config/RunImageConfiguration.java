@@ -34,14 +34,14 @@ public class RunImageConfiguration {
     @Parameter
     private List<String> volumes;
 
+    // Links to other container started
+    @Parameter
+    private List<String> links;
+
     // Wait that many milliseconds after starting the container in order to allow the
     // container to warm up
     @Parameter
     private WaitConfiguration wait;
-
-    // Wait until the given URL is accessible
-    @Parameter
-    private String waitHttp;
 
     public Map<String, String> getEnv() {
         return env;
@@ -63,11 +63,11 @@ public class RunImageConfiguration {
         return wait;
     }
 
-    public String getWaitHttp() {
-        return waitHttp;
-    }
-
     public List<String> getVolumesFrom() {
         return volumes;
+    }
+
+    public List<String> getLinks() {
+        return links;
     }
 }
