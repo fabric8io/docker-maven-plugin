@@ -3,9 +3,10 @@ package org.jolokia.docker.maven.util;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * @author roland
@@ -80,6 +81,27 @@ public class EnvUtil {
                     // best try ...
                 }
             }
+        }
+    }
+
+    public static List<String[]> splitLinks(List<String> links) {
+        if (links != null) {
+            List<String[]> ret = new ArrayList<>();
+
+            for (String link : links) {
+                String[] p = link.split(":");
+                String linkAlias = p[p.length - 1];
+                String[] nameParts = Arrays.copyOfRange(p, 0, p.length - 1);
+                String lookup = StringUtils.join(nameParts, ":");
+                if (lookup.length() == 0) {
+                    lookup = linkAlias;
+                }
+                ret.add(new String[]{lookup, linkAlias});
+            }
+
+            return ret;
+        } else {
+            return Collections.emptyList();
         }
     }
 

@@ -19,7 +19,7 @@ public class StartOrderResolver {
     public static List<Resolvable> resolve(List<Resolvable> images) throws MojoFailureException {
         List<Resolvable> ret = new ArrayList<>();
         List<Resolvable> secondPass = new ArrayList<>();
-        Set<String> processedImageNames = new HashSet<>();
+        Set<String> processedImages = new HashSet<>();
 
         // First pass: Pick all data images and all without dependencies
         for (Resolvable config : images) {
@@ -27,7 +27,7 @@ public class StartOrderResolver {
             if (volumesOrLinks == null) {
                 // A data image only or no dependency. Add it to the list of data image which can be always
                 // created first.
-                processedImageNames.add(config.getName());
+                updateProcessedImages(processedImages, config);
                 ret.add(config);
             } else {
                 secondPass.add(config);
@@ -40,10 +40,10 @@ public class StartOrderResolver {
         String error = null;
         try {
             do {
-                remaining = resolveImageDependencies(ret,remaining,processedImageNames);
+                remaining = resolveImageDependencies(ret,remaining,processedImages);
             } while (remaining.size() > 0  && retries-- > 0);
         } catch (ResolveSteadyStateException e) {
-            error = "Cannot resolve imaged depdendencies for start order\n" + remainingImagesDescription(remaining);
+            error = "Cannot resolve image dependencies for start order\n" + remainingImagesDescription(remaining);
         }
         if (retries == 0 && remaining.size() > 0) {
             error = "Cannot resolve image dependencies after " + MAX_RESOLVE_RETRIES + " passes\n"
@@ -53,6 +53,13 @@ public class StartOrderResolver {
             throw new MojoFailureException(error);
         }
         return ret;
+    }
+
+    private static void updateProcessedImages(Set<String> processedImageNames, Resolvable config) {
+        processedImageNames.add(config.getName());
+        if (config.getAlias() != null) {
+            processedImageNames.add(config.getAlias());
+        }
     }
 
     private static String remainingImagesDescription(List<Resolvable> configs) {
@@ -73,7 +80,7 @@ public class StartOrderResolver {
         for (Resolvable config : secondPass) {
             List<String> dependentImagesFrom = extractDependentImagesFor(config);
             if (containsAll(processedImages, dependentImagesFrom)) {
-                processedImages.add(config.getName());
+                updateProcessedImages(processedImages,config);
                 ret.add(config);
                 changed = true;
             } else {
@@ -109,6 +116,7 @@ public class StartOrderResolver {
 
     public interface Resolvable {
         String getName();
+        String getAlias();
         List<String> getDependencies();
     }
 }

@@ -2,7 +2,7 @@ package org.jolokia.docker.maven.util;
 
 import java.io.*;
 import java.net.*;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.*;
@@ -35,6 +35,23 @@ public class EnvUtilTest {
         long waited = EnvUtil.httpPingWait(httpPingUrl,700);
         assertTrue("Waited longer than 500ms: " + waited,waited < 700);
         server.stop(10);
+    }
+
+    @Test
+    public void splitPath() {
+        List<String[]> res = EnvUtil.splitLinks(Arrays.asList("db", "postgres:9:db", "postgres:db"));
+        assertEquals(3,res.size());
+        String[][] expected = new String[][] {
+                { "db", "db"},
+                { "postgres:9","db"},
+                { "postgres", "db"}
+        };
+        for (int i = 0; i < res.size(); i++) {
+            String[] got = res.get(i);
+            assertEquals(2,got.length);
+            assertEquals(expected[i][0],got[0]);
+            assertEquals(expected[i][1],got[1]);
+        }
     }
     
     @Test

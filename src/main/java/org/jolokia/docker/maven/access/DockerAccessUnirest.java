@@ -95,6 +95,21 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
+    @Override
+    public String getContainerName(String id) throws MojoExecutionException {
+        try {
+            BaseRequest req = Unirest.get(url + "/containers/" + id + "/json")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
+                                     .header("Content-Type", "application/json");
+            HttpResponse<String> resp = request(req);
+            checkReturnCode("Getting information about container '" + id + "'", resp, 200);
+            JSONObject json = new JSONObject(resp.getBody());
+            return json.getString("Name");
+        } catch (UnirestException e) {
+            throw new MojoExecutionException("Cannot get information for container '" + id + "'", e);
+        }
+    }
+
     /** {@inheritDoc} */
     public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom,List<String> links) throws MojoExecutionException {
         try {
@@ -532,8 +547,8 @@ public class DockerAccessUnirest implements DockerAccess {
                 return;
             }
         }
-        throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + resp.getCode() + ", " +
-                                         (resp.getBody() != null ? resp.getBody().toString().trim() : "") + ")");
+        throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + resp.getCode() +
+                                         (resp.getBody() != null ? "," + resp.getBody().toString().trim() : "") + ")");
     }
 
     private String stripSlash(String url) {

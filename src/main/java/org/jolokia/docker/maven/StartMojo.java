@@ -21,7 +21,6 @@ import java.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
-import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.*;
@@ -38,8 +37,11 @@ public class StartMojo extends AbstractDockerMojo {
     private boolean autoPull;
 
     // Map holding associations between started containers and their images via name and aliases
+    // Key: Image, Value: Container
     private Map<String, String> containerImageNameMap = new HashMap<>();
-    private Map<String, String> containerImageAliasMap = new HashMap<>();
+
+    // Key: Alias, Value: Image
+    private Map<String, String> imageAliasMap = new HashMap<>();
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
@@ -62,7 +64,7 @@ public class StartMojo extends AbstractDockerMojo {
             docker.startContainer(container,
                                   mappedPorts.getPortsMap(),
                                   findContainersForImages(runConfig.getVolumesFrom()),
-                                  findLinksWithContainerNames(runConfig.getLinks()));
+                                  findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
             info("Created and started container " + container.substring(0, 12) + " from image " + imageName);
 
@@ -80,20 +82,14 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private List<String> findLinksWithContainerNames(List<String> links) throws MojoExecutionException {
+    private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws MojoExecutionException {
         List<String> ret = new ArrayList<>();
-        for (String link : links) {
-            // Support also image name with tags (which are also added with ':')
-            // Either an alias can be used or the image name
-            String[] p = link.split(":");
-            String linkAlias = p[p.length-1];
-            String[] nameParts = Arrays.copyOfRange(p,0,p.length - 1);
-            String lookup = StringUtils.join(nameParts,":");
-            String container = lookupContainer(lookup);
+        for (String[] link : EnvUtil.splitLinks(links)) {
+            String container = lookupContainer(link[0]);
             if (container == null) {
-                throw new MojoExecutionException("Cannot find container for " + lookup + " while preparing links");
+                throw new MojoExecutionException("Cannot find container for " + link[0] + " while preparing links");
             }
-            ret.add(container + ":" + linkAlias);
+            ret.add(docker.getContainerName(container) + ":" + link[1]);
         }
         return ret;
     }
@@ -113,10 +109,12 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     private String lookupContainer(String lookup) {
-        for (Map<String,String> map : new Map[] { containerImageAliasMap, containerImageNameMap}) {
-            if (map.containsKey(lookup)) {
-                return map.get(lookup);
-            }
+        if (imageAliasMap.containsKey(lookup)) {
+            String image = imageAliasMap.get(lookup);
+            return containerImageNameMap.get(image);
+        }
+        if (containerImageNameMap.containsKey(lookup)) {
+            return containerImageNameMap.get(lookup);
         }
         return null;
     }
@@ -124,7 +122,7 @@ public class StartMojo extends AbstractDockerMojo {
     private void registerContainer(String container, ImageConfiguration imageConfig) {
         containerImageNameMap.put(imageConfig.getName(), container);
         if (imageConfig.getAlias() != null) {
-            containerImageAliasMap.put(imageConfig.getAlias(),container);
+            imageAliasMap.put(imageConfig.getAlias(), imageConfig.getName());
         }
     }
 
@@ -154,13 +152,14 @@ public class StartMojo extends AbstractDockerMojo {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
             String waitHttp = wait.getUrl();
+            int time = wait.getTime();
             if (waitHttp != null) {
                 String waitUrl = mappedPorts.replaceVars(waitHttp);
-                long waited = EnvUtil.httpPingWait(waitUrl, wait.getTime());
+                long waited = EnvUtil.httpPingWait(waitUrl, time);
                 info("Waited on " + waitUrl + " for " + waited + " ms");
-            } else if (wait.getTime() > 0) {
-                EnvUtil.sleep(wait.getTime());
-                info("Waited " + wait + " ms");
+            } else if (time > 0) {
+                EnvUtil.sleep(time);
+                info("Waited " + time + " ms");
             }
         }
     }

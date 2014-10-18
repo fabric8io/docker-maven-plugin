@@ -36,6 +36,8 @@ public interface DockerAccess {
      */
     String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException;
 
+    String getContainerName(String id) throws MojoExecutionException;
+
     /**
      * Start a container.
      *

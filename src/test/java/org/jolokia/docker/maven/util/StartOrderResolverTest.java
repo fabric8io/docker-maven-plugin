@@ -68,6 +68,11 @@ public class StartOrderResolverTest {
         }
 
         @Override
+        public String getAlias() {
+            return null;
+        }
+
+        @Override
         public List<String> getDependencies() {
             return deps;
         }

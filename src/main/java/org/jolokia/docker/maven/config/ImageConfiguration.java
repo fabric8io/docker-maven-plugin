@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
+import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.StartOrderResolver;
 
 /**
@@ -29,17 +30,17 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return name;
     }
 
+    public String getAlias() {
+        return alias;
+    }
+
     public RunImageConfiguration getRunConfiguration() {
         return run;
     }
 
+
     public BuildImageConfiguration getBuildConfiguration() {
         return build;
-    }
-
-
-    public String getAlias() {
-        return alias;
     }
 
     @Override
@@ -47,9 +48,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         RunImageConfiguration runConfig = getRunConfiguration();
         List<String> ret = new ArrayList<>();
         if (runConfig != null) {
-            for (List deps : new List[] { runConfig.getVolumesFrom(), runConfig.getLinks() }) {
-                if (deps != null) {
-                    ret.addAll(deps);
+            if (runConfig.getVolumesFrom() != null) {
+                ret.addAll(runConfig.getVolumesFrom());
+            }
+            if (runConfig.getLinks() != null) {
+                for (String[] link : EnvUtil.splitLinks(runConfig.getLinks())) {
+                    ret.add(link[0]);
                 }
             }
         }
