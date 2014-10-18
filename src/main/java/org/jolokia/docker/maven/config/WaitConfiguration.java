@@ -14,11 +14,18 @@ public class WaitConfiguration {
     @Parameter
     private String url;
 
+    @Parameter
+    private String log;
+
     public int getTime() {
         return time;
     }
 
     public String getUrl() {
         return url;
+    }
+
+    public String getLog() {
+        return log;
     }
 }

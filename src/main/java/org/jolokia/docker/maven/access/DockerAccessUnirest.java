@@ -18,6 +18,7 @@ import com.mashape.unirest.request.body.Body;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.FileEntity;
@@ -79,7 +80,7 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException {
+    public String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/create")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
@@ -220,6 +221,37 @@ public class DockerAccessUnirest implements DockerAccess {
             return ret;
         } catch (UnirestException e) {
             throw new MojoExecutionException("Cannot get container information", e);
+        }
+    }
+
+    @Override
+    public String getLogs(final String containerId) throws MojoExecutionException {
+        try {
+            HttpClient client = ClientFactory.getHttpClient();
+            URI logUrl = new URI(url + "/containers/" + containerId + "/logs?stdout=1&stderr=1");
+            HttpGet get = new HttpGet(logUrl);
+
+            final StringBuffer dockerLog = new StringBuffer();
+
+            org.apache.http.HttpResponse resp = client.execute(URIUtils.extractHost(logUrl), get);
+            InputStream is = resp.getEntity().getContent();
+            int len;
+            int size = 8129;
+            byte[] buf = new byte[size];
+
+            while ((len = is.read(buf, 0, size)) != -1) {
+                String txt = new String(buf, 0, len, "UTF-8");
+                dockerLog.append(txt);
+            }
+            StatusLine status = resp.getStatusLine();
+            if (status.getStatusCode() != 200) {
+                throw new MojoExecutionException(
+                        "Error while getting log for '" + containerId + "' (code: " + status.getStatusCode()
+                        + ", " + status.getReasonPhrase() + ")");
+            }
+            return dockerLog.toString();
+        } catch (IOException | URISyntaxException e) {
+            throw new MojoExecutionException("Cannot get container log for " + containerId, e);
         }
     }
 

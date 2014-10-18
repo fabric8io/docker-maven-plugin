@@ -17,10 +17,12 @@ package org.jolokia.docker.maven;
  */
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
+import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.*;
@@ -58,8 +60,7 @@ public class StartMojo extends AbstractDockerMojo {
             }
             PortMapping mappedPorts = new PortMapping(runConfig.getPorts(),project.getProperties());
             String container = docker.createContainer(imageName,
-                                                      mappedPorts.getContainerPorts(),
-                                                      runConfig.getCommand(),
+                                                      runConfig.getCommand(), mappedPorts.getContainerPorts(),
                                                       runConfig.getEnv());
             docker.startContainer(container,
                                   mappedPorts.getPortsMap(),
@@ -78,7 +79,8 @@ public class StartMojo extends AbstractDockerMojo {
             }
 
             // Wait if requested
-            waitIfRequested(runConfig,mappedPorts);
+            waitIfRequested(runConfig,mappedPorts,docker,container);
+            debug(docker.getLogs(container));
         }
     }
 
@@ -148,20 +150,40 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts) {
+    private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
-            String waitHttp = wait.getUrl();
-            int time = wait.getTime();
-            if (waitHttp != null) {
-                String waitUrl = mappedPorts.replaceVars(waitHttp);
-                long waited = EnvUtil.httpPingWait(waitUrl, time);
-                info("Waited on " + waitUrl + " for " + waited + " ms");
-            } else if (time > 0) {
-                EnvUtil.sleep(time);
-                info("Waited " + time + " ms");
+            int maxTime = wait.getTime();
+            ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
+            ArrayList<String> logOut = new ArrayList<>();
+            if (wait.getUrl() != null) {
+                String waitUrl = mappedPorts.replaceVars(wait.getUrl());
+                checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
+                logOut.add("on url " + waitUrl + " ");
             }
+            if (wait.getLog() != null) {
+                checkers.add(getLogWaitChecker(wait.getLog(),docker,containerId));
+                logOut.add("on log out '" + wait.getLog() + "' ");
+            }
+            long waited = WaitUtil.wait(wait.getTime(),checkers.toArray(new WaitUtil.WaitChecker[0]));
+            info("Waited " + StringUtils.join(logOut.toArray(),"and") + waited + " ms");
         }
+    }
+
+    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final DockerAccess docker, final String containerId) {
+        return new WaitUtil.WaitChecker() {
+
+            @Override
+            public boolean check() {
+                try {
+                    String log = docker.getLogs(containerId);
+                    Pattern pattern = Pattern.compile(logPattern);
+                    return pattern.matcher(log).find();
+                } catch (MojoExecutionException e) {
+                    return false;
+                }
+            }
+        };
     }
 
     // Store dynamically mapped ports
