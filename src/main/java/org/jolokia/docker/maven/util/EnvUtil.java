@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
@@ -103,6 +104,15 @@ public class EnvUtil {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    public static String[] splitWOnSpaceWithEscape(String toSplit) {
+        String[] split = toSplit.split("(?<!" + Pattern.quote("\\") + ")\\s+");
+        String[] res = new String[split.length];
+        for (int i = 0; i < split.length; i++) {
+            res[i] = split[i].replaceAll("\\\\ "," ");
+        }
+        return res;
     }
 
     // ====================================================================================================

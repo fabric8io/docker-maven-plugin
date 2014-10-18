@@ -363,7 +363,7 @@ public class DockerAccessUnirest implements DockerAccess {
         }
         if (command != null) {
             JSONArray a = new JSONArray();
-            for (String s : command.split("\\s+")) {
+            for (String s : EnvUtil.splitWOnSpaceWithEscape(command)) {
                 a.put(s);
             }
             ret.put("Cmd",a);

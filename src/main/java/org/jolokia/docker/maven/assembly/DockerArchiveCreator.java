@@ -20,6 +20,7 @@ import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
+import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -87,7 +88,10 @@ public class DockerArchiveCreator {
                             .env(config.getEnv());
             if (config.getFrom() != null) {
                 builder.baseImage(config.getFrom());
-                builder.command(null); // Use command from base image
+                builder.command(null); // Use command from base image (gets overwritten below if explicitely set)
+            }
+            if (config.getCommand() != null) {
+                builder.command(EnvUtil.splitWOnSpaceWithEscape(config.getCommand()));
             }
             return builder.create(destDir);
         } catch (IOException e) {

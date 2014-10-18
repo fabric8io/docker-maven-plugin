@@ -38,7 +38,6 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return run;
     }
 
-
     public BuildImageConfiguration getBuildConfiguration() {
         return build;
     }
@@ -48,15 +47,23 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         RunImageConfiguration runConfig = getRunConfiguration();
         List<String> ret = new ArrayList<>();
         if (runConfig != null) {
-            if (runConfig.getVolumesFrom() != null) {
-                ret.addAll(runConfig.getVolumesFrom());
-            }
-            if (runConfig.getLinks() != null) {
-                for (String[] link : EnvUtil.splitLinks(runConfig.getLinks())) {
-                    ret.add(link[0]);
-                }
-            }
+            addVolumes(runConfig, ret);
+            addLinks(runConfig, ret);
         }
         return ret;
+    }
+
+    private void addVolumes(RunImageConfiguration runConfig, List<String> ret) {
+        if (runConfig.getVolumesFrom() != null) {
+            ret.addAll(runConfig.getVolumesFrom());
+        }
+    }
+
+    private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
+        if (runConfig.getLinks() != null) {
+            for (String[] link : EnvUtil.splitLinks(runConfig.getLinks())) {
+                ret.add(link[0]);
+            }
+        }
     }
 }

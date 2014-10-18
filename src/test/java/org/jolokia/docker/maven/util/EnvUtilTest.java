@@ -53,7 +53,24 @@ public class EnvUtilTest {
             assertEquals(expected[i][1],got[1]);
         }
     }
-    
+
+    @Test
+    public void splitOnSpace() {
+        Object[] data = new Object[] {
+                "bla blub", new String[] { "bla", "blub"},
+                "bla\\ blub", new String[] {"bla blub"},
+                "bla blub\\ blubber", new String[] { "bla", "blub blubber"}
+        };
+        for (int i = 0; i < data.length; i += 2) {
+            String[] result = EnvUtil.splitWOnSpaceWithEscape((String) data[i]);
+            String[] expected = (String[]) data[i+1];
+            assertEquals(expected.length, result.length);
+            for (int j = 0; j < expected.length; j++) {
+                assertEquals(expected[j],result[j]);
+            }
+        }
+    }
+
     @Test
     public void writePortProperties() throws IOException, MojoExecutionException {
         File propFile = File.createTempFile("dmpl-",".properties");
