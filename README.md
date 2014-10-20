@@ -23,6 +23,7 @@ This plugin's **highlights** are:
 * On-the-fly creation of Docker data images and containers with Maven artifacts and dependencies linked or merged into the containers under test.
 * Pushing data images to a registry
 * Setting of environment variables when creating the container
+* Support for SSL authentication (since Docker 1.3)
 * Color output ;-)
 
 This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
