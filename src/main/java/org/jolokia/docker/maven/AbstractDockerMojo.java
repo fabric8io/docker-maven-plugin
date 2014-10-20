@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven;
 
+import java.io.File;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
@@ -15,6 +16,8 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.fusesource.jansi.AnsiConsole;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessUnirest;
+import org.jolokia.docker.maven.access.*;
+
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -27,6 +30,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
+    private static final String DOCKER_HTTPS_PORT = "2376";
 
     // Current maven project
     @Component
@@ -43,6 +47,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Name of the image for which to stop its containers. If none given, all are removed
     @Parameter(property = "docker.image", required = false)
     protected String image;
+
+    @Parameter(property = "docker.certPath")
+    private String certPath;
 
     // Whether to use color
     @Parameter(property = "docker.useColor", defaultValue = "true")
@@ -72,7 +79,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             colorInit();
-            DockerAccess access = new DockerAccessUnirest(extractUrl(), this);
+            DockerAccess access = new DockerAccessUnirest(extractUrl(), getCertPath(), this);
             access.start();
             try {
                 executeInternal(access);
@@ -84,13 +91,25 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         }
     }
 
+    private String getCertPath() {
+        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
+        if (path == null) {
+            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
+            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
+                return dockerHome.getAbsolutePath();
+            }
+        }
+        return path;
+    }
+
     // Check both, url and env DOCKER_HOST (first takes precedence)
     private String extractUrl() {
         String connect = url != null ? url : System.getenv("DOCKER_HOST");
         if (connect == null) {
             throw new IllegalArgumentException("No url given and now DOCKER_HOST environment variable set");
         }
-        return connect.replaceFirst("^tcp:", "http:");
+        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        return connect.replaceFirst("^tcp:", protocol);
     }
 
     /**

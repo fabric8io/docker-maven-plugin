@@ -6,12 +6,7 @@
 
 This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
-**This document describes version 0.9.10 of this plugin. The newest, experimental version 0.10.1 with a new configuration syntax has not yet much documentation, so 
-please stick to 0.9.10 in the meantime.**
-
-**Docker 1.3 comes with SSL security enabled by default, which the 0.9.10 plugin doesn't understand. 0.10.2 (to be ASAP) will handle this properly. So 
-if you are using this plugin, please don't update Docker to 1.3 or run it without SSL (in development only, of course). For using non-SSL docker communication with
-  boot2docker please refer to this [workaround](https://github.com/boot2docker/boot2docker/issues/571#issuecomment-59528801)**
+**This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.2 with a new configuration syntax has not yet much documentation, so please stick to 0.9.11 in the meantime.**
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
@@ -27,6 +22,7 @@ This plugin's **highlights** are:
 * On-the-fly creation of Docker data images and containers with Maven artifacts and dependencies linked or merged into the containers under test.
 * Pushing data images to a registry
 * Setting of environment variables when creating the container
+* Support for SSL authentication (since Docker 1.3)
 * Color output ;-)
 
 This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
@@ -37,7 +33,7 @@ Please refer also to the examples provided in the `samples/` directory.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.9.10</version>
+  <version>0.9.11</version>
 
   <configuration>
      <!-- For possible options, see below -->
