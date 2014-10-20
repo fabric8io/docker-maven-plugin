@@ -7,7 +7,7 @@
 This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
 **This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.2 with a new configuration syntax has not yet much documentation, so 
-please stick to 0.9.11 in the meantime.**
+please stick to 0.9.11 in the meantime. See the [CHANGELOG](CHANGELOG.md) for more details about the differences**
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
