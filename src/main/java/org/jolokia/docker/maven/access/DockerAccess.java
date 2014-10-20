@@ -3,10 +3,6 @@ package org.jolokia.docker.maven.access;
 import java.io.File;
 import java.util.*;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.jolokia.docker.maven.util.AuthConfig;
-
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
  * provides the methods needed bu this maven plugin.
@@ -21,9 +17,9 @@ public interface DockerAccess {
      *
      * @param image name of image to check
      * @return true if the image is locally available or false if it must be pulled.
-     * @throws MojoExecutionException in case of an request error
+     * @throws DockerAccessException in case of an request error
      */
-    boolean hasImage(String image) throws MojoExecutionException;
+    boolean hasImage(String image) throws DockerAccessException;
 
     /**
      * Create a container from the given image.
@@ -33,18 +29,18 @@ public interface DockerAccess {
      * @param ports ports to expose, can be null
      * @param env map with environment variables to use
      * @return the container id
-     * @throws MojoExecutionException if the container could not be created.
+     * @throws DockerAccessException if the container could not be created.
      */
-    String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws MojoExecutionException;
+    String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws DockerAccessException;
 
     /**
      * Get the the name of a container for a given container id
      *
      * @param id container id to lookup
      * @return name of the container
-     * @throws MojoExecutionException if the id does not match a container
+     * @throws DockerAccessException if the id does not match a container
      */
-    String getContainerName(String id) throws MojoExecutionException;
+    String getContainerName(String id) throws DockerAccessException;
 
     /**
      * Start a container.
@@ -55,17 +51,17 @@ public interface DockerAccess {
      *              by docker. The value of a dynamically selected port can be obtained via {@link #queryContainerPortMapping(String)}
      *              This map must not be null (but can be empty)
      * @param volumesFrom mount volumes from the given container id. Can be null.
-     * @throws MojoExecutionException if the container could not be started.
+     * @throws DockerAccessException if the container could not be started.
      */
-    void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) throws MojoExecutionException;
+    void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) throws DockerAccessException;
 
     /**
      * Stop a container.
      *
      * @param containerId the contaienr id
-     * @throws MojoExecutionException if the container could not be stopped.
+     * @throws DockerAccessException if the container could not be stopped.
      */
-    void stopContainer(String containerId) throws MojoExecutionException;
+    void stopContainer(String containerId) throws DockerAccessException;
 
     /**
      * Query the port mappings for a certain container.
@@ -73,74 +69,77 @@ public interface DockerAccess {
      * @param containerId id of the container to query.
      * @return mapped ports where the keys of this map are the mapped host ports and the values are the container ports. The returned
      *         map is never null but can be empty.
-     * @throws MojoExecutionException if the query failed.
+     * @throws DockerAccessException if the query failed.
      */
-    Map<Integer, Integer> queryContainerPortMapping(String containerId) throws MojoExecutionException;
+    Map<Integer, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException;
 
     /**
      * Get all containers which are build from an image. Only the last 100 containers are considered
      *
      * @param image for which its container are looked up
      * @return list of container ids
-     * @throws MojoExecutionException if the request fails
+     * @throws DockerAccessException if the request fails
      */
-    List<String> getContainersForImage(String image) throws MojoExecutionException;
+    List<String> getContainersForImage(String image) throws DockerAccessException;
 
     /**
      * Get logs for a container.
      *
      * @param containerId container id
      * @return the logs for the given container
-     * @throws MojoExecutionException if the request fails
+     * @throws DockerAccessException if the request fails
      */
-    String getLogs(String containerId) throws MojoExecutionException;
+    String getLogs(String containerId) throws DockerAccessException;
 
     /**
      * Remove a container with the given id
      *
      * @param containerId container id for the container to remove
-     * @throws MojoExecutionException if the container couldn't be removed.
+     * @throws DockerAccessException if the container couldn't be removed.
      */
-    void removeContainer(String containerId) throws MojoExecutionException;
+    void removeContainer(String containerId) throws DockerAccessException;
 
     /**
      * Pull an image from a remote registry and store it locally.
      *
      * @param image the image to pull.
      * @param authConfig authentication configuration used when pulling an image
-     * @throws MojoExecutionException if the image couldn't be pulled.
+     * @throws DockerAccessException if the image couldn't be pulled.
      */
-    void pullImage(String image, AuthConfig authConfig) throws MojoExecutionException;
+    void pullImage(String image, AuthConfig authConfig) throws DockerAccessException;
 
     /**
      * Push an image to a registry.
      * @param image image name to push (can be an alias)
+     * @throws DockerAccessException in case pushing fails
      */
-    void pushImage(String image, AuthConfig authConfig) throws MojoExecutionException;
-
-    /**
-     * Lifecycle method for this access class which must be called before any other method is called.
-     */
-    void start() throws MojoFailureException;
-
-    /**
-     * Lifecycle method which must be called when this object is not needed anymore. This hook might be used for
-     * cleaning up things.
-     */
-    void shutdown();
+    void pushImage(String image, AuthConfig authConfig) throws DockerAccessException;
 
     /**
      * Create an docker image from a given archive
      *
      * @param image name of the image to build or <code>null</code> if none should be used
      * @param dockerArchive from which the docker image should be build
+     * @throws DockerAccessException if dockerhost reporst an error during building of an image
      */
-    void buildImage(String image, File dockerArchive) throws MojoExecutionException;
+    void buildImage(String image, File dockerArchive) throws DockerAccessException;
 
     /**
      * Remove an image from this docker installation
      *
      * @param image image to remove
+     * @throws DockerAccessException if an image cannot be removed
      */
-    void removeImage(String image) throws MojoExecutionException;
+    void removeImage(String image) throws DockerAccessException;
+
+    /**
+     * Lifecycle method for this access class which must be called before any other method is called.
+     */
+    void start() throws DockerAccessException;
+
+    /**
+     * Lifecycle method which must be called when this object is not needed anymore. This hook might be used for
+     * cleaning up things.
+     */
+    void shutdown();
 }

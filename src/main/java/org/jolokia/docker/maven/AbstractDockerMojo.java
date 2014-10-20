@@ -79,11 +79,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             colorInit();
-            DockerAccess access = new DockerAccessViaHttpClient(extractUrl(), getCertPath(), this);
-            access.start();
+            DockerAccess access = null;
+            try {
+                access = new DockerAccessWithHttpClient(extractUrl(), getCertPath(), this);
+                access.start();
+            } catch (DockerAccessException e) {
+                throw new MojoExecutionException("Cannot create docker access object ",e);
+            }
             try {
                 executeInternal(access);
-            } catch (MojoExecutionException exp) {
+            } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(errorHlColor + exp.getMessage() + resetColor, exp);
             } finally {
                 access.shutdown();
@@ -116,11 +121,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      * Hook for subclass for doing the real job
      *
      * @param dockerAccess access object for getting to the DockerServer
-     * @throws MojoExecutionException
-     * @throws MojoFailureException
      */
     protected abstract void executeInternal(DockerAccess dockerAccess)
-            throws MojoExecutionException, MojoFailureException;
+            throws DockerAccessException, MojoExecutionException;
 
     // =============================================================================================
     // Registry for managed containers
@@ -286,7 +289,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         System.out.flush();
     }
 
-    protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
+    protected AuthConfig prepareAuthConfig(String image) throws MojoExecutionException {
         return authConfigFactory.createAuthConfig(authConfig, image,settings);
     }
 
@@ -326,12 +329,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         public void shutdown(DockerAccess access, LogHandler log,boolean keepContainer)
                 throws MojoExecutionException {
             // Stop the container
-            access.stopContainer(container);
-            if (!keepContainer) {
-                // Remove the container
-                access.removeContainer(container);
+            try {
+                access.stopContainer(container);
+                if (!keepContainer) {
+                    // Remove the container
+                    access.removeContainer(container);
+                }
+                log.info("Stopped " + container.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
+            } catch (DockerAccessException e) {
+                throw new MojoExecutionException("Cannot shutdown",e);
             }
-            log.info("Stopped " + container.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
         }
 
         @Override

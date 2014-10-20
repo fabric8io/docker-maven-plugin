@@ -5,12 +5,13 @@ import java.util.Map;
 
 import mockit.*;
 import mockit.integration.junit4.JMockit;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.jolokia.docker.maven.access.AuthConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,17 +72,17 @@ public class AuthConfigHandlerTest {
         }
     }
 
-    @Test(expected = MojoFailureException.class)
+    @Test(expected = MojoExecutionException.class)
     public void testSystemPropertyNoUser() throws Exception {
         checkException("docker.password");
     }
 
-    @Test(expected = MojoFailureException.class)
+    @Test(expected = MojoExecutionException.class)
     public void testSystemPropertyNoPassword() throws Exception {
         checkException("docker.username");
     }
 
-    private void checkException(String key) throws MojoFailureException {
+    private void checkException(String key) throws MojoExecutionException {
         System.setProperty(key, "secret");
         try {
             factory.createAuthConfig(null, "test/test", settings);
@@ -91,7 +92,7 @@ public class AuthConfigHandlerTest {
     }
 
     @Test
-    public void testFromPluginConfiguration() throws MojoFailureException {
+    public void testFromPluginConfiguration() throws MojoExecutionException {
         Map pluginConfig = new HashMap();
         pluginConfig.put("username", "roland");
         pluginConfig.put("password", "secret");
@@ -102,15 +103,15 @@ public class AuthConfigHandlerTest {
     }
 
 
-    @Test(expected = MojoFailureException.class)
-    public void testFromPluginConfigurationFailed() throws MojoFailureException {
+    @Test(expected = MojoExecutionException.class)
+    public void testFromPluginConfigurationFailed() throws MojoExecutionException {
         Map pluginConfig = new HashMap();
         pluginConfig.put("password", "secret");
         factory.createAuthConfig(pluginConfig, "test/test", settings);
     }
 
     @Test
-    public void testFromSettings() throws MojoFailureException {
+    public void testFromSettings() throws MojoExecutionException {
         new NonStrictExpectations() {{
             settings.getServer("test.org");
             Server server = new Server();

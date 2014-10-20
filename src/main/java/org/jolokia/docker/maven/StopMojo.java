@@ -1,9 +1,9 @@
 package org.jolokia.docker.maven;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
 
@@ -26,7 +26,7 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepData", defaultValue = "false")
     private boolean keepData;
 
-    protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
+    protected void executeInternal(DockerAccess access) throws MojoExecutionException {
         if (!keepRunning) {
             List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
             for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {

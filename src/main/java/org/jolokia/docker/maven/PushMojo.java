@@ -3,9 +3,9 @@ package org.jolokia.docker.maven;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 
@@ -22,7 +22,7 @@ public class PushMojo extends AbstractDockerMojo {
     private String push;
 
     /** {@inheritDoc} */
-    public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
+    public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
         Set imagesToPush = extractImagesToPush(push);
 
         for (ImageConfiguration imageConfig : images) {

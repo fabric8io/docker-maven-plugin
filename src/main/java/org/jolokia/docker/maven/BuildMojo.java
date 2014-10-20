@@ -5,11 +5,11 @@ import java.io.File;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -44,7 +44,7 @@ public class BuildMojo extends AbstractDockerMojo {
     private DockerArchiveCreator dockerArchiveCreator;
 
     @Override
-    protected void executeInternal(DockerAccess dockerAccess) throws MojoExecutionException, MojoFailureException {
+    protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : images) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
@@ -54,7 +54,7 @@ public class BuildMojo extends AbstractDockerMojo {
     }
 
     private void buildImage(String name, BuildImageConfiguration buildConfig, DockerAccess dockerAccess)
-            throws MojoExecutionException, MojoFailureException {
+            throws DockerAccessException, MojoExecutionException {
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         File dockerArchive = dockerArchiveCreator.create(params, buildConfig);
         String imageName = getImageName(name);

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
@@ -43,7 +42,7 @@ public class DockerArchiveCreator {
     private ArchiverManager archiverManager;
 
     public File create(MojoParameters params, BuildImageConfiguration config)
-            throws MojoFailureException, MojoExecutionException {
+            throws MojoExecutionException {
         validate(config);
 
         File target = new File(params.getProject().getBasedir(),"target/");
@@ -100,7 +99,7 @@ public class DockerArchiveCreator {
     }
 
     private void createAssembly(MojoParameters params, BuildImageConfiguration buildConfig)
-            throws MojoFailureException, MojoExecutionException {
+            throws MojoExecutionException {
 
         AssemblerConfigurationSource config =
                 new DockerArchiveConfigurationSource(params, buildConfig.getAssemblyDescriptor(), buildConfig.getAssemblyDescriptorRef());
@@ -112,18 +111,18 @@ public class DockerArchiveCreator {
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
             throw new MojoExecutionException( "Failed to create assembly for docker image: " + e.getMessage(), e );
         } catch (InvalidAssemblerConfigurationException e) {
-            throw new MojoFailureException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
+            throw new MojoExecutionException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
                                             "Assembly: " + assembly.getId() + " is not configured correctly: "
                                             + e.getMessage());
         }
     }
 
-    private Assembly extractAssembly(AssemblerConfigurationSource config) throws MojoExecutionException, MojoFailureException {
+    private Assembly extractAssembly(AssemblerConfigurationSource config) throws MojoExecutionException {
         try
         {
             List<Assembly> assemblies = assemblyReader.readAssemblies(config);
             if (assemblies.size() != 1) {
-                throw new MojoFailureException("Only one assembly can be used for creating a Docker base image (and not " + assemblies.size() +")");
+                throw new MojoExecutionException("Only one assembly can be used for creating a Docker base image (and not " + assemblies.size() +")");
             }
             return assemblies.get(0);
         }
@@ -133,7 +132,7 @@ public class DockerArchiveCreator {
         }
         catch (InvalidAssemblerConfigurationException e)
         {
-            throw new MojoFailureException(assemblyReader, e.getMessage(), "Docker assembly configuration is invalid: " + e.getMessage());
+            throw new MojoExecutionException(assemblyReader, e.getMessage(), "Docker assembly configuration is invalid: " + e.getMessage());
         }
     }
 }

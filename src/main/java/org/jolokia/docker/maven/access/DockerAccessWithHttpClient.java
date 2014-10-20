@@ -1,7 +1,7 @@
 package org.jolokia.docker.maven.access;
 
 import java.io.*;
-import java.net.*;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -14,7 +14,6 @@ import javax.net.ssl.SSLContext;
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
-import org.apache.http.client.utils.URIUtils;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.FileEntity;
@@ -22,19 +21,24 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.jolokia.docker.maven.util.*;
 import org.json.*;
 
 /**
- * Implementation for a DockerAccess based on the <a href="http://unirest.io/java.html">Unirest</a>
- * REST access library.
+ * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a> for accessing remotely
+ * the docker host.
+ *
+ * The design goal here is to provide only the functionality required for this plugin in order to make
+ * it as robust as possible agains docker API changes (which happen quite frequently). That's also
+ * the reason, why no framework like JAX-RS or docker-java is used so that the dependencies are kept low.
+ *
+ * Of course, it's a bit more manual work, but it's worth the effort (as long as the Docker API functionality
+ * required is not to much).
  *
  * @author roland
  * @since 26.03.14
  */
-public class DockerAccessViaHttpClient implements DockerAccess {
+public class DockerAccessWithHttpClient implements DockerAccess {
 
     // Used Docker API
     static private final String DOCKER_API_VERSION = "v1.10";
@@ -56,7 +60,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
      * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessViaHttpClient(String baseUrl, String certPath, LogHandler log) throws MojoExecutionException, MojoFailureException {
+    public DockerAccessWithHttpClient(String baseUrl, String certPath, LogHandler log) throws DockerAccessException {
         this.baseUrl = stripSlash(baseUrl) + "/" + DOCKER_API_VERSION;
         this.log = log;
 
@@ -64,7 +68,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public boolean hasImage(String image) throws MojoExecutionException {
+    public boolean hasImage(String image) throws DockerAccessException {
         Matcher matcher = Pattern.compile("^(.*?):([^:]+)?$").matcher(image);
         String base = matcher.matches() ? matcher.group(1) : image;
 
@@ -76,7 +80,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws MojoExecutionException {
+    public String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws DockerAccessException {
         HttpUriRequest post = newPost(baseUrl + "/containers/create", getContainerConfig(image, ports, command, env));
         HttpResponse resp = request(post);
         checkReturnCode("Creating container for image '" + image + "'", resp, 201);
@@ -86,7 +90,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     @Override
-    public String getContainerName(String id) throws MojoExecutionException {
+    public String getContainerName(String id) throws DockerAccessException {
         HttpUriRequest req = newGet(baseUrl + "/containers/" + encode(id) + "/json");
         HttpResponse  resp = request(req);
         checkReturnCode("Getting information about container '" + id + "'", resp, 200);
@@ -95,7 +99,8 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom,List<String> links) throws MojoExecutionException {
+    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom,List<String> links)
+            throws DockerAccessException {
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start",
                                      getStartConfig(ports, volumesFrom, links));
         HttpResponse resp = request(req);
@@ -103,26 +108,22 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void stopContainer(String containerId) throws MojoExecutionException {
+    public void stopContainer(String containerId) throws DockerAccessException {
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/stop", null);
         HttpResponse  resp = request(req);
         checkReturnCode("Stopping container with id " + containerId, resp, 204, 304);
     }
 
     /** {@inheritDoc} */
-    public void buildImage(String image, File dockerArchive) throws MojoExecutionException {
-        try {
-            URI buildUrl = new URI(baseUrl + "/build?rm=true" + (image != null ? "&t=" + encode(image) : ""));
-            HttpPost post = new HttpPost(buildUrl);
-            post.setEntity(new FileEntity(dockerArchive));
-            processBuildResponse(image, client.execute(URIUtils.extractHost(buildUrl), post));
-        } catch (IOException | URISyntaxException e) {
-            throw new MojoExecutionException("Cannot build image " + image + " from " + dockerArchive,e);
-        }
+    public void buildImage(String image, File dockerArchive) throws DockerAccessException {
+        String buildUrl = baseUrl + "/build?rm=true" + (image != null ? "&t=" + encode(image) : "");
+        HttpPost post = new HttpPost(buildUrl);
+        post.setEntity(new FileEntity(dockerArchive));
+        processBuildResponse(image, request(post));
     }
 
     /** {@inheritDoc} */
-    public Map<Integer, Integer> queryContainerPortMapping(String containerId) throws MojoExecutionException {
+    public Map<Integer, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException {
         HttpUriRequest req = newGet(baseUrl + "/containers/" + encode(containerId) + "/json");
         HttpResponse resp = request(req);
         checkReturnCode("Getting container information for " + containerId, resp, 200);
@@ -130,7 +131,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public List<String> getContainersForImage(String image) throws MojoExecutionException {
+    public List<String> getContainersForImage(String image) throws DockerAccessException {
         List<String> ret = new ArrayList<String>();
         HttpUriRequest req = newGet(baseUrl + "/containers/json?limit=100");
         HttpResponse resp = request(req);
@@ -148,27 +149,23 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     @Override
-    public String getLogs(final String containerId) throws MojoExecutionException {
-        try {
-            HttpUriRequest get = newGet(baseUrl + "/containers/" + encode(containerId) + "/logs?stdout=1&stderr=1");
+    public String getLogs(final String containerId) throws DockerAccessException {
+        HttpUriRequest get = newGet(baseUrl + "/containers/" + encode(containerId) + "/logs?stdout=1&stderr=1");
 
-            HttpResponse resp = client.execute(get);
-            checkReturnCode("Getting log for '" + containerId + "' ",resp,200);
-            return EntityUtils.toString(resp.getEntity());
-        } catch (IOException e) {
-            throw new MojoExecutionException("Cannot get container log for " + containerId, e);
-        }
+        HttpResponse resp = request(get);
+        checkReturnCode("Getting log for '" + containerId + "' ",resp,200);
+        return asString(resp);
     }
 
     /** {@inheritDoc} */
-    public void removeContainer(String containerId) throws MojoExecutionException {
+    public void removeContainer(String containerId) throws DockerAccessException {
         HttpUriRequest req = newDelete(baseUrl + "/containers/" + encode(containerId));
         HttpResponse  resp = request(req);
         checkReturnCode("Stopping container with id " + containerId, resp, 204);
     }
 
     /** {@inheritDoc} */
-    public void pullImage(String image,AuthConfig authConfig) throws MojoExecutionException {
+    public void pullImage(String image,AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepository());
         pullUrl = addTagAndRegistry(pullUrl, name);
@@ -176,7 +173,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void pushImage(String image, AuthConfig authConfig) throws MojoExecutionException {
+    public void pushImage(String image, AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = baseUrl + "/images/" + encode(name.getRepository()) + "/push";
         pushUrl = addTagAndRegistry(pushUrl,name);
@@ -184,7 +181,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void removeImage(String image) throws MojoExecutionException {
+    public void removeImage(String image) throws DockerAccessException {
         HttpUriRequest req = newDelete(baseUrl + "/images/" + image);
         HttpResponse resp = request(req);
         checkReturnCode("Removing image " + image, resp, 200);
@@ -196,7 +193,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     // ---------------
     // Lifecycle methods not needed here
     /** {@inheritDoc} */
-    public void start() throws MojoFailureException {}
+    public void start() throws DockerAccessException {}
 
 
     /** {@inheritDoc} */
@@ -205,7 +202,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     // ====================================================================================================
 
     // HttpClient to use
-    private HttpClient createHttpClient(String certPath) throws MojoFailureException {
+    private HttpClient createHttpClient(String certPath) throws DockerAccessException {
         HttpClientBuilder builder = HttpClients.custom();
         addSslSupportIfNeeded(builder,certPath);
 
@@ -216,7 +213,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     // Lookup a keystore and add it to the client
-    private void addSslSupportIfNeeded(HttpClientBuilder builder, String certPath) throws MojoFailureException {
+    private void addSslSupportIfNeeded(HttpClientBuilder builder, String certPath) throws DockerAccessException {
         if (certPath != null) {
             try {
                 KeyStore keyStore = KeyStoreUtil.createKeyStore(certPath);
@@ -230,7 +227,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
                 SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
                 builder.setSSLSocketFactory(sslsf);
             } catch (IOException | GeneralSecurityException e) {
-                throw new MojoFailureException("Cannot read keys and/or certs from " + certPath + ": " + e,e);
+                throw new DockerAccessException("Cannot read keys and/or certs from " + certPath + ": " + e,e);
             }
         }
 
@@ -260,33 +257,40 @@ public class DockerAccessViaHttpClient implements DockerAccess {
         return req;
     }
 
-    private HttpResponse request(HttpUriRequest req) throws MojoExecutionException {
+    private HttpResponse request(HttpUriRequest req) throws DockerAccessException {
         try {
             return client.execute(req);
         } catch (IOException e) {
-            throw new MojoExecutionException("Cannot send req " + req + ": " + e,e);
+            throw new DockerAccessException("Cannot send req " + req + ": " + e,e);
         }
     }
 
     // -----------------------
     // Serialization stuff
 
-    private JSONArray asJsonArray(HttpResponse resp) throws MojoExecutionException {
+    private JSONArray asJsonArray(HttpResponse resp) throws DockerAccessException {
         try {
             return new JSONArray(EntityUtils.toString(resp.getEntity()));
         } catch (IOException e) {
-            throw new MojoExecutionException("Cannot read content from response " + resp);
+            throw new DockerAccessException("Cannot read content from response " + resp,e);
         }
     }
 
-    private JSONObject asJsonObject(HttpResponse resp) throws MojoExecutionException {
+    private JSONObject asJsonObject(HttpResponse resp) throws DockerAccessException {
         try {
             return new JSONObject(EntityUtils.toString(resp.getEntity()));
         } catch (IOException e) {
-            throw new MojoExecutionException("Cannot read content from response " + resp);
+            throw new DockerAccessException("Cannot read content from response as JSON object " + resp,e);
         }
     }
 
+    private String asString(HttpResponse resp) throws DockerAccessException {
+        try {
+            return EntityUtils.toString(resp.getEntity());
+        } catch (IOException e) {
+            throw new DockerAccessException("Cannot read content from response as string " + resp,e);
+        }
+    }
     private String encode(String param) {
         try {
             return URLEncoder.encode(param,"UTF-8");
@@ -429,7 +433,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
     }
 
     private void pullOrPushImage(String image, String uri, String what, AuthConfig authConfig)
-            throws MojoExecutionException {
+            throws DockerAccessException {
         try {
             HttpPost post = new HttpPost(uri);
             if (authConfig != null) {
@@ -438,7 +442,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
 
             processPullOrPushResponse(image, client.execute(post), what);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error while " + what + " " + image + ": ",e);
+            throw new DockerAccessException("Error while " + what + " " + image + ": ",e);
         }
     }
 
@@ -465,7 +469,8 @@ public class DockerAccessViaHttpClient implements DockerAccess {
         }
     }
 
-    private void processPullOrPushResponse(final String image, org.apache.http.HttpResponse resp, final String action) throws IOException, MojoExecutionException {
+    private void processPullOrPushResponse(final String image, HttpResponse resp, final String action)
+            throws DockerAccessException {
         processChunkedResponse(resp, new ChunkedCallback() {
 
             private boolean downloadInProgress = false;
@@ -502,7 +507,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
         });
     }
 
-    private void processBuildResponse(final String image, org.apache.http.HttpResponse resp) throws IOException, MojoExecutionException {
+    private void processBuildResponse(final String image, org.apache.http.HttpResponse resp) throws DockerAccessException {
 
         processChunkedResponse(resp, new ChunkedCallback() {
             public void process(JSONObject json) {
@@ -529,24 +534,28 @@ public class DockerAccessViaHttpClient implements DockerAccess {
 
     }
 
-    private void processChunkedResponse(org.apache.http.HttpResponse resp, ChunkedCallback cb) throws IOException, MojoExecutionException {
-        InputStream is = resp.getEntity().getContent();
-        int len;
-        int size = 8129;
-        byte[] buf = new byte[size];
-        // Data comes in chunkwise
-        while ((len = is.read(buf, 0, size)) != -1) {
-            String txt = new String(buf,0,len,"UTF-8");
-            try {
-                JSONObject json = new JSONObject(txt);
-                cb.process(json);
-            } catch (JSONException exp) {
-                log.warn("Couldn't parse answer chunk '" + txt + "': " + exp);
+    private void processChunkedResponse(org.apache.http.HttpResponse resp, ChunkedCallback cb) throws DockerAccessException {
+        try {
+            InputStream is = resp.getEntity().getContent();
+            int len;
+            int size = 8129;
+            byte[] buf = new byte[size];
+            // Data comes in chunkwise
+            while ((len = is.read(buf, 0, size)) != -1) {
+                String txt = new String(buf,0,len,"UTF-8");
+                try {
+                    JSONObject json = new JSONObject(txt);
+                    cb.process(json);
+                } catch (JSONException exp) {
+                    log.warn("Couldn't parse answer chunk '" + txt + "': " + exp);
+                }
             }
-        }
-        StatusLine status = resp.getStatusLine();
-        if (status.getStatusCode() != 200) {
-            throw new MojoExecutionException(cb.getErrorMessage(status));
+            StatusLine status = resp.getStatusLine();
+            if (status.getStatusCode() != 200) {
+                throw new DockerAccessException(cb.getErrorMessage(status));
+            }
+        } catch (IOException e) {
+            throw new DockerAccessException("Cannot process chunk response: " + e,e);
         }
     }
 
@@ -560,7 +569,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
         }
     }
 
-    private void checkReturnCode(String msg, HttpResponse resp, int ... expectedCodes) throws MojoExecutionException {
+    private void checkReturnCode(String msg, HttpResponse resp, int ... expectedCodes) throws DockerAccessException {
         StatusLine status = resp.getStatusLine();
         int statusCode = status.getStatusCode();
         for (int code : expectedCodes) {
@@ -568,7 +577,7 @@ public class DockerAccessViaHttpClient implements DockerAccess {
                 return;
             }
         }
-        throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + statusCode + ")");
+        throw new DockerAccessException("Error while calling docker: " + msg + " (code: " + statusCode + ")");
     }
 
     private String stripSlash(String url) {

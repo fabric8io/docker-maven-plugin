@@ -2,7 +2,7 @@ package org.jolokia.docker.maven.util;
 
 import java.util.*;
 
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * @author roland
@@ -16,7 +16,7 @@ public class StartOrderResolver {
     // Only return images which should be run
     // Images references via volumes but with no run configuration are started once to create
     // an appropriate container which can be linked into the image
-    public static List<Resolvable> resolve(List<Resolvable> images) throws MojoFailureException {
+    public static List<Resolvable> resolve(List<Resolvable> images) throws MojoExecutionException {
         List<Resolvable> ret = new ArrayList<>();
         List<Resolvable> secondPass = new ArrayList<>();
         Set<String> processedImages = new HashSet<>();
@@ -50,7 +50,7 @@ public class StartOrderResolver {
                     + remainingImagesDescription(remaining);
         }
         if (error != null) {
-            throw new MojoFailureException(error);
+            throw new MojoExecutionException(error);
         }
         return ret;
     }

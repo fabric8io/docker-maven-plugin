@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
 import static org.jolokia.docker.maven.util.StartOrderResolver.Resolvable;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author roland
@@ -18,7 +17,7 @@ import static org.junit.Assert.fail;
 public class StartOrderResolverTest {
 
     @Test
-    public void simple() throws MojoFailureException {
+    public void simple() throws MojoExecutionException {
         checkData(new Object[][]{
                 { new T[]{new T("1", "2"), new T("2")}, new T[]{new T("2"), new T("1", "2")} },
                 { new T[]{new T("1", "2", "3"), new T("2", "3"), new T("3")}, new T[]{new T("3"), new T("2", "3"), new T("1", "2", "3")} },
@@ -26,18 +25,18 @@ public class StartOrderResolverTest {
     }
 
     @Test
-    public void circularDep() throws MojoFailureException {
+    public void circularDep() throws MojoExecutionException {
         try {
             checkData(new Object[][] {
                     {new T[]{new T("1", "2"), new T("2", "1")}, new T[]{new T("1", "2"), new T("2", "1")}}
             });
             fail();
-        } catch (MojoFailureException exp) {
+        } catch (MojoExecutionException exp) {
 
         }
     }
 
-    private void checkData(Object[][] data) throws MojoFailureException {
+    private void checkData(Object[][] data) throws MojoExecutionException {
         for (Object[] aData : data) {
             Resolvable[] input = (Resolvable[]) aData[0];
             Resolvable[] expected = (Resolvable[]) aData[1];

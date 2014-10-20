@@ -20,10 +20,10 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.*;
 
@@ -46,7 +46,7 @@ public class StartMojo extends AbstractDockerMojo {
     private Map<String, String> imageAliasMap = new HashMap<>();
 
     /** {@inheritDoc} */
-    public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
+    public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
 
         for (StartOrderResolver.Resolvable resolvable : StartOrderResolver.resolve(convertToResolvables(images))) {
             ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
@@ -84,25 +84,25 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws MojoExecutionException {
+    private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitLinks(links)) {
             String container = lookupContainer(link[0]);
             if (container == null) {
-                throw new MojoExecutionException("Cannot find container for " + link[0] + " while preparing links");
+                throw new DockerAccessException("Cannot find container for " + link[0] + " while preparing links");
             }
             ret.add(docker.getContainerName(container) + ":" + link[1]);
         }
         return ret;
     }
 
-    private List<String> findContainersForImages(List<String> images) throws MojoFailureException {
+    private List<String> findContainersForImages(List<String> images) throws MojoExecutionException {
         List<String> containers = new ArrayList<>();
         if (images != null) {
             for (String image : images) {
                 String container = lookupContainer(image);
                 if (container  == null) {
-                    throw new MojoFailureException("No container for image " + image + " started.");
+                    throw new MojoExecutionException("No container for image " + image + " started.");
                 }
                 containers.add(container);
             }
@@ -138,7 +138,7 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
-    public void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {
+    public void checkImage(DockerAccess docker,String image) throws DockerAccessException,MojoExecutionException {
         if (!docker.hasImage(image)) {
             if (autoPull) {
                 docker.pullImage(image,prepareAuthConfig(image));
@@ -179,7 +179,7 @@ public class StartMojo extends AbstractDockerMojo {
                     String log = docker.getLogs(containerId);
                     Pattern pattern = Pattern.compile(logPattern);
                     return pattern.matcher(log).find();
-                } catch (MojoExecutionException e) {
+                } catch (DockerAccessException e) {
                     return false;
                 }
             }

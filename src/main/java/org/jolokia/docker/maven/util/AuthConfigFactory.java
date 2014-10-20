@@ -3,12 +3,14 @@ package org.jolokia.docker.maven.util;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.jolokia.docker.maven.access.AuthConfig;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 /**
@@ -63,7 +65,7 @@ public class AuthConfigFactory {
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(Map authConfig, String image, Settings settings) throws MojoFailureException {
+    public AuthConfig createAuthConfig(Map authConfig, String image, Settings settings) throws MojoExecutionException {
         Properties props = System.getProperties();
         if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
             return getAuthConfigFromProperties(props);
@@ -76,12 +78,12 @@ public class AuthConfigFactory {
 
     // ===================================================================================================
 
-    private AuthConfig getAuthConfigFromProperties(Properties props) throws MojoFailureException {
+    private AuthConfig getAuthConfigFromProperties(Properties props) throws MojoExecutionException {
         if (!props.containsKey(DOCKER_USERNAME)) {
-            throw new MojoFailureException("No " + DOCKER_USERNAME + " given when using authentication");
+            throw new MojoExecutionException("No " + DOCKER_USERNAME + " given when using authentication");
         }
         if (!props.containsKey(DOCKER_PASSWORD)) {
-            throw new MojoFailureException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
+            throw new MojoExecutionException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
         }
         return new AuthConfig(props.getProperty(DOCKER_USERNAME),
                               decrypt(props.getProperty(DOCKER_PASSWORD)),
@@ -89,10 +91,10 @@ public class AuthConfigFactory {
                               props.getProperty(DOCKER_AUTH));
     }
 
-    private AuthConfig getAuthConfigFromPluginConfiguration(Map authConfig) throws MojoFailureException {
+    private AuthConfig getAuthConfigFromPluginConfiguration(Map authConfig) throws MojoExecutionException {
         for (String key : new String[] { "username", "password"}) {
             if (!authConfig.containsKey(key)) {
-                throw new MojoFailureException("No '" + key + "' given while using <authConfig> in configuration");
+                throw new MojoExecutionException("No '" + key + "' given while using <authConfig> in configuration");
             }
         }
         Map<String,String> cloneConfig = new HashMap<String,String>(authConfig);
@@ -100,7 +102,7 @@ public class AuthConfigFactory {
         return new AuthConfig(cloneConfig);
     }
 
-    private AuthConfig getAuthConfigFromSettings(String image, Settings settings) throws MojoFailureException {
+    private AuthConfig getAuthConfigFromSettings(String image, Settings settings) throws MojoExecutionException {
         String registry = getRegistryFromImageNameOrDefault(image);
         Server server = settings.getServer(registry);
         if (server != null) {
@@ -114,16 +116,16 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private String decrypt(String password) throws MojoFailureException {
+    private String decrypt(String password) throws MojoExecutionException {
         try {
             // Done by reflection since I have classloader issues otherwise
             Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
             Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
             return (String) method.invoke(secDispatcher,password);
         } catch (ComponentLookupException e) {
-            throw new MojoFailureException("Error looking security dispatcher",e);
+            throw new MojoExecutionException("Error looking security dispatcher",e);
         } catch (ReflectiveOperationException e) {
-            throw new MojoFailureException("Cannot decrypt password: " + e.getCause(),e);
+            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
         }
     }
 

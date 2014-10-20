@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
+import org.jolokia.docker.maven.access.AuthConfig;
 import org.json.JSONObject;
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven.util;
+package org.jolokia.docker.maven.access;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
