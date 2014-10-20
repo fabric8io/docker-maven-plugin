@@ -20,8 +20,16 @@ import org.bouncycastle.openssl.PEMParser;
  */
 public class KeyStoreUtil {
 
-
-    public static KeyStore createKeyStore(String certPath) throws IOException, GeneralSecurityException {
+    /**
+     * Create a key stored holding certificates and secret keys from the given Docker key cert
+     *
+     * @param certPath directory holding the keys (key.pem) and certss (ca.pem, cert.pem)
+     * @return a keystore where the private key is secured with "docker"
+     *
+     * @throws IOException is reading of the the PEMs failed
+     * @throws GeneralSecurityException when the files in a wrong format
+     */
+    public static KeyStore createDockerKeyStore(String certPath) throws IOException, GeneralSecurityException {
         PrivateKey privKey = loadPrivateKey(certPath + "/key.pem");
         Certificate[] certs = loadCertificates(certPath + "/cert.pem");
 
@@ -33,25 +41,8 @@ public class KeyStoreUtil {
         return keyStore;
     }
 
-    private static void addCA(KeyStore keyStore, String caPath) throws KeyStoreException, FileNotFoundException, CertificateException {
-        for (Certificate cert : loadCertificates(caPath)) {
-            final X509Certificate crt = (X509Certificate) cert;
-
-            final String alias = crt.getSubjectX500Principal().getName();
-            keyStore.setCertificateEntry(alias, crt);
-        }
-    }
-
-    private static Certificate[] loadCertificates(String certPath) throws FileNotFoundException, CertificateException {
-        InputStream is = new FileInputStream(certPath);
-        Collection<? extends Certificate> certs = CertificateFactory.getInstance("X509").generateCertificates(is);
-        return new ArrayList<>(certs).toArray(new Certificate[certs.size()]);
-    }
-
     public static PrivateKey loadPrivateKey(String keyPath) throws IOException, GeneralSecurityException {
-
         PEMKeyPair keyPair = (PEMKeyPair) loadPEM(keyPath);
-
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyPair.getPrivateKeyInfo().getEncoded());
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePrivate(keySpec);
@@ -60,5 +51,19 @@ public class KeyStoreUtil {
     private static Object loadPEM(String keyPath) throws IOException {
         PEMParser parser = new PEMParser(new BufferedReader(new FileReader(keyPath)));
         return parser.readObject();
+    }
+
+    private static void addCA(KeyStore keyStore, String caPath) throws KeyStoreException, FileNotFoundException, CertificateException {
+        for (Certificate cert : loadCertificates(caPath)) {
+            X509Certificate crt = (X509Certificate) cert;
+            String alias = crt.getSubjectX500Principal().getName();
+            keyStore.setCertificateEntry(alias, crt);
+        }
+    }
+
+    private static Certificate[] loadCertificates(String certPath) throws FileNotFoundException, CertificateException {
+        InputStream is = new FileInputStream(certPath);
+        Collection<? extends Certificate> certs = CertificateFactory.getInstance("X509").generateCertificates(is);
+        return new ArrayList<>(certs).toArray(new Certificate[certs.size()]);
     }
 }

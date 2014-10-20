@@ -63,7 +63,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     public DockerAccessWithHttpClient(String baseUrl, String certPath, LogHandler log) throws DockerAccessException {
         this.baseUrl = stripSlash(baseUrl) + "/" + DOCKER_API_VERSION;
         this.log = log;
-
         this.client = createHttpClient(certPath);
     }
 
@@ -216,7 +215,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     private void addSslSupportIfNeeded(HttpClientBuilder builder, String certPath) throws DockerAccessException {
         if (certPath != null) {
             try {
-                KeyStore keyStore = KeyStoreUtil.createKeyStore(certPath);
+                KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath);
 
                 SSLContext sslContext =
                         SSLContexts.custom()
