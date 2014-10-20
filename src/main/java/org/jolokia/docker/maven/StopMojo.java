@@ -29,11 +29,9 @@ public class StopMojo extends AbstractDockerMojo {
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, MojoFailureException {
         if (!keepRunning) {
             List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
-            for (ShutdownAction action : getShutdownActions()) {
-                if (action.applies(image)) {
-                    action.shutdown(access, this, keepContainer, keepData);
-                    appliedShutdownActions.add(action);
-                }
+            for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
+                action.shutdown(access, this, keepContainer);
+                appliedShutdownActions.add(action);
             }
             removeShutdownActions(appliedShutdownActions);
         }

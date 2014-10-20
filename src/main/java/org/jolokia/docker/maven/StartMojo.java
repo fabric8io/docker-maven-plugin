@@ -17,13 +17,15 @@ package org.jolokia.docker.maven;
  */
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
+import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.util.EnvUtil;
-import org.jolokia.docker.maven.util.PortMapping;
+import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * Goal for creating and starting a docker container
@@ -31,101 +33,161 @@ import org.jolokia.docker.maven.util.PortMapping;
  * @author roland
  */
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
-public class StartMojo extends AbstractDataImageSupportMojo {
+public class StartMojo extends AbstractDockerMojo {
 
-    // Port mapping. Can contain symbolic names in which case dynamic
-    // ports are used
-    @Parameter
-    private List<String> ports;
+    @Parameter(defaultValue = "true")
+    private boolean autoPull;
 
-    // Environment variables to set when starting the container. key: variable name, value: env value
-    @Parameter
-    private Map<String,String> env;
+    // Map holding associations between started containers and their images via name and aliases
+    // Key: Image, Value: Container
+    private Map<String, String> containerImageNameMap = new HashMap<>();
 
-    // Command to execute in container
-    @Parameter(property = "docker.command")
-    private String command;
-
-    // Path to a file where the dynamically mapped properties are written to
-    @Parameter(property = "docker.portPropertyFile")
-    private String portPropertyFile;
-
-    // Wait that many milliseconds after starting the container in order to allow the
-    // container to warm up
-    @Parameter(property = "docker.wait", defaultValue = "0")
-    private int wait;
-
-    // Wait until the given URL is accessible
-    @Parameter(property = "docker.waitHttp")
-    private String waitHttp;
+    // Key: Alias, Value: Image
+    private Map<String, String> imageAliasMap = new HashMap<>();
 
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws MojoExecutionException, MojoFailureException {
-        if (image == null) {
-            throw new MojoFailureException("Image must not be null when using docker:start");
-        }
-        checkImage(docker,image);
 
-        PortMapping mappedPorts = new PortMapping(ports,project.getProperties());
+        for (StartOrderResolver.Resolvable resolvable : StartOrderResolver.resolve(convertToResolvables(images))) {
+            ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+            String imageName = imageConfig.getName();
+            checkImage(docker,imageName);
 
-        String container,dataImage,dataContainer;
-
-        if (useDataContainer()) {
-            dataImage = createDataImage(docker);
-            if (mergeData) {
-                // Image created on the fly and used for action
-                dataContainer = null;
-                container = docker.createContainer(dataImage,mappedPorts.getContainerPorts(),command,env);
-            } else {
-                dataContainer = docker.createContainer(dataImage, null, null, env);
-                docker.startContainer(dataContainer, null, null);
-
-                container = docker.createContainer(image,mappedPorts.getContainerPorts(),command,env);
+            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            if (runConfig == null) {
+                // It's a data image which needs not to have a runtime configuration
+                runConfig = RunImageConfiguration.DEFAULT;
             }
-        } else {
-            dataImage = null;
-            dataContainer = null;
+            PortMapping mappedPorts = new PortMapping(runConfig.getPorts(),project.getProperties());
+            String container = docker.createContainer(imageName,
+                                                      runConfig.getCommand(), mappedPorts.getContainerPorts(),
+                                                      runConfig.getEnv());
+            docker.startContainer(container,
+                                  mappedPorts.getPortsMap(),
+                                  findContainersForImages(runConfig.getVolumesFrom()),
+                                  findLinksWithContainerNames(docker,runConfig.getLinks()));
+            registerContainer(container, imageConfig);
+            info("Created and started container " + container.substring(0, 12) + " from image " + imageName);
 
-            container = docker.createContainer(image,mappedPorts.getContainerPorts(),command,env);
+            // Remember id for later stopping the container
+            registerShutdownAction(new ShutdownAction(imageName,container));
+
+            // Set maven properties for dynamically assigned ports.
+            if (mappedPorts.containsDynamicPorts()) {
+                mappedPorts.updateVarsForDynamicPorts(docker.queryContainerPortMapping(container));
+                propagatePortVariables(mappedPorts,runConfig.getPortPropertyFile());
+            }
+
+            // Wait if requested
+            waitIfRequested(runConfig,mappedPorts,docker,container);
+            debug(docker.getLogs(container));
         }
-
-        docker.startContainer(container, mappedPorts.getPortsMap(), dataContainer);
-        info("Created and started container " + container.substring(0, 12) + " from image " + (useDataContainer() && mergeData ? dataImage : image));
-
-        // Remember id for later stopping the container
-        registerShutdownAction(new ShutdownAction(image,container,dataImage));
-
-        // Set maven properties for dynamically assigned ports.
-        if (mappedPorts.containsDynamicPorts()) {
-            mappedPorts.updateVarsForDynamicPorts(docker.queryContainerPortMapping(container));
-            propagatePortVariables(mappedPorts);
-        }
-
-        // Wait if requested
-        waitIfRequested(mappedPorts);
     }
 
+    private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws MojoExecutionException {
+        List<String> ret = new ArrayList<>();
+        for (String[] link : EnvUtil.splitLinks(links)) {
+            String container = lookupContainer(link[0]);
+            if (container == null) {
+                throw new MojoExecutionException("Cannot find container for " + link[0] + " while preparing links");
+            }
+            ret.add(docker.getContainerName(container) + ":" + link[1]);
+        }
+        return ret;
+    }
+
+    private List<String> findContainersForImages(List<String> images) throws MojoFailureException {
+        List<String> containers = new ArrayList<>();
+        if (images != null) {
+            for (String image : images) {
+                String container = lookupContainer(image);
+                if (container  == null) {
+                    throw new MojoFailureException("No container for image " + image + " started.");
+                }
+                containers.add(container);
+            }
+        }
+        return containers;
+    }
+
+    private String lookupContainer(String lookup) {
+        if (imageAliasMap.containsKey(lookup)) {
+            String image = imageAliasMap.get(lookup);
+            return containerImageNameMap.get(image);
+        }
+        if (containerImageNameMap.containsKey(lookup)) {
+            return containerImageNameMap.get(lookup);
+        }
+        return null;
+    }
+
+    private void registerContainer(String container, ImageConfiguration imageConfig) {
+        containerImageNameMap.put(imageConfig.getName(), container);
+        if (imageConfig.getAlias() != null) {
+            imageAliasMap.put(imageConfig.getAlias(), imageConfig.getName());
+        }
+    }
+
+    private List<StartOrderResolver.Resolvable> convertToResolvables(List<ImageConfiguration> images) {
+        List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
+        for (ImageConfiguration config : images) {
+            ret.add(config);
+        }
+        return ret;
+    }
 
     // ========================================================================================================
 
-    private boolean useDataContainer() {
-        return assemblyDescriptor != null || assemblyDescriptorRef != null;
-    }
-
-    private void waitIfRequested(PortMapping mappedPorts) {
-        if (waitHttp != null) {
-            String waitUrl = mappedPorts.replaceVars(waitHttp);
-            long waited = EnvUtil.httpPingWait(waitUrl, wait);
-            info("Waited on " + waitUrl + " for " + waited + " ms");
-        } else if (wait > 0) {
-            EnvUtil.sleep(wait);
-            info("Waited " + wait + " ms");
+    public void checkImage(DockerAccess docker,String image) throws MojoExecutionException, MojoFailureException {
+        if (!docker.hasImage(image)) {
+            if (autoPull) {
+                docker.pullImage(image,prepareAuthConfig(image));
+            } else {
+                throw new MojoExecutionException(this, "No image '" + image + "' found",
+                                                 "Please enable 'autoPull' or pull image '" + image +
+                                                 "' yourself (docker pull " + image + ")");
+            }
         }
     }
 
+    private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {
+        WaitConfiguration wait = runConfig.getWaitConfiguration();
+        if (wait != null) {
+            int maxTime = wait.getTime();
+            ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
+            ArrayList<String> logOut = new ArrayList<>();
+            if (wait.getUrl() != null) {
+                String waitUrl = mappedPorts.replaceVars(wait.getUrl());
+                checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
+                logOut.add("on url " + waitUrl + " ");
+            }
+            if (wait.getLog() != null) {
+                checkers.add(getLogWaitChecker(wait.getLog(),docker,containerId));
+                logOut.add("on log out '" + wait.getLog() + "' ");
+            }
+            long waited = WaitUtil.wait(wait.getTime(),checkers.toArray(new WaitUtil.WaitChecker[0]));
+            info("Waited " + StringUtils.join(logOut.toArray(),"and") + waited + " ms");
+        }
+    }
+
+    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final DockerAccess docker, final String containerId) {
+        return new WaitUtil.WaitChecker() {
+
+            @Override
+            public boolean check() {
+                try {
+                    String log = docker.getLogs(containerId);
+                    Pattern pattern = Pattern.compile(logPattern);
+                    return pattern.matcher(log).find();
+                } catch (MojoExecutionException e) {
+                    return false;
+                }
+            }
+        };
+    }
 
     // Store dynamically mapped ports
-    private void propagatePortVariables(PortMapping mappedPorts) throws MojoExecutionException {
+    private void propagatePortVariables(PortMapping mappedPorts,String portPropertyFile) throws MojoExecutionException {
         Properties props = new Properties();
         Map<String,Integer> dynamicPorts = mappedPorts.getDynamicPorts();
         for (Map.Entry<String,Integer> entry : dynamicPorts.entrySet()) {
@@ -143,5 +205,4 @@ public class StartMojo extends AbstractDataImageSupportMojo {
             EnvUtil.writePortProperties(props, portPropertyFile);
         }
     }
-
 }

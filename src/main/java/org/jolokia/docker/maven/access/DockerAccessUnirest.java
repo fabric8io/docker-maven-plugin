@@ -3,9 +3,12 @@ package org.jolokia.docker.maven.access;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.*;
 
 import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -18,10 +21,16 @@ import com.mashape.unirest.request.body.Body;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.jolokia.docker.maven.util.*;
 import org.json.*;
 
@@ -45,15 +54,25 @@ public class DockerAccessUnirest implements DockerAccess {
     // Base Docker URL
     private final String url;
 
+    // Keystore for certificates
+    private KeyStore keyStore;
+
     /**
      * Create a new access for the given URL
-     *
      * @param url base URL for accessing the docker Daemon
+     * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessUnirest(String url, LogHandler log) {
+    public DockerAccessUnirest(String url, String certPath, LogHandler log) throws MojoExecutionException {
         this.url = stripSlash(url) + "/" + DOCKER_API_VERSION;
         this.log = log;
+        if (certPath != null) {
+            try {
+                this.keyStore = KeyStoreUtil.createKeyStore(certPath);
+            } catch (IOException | GeneralSecurityException e) {
+                throw new MojoExecutionException("Cannot read keys and/or certs from " + certPath + ": " + e,e);
+            }
+        }
         Unirest.setDefaultHeader("accept", "application/json");
     }
 
@@ -79,7 +98,7 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException {
+    public String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/create")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
@@ -95,14 +114,29 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
+    @Override
+    public String getContainerName(String id) throws MojoExecutionException {
+        try {
+            BaseRequest req = Unirest.get(url + "/containers/" + id + "/json")
+                                     .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
+                                     .header("Content-Type", "application/json");
+            HttpResponse<String> resp = request(req);
+            checkReturnCode("Getting information about container '" + id + "'", resp, 200);
+            JSONObject json = new JSONObject(resp.getBody());
+            return json.getString("Name");
+        } catch (UnirestException e) {
+            throw new MojoExecutionException("Cannot get information for container '" + id + "'", e);
+        }
+    }
+
     /** {@inheritDoc} */
-    public void startContainer(String containerId, Map<Integer, Integer> ports, String volumesFrom) throws MojoExecutionException {
+    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom,List<String> links) throws MojoExecutionException {
         try {
             BaseRequest req = Unirest.post(url + "/containers/{id}/start")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .header("Content-Type", "application/json")
                                      .routeParam("id", containerId)
-                                     .body(getStartConfig(ports, volumesFrom));
+                                     .body(getStartConfig(ports, volumesFrom, links));
             HttpResponse<String> resp = request(req);
             checkReturnCode("Starting container with id " + containerId, resp, 204);
         } catch (UnirestException e) {
@@ -117,7 +151,7 @@ public class DockerAccessUnirest implements DockerAccess {
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL)
                                      .routeParam("id", containerId);
             HttpResponse<String> resp = request(req);
-            checkReturnCode("Stopping container with id " + containerId, resp, 204);
+            checkReturnCode("Stopping container with id " + containerId, resp, 204, 304);
 
         } catch (UnirestException e) {
             throw new MojoExecutionException("Cannot stop container " + containerId, e);
@@ -140,37 +174,49 @@ public class DockerAccessUnirest implements DockerAccess {
 
     /** {@inheritDoc} */
     private Map<Integer, Integer> extractPorts(JSONObject info) {
-        Map<Integer, Integer> ret = new HashMap<Integer, Integer>();
-
         JSONObject networkSettings = info.getJSONObject("NetworkSettings");
         if (networkSettings != null) {
             JSONObject ports = networkSettings.getJSONObject("Ports");
             if (ports != null) {
-                for (Object portSpecO : ports.keySet()) {
-                    String portSpec = portSpecO.toString();
-                    if (!ports.isNull(portSpec)) {
-                        JSONArray hostSpecs = ports.getJSONArray(portSpec);
-                        if (hostSpecs != null && hostSpecs.length() > 0) {
-                            // We take only the first
-                            JSONObject hostSpec = hostSpecs.getJSONObject(0);
-                            Object hostPortO = hostSpec.get("HostPort");
-                            if (hostPortO != null) {
-                                try {
-                                    Integer hostPort = (Integer.parseInt(hostPortO.toString()));
-                                    int idx = portSpec.indexOf('/');
-                                    String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
-                                    Integer containerPort = Integer.parseInt(p);
-                                    ret.put(containerPort, hostPort);
-                                } catch (NumberFormatException exp) {
-                                    log.warn("Cannot parse " + hostPortO + " or " + portSpec + " as a port number. Ignoring in mapping");
-                                }
-                            }
-                        }
-                    }
-                }
+                return createPortMapping(ports);
             }
         }
-        return ret;
+        return Collections.emptyMap();
+    }
+
+    private Map<Integer, Integer> createPortMapping(JSONObject ports) {
+        Map<Integer, Integer> portMapping = new HashMap<Integer, Integer>();
+        for (Object portSpecO : ports.keySet()) {
+            String portSpec = portSpecO.toString();
+            if (!ports.isNull(portSpec)) {
+                JSONArray hostSpecs = ports.getJSONArray(portSpec);
+                parseHostSpecsAndUpdateMapping(portMapping, hostSpecs, portSpec);
+            }
+        }
+        return portMapping;
+    }
+
+    private void parseHostSpecsAndUpdateMapping(Map<Integer, Integer> portMapping, JSONArray hostSpecs, String portSpec) {
+        if (hostSpecs != null && hostSpecs.length() > 0) {
+            // We take only the first
+            JSONObject hostSpec = hostSpecs.getJSONObject(0);
+            Object hostPortO = hostSpec.get("HostPort");
+            if (hostPortO != null) {
+                parsePortSpecAndUpdateMapping(portMapping, hostPortO, portSpec);
+            }
+        }
+    }
+
+    private void parsePortSpecAndUpdateMapping(Map<Integer, Integer> portMapping, Object hostPort, String portSpec) {
+        try {
+            Integer hostP = (Integer.parseInt(hostPort.toString()));
+            int idx = portSpec.indexOf('/');
+            String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
+            Integer containerPort = Integer.parseInt(p);
+            portMapping.put(containerPort, hostP);
+        } catch (NumberFormatException exp) {
+            log.warn("Cannot parse " + hostPort + " or " + portSpec + " as a port number. Ignoring in mapping");
+        }
     }
 
     /** {@inheritDoc} */
@@ -179,8 +225,7 @@ public class DockerAccessUnirest implements DockerAccess {
             List<String> ret = new ArrayList<String>();
             BaseRequest req = Unirest.get(url + "/containers/json?limit=100")
                                      .header(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
-            HttpResponse<String> resp = null;
-            resp = request(req);
+            HttpResponse<String> resp = request(req);
             checkReturnCode("Fetching container information", resp, 200);
             JSONArray configs = new JSONArray(resp.getBody());
             for (int i = 0; i < configs.length(); i ++) {
@@ -194,6 +239,37 @@ public class DockerAccessUnirest implements DockerAccess {
             return ret;
         } catch (UnirestException e) {
             throw new MojoExecutionException("Cannot get container information", e);
+        }
+    }
+
+    @Override
+    public String getLogs(final String containerId) throws MojoExecutionException {
+        try {
+            HttpClient client = ClientFactory.getHttpClient();
+            URI logUrl = new URI(url + "/containers/" + containerId + "/logs?stdout=1&stderr=1");
+            HttpGet get = new HttpGet(logUrl);
+
+            final StringBuffer dockerLog = new StringBuffer();
+
+            org.apache.http.HttpResponse resp = client.execute(URIUtils.extractHost(logUrl), get);
+            InputStream is = resp.getEntity().getContent();
+            int len;
+            int size = 8129;
+            byte[] buf = new byte[size];
+
+            while ((len = is.read(buf, 0, size)) != -1) {
+                String txt = new String(buf, 0, len, "UTF-8");
+                dockerLog.append(txt);
+            }
+            StatusLine status = resp.getStatusLine();
+            if (status.getStatusCode() != 200) {
+                throw new MojoExecutionException(
+                        "Error while getting log for '" + containerId + "' (code: " + status.getStatusCode()
+                        + ", " + status.getReasonPhrase() + ")");
+            }
+            return dockerLog.toString();
+        } catch (IOException | URISyntaxException e) {
+            throw new MojoExecutionException("Cannot get container log for " + containerId, e);
         }
     }
 
@@ -284,8 +360,28 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void start() {
+    public void start() throws MojoFailureException {
         Options.refresh();
+        Unirest.setHttpClient(createHttpClient());
+    }
+
+    private HttpClient createHttpClient() throws MojoFailureException {
+        try {
+            SSLContext sslContext =
+                    SSLContexts.custom()
+                               .useTLS()
+                               .loadKeyMaterial(keyStore,"docker".toCharArray())
+                               .loadTrustMaterial(keyStore)
+                               .build();
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+
+            CloseableHttpClient httpclient = HttpClients.custom()
+                                                        .setSSLSocketFactory(sslsf)
+                                                        .build();
+            return httpclient;
+        } catch (GeneralSecurityException e) {
+            throw new MojoFailureException("Cannot initialize HTTP client", e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -327,7 +423,7 @@ public class DockerAccessUnirest implements DockerAccess {
 
     private String getContainerConfig(String image, Set<Integer> ports, String command, Map<String, String> env) {
         JSONObject ret = new JSONObject();
-        ret.put("Image",image);
+        ret.put("Image", image);
         if (ports != null && ports.size() > 0) {
             JSONObject exposedPorts = new JSONObject();
             for (Integer port : ports) {
@@ -337,7 +433,7 @@ public class DockerAccessUnirest implements DockerAccess {
         }
         if (command != null) {
             JSONArray a = new JSONArray();
-            for (String s : command.split("\\s+")) {
+            for (String s : EnvUtil.splitWOnSpaceWithEscape(command)) {
                 a.put(s);
             }
             ret.put("Cmd",a);
@@ -347,13 +443,13 @@ public class DockerAccessUnirest implements DockerAccess {
             for (Map.Entry<String,String> entry : env.entrySet()) {
                 a.put(entry.getKey() + "=" + entry.getValue());
             }
-            ret.put("Env",a);
+            ret.put("Env", a);
         }
         log.debug("Container create config: " + ret.toString());
         return ret.toString();
     }
 
-    private String getStartConfig(Map<Integer, Integer> ports, String volumesFrom) {
+    private String getStartConfig(Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) {
         JSONObject ret = new JSONObject();
         if (ports != null && ports.size() > 0) {
             JSONObject c = new JSONObject();
@@ -368,9 +464,10 @@ public class DockerAccessUnirest implements DockerAccess {
             ret.put("PortBindings", c);
         }
         if (volumesFrom != null) {
-            JSONArray a = new JSONArray();
-            a.put(volumesFrom);
-            ret.put("VolumesFrom", a);
+            ret.put("VolumesFrom", new JSONArray(volumesFrom));
+        }
+        if (links != null) {
+            ret.put("Links", new JSONArray(links));
         }
         log.debug("Container start config: " + ret.toString());
         return ret.toString();
@@ -444,7 +541,7 @@ public class DockerAccessUnirest implements DockerAccess {
                 if (json.has("error")) {
                     String msg = json.getString("error").trim();
                     String details = json.getJSONObject("errorDetail").getString("message").trim();
-                    log.error("!!! " +  msg + (msg.equals(details) ? "" : "(" + details + ")"));
+                    log.error("!!! " + msg + (msg.equals(details) ? "" : "(" + details + ")"));
                 } else {
                     log.info("... " + (json.has("id") ? json.getString("id") + ": " : "") + json.getString("status"));
                 }
@@ -514,12 +611,14 @@ public class DockerAccessUnirest implements DockerAccess {
         }
     }
 
-    private void checkReturnCode(String msg, HttpResponse resp, int expectedCode) throws MojoExecutionException {
-        if (resp.getCode() != expectedCode) {
-            throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + resp.getCode() + ", " +
-                                             resp.getBody().toString().trim() + ")");
-
+    private void checkReturnCode(String msg, HttpResponse resp, int ... expectedCodes) throws MojoExecutionException {
+        for (int code : expectedCodes) {
+            if (resp.getCode() == code) {
+                return;
+            }
         }
+        throw new MojoExecutionException("Error while calling docker: " + msg + " (code: " + resp.getCode() +
+                                         (resp.getBody() != null ? "," + resp.getBody().toString().trim() : "") + ")");
     }
 
     private String stripSlash(String url) {

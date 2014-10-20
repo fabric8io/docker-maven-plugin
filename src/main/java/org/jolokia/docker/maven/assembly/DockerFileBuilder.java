@@ -2,10 +2,7 @@ package org.jolokia.docker.maven.assembly;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.codehaus.plexus.util.FileUtils;
 
@@ -65,15 +62,6 @@ public class DockerFileBuilder {
         b.append("FROM ").append(baseImage).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
 
-        // Default command mit args
-        if (command != null) {
-            b.append("CMD [\"").append(command).append("\"");
-            for (String arg : arguments) {
-                b.append(",\"").append(arg).append("\"");
-            }
-            b.append("]").append("\n");
-        }
-
         // Entries
         for (AddEntry entry : addEntries) {
             b.append("ADD ").append(entry.source).append(" ")
@@ -98,6 +86,15 @@ public class DockerFileBuilder {
              .append(entry.getValue()).append("\n");
         }
 
+        // Default command mit args
+        if (command != null) {
+            b.append("CMD [\"").append(command).append("\"");
+            for (String arg : arguments) {
+                b.append(",\"").append(arg).append("\"");
+            }
+            b.append("]").append("\n");
+        }
+
         return b.toString();
     }
 
@@ -112,7 +109,9 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder baseImage(String baseImage) {
-        this.baseImage = baseImage;
+        if (baseImage != null) {
+            this.baseImage = baseImage;
+        }
         return this;
     }
 
@@ -122,13 +121,20 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder exportDir(String exportDir) {
-        this.exportDir = exportDir;
+        if (exportDir != null) {
+            this.exportDir = exportDir;
+        }
         return this;
     }
 
-    public DockerFileBuilder command(String command, String ... args) {
-        this.command = command;
-        this.arguments = args;
+    public DockerFileBuilder command(String ... args) {
+        if (args == null || args.length == 0) {
+            this.command = null;
+            this.arguments = new String[0];
+        } else {
+            this.command = args[0];
+            this.arguments = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+        }
         return this;
     }
 
@@ -142,18 +148,18 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder expose(List<Integer> ports) {
+    public DockerFileBuilder expose(List<String> ports) {
         if (ports != null) {
-            for (Integer port : ports) {
+            for (String port : ports) {
                 if (port != null) {
-                    expose(port);
+                    expose(Integer.parseInt(port));
                 }
             }
         }
         return this;
     }
 
-    public DockerFileBuilder environmentVariables(Map<String, String> values) {
+    public DockerFileBuilder env(Map<String, String> values) {
         this.envEntries = values != null ? values : new HashMap<String,String>();
         return this;
     }

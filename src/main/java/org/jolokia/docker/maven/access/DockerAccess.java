@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.jolokia.docker.maven.util.AuthConfig;
 
 /**
@@ -28,26 +29,35 @@ public interface DockerAccess {
      * Create a container from the given image.
      *
      * @param image the image from which the container should be created
-     * @param ports ports to expose, can be null
      * @param command an optional command which gets executed when starting the container. might be null.
+     * @param ports ports to expose, can be null
      * @param env map with environment variables to use
      * @return the container id
      * @throws MojoExecutionException if the container could not be created.
      */
-    String createContainer(String image, Set<Integer> ports, String command, Map<String, String> env) throws MojoExecutionException;
+    String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws MojoExecutionException;
+
+    /**
+     * Get the the name of a container for a given container id
+     *
+     * @param id container id to lookup
+     * @return name of the container
+     * @throws MojoExecutionException if the id does not match a container
+     */
+    String getContainerName(String id) throws MojoExecutionException;
 
     /**
      * Start a container.
      *
      * @param containerId id of container to start
-     * @param ports ports to map. The keys of this map must be ports which were exposed via {@link #createContainer(String, Set, String, Map)}
+     * @param ports ports to map. The keys of this map must be ports which were exposed via {@link #createContainer(String, String, Set, Map)}
      *              while the values are the host ports to use. If a value is <code>null</code> a port is dynamically selected
      *              by docker. The value of a dynamically selected port can be obtained via {@link #queryContainerPortMapping(String)}
      *              This map must not be null (but can be empty)
      * @param volumesFrom mount volumes from the given container id. Can be null.
      * @throws MojoExecutionException if the container could not be started.
      */
-    void startContainer(String containerId, Map<Integer, Integer> ports, String volumesFrom) throws MojoExecutionException;
+    void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) throws MojoExecutionException;
 
     /**
      * Stop a container.
@@ -77,6 +87,15 @@ public interface DockerAccess {
     List<String> getContainersForImage(String image) throws MojoExecutionException;
 
     /**
+     * Get logs for a container.
+     *
+     * @param containerId container id
+     * @return the logs for the given container
+     * @throws MojoExecutionException if the request fails
+     */
+    String getLogs(String containerId) throws MojoExecutionException;
+
+    /**
      * Remove a container with the given id
      *
      * @param containerId container id for the container to remove
@@ -102,7 +121,7 @@ public interface DockerAccess {
     /**
      * Lifecycle method for this access class which must be called before any other method is called.
      */
-    void start();
+    void start() throws MojoFailureException;
 
     /**
      * Lifecycle method which must be called when this object is not needed anymore. This hook might be used for

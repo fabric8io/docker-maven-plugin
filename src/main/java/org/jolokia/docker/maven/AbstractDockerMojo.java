@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven;
 
+import java.io.File;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
@@ -13,8 +14,8 @@ import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.fusesource.jansi.AnsiConsole;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessUnirest;
+import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -28,6 +29,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
 
+    public static final String DOCKER_SHUTDOWN_ACTIONS = "DOCKER_SHUTDOWN_ACTIONS";
+    public static final String DOCKER_HTTPS_PORT = "2376";
+
     // Current maven project
     @Component
     protected MavenProject project;
@@ -40,9 +44,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     @Parameter(property = "docker.url")
     private String url;
 
-    // Name of the image for which to stop its containers. If none given, all are removed
-    @Parameter(property = "docker.image", required = false)
-    protected String image;
+    @Parameter(property = "docker.certPath")
+    private String certPath;
 
     // Whether to use color
     @Parameter(property = "docker.useColor", defaultValue = "true")
@@ -55,6 +58,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Authentication information
     @Parameter
     Map authConfig;
+
+    // Relevant configuration to use
+    @Parameter(required = true)
+    protected List<ImageConfiguration> images;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
@@ -72,7 +79,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             colorInit();
-            DockerAccess access = new DockerAccessUnirest(extractUrl(), this);
+            DockerAccess access = new DockerAccessViaHttpClient(extractUrl(), getCertPath(), this);
             access.start();
             try {
                 executeInternal(access);
@@ -84,13 +91,25 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         }
     }
 
+    private String getCertPath() {
+        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
+        if (path == null) {
+            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
+            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
+                return dockerHome.getAbsolutePath();
+            }
+        }
+        return path;
+    }
+
     // Check both, url and env DOCKER_HOST (first takes precedence)
     private String extractUrl() {
         String connect = url != null ? url : System.getenv("DOCKER_HOST");
         if (connect == null) {
             throw new IllegalArgumentException("No url given and now DOCKER_HOST environment variable set");
         }
-        return connect.replaceFirst("^tcp:", "http:");
+        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        return connect.replaceFirst("^tcp:", protocol);
     }
 
     /**
@@ -106,24 +125,21 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // =============================================================================================
     // Registry for managed containers
 
-    // Set with all registered shutdown actions
-    private static Set<ShutdownAction> shutdownActions =
-            Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
 
     /**
      * Register a shutdown action executed during "stop"
      * @param shutdownAction action to register
      */
-    protected static void registerShutdownAction(ShutdownAction shutdownAction) {
-        shutdownActions.add(shutdownAction);
+    protected void registerShutdownAction(ShutdownAction shutdownAction) {
+        getShutdownActions().add(shutdownAction);
     }
 
     /**
      * Return shutdown actions in reverse registration order
      * @return registered shutdown actions
      */
-    protected static List<ShutdownAction> getShutdownActions() {
-        List<ShutdownAction> ret = new ArrayList<ShutdownAction>(shutdownActions);
+    protected List<ShutdownAction> getShutdownActionsInExecutionOrder() {
+        List<ShutdownAction> ret = new ArrayList<ShutdownAction>(getShutdownActions());
         Collections.reverse(ret);
         return ret;
     }
@@ -132,20 +148,52 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      * Remove a list of shutdown actions
      * @param actions actions to remove
      */
-    protected static void removeShutdownActions(List<ShutdownAction> actions) {
-        shutdownActions.removeAll(actions);
+    protected void removeShutdownActions(List<ShutdownAction> actions) {
+        getShutdownActions().removeAll(actions);
+    }
+
+    private Set<ShutdownAction> getShutdownActions() {
+        Object obj = getPluginContext().get(DOCKER_SHUTDOWN_ACTIONS);
+        if (obj == null) {
+            Set<ShutdownAction> actions = Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
+            getPluginContext().put(DOCKER_SHUTDOWN_ACTIONS, actions);
+            return actions;
+        } else {
+            return (Set<ShutdownAction>) obj;
+        }
     }
 
     // =================================================================================
     // Extract authentication information
 
-    protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
-        return authConfigFactory.createAuthConfig(authConfig, image,settings);
-    }
-
     @Override
     public void contextualize(Context context) throws ContextException {
         authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
+    }
+
+    // =================================================================================
+
+     protected String getImageName(String name) {
+        if (name != null) {
+            return name;
+        } else {
+            return getDefaultUserName() + "/" + getDefaultRepoName() + ":" + project.getVersion();
+        }
+    }
+
+    private String getDefaultRepoName() {
+        String repoName = project.getBuild().getFinalName();
+        if (repoName == null || repoName.length() == 0) {
+            repoName = project.getArtifactId();
+        }
+        return repoName;
+    }
+
+    // Repo names with '.' are considered to be remote registries
+    private String getDefaultUserName() {
+        String groupId = project.getGroupId();
+        String repo = groupId.replace('.','_').replace('-','_');
+        return repo.length() > 30 ? repo.substring(0,30) : repo;
     }
 
     // =================================================================================
@@ -191,7 +239,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     private int oldProgress = 0;
     private int total = 0;
-
 
     // A progress indicator is always written out to standard out if a tty is enabled.
 
@@ -239,6 +286,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         System.out.flush();
     }
 
+    protected AuthConfig prepareAuthConfig(String image) throws MojoFailureException {
+        return authConfigFactory.createAuthConfig(authConfig, image,settings);
+    }
 
     // ==========================================================================================
     // Class for registering a shutdown action
@@ -251,13 +301,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         // Data container create from image
         private String container;
 
-        // Name of the data image create on-the-fly
-        private String dataImage;
-
-        protected ShutdownAction(String image, String container, String dataImage) {
+        protected ShutdownAction(String image, String container) {
             this.image = image;
             this.container = container;
-            this.dataImage = dataImage;
         }
 
         /**
@@ -276,30 +322,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
          * @param access access object for reaching docker
          * @param log logger to use
          * @param keepContainer whether to keep the container (and its data container)
-         * @param keepData whether to keep the data
          */
-        public void shutdown(DockerAccess access, LogHandler log,
-                             boolean keepContainer, boolean keepData) throws MojoExecutionException {
+        public void shutdown(DockerAccess access, LogHandler log,boolean keepContainer)
+                throws MojoExecutionException {
             // Stop the container
             access.stopContainer(container);
             if (!keepContainer) {
                 // Remove the container
                 access.removeContainer(container);
-                if (dataImage != null && !keepData) {
-                    removeDataImageAndItsContainers(dataImage,access,log);
-                }
             }
             log.info("Stopped " + container.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
-        }
-
-        private void removeDataImageAndItsContainers(String imageToRemove, DockerAccess access, LogHandler log) throws MojoExecutionException {
-            List<String> containers = access.getContainersForImage(imageToRemove);
-            for (String c : containers) {
-                access.removeContainer(c);
-                log.info("Removed data container " + c);
-            }
-            access.removeImage(dataImage);
-            log.info("Removed data image " + imageToRemove);
         }
 
         @Override
