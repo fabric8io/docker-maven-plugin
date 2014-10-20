@@ -3,9 +3,12 @@ package org.jolokia.docker.maven.access;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.*;
 
 import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -21,8 +24,13 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIUtils;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.jolokia.docker.maven.util.*;
 import org.json.*;
 
@@ -46,15 +54,25 @@ public class DockerAccessUnirest implements DockerAccess {
     // Base Docker URL
     private final String url;
 
+    // Keystore for certificates
+    private KeyStore keyStore;
+
     /**
      * Create a new access for the given URL
-     *
      * @param url base URL for accessing the docker Daemon
+     * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessUnirest(String url, LogHandler log) {
+    public DockerAccessUnirest(String url, String certPath, LogHandler log) throws MojoExecutionException {
         this.url = stripSlash(url) + "/" + DOCKER_API_VERSION;
         this.log = log;
+        if (certPath != null) {
+            try {
+                this.keyStore = KeyStoreUtil.createKeyStore(certPath);
+            } catch (IOException | GeneralSecurityException e) {
+                throw new MojoExecutionException("Cannot read keys and/or certs from " + certPath + ": " + e,e);
+            }
+        }
         Unirest.setDefaultHeader("accept", "application/json");
     }
 
@@ -342,8 +360,28 @@ public class DockerAccessUnirest implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void start() {
+    public void start() throws MojoFailureException {
         Options.refresh();
+        Unirest.setHttpClient(createHttpClient());
+    }
+
+    private HttpClient createHttpClient() throws MojoFailureException {
+        try {
+            SSLContext sslContext =
+                    SSLContexts.custom()
+                               .useTLS()
+                               .loadKeyMaterial(keyStore,"docker".toCharArray())
+                               .loadTrustMaterial(keyStore)
+                               .build();
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+
+            CloseableHttpClient httpclient = HttpClients.custom()
+                                                        .setSSLSocketFactory(sslsf)
+                                                        .build();
+            return httpclient;
+        } catch (GeneralSecurityException e) {
+            throw new MojoFailureException("Cannot initialize HTTP client", e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -385,7 +423,7 @@ public class DockerAccessUnirest implements DockerAccess {
 
     private String getContainerConfig(String image, Set<Integer> ports, String command, Map<String, String> env) {
         JSONObject ret = new JSONObject();
-        ret.put("Image",image);
+        ret.put("Image", image);
         if (ports != null && ports.size() > 0) {
             JSONObject exposedPorts = new JSONObject();
             for (Integer port : ports) {
@@ -405,7 +443,7 @@ public class DockerAccessUnirest implements DockerAccess {
             for (Map.Entry<String,String> entry : env.entrySet()) {
                 a.put(entry.getKey() + "=" + entry.getValue());
             }
-            ret.put("Env",a);
+            ret.put("Env", a);
         }
         log.debug("Container create config: " + ret.toString());
         return ret.toString();
@@ -503,7 +541,7 @@ public class DockerAccessUnirest implements DockerAccess {
                 if (json.has("error")) {
                     String msg = json.getString("error").trim();
                     String details = json.getJSONObject("errorDetail").getString("message").trim();
-                    log.error("!!! " +  msg + (msg.equals(details) ? "" : "(" + details + ")"));
+                    log.error("!!! " + msg + (msg.equals(details) ? "" : "(" + details + ")"));
                 } else {
                     log.info("... " + (json.has("id") ? json.getString("id") + ": " : "") + json.getString("status"));
                 }

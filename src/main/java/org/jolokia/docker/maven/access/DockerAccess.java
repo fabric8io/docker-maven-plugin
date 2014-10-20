@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.jolokia.docker.maven.util.AuthConfig;
 
 /**
@@ -120,7 +121,7 @@ public interface DockerAccess {
     /**
      * Lifecycle method for this access class which must be called before any other method is called.
      */
-    void start();
+    void start() throws MojoFailureException;
 
     /**
      * Lifecycle method which must be called when this object is not needed anymore. This hook might be used for
