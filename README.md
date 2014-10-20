@@ -6,7 +6,7 @@
 
 This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
-**This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.2 with a new configuration syntax has not yet much documentation, so 
+**This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.2 with a new configuration syntax has not yet much [documentation](https://github.com/rhuss/shootout-docker-maven/blob/master/pom.xml#L83), so 
 please stick to 0.9.11 in the meantime. See the [CHANGELOG](CHANGELOG.md) for more details about the differences**
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
@@ -28,7 +28,6 @@ This plugin's **highlights** are:
 
 This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
 Please refer also to the examples provided in the `samples/` directory.
-
 
 ````xml
 <plugin>
@@ -339,6 +338,14 @@ Regardless which mode you choose you can encrypt password as described in the [M
 ````
 
 This password then can be used in `authConfig`, `docker.password` and/or the `<server>` setting configuration. However, putting an encrypted password into `authConfig` in the `pom.xml` doesn't make much sense, since this password is encrypted with an individual master password.
+
+## SSL with keys and certificates
+
+The plugin can communicate with the Docker Host via SSL, too. This is the default now for Docker 1.3 (and Boot2Docker). 
+SSL is switched on if the port used is `2376` which is the default, IANA registered SSL port of the Docker host 
+(and plain HTTP for `2375`). The directory holding `ca.pem`, `key.pem` and `cert.pem` can be configured with the
+configuration parameter `certPath`. Alternatively, the environment variable `DOCKER_CERT_PATH` is evaluated and finally 
+`~/.docker` is used as the last fallback.
 
 ## Examples
 
