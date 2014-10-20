@@ -35,6 +35,10 @@ public class StartOrderResolver {
         }
 
         // Next passes: Those with dependencies are checked whether they already have been visited.
+        return secondPass.size() > 0 ? resolveRemaining(ret, secondPass, processedImages) : ret;
+    }
+
+    private static List<Resolvable> resolveRemaining(List<Resolvable> ret, List<Resolvable> secondPass, Set<String> processedImages) throws MojoExecutionException {
         List<Resolvable> remaining = secondPass;
         int retries = MAX_RESOLVE_RETRIES;
         String error = null;

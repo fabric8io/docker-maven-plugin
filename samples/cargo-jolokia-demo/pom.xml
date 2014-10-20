@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.10.1</version>
+  <version>0.10.2-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -95,6 +95,7 @@
               <id>start</id>
               <phase>pre-integration-test</phase>
               <goals>
+                <goal>build</goal>
                 <goal>start</goal>
               </goals>
             </execution>

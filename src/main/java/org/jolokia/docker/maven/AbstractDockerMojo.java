@@ -335,7 +335,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
                     // Remove the container
                     access.removeContainer(container);
                 }
-                log.info("Stopped " + container.substring(0, 12) + (keepContainer ? "" : " and removed") + " container");
+                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " + container.substring(0, 12)  + " [" + image +  "]" );
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot shutdown",e);
             }

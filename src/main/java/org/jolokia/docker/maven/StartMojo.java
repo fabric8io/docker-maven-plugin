@@ -67,7 +67,7 @@ public class StartMojo extends AbstractDockerMojo {
                                   findContainersForImages(runConfig.getVolumesFrom()),
                                   findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
-            info("Created and started container " + container.substring(0, 12) + " from image " + imageName);
+            info("Created and started container " + container.substring(0, 12) + " [" + imageName + "]");
 
             // Remember id for later stopping the container
             registerShutdownAction(new ShutdownAction(imageName,container));

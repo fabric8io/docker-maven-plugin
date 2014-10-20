@@ -19,6 +19,7 @@ public class StartOrderResolverTest {
     @Test
     public void simple() throws MojoExecutionException {
         checkData(new Object[][]{
+                { new T[]{new T("1")}, new T[]{new T("1")}},
                 { new T[]{new T("1", "2"), new T("2")}, new T[]{new T("2"), new T("1", "2")} },
                 { new T[]{new T("1", "2", "3"), new T("2", "3"), new T("3")}, new T[]{new T("3"), new T("2", "3"), new T("1", "2", "3")} },
         });
