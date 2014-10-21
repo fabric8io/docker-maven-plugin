@@ -7,7 +7,7 @@
 This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
 **This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.2 with a new configuration syntax has not yet much [documentation](https://github.com/rhuss/shootout-docker-maven/blob/master/pom.xml#L83), so 
-please stick to 0.9.11 in the meantime. See the [CHANGELOG](CHANGELOG.md) for more details about the differences**
+please stick to 0.9.11 in the meantime. See the [CHANGELOG](CHANGELOG.md) for more details about the differences and this [blog post](http://ro14nd.de/Docker-Maven-Plugin-Rewrite/) for the motivation behind this restructuring.**
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
