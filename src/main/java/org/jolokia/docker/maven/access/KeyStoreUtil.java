@@ -23,7 +23,7 @@ public class KeyStoreUtil {
     /**
      * Create a key stored holding certificates and secret keys from the given Docker key cert
      *
-     * @param certPath directory holding the keys (key.pem) and certss (ca.pem, cert.pem)
+     * @param certPath directory holding the keys (key.pem) and certs (ca.pem, cert.pem)
      * @return a keystore where the private key is secured with "docker"
      *
      * @throws IOException is reading of the the PEMs failed
@@ -42,15 +42,14 @@ public class KeyStoreUtil {
     }
 
     public static PrivateKey loadPrivateKey(String keyPath) throws IOException, GeneralSecurityException {
-        PEMKeyPair keyPair = (PEMKeyPair) loadPEM(keyPath);
+        PEMKeyPair keyPair = loadPEM(keyPath);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyPair.getPrivateKeyInfo().getEncoded());
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePrivate(keySpec);
+        return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
     }
 
-    private static Object loadPEM(String keyPath) throws IOException {
+    private static <T> T loadPEM(String keyPath) throws IOException {
         PEMParser parser = new PEMParser(new BufferedReader(new FileReader(keyPath)));
-        return parser.readObject();
+        return (T) parser.readObject();
     }
 
     private static void addCA(KeyStore keyStore, String caPath) throws KeyStoreException, FileNotFoundException, CertificateException {
