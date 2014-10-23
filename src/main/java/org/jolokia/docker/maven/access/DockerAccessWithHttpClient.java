@@ -180,13 +180,14 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void removeImage(String image) throws DockerAccessException {
+    public boolean removeImage(String image) throws DockerAccessException {
         HttpUriRequest req = newDelete(baseUrl + "/images/" + image);
         HttpResponse resp = request(req);
-        checkReturnCode("Removing image " + image, resp, 200);
+        checkReturnCode("Removing image " + image, resp, 200, 404);
         if (log.isDebugEnabled()) {
             logRemoveResponse(asJsonArray(resp));
         }
+        return resp.getStatusLine().getStatusCode() == 200;
     }
 
     // ---------------

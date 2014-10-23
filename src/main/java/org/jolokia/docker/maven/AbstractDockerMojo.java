@@ -81,6 +81,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
 
+    protected static String getContainerImageDescription(String container, String image, String alias) {
+        return container.substring(0, 12) + " " + getImageDescription(image,alias);
+    }
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
      * which must be implemented by subclass.
@@ -331,6 +335,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         return authConfigFactory.createAuthConfig(authConfig, image,settings);
     }
 
+    protected static String getImageDescription(String image, String alias) {
+        return "[" + image + "]" +
+               (alias != null ? " \"" + alias + "\"" : "");
+    }
+
     // ==========================================================================================
     // Class for registering a shutdown action
 
@@ -377,9 +386,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
                     // Remove the container
                     access.removeContainer(container);
                 }
-                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " + container.substring(0, 12)
-                         + " [" + image +  "]"  +
-                         (alias !=null ? " \"" + alias + "\"" : ""));
+                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " +
+                         getContainerImageDescription(container, image, alias));
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot shutdown",e);
             }

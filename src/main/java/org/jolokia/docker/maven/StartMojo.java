@@ -70,7 +70,8 @@ public class StartMojo extends AbstractDockerMojo {
                                   findContainersForImages(runConfig.getVolumesFrom()),
                                   findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
-            info("Created and started container " + getImageContainerDescription(imageConfig, container));
+            info("Created and started container " +
+                 getContainerImageDescription(container,imageConfig.getName(),imageConfig.getAlias()));
 
             // Remember id for later stopping the container
             registerShutdownAction(new ShutdownAction(imageName,imageConfig.getAlias(),container));
@@ -96,11 +97,6 @@ public class StartMojo extends AbstractDockerMojo {
             error(e.getMessage());
             throw new MojoExecutionException("No container start order could be found",e);
         }
-    }
-
-    private String getImageContainerDescription(ImageConfiguration image, String container) {
-        return container.substring(0, 12) + " [" + image.getName() + "]" +
-               (image.getAlias() != null ? " \"" + image.getAlias() + "\"" : "");
     }
 
     private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
