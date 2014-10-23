@@ -10,6 +10,14 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 
 /**
+ * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
+ * when configured for integration testing in a lifefcycle phase), then only the container
+ * started by this goal will be stopped and removed by default (this can be tuned with the
+ * system property <code>docker.keepContainer</code>).
+ *
+ * If this goal is called standalone, then <em>all</em> containers are stopped, for which images
+ * has been configured in the pom.xml
+ *
  * @author roland
  * @since 26.03.14
  */
@@ -24,10 +32,6 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
     private boolean keepRunning;
 
-    // Whether the data container & image should be kept if an assembly is used
-    @Parameter(property = "docker.keepData", defaultValue = "false")
-    private boolean keepData;
-
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
 
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
@@ -38,7 +42,7 @@ public class StopMojo extends AbstractDockerMojo {
             for (ImageConfiguration image : getImages()) {
                 String imageName = image.getName();
                 for (String container : access.getContainersForImage(imageName)) {
-                    new ShutdownAction(imageName,container).shutdown(access, this, keepContainer);
+                    new ShutdownAction(imageName,image.getAlias(), container).shutdown(access, this, keepContainer);
                 }
             }
         } else {

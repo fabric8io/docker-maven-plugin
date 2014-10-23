@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.util;
 import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * @author roland
@@ -70,7 +71,8 @@ public class StartOrderResolver {
         StringBuffer ret = new StringBuffer();
         ret.append("Unresolved images:\n");
         for (Resolvable config : configs) {
-            ret.append("     " + config.getName() + "\n");
+            ret.append("     " + config.getName() + " depends on ");
+            ret.append(StringUtils.join(new ArrayList(config.getDependencies()).toArray(),","));
         }
         return ret.toString();
     }

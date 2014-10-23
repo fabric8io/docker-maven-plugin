@@ -1,13 +1,13 @@
 package org.jolokia.docker.maven;
 
 /*
- * Copyright 2001-2005 The Apache Software Foundation.
+ * Copyright 2009-2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,7 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.*;
 
 /**
- * Goal for creating and starting a docker container
+ * Goal for creating and starting a docker container. This goal evaluates the image configuration
  *
  * @author roland
  */
@@ -50,7 +50,8 @@ public class StartMojo extends AbstractDockerMojo {
 
         getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
 
-        for (StartOrderResolver.Resolvable resolvable : StartOrderResolver.resolve(convertToResolvables(getImages()))) {
+
+        for (StartOrderResolver.Resolvable resolvable : getImagesConfigsInOrder()) {
             ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
             String imageName = imageConfig.getName();
             checkImage(docker,imageName);
@@ -69,10 +70,10 @@ public class StartMojo extends AbstractDockerMojo {
                                   findContainersForImages(runConfig.getVolumesFrom()),
                                   findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
-            info("Created and started container " + container.substring(0, 12) + " [" + imageName + "]");
+            info("Created and started container " + getImageContainerDescription(imageConfig, container));
 
             // Remember id for later stopping the container
-            registerShutdownAction(new ShutdownAction(imageName,container));
+            registerShutdownAction(new ShutdownAction(imageName,imageConfig.getAlias(),container));
 
             // Set maven properties for dynamically assigned ports.
             if (mappedPorts.containsDynamicPorts()) {
@@ -86,6 +87,20 @@ public class StartMojo extends AbstractDockerMojo {
                 debug(docker.getLogs(container));
             }
         }
+    }
+
+    private List<StartOrderResolver.Resolvable> getImagesConfigsInOrder() throws MojoExecutionException {
+        try {
+            return StartOrderResolver.resolve(convertToResolvables(getImages()));
+        } catch (MojoExecutionException e) {
+            error(e.getMessage());
+            throw new MojoExecutionException("No container start order could be found",e);
+        }
+    }
+
+    private String getImageContainerDescription(ImageConfiguration image, String container) {
+        return container.substring(0, 12) + " [" + image.getName() + "]" +
+               (image.getAlias() != null ? " \"" + image.getAlias() + "\"" : "");
     }
 
     private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {

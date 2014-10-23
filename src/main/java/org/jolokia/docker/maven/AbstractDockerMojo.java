@@ -179,7 +179,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
 
     /**
-     * Get all images to use. Can be restricted via -Ddocker.image to pick a single image
+     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images. The values
+     * is taken as comma separated list.
      *
      * @return list of image configuration to use
      */
@@ -338,12 +339,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         // The image used
         private String image;
 
+        // Alias of the image
+        private final String alias;
+
         // Data container create from image
         private String container;
 
-        protected ShutdownAction(String image, String container) {
+        protected ShutdownAction(String image, String alias, String container) {
             this.image = image;
             this.container = container;
+            this.alias = alias;
         }
 
         /**
@@ -372,7 +377,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
                     // Remove the container
                     access.removeContainer(container);
                 }
-                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " + container.substring(0, 12)  + " [" + image +  "]" );
+                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " + container.substring(0, 12)
+                         + " [" + image +  "]"  +
+                         (alias !=null ? " \"" + alias + "\"" : ""));
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot shutdown",e);
             }
