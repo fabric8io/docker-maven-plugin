@@ -6,6 +6,8 @@ import java.util.List;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 
 /**
  * @author roland
@@ -26,14 +28,29 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepData", defaultValue = "false")
     private boolean keepData;
 
-    protected void executeInternal(DockerAccess access) throws MojoExecutionException {
-        if (!keepRunning) {
-            List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
-            for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
-                action.shutdown(access, this, keepContainer);
-                appliedShutdownActions.add(action);
+    protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
+
+        Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
+
+        if (startCalled == null || !startCalled) {
+            // Called directly ....
+
+            for (ImageConfiguration image : getImages()) {
+                String imageName = image.getName();
+                for (String container : access.getContainersForImage(imageName)) {
+                    new ShutdownAction(imageName,container).shutdown(access, this, keepContainer);
+                }
             }
-            removeShutdownActions(appliedShutdownActions);
+        } else {
+            // Called from a lifecycle phase ...
+            if (!keepRunning) {
+                List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
+                for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
+                    action.shutdown(access, this, keepContainer);
+                    appliedShutdownActions.add(action);
+                }
+                removeShutdownActions(appliedShutdownActions);
+            }
         }
     }
 }

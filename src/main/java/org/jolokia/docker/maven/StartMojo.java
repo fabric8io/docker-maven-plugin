@@ -48,7 +48,9 @@ public class StartMojo extends AbstractDockerMojo {
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
 
-        for (StartOrderResolver.Resolvable resolvable : StartOrderResolver.resolve(convertToResolvables(images))) {
+        getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
+
+        for (StartOrderResolver.Resolvable resolvable : StartOrderResolver.resolve(convertToResolvables(getImages()))) {
             ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
             String imageName = imageConfig.getName();
             checkImage(docker,imageName);
@@ -80,7 +82,9 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Wait if requested
             waitIfRequested(runConfig,mappedPorts,docker,container);
-            debug(docker.getLogs(container));
+            if (isDebugEnabled()) {
+                debug(docker.getLogs(container));
+            }
         }
     }
 

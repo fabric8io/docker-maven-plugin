@@ -29,7 +29,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
 
-    public static final String DOCKER_SHUTDOWN_ACTIONS = "DOCKER_SHUTDOWN_ACTIONS";
+    // Key in plugin context specifying shutdown actions
+    public static final String CONTEXT_KEY_SHUTDOWN_ACTIONS = "CONTEXT_KEY_DOCKER_SHUTDOWN_ACTIONS";
+
+    // Key for indicating that a "start" goal has run
+    public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
+
+    // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
+    // docker installaitons.
     public static final String DOCKER_HTTPS_PORT = "2376";
 
     // Current maven project
@@ -55,13 +62,18 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     @Parameter(property = "docker.skip", defaultValue = "false")
     private boolean skip;
 
+    // Whether to restrict operation to a single image. This can be either
+    // the image or an alias name
+    @Parameter(property = "docker.image")
+    private String imageToUse;
+
     // Authentication information
     @Parameter
     Map authConfig;
 
     // Relevant configuration to use
     @Parameter(required = true)
-    protected List<ImageConfiguration> images;
+    private List<ImageConfiguration> images;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
@@ -156,14 +168,39 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
 
     private Set<ShutdownAction> getShutdownActions() {
-        Object obj = getPluginContext().get(DOCKER_SHUTDOWN_ACTIONS);
+        Object obj = getPluginContext().get(CONTEXT_KEY_SHUTDOWN_ACTIONS);
         if (obj == null) {
             Set<ShutdownAction> actions = Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
-            getPluginContext().put(DOCKER_SHUTDOWN_ACTIONS, actions);
+            getPluginContext().put(CONTEXT_KEY_SHUTDOWN_ACTIONS, actions);
             return actions;
         } else {
             return (Set<ShutdownAction>) obj;
         }
+    }
+
+    /**
+     * Get all images to use. Can be restricted via -Ddocker.image to pick a single image
+     *
+     * @return list of image configuration to use
+     */
+    protected List<ImageConfiguration> getImages() {
+        List<ImageConfiguration> ret = new ArrayList<>();
+        for (ImageConfiguration image : images) {
+            if (!matchesConfiguredImages(image)) {
+                // Skip if an image name is set but does not match
+                continue;
+            }
+            ret.add(image);
+        }
+        return ret;
+    }
+
+    private boolean matchesConfiguredImages(ImageConfiguration image) {
+        if (imageToUse == null) {
+            return true;
+        }
+        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(imageToUse.split("\\s*,\\s*")));
+        return imagesAllowed.contains(image.getName()) || imagesAllowed.contains(image.getAlias());
     }
 
     // =================================================================================

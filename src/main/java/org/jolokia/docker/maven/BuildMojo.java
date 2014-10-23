@@ -45,7 +45,7 @@ public class BuildMojo extends AbstractDockerMojo {
 
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
-        for (ImageConfiguration imageConfig : images) {
+        for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 buildImage(imageConfig.getName(),buildConfig, dockerAccess);
