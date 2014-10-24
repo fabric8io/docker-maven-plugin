@@ -45,20 +45,20 @@ public class BuildMojo extends AbstractDockerMojo {
 
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
-        for (ImageConfiguration imageConfig : images) {
+        for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
-                buildImage(imageConfig.getName(),buildConfig, dockerAccess);
+                buildImage(imageConfig, dockerAccess);
             }
         }
     }
 
-    private void buildImage(String name, BuildImageConfiguration buildConfig, DockerAccess dockerAccess)
+    private void buildImage(ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
-        File dockerArchive = dockerArchiveCreator.create(params, buildConfig);
-        String imageName = getImageName(name);
-        info("Created image " + imageName);
+        File dockerArchive = dockerArchiveCreator.create(params, imageConfig.getBuildConfiguration());
+        String imageName = getImageName(imageConfig.getName());
+        info("Created image " + getImageDescription(imageName,imageConfig.getAlias()));
         dockerAccess.buildImage(imageName, dockerArchive);
     }
 }

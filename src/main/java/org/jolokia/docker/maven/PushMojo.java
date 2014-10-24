@@ -25,7 +25,7 @@ public class PushMojo extends AbstractDockerMojo {
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
         Set imagesToPush = extractImagesToPush(push);
 
-        for (ImageConfiguration imageConfig : images) {
+        for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = getImageName(imageConfig.getName());
             if (checkForPush(imagesToPush,name,buildConfig)) {

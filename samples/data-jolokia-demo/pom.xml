@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.10.2</version>
+  <version>0.10.3</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -80,6 +80,7 @@
             <!-- Docker Image to use -->
             <image>
               <!-- App-Server Image -->
+              <alias>server</alias>
               <name>${image}</name>
               <run>
                 <volumes>
@@ -104,6 +105,7 @@
               </run>
             </image>
             <image>
+              <alias>data</alias>
               <!-- Artefact Image-->
               <name>jolokia/${project.artifactId}:${project.version}</name>
               <build>

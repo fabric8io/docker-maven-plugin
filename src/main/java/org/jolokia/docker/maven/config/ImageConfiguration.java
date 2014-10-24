@@ -66,4 +66,11 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
             }
         }
     }
+
+    public boolean isDataImage() {
+        // If there is no explicite run configuration, its a data image
+        // TODO: Probably add an explicite property so that a user can indicated whether it
+        // a data image or not on its own.
+        return getRunConfiguration() == null;
+    }
 }
