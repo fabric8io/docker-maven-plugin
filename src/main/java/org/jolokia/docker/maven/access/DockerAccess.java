@@ -128,10 +128,11 @@ public interface DockerAccess {
      * Remove an image from this docker installation
      *
      * @param image image to remove
+     * @param force if set to true remove containers as well (only the first vararg is evaluated)
      * @return true if an image was removed, false if none was removed
      * @throws DockerAccessException if an image cannot be removed
      */
-    boolean removeImage(String image) throws DockerAccessException;
+    boolean removeImage(String image, boolean ... force) throws DockerAccessException;
 
     /**
      * Lifecycle method for this access class which must be called before any other method is called.

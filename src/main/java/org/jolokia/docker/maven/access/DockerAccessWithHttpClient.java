@@ -180,8 +180,9 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public boolean removeImage(String image) throws DockerAccessException {
-        HttpUriRequest req = newDelete(baseUrl + "/images/" + image);
+    public boolean removeImage(String image, boolean ... forceOpt) throws DockerAccessException {
+        boolean force = forceOpt != null && forceOpt.length > 0 && forceOpt[0];
+        HttpUriRequest req = newDelete(baseUrl + "/images/" + image + (force ? "?force=1" : ""));
         HttpResponse resp = request(req);
         checkReturnCode("Removing image " + image, resp, 200, 404);
         if (log.isDebugEnabled()) {
@@ -519,11 +520,21 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                     }
                 } else if (json.has("stream")) {
                     String message = json.getString("stream");
-                    while (message.endsWith("\n")) {
-                        message = message.substring(0,message.length() - 1);
+                    log.debug(trim(message));
+                } else if (json.has("status")) {
+                    String status = trim(json.getString("status"));
+                    String id = json.has("id") ? json.getString("id") : null;
+                    if (status.matches("^.*(Download|Pulling).*")) {
+                        log.info("  " + (id != null ? id + " " : "") + status);
                     }
-                    log.debug(message);
                 }
+            }
+
+            private String trim(String message) {
+                while (message.endsWith("\n")) {
+                    message = message.substring(0,message.length() - 1);
+                }
+                return message;
             }
 
             public String getErrorMessage(StatusLine status) {
