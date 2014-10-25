@@ -46,6 +46,7 @@ public class StartMojo extends AbstractDockerMojo {
     private Map<String, String> imageAliasMap = new HashMap<>();
 
     /** {@inheritDoc} */
+    @Override
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
 
         getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
@@ -67,8 +68,8 @@ public class StartMojo extends AbstractDockerMojo {
                                                       runConfig.getEnv());
             docker.startContainer(container,
                                   mappedPorts.getPortsMap(),
-                                  findContainersForImages(runConfig.getVolumesFrom()),
-                                  findLinksWithContainerNames(docker,runConfig.getLinks()));
+                                  mappedPorts.getBindToMap(),
+                                  findContainersForImages(runConfig.getVolumesFrom()), findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
             info("Created and started container " +
                  getContainerImageDescription(container,imageConfig.getName(),imageConfig.getAlias()));

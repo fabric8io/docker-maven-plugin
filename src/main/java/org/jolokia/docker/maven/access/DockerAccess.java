@@ -50,10 +50,12 @@ public interface DockerAccess {
      *              while the values are the host ports to use. If a value is <code>null</code> a port is dynamically selected
      *              by docker. The value of a dynamically selected port can be obtained via {@link #queryContainerPortMapping(String)}
      *              This map must not be null (but can be empty)
+     * @param bindTo bind to addresses. The keys of this map are container ports and the values are the local ip addresses they should be
+     * 				 bound to.
      * @param volumesFrom mount volumes from the given container id. Can be null.
      * @throws DockerAccessException if the container could not be started.
      */
-    void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) throws DockerAccessException;
+    void startContainer(String containerId, Map<Integer, Integer> ports, Map<Integer, String> bindTo, List<String> volumesFrom, List<String> links) throws DockerAccessException;
 
     /**
      * Stop a container.
