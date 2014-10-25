@@ -15,14 +15,16 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class PortMapping {
 
     // variables (container port -> variable name)
-    private final Map<Integer, String> varMap;
+    private final Map<Integer, String> varMap = new HashMap<>();
 
     // ports map (container port -> host port)
-    private final Map<Integer, Integer> portsMap;
+    private final Map<Integer, Integer> portsMap = new HashMap<>();
 
     // Mapping between vars and dynamics ports which gets filled in lately
-    private final Map<String, Integer> dynamicPorts;
+    private final Map<String, Integer> dynamicPorts = new HashMap<>();
 
+    private final Map<Integer, String> bindToMap = new HashMap<>();
+    
     /**
      * Create the mapping
      * @param config a list of configuration strings where each string hast the format <code>host-port:container-port</code>. If
@@ -32,38 +34,35 @@ public class PortMapping {
      * @throws MojoExecutionException if the format doesn't fit
      */
     public PortMapping(List<String> config, Properties variables) throws MojoExecutionException {
-        portsMap = new HashMap<Integer, Integer>();
-        varMap = new HashMap<Integer, String>();
-        dynamicPorts = new HashMap<String, Integer>();
         if (config != null) {
             for (String port : config) {
                 try {
-                    String ps[] = port.split(":", 2);
-                    if (ps.length != 2) {
+                	String ps[] = port.split(":", 3);
+                    if (ps.length == 3) {
+                    	mapPorts(ps[0], ps[1], ps[2], variables);
+                    } else if (ps.length == 2) {
+                    	mapPorts(null, ps[0], ps[1], variables);
+                    } else {
                         throw new MojoExecutionException("Invalid mapping '" + port + "' (must contain at least one :)");
                     }
-                    Integer containerPort = Integer.parseInt(ps[1]);
-                    Integer hostPort;
-                    try {
-                        hostPort = Integer.parseInt(ps[0]);
-                    } catch (NumberFormatException exp) {
-                        // Port should be dynamically assigned and set to the variable give in ps[0]
-                        hostPort = getPortFromVariable(variables, ps[0]);
-                        if (hostPort != null) {
-                            dynamicPorts.put(ps[0],hostPort);
-                        } else {
-                            varMap.put(containerPort,ps[0]);
-                        }
-                    }
-                    portsMap.put(containerPort, hostPort);
                 } catch (NumberFormatException exp) {
-                    throw new MojoExecutionException("Port mappings must be given in the format <hostPort>:<mappedPort> (e.g. 8080:8080). " +
+                    throw new MojoExecutionException("Port mappings must be given in the format <hostPort>:<mappedPort> or " +
+                    								 "<bindTo>:<hostPort>:<mappedPort> (e.g. 8080:8080 / 127.0.0.1:8080:8080). " +
                                                      "The given config '" + port + "' doesn't match this",exp);
                 }
             }
         }
     }
 
+    /**
+     * Get the local address a container should bind to
+     * 
+     * @return map of container ports and the local ip addresses they should be bound to
+     */
+    public Map<Integer, String> getBindToMap() {
+    	return bindToMap;
+    }
+    
     /**
      * Get the port mapping as map
      *
@@ -156,8 +155,31 @@ public class PortMapping {
             } catch (NumberFormatException exp) {
                 return null;
             }
-        } else {
-            return null;
-        }
+        } 
+        
+        return null;
     }
+    
+	private void mapPorts(String bindTo, String hPort,String cPort, Properties variables) {
+		Integer containerPort = Integer.parseInt(cPort);
+		Integer hostPort;
+		try {
+		    hostPort = Integer.parseInt(hPort);
+		} catch (NumberFormatException exp) {
+		    // Port should be dynamically assigned and set to the variable give in hPort
+		    hostPort = getPortFromVariable(variables, hPort);
+		    if (hostPort != null) {
+		        dynamicPorts.put(hPort, hostPort);
+		    } else {
+		        varMap.put(containerPort, hPort);
+		    }
+		}
+		
+		if (bindTo != null) {
+			// the container port can never be null, so use that as the key
+			bindToMap.put(containerPort, bindTo);
+		}
+		
+		portsMap.put(containerPort, hostPort);
+	}
 }
