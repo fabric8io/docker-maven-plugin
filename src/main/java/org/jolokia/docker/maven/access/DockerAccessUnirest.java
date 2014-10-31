@@ -240,7 +240,13 @@ public class DockerAccessUnirest implements DockerAccess {
     /** {@inheritDoc} */
     public void pushImage(String image, AuthConfig authConfig) throws MojoExecutionException {
         ImageName name = new ImageName(image);
-        String pushUrl = url + "/images/" + URLParamEncoder.encode(name.getRepository()) + "/push";
+        String pushUrl = url + "/images/"
+                + URLParamEncoder.encode(
+                name.getRegistry() != null && !name.getRegistry().isEmpty()
+                        ? name.getRegistry() + "/" + name.getRepository()
+                        : name.getRepository()
+                )
+                + "/push";
         pushUrl = addTagAndRegistry(pushUrl,name);
         pullOrPushImage(image,pushUrl,"pushing",authConfig);
     }
