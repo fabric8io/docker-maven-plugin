@@ -4,6 +4,9 @@
 
 New configuration syntax with support for multiple containers 
 
+* **0.10.4**
+  - Fixed push issue when using a private registry (#40)
+
 * **0.10.2**
   - Support for SSL Authentication with Docker 1.3. Plugin will respect `DOCKER_CERT_PATH` with fallback to `~/.docker/`. 
     The plugin configuration `certPath` can be used, too and has the highest priority.
@@ -17,6 +20,9 @@ Still missing: documentation (coming soon ..)
 ## 0.9.x Series 
 
 Original configuration syntax (as described in the [README](README.md))
+
+* **0.9.13**
+  - Fixed push issue when using a private registry (#40)
 
 * **0.9.11**
   - Support for SSL Authentication with Docker 1.3. Plugin will respect `DOCKER_CERT_PATH` with fallback to `~/.docker/`. 

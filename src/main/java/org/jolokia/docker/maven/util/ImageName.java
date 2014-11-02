@@ -61,6 +61,30 @@ public class ImageName {
         }
     }
 
+    public String getRepository() {
+        return repository;
+    }
+
+    public String getRegistry() {
+        return registry;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public String getRepositoryWithRegistry() {
+        if (hasRegistry()) {
+            return registry + "/" + repository;
+        } else {
+            return repository;
+        }
+    }
+
+    public boolean hasRegistry() {
+        return registry != null && registry.length() > 0;
+    }
+
     private String joinTail(String[] parts) {
         StringBuilder builder = new StringBuilder();
         for (int i = 1;i < parts.length; i++) {
@@ -74,17 +98,5 @@ public class ImageName {
 
     private boolean isRegistry(String part) {
         return part.contains(".") || part.contains(":");
-    }
-
-    public String getRepository() {
-        return repository;
-    }
-
-    public String getRegistry() {
-        return registry;
-    }
-
-    public String getTag() {
-        return tag;
     }
 }

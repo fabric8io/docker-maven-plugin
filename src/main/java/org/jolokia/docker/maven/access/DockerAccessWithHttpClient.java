@@ -167,15 +167,16 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     public void pullImage(String image,AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepository());
-        pullUrl = addTagAndRegistry(pullUrl, name);
+        pullUrl = addTag(pullUrl, name);
+        pullUrl = addRegistry(pullUrl,name);
         pullOrPushImage(image,pullUrl,"pulling",authConfig);
     }
 
     /** {@inheritDoc} */
     public void pushImage(String image, AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        String pushUrl = baseUrl + "/images/" + encode(name.getRepository()) + "/push";
-        pushUrl = addTagAndRegistry(pushUrl,name);
+        String pushUrl = baseUrl + "/images/" + encode(name.getRepositoryWithRegistry()) + "/push";
+        pushUrl = addTag(pushUrl,name);
         pullOrPushImage(image,pushUrl,"pushing",authConfig);
     }
 
@@ -447,24 +448,17 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
     }
 
-    private String addTagAndRegistry(String url, ImageName name) {
-        List<String> params = new ArrayList<>();
-        if (name.getTag() != null) {
-            params.add("tag=" + name.getTag());
-        }
-        if (name.getRegistry() != null) {
-            params.add("registry=" + name.getRegistry());
-        }
-        if (params.size() > 0) {
-            StringBuilder addOn = new StringBuilder();
+    private String addTag(String url, ImageName name) {
+        return addQueryParam(url, "tag", name.getTag());
+    }
 
-            for (int i = 0; i < params.size(); i ++) {
-                addOn.append(params.get(i));
-                if (i < params.size() - 1) {
-                    addOn.append("&");
-                }
-            }
-            return url + (url.contains("?") ? "&" : "?") + addOn.toString();
+    private String addRegistry(String url, ImageName name) {
+        return addQueryParam(url,"registry",name.getRegistry());
+    }
+
+    private String addQueryParam(String url, String param, String value) {
+        if (value != null) {
+            return url + (url.contains("?") ? "&" : "?") + param + "=" + encode(value);
         } else {
             return url;
         }
