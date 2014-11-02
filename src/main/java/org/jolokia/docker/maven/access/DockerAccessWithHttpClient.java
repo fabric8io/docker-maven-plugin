@@ -67,6 +67,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean hasImage(String image) throws DockerAccessException {
         Matcher matcher = Pattern.compile("^(.*?):([^:]+)?$").matcher(image);
         String base = matcher.matches() ? matcher.group(1) : image;
@@ -79,6 +80,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws DockerAccessException {
         HttpUriRequest post = newPost(baseUrl + "/containers/create", getContainerConfig(image, ports, command, env));
         HttpResponse resp = request(post);
@@ -98,15 +100,17 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
-    public void startContainer(String containerId, Map<Integer, Integer> ports, List<String> volumesFrom,List<String> links)
+    @Override
+    public void startContainer(String containerId, PortMapping portMapping,List<String> volumesFrom, List<String> links)
             throws DockerAccessException {
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start",
-                                     getStartConfig(ports, volumesFrom, links));
+                                     getStartConfig(portMapping, volumesFrom, links));
         HttpResponse resp = request(req);
         checkReturnCode("Starting container with id " + containerId, resp, 204);
     }
 
     /** {@inheritDoc} */
+    @Override
     public void stopContainer(String containerId) throws DockerAccessException {
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/stop", null);
         HttpResponse  resp = request(req);
@@ -114,6 +118,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void buildImage(String image, File dockerArchive) throws DockerAccessException {
         String buildUrl = baseUrl + "/build?rm=true" + (image != null ? "&t=" + encode(image) : "");
         HttpPost post = new HttpPost(buildUrl);
@@ -122,6 +127,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public Map<Integer, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException {
         HttpUriRequest req = newGet(baseUrl + "/containers/" + encode(containerId) + "/json");
         HttpResponse resp = request(req);
@@ -130,8 +136,9 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public List<String> getContainersForImage(String image) throws DockerAccessException {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
         HttpUriRequest req = newGet(baseUrl + "/containers/json?limit=100");
         HttpResponse resp = request(req);
         checkReturnCode("Fetching container information", resp, 200);
@@ -157,6 +164,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void removeContainer(String containerId) throws DockerAccessException {
         HttpUriRequest req = newDelete(baseUrl + "/containers/" + encode(containerId));
         HttpResponse  resp = request(req);
@@ -164,6 +172,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void pullImage(String image,AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepository());
@@ -173,14 +182,16 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void pushImage(String image, AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = baseUrl + "/images/" + encode(name.getRepositoryWithRegistry()) + "/push";
-        pushUrl = addTag(pushUrl,name);
+        pushUrl = addTag(pushUrl, name);
         pullOrPushImage(image,pushUrl,"pushing",authConfig);
     }
 
     /** {@inheritDoc} */
+    @Override
     public boolean removeImage(String image, boolean ... forceOpt) throws DockerAccessException {
         boolean force = forceOpt != null && forceOpt.length > 0 && forceOpt[0];
         HttpUriRequest req = newDelete(baseUrl + "/images/" + image + (force ? "?force=1" : ""));
@@ -195,10 +206,12 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     // ---------------
     // Lifecycle methods not needed here
     /** {@inheritDoc} */
-    public void start() throws DockerAccessException {}
+    @Override
+    public void start() {}
 
 
     /** {@inheritDoc} */
+    @Override
     public void shutdown() {}
 
     // ====================================================================================================
@@ -318,7 +331,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     private Map<Integer, Integer> createPortMapping(JSONObject ports) {
-        Map<Integer, Integer> portMapping = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> portMapping = new HashMap<>();
         for (Object portSpecO : ports.keySet()) {
             String portSpec = portSpecO.toString();
             if (!ports.isNull(portSpec)) {
@@ -380,19 +393,10 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         return ret.toString();
     }
 
-    private String getStartConfig(Map<Integer, Integer> ports, List<String> volumesFrom, List<String> links) {
+    private String getStartConfig(PortMapping portMapping, List<String> volumesFrom, List<String> links) {
         JSONObject ret = new JSONObject();
-        if (ports != null && ports.size() > 0) {
-            JSONObject c = new JSONObject();
-            for (Map.Entry<Integer,Integer> entry : ports.entrySet()) {
-                Integer port = entry.getValue();
-                JSONArray a = new JSONArray();
-                JSONObject o = new JSONObject();
-                o.put("HostPort",port != null ? port.toString() : "");
-                a.put(o);
-                c.put(entry.getKey() + "/tcp",a);
-            }
-            ret.put("PortBindings", c);
+        if (portMapping != null && !portMapping.isEmpty()) {
+            ret.put("PortBindings", portMapping.toDockerConfig());
         }
         if (volumesFrom != null) {
             ret.put("VolumesFrom", new JSONArray(volumesFrom));
@@ -470,7 +474,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
             private boolean downloadInProgress = false;
 
-            public void process(JSONObject json) {
+            @Override
+			public void process(JSONObject json) {
                 if (json.has("progressDetail")) {
                     JSONObject details = json.getJSONObject("progressDetail");
                     if (details.has("total")) {
@@ -480,12 +485,12 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                         log.progressUpdate(details.getInt("current"));
                         downloadInProgress = true;
                         return;
-                    } else {
-                        if (downloadInProgress) {
-                            log.progressFinished();
-                        }
-                        downloadInProgress = false;
+                    } 
+                       
+                    if (downloadInProgress) {
+                    	log.progressFinished();
                     }
+                    downloadInProgress = false;
                 }
                 if (json.has("error")) {
                     String msg = json.getString("error").trim();
@@ -496,7 +501,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 }
             }
 
-            public String getErrorMessage(StatusLine status) {
+            @Override
+			public String getErrorMessage(StatusLine status) {
                 return "Error while " + action + " image '" + image + "' (code: " + status.getStatusCode() + ", " + status.getReasonPhrase() + ")";
             }
         });
@@ -505,7 +511,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     private void processBuildResponse(final String image, org.apache.http.HttpResponse resp) throws DockerAccessException {
 
         processChunkedResponse(resp, new ChunkedCallback() {
-            public void process(JSONObject json) {
+            @Override
+			public void process(JSONObject json) {
                 if (json.has("error")) {
                     log.error("Error building image: " + json.get("error"));
                     if (json.has("errorDetail")) {
@@ -531,7 +538,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 return message;
             }
 
-            public String getErrorMessage(StatusLine status) {
+            @Override
+			public String getErrorMessage(StatusLine status) {
                 return "Error while building image '" + image + "' (code: " + status.getStatusCode()
                        + ", " + status.getReasonPhrase() + ")";
             }

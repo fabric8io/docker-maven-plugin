@@ -22,8 +22,7 @@ import java.util.regex.Pattern;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.codehaus.plexus.util.StringUtils;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.*;
 
@@ -46,6 +45,7 @@ public class StartMojo extends AbstractDockerMojo {
     private Map<String, String> imageAliasMap = new HashMap<>();
 
     /** {@inheritDoc} */
+    @Override
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
 
         getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
@@ -61,14 +61,13 @@ public class StartMojo extends AbstractDockerMojo {
                 // It's a data image which needs not to have a runtime configuration
                 runConfig = RunImageConfiguration.DEFAULT;
             }
-            PortMapping mappedPorts = new PortMapping(runConfig.getPorts(),project.getProperties());
+            PortMapping mappedPorts = getPortMapping(runConfig);
             String container = docker.createContainer(imageName,
                                                       runConfig.getCommand(), mappedPorts.getContainerPorts(),
                                                       runConfig.getEnv());
             docker.startContainer(container,
-                                  mappedPorts.getPortsMap(),
-                                  findContainersForImages(runConfig.getVolumesFrom()),
-                                  findLinksWithContainerNames(docker,runConfig.getLinks()));
+                                  mappedPorts,
+                                  findContainersForImages(runConfig.getVolumesFrom()), findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
             info("Created and started container " +
                  getContainerImageDescription(container,imageConfig.getName(),imageConfig.getAlias()));
@@ -78,7 +77,7 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Set maven properties for dynamically assigned ports.
             if (mappedPorts.containsDynamicPorts()) {
-                mappedPorts.updateVarsForDynamicPorts(docker.queryContainerPortMapping(container));
+                mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(container));
                 propagatePortVariables(mappedPorts,runConfig.getPortPropertyFile());
             }
 
@@ -87,6 +86,14 @@ public class StartMojo extends AbstractDockerMojo {
             if (isDebugEnabled()) {
                 debug(docker.getLogs(container));
             }
+        }
+    }
+
+    private PortMapping getPortMapping(RunImageConfiguration runConfig) throws MojoExecutionException {
+        try {
+            return new PortMapping(runConfig.getPorts(), project.getProperties());
+        } catch (IllegalArgumentException exp) {
+            throw new MojoExecutionException("Cannot parse portmapping",exp);
         }
     }
 
@@ -204,7 +211,7 @@ public class StartMojo extends AbstractDockerMojo {
     // Store dynamically mapped ports
     private void propagatePortVariables(PortMapping mappedPorts,String portPropertyFile) throws MojoExecutionException {
         Properties props = new Properties();
-        Map<String,Integer> dynamicPorts = mappedPorts.getDynamicPorts();
+        Map<String,Integer> dynamicPorts = mappedPorts.getPortVariables();
         for (Map.Entry<String,Integer> entry : dynamicPorts.entrySet()) {
             String var = entry.getKey();
             String val = "" + entry.getValue();
