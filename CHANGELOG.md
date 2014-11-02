@@ -6,6 +6,11 @@ New configuration syntax with support for multiple containers
 
 * **0.10.4**
   - Fixed push issue when using a private registry (#40)
+  - Add support for binding to an arbritrary host IP (#39)
+
+* **0.10.3**
+  - Added "remove" goal for cleaning up images
+  - Allow "stop" also as standalone goal for stopping all managed builds
 
 * **0.10.2**
   - Support for SSL Authentication with Docker 1.3. Plugin will respect `DOCKER_CERT_PATH` with fallback to `~/.docker/`. 
@@ -21,7 +26,7 @@ Still missing: documentation (coming soon ..)
 
 Original configuration syntax (as described in the [README](README.md))
 
-* **0.9.13**
+* **0.9.12**
   - Fixed push issue when using a private registry (#40)
 
 * **0.9.11**
