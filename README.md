@@ -1,4 +1,5 @@
 # docker-maven-plugin
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/rhuss/docker-maven-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![endorse](http://api.coderwall.com/rhuss/endorsecount.png)](http://coderwall.com/rhuss)
 [![Build Status](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
