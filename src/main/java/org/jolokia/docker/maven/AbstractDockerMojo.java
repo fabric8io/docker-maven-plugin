@@ -191,11 +191,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     protected List<ImageConfiguration> getImages() {
         List<ImageConfiguration> ret = new ArrayList<>();
         for (ImageConfiguration image : images) {
-            if (!matchesConfiguredImages(image)) {
-                // Skip if an image name is set but does not match
-                continue;
+            if (matchesConfiguredImages(image)) {
+                ret.add(image);
             }
-            ret.add(image);
         }
         return ret;
     }
