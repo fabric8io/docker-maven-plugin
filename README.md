@@ -60,9 +60,91 @@ parameter for integration tests to connect to the application.
 
 ### Configuration
 
+You can use a single configuration for all goals (in fact, that's the
+recommended way). The configuration contains a general part and a list
+of image specific configuration, one for each image. 
 
+The general part contains global configuration like the Docker URL or
+the path to the SSL certificates for communication with the Docker Host.
 
-### Misc highlights
+Then, each image configuration has three parts:
+
+* A general part containing the image's name and alias.
+* A `<build>` configuration specifying how images are build.
+* A `<run>` configuration telling how container should be created and started.
+
+Either `<build>` or `<run>` can be optional.
+
+Let's have a look at a plugin configuration example:
+
+````xml
+<configuration>
+  <images>
+    <image>
+      <alias>service</alias>
+      <name>jolokia/docker-demo:${project.version}</name>
+
+      <build>
+         <from>java:8</from>
+         <assemblyDescriptor>docker-assembly.xml</assemblyDescriptor>
+         <ports>
+           <port>8080</port>
+         </ports>
+         <command>java -jar /maven/service.jar</command>
+      </build>
+
+      <run>
+         <ports>
+           <port>tomcat.port:8080</port>
+         </ports>
+         <wait>
+           <url>http://localhost:${tomcat.port}/access</url>
+           <time>10000</time>
+         </wait>
+         <links>
+           <link>database:db</link>
+         </links>
+       </run>
+    </image>
+
+    <image>
+      <alias>database</alias>
+      <name>postgres:9</name>
+      <run>
+        <wait>
+          <log>database system is ready to accept connections</log>
+          <time>20000</time>
+        </wait>
+      </run>
+    </image>
+  </images>
+</configuration>
+````
+
+Here two images are specified. One is the official PostgreSQL 9 image from
+Docker Hub, which internally can be referenced as "*database*" (`<alias>`). It
+only has a `<run>` section which declares that the startup should wait
+until the given text pattern is matched in the log output. Next is a
+"*service*" image, which is specified in its `<build>` section. It
+creates an image which has artifacts and dependencies in the
+`/maven` directory (and which are specified with an assembly
+descriptor). Additionally it specifies the startup command for the
+container which in this example fires up a microservices from a jar
+file just copied over via the assmebly descriptor. Also it exposes
+port 8080. In the `<run>` section this port is dynamically mapped to a
+port out of the Docker range 49000 ... 49900 and then assigned to the
+Maven property `${jolokia.port}`. This property could be used for an
+integration test to access this micro service. An important part is
+the `<links>` section which tells that the image aliased "*database*" is
+linked into the "*service*" container, which can access the internal
+ports in the usual Docker way (via environments variables prefixed
+with `DB_`). 
+
+Images can be specified in any order, the plugin will take care of the
+proper startup order (and will bail out in case of circulara
+dependencies). 
+
+### Other highlights
 
 Some other highlights in random order (and not complete):
 
@@ -73,6 +155,10 @@ Some other highlights in random order (and not complete):
 * Specification of encrypted registry passwords for push and pull in
   `~/.m2/settings.xml` (i.e. outside the `pom.xml`)
 * Color output ;-)
+
+-------------
+
+*Old Stuff:*
 
 This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
 Please refer also to the examples provided in the `samples/` directory.
