@@ -4,74 +4,26 @@
 [![Build Status](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](http://flattr.com/thing/73919/Jolokia-JMX-on-Capsaicin)
 
-This is a Maven plugin for managing Docker images and containers from your builds.
+This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
-> This document describes the configuration syntax for version >=
-> 0.10.0. For older version (i.e. 0.9.x) please refer to the old
-> [documentation](README-0.9.x.md). Migration to the new syntax is not
-> difficult and described [separately](UPGRADE-FROM-0.9.x.md)
+**This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.3 with a new configuration syntax has not yet much [documentation](https://github.com/rhuss/shootout-docker-maven/blob/master/pom.xml#L83), so
+please stick to 0.9.11 in the meantime. See the [CHANGELOG](CHANGELOG.md) for more details about the differences and this [blog post](http://ro14nd.de/Docker-Maven-Plugin-Rewrite/) for the motivation behind this restructuring.**
 
-## Introduction 
+With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
-It focuses on two major aspects:
+Build artifacts and dependencies can be accessed from within 
+running containers, so that a file based deployment is easily possible and there is no need to use dedicated deployment support from plugins like [Cargo](http://cargo.codehaus.org/).
+ 
+This plugin's **highlights** are:
 
-* Building and pushing Docker images which contains build artifacts
-* Starting and stopping Docker container for integration testing and
-  development
-
-Docker **images** are the central entity which can be configured. 
-Containers on the other hand are more or less volatil. They are
-created and destroyed on the fly from the configured images and are
-completely managed internally.
-
-### Building docker images
-
-One purpose of this plugin is to create docker images holding the
-actual application. This can be done with the `docker:build` goal.  It
-is easy to include build artifacts and their dependencies into an
-image. Therefor this plugin uses the
-[assembly descriptor format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
-from the
-[maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/)
-for specifying the content which will be added below a directory in
-the image (`/maven` by default). Image which are build with this
-plugin can be also pushed to public or private registries with
-`docker:push`.
-
-### Running containers
-
-With this plugin it is possible to run completely isolated integration
-tests so you don't need to take care of shared resources. Ports can be
-mapped dynamically and made available as Maven properties to you
-integration test code. 
-
-Multiple containers can be managed at once which can be linked
-together or share data via volumes. Containers are created and started
-with the `docker:start` goal and stopped and destroyed with the
-`docker:stop` goal. For integrations tests both goals are typically
-bound to the the `pre-integration-test` and `post-integration-test`,
-respectively. 
-
-For proper isolation container exposed ports can be dynamically and
-flexibly mapped to local host ports. It is easy to specify a Maven
-property which will be filled in with a dynamically assigned port
-after a container has been started and which can then be used as
-parameter for integration tests to connect to the application.
-
-### Configuration
-
-
-
-### Misc highlights
-
-Some other highlights in random order (and not complete):
-
-* Auto pulling of images (with progress indicator)
-* Waiting for a container to startup based on time, the reachability
-  of an URL or a pattern in the log output
+* Configurable port mapping
+* Assigning dynamically selected host ports to Maven variables
+* Pulling of images (with progress indicator) if not yet downloaded
+* Optional waiting on a successful HTTP ping to the container
+* On-the-fly creation of Docker data images and containers with Maven artifacts and dependencies linked or merged into the containers under test.
+* Pushing data images to a registry
+* Setting of environment variables when creating the container
 * Support for SSL authentication (since Docker 1.3)
-* Specification of encrypted registry passwords for push and pull in
-  `~/.m2/settings.xml` (i.e. outside the `pom.xml`)
 * Color output ;-)
 
 This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
@@ -112,8 +64,8 @@ Please refer also to the examples provided in the `samples/` directory.
 
 ### `docker:start`
 
-Creates and starts a specified docker container with the additional possibility to link artifacts and dependencies to this
-  container, or, if `mergeData` is set to `true`, create a new image based on the given image and the assembly artifacts specified.
+Creates and starts a specified docker container with the additional possibility to link artifacts and dependencies to this 
+  container, or, if `mergeData` is set to `true`, create a new image based on the given image and the assembly artifacts specified. 
 
 #### Configuration
 
@@ -122,7 +74,7 @@ Creates and starts a specified docker container with the additional possibility 
 | **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
 | **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
 | **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
-| **env**      | Additional environment variables used when creating a container |        |                         |
+| **env**      | Additional environment variables used when creating a container |        |                         | 
 | **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
 | **command**  | Command to execute in the docker container              |`docker.command`|                         |
 | **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example.              |                |                         |
@@ -140,7 +92,7 @@ Creates and starts a specified docker container with the additional possibility 
 
 ### `docker:stop`
 
-Stops and removes a docker container.
+Stops and removes a docker container. 
 
 #### Configuration
 
@@ -156,9 +108,9 @@ Stops and removes a docker container.
 
 ### `docker:push`
 
-Push a data image to the registry. The data image is the same created during the `start` goal. See below for more information about how the data image is created. The registry to push is by
-default `registry.hub.docker.io` but can be specified as part of the `dataImage` name the Docker way. E.g. `docker.test.org:5000/data:1.5` will push the repository `data` with tag `1.5` to
-the registry `docker.test.org` at port `5000`. Security information (i.e. user and password) can be specified in multiple ways as described in an extra section.
+Push a data image to the registry. The data image is the same created during the `start` goal. See below for more information about how the data image is created. The registry to push is by 
+default `registry.hub.docker.io` but can be specified as part of the `dataImage` name the Docker way. E.g. `docker.test.org:5000/data:1.5` will push the repository `data` with tag `1.5` to 
+the registry `docker.test.org` at port `5000`. Security information (i.e. user and password) can be specified in multiple ways as described in an extra section. 
 
 #### Configuration
 
@@ -181,7 +133,7 @@ the registry `docker.test.org` at port `5000`. Security information (i.e. user a
 ### `docker:build`
 
 Build a data image without pushing. It works essentially the same as `docker:push` but does not push to a registry
-and does not delete the image afterwards.
+and does not delete the image afterwards. 
 
 #### Configuration
 
@@ -196,8 +148,8 @@ and does not delete the image afterwards.
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
 | **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
-| **ports**    | List of ports to be exposed                             |                |  |
-| **env**      | List of environment variables to use for building       |                |  |
+| **ports**    | List of ports to be exposed                             |                |  | 
+| **env**      | List of environment variables to use for building       |                |  | 
 | **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 | **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
@@ -227,7 +179,7 @@ might not be available to them.
 ## Setting environment variables
 
 When creating a container one or more environment variables can be set via configuration with the `env` parameter
-
+ 
 ```xml
 <env>
   <JAVA_HOME>/opt/jdk8</JAVA_HOME>
@@ -235,7 +187,7 @@ When creating a container one or more environment variables can be set via confi
 </env>
 ```
 
-If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by
+If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by 
 switching the JDK or whatever).
 
 ## Getting your assembly into the container
@@ -254,7 +206,7 @@ Let's have a look at an example. In this case, we are deploying a war-dependency
 ````xml
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 
                         http://maven.apache.org/xsd/assembly-1.1.2.xsd">
   <dependencySets>
     <dependencySet>
@@ -301,7 +253,7 @@ fi
 /opt/tomcat/bin/catalina.sh run
 ````
 
-Before starting tomcat, this script will link every .war file it finds in `/maven` to `/opt/tomcat/webapps` which effectively will deploy them.
+Before starting tomcat, this script will link every .war file it finds in `/maven` to `/opt/tomcat/webapps` which effectively will deploy them. 
 
 Alternatively, the parameter `mergeData` could have been set to `true` in the plugin configuration. In this case no separate data image is created but an image which is based on the specified image (`jolokia/tomcat-7.0` in this example) and the assembly are directly available from `/maven`. This has the advantage that only a single image needs to be pushed containing  both, the created artifact and application server.
 
@@ -333,7 +285,7 @@ Various configuration parameters of this plugin are available for cleaning up af
 
 ## Authentication
 
-When pulling (via the `autoPull` mode of `docker:start` and `docker:push`) or pushing image, it might be necessary to authenticate against a Docker registry.
+When pulling (via the `autoPull` mode of `docker:start` and `docker:push`) or pushing image, it might be necessary to authenticate against a Docker registry.  
 
 There are three different ways for providing credentials:
 
@@ -360,7 +312,7 @@ The system property provided credentials are a good compromise when using CI ser
 
 	mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
 
-The most secure and also the most *mavenish* way is to add a server to the Maven settings file `~/.m2/settings.xml`:
+The most secure and also the most *mavenish* way is to add a server to the Maven settings file `~/.m2/settings.xml`: 
 
 ````xml
 <servers>
@@ -389,10 +341,10 @@ This password then can be used in `authConfig`, `docker.password` and/or the `<s
 
 ## SSL with keys and certificates
 
-The plugin can communicate with the Docker Host via SSL, too. This is the default now for Docker 1.3 (and Boot2Docker).
-SSL is switched on if the port used is `2376` which is the default, IANA registered SSL port of the Docker host
+The plugin can communicate with the Docker Host via SSL, too. This is the default now for Docker 1.3 (and Boot2Docker). 
+SSL is switched on if the port used is `2376` which is the default, IANA registered SSL port of the Docker host 
 (and plain HTTP for `2375`). The directory holding `ca.pem`, `key.pem` and `cert.pem` can be configured with the
-configuration parameter `certPath`. Alternatively, the environment variable `DOCKER_CERT_PATH` is evaluated and finally
+configuration parameter `certPath`. Alternatively, the environment variable `DOCKER_CERT_PATH` is evaluated and finally 
 `~/.docker` is used as the last fallback.
 
 ## Examples
@@ -431,15 +383,15 @@ mvn -Pmerge-data verify
 
 # Push the data image
 mvn docker:push
-
+ 
 # Please note, that first it will take some time to fetch the image
-# from docker.io. The next time running it will be much faster.
+# from docker.io. The next time running it will be much faster. 
 
 # Restore back you .m2 repo
 cd ~/.m2
 mv repository /tmp/
 mv repository.bak repository
-````
+```` 
 
 ## Misc
 
@@ -449,7 +401,7 @@ on OS X
 * It is recommended to use the `maven-failsafe-plugin` for integration testing in order to
 stop the docker container even when the tests are failing.
 
-## Why another docker-maven-plugin ?
+## Why another docker-maven-plugin ? 
 
 Spring feelings in 2014 seems to be quite fertile for the Java crowd's
 Docker awareness
@@ -457,7 +409,7 @@ Docker awareness
 counted ~~5~~ 10 [maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)
 on GitHub as of ~~April~~ July 2014, tendency increasing. It seems, that all
 of them have a slightly different focus, but all of them can do the
-most important tasks: Starting and stopping containers.
+most important tasks: Starting and stopping containers. 
 
 So you might wonder, why I started this plugin if there were already
 quite some out here ?
@@ -477,25 +429,25 @@ and what I want to achieve:
   work on indirect setups with VMs like
   [boot2docker](https://github.com/boot2docker/boot2docker) for
   running on OS X.
-
+  
 * It should be possible to **pull images** on the fly to get
   self-contained and repeatable builds with the only requirement to
-  have docker installed.
-
+  have docker installed. 
+  
 * The configuration of the plugin should be **simple** since usually
   developers don't want to dive into specific Docker details only to
   start a container. So, only a handful options should be exposed
   which needs not necessarily map directly to docker config setup.
-
+  
 * The plugin should play nicely with
   [Cargo](http://cargo.codehaus.org/) so that deployments into
-  containers can be easy.
-
+  containers can be easy. 
+  
 * I want as **less dependencies** as possible for this plugin. So I
   decided to *not* use the
   Java Docker API [docker-java](https://github.com/docker-java/docker-java) which is
   external to docker and has a different lifecycle than Docker's
-  [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/).
+  [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/). 
   That is probably the biggest difference to the other
   docker-maven-plugins since AFAIK they all rely on this API. Since
   for this plugin I really need only a small subset of the whole API,
@@ -508,6 +460,6 @@ and what I want to achieve:
   in case somebody wants to write yet another plugin ;-)
 
 In the meantime, enjoy this plugin, and please use the
-[issue tracker](https://github.com/rhuss/docker-maven-plugin/issues)
+[issue tracker](https://github.com/rhuss/docker-maven-plugin/issues) 
 for anything what hurts.
 

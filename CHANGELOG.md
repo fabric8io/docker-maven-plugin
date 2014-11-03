@@ -6,7 +6,7 @@ New configuration syntax with support for multiple containers
 
 * **0.10.4**
   - Fixed push issue when using a private registry (#40)
-  - Add support for binding to an arbritrary host IP (#39)
+  - Add support for binding to an arbitrary host IP (#39)
 
 * **0.10.3**
   - Added "remove" goal for cleaning up images
