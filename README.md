@@ -11,6 +11,14 @@ This is a Maven plugin for managing Docker images and containers from your build
 > [documentation](README-0.9.x.md). Migration to the new syntax is not
 > difficult and described [separately](UPGRADE-FROM-0.9.x.md)
 
+* [Introduction](#introduction)
+* [User Manual](#user-manual)
+  - [Installation](#installation)
+  - [Global Configuration](#global-configuration)
+  - [Image Configuration](#image-configuration)
+  - [Maven Goals](#maven-goals)
+    * [`docker:start`](#dockerstart)
+
 ## Introduction 
 
 It focuses on two major aspects:
@@ -158,7 +166,8 @@ Some other highlights in random order (and not complete):
 
 ## User Manual
 
-In the f
+The following sections describe the installation of this plugin, the
+available goals and its configuration options. 
 
 ### Installation
 
@@ -208,7 +217,7 @@ available goals are described below.
 </plugin>
 ````
 
-### Global configuration parameters
+### Global configuration
 
 Global configuration parameters specify overall behavior like the
 connection to the Docker host. The corresponding system properties
@@ -312,7 +321,7 @@ Example:
 This plugin supports the following goals which are explained in detail
 in the following sections.
 
-|                |                                      |
+| Goal           | Description                          |
 | -------------- | ------------------------------------ |
 | `docker:start` | Create and start containers          |
 | `docker:stop`  | Stop and destroy containers          |
