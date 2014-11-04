@@ -6,10 +6,10 @@
 
 This is a Maven plugin for managing Docker images and containers from your builds.
 
-> This document describes the configuration syntax for version >=
+> *This document describes the configuration syntax for version >=
 > 0.10.0. For older version (i.e. 0.9.x) please refer to the old
 > [documentation](README-0.9.x.md). Migration to the new syntax is not
-> difficult and described [separately](UPGRADE-FROM-0.9.x.md)
+> difficult and described [separately](UPGRADE-FROM-0.9.x.md)*
 
 * [Introduction](#introduction)
 * [User Manual](#user-manual)
@@ -18,16 +18,21 @@ This is a Maven plugin for managing Docker images and containers from your build
   - [Image Configuration](#image-configuration)
   - [Maven Goals](#maven-goals)
     * [`docker:start`](#dockerstart)
+    * [`docker:stop`](#dockerstop)
+    * [`docker:build`](#dockerbuild)
+    * [`docker:push`](#dockerpush)
+    * [`docker:remove`](#dockerremove)
+* [Examples](#examples)
 
 ## Introduction 
 
 It focuses on two major aspects:
 
-* Building and pushing Docker images which contains build artifacts
-* Starting and stopping Docker container for integration testing and
+* **Building** and pushing Docker images which contains build artifacts
+* Starting and stopping Docker container for **integration testing** and
   development
 
-Docker **images** are the central entity which can be configured. 
+Docker *images* are the central entity which can be configured. 
 Containers on the other hand are more or less volatil. They are
 created and destroyed on the fly from the configured images and are
 completely managed internally.
@@ -341,12 +346,38 @@ the configuration's `<run>` section of all given (and enabled images)
 
 The `<run>` configuration knows the following sub elements:
 
+* **command** is a command which should be executed at the end of the
+  container's startup. If not given, the image's default command is
+  used. 
+* **env** can contain environment variables as subelements which are
+  set during startup of the container. The are specified in the
+  typical maven property format `<env_name>value</env_name>`
+  (e.g. `<JAVA_OPTS>-Xmx512m</JAVA_OPTS>`)
+* **ports** declares how container exposed ports should be
+  mapped. This is described below in an extra
+  [section](#port-mapping). 
+* **portPropertyFile**, if given, specifies a file into which the
+  mapped properties should be written to. The format of this file and
+  its purpose are also described [below](#port-mapping)
+* **volumes** can contain a list mit `<from>` elements which specify
+  image names or aliases from which volumes should be imported.
+* **wait** specifies condition which must be fulfilled for the startup
+  to complete. See [below](#wait-during-startup) which subelements are
+  available and how they can be specified.
+
+Example:
+
 ````xml
 <run>
-
+  <command>...</command
+  <env>
+    ...
+  </env>
 </run>
 ````
+##### Port Mapping
 
+##### Wait during startup
 
 #### Configuration
 
