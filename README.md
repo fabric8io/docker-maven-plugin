@@ -326,13 +326,13 @@ Example:
 This plugin supports the following goals which are explained in detail
 in the following sections.
 
-| Goal           | Description                          |
-| -------------- | ------------------------------------ |
-| `docker:start` | Create and start containers          |
-| `docker:stop`  | Stop and destroy containers          |
-| `docker:build` | Build images                         |
-| `docker:push`  | Push images to a registry            |
-| `docker:remove`| Remove images from local docker host |
+| Goal                             | Description                          |
+| -------------------------------- | ------------------------------------ |
+| [`docker:start`](#dockerstart)   | Create and start containers          |
+| [`docker:stop`](#dockerstop)     | Stop and destroy containers          |
+| [`docker:build`](#dockerbuild)   | Build images                         |
+| [`docker:push`](#dockerpush)     | Push images to a registry            |
+| [`docker:remove`](#dockerremove) | Remove images from local docker host |
 
 Note that all goals are orthogonal to each other. For example in order
 to start a container for your application you typically have to build
