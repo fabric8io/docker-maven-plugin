@@ -73,7 +73,7 @@ Then, each image configuration has three parts:
 * A `<build>` configuration specifying how images are build.
 * A `<run>` configuration telling how container should be created and started.
 
-Either `<build>` or `<run>` can be optional.
+Either `<build>` or `<run>` can be also omitted.
 
 Let's have a look at a plugin configuration example:
 
@@ -156,30 +156,44 @@ Some other highlights in random order (and not complete):
   `~/.m2/settings.xml` (i.e. outside the `pom.xml`)
 * Color output ;-)
 
--------------
+## User Manual
 
-*Old Stuff:*
+In the f
 
-This plugin is available from Maven central and can be connected to pre- and post-integration phase as seen below.
-Please refer also to the examples provided in the `samples/` directory.
+### Installation
+
+This plugin is available from Maven central and can be connected to
+pre- and post-integration phase as seen below. The configuration and
+available goals are described below. 
 
 ````xml
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.10.3</version>
+  <version>0.10.4</version>
 
   <configuration>
-     <!-- For possible options, see below -->
+     ....
+     <images>
+        <!-- A single's image configuration -->
+        <image>
+           ....
+        </image>
+        ....
+     </images>
   </configuration>
 
   <!-- Connect start/stop to pre- and
-       post-integration-test phase, respectively -->
+       post-integration-test phase, respectively if you want to start
+       your docker containers during integration tests -->
   <executions>
     <execution>
        <id>start</id>
        <phase>pre-integration-test</phase>
        <goals>
+         <!-- "build" should be used to create the images with the
+              artefacts --> 
+         <goal>build</goal>
          <goal>start</goal>
        </goals>
     </execution>
@@ -194,18 +208,112 @@ Please refer also to the examples provided in the `samples/` directory.
 </plugin>
 ````
 
-## Maven Goals
+### Global configuration parameters
 
-### `docker:start`
+Global configuration parameters specify overall behavior like the
+connection to the Docker host. The corresponding system properties
+which can be used to set it from the outside are given in
+parentheses. 
 
-Creates and starts a specified docker container with the additional possibility to link artifacts and dependencies to this
-  container, or, if `mergeData` is set to `true`, create a new image based on the given image and the assembly artifacts specified.
+* **dockerHost** (`docker.host`) Use this variable to specify the URL
+  to on your Docker Daemon is listening. This plugin requires the
+  usage of the Docker remote API so this must be enabled. If this
+  configuration option is not given, the environment variable
+  `DOCKER_HOST` is evaluated. If this is also not set the plugin will
+  stop with an error. The scheme of this URL can be either given
+  directly as `http` or `https` depending on whether plain HTTP
+  communication is enabled (< 1.3.0) or SSL should be used (>=
+  1.3.0). Or the scheme could be `tcp` in which case the protocol is
+  determined via the IANA assigned port: 2375 for `http` and 2376 for
+  `https`. 
+* **certPath** (`docker.certPath`) Since 1.3.0 Docker remote API requires
+  communication via SSL and authentication with certificates. These
+  certificates are normally stored
+  in `~/.docker/`. With this configuration the path can be set
+  explicitly. If not set, the fallback is first taken from the
+  environment variable `DOCKER_CERT_PATH` and then as last resort
+  `~/.docker/`. The keys in this are expected with it standard names
+  `ca.pem`, `cert.pem` and `key.pem`. Please refer to the
+  [Docker documentation]() for more information about SSL security
+  with Docker. 
+* **image** (`docker.image`) In order to temporarily restrict the
+  operation of plugin goals this configuration option can be
+  used. Typically this will be set via the system property
+  `docker.image` when Maven is called. The value can be a single image
+  name (either its alias or full name) or it can be a comma separated
+  list with multiple image names. Any name which doesn't refer an
+  image in the configuration will be ignored. 
+* **useColor** (`docker.useColor`)
+  If set to `true` the log output of this plugin will be colored. By
+  default the output is colored if the build is running with a TTY,
+  without color otherwise.
+* **skip** (`docker.skip`)
+  With this parameter the execution of this plugin can be skipped
+  completely. 
+
+### Image configuration
+
+The plugin's configuration is centered around *images*. These are
+specified for each image within the `<images>` element of the
+configuration with one `<image>` element per image to use. 
+
+The `<image>` element can contain the following sub elements:
+
+* `<name>` : Each `<image>` configuration has a mandatory, unique docker
+  repository *name*. This can include registry and tag parts, too. For
+  definition of the repository name please refer to the
+  [Docker documentation]()
+* `<alias>` is a shortcut name for an image which can be used for
+  identifying the image within this configuration. This is used when
+  linking images together or for specifying it with the global
+  **image** configuration.
+* `<build>` is a complex element which contains all the configuration
+  aspects when doing a `docker:build` or `docker:push`. This element
+  can be omitted if the image is only pulled from a registry e.g. as
+  support for integration tests like database images.
+* `<run>` contains subelement which describe how containers should be
+  created and run when `docker:start` or `docker:stop` is called. If
+  this image is only used a *data container* for exporting artefacts
+  via volumes this section can be missing.
+
+Either `<build>` or `<run>` must be present. They are explained in
+detail in the corresponding goal sections.
+
+### Maven Goals
+
+This plugin supports the following goals which are explained in detail
+in the following sections.
+
+| `docker:start` | Create and start containers          |
+| `docker:stop`  | Stop and destroy containers          |
+| `docker:build` | Build images                         |
+| `docker:push`  | Push images to a registry            |
+| `docker:remove`| Remove images from local docker host |
+
+Note that all goals are orthogonal to each other. For example in order
+to start a container for your application you typically have to build
+its image before. `docker:start` does **not** imply building the image
+so you should use it then in combination with `docker:build`.  
+
+#### `docker:start`
+
+Creates and starts docker containers. This goals evaluates
+the configuration's `<run>` section of all given (and enabled images)
+
+The `<run>` configuration knows the following sub elements:
+
+````xml
+<run>
+
+</run>
+````
+
 
 #### Configuration
 
 | Parameter    | Descriptions                                            | Property       | Default                 |
 | ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
+| **url**      | URL to the docker daemon                                | `docker.url`   | `https://localhost:2376f` |
 | **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
 | **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
 | **env**      | Additional environment variables used when creating a container |        |                         |
