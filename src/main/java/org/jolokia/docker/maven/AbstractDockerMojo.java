@@ -48,15 +48,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     protected Settings settings;
 
     // URL to docker daemon
-    @Parameter(property = "docker.url")
-    private String url;
+    @Parameter(property = "docker.host")
+    private String dockerHost;
 
     @Parameter(property = "docker.certPath")
     private String certPath;
 
     // Whether to use color
     @Parameter(property = "docker.useColor", defaultValue = "true")
-    private boolean color;
+    private boolean useColor;
 
     // Whether to skip docker alltogether
     @Parameter(property = "docker.skip", defaultValue = "false")
@@ -65,7 +65,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // Whether to restrict operation to a single image. This can be either
     // the image or an alias name
     @Parameter(property = "docker.image")
-    private String imageToUse;
+    private String image;
 
     // Authentication information
     @Parameter
@@ -125,7 +125,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // Check both, url and env DOCKER_HOST (first takes precedence)
     private String extractUrl() {
-        String connect = url != null ? url : System.getenv("DOCKER_HOST");
+        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
         if (connect == null) {
             throw new IllegalArgumentException("No url given and now DOCKER_HOST environment variable set");
         }
@@ -199,10 +199,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
 
     private boolean matchesConfiguredImages(ImageConfiguration image) {
-        if (imageToUse == null) {
+        if (this.image == null) {
             return true;
         }
-        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(imageToUse.split("\\s*,\\s*")));
+        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(this.image.split("\\s*,\\s*")));
         return imagesAllowed.contains(image.getName()) || imagesAllowed.contains(image.getAlias());
     }
 
@@ -243,7 +243,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // Color init
     private void colorInit() {
-        if (color && System.console() != null) {
+        if (useColor && System.console() != null) {
             AnsiConsole.systemInstall();
             errorHlColor = "\u001B[0;31m";
             infoHlColor = "\u001B[0;32m";
