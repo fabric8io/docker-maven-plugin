@@ -312,6 +312,7 @@ Example:
 This plugin supports the following goals which are explained in detail
 in the following sections.
 
+|                |                                      |
 | -------------- | ------------------------------------ |
 | `docker:start` | Create and start containers          |
 | `docker:stop`  | Stop and destroy containers          |
