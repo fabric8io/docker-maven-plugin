@@ -632,32 +632,6 @@ with tag `1.5` to the registry `docker.test.org` at port
 `5000`. Security information (i.e. user and password) can be specified
 in multiple ways as described in an extra [section](#authentication).
 
-## Cleanup
-
-Various configuration parameters of this plugin are available for
-cleaning up after a build:
-
-* `keepRunning` specifies that the container should not be stopped
-  after the build. Obviously, the container and any data image created
-  will be left alone as well. This option is especially useful when
-  given as command line option `-Ddocker.keepRunning` for doing some
-  debugging or developing integration tests.
-
-* `keepContainer` tells the plugin to not remove the container created
-  from the image after the build (the container is stopped,
-  though). If a merged container was created via the option
-  `mergeData` then this container will remain as well as the
-  on-the-fly created image this container belongs to. This is useful
-  for post-mortem analysis of the container by e.g. looking at the
-  logs. This option can be switched on with
-  `-Ddocker.keepContainer`. If a separate data container is used, this
-  data container and its image will stay as well.
-
-* `keepData` finally can be used to keep only the data container, but
-  the other container should be be removed. This option has only an
-  effect if `keepContainer` is `false`. That way, the created
-  artifacts can be kept even after the build.
-
 ### Authentication
 
 When pulling (via the `autoPull` mode of `docker:start` and
