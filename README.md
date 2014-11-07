@@ -22,7 +22,7 @@ This is a Maven plugin for managing Docker images and containers from your build
     * [`docker:build`](#dockerbuild)
     * [`docker:push`](#dockerpush)
     * [`docker:remove`](#dockerremove)
-  - [Security](#security)
+  - [Authentication](#authentication)
 * [Examples](#examples)
 
 ## Introduction 
@@ -64,7 +64,9 @@ together or share data via volumes. Containers are created and started
 with the `docker:start` goal and stopped and destroyed with the
 `docker:stop` goal. For integrations tests both goals are typically
 bound to the the `pre-integration-test` and `post-integration-test`,
-respectively. 
+respectively. It is recommended to use the `maven-failsafe-plugin` for
+integration testing in order to stop the docker container even when
+the tests are failing.
 
 For proper isolation container exposed ports can be dynamically and
 flexibly mapped to local host ports. It is easy to specify a Maven
@@ -242,15 +244,16 @@ parentheses.
   determined via the IANA assigned port: 2375 for `http` and 2376 for
   `https`. 
 * **certPath** (`docker.certPath`) Since 1.3.0 Docker remote API requires
-  communication via SSL and authentication with certificates. These
+  communication via SSL and authentication with certificates when used
+  with boot2docker. These
   certificates are normally stored
   in `~/.docker/`. With this configuration the path can be set
   explicitly. If not set, the fallback is first taken from the
   environment variable `DOCKER_CERT_PATH` and then as last resort
   `~/.docker/`. The keys in this are expected with it standard names
   `ca.pem`, `cert.pem` and `key.pem`. Please refer to the
-  [Docker documentation]() for more information about SSL security
-  with Docker. 
+  [Docker documentation](https://docs.docker.com/articles/https/) for
+  more information about SSL security with Docker. 
 * **image** (`docker.image`) In order to temporarily restrict the
   operation of plugin goals this configuration option can be
   used. Typically this will be set via the system property
@@ -375,10 +378,21 @@ Example:
 
 ````xml
 <run>
-  <command>...</command
+  <volumes>
+    <from>jolokia/docker-demo</from>
+  </volumes>
   <env>
-    ...
+    <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
+    <JOLOKIA_OFF/>
   </env>
+  <ports>
+    <port>jolokia.port:8080</port>
+  </ports>
+  <wait>
+    <url>http://localhost:${jolokia.port}/jolokia</url>
+    <time>10000</time>
+  </wait>
+  <command>java -jar /maven/docker-demo.jar</command>
 </run>
 ````
 
@@ -429,9 +443,7 @@ A `port` stanza may take one of two forms:
   property `host.port` which may then later be used in a property
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
-  similar to: 
-
-    mvn -Dhost.port=10080 docker:start
+  similar to `mvn -Dhost.port=10080 docker:start`
 
 Another useful configuration option is `portPropertyFile` with which a
 file can be specified to which the real port mapping is written after
@@ -501,85 +513,95 @@ Example:
 
     $ mvn -Ddocker.keepRuning clean install
 
-
-#### Configuration
-
-| Parameter  | Descriptions                     | Property       | Default                 |
-| ---------- | -------------------------------- | -------------- | ----------------------- |
-| **url**    | URL to the docker daemon         | `docker.url`   | `http://localhost:4243` |
-| **image** | Which image to stop. All containers for this named image are stopped | `docker.image` |  |
-| **keepContainer** | Set to `true` for not automatically removing the container after stopping it. | `docker.keepContainer` | |
-| **keepRunning** | Set to `true` for not stopping the container even when this goals runs. | `docker.keepRunning` | `false` |
-| **keepData**  | Keep the data container and image after the build if set to `true` | `docker.keepData` |  `false`                       |
-| **color**  | Set to `true` for colored output | `docker.color` | `true` if TTY connected |
-| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
-
-### `docker:push`
-
-Push a data image to the registry. The data image is the same created during the `start` goal. See below for more information about how the data image is created. The registry to push is by
-default `registry.hub.docker.io` but can be specified as part of the `dataImage` name the Docker way. E.g. `docker.test.org:5000/data:1.5` will push the repository `data` with tag `1.5` to
-the registry `docker.test.org` at port `5000`. Security information (i.e. user and password) can be specified in multiple ways as described in an extra section.
-
-#### Configuration
-
-| Parameter    | Descriptions                                            | Property       | Default                 |
-| ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
-| **image**    | Name of the docker base image (e.g. `consol/tomcat:7.0.52`) | `docker.image` | none         |
-| **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
-| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
-| **assemblyDescriptorRef** | Predefined assemblies which can be directly used. Possible values are given below | | |
-| **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
-| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
-| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
-| **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
-| **keepData**  | Keep the data image after the build if set to `true` | `docker.keepData` |  `true`                       |
-| **authConfig** | Authentication configuration when pushing images. See below for details. | | |
-| **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
-| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
-
 ### `docker:build`
 
-Build a data image without pushing. It works essentially the same as `docker:push` but does not push to a registry
-and does not delete the image afterwards.
+This goal will build all images which have a `<build>` configuration
+section, or, if the global configuration `image` is set, only those
+images contained in this variable will be build. 
 
-#### Configuration
+All build relevant configuration is contained in the `<build>` section
+of an image configuration. The available subelements are
 
-| Parameter    | Descriptions                                            | Property       | Default                 |
-| ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `docker.url`   | `http://localhost:2375` |
-| **image**    | Name of the docker base image (e.g. `consol/tomcat:7.0.52`) | `docker.image` | none         |
-| **autoPull** | Set to `true` if an yet unloaded base image should be automatically pulled | `docker.autoPull` | `true`      |
-| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example               |                |                         |
-| **assemblyDescriptorRef** | Predefined assemblies which can be directly used. Possible values are given below | | |
-| **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
-| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
-| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
-| **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
-| **ports**    | List of ports to be exposed                             |                |  |
-| **env**      | List of environment variables to use for building       |                |  |
-| **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
-| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
+* **from** specifies the base image which should be used for this
+  image. If not given this default to `busybox:latest` and is suitable
+  for a pure data image.
+* **exportDir** depicts the directory under which the files and
+  artefacts contained in the assembly will be copied within the
+  container. By default this is `/maven`.
+* **assemblyDescriptor** is a reference to an assembly descriptor as
+  described in the section [Docker Assembly](#docker-assembly) below. 
+* **assemblyDescriptorRef** is an alias to a predefined assembly
+  descriptor. The available aliases are also described in the
+  [Docker Assembly](#docker-assembly) section.
+* **ports** describes the exports ports. It contains a list of
+  `<port>` elements, one for each port to expose.
+* **env** hold environments as described in
+  [Setting Environment Variables](#setting-environment-variables). 
+* **command** is the command to execute by default (i.e. if no command
+  is provided when a container for this image is started).
 
+From this configuration this Plugin creates an in-memory Dockerfile,
+copies over the assembled files and calls the Docker daemon via its
+remote API. In a future version you will be able to specify
+alternatively an own Dockerfile (possibly containing maven properties)
+for better customization.
 
-## Getting your assembly into the container
-
-With using the `assemblyDescriptor` or `assemblyDescriptorRef` option it is possible to bring local files, artifacts and dependencies into the running Docker container. This works as follows:
-
-* `assemblyDescriptor` points to a file describing the data to assemble. It has the same format as for creating assemblies with the [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/) , with some restrictions (see below).
-* Alternatively `assemblyDescriptorRef` can be used with the name of a predefined assembly descriptor. See below for possible values.
-* This plugin will create the assembly and create a Docker image on the fly which exports the assembly below a directory `/maven`. Typically this will be an extra image, but if the configuration parameter `mergeData` is set then the image which was configured for the `start` goal is used as a base image so that the data and e.g. application server are contained in the same image. This is useful for distributing a complete image where artifacts and the server are baked together.
-* From this image a (data) container is created and the 'real' container is started with a `volumesFrom` option pointing to this data container (if `mergeData` is not used).
-* That way, the container started has access to all the data created from the directory `/maven/` within the container.
-* The container command can check for the existence of this directory and deploy everything within this directory.
-
-Let's have a look at an example. In this case, we are deploying a war-dependency into a Tomcat container. The assembly descriptor `src/main/docker-assembly.xml` option may look like
+Here's an example:
 
 ````xml
-<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
-                        http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+<build>
+  <from>java:8u40</from>
+  <assemblyDescriptor>src/main/assembly.xml</assemblyDescriptor>
+  <ports>
+    <port>8080</port>
+  </ports>
+  <exportDir>/opt/demo</exportDir>
+  <command>java /opt/demo/server.jar</command>
+</build>
+````
+
+#### Docker Assembly
+
+With using the `assemblyDescriptor` or `assemblyDescriptorRef` option
+it is possible to bring local files, artifacts and dependencies into
+the running Docker container. An `assemblyDescriptor` points to a file
+describing the data to put into an image to build. It has the same
+[format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
+as for creating assemblies with the
+[maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/)
+with following exceptions:
+
+* `<formats>` are ignored, the assembly will allways use a directory
+  when preparing the data container (i.e. the format is fixed to
+  `dir`) 
+* The `<id>` is ignored since only a single assembly descriptor is
+  used (no need to distinguish multiple descriptors) 
+
+Alternatively `assemblyDescriptorRef` can be used with the name of a
+predefined assembly descriptor. The followign symbolic names can be
+used for `assemblyDescritproRef`: 
+
+* **artifact-with-dependencies** will copy your project's artifact and
+  all its dependencies 
+* **artifact** will copy only the project's artifact but no
+  dependencies. 
+* **project** will copy over the whole Maven project but with out
+  `target/` directory. 
+* **rootWar** will copy the artifact as `ROOT.war` to the exposed
+  directory. I.e. Tomcat will then deploy the war under the root
+  context. 
+
+All declared files end up in the configured `exportDir` (or `/maven`
+by default) in the created image.
+
+In the following example a dependency from the pom.xml is included and
+mapped to the name `jolokia.war`. With this configuration you will end
+up with an image, based on `busybox` which has a directory `/maven`
+containing a single file `jolokia.war`. This volume is also exported
+automatically. 
+
+```xml
+<assembly>
   <dependencySets>
     <dependencySet>
       <includes>
@@ -588,84 +610,72 @@ Let's have a look at an example. In this case, we are deploying a war-dependency
       <outputDirectory>.</outputDirectory>
       <outputFileNameMapping>jolokia.war</outputFileNameMapping>
     </dependencySet>
+  </dependencySets>
 </assembly>
-````
+```
 
-Then you will end up with a data container which contains with a file `/maven/jolokia.war` which is mirrored into the main container.
+Another container can now connect to the volume an 'mount' the 
+`/maven` directory. A container  from `consol/tomcat-7.0` will look
+into `/maven` and copy over everything to `/opt/tomcat/webapps` before
+starting Tomcat.
 
-The plugin configuration could look like
+### `docker:push`
 
-````xml
-<plugin>
-    <groupId>org.jolokia</groupId>
-    <artifactId>docker-maven-plugin</artifactId>
-    ....
-    <configuration>
-      <image>jolokia/tomcat-7.0</image>
-      <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
-      ...
-    </configuration>
-</plugin>
-````
-
-The image `jolokia/tomcat-7.0` is a [trusted build](https://github.com/rhuss/jolokia-it/tree/master/docker/tomcat/7.0) available from the central docker registry which uses a command `deploy-and-run.sh` that looks like this:
-
-````bash
-#!/bin/sh
-
-DIR=${DEPLOY_DIR:-/maven}
-echo "Checking *.war in $DIR"
-if [ -d $DIR ]; then
-  for i in $DIR/*.war; do
-     file=$(basename $i)
-     echo "Linking $i --> /opt/tomcat/webapps/$file"
-     ln -s $i /opt/tomcat/webapps/$file
-  done
-fi
-/opt/tomcat/bin/catalina.sh run
-````
-
-Before starting tomcat, this script will link every .war file it finds in `/maven` to `/opt/tomcat/webapps` which effectively will deploy them.
-
-Alternatively, the parameter `mergeData` could have been set to `true` in the plugin configuration. In this case no separate data image is created but an image which is based on the specified image (`jolokia/tomcat-7.0` in this example) and the assembly are directly available from `/maven`. This has the advantage that only a single image needs to be pushed containing  both, the created artifact and application server.
-
-It is really that easy to deploy your artifacts. And it's fast (less than 10s for starting, deploying, testing (1 test) and stopping the container on my 4years old MBP using boot2docker).
-
-### Assembly Descriptor
-
-The assembly descriptor has the same [format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html) as the the maven-assembly-plugin with the following exceptions:
-
-* `<formats>` are ignored, the assembly will allways use a directory when preparing the data container (i.e. the format is fixed to `dir`)
-* The `<id>` is ignored since only a single assembly descriptor is used (no need to distinguish multiple descriptors)
-
-This `docker-maven-plugin` comes with some predefined assembly descriptors which can be used with `assemblyDescritproRef`:
-
-* **artifact-with-dependencies** will copy your project's artifact and all its dependencies
-* **artifact** will copy only the project's artifact but no dependencies.
-* **project** will copy over the whole Maven project but with out `target/` directory.
-* **rootWar** will copy the artifact as `ROOT.war` to the exposed directory. I.e. Tomcat will then deploy the war under the root context.
+This goals uploads images to the registry which have a `<build>`
+configuration section. The images to push can be restricted with with
+the global option `image` (see
+[Global Configuration](#global-configuration) for details). The
+registry to push is by default `registry.hub.docker.io` but can be
+specified as part of the images's `name` name the Docker
+way. E.g. `docker.test.org:5000/data:1.5` will push the image `data`
+with tag `1.5` to the registry `docker.test.org` at port
+`5000`. Security information (i.e. user and password) can be specified
+in multiple ways as described in an extra [section](#authentication).
 
 ## Cleanup
 
-Various configuration parameters of this plugin are available for cleaning up after a build:
+Various configuration parameters of this plugin are available for
+cleaning up after a build:
 
-* `keepRunning` specifies that the container should not be stopped after the build. Obviously, the container and any data image created will be left alone as well. This option is especially useful when given as command line option `-Ddocker.keepRunning` for doing some debugging or developing integration tests.
+* `keepRunning` specifies that the container should not be stopped
+  after the build. Obviously, the container and any data image created
+  will be left alone as well. This option is especially useful when
+  given as command line option `-Ddocker.keepRunning` for doing some
+  debugging or developing integration tests.
 
-* `keepContainer` tells the plugin to not remove the container created from the image after the build (the container is stopped, though). If a merged container was created via the option `mergeData` then this container will remain as well as the on-the-fly created image this container belongs to. This is useful for post-mortem analysis of the container by e.g. looking at the logs. This option can be switched on with `-Ddocker.keepContainer`. If a separate data container is used, this data container and its image will stay as well.
+* `keepContainer` tells the plugin to not remove the container created
+  from the image after the build (the container is stopped,
+  though). If a merged container was created via the option
+  `mergeData` then this container will remain as well as the
+  on-the-fly created image this container belongs to. This is useful
+  for post-mortem analysis of the container by e.g. looking at the
+  logs. This option can be switched on with
+  `-Ddocker.keepContainer`. If a separate data container is used, this
+  data container and its image will stay as well.
 
-* `keepData` finally can be used to keep only the data container, but the other container should be be removed. This option has only an effect if `keepContainer` is `false`. That way, the created artifacts can be kept even after the build.
+* `keepData` finally can be used to keep only the data container, but
+  the other container should be be removed. This option has only an
+  effect if `keepContainer` is `false`. That way, the created
+  artifacts can be kept even after the build.
 
-## Authentication
+### Authentication
 
-When pulling (via the `autoPull` mode of `docker:start` and `docker:push`) or pushing image, it might be necessary to authenticate against a Docker registry.
+When pulling (via the `autoPull` mode of `docker:start` and
+`docker:push`) or pushing image, it might be necessary to authenticate
+against a Docker registry. 
 
 There are three different ways for providing credentials:
+ 
+* Using a `<authConfig>` section in the plugin configuration with
+  `<username>` and `<password>` elements. 
+* Providing system properties `docker.username` and `docker.password`
+  from the outside 
+* Using a `<server>` configuration in the the `~/.m2/settings.xml`
+  settings 
 
-* Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
-* Providing system properties `docker.username` and `docker.password` from the outside
-* Using a `<server>` configuration in the the `~/.m2/settings.xml` settings
-
-Using the username and password directly in the `pom.xml` is not recommended since this is widely visible. This is most easiest and transparent way, though. Using an `<authConfig>` is straight forward:
+Using the username and password directly in the `pom.xml` is not
+recommended since this is widely visible. This is most easiest and
+transparent way, though. Using an `<authConfig>` is straight forward:
 
 ````xml
 <plugin>
@@ -680,13 +690,16 @@ Using the username and password directly in the `pom.xml` is not recommended sin
 </plugin>
 ````
 
-The system property provided credentials are a good compromise when using CI servers like Jenkins. You simply provide the credentials from the outside:
+The system property provided credentials are a good compromise when
+using CI servers like Jenkins. You simply provide the credentials from
+the outside:
 
 	mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
 
-The most secure and also the most *mavenish* way is to add a server to the Maven settings file `~/.m2/settings.xml`:
+The most secure and also the most *mavenish* way is to add a server to
+the Maven settings file `~/.m2/settings.xml`:
 
-````xml
+```xml
 <servers>
   <server>
     <id>registry.hub.docker.io</id>
@@ -695,106 +708,111 @@ The most secure and also the most *mavenish* way is to add a server to the Maven
   </server>
   ....
 </servers>
-````
+```
 
-The server id must specify the registry to push to/pull from, which by default is central index `registry.hub.docker.io`. Here you should add you docker.io account for your repositories.
+The server id must specify the registry to push to/pull from, which by
+default is central index `registry.hub.docker.io`. Here you should add
+you docker.io account for your repositories.
 
-### Password encryption
+#### Password encryption
 
-Regardless which mode you choose you can encrypt password as described in the [Maven documentation](http://maven.apache.org/guides/mini/guide-encryption.html). Assuming that you have setup a *master password* in `~/.m2/security-settings.xml` you can create easily encrypted passwords:
+Regardless which mode you choose you can encrypt password as described
+in the
+[Maven documentation](http://maven.apache.org/guides/mini/guide-encryption.html). Assuming
+that you have setup a *master password* in
+`~/.m2/security-settings.xml` you can create easily encrypted
+passwords:
 
-````bash
-	$ mvn --encrypt-password
-	Password:
-	{QJ6wvuEfacMHklqsmrtrn1/ClOLqLm8hB7yUL23KOKo=}
-````
+```bash
+$ mvn --encrypt-password
+Password:
+{QJ6wvuEfacMHklqsmrtrn1/ClOLqLm8hB7yUL23KOKo=}
+```
 
-This password then can be used in `authConfig`, `docker.password` and/or the `<server>` setting configuration. However, putting an encrypted password into `authConfig` in the `pom.xml` doesn't make much sense, since this password is encrypted with an individual master password.
-
-## SSL with keys and certificates
-
-The plugin can communicate with the Docker Host via SSL, too. This is the default now for Docker 1.3 (and Boot2Docker).
-SSL is switched on if the port used is `2376` which is the default, IANA registered SSL port of the Docker host
-(and plain HTTP for `2375`). The directory holding `ca.pem`, `key.pem` and `cert.pem` can be configured with the
-configuration parameter `certPath`. Alternatively, the environment variable `DOCKER_CERT_PATH` is evaluated and finally
-`~/.docker` is used as the last fallback.
+This password then can be used in `authConfig`, `docker.password`
+and/or the `<server>` setting configuration. However, putting an
+encrypted password into `authConfig` in the `pom.xml` doesn't make
+much sense, since this password is encrypted with an individual master
+password.
 
 ## Examples
 
 This plugin comes with some commented examples in the `samples/` directory:
 
-* [data-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/data-jolokia-demo) is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX bridge in a tomcat. It uses a Docker data container which is linked into the Tomcat container and contains the WAR files to deply
-* [cargo-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo) is the same as above except that Jolokia gets deployed via [Cargo](http://cargo.codehaus.org/Maven2+plugin)
+### Jolokia Demo
 
-For a complete example please refer to `samples/data-jolokia-demo/pom.xml`.
+[data-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/data-jolokia-demo)
+is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX
+bridge in a tomcat. It uses a Docker data container which is linked
+into the Tomcat container and contains the WAR files to deply. There
+are two flavor of tests
 
-In order to prove, that self contained builds are not a fiction, you might convince yourself by trying out this (on a UN*X like system):
+* One with two image where a (almost naked) data container with the
+  war file is created and then mounted into the server image during
+  startup before the integration test.
 
-````bash
-# Move away your local maven repository for a moment
-cd ~/.m2/
-mv repository repository.bak
+* When using the profile `-Pmerge` then a single image with Tomcat and
+  the dependent war files is created. During startup of a container
+  from the created image, a deploy script will link over the war files
+  into Tomat so that they are automatically deployed.
+  
+For running the tests call
 
-# Fetch docker-maven-plugin
-cd /tmp/
-git clone https://github.com/rhuss/docker-maven-plugin.git
-cd docker-maven-plugin/
+```bash
+mvn clean install
+mvn -Pmerge clean install
+```
 
-# Install plugin
-# (This is only needed until the plugin makes it to maven central)
-mvn install
+The sever used is by default Tomcat 7. This server can easily be
+changed with the system properties `server.name` and
+`server.version`. The following variants are available:
 
-# Goto the sample
-cd samples/data-jolokia-demo
+* For `server.name=tomcat` the `server.version` can be 3.3, 4.0, 5.5, 6.0, 7.0
+  or 8.0
+* For `server.name=jetty` the `server.version` can be 4, 5, 6, 7, 8 or 9
 
-# Run the integration test
-mvn verify
+Example:
 
-# Use a 'merged' data image
-mvn -Pmerge-data verify
+```bash
+mvn -Dserver.name=jetty -Dserver.version=9 clean install
+```
 
-# Push the data image
-mvn docker:push
+### Cargo Demo
 
-# Please note, that first it will take some time to fetch the image
-# from docker.io. The next time running it will be much faster.
+[cargo-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
+will use Docker to start a Tomcat 7 server with dynamic port mapping,
+which is used for remote deployment via
+[Cargo](http://cargo.codehaus.org/Maven2+plugin) and running the
+integration tests.
 
-# Restore back you .m2 repo
-cd ~/.m2
-mv repository /tmp/
-mv repository.bak repository
-````
+## Motivation
 
-## Misc
+If you search it GitHub you will find a whole cosmos of Maven Docker
+plugins (November 2014: 12 (!) plugins which 4 actively maintained
+). On the one hand, variety is a good thing on the other hand for
+users it is hard to decide which one to choose. So, you might wonder
+why you should choose this one.
 
-* [Script](https://gist.github.com/deinspanjer/9215467) for setting up NAT forwarding rules when using [boot2docker](https://github.com/boot2docker/boot2docker)
-on OS X
+I setup a dedicated
+[shootout project](https://github.com/rhuss/shootout-docker-maven)
+which compares the four most active plugins. It contains a simple demo
+project with a database and microservice image and an integration
+test. Each plugin is configured to create images and run the
+integration test (if possible). Although it might be a bit biased, I
+think its a good decision help for finding out which plugin suites you
+best.
 
-* It is recommended to use the `maven-failsafe-plugin` for integration testing in order to
-stop the docker container even when the tests are failing.
+But here is my motivation for writing this plugin. 
 
-## Why another docker-maven-plugin ?
-
-Spring feelings in 2014 seems to be quite fertile for the Java crowd's
-Docker awareness
-;-). [Not only I](https://github.com/bibryam/docker-maven-plugin/issues/1)
-counted ~~5~~ 10 [maven-docker-plugins](https://github.com/search?q=docker-maven-plugin)
-on GitHub as of ~~April~~ July 2014, tendency increasing. It seems, that all
-of them have a slightly different focus, but all of them can do the
-most important tasks: Starting and stopping containers.
-
-So you might wonder, why I started this plugin if there were already
-quite some out here ?
+First of all, you might wonder, why I started this plugin if there
+were already quite some out here ?
 
 The reason is quite simple: I didn't knew them when I started and if
 you look at the commit history you will see that they all started
 their life roughly at the same time (March 2014).
 
-I expect there will be some settling soon and even some merging of
-efforts which I would highly appreciate and support.
-
-For what it's worth, here are some of my motivations for this plugin
-and what I want to achieve:
+My design goals where quite simple and here are my initial needs for
+this plugin:
 
 * I needed a flexible, **dynamic port mapping** from container to host
   ports so that truly isolated build can be achieved. This should
@@ -816,8 +834,8 @@ and what I want to achieve:
   containers can be easy.
 
 * I want as **less dependencies** as possible for this plugin. So I
-  decided to *not* use the
-  Java Docker API [docker-java](https://github.com/docker-java/docker-java) which is
+  decided to *not* use the Java Docker API
+  [docker-java](https://github.com/docker-java/docker-java) which is
   external to docker and has a different lifecycle than Docker's
   [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/).
   That is probably the biggest difference to the other
@@ -826,12 +844,18 @@ and what I want to achieve:
   I think it is ok to do the REST calls directly. That way I only have
   to deal with Docker peculiarities and not also with docker-java's
   one. As a side effect this plugin has less transitive dependencies.
-  FYI: There is now yet another Docker Java client library out, which
+  FYI: There are now yet other Docker Java/Groovy client libraries out, which
   might be used for plugins like this, too:
-  [fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api). (Just
-  in case somebody wants to write yet another plugin ;-)
-
-In the meantime, enjoy this plugin, and please use the
+  [fabric/fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api),
+  [sprotify/docker-client](https://github.com/spotify/docker-client)
+  or
+  [gesellix-docker/docker-client](https://github.com/gesellix-docker/docker-client).
+  Can you see the pattern ;-) ?
+  
+So, final words: Enjoy this plugin, and please use the
 [issue tracker](https://github.com/rhuss/docker-maven-plugin/issues)
-for anything what hurts.
+for anything what hurts or when you have a wish list. I'm quite
+committed to this plugin and have quite some plans. Please stay tuned
+...
+
 
