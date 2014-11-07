@@ -632,6 +632,24 @@ with tag `1.5` to the registry `docker.test.org` at port
 `5000`. Security information (i.e. user and password) can be specified
 in multiple ways as described in an extra [section](#authentication).
 
+### `docker:remove`
+
+This goal can be used to clean up images and containers. By default
+all so called *data images* are removed with its containers. A data
+image is an image without a run configuration. This can be tuned by
+providing the properties `removeAll` which indicates to remove all
+images managed by this build. As with the other goals, the
+configuration `image` can be used to tune the images to remove. All
+containers belonging to the images are removed as well.
+
+Considering three images 'db','tomcat' and 'data' where 'data' is the
+only data images this example demonstrates the effect of this goal: 
+
+* `mvn docker:remove` will remove 'data'
+* `mvn -Ddocker.removeAll docker:remove` will remove all three images
+* `mvn -Ddocker.image=data,tomcat docker:remove` will remove 'data'
+* `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove` will remove 'data' and 'tomcat'
+
 ### Authentication
 
 When pulling (via the `autoPull` mode of `docker:start` and
