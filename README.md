@@ -22,6 +22,7 @@ This is a Maven plugin for managing Docker images and containers from your build
     * [`docker:build`](#dockerbuild)
     * [`docker:push`](#dockerpush)
     * [`docker:remove`](#dockerremove)
+  - [Security](#security)
 * [Examples](#examples)
 
 ## Introduction 
@@ -264,7 +265,13 @@ parentheses.
 * **skip** (`docker.skip`)
   With this parameter the execution of this plugin can be skipped
   completely. 
-
+* **autoPull** (`docker.autoPull`)
+  By default external images (base image for building or images to
+  start) are downloaded automatically. With this options this can be
+  switched off by setting this value to `false`.
+* **authConfig** holds the authencation information when pulling from
+  or pushing to Docker registry. There is a dedicated
+  [section](#authentication) for how doing security.
 
 Example:
 
@@ -293,7 +300,7 @@ The `<image>` element can contain the following sub elements:
   identifying the image within this configuration. This is used when
   linking images together or for specifying it with the global
   **image** configuration.
-* **<build** is a complex element which contains all the configuration
+* **build** is a complex element which contains all the configuration
   aspects when doing a `docker:build` or `docker:push`. This element
   can be omitted if the image is only pulled from a registry e.g. as
   support for integration tests like database images.
@@ -351,8 +358,7 @@ The `<run>` configuration knows the following sub elements:
   used. 
 * **env** can contain environment variables as subelements which are
   set during startup of the container. The are specified in the
-  typical maven property format `<env_name>value</env_name>`
-  (e.g. `<JAVA_OPTS>-Xmx512m</JAVA_OPTS>`)
+  typical maven property format as described [below](#setting-environment-variables).
 * **ports** declares how container exposed ports should be
   mapped. This is described below in an extra
   [section](#port-mapping). 
@@ -375,36 +381,126 @@ Example:
   </env>
 </run>
 ````
+
+##### Setting environment variables
+
+When creating a container one or more environment variables can be set via configuration with the `env` parameter
+
+```xml
+<env>
+  <JAVA_HOME>/opt/jdk8</JAVA_HOME>
+  <CATALINA_OPTS>-Djava.security.egd=file:/dev/./urandom</CATALINA_OPTS>
+</env>
+```
+
+If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by
+switching the JDK or whatever).
+
 ##### Port Mapping
+
+The `<ports>` configuration contains a list of port mappings. Each
+mapping has multiple parts, each separate by a colon. This is
+equivalent to the port mapping when using the Docker CLI with option
+`-p`. 
+
+```xml
+<ports>
+  <port>18080:8080</port>
+  <port>host.port:80</port>
+<ports>
+```
+
+A `port` stanza may take one of two forms:
+
+* A tuple consisting of two numeric values separated by a `:`. This
+  form will result in an explicit mapping between the docker host and
+  the corresponding port inside the container. In the above example,
+  port 18080 would be exposed on the docker host and mapped to port
+  8080 in the running container. 
+* A tuple consisting of a string and a numeric value separated by a
+  `:`. In this form, the string portion of the tuple will correspond
+  to a Maven property. If the property is undefined when the `start`
+  task executes, a port will be dynamically selected by Docker in the
+  range 49000 ... 49900 and assigned to the property which may then be
+  used later in the same POM file. If the property exists and has a
+  numeric value, that value will be used as the exposed port on the
+  docker host as in the previous form. In the above example, the
+  docker service will elect a new port and assign the value to the
+  property `host.port` which may then later be used in a property
+  expression similar to `<value>${host.port}</value>`. This can be
+  used to pin a port from the outside when doing some initial testing
+  similar to: 
+
+    mvn -Dhost.port=10080 docker:start
+
+Another useful configuration option is `portPropertyFile` with which a
+file can be specified to which the real port mapping is written after
+all dynamic ports has been resolved. The keys of this property file
+are the variable names, the values are the dynamically assgined host
+ports. This property file might be useful together with other maven
+plugins which already resolved their maven variables earlier in the
+lifecycle than this plugin so that the port variables might not be
+available to them.
 
 ##### Wait during startup
 
-#### Configuration
+While starting a container is it possible to block the execution until
+some condition is met. These conditions can be specified within a
+`<wait>` section which knows multiple sub-elements
 
-| Parameter    | Descriptions                                            | Property       | Default                 |
-| ------------ | ------------------------------------------------------- | -------------- | ----------------------- |
-| **url**      | URL to the docker daemon                                | `docker.url`   | `https://localhost:2376f` |
-| **image**    | Name of the docker image (e.g. `jolokia/tomcat:7.0.52`) | `docker.image` | none, required          |
-| **ports**    | List of ports to be mapped statically or dynamically.   |                |                         |
-| **env**      | Additional environment variables used when creating a container |        |                         |
-| **autoPull** | Set to `true` if an yet unloaded image should be automatically pulled | `docker.autoPull` | `true`      |
-| **command**  | Command to execute in the docker container              |`docker.command`|                         |
-| **assemblyDescriptor**  | Path to the data container assembly descriptor. See below for an explanation and example.              |                |                         |
-| **assemblyDescriptorRef** | Predefined assemblies which can be directly used. For possible values, see below. | | |
-| **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
-| **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
-| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
-| **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
-| **authConfig** | Authentication configuration when autopulling images. See below for details. | | |
-| **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
-| **wait**     | Ramp up time in milliseconds                            | `docker.wait`  |                         |
-| **waitHttp** | Wait until this URL is reachable with an HTTP HEAD request. Dynamic port variables can be given, too | `docker.waitHttp` | |
-| **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
-| **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
+* **url** is an URL which is polled periodically until it returns a
+  HTTP 200 status code.
+* **log** is a regular expression which is applied against the log
+  output of an container and blocks until the pattern is matched.
+* **time** is the time in milliseconds to block.
+
+As soon as one condition is met the build continues. If you add a
+`<time>` constraint this works more or less as a timeout for other
+conditions. 
+
+Example:
+
+````xml
+<wait>
+  <url>http://localhost:${host.port}</url>
+  <time>10000</time>
+</wait>
+```` 
+
+This setup will wait for the given URL to be reachable but ten seconds
+at most. You can use maven properties in each
+condition, too. In the example, the `${host.port}` propertu is
+probably set before within a port mapping section. 
 
 ### `docker:stop`
 
-Stops and removes a docker container.
+Stops and removes a docker container. This goals starts every
+container started with `<docker:stop>` either during the same build
+(e.g. when bound to lifecycle phases when doing integration tests) or
+for containers created by a previous call to `<docker:start>`
+
+If called within the same build run it will exactly stop and destroy
+all containers started by this plugin. If called in a separate run it
+will stop (and destroy) all containers which were created from images
+which are configured for this goal. This might be dangerous, but of
+course you can always stop your containers with the Docker CLI, too.
+
+For tuning what should happen when stopping there are two global
+parameters which are typically used as system properties:
+
+* **keepContainer** (`docker.keepContainer`) If given will not destroy
+  container after they have been stopped. 
+* **keepRunning** (`docker.keepRunning`) actually won't stop the
+  container. This apparently makes only sense when used on the command
+  line when doing integration testing (i.e. calling `docker:stop`
+  during a lifecycle binding) so that the container are still running
+  after an integration test. This is useful for analysis of the
+  containers (e.g. by entering it with `docker exec`). 
+
+Example: 
+
+    $ mvn -Ddocker.keepRuning clean install
+
 
 #### Configuration
 
@@ -465,42 +561,6 @@ and does not delete the image afterwards.
 | **color**    | Set to `true` for colored output                        | `docker.color` | `true` if TTY connected  |
 | **skip**     | If set to `true` skip the execution of this goal        | `docker.skip`  |                          |
 
-## Dynamic Port mapping
-
-For the `start` goal, container port mapping may be configured using a `ports` declaration.
-
-```xml
-<ports>
-  <port>18080:8080</port>
-  <port>host.port:80</port>
-<ports>
-```
-
-A `port` stanza may take one of two forms:
-* A tuple consisting of two numeric values separated by a `:`. This form will result in an explicit mapping between the docker host and the corresponding port inside the container. In the above example, port 18080 would be exposed on the docker host and mapped to port 8080 in the running container.
-* A tuple consisting of a string and a numeric value separated by a `:`. In this form, the string portion of the tuple will correspond to a Maven property. If the property is undefined when the `start` task executes, a port will be dynamically selected by Docker in the range 49000 ... 49900 and assigned to the property which may then be used later in the same POM file. If the property exists and has a numeric value, that value will be used as the exposed port on the docker host as in the previous form. In the above example, the docker service will elect a new port and assign the value to the property `host.port` which may then later be used in a property expression similar to `<value>${host.port}</value>`. This can be used to pin a port from the outside when doing some initial testing similar to:
-
-    mvn -Dhost.port=10080 docker:start
-
-Another useful configuration option is `portPropertyFile` with which a file can be specified to which the real port
-mapping is written after all dynamic ports has been resolved. The keys of this property file are the variable names,
-the values are the dynamically assgined host ports. This property file might be useful together with other maven
-plugins which already resolved their maven variables earlier in the lifecycle than this plugin so that the port variables
-might not be available to them.
-
-## Setting environment variables
-
-When creating a container one or more environment variables can be set via configuration with the `env` parameter
-
-```xml
-<env>
-  <JAVA_HOME>/opt/jdk8</JAVA_HOME>
-  <CATALINA_OPTS>-Djava.security.egd=file:/dev/./urandom</CATALINA_OPTS>
-</env>
-```
-
-If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by
-switching the JDK or whatever).
 
 ## Getting your assembly into the container
 
