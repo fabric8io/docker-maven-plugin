@@ -36,18 +36,17 @@ public class StopMojo extends AbstractDockerMojo {
 
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
 
-        if (startCalled == null || !startCalled) {
-            // Called directly ....
-
-            for (ImageConfiguration image : getImages()) {
-                String imageName = image.getName();
-                for (String container : access.getContainersForImage(imageName)) {
-                    new ShutdownAction(imageName,image.getAlias(), container).shutdown(access, this, keepContainer);
+        if (!keepRunning) {
+            if (startCalled == null || !startCalled) {
+                // Called directly ....
+                for (ImageConfiguration image : getImages()) {
+                    String imageName = image.getName();
+                    for (String container : access.getContainersForImage(imageName)) {
+                        new ShutdownAction(imageName,image.getAlias(), container).shutdown(access, this, keepContainer);
+                    }
                 }
-            }
-        } else {
-            // Called from a lifecycle phase ...
-            if (!keepRunning) {
+            } else {
+                // Called from a lifecycle phase ...
                 List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
                 for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
                     action.shutdown(access, this, keepContainer);

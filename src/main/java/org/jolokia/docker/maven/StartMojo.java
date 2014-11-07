@@ -34,7 +34,7 @@ import org.jolokia.docker.maven.util.*;
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartMojo extends AbstractDockerMojo {
 
-    @Parameter(defaultValue = "true")
+    @Parameter(defaultValue = "true", property = "docker.autoPull")
     private boolean autoPull;
 
     // Map holding associations between started containers and their images via name and aliases
