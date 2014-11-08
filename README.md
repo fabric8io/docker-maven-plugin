@@ -26,7 +26,7 @@ The documenttion is splitted into several parts:
 * The [Introduction](doc/intro.md) introduction has a highlevel
   overview of the functionality of this plugin and gives an example of
   its usage. The motivation and design goals are given there, too
-* The [User Manual](doc/manual.md) is a detailed reference for all
+* The **[User Manual](doc/manual.md)** is a detailed reference for all
   provided goals and the configuration parameters. 
 * [Examples](doc/examples.md) are below `samples/` and contain example
   setups which you can use as blueprints for your own projects.
