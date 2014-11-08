@@ -47,3 +47,23 @@ will use Docker to start a Tomcat 7 server with dynamic port mapping,
 which is used for remote deployment via
 [Cargo](http://cargo.codehaus.org/Maven2+plugin) and running the
 integration tests.
+
+### docker-maven-plugin Shootout
+
+In order to help in the decision, which plugin to use, there is a
+sample project
+[rhuss/shootout-docker-maven](https://github.com/rhuss/shootout-docker-maven),
+which has more complex sample project involving two images:
+
+* Vanilla PostgreSQL 9 Image
+* HTTP Request Logging Service
+  - MicroService mit embedded Tomcat
+  - DB Schema is created during startup vai [Flyway](http://flywaydb.org/)
+* PostgreSQL container is connected via a Docker 'link'
+* Simple integration test which excercises the service
+
+The different plugins can be enabled with different Maven profiles,
+the one for this plugin is called `rhuss` (and the others `wouterd`,
+`alexec` and `spotify`).
+
+For more information please look over there.

@@ -84,7 +84,7 @@
               <name>${image}</name>
               <run>
                 <volumes>
-                  <from>jolokia/${project.artifactId}:${project.version}</from>
+                  <from>data</from>
                 </volumes>
                 <env>
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>

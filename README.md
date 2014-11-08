@@ -6,10 +6,10 @@
 
 This is a Maven plugin for managing Docker images and containers from your builds.
 
-> *This document describes the configuration syntax for version >=
+> *This document describes the new configuration syntax for versions >=
 > 0.10.0. For older version (i.e. 0.9.x) please refer to the old
 > [documentation](doc/readme-0.9.x.md). Migration to the new syntax is not
-> difficult and described [separately](doc/upgrade-from-0.9.x.md)*
+> difficult and described [separately](doc/upgrade-from-0.9.x.md).*
 
 This plugin provides the following goals:
 
