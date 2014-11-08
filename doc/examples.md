@@ -1,0 +1,49 @@
+## Examples
+
+This plugin comes with some commented examples in the `samples/` directory:
+
+### Jolokia Demo
+
+[data-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/data-jolokia-demo)
+is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX
+bridge in a tomcat. It uses a Docker data container which is linked
+into the Tomcat container and contains the WAR files to deply. There
+are two flavor of tests
+
+* One with two image where a (almost naked) data container with the
+  war file is created and then mounted into the server image during
+  startup before the integration test.
+
+* When using the profile `-Pmerge` then a single image with Tomcat and
+  the dependent war files is created. During startup of a container
+  from the created image, a deploy script will link over the war files
+  into Tomat so that they are automatically deployed.
+  
+For running the tests call
+
+```bash
+mvn clean install
+mvn -Pmerge clean install
+```
+
+The sever used is by default Tomcat 7. This server can easily be
+changed with the system properties `server.name` and
+`server.version`. The following variants are available:
+
+* For `server.name=tomcat` the `server.version` can be 3.3, 4.0, 5.5, 6.0, 7.0
+  or 8.0
+* For `server.name=jetty` the `server.version` can be 4, 5, 6, 7, 8 or 9
+
+Example:
+
+```bash
+mvn -Dserver.name=jetty -Dserver.version=9 clean install
+```
+
+### Cargo Demo
+
+[cargo-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
+will use Docker to start a Tomcat 7 server with dynamic port mapping,
+which is used for remote deployment via
+[Cargo](http://cargo.codehaus.org/Maven2+plugin) and running the
+integration tests.
