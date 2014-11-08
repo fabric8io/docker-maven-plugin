@@ -5,8 +5,9 @@
 New configuration syntax with support for multiple containers 
 
 * **0.10.4**
+  - Restructured and updated documentation
   - Fixed push issue when using a private registry (#40)
-  - Add support for binding to an arbritrary host IP (#39)
+  - Add support for binding to an arbitrary host IP (#39)
 
 * **0.10.3**
   - Added "remove" goal for cleaning up images
@@ -19,8 +20,6 @@ New configuration syntax with support for multiple containers
   - Support for linking of containers (see the configuration in the [shootout-docker-maven](https://github.com/rhuss/shootout-docker-maven/blob/master/pom.xml) POM)
     Images can be specified in any order, the plugin takes care of the right startup order when running containers.
   - Support for waiting on a container's log output before continuing 
-
-Still missing: documentation (coming soon ..)
 
 ## 0.9.x Series 
 

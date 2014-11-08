@@ -36,9 +36,6 @@ public class BuildImageConfiguration {
     @Parameter
     private String command;
 
-    @Parameter(defaultValue = "true")
-    private boolean doNotPush;
-
     public String getFrom() {
         return from;
     }
@@ -66,11 +63,7 @@ public class BuildImageConfiguration {
     public Map<String, String> getEnv() {
         return env;
     }
-
-    public boolean isDoNotPush() {
-        return doNotPush;
-    }
-
+    
     public String getCommand() {
         return command;
     }

@@ -84,7 +84,7 @@
               <name>${image}</name>
               <run>
                 <volumes>
-                  <from>jolokia/${project.artifactId}:${project.version}</from>
+                  <from>data</from>
                 </volumes>
                 <env>
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
@@ -206,7 +206,7 @@
             <configuration combine.self="override">
               <images>
                 <image>
-                  <!-- Artefact Image-->
+                  <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}:${project.version}</name>
                   <build>
                     <from>${image}</from>
