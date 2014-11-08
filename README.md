@@ -9,7 +9,7 @@ This is a Maven plugin for managing Docker images and containers from your build
 > *This document describes the new configuration syntax for versions >=
 > 0.10.0. For older version (i.e. 0.9.x) please refer to the old
 > [documentation](doc/readme-0.9.x.md). Migration to the new syntax is not
-> difficult and described [separately](doc/upgrade-from-0.9.x.md).*
+> difficult and described [separately](doc/migration-0.9.x.md).*
 
 This plugin provides the following goals:
 
@@ -30,6 +30,7 @@ The documenttion is splitted into several parts:
   provided goals and the configuration parameters. 
 * [Examples](doc/examples.md) are below `samples/` and contain example
   setups which you can use as blueprints for your own projects.
+* [Migration Guide](doc/migration-0.9.x.md) for migration from pre-0.10.x versions.
 * [ChangeLog](doc/changelog.md) contains the history for this plugin.
   
 
