@@ -3,15 +3,15 @@
 
 ## Preparation
 
-* Increase version number in README.md example
+* Increase version number in doc/manual.md example
 * Increase version numbers in the poms below samples/ (they are not automatically updated)
 
 ## Building and deploying
 
 The release process uses the maven release plugin:
 
-     mvn -DdevelopmentVersion=1.0.1-SNAPSHOT -DreleaseVersion=1.0.0 -Dtag=v1.0.0 -Pdist release:prepare
-     mvn -Pdist release:perform
+     mvn -Dmaven.repo.local=/tmp/clean-repo -DdevelopmentVersion=1.0.1-SNAPSHOT -DreleaseVersion=1.0.0 -Dtag=v1.0.0 -Pdist release:prepare
+     mvn -Dmaven.repo.local=/tmp/clean-repo -Pdist release:perform
  
 This will deploy to Maven central. The profile "dist" enables signing
 of artefacts and uses a running GPG agent.
