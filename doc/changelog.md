@@ -23,7 +23,7 @@ New configuration syntax with support for multiple containers
 
 ## 0.9.x Series 
 
-Original configuration syntax (as described in the [README](README.md))
+Original configuration syntax (as described in the old [README](readme-0.9.x.md))
 
 * **0.9.12**
   - Fixed push issue when using a private registry (#40)
