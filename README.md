@@ -21,21 +21,16 @@ This plugin provides the following goals:
 | [`docker:push`](doc/manual.md#dockerpush)     | Push images to a registry            |
 | [`docker:remove`](doc/manual.md#dockerremove) | Remove images from local docker host |
 
-The only requirement is a remote access to a Docker daemon (no CLI
-installation is required).
+The documenttion is splitted into several parts:
 
-* [Introduction](doc/intro.md) 
-  The introduction has a highlevel overview of the functionality of
-  this plugin and gives an example of its usage. The motivation and
-  design goals are given there, too
-* [User Manual](doc/manual.md)
-  The user manual is a detailed reference for all provided goals and
-  the configuration parameters. 
-* [Examples](doc/examples.md)
-  The examples below `samples/` contain example setup which you can
-  use as blueprints for your own projects.
-* [Changes] (doc/changelog.md)
-  The Changelog contains the history for this plugin.
+* The [Introduction](doc/intro.md) introduction has a highlevel
+  overview of the functionality of this plugin and gives an example of
+  its usage. The motivation and design goals are given there, too
+* The [User Manual](doc/manual.md) is a detailed reference for all
+  provided goals and the configuration parameters. 
+* [Examples](doc/examples.md) are below `samples/` and contain example
+  setups which you can use as blueprints for your own projects.
+* [ChangeLog](doc/changelog.md) contains the history for this plugin.
   
 
 

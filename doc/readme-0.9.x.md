@@ -1,4 +1,4 @@
-# docker-maven-plugin
+# docker-maven-plugin 0.9.x
 
 [![endorse](http://api.coderwall.com/rhuss/endorsecount.png)](http://coderwall.com/rhuss)
 [![Build Status](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
@@ -6,8 +6,14 @@
 
 This is a Maven plugin for managing Docker images and containers from within Maven builds. 
 
-**This document describes version 0.9.11 of this plugin. The newest, experimental version 0.10.3 with a new configuration syntax has not yet much [documentation](https://github.com/rhuss/shootout-docker-maven/blob/master/pom.xml#L83), so
-please stick to 0.9.11 in the meantime. See the [CHANGELOG](CHANGELOG.md) for more details about the differences and this [blog post](http://ro14nd.de/Docker-Maven-Plugin-Rewrite/) for the motivation behind this restructuring.**
+> **This document describes version 0.9.x of this plugin. Starting
+> with version 0.10.1 a new configuration syntax was introduced which
+> as documented in the [README](../README.md). See the
+> [CHANGELOG](changelog.md) for more details about the differences and
+> this [blog post](http://ro14nd.de/Docker-Maven-Plugin-Rewrite/) for
+> the motivation behind this restructuring. The 0.9.x version is
+> deprecated and won't be updated in the futuer. For a migration to
+> the new syntax please refer to this [guide](migration-0.9.x.md)**
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
