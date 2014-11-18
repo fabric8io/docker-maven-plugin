@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.config;
 
 import java.util.*;
 
-import org.apache.maven.plugins.annotations.Parameter;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.StartOrderResolver;
 
@@ -12,21 +11,31 @@ import org.jolokia.docker.maven.util.StartOrderResolver;
  */
 public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
-    @Parameter(required = true)
+    /**
+     * @parameter
+     * @required
+     */
     private String name;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String alias;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private RunImageConfiguration run;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private BuildImageConfiguration build;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private Map<String,String> reference;
-
 
     // Used for injection
     public ImageConfiguration() {}

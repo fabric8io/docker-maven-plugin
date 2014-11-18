@@ -16,7 +16,6 @@ package org.jolokia.docker.maven;/*
  */
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -33,13 +32,17 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  *
  * @author roland
  * @since 23.10.14
+ *
+ * @goal remove
+ * @phase post-integration-test
  */
 
-@Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class RemoveMojo extends AbstractDockerMojo {
 
     // Whether all configured images should be removed
-    @Parameter(property = "docker.removeAll", defaultValue = "false")
+    /**
+     * @parameter property = "docker.removeAll" default-value = "false"
+     */
     private boolean removeAll;
 
     @Override

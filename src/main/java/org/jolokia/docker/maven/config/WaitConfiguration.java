@@ -1,20 +1,24 @@
 package org.jolokia.docker.maven.config;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 /**
  * @author roland
  * @since 12.10.14
  */
 public class WaitConfiguration {
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private int time;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String url;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String log;
 
     public WaitConfiguration() {}

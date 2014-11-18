@@ -3,8 +3,6 @@ package org.jolokia.docker.maven.config;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 /**
  * @author roland
  * @since 02.09.14
@@ -12,28 +10,44 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class BuildImageConfiguration {
 
     // Base Image name of the data image to use.
-    @Parameter
+    /**
+     * @parameter
+     */
     private String from;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String exportDir;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String registry;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String assemblyDescriptor;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String assemblyDescriptorRef;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private List<String> ports;
 
-    @Parameter
-    private Map<String,String> env;
+    /**
+     * @parameter
+     */
+     private Map<String,String> env;
 
-    @Parameter
+    /**
+     * @parameter
+     */
     private String command;
 
     public BuildImageConfiguration() {}

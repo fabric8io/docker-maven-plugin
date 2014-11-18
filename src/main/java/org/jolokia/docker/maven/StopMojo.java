@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -20,16 +19,22 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  *
  * @author roland
  * @since 26.03.14
+ *
+ * @goal stop
+ * @phase post-integration-test
  */
-@Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractDockerMojo {
 
     // Whether to keep the containers afters stopping
-    @Parameter(property = "docker.keepContainer",defaultValue = "false")
+    /**
+     * @parameter property = "docker.keepContainer" default-value = "false"
+     */
     private boolean keepContainer;
 
     // Whether to *not* stop the container. Mostly useful as a command line param
-    @Parameter(property = "docker.keepRunning", defaultValue = "false")
+    /**
+     * @parameter property = "docker.keepRunning" defaultValue = "false"
+     */
     private boolean keepRunning;
 
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {

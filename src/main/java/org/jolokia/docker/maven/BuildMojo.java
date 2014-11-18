@@ -5,7 +5,6 @@ import java.io.File;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
@@ -20,27 +19,39 @@ import org.jolokia.docker.maven.util.MojoParameters;
  *
  * @author roland
  * @since 28.07.14
+ *
+ * @goal build
+ * @phase install
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
 public class BuildMojo extends AbstractDockerMojo {
 
     // ==============================================================================================================
     // Parameters required from Maven when building an assembly. They cannot be injected directly
     // into DockerAssemblyCreator.
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
-    @Parameter
+    /**
+     * @parameter
+     */
     private MavenArchiveConfiguration archive;
 
-    @Component
+    /**
+     * @component
+     */
     private MavenSession session;
 
-    @Component
+    /**
+     * @component
+     */
     private MavenFileFilter mavenFileFilter;
 
-    @Component
+    /**
+     * @component
+     */
     protected MavenProject project;
 
-    @Component
+    /**
+     * @component
+     */
     private DockerArchiveCreator dockerArchiveCreator;
 
     @Override

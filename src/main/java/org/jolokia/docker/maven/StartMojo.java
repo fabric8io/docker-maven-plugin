@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
@@ -30,11 +29,15 @@ import org.jolokia.docker.maven.util.*;
  * Goal for creating and starting a docker container. This goal evaluates the image configuration
  *
  * @author roland
+ *
+ * @goal start
+ * @phase pre-integration-test
  */
-@Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartMojo extends AbstractDockerMojo {
 
-    @Parameter(defaultValue = "true", property = "docker.autoPull")
+    /**
+     * @parameter property = "docker.autoPull"  defaultValue = "true"
+     */
     private boolean autoPull;
 
     // Map holding associations between started containers and their images via name and aliases

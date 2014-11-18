@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusConstants;
@@ -41,49 +39,66 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     public static final String DOCKER_HTTPS_PORT = "2376";
 
     // Current maven project
-    @Component
+    /**
+     * @component
+     */
     protected MavenProject project;
 
     // Settings holding authentication info
-    @Component
+    /**
+     * @component
+     */
     protected Settings settings;
 
     // Handler for external configurations
-    @Component
+    /**
+     * @component
+     */
     protected ImageConfigResolver imageConfigResolver;
 
     // URL to docker daemon
-    @Parameter(property = "docker.host")
+    /**
+     * @parameter property = "docker.host"
+     */
     private String dockerHost;
 
-    @Parameter(property = "docker.certPath")
+    /**
+     * @parameter property = "docker.certPath"
+     */
     private String certPath;
 
     // Whether to use color
-    @Parameter(property = "docker.useColor", defaultValue = "true")
+    /**
+     * @parameter property = "docker.useColor" default-value = "true"
+     */
     private boolean useColor;
 
     // Whether to skip docker altogether
-    @Parameter(property = "docker.skip", defaultValue = "false")
+    /**
+     * @parameter property = "docker.skip" default-value = "false"
+     */
     private boolean skip;
 
     // Whether to restrict operation to a single image. This can be either
     // the image or an alias name
-    @Parameter(property = "docker.image")
+    /**
+     * @parameter property = "docker.image"
+     */
     private String image;
 
     // Authentication information
-    @Parameter
+    /**
+     * @parameter
+     */
     Map authConfig;
 
     // Relevant configuration to use. This includes also references to external
     // images
-    @Parameter(required = true)
+    /**
+     * @parameter
+     * @required
+     */
     private List<ImageConfiguration> images;
-
-    // The resolved list of image configurations. This list is internal an will
-    // created during startup.
-    private ArrayList<ImageConfiguration> resolvedImages;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
