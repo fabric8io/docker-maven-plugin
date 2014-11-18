@@ -3,7 +3,7 @@
 It focuses on two major aspects:
 
 * **Building** and **pushing** Docker images which contains build artifacts
-* **Starting** and **stopping** Docker container for integration
+* **Starting** and **stopping** Docker containers for integration
   testing and development 
 
 Docker *images* are the central entity which can be configured. 
@@ -29,7 +29,7 @@ plugin can be also pushed to public or private registries with
 
 With this plugin it is possible to run completely isolated integration
 tests so you don't need to take care of shared resources. Ports can be
-mapped dynamically and made available as Maven properties to you
+mapped dynamically and made available as Maven properties to your
 integration test code. 
 
 Multiple containers can be managed at once which can be linked
@@ -130,7 +130,7 @@ ports in the usual Docker way (via environments variables prefixed
 with `DB_`). 
 
 Images can be specified in any order, the plugin will take care of the
-proper startup order (and will bail out in case of circulara
+proper startup order (and will bail out in case of circular
 dependencies). 
 
 ### Other highlights
