@@ -7,5 +7,22 @@
       <implementation>org.jolokia.docker.maven.assembly.DockerArchiveCreator</implementation>
       <instantiation-strategy>per-lookup</instantiation-strategy>
     </component>
+
+    <component>
+      <role>org.jolokia.docker.maven.config.handler.ImageConfigResolver</role>
+      <implementation>org.jolokia.docker.maven.config.handler.ImageConfigResolver</implementation>
+      <instantiation-strategy>per-lookup</instantiation-strategy>
+      <requirements>
+        <requirement>
+          <role>org.jolokia.docker.maven.config.handler.ReferenceConfigHandler</role>
+          <field-name>handlers</field-name>
+        </requirement>
+      </requirements>
+    </component>
+
+    <component>
+      <role>org.jolokia.docker.maven.config.handler.ReferenceConfigHandler</role>
+      <implementation>org.jolokia.docker.maven.config.handler.Fabric8ConfigHandler</implementation>
+    </component>
   </components>
 </component-set>

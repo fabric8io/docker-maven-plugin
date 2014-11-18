@@ -42,7 +42,7 @@ public class StopMojo extends AbstractDockerMojo {
                 for (ImageConfiguration image : getImages()) {
                     String imageName = image.getName();
                     for (String container : access.getContainersForImage(imageName)) {
-                        new ShutdownAction(imageName,image.getAlias(), container).shutdown(access, this, keepContainer);
+                        new ShutdownAction(image, container).shutdown(access, this, keepContainer);
                     }
                 }
             } else {

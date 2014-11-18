@@ -50,7 +50,6 @@ public class StartMojo extends AbstractDockerMojo {
 
         getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
 
-
         for (StartOrderResolver.Resolvable resolvable : getImagesConfigsInOrder()) {
             ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
             String imageName = imageConfig.getName();
@@ -70,10 +69,10 @@ public class StartMojo extends AbstractDockerMojo {
                                   findContainersForImages(runConfig.getVolumesFrom()), findLinksWithContainerNames(docker,runConfig.getLinks()));
             registerContainer(container, imageConfig);
             info("Created and started container " +
-                 getContainerImageDescription(container,imageConfig.getName(),imageConfig.getAlias()));
+                 getContainerAndImageDescription(container, imageConfig.getDescription()));
 
             // Remember id for later stopping the container
-            registerShutdownAction(new ShutdownAction(imageName,imageConfig.getAlias(),container));
+            registerShutdownAction(new ShutdownAction(imageConfig,container));
 
             // Set maven properties for dynamically assigned ports.
             if (mappedPorts.containsDynamicPorts()) {

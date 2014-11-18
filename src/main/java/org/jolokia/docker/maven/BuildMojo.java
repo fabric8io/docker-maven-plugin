@@ -58,7 +58,7 @@ public class BuildMojo extends AbstractDockerMojo {
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         File dockerArchive = dockerArchiveCreator.create(params, imageConfig.getBuildConfiguration());
         String imageName = getImageName(imageConfig.getName());
-        info("Creating image " + getImageDescription(imageName,imageConfig.getAlias()));
+        info("Creating image " + imageConfig.getDescription());
         dockerAccess.buildImage(imageName, dockerArchive);
     }
 }
