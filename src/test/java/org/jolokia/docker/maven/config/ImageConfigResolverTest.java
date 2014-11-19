@@ -20,7 +20,7 @@ import java.util.*;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.ReflectionUtils;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
-import org.jolokia.docker.maven.config.handler.ReferenceConfigHandler;
+import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,7 +51,7 @@ public class ImageConfigResolverTest {
     @Test
     public void withReference() throws Exception {
         Map<String,String> refConfig = Collections.singletonMap("type", "test");
-        ImageConfiguration config = new ImageConfiguration.Builder().name("reference").referenceConfig(refConfig).build();
+        ImageConfiguration config = new ImageConfiguration.Builder().name("reference").externalConfig(refConfig).build();
         List<ImageConfiguration> rest = resolver.resolve(config,null);
         assertEquals(3,rest.size());
         for (int i = 0; i < 3;i++) {
@@ -64,7 +64,7 @@ public class ImageConfigResolverTest {
         Map<String,String> refConfig = Collections.singletonMap("notAType","test");
         ImageConfiguration config = new ImageConfiguration.Builder()
                 .name("reference")
-                .referenceConfig(refConfig).build();
+                .externalConfig(refConfig).build();
         resolver.resolve(config,null);
     }
 
@@ -73,11 +73,11 @@ public class ImageConfigResolverTest {
         Map<String,String> refConfig = Collections.singletonMap("type","unknown");
         ImageConfiguration config = new ImageConfiguration.Builder()
                 .name("reference")
-                .referenceConfig(refConfig).build();
+                .externalConfig(refConfig).build();
         resolver.resolve(config,null);
     }
 
-    private static class TestHandler implements ReferenceConfigHandler {
+    private static class TestHandler implements ExternalConfigHandler {
 
         int nr;
 

@@ -258,10 +258,10 @@
             <configuration combine.self="override">
               <images>
                 <image>
-                  <reference>
+                  <external>
                     <type>props</type>
                     <prefix>docker</prefix>
-                  </reference>
+                  </external>
                 </image>
               </images>
             </configuration>

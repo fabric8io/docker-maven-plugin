@@ -25,7 +25,7 @@ import static org.jolokia.docker.maven.util.EnvUtil.*;
  * @author roland
  * @since 18/11/14
  */
-public class PropertyConfigHandler implements ReferenceConfigHandler {
+public class PropertyConfigHandler implements ExternalConfigHandler {
     @Override
     public String getType() {
         return "props";
@@ -105,7 +105,7 @@ public class PropertyConfigHandler implements ReferenceConfigHandler {
     }
 
     private String getPrefix(ImageConfiguration config) {
-        Map<String, String> refConfig = config.getReference();
+        Map<String, String> refConfig = config.getExternalConfig();
         String prefix = refConfig.get("prefix");
         if (prefix == null) {
             prefix = "docker";

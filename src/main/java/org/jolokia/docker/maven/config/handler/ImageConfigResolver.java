@@ -30,15 +30,15 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
 public class ImageConfigResolver implements Initializable {
 
     // Map type to handler
-    private Map<String,ReferenceConfigHandler> registry;
+    private Map<String,ExternalConfigHandler> registry;
 
-    private List<ReferenceConfigHandler> handlers;
+    private List<ExternalConfigHandler> handlers;
 
     @Override
     public void initialize() throws InitializationException {
         this.registry = new HashMap<>();
         if (handlers != null) {
-            for (ReferenceConfigHandler handler : handlers) {
+            for (ExternalConfigHandler handler : handlers) {
                 registry.put(handler.getType(), handler);
             }
         }
@@ -57,13 +57,13 @@ public class ImageConfigResolver implements Initializable {
      * or when the type is not known (i.e. no handler is registered for this type).
      */
     public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties) {
-        Map<String,String> referenceConfig = unresolvedConfig.getReference();
+        Map<String,String> referenceConfig = unresolvedConfig.getExternalConfig();
         if (referenceConfig != null) {
             String type = referenceConfig.get("type");
             if (type == null) {
                 throw new IllegalArgumentException("No config type for image " + unresolvedConfig.getDescription() + " given");
             }
-            ReferenceConfigHandler handler = registry.get(type);
+            ExternalConfigHandler handler = registry.get(type);
             if (handler == null) {
                 throw new IllegalArgumentException("No handler for type " + type + " and image " +
                                                    unresolvedConfig.getDescription() + " given");

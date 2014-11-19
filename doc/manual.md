@@ -7,7 +7,7 @@
   - [`docker:build`](#dockerbuild)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
-* []
+* [External Configuration](#external-configuration)
 * [Authentication](#authentication)
 
 ## User Manual
@@ -25,7 +25,7 @@ available goals are described below.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.10.4</version>
+  <version>0.10.5</version>
 
   <configuration>
      ....
@@ -149,7 +149,7 @@ The `<image>` element can contain the following sub elements:
   created and run when `docker:start` or `docker:stop` is called. If
   this image is only used a *data container* for exporting artifacts
   via volumes this section can be missing.
-* **reference** can be used to fetch the configuration through other
+* **external** can be used to fetch the configuration through other
   means than the intrinisic configuration with `run` and `build`. It
   contains a `<type>` element specifying the handler for getting the
   configuration. See [External configuration](#external-configuration)
@@ -498,18 +498,18 @@ only data images this example demonstrates the effect of this goal:
 
 For special configuration needs there is the possibility to get the
 runtime and build configuration from places outside the plugin's
-configuration. This is done with the help of `<reference>`
+configuration. This is done with the help of `<external>`
 configuration sections which at least has a `<type>` subelement. This
 `<type>` element selects a specific so called "handler" which is
 responsible for creating the full image configuration. A handler can
 decided to use the `<run>` and `<build>` configuration which could
-be provided in addition to this `<reference>` section or it can decide
+be provided in addition to this `<external>` section or it can decide
 to completely ignore any extra configuration option. 
 
 A handler can also decide to expand this single image configuration to
 a list of image configurations. The image configurations resulting
-from such a reference configuration are added to the *regular*
-`<image>` configurations without a `<reference>` section.
+from such a external configuration are added to the *regular*
+`<image>` configurations without an `<external>` section.
 
 The available handlers are described in the following. 
 
@@ -525,10 +525,10 @@ Example:
 
 ```xml
 <image>
-  <reference>
+  <external>
      <type>props</type>
      <prefix>docker</prefix> <!-- this is the default -->
-  </reference>
+  </external>
 </image>
 ```
 
@@ -584,6 +584,40 @@ use different prefixes. As stated above the environment and ports
 configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.
+
+Example:
+
+```xml
+<properties>
+  <docker.name>jolokia/demo</docker.name>
+  <docker.alias>service</docker.alias>
+  <docker.from>consol/tomcat:7.0</docker.from>
+  <docker.assemblyDescriptor>src/main/docker-assembly.xml</docker.assemblyDescriptor>
+  <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
+  <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
+  <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
+</properties>
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.jolokia</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <external>
+              <type>props</type>
+              <prefix>docker</prefix>
+            </external>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+```
+
 
 ### Authentication
 

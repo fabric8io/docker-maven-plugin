@@ -35,7 +35,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     /**
      * @parameter
      */
-    private Map<String,String> reference;
+    private Map<String,String> external;
 
     // Used for injection
     public ImageConfiguration() {}
@@ -43,12 +43,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     // For builder
     private ImageConfiguration(String name, String alias,
                                RunImageConfiguration run, BuildImageConfiguration build,
-                               Map<String, String> reference) {
+                               Map<String, String> external) {
         this.name = name;
         this.alias = alias;
         this.run = run;
         this.build = build;
-        this.reference = reference;
+        this.external = external;
     }
 
     @Override
@@ -68,8 +68,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return build;
     }
 
-    public Map<String, String> getReference() {
-        return reference;
+    public Map<String, String> getExternalConfig() {
+        return external;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         String name,alias;
         RunImageConfiguration runConfig;
         BuildImageConfiguration buildConfig;
-        Map<String,String> referenceConfig;
+        Map<String,String> externalConfig;
 
         public Builder name(String name) {
             this.name = name;
@@ -139,13 +139,13 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
             return this;
         }
 
-        public Builder referenceConfig(Map<String,String> referenceConfig) {
-            this.referenceConfig = referenceConfig;
+        public Builder externalConfig(Map<String, String> externalConfig) {
+            this.externalConfig = externalConfig;
             return this;
         }
 
         public ImageConfiguration build() {
-            return new ImageConfiguration(name,alias,runConfig,buildConfig,referenceConfig);
+            return new ImageConfiguration(name,alias,runConfig,buildConfig, externalConfig);
         }
     }
 }

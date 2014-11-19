@@ -14,14 +14,14 @@
       <instantiation-strategy>per-lookup</instantiation-strategy>
       <requirements>
         <requirement>
-          <role>org.jolokia.docker.maven.config.handler.ReferenceConfigHandler</role>
+          <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
           <field-name>handlers</field-name>
         </requirement>
       </requirements>
     </component>
 
     <component>
-      <role>org.jolokia.docker.maven.config.handler.ReferenceConfigHandler</role>
+      <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
       <implementation>org.jolokia.docker.maven.config.handler.PropertyConfigHandler</implementation>
     </component>
   </components>

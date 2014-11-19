@@ -27,7 +27,7 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  * @author roland
  * @since 18/11/14
  */
-public interface ReferenceConfigHandler {
+public interface ExternalConfigHandler {
 
     /**
      * Get the unique type of this plugin as referenced with the <code>&lt;type&gt;</code> tag within a
