@@ -22,8 +22,12 @@ are two flavor of tests
 For running the tests call
 
 ```bash
+# Use two ("data" and "server") connected containers
 mvn clean install
+# Use a single image with tomcat and data:
 mvn -Pmerge clean install
+# Use a property based configuration:
+mvn -Pprops clean install
 ```
 
 The sever used is by default Tomcat 7. This server can easily be
