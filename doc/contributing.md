@@ -1,8 +1,8 @@
 # Contributing
 
 Pull requests are highly appreciated and most of them get applied. However, you
-must sign-off your code so that you certify that your  contributions is is compatible with the
-license of this project (which is the APL 2, see [LICENSE](../LICENSE)). The sign-off also certifies
+must sign-off your code so that you certify that your  contributions is compatible with the
+license of this project (which is the [Apache Public License 2](../LICENSE)). The sign-off also certifies
 that you wrote it or otherwise have the right to
 pass it on as an open-source patch under the APL 2.  The rules are simple: if you
 can certify the below (from
@@ -46,7 +46,7 @@ By making a contribution to this project, I certify that:
     this project or the open source license(s) involved.
 ```
 
-Then you just add a line to every git commit message:
+then you just add a line to every git commit message:
 
     Signed-off-by: Joe Smith <joe.smith@email.com>
 
@@ -61,8 +61,4 @@ with an interactive rebase before sending the pull request. And of course your p
 rebased to the current master. All this is nicely explained [here](https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request).
 
 Said all this, don't hesitate to ask when there are any problems or you have an issue with this process.
-
-
-
-
 
