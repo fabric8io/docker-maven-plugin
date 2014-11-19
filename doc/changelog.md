@@ -4,6 +4,10 @@
 
 New configuration syntax with support for multiple containers 
 
+* **0.10.5**
+  - Add hooks for external configurations
+  - Add property based configuration for images (#42)
+
 * **0.10.4**
   - Restructured and updated documentation
   - Fixed push issue when using a private registry (#40)
