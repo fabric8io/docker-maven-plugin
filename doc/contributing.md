@@ -1,14 +1,10 @@
 # Contributing
 
 Pull requests are highly appreciated and most of them get applied. However, you
-must sign off your code so that you certify that your  contributions is is compatible with the
-license of this project (which is the APL 2, see [LICENSE](../LICENSE)).
-
-### Sign your work
-
-The sign-off is a simple line at the end of the explanation for the
-patch, which certifies that you wrote it or otherwise have the right to
-pass it on as an open-source patch.  The rules are pretty simple: if you
+must sign-off your code so that you certify that your  contributions is is compatible with the
+license of this project (which is the APL 2, see [LICENSE](../LICENSE)). The sign-off also certifies
+that you wrote it or otherwise have the right to
+pass it on as an open-source patch under the APL 2.  The rules are simple: if you
 can certify the below (from
 [developercertificate.org](http://developercertificate.org/)):
 
@@ -54,17 +50,17 @@ Then you just add a line to every git commit message:
 
     Signed-off-by: Joe Smith <joe.smith@email.com>
 
-Using your real name (sorry, no pseudonyms or anonymous contributions.)
+with your real name (first and last name)
 
 If you set your `user.name` and `user.email` git configs, you can sign your
-commit automatically with `git commit -s`. If you forgot this you can use `git commit -s --amend`
-to add this in retrospective for the last commit.
+commit automatically with `git commit -s`. If you forgot this you can
+use `git commit -s --amend` to add this in retrospective for the last commit.
 
 When sending pull request we prefer that to be a single commit. So please squash your commits
 with an interactive rebase before sending the pull request. And of course your pull request should be
 rebased to the current master. All this is nicely explained [here](https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request).
 
-Said all this, don't hesitate to ask when there are any problems.
+Said all this, don't hesitate to ask when there are any problems or you have an issue with this process.
 
 
 

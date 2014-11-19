@@ -32,7 +32,7 @@ The documenttion is splitted into several parts:
   setups which you can use as blueprints for your own projects.
 * [Migration Guide](doc/migration-0.9.x.md) for migration from pre-0.10.x versions.
 * [ChangeLog](doc/changelog.md) contains the history for this plugin.
-* [Contributing](doc/contributing.md) explains how you can contribute to this project. Pull requests are highly appreciated !
+* [Contributing](doc/contributing.md) explains how you can contribute to this project. Pull requests are highly appreciated!
   
 
 
