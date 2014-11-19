@@ -89,7 +89,7 @@
                 <env>
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
                   <!-- Base starts jolokia by default. With this, it can be disabled -->
-                  <JOLOKIA_OFF/>
+                  <JOLOKIA_OFF>1</JOLOKIA_OFF>
                 </env>
                 <ports>
                   <!-- Port mappings: Container internal port (which must be exposed) will be

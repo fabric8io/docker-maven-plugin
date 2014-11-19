@@ -7,6 +7,7 @@
   - [`docker:build`](#dockerbuild)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
+* []
 * [Authentication](#authentication)
 
 ## User Manual
@@ -135,7 +136,7 @@ The `<image>` element can contain the following sub elements:
 * **name** : Each `<image>` configuration has a mandatory, unique docker
   repository *name*. This can include registry and tag parts, too. For
   definition of the repository name please refer to the
-  [Docker documentation]()
+  Docker documentation
 * **alias** is a shortcut name for an image which can be used for
   identifying the image within this configuration. This is used when
   linking images together or for specifying it with the global
@@ -144,10 +145,15 @@ The `<image>` element can contain the following sub elements:
   aspects when doing a `docker:build` or `docker:push`. This element
   can be omitted if the image is only pulled from a registry e.g. as
   support for integration tests like database images.
-* **run** contains subelement which describe how containers should be
+* **run** contains subelements which describe how containers should be
   created and run when `docker:start` or `docker:stop` is called. If
-  this image is only used a *data container* for exporting artefacts
+  this image is only used a *data container* for exporting artifacts
   via volumes this section can be missing.
+* **reference** can be used to fetch the configuration through other
+  means than the intrinisic configuration with `run` and `build`. It
+  contains a `<type>` element specifying the handler for getting the
+  configuration. See [External configuration](#external-configuration)
+  for details.
 
 Either `<build>` or `<run>` must be present. They are explained in
 detail in the corresponding goal sections.
@@ -321,7 +327,7 @@ at most. You can use maven properties in each
 condition, too. In the example, the `${host.port}` propertu is
 probably set before within a port mapping section. 
 
-### `docker:stop`
+#### `docker:stop`
 
 Stops and removes a docker container. This goals starts every
 container started with `<docker:stop>` either during the same build
@@ -350,7 +356,7 @@ Example:
 
     $ mvn -Ddocker.keepRuning clean install
 
-### `docker:build`
+#### `docker:build`
 
 This goal will build all images which have a `<build>` configuration
 section, or, if the global configuration `image` is set, only those
@@ -397,7 +403,7 @@ Here's an example:
 </build>
 ````
 
-#### Docker Assembly
+##### Docker Assembly
 
 With using the `assemblyDescriptor` or `assemblyDescriptorRef` option
 it is possible to bring local files, artifacts and dependencies into
@@ -456,7 +462,7 @@ Another container can now connect to the volume an 'mount' the
 into `/maven` and copy over everything to `/opt/tomcat/webapps` before
 starting Tomcat.
 
-### `docker:push`
+#### `docker:push`
 
 This goals uploads images to the registry which have a `<build>`
 configuration section. The images to push can be restricted with with
@@ -469,7 +475,7 @@ with tag `1.5` to the registry `docker.test.org` at port
 `5000`. Security information (i.e. user and password) can be specified
 in multiple ways as described in an extra [section](#authentication).
 
-### `docker:remove`
+#### `docker:remove`
 
 This goal can be used to clean up images and containers. By default
 all so called *data images* are removed with its containers. A data
@@ -487,6 +493,97 @@ only data images this example demonstrates the effect of this goal:
 * `mvn -Ddocker.image=data,tomcat docker:remove` will remove 'data'
 * `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove`
   will remove 'data' and 'tomcat' 
+
+### External Configuration
+
+For special configuration needs there is the possibility to get the
+runtime and build configuration from places outside the plugin's
+configuration. This is done with the help of `<reference>`
+configuration sections which at least has a `<type>` subelement. This
+`<type>` element selects a specific so called "handler" which is
+responsible for creating the full image configuration. A handler can
+decided to use the `<run>` and `<build>` configuration which could
+be provided in addition to this `<reference>` section or it can decide
+to completely ignore any extra configuration option. 
+
+A handler can also decide to expand this single image configuration to
+a list of image configurations. The image configurations resulting
+from such a reference configuration are added to the *regular*
+`<image>` configurations without a `<reference>` section.
+
+The available handlers are described in the following. 
+
+#### Property based Configuration
+
+For simple needs the image configuration can be completely defined via
+Maven properties which are defined outside of this plugin's
+configuration. Such a property based configuration can be selected
+with an `<type>` of `props`. As extra configuration a prefix for the
+properties can be defined which by default is `docker`.
+
+Example:
+
+```xml
+<image>
+  <reference>
+     <type>props</type>
+     <prefix>docker</prefix> <!-- this is the default -->
+  </reference>
+</image>
+```
+
+Given this example configuration a single image configuration is build
+up from the following properties, which correspond to corresponding
+values in the `<build>` and `<run>` sections.
+
+* **docker.name** Image name
+* **docker.alias** Alias name
+* **docker.from** Base image for building an image
+* **docker.assemblyDescriptor** Path to the assembly descriptor when
+  building an image
+* **docker.assemblyDescriptorRef** Name of a predefined assembly to
+  use. 
+* **docker.exportDir** Directory name for the exported artifacts as
+  described in an assembly (which is `/maven` by default).
+* **docker.registry** Registry to use for pushing images.
+* **docker.command** Command to execute. This is used both when
+  running a container and as default command when creating an image.
+* **docker.env.VARIABLE** Sets an environment
+  variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>`
+  sets the environment variable `JAVA_OPTS`. Multiple such entries can
+  be provided. This environment is used both for building images and
+  running containers. The value cannot be empty.
+* **docker.ports.PROP** Sets a port mapping. For example
+  `<docker.ports.jolokia.port>8080<docker.ports.jolokia.port>` maps
+  the container port 8080 dyamically to a host port and assigns this
+  host port to the Maven property `${jolokia.port}`. See
+  [Port mapping](#port-mapping) for possible mapping options. For
+  creating images only the value is used for exposing the port.
+* **docker.portPropertyFile** specifies a path to a port mapping used
+  when starting a container.
+* **docker.links.idx** defines a list of links to other containers when
+  starting a container. *idx* can be any suffix which is not use
+  except when *idx* is numeric it specifies the order within the
+  list (i.e. the list contains first a entries with numeric
+  indexes sorted and the all non-numeric indexes in arbitrary order).
+  For example `<docker.links.1>db</docker.links.1>` specifies a link
+  to the image with alias 'db'.
+* **docker.volumesFrom.idx** defines a list of image aliases from which
+  the volumes should be mounted of the container. The list semantics
+  is the same as for links (see above). For examples
+  `<docker.volumesFrom.1>data</docker.volumesFrom.1>` will mount all
+  volumes exported by the `data` image.
+* **docker.wait.url** URL to wait for during startup of a container
+* **docker.wait.time** Amount of time to wait during startup of a
+    container (in ms)
+* **docker.wait.log** Wait for a log output to appear.
+
+Any other `<run>` or `<build>` sections are ignored when this handler
+is used. Multiple property configuration handlers can be used if they
+use different prefixes. As stated above the environment and ports
+configuration are both used for running container and building
+images. If you need a separate configuration you should use explicit
+run and build configuration sections.
 
 ### Authentication
 

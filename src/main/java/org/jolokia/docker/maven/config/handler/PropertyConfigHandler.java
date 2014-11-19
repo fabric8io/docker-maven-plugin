@@ -70,7 +70,7 @@ public class PropertyConfigHandler implements ReferenceConfigHandler {
                 .env(extractFromPropertiesAsMap(prefix + ".env", properties))
                 .ports(extractPorts(prefix + ".ports", properties))
                 .links(extractFromPropertiesAsList(prefix + ".links", properties))
-                .volumes(extractFromPropertiesAsList(prefix + ".volumes", properties))
+                .volumes(extractFromPropertiesAsList(prefix + ".volumesFrom", properties))
                 .portPropertyFile(withPrefix(prefix, "portPropertyFile", properties))
                 .build();
     }
