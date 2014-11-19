@@ -22,7 +22,7 @@
 
     <component>
       <role>org.jolokia.docker.maven.config.handler.ReferenceConfigHandler</role>
-      <implementation>org.jolokia.docker.maven.config.handler.Fabric8ConfigHandler</implementation>
+      <implementation>org.jolokia.docker.maven.config.handler.PropertyConfigHandler</implementation>
     </component>
   </components>
 </component-set>

@@ -161,7 +161,17 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder env(Map<String, String> values) {
         this.envEntries = values != null ? values : new HashMap<String,String>();
+        validateEnv(envEntries);
         return this;
+    }
+
+    private void validateEnv(Map<String,String> env) {
+        for (Map.Entry<String,String> entry : env.entrySet()) {
+            if (entry.getValue() == null || entry.getValue().length() == 0) {
+                throw new IllegalArgumentException("Environment variable '" +
+                                                   entry.getKey() + "' must not be null or empty if building an image");
+            }
+        }
     }
 
     // All entries required, destination is relative to exportDir

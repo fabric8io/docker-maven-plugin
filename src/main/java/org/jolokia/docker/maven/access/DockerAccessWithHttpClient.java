@@ -385,6 +385,11 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         if (env != null && env.size() > 0) {
             JSONArray a = new JSONArray();
             for (Map.Entry<String,String> entry : env.entrySet()) {
+                String value = entry.getValue();
+                if (value == null || value.length() == 0) {
+                    throw new IllegalArgumentException("Env variable '" + entry.getKey() +
+                                                       "' must not be null or empty when running " + image);
+                }
                 a.put(entry.getKey() + "=" + entry.getValue());
             }
             ret.put("Env", a);

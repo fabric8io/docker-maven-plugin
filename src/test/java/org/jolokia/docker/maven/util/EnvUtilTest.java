@@ -68,5 +68,36 @@ public class EnvUtilTest {
         assertEquals(newProps.get("test2"),"blub");
     }
 
+    @Test
+    public void extractMapFromProperties() {
+        Properties props = getTestProperties(
+                "bla.hello","world",
+                "bla.max","morlock",
+                "blub.not","aMap");
+        Map<String,String> result = EnvUtil.extractFromPropertiesAsMap("bla", props);
+        assertEquals(2,result.size());
+        assertEquals("world",result.get("hello"));
+        assertEquals("morlock",result.get("max"));
+    }
+
+    @Test
+    public void extractListFromProperties() {
+        Properties props = getTestProperties(
+                "bla.2","world",
+                "bla.1","hello",
+                "bla.blub","last",
+                "blub.1","unknown");
+        List<String> result = EnvUtil.extractFromPropertiesAsList("bla",props);
+        assertEquals(3,result.size());
+        assertArrayEquals(new String[] {"hello","world","last"}, new ArrayList(result).toArray());
+    }
+
+    private Properties getTestProperties(String ... vals) {
+        Properties ret = new Properties();
+        for (int i = 0; i < vals.length; i+=2) {
+            ret.setProperty(vals[i],vals[i+1]);
+        }
+        return ret;
+    }
 
 }

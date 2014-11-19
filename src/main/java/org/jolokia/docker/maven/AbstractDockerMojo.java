@@ -39,65 +39,46 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     public static final String DOCKER_HTTPS_PORT = "2376";
 
     // Current maven project
-    /**
-     * @component
-     */
+    /** @parameter default-value="${project}" */
     protected MavenProject project;
 
     // Settings holding authentication info
-    /**
-     * @component
-     */
+    /** @component */
     protected Settings settings;
 
     // Handler for external configurations
-    /**
-     * @component
-     */
+    /** @component */
     protected ImageConfigResolver imageConfigResolver;
 
     // URL to docker daemon
-    /**
-     * @parameter property = "docker.host"
-     */
+    /** @parameter property = "docker.host" */
     private String dockerHost;
 
-    /**
-     * @parameter property = "docker.certPath"
-     */
+    /** @parameter property = "docker.certPath" */
     private String certPath;
 
     // Whether to use color
-    /**
-     * @parameter property = "docker.useColor" default-value = "true"
-     */
+    /** @parameter property = "docker.useColor" default-value = "true" */
     private boolean useColor;
 
     // Whether to skip docker altogether
-    /**
-     * @parameter property = "docker.skip" default-value = "false"
-     */
+    /** @parameter property = "docker.skip" default-value = "false" */
     private boolean skip;
 
     // Whether to restrict operation to a single image. This can be either
     // the image or an alias name
-    /**
-     * @parameter property = "docker.image"
-     */
+    /** @parameter property = "docker.image" */
     private String image;
 
     // Authentication information
-    /**
-     * @parameter
-     */
+    /** @parameter */
     Map authConfig;
 
     // Relevant configuration to use. This includes also references to external
     // images
     /**
      * @parameter
-     * @required
-     */
+     * @required */
     private List<ImageConfiguration> images;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
@@ -223,7 +204,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     private List<ImageConfiguration> resolveImages() {
         List<ImageConfiguration> ret = new ArrayList<>();
         for (ImageConfiguration image : images) {
-            ret.addAll(imageConfigResolver.resolve(image));
+            ret.addAll(imageConfigResolver.resolve(image,project.getProperties()));
         }
         return ret;
     }

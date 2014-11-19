@@ -16,6 +16,7 @@ package org.jolokia.docker.maven.config.handler;/*
  */
 
 import java.util.List;
+import java.util.Properties;
 
 import org.jolokia.docker.maven.config.ImageConfiguration;
 
@@ -40,10 +41,9 @@ public interface ReferenceConfigHandler {
      * For the given plugin configuration (which also contains the type) extract one or more
      * {@link ImageConfiguration} objects describing the image to manage
      *
-     * TODO: Think about adding some Maven context to the argument list
-     *
      * @param unresolvedConfig the original, unresolved config
+     * @param properties extra properties used for resolving
      * @return list of image configuration. Must not be null but can be empty.
      */
-    List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig);
+    List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties);
 }

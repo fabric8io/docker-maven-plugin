@@ -5,7 +5,6 @@ import java.io.File;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
@@ -43,11 +42,6 @@ public class BuildMojo extends AbstractDockerMojo {
      * @component
      */
     private MavenFileFilter mavenFileFilter;
-
-    /**
-     * @component
-     */
-    protected MavenProject project;
 
     /**
      * @component

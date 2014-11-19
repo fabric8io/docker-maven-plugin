@@ -43,7 +43,7 @@ public class ImageConfigResolverTest {
 
     @Test
     public void direct() throws IllegalAccessException, InitializationException {
-        List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"));
+        List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"),null);
         assertEquals(1, rest.size());
         assertEquals("vanilla", rest.get(0).getName());
     }
@@ -52,7 +52,7 @@ public class ImageConfigResolverTest {
     public void withReference() throws Exception {
         Map<String,String> refConfig = Collections.singletonMap("type", "test");
         ImageConfiguration config = new ImageConfiguration.Builder().name("reference").referenceConfig(refConfig).build();
-        List<ImageConfiguration> rest = resolver.resolve(config);
+        List<ImageConfiguration> rest = resolver.resolve(config,null);
         assertEquals(3,rest.size());
         for (int i = 0; i < 3;i++) {
             assertEquals("image " + i,rest.get(i).getName());
@@ -65,7 +65,7 @@ public class ImageConfigResolverTest {
         ImageConfiguration config = new ImageConfiguration.Builder()
                 .name("reference")
                 .referenceConfig(refConfig).build();
-        resolver.resolve(config);
+        resolver.resolve(config,null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -74,7 +74,7 @@ public class ImageConfigResolverTest {
         ImageConfiguration config = new ImageConfiguration.Builder()
                 .name("reference")
                 .referenceConfig(refConfig).build();
-        resolver.resolve(config);
+        resolver.resolve(config,null);
     }
 
     private static class TestHandler implements ReferenceConfigHandler {
@@ -91,7 +91,7 @@ public class ImageConfigResolverTest {
         }
 
         @Override
-        public List<ImageConfiguration> resolve(ImageConfiguration referenceConfig) {
+        public List<ImageConfiguration> resolve(ImageConfiguration referenceConfig, Properties properties) {
             List<ImageConfiguration> ret = new ArrayList<>();
             for (int i = 0; i < nr;i++) {
                 ImageConfiguration config = getImageConfiguration("image " + i);
