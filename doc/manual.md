@@ -494,7 +494,7 @@ only data images this example demonstrates the effect of this goal:
 * `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove`
   will remove 'data' and 'tomcat' 
 
-### External Configuration
+### External Configuration (since 0.10.5)
 
 For special configuration needs there is the possibility to get the
 runtime and build configuration from places outside the plugin's
