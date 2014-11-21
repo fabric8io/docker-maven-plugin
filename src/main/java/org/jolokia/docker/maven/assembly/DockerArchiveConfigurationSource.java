@@ -10,6 +10,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -93,6 +94,11 @@ public class DockerArchiveConfigurationSource implements AssemblerConfigurationS
         return null;
     }
 
+    @Override
+    public List<String> getDelimiters() {
+        return null;
+    }
+
     // X
     public MavenProject getProject() {
         return params.getProject();
@@ -121,6 +127,11 @@ public class DockerArchiveConfigurationSource implements AssemblerConfigurationS
     // X
     public List<String> getFilters() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isIncludeProjectBuildFilters() {
+        return true;
     }
 
     // X
@@ -170,6 +181,11 @@ public class DockerArchiveConfigurationSource implements AssemblerConfigurationS
 
     // X: (maybe inject MavenArchiveConfiguration)
     public String getArchiverConfig() {
+        return null;
+    }
+
+    @Override
+    public MavenReaderFilter getMavenReaderFilter() {
         return null;
     }
 

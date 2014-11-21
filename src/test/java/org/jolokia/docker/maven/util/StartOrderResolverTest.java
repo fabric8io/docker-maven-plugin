@@ -1,9 +1,7 @@
 package org.jolokia.docker.maven.util;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
