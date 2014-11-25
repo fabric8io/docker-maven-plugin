@@ -76,6 +76,7 @@
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
         <configuration>
+          <logDate>default</logDate>
           <images>
             <!-- Docker Image to use -->
             <image>
@@ -99,9 +100,14 @@
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
+                  <log>Server startup</log>
                   <url>http://localhost:${jolokia.port}/jolokia</url>
                   <time>10000</time>
                 </wait>
+                <log>
+                  <enabled>true</enabled>
+                  <color>red</color>
+              </log>
               </run>
             </image>
             <image>

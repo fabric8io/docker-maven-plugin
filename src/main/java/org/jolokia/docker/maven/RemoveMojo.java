@@ -18,7 +18,7 @@ package org.jolokia.docker.maven;/*
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 
 /**
  * Mojo for removing images. By default only data images are removed. Data images are
@@ -44,6 +44,8 @@ public class RemoveMojo extends AbstractDockerMojo {
      * @parameter property = "docker.removeAll" default-value = "false"
      */
     private boolean removeAll;
+    /** @parameter property = "docker.showLogs" default-value="false" */
+    private boolean showLogs;
 
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
@@ -56,6 +58,21 @@ public class RemoveMojo extends AbstractDockerMojo {
                     }
                 }
             }
+        }
+    }
+
+    protected boolean showLog(ImageConfiguration imageConfig) {
+        if (showLogs) {
+            return true;
+        } else {
+            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            if (runConfig != null) {
+                LogConfiguration logConfig = runConfig.getLog();
+                if (logConfig != null) {
+                    return logConfig.isEnabled();
+                }
+            }
+            return false;
         }
     }
 }

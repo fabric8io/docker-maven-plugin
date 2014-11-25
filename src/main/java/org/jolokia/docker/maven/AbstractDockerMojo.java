@@ -11,11 +11,17 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
+import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
+import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.util.*;
+
+import static org.fusesource.jansi.Ansi.Color.*;
+import static org.fusesource.jansi.Ansi.ansi;
 
 /**
  * Base class for this plugin.
@@ -33,6 +39,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
+
+    // Key holding the log dispatcher
+    public static final Object CONTEXT_KEY_LOG_DISPATCHER = "CONTEXT_KEY_DOCKER_LOG_DISPATCHER";
 
     // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
     // docker installations.
@@ -57,16 +66,23 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** @parameter property = "docker.certPath" */
     private String certPath;
 
+    // If logging is enabled globally
+
     // Whether to use color
     /** @parameter property = "docker.useColor" default-value = "true" */
-    private boolean useColor;
+    protected boolean useColor;
+
+    // The date format to use when putting out logs
+    /** @parameter property = "docker.logDate" */
+    private String logDate;
 
     // Whether to skip docker altogether
     /** @parameter property = "docker.skip" default-value = "false" */
     private boolean skip;
 
     // Whether to restrict operation to a single image. This can be either
-    // the image or an alias name
+    // the image or an alias name. It can also be comma separated list.
+    // This parameter is typically set via the command line.
     /** @parameter property = "docker.image" */
     private String image;
 
@@ -82,7 +98,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     private List<ImageConfiguration> images;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
-    private String errorHlColor,infoHlColor,warnHlColor,resetColor,progressHlColor;
+    private Ansi.Color
+            COLOR_ERROR = RED,
+            COLOR_INFO = GREEN,
+            COLOR_WARNING = YELLOW,
+            COLOR_PROGRESS = CYAN;
 
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
@@ -107,7 +127,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
             try {
                 executeInternal(access);
             } catch (DockerAccessException exp) {
-                throw new MojoExecutionException(errorHlColor + exp.getMessage() + resetColor, exp);
+                throw new MojoExecutionException(ansi().fg(COLOR_ERROR).a(exp.getMessage()).reset().toString(), exp);
             } finally {
                 access.shutdown();
             }
@@ -193,9 +213,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     protected List<ImageConfiguration> getImages() {
         List<ImageConfiguration> resolvedImages = resolveImages();
         List<ImageConfiguration> ret = new ArrayList<>();
-        for (ImageConfiguration image : resolvedImages) {
-            if (matchesConfiguredImages(image)) {
-                ret.add(image);
+        for (ImageConfiguration imageConfig : resolvedImages) {
+            if (matchesConfiguredImages(this.image, imageConfig)) {
+                ret.add(imageConfig);
             }
         }
         return ret;
@@ -209,12 +229,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         return ret;
     }
 
-    private boolean matchesConfiguredImages(ImageConfiguration image) {
-        if (this.image == null) {
+    // Check if the provided image configuration matches the given
+    protected boolean matchesConfiguredImages(String imageList, ImageConfiguration imageConfig) {
+        if (imageList == null) {
             return true;
         }
-        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(this.image.split("\\s*,\\s*")));
-        return imagesAllowed.contains(image.getName()) || imagesAllowed.contains(image.getAlias());
+        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(imageList.split("\\s*,\\s*")));
+        return imagesAllowed.contains(imageConfig.getName()) || imagesAllowed.contains(imageConfig.getAlias());
     }
 
     // =================================================================================
@@ -254,19 +275,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     // Color init
     private void colorInit() {
-        if (useColor && System.console() != null) {
+        if (System.console() == null) {
+            useColor = false;
+        }
+        if (useColor) {
             AnsiConsole.systemInstall();
-            errorHlColor = "\u001B[0;31m";
-            infoHlColor = "\u001B[0;32m";
-            resetColor = "\u001B[0;39m";
-            warnHlColor = "\u001B[0;33m";
-            progressHlColor = "\u001B[0;36m";
+            Ansi.setEnabled(true);
         } else {
-            errorHlColor = "";
-            infoHlColor = "";
-            resetColor = "";
-            warnHlColor = "";
-            progressHlColor = "";
+            Ansi.setEnabled(false);
         }
     }
 
@@ -276,11 +292,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
     /** {@inheritDoc} */
     public void info(String info) {
-        getLog().info(infoHlColor + LOG_PREFIX + info + resetColor);
+        getLog().info(ansi().fg(COLOR_INFO).a(LOG_PREFIX).a(info).reset().toString());
     }
     /** {@inheritDoc} */
     public void warn(String warn) {
-        getLog().warn(warnHlColor + LOG_PREFIX + warn + resetColor);
+        getLog().warn(ansi().fg(COLOR_WARNING).a(LOG_PREFIX).a(warn).reset().toString());
     }
     /** {@inheritDoc} */
     public boolean isDebugEnabled() {
@@ -288,7 +304,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
     /** {@inheritDoc} */
     public void error(String error) {
-        getLog().error(errorHlColor + error + resetColor);
+        getLog().error(ansi().fg(COLOR_ERROR).a(error).reset().toString());
     }
 
     private int oldProgress = 0;
@@ -299,7 +315,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** {@inheritDoc} */
     public void progressStart(int t) {
         if (getLog().isInfoEnabled()) {
-            print(progressHlColor + "       ");
+            print(ansi().fg(COLOR_PROGRESS) + "       ");
             oldProgress = 0;
             total = t;
         }
@@ -322,7 +338,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** {@inheritDoc} */
     public void progressFinished() {
         if (getLog().isInfoEnabled()) {
-            println(resetColor);
+            println(ansi().reset().toString());
             oldProgress = 0;
             total = 0;
         }
@@ -346,6 +362,62 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
 
     protected static String getContainerAndImageDescription(String container, String description) {
         return container.substring(0, 12) + " " + description;
+    }
+
+    protected LogDispatcher getLogDispatcher(DockerAccess docker) {
+        LogDispatcher dispatcher = (LogDispatcher) getPluginContext().get(CONTEXT_KEY_LOG_DISPATCHER);
+        if (dispatcher == null) {
+            dispatcher = new LogDispatcher(docker,useColor);
+            dispatcher.addLogOutputStream(System.out);
+            getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER,dispatcher);
+        }
+        return dispatcher;
+    }
+
+    protected ContainerLogOutputSpec getContainerLogSpec(String containerId, ImageConfiguration imageConfiguration) {
+        ContainerLogOutputSpec.Builder builder = new ContainerLogOutputSpec.Builder();
+        LogConfiguration logConfig = extractLogConfiguration(imageConfiguration);
+
+        addLogFormat(builder, logConfig);
+        addPrefix(builder, logConfig.getPrefix(), imageConfiguration.getAlias(), containerId);
+
+        builder.containerId(containerId)
+                .color(logConfig.getColor());
+
+        return builder.build();
+    }
+
+    private void addPrefix(ContainerLogOutputSpec.Builder builder, String logPrefix, String alias, String containerId) {
+        String prefix = logPrefix;
+        if (prefix == null) {
+            prefix = alias;
+        }
+        if (prefix == null) {
+            prefix = containerId.substring(0,6);
+        }
+        builder.prefix(prefix);
+    }
+
+    private void addLogFormat(ContainerLogOutputSpec.Builder builder, LogConfiguration logConfig) {
+        String logFormat = logConfig.getDate() != null ? logConfig.getDate() : logDate;
+        if (logFormat != null && logFormat.equalsIgnoreCase("true")) {
+            logFormat = "DEFAULT";
+        }
+        if (logFormat != null) {
+            builder.timeFormatter(logFormat);
+        }
+    }
+
+    private LogConfiguration extractLogConfiguration(ImageConfiguration imageConfiguration) {
+        RunImageConfiguration runConfig = imageConfiguration.getRunConfiguration();
+        LogConfiguration logConfig = null;
+        if (runConfig != null) {
+            logConfig = runConfig.getLog();
+        }
+        if (logConfig == null) {
+            logConfig = LogConfiguration.DEFAULT;
+        }
+        return logConfig;
     }
 
     // ==========================================================================================

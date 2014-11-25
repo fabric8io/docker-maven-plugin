@@ -7,6 +7,7 @@
   - [`docker:build`](#dockerbuild)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
+  - [`docker:log`](#dockerlog)
 * [External Configuration](#external-configuration)
 * [Authentication](#authentication)
 
@@ -113,6 +114,10 @@ parentheses.
 * **authConfig** holds the authencation information when pulling from
   or pushing to Docker registry. There is a dedicated
   [section](#authentication) for how doing security.
+* **logDate** (`docker.logDate`) specifies the date format which is used for printing out
+  container logs. This configuration can be overwritten by individual
+  run configurations and described below. The format is described in
+  the [section](#log-configuration) below. 
 
 Example:
 
@@ -128,7 +133,7 @@ Example:
 ### Image configuration
 
 The plugin's configuration is centered around *images*. These are
-specified for each image within the `<images>` element of the
+lockspecified for each image within the `<images>` element of the
 configuration with one `<image>` element per image to use. 
 
 The `<image>` element can contain the following sub elements:
@@ -156,7 +161,7 @@ The `<image>` element can contain the following sub elements:
   for details.
 
 Either `<build>` or `<run>` must be present. They are explained in
-detail in the corresponding goal sections.
+details in the corresponding goal sections.
 
 Example:
 
@@ -186,6 +191,7 @@ in the following sections.
 | [`docker:build`](#dockerbuild)   | Build images                         |
 | [`docker:push`](#dockerpush)     | Push images to a registry            |
 | [`docker:remove`](#dockerremove) | Remove images from local docker host |
+| [`docker:log`](#dockerlog)       | Show container logs                  |
 
 Note that all goals are orthogonal to each other. For example in order
 to start a container for your application you typically have to build
@@ -218,6 +224,15 @@ The `<run>` configuration knows the following sub elements:
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup) which subelements are
   available and how they can be specified.
+* **log** specifies the log configuration for whether and how log
+  messages from the running containers should be printed. See
+  [below](#log-configuration) for a detailed description of this configuration
+  section. 
+* **showLogs** allows, if set, to see all standard output and standard
+  error messages for all containers selected. As value the images for
+  which logs should be shown can be given as a comma separated
+  list. This is probably most useful when used from the command line
+  as system property `docker.showLogs`.   
 
 Example:
 
@@ -363,6 +378,41 @@ This setup will wait for the given URL to be reachable but ten seconds
 at most. You can use maven properties in each
 condition, too. In the example, the `${host.port}` propertu is
 probably set before within a port mapping section. 
+
+##### Log configuration
+
+When running containers the standard output and standard error of the
+container can be printed out. Several options are available for
+configuring the log output:
+
+* **enabled** If given and set to `false` log output is disabled. This
+  is useful if you want to disable log output by default but want to
+  use the other configuration options when log output is switched on
+  on the command line with `-Ddocker.showLogs`. Logging is enabled by
+  default if a `<log>` section is given.
+* **prefix** Prefix to use for the log output in order to identify the
+  container. By default the image `alias` is used or alternatively the
+  container `id`. 
+* **date** Dateformat to use for log timestamps. If `<date>` is not
+  given no timestamp will be shown. The date specification can be
+  either a constant or a date format. The recognized constants are:
+  * `NONE` Switch off timestamp output. Useful on the command line
+    (`-Ddocker.logDate=NONE`) for switching off otherwise enabled
+    logging. 
+  * `DEFAULT` A default format in the form `HH:mm:ss.SSS`
+  * `MEDIUM` Joda medium date time format
+  * `SHORT` Joda short date time format
+  * `LONG` Joda long date time format
+  * `ISO8601` Full ISO-8601 formatted date time with milli seconds
+  As an alternative a date-time format string as recognized by
+  [JodaTime](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html)
+  is possible. In order to set a consistent date format 
+  the global configuration parameter `logDate` can be used.
+* **color** Color used for coloring the prefix when coloring is enabeld
+  (i.e. if running in a console and `useColor` is set). The available
+  colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If
+  coloring is enabled and now color is provided a color is picked for
+  you. 
 
 #### `docker:stop`
 
@@ -531,6 +581,36 @@ only data images this example demonstrates the effect of this goal:
 * `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove`
   will remove 'data' and 'tomcat' 
 
+#### `docker:log`
+
+With this goal it is possible to print out the logs of containers
+started from images configured in this plugin. By default only the
+latest container started is printed, but this can be changed with a
+property. The format of the log output is influenced by run
+configuration of the configured images. The following system
+properties can the behaviour of this goal:
+
+* **docker.logAll** if set to `true` the logs of all containers
+  created from images configured for this plugin are printed. The
+  container id is then prefixed before every log line. These images
+  can contain many containers which are already stopped. It is
+  probably a better idea to use `docker logs` diretly from the command
+  line. 
+* **docker.follow** if given will wait for subsequent log output until
+  CRTL-C is pressed. This is similar to the behaviour of `docker logs
+  -f` (or `tail -f`).
+* **docker.image** can be used to restrict the set of images for which
+  log should be fetched. This can be a comma separated list of image
+  or alias names. 
+* **docker.logDate** specifies the log date to use. See
+  "[Log configuration](log-configuration)" above for the available
+  formats. 
+
+Example:
+
+````
+$ mvn docker:log -Ddocker.follow -Ddocker.logDate=DEFAULT
+````
 ### External Configuration (since 0.10.5)
 
 For special configuration needs there is the possibility to get the

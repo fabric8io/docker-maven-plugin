@@ -27,12 +27,20 @@ public class WaitUtil {
         do {
             for (WaitChecker checker : checkers) {
                 if (checker.check()) {
+                    cleanup(checkers);
                     return delta(now);
                 }
             }
             sleep(WAIT_RETRY_WAIT);
         } while (delta(now) < max);
         return delta(now);
+    }
+
+    // Give checkers a possibility to clean up
+    private static void cleanup(WaitChecker[] checkers) {
+        for (WaitChecker checker : checkers) {
+            checker.cleanUp();
+        }
     }
 
     /**
@@ -84,11 +92,15 @@ public class WaitUtil {
                 return false;
             }
         }
+
+        @Override
+        public void cleanUp() { }
     }
 
     // ====================================================================================================
 
     public static interface WaitChecker {
         boolean check();
+        void cleanUp();
     }
 }

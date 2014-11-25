@@ -8,7 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * Entity holding port mappings which can be set throught the configuration.
+ * Entity holding port mappings which can be set through the configuration.
  *
  * @author roland
  * @since 04.04.14

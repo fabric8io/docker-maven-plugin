@@ -22,7 +22,10 @@ import java.util.regex.Pattern;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.access.log.LogCallback;
+import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -40,6 +43,9 @@ public class StartMojo extends AbstractDockerMojo {
      */
     private boolean autoPull;
 
+    /** @parameter property = "docker.showLog" */
+    private String showLog;
+
     // Map holding associations between started containers and their images via name and aliases
     // Key: Image, Value: Container
     private Map<String, String> containerImageNameMap = new HashMap<>();
@@ -53,8 +59,10 @@ public class StartMojo extends AbstractDockerMojo {
 
         getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
 
+        LogDispatcher dispatcher = getLogDispatcher(docker);
+
         for (StartOrderResolver.Resolvable resolvable : getImagesConfigsInOrder()) {
-            ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+            final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
             String imageName = imageConfig.getName();
             checkImage(docker,imageName);
 
@@ -69,7 +77,14 @@ public class StartMojo extends AbstractDockerMojo {
                                                       runConfig.getEnv());
             docker.startContainer(container,
                                   mappedPorts,
-                                  findContainersForImages(runConfig.getVolumesFrom()), findLinksWithContainerNames(docker,runConfig.getLinks()));
+                                  findContainersForImages(runConfig.getVolumesFrom()),
+                                  findLinksWithContainerNames(docker, runConfig.getLinks()));
+
+
+            if (showLog(imageConfig)) {
+                dispatcher.trackContainerLog(container, getContainerLogSpec(container, imageConfig));
+            }
+
             registerContainer(container, imageConfig);
             info("Created and started container " +
                  getContainerAndImageDescription(container, imageConfig.getDescription()));
@@ -85,9 +100,6 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Wait if requested
             waitIfRequested(runConfig,mappedPorts,docker,container);
-            if (isDebugEnabled()) {
-                debug(docker.getLogs(container));
-            }
         }
     }
 
@@ -95,7 +107,7 @@ public class StartMojo extends AbstractDockerMojo {
         try {
             return new PortMapping(runConfig.getPorts(), project.getProperties());
         } catch (IllegalArgumentException exp) {
-            throw new MojoExecutionException("Cannot parse portmapping",exp);
+            throw new MojoExecutionException("Cannot parse port mapping",exp);
         }
     }
 
@@ -177,7 +189,6 @@ public class StartMojo extends AbstractDockerMojo {
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
-            int maxTime = wait.getTime();
             ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
             ArrayList<String> logOut = new ArrayList<>();
             if (wait.getUrl() != null) {
@@ -197,14 +208,37 @@ public class StartMojo extends AbstractDockerMojo {
     private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final DockerAccess docker, final String containerId) {
         return new WaitUtil.WaitChecker() {
 
+            boolean first = true;
+            LogGetHandle logHandle;
+            boolean detected = false;
+
             @Override
             public boolean check() {
-                try {
-                    String log = docker.getLogs(containerId);
-                    Pattern pattern = Pattern.compile(logPattern);
-                    return pattern.matcher(log).find();
-                } catch (DockerAccessException e) {
-                    return false;
+                if (first) {
+                    final Pattern pattern = Pattern.compile(logPattern);
+                    logHandle = docker.getLogAsync(containerId, new LogCallback() {
+                        @Override
+                        public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
+                            if (pattern.matcher(txt).find()) {
+                                detected = true;
+                                throw new LogCallback.DoneException();
+                            }
+                        }
+
+                        @Override
+                        public void error(String error) {
+                            StartMojo.this.error(error);
+                        }
+                    });
+                    first = false;
+                }
+                return detected;
+            }
+
+            @Override
+            public void cleanUp() {
+                if (logHandle != null) {
+                    logHandle.finish();
                 }
             }
         };
@@ -227,6 +261,27 @@ public class StartMojo extends AbstractDockerMojo {
         // to maven to not allow late evaluation or any other easy way to inter-plugin communication
         if (portPropertyFile != null) {
             EnvUtil.writePortProperties(props, portPropertyFile);
+        }
+    }
+
+    protected boolean showLog(ImageConfiguration imageConfig) {
+        if (showLog != null) {
+            if (showLog.equalsIgnoreCase("true")) {
+                return true;
+            } else if (showLog.equalsIgnoreCase("false")) {
+                return false;
+            } else {
+                return matchesConfiguredImages(showLog,imageConfig);
+            }
+        } else {
+            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            if (runConfig != null) {
+                LogConfiguration logConfig = runConfig.getLog();
+                if (logConfig != null) {
+                    return logConfig.isEnabled();
+                }
+            }
+            return false;
         }
     }
 }

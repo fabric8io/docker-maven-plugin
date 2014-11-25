@@ -55,11 +55,16 @@ public class RunImageConfiguration {
      */
     private WaitConfiguration wait;
 
+    /**
+     * @parameter
+     */
+    private LogConfiguration log;
+
     public RunImageConfiguration() {}
 
     RunImageConfiguration(Map<String, String> env, String command, String portPropertyFile,
                           List<String> ports, List<String> volumes, List<String> links,
-                          WaitConfiguration wait) {
+                          WaitConfiguration wait, LogConfiguration log) {
         this.env = env;
         this.command = command;
         this.portPropertyFile = portPropertyFile;
@@ -67,6 +72,7 @@ public class RunImageConfiguration {
         this.volumes = volumes;
         this.links = links;
         this.wait = wait;
+        this.log = log;
     }
 
     public Map<String, String> getEnv() {
@@ -89,6 +95,10 @@ public class RunImageConfiguration {
         return wait;
     }
 
+    public LogConfiguration getLog() {
+        return log;
+    }
+
     public List<String> getVolumesFrom() {
         return volumes;
     }
@@ -107,6 +117,7 @@ public class RunImageConfiguration {
         private List<String> volumes;
         private List<String> links;
         private WaitConfiguration wait;
+        private LogConfiguration log;
 
         public Builder env(Map<String, String> env) {
             this.env = env;
@@ -143,9 +154,14 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder log(LogConfiguration log) {
+            this.log = log;
+            return this;
+        }
+
         public RunImageConfiguration build() {
             return new RunImageConfiguration(env, command, portPropertyFile, ports,
-                                             volumes, links, wait);
+                                             volumes, links, wait, log);
         }
     }
 }

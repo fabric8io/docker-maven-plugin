@@ -3,6 +3,9 @@ package org.jolokia.docker.maven.access;
 import java.io.File;
 import java.util.*;
 
+import org.jolokia.docker.maven.access.log.LogCallback;
+import org.jolokia.docker.maven.access.log.LogGetHandle;
+
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
  * provides the methods needed bu this maven plugin.
@@ -80,13 +83,31 @@ public interface DockerAccess {
     List<String> getContainersForImage(String image) throws DockerAccessException;
 
     /**
-     * Get logs for a container.
+     * Get the id of the newest container started for an image
      *
-     * @param containerId container id
-     * @return the logs for the given container
+     * @param image for which its container are looked up
+     * @return container id or <code>null</code> if no container has been started for this image.
      * @throws DockerAccessException if the request fails
      */
-    String getLogs(String containerId) throws DockerAccessException;
+    String getNewestImageForContainer(String image) throws DockerAccessException;
+
+    /**
+     * Get logs for a container up to now synchronously.
+     *
+     * @param containerId container id
+     * @param callback which is called for each line received
+     */
+    void getLogSync(String containerId, LogCallback callback);
+
+    /**
+     * Get logs asynchronously. This call will start a thread in the background for doing the request.
+     * It returns a handle which can be used to abort the request on demand.
+     *
+     * @param containerId id of the container for which to fetch the logs
+     * @param callback to call when log data arrives
+     * @return handle for managing the lifecycle of the thread
+     */
+    LogGetHandle getLogAsync(String containerId, LogCallback callback);
 
     /**
      * Remove a container with the given id
@@ -141,4 +162,5 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+
 }

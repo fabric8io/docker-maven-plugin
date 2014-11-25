@@ -1,8 +1,6 @@
 package org.jolokia.docker.maven.access;
 
 import java.io.*;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.*;
@@ -13,16 +11,23 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.FileEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
+import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.util.*;
 import org.json.*;
+
+import static org.jolokia.docker.maven.access.util.RequestUtil.*;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a> for accessing remotely
@@ -42,8 +47,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     // Used Docker API
     static private final String DOCKER_API_VERSION = "v1.10";
-    public static final String HEADER_ACCEPT = "Accept";
-    public static final String HEADER_ACCEPT_ALL = "*/*";
 
     // Logging
     private final LogHandler log;
@@ -138,30 +141,62 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     /** {@inheritDoc} */
     @Override
     public List<String> getContainersForImage(String image) throws DockerAccessException {
+        return getContainerIds(image,false);
+    }
+
+    @Override
+    public String getNewestImageForContainer(String image) throws DockerAccessException {
+        List<String> newestContainer = getContainerIds(image,true);
+        assert newestContainer.size() == 0 || newestContainer.size() == 1;
+        return newestContainer.size() == 0 ? null : newestContainer.get(0);
+    }
+
+    private List<String> getContainerIds(String image,boolean onlyLatest) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         HttpUriRequest req = newGet(baseUrl + "/containers/json?limit=100");
         HttpResponse resp = request(req);
         checkReturnCode("Fetching container information", resp, 200);
         JSONArray configs = asJsonArray(resp);
+        long newest = 0;
         for (int i = 0; i < configs.length(); i ++) {
             JSONObject config = configs.getJSONObject(i);
             String containerImage = config.getString("Image");
 
             if (image.equals(containerImage)) {
-                ret.add(config.getString("Id"));
+                String id = config.getString("Id");
+                if (!onlyLatest) {
+                    ret.add(id);
+                } else {
+                    int timestamp = config.getInt("Created");
+                    if (timestamp > newest) {
+                        newest = timestamp;
+                        if (ret.size() == 0) {
+                            ret.add(id);
+                        } else {
+                            ret.set(0, id);
+                        }
+                    }
+                }
             }
         }
         return ret;
     }
 
-    @Override
-    public String getLogs(final String containerId) throws DockerAccessException {
-        HttpUriRequest get = newGet(baseUrl + "/containers/" + encode(containerId) + "/logs?stdout=1&stderr=1");
 
-        HttpResponse resp = request(get);
-        checkReturnCode("Getting log for '" + containerId + "' ",resp,200);
-        return asString(resp);
+    @Override
+    public void getLogSync(String containerId, LogCallback callback) {
+        LogRequestor extractor = new LogRequestor(client, baseUrl, containerId, callback);
+        extractor.fetchLogs();
     }
+
+
+    @Override
+    public LogGetHandle getLogAsync(String containerId, LogCallback callback) {
+        LogRequestor extractor = new LogRequestor(client, baseUrl, containerId, callback);
+        extractor.start();
+        return extractor;
+    }
+
 
     /** {@inheritDoc} */
     @Override
@@ -177,8 +212,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         ImageName name = new ImageName(image);
         String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepository());
         pullUrl = addTag(pullUrl, name);
-        pullUrl = addRegistry(pullUrl,name);
-        pullOrPushImage(image,pullUrl,"pulling",authConfig);
+        pullUrl = addRegistry(pullUrl, name);
+        pullOrPushImage(image, pullUrl, "pulling", authConfig);
     }
 
     /** {@inheritDoc} */
@@ -187,7 +222,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         ImageName name = new ImageName(image);
         String pushUrl = baseUrl + "/images/" + encode(name.getRepositoryWithRegistry()) + "/push";
         pushUrl = addTag(pushUrl, name);
-        pullOrPushImage(image,pushUrl,"pushing",authConfig);
+            pullOrPushImage(image, pushUrl, "pushing", authConfig);
     }
 
     /** {@inheritDoc} */
@@ -219,57 +254,39 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     // HttpClient to use
     private HttpClient createHttpClient(String certPath) throws DockerAccessException {
         HttpClientBuilder builder = HttpClients.custom();
-        addSslSupportIfNeeded(builder,certPath);
-
+        PoolingHttpClientConnectionManager manager = getPoolingConnectionFactory(certPath);
+        manager.setDefaultMaxPerRoute(10);
+        builder.setConnectionManager(manager);
         // TODO: Tune client if needed (e.g. add pooling factoring .....
         // But I think, that's not really required.
 
         return builder.build();
     }
 
-    // Lookup a keystore and add it to the client
-    private void addSslSupportIfNeeded(HttpClientBuilder builder, String certPath) throws DockerAccessException {
+    private PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws DockerAccessException {
         if (certPath != null) {
-            try {
-                KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath);
-
-                SSLContext sslContext =
-                        SSLContexts.custom()
-                                   .useTLS()
-                                   .loadKeyMaterial(keyStore,"docker".toCharArray())
-                                   .loadTrustMaterial(keyStore)
-                                   .build();
-                SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
-                builder.setSSLSocketFactory(sslsf);
-            } catch (IOException | GeneralSecurityException e) {
-                throw new DockerAccessException("Cannot read keys and/or certs from " + certPath + ": " + e,e);
-            }
+            return new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath));
+        } else {
+            return new PoolingHttpClientConnectionManager();
         }
-
     }
 
-    // -----------------------
-    // Request related methods
-    private HttpUriRequest newGet(String url) {
-        return addDefaultHeaders(new HttpGet(url));
-    }
+    // Lookup a keystore and add it to the client
+    private Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws DockerAccessException {
+        try {
+            KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath);
 
-    private HttpUriRequest newPost(String url, String body) {
-        HttpPost post = new HttpPost(url);
-        if (body != null) {
-            post.setEntity(new StringEntity(body, Charset.defaultCharset()));
+            SSLContext sslContext =
+                    SSLContexts.custom()
+                               .useTLS()
+                               .loadKeyMaterial(keyStore, "docker".toCharArray())
+                               .loadTrustMaterial(keyStore)
+                               .build();
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+            return RegistryBuilder.<ConnectionSocketFactory> create().register("https", sslsf).build();
+        } catch (IOException | GeneralSecurityException e) {
+            throw new DockerAccessException("Cannot read keys and/or certs from " + certPath + ": " + e, e);
         }
-        return addDefaultHeaders(post);
-    }
-
-    private HttpUriRequest newDelete(String url) {
-        return addDefaultHeaders(new HttpDelete(url));
-    }
-
-    private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
-        req.addHeader(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
-        req.addHeader("Content-Type", "application/json");
-        return req;
     }
 
     private HttpResponse request(HttpUriRequest req) throws DockerAccessException {
@@ -304,14 +321,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             return EntityUtils.toString(resp.getEntity());
         } catch (IOException e) {
             throw new DockerAccessException("Cannot read content from response as string " + resp,e);
-        }
-    }
-    private String encode(String param) {
-        try {
-            return URLEncoder.encode(param,"UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            // wont happen
-            return URLEncoder.encode(param);
         }
     }
 
@@ -475,7 +484,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     private void processPullOrPushResponse(final String image, HttpResponse resp, final String action)
             throws DockerAccessException {
-        processChunkedResponse(resp, new ChunkedCallback() {
+        processChunkedResponse(resp, new ChunkedJsonCallback() {
 
             private boolean downloadInProgress = false;
 
@@ -513,9 +522,9 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         });
     }
 
-    private void processBuildResponse(final String image, org.apache.http.HttpResponse resp) throws DockerAccessException {
+    private void processBuildResponse(final String image, HttpResponse resp) throws DockerAccessException {
 
-        processChunkedResponse(resp, new ChunkedCallback() {
+        processChunkedResponse(resp, new ChunkedJsonCallback() {
             @Override
 			public void process(JSONObject json) {
                 if (json.has("error")) {
@@ -536,13 +545,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 }
             }
 
-            private String trim(String message) {
-                while (message.endsWith("\n")) {
-                    message = message.substring(0,message.length() - 1);
-                }
-                return message;
-            }
-
             @Override
 			public String getErrorMessage(StatusLine status) {
                 return "Error while building image '" + image + "' (code: " + status.getStatusCode()
@@ -552,7 +554,11 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     }
 
-    private void processChunkedResponse(org.apache.http.HttpResponse resp, ChunkedCallback cb) throws DockerAccessException {
+    private void processChunkedResponse(HttpResponse resp, final ChunkedJsonCallback cb) throws DockerAccessException {
+        processChunkedResponse(resp, new TextToJsonBridgeCallback(cb));
+    }
+
+    private void processChunkedResponse(HttpResponse resp, ChunkedTextCallback cb) throws DockerAccessException {
         try {
             InputStream is = resp.getEntity().getContent();
             int len;
@@ -561,12 +567,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             // Data comes in chunkwise
             while ((len = is.read(buf, 0, size)) != -1) {
                 String txt = new String(buf,0,len,"UTF-8");
-                try {
-                    JSONObject json = new JSONObject(txt);
-                    cb.process(json);
-                } catch (JSONException exp) {
-                    log.warn("Couldn't parse answer chunk '" + txt + "': " + exp);
-                }
+                cb.process(txt);
             }
             StatusLine status = resp.getStatusLine();
             if (status.getStatusCode() != 200) {
@@ -616,10 +617,47 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
     }
 
+
+    private String trim(String message) {
+        while (message.endsWith("\n")) {
+            message = message.substring(0,message.length() - 1);
+        }
+        return message;
+    }
+
     // ================================================================================================
 
-    private interface ChunkedCallback {
+    private interface ChunkedJsonCallback {
         void process(JSONObject json);
         String getErrorMessage(StatusLine status);
+    }
+
+    private interface ChunkedTextCallback {
+        void process(String text);
+        String getErrorMessage(StatusLine status);
+    }
+
+    // Parse text as json
+    private class TextToJsonBridgeCallback implements ChunkedTextCallback {
+        ChunkedJsonCallback cb;
+
+        public TextToJsonBridgeCallback(ChunkedJsonCallback cb) {
+            this.cb = cb;
+        }
+
+        @Override
+        public void process(String text) {
+            try {
+                JSONObject json = new JSONObject(text);
+                cb.process(json);
+            } catch (JSONException exp) {
+                log.warn("Couldn't parse answer chunk '" + text + "': " + exp);
+            }
+        }
+
+        @Override
+        public String getErrorMessage(StatusLine status) {
+            return cb.getErrorMessage(status);
+        }
     }
 }

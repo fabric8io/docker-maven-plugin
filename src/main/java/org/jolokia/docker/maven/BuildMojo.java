@@ -9,8 +9,7 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
-import org.jolokia.docker.maven.config.BuildImageConfiguration;
-import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -47,6 +46,8 @@ public class BuildMojo extends AbstractDockerMojo {
      * @component
      */
     private DockerArchiveCreator dockerArchiveCreator;
+    /** @parameter property = "docker.showLogs" default-value="false" */
+    private boolean showLogs;
 
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
@@ -65,5 +66,20 @@ public class BuildMojo extends AbstractDockerMojo {
         String imageName = getImageName(imageConfig.getName());
         info("Creating image " + imageConfig.getDescription());
         dockerAccess.buildImage(imageName, dockerArchive);
+    }
+
+    protected boolean showLog(ImageConfiguration imageConfig) {
+        if (showLogs) {
+            return true;
+        } else {
+            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            if (runConfig != null) {
+                LogConfiguration logConfig = runConfig.getLog();
+                if (logConfig != null) {
+                    return logConfig.isEnabled();
+                }
+            }
+            return false;
+        }
     }
 }

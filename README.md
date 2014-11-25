@@ -16,6 +16,7 @@ The current version ist **0.10.4** and works with Maven 3.2.1 or later.
 | [`docker:build`](doc/manual.md#dockerbuild)   | Build images                         |
 | [`docker:push`](doc/manual.md#dockerpush)     | Push images to a registry            |
 | [`docker:remove`](doc/manual.md#dockerremove) | Remove images from local docker host |
+| [`docker:log`](doc/manual.md#dockerlog)       | Show container logs                  |
 
 #### Documentation
 
