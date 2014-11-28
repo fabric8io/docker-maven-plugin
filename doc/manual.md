@@ -208,7 +208,8 @@ The `<run>` configuration knows the following sub elements:
 * **ports** declares how container exposed ports should be
   mapped. This is described below in an extra
   [section](#port-mapping). 
-* **links** declares how containers are linked together see description on [container linking](#container-linking)
+* **links** declares how containers are linked together see
+  description on [container linking](#container-linking). 
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
   its purpose are also described [below](#port-mapping)
@@ -245,7 +246,8 @@ Example:
 
 ##### Setting environment variables
 
-When creating a container one or more environment variables can be set via configuration with the `env` parameter
+When creating a container one or more environment variables can be set
+via configuration with the `env` parameter 
 
 ```xml
 <env>
@@ -254,7 +256,8 @@ When creating a container one or more environment variables can be set via confi
 </env>
 ```
 
-If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by
+If you put this configuration into profiles you can easily create
+various test variants with a single image (e.g. by
 switching the JDK or whatever).
 
 ##### Port Mapping
@@ -303,17 +306,24 @@ available to them.
 
 ##### Container linking
 
-The `<links>` configuration contains a list of containers that should be linked to this container according to [Docker Links](https://docs.docker.com/userguide/dockerlinks/). Each link has two parts separated by a `:` where the optional left side will be used as the name in the environment variables and right side refers to the name of the container linking to. This is equivalent to the linking when using the Docker CLI `--link` option.
+The `<links>` configuration contains a list of containers that should
+be linked to this container according to
+[Docker Links](https://docs.docker.com/userguide/dockerlinks/). Each
+link has two parts separated by a `:` where the optional right side
+will be used as the name in the environment variables and the left side
+refers to the name of the container linking to. This is equivalent to
+the linking when using the Docker CLI `--link` option. 
 
-Example:
+Example for linking to a container with name or alias *postgres* :
 
 ```xml
 <links>
-  <link>db:postgres</link>
+  <link>postgres:db</link>
 </links>
 ```
 
-This will create the following environment variables, given that the postgres image exposes TCP port 5432:
+This will create the following environment variables, given that the
+postgres image exposes TCP port 5432: 
 
 ```
 DB_NAME=/web2/db
