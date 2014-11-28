@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
@@ -11,6 +12,7 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+import org.codehaus.plexus.util.FileUtils;
 import org.fusesource.jansi.AnsiConsole;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -365,11 +367,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         // Description
         private String description;
 
-        protected ShutdownAction(ImageConfiguration imageConfig, String container) {
+        private final MavenProject project;
+
+        protected ShutdownAction(ImageConfiguration imageConfig, String container, MavenProject project) {
             this.image = imageConfig.getName();
             this.alias = imageConfig.getAlias();
             this.description = imageConfig.getDescription();
             this.container = container;
+            this.project = project;
         }
 
         /**
@@ -394,14 +399,27 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
             // Stop the container
             try {
                 access.stopContainer(container);
+                final String containerAndImageDescription = getContainerAndImageDescription(container, description);
                 if (!keepContainer) {
                     // Remove the container
+                    extractContainerLog(access, log, containerAndImageDescription);
                     access.removeContainer(container);
                 }
-                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " +
-                         getContainerAndImageDescription(container, description));
+                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " + containerAndImageDescription);
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot shutdown",e);
+            }
+        }
+
+        private void extractContainerLog(DockerAccess access, LogHandler log, String containerAndImageDescription) throws DockerAccessException {
+            final String outputPath = project.getBuild().getDirectory() + "/docker";
+            new File(outputPath).mkdir();
+            final String logfile = outputPath + "/" + container.substring(0, 12) + ".log";
+            try {
+                FileUtils.fileWrite(logfile, access.getLogs(container));
+                log.info("Written log to " + logfile);
+            } catch (IOException e) {
+                log.warn("Failed to get log from container " + containerAndImageDescription + ": " + e.getMessage());
             }
         }
 
