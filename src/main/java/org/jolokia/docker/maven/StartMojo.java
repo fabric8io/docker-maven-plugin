@@ -75,7 +75,7 @@ public class StartMojo extends AbstractDockerMojo {
                  getContainerAndImageDescription(container, imageConfig.getDescription()));
 
             // Remember id for later stopping the container
-            registerShutdownAction(new ShutdownAction(imageConfig,container));
+            registerShutdownAction(new ShutdownAction(imageConfig,container, project));
 
             // Set maven properties for dynamically assigned ports.
             if (mappedPorts.containsDynamicPorts()) {
