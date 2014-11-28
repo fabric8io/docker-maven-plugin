@@ -309,10 +309,10 @@ available to them.
 The `<links>` configuration contains a list of containers that should
 be linked to this container according to
 [Docker Links](https://docs.docker.com/userguide/dockerlinks/). Each
-link has two parts separated by a `:` where the optional right side
-will be used as the name in the environment variables and the left side
-refers to the name of the container linking to. This is equivalent to
-the linking when using the Docker CLI `--link` option. 
+link can have two parts where the optional right side is separated by
+a `:` and will be used as the name in the environment variables and
+the left side refers to the name of the container linking to. This is
+equivalent to the linking when using the Docker CLI `--link` option.
 
 Example for linking to a container with name or alias *postgres* :
 
