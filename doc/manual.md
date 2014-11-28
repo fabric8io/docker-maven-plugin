@@ -208,6 +208,7 @@ The `<run>` configuration knows the following sub elements:
 * **ports** declares how container exposed ports should be
   mapped. This is described below in an extra
   [section](#port-mapping). 
+* **links** declares how containers are linked together see description on [container linking](#container-linking)
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
   its purpose are also described [below](#port-mapping)
@@ -231,6 +232,9 @@ Example:
   <ports>
     <port>jolokia.port:8080</port>
   </ports>
+  <links>
+    <link>db</db>
+  </links>
   <wait>
     <url>http://localhost:${jolokia.port}/jolokia</url>
     <time>10000</time>
@@ -296,6 +300,29 @@ ports. This property file might be useful together with other maven
 plugins which already resolved their maven variables earlier in the
 lifecycle than this plugin so that the port variables might not be
 available to them.
+
+##### Container linking
+
+The `<links>` configuration contains a list of containers that should be linked to this container according to [Docker Links](https://docs.docker.com/userguide/dockerlinks/). Each link has two parts separated by a `:` where the optional left side will be used as the name in the environment variables and right side refers to the name of the container linking to. This is equivalent to the linking when using the Docker CLI `--link` option.
+
+Example:
+
+```xml
+<links>
+  <link>db:postgres</link>
+</links>
+```
+
+This will create the following environment variables, given that the postgres image exposes TCP port 5432:
+
+```
+DB_NAME=/web2/db
+DB_PORT=tcp://172.17.0.5:5432
+DB_PORT_5432_TCP=tcp://172.17.0.5:5432
+DB_PORT_5432_TCP_PROTO=tcp
+DB_PORT_5432_TCP_PORT=5432
+DB_PORT_5432_TCP_ADDR=172.17.0.5
+```
 
 ##### Wait during startup
 
@@ -695,4 +722,3 @@ and/or the `<server>` setting configuration. However, putting an
 encrypted password into `authConfig` in the `pom.xml` doesn't make
 much sense, since this password is encrypted with an individual master
 password.
-
