@@ -56,12 +56,13 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return name;
     }
 
-    public String getAlias() {
+    @Override
+	public String getAlias() {
         return alias;
     }
 
     public RunImageConfiguration getRunConfiguration() {
-        return run;
+        return (run == null) ? RunImageConfiguration.DEFAULT : run;
     }
 
     public BuildImageConfiguration getBuildConfiguration() {

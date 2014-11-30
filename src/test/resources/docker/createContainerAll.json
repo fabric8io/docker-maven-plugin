@@ -1,0 +1,14 @@
+{
+	"Hostname": "hostname",
+	"Domainname": "domain.com",
+	"User": "user",
+	"Memory": 1,
+	"MemorySwap": 1,
+	"Env": [ "foo=bar" ],
+	"Cmd": [ "date" ],
+	"Entrypoint": "entrypoint",
+	"Image": "base",
+	"Volumes":  { "/tmp": { } },
+	"WorkingDir": "/foo",
+	"ExposedPorts": { "22/tcp": { } }
+}
