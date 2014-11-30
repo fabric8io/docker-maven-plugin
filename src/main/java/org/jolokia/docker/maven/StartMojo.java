@@ -67,25 +67,20 @@ public class StartMojo extends AbstractDockerMojo {
             checkImage(docker,imageName);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            if (runConfig == null) {
-                // It's a data image which needs not to have a runtime configuration
-                runConfig = RunImageConfiguration.DEFAULT;
-            }
-            PortMapping mappedPorts = getPortMapping(runConfig);
-            String container = docker.createContainer(imageName,
-                                                      runConfig.getCommand(), mappedPorts.getContainerPorts(),
-                                                      runConfig.getEnv());
-            docker.startContainer(container,
-                                  mappedPorts,
-                                  findContainersForImages(runConfig.getVolumesFrom()),
-                                  findLinksWithContainerNames(docker, runConfig.getLinks()));
+            
+            PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-
+            ContainerConfig containerConfig = createContainerConfig(imageName, runConfig, mappedPorts.getContainerPorts());
+            String container = docker.createContainer(containerConfig);
+                                            
+            ContainerHostConfig hostConfig = createHostConfig(docker, runConfig, mappedPorts);
+            docker.startContainer(container, hostConfig);
+            
             if (showLog(imageConfig)) {
                 dispatcher.trackContainerLog(container, getContainerLogSpec(container, imageConfig));
             }
-
             registerContainer(container, imageConfig);
+
             info("Created and started container " +
                  getContainerAndImageDescription(container, imageConfig.getDescription()));
 
@@ -102,10 +97,36 @@ public class StartMojo extends AbstractDockerMojo {
             waitIfRequested(runConfig,mappedPorts,docker,container);
         }
     }
-
-    private PortMapping getPortMapping(RunImageConfiguration runConfig) throws MojoExecutionException {
+    
+    // visible for testing
+    ContainerConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, Set<Integer> ports)
+        throws MojoExecutionException {
         try {
-            return new PortMapping(runConfig.getPorts(), project.getProperties());
+            return new ContainerConfig(imageName).hostname(runConfig.getHostname()).domainname(runConfig.getDomainname())
+                    .user(runConfig.getUser()).workingDir(runConfig.getWorkingDir()).memory(runConfig.getMemory())
+                    .memorySwap(runConfig.getMemorySwap()).entrypoint(runConfig.getEntrypoint()).exposedPorts(ports)
+                    .environment(runConfig.getEnv()).command(runConfig.getCommand()).bind(runConfig.getBind());
+        }
+        catch (IllegalArgumentException e) {
+            throw new MojoExecutionException(String.format("Failed to create contained configuration for [%s]", imageName), e);
+        }
+    }
+
+    // visible for testing
+    ContainerHostConfig createHostConfig(DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts)
+        throws DockerAccessException, MojoExecutionException {
+        RunImageConfiguration.RestartPolicy restartPolicy = runConfig.getRestartPolicy();        
+        return new ContainerHostConfig().bind(runConfig.getBind()).links(findLinksWithContainerNames(docker, runConfig.getLinks()))
+                .portBindings(mappedPorts).privileged(runConfig.getPrivileged()).dns(runConfig.getDns())
+                .dnsSearch(runConfig.getDnsSearch()).volumesFrom(findContainersForImages(runConfig.getVolumesFrom()))
+                .capAdd(runConfig.getCapAdd()).capDrop(runConfig.getCapDrop())
+                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
+    }
+    
+    // visible for testing
+    PortMapping getPortMapping(RunImageConfiguration runConfig, Properties properties) throws MojoExecutionException {
+        try {
+            return new PortMapping(runConfig.getPorts(), properties);
         } catch (IllegalArgumentException exp) {
             throw new MojoExecutionException("Cannot parse port mapping",exp);
         }
@@ -120,7 +141,8 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
+    // visible for testing
+    List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitLinks(links)) {
             String container = lookupContainer(link[0]);
@@ -132,7 +154,8 @@ public class StartMojo extends AbstractDockerMojo {
         return ret;
     }
 
-    private List<String> findContainersForImages(List<String> images) throws MojoExecutionException {
+    // visible for testing
+    List<String> findContainersForImages(List<String> images) throws MojoExecutionException {
         List<String> containers = new ArrayList<>();
         if (images != null) {
             for (String image : images) {

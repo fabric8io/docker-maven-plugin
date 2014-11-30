@@ -27,14 +27,11 @@ public interface DockerAccess {
     /**
      * Create a container from the given image.
      *
-     * @param image the image from which the container should be created
-     * @param command an optional command which gets executed when starting the container. might be null.
-     * @param ports ports to expose, can be null
-     * @param env map with environment variables to use
+     * @param configuration container configuration
      * @return the container id
      * @throws DockerAccessException if the container could not be created.
      */
-    String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws DockerAccessException;
+    String createContainer(ContainerConfig configuration) throws DockerAccessException;
 
     /**
      * Get the the name of a container for a given container id
@@ -48,12 +45,11 @@ public interface DockerAccess {
     /**
      * Start a container.
      *
-     * @param containerId id of container to start
-     * @param portMapping port mapping to use. Must not be null.
-     * @param volumesFrom mount volumes from the given container id. Can be null.
+     * @param containerId container id
+     * @param configuration container host configuration
      * @throws DockerAccessException if the container could not be started.
      */
-    void startContainer(String containerId, PortMapping portMapping, List<String> volumesFrom, List<String> links) throws DockerAccessException;
+    void startContainer(String containerId, ContainerHostConfig configuration) throws DockerAccessException;
 
     /**
      * Stop a container.
