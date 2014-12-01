@@ -14,58 +14,30 @@ public class ContainerHostConfig {
 
     private final JSONObject object = new JSONObject();
 
-    public ContainerHostConfig bind(List<String> bind) {
-        if (bind != null && !bind.isEmpty()) {
-            JSONArray host = new JSONArray();
-            for (String volume : bind) {
-                if (volume.contains(":")) {
-                    host.put(volume);
-                }
-            }
-            object.put("Binds", host);
-        }
-        return this;
+    public ContainerHostConfig capAdd(List<String> capAdd) {
+        return addAsArray("CapAdd",capAdd);
     }
 
-    public ContainerHostConfig capAdd(List<String> capAdd)
-    {
-        if (capAdd != null) {
-            object.put("CapAdd", new JSONArray(capAdd));
-        }
-        return this;
+    public ContainerHostConfig capDrop(List<String> capDrop) {
+        return addAsArray("CapDrop", capDrop);
     }
 
-    public ContainerHostConfig capDrop(List<String> capDrop)
-    {
-        if (capDrop != null) {
-            object.put("CapDrop", new JSONArray(capDrop));
-        }
-        return this;
+    public ContainerHostConfig dns(List<String> dns) {
+        return addAsArray("Dns",dns);
     }
 
-    public ContainerHostConfig dns(List<String> dns)
-    {
-        if (dns != null) {
-            object.put("Dns", new JSONArray(dns));
-        }
-        return this;
+    public ContainerHostConfig dnsSearch(List<String> dnsSearch) {
+        return addAsArray("DnsSearch",dnsSearch);
     }
 
-    public ContainerHostConfig dnsSearch(List<String> dnsSearch)
-    {
-        if (dnsSearch != null) {
-            object.put("DnsSearch", new JSONArray(dnsSearch));
-        }
-        return this;
-    }
-    
     public ContainerHostConfig links(List<String> links) {
-        if (links != null) {
-            object.put("Links", new JSONArray(links));
-        }
-        return this;
+        return addAsArray("Links",links);
     }
-    
+
+    public ContainerHostConfig volumesFrom(List<String> volumesFrom) {
+        return addAsArray("VolumesFrom",volumesFrom);
+    }
+
     public ContainerHostConfig portBindings(PortMapping portMapping) {
         Map<Integer, Integer> portMap = portMapping.getPortsMap();
         if (!portMap.isEmpty()) {
@@ -94,8 +66,20 @@ public class ContainerHostConfig {
         return this;
     }
 
-    public ContainerHostConfig privileged(boolean privileged)
-    {
+    public ContainerHostConfig bind(List<String> bind) {
+        if (bind != null && !bind.isEmpty()) {
+            JSONArray host = new JSONArray();
+            for (String volume : bind) {
+                if (volume.contains(":")) {
+                    host.put(volume);
+                }
+            }
+            object.put("Binds", host);
+        }
+        return this;
+    }
+
+    public ContainerHostConfig privileged(boolean privileged) {
         object.put("Privileged", privileged);
         return this;
     }
@@ -106,20 +90,20 @@ public class ContainerHostConfig {
             JSONObject policy = new JSONObject();
             policy.put("Name", name);
             policy.put("MaximumRetryCount", retry);
-            
+
             object.put("RestartPolicy", policy);
         }
         return this;
     }
-    
+
     public String toJson() {
         return object.toString();
     }
 
-    public ContainerHostConfig volumesFrom(List<String> volumesFrom) {
-        if (volumesFrom != null) {
-            object.put("VolumesFrom", new JSONArray(volumesFrom));
-        }
+    private ContainerHostConfig addAsArray(String propKey, List<String> props) {
+        if (props != null) {
+            object.put(propKey, new JSONArray(props));
+        };
         return this;
     }
 }

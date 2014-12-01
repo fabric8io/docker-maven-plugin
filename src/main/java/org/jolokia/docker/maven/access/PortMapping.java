@@ -206,7 +206,7 @@ public class PortMapping {
         return containerPortsMap.isEmpty();
     }
 
-        Map<Integer, String> getBindToMap() {
+    Map<Integer, String> getBindToMap() {
     	return bindToMap;
     }
 
