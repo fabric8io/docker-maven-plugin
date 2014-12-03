@@ -603,7 +603,7 @@ properties can the behaviour of this goal:
   log should be fetched. This can be a comma separated list of image
   or alias names. 
 * **docker.logDate** specifies the log date to use. See
-  "[Log configuration](log-configuration)" above for the available
+  "[Log configuration](#log-configuration)" above for the available
   formats. 
 
 Example:
@@ -611,7 +611,7 @@ Example:
 ````
 $ mvn docker:log -Ddocker.follow -Ddocker.logDate=DEFAULT
 ````
-### External Configuration (since 0.10.5)
+### External Configuration
 
 For special configuration needs there is the possibility to get the
 runtime and build configuration from places outside the plugin's
