@@ -3,10 +3,6 @@ package org.jolokia.docker.maven.config;
 import java.util.List;
 import java.util.Map;
 
-import org.jolokia.docker.maven.access.ContainerHostConfig;
-import org.jolokia.docker.maven.config.RunImageConfiguration.Builder;
-import org.jolokia.docker.maven.config.RunImageConfiguration.RestartPolicy;
-
 
 /**
  * @author roland
@@ -134,8 +130,9 @@ public class RunImageConfiguration {
      */
     private LogConfiguration log;
 
-    public RunImageConfiguration() {}
-
+    /**
+     * @parameter
+     */
     private RestartPolicy restartPolicy;
 
     public RunImageConfiguration() { }
@@ -190,7 +187,8 @@ public class RunImageConfiguration {
 
     public LogConfiguration getLog() {
         return log;
-    
+    }
+
     public List<String> getBind() {
         return bind;
     }
