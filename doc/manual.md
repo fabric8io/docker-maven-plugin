@@ -255,6 +255,11 @@ Example:
     <url>http://localhost:${jolokia.port}/jolokia</url>
     <time>10000</time>
   </wait>
+  <log>
+    <prefix>DEMO</prefix>
+    <date>ISO8601</date>
+    <color>blue</color>
+  </log>
   <command>java -jar /maven/docker-demo.jar</command>
 </run>
 ````
