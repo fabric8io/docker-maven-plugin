@@ -416,7 +416,7 @@ configuring the log output:
   
 Example (values can be case insensitive, too) :
 
-````
+````xml
 <log>
   <prefix>TC</prefix>
   <date>default</date>
