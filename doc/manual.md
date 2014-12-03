@@ -413,6 +413,16 @@ configuring the log output:
   colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If
   coloring is enabled and now color is provided a color is picked for
   you. 
+  
+Example (values can be case insensitive, too) :
+
+````
+<log>
+  <prefix>TC</prefix>
+  <date>default</date>
+  <color>cyan</color>
+</log>
+````
 
 #### `docker:stop`
 
