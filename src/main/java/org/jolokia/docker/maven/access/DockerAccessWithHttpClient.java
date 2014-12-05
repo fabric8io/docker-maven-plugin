@@ -56,28 +56,26 @@ import static org.jolokia.docker.maven.access.util.RequestUtil.*;
  */
 public class DockerAccessWithHttpClient implements DockerAccess {
 
-    // Used Docker API
-    static private final String DOCKER_API_VERSION = "v1.15";
     public static final String HEADER_ACCEPT = "Accept";
     public static final String HEADER_ACCEPT_ALL = "*/*";
 
     // Logging
     private final LogHandler log;
-
+    
     // Base Docker URL
     private final String baseUrl;
 
     // HttpClient to use
     private final HttpClient client;
-
+    
     /**
      * Create a new access for the given URL
      * @param baseUrl base URL for accessing the docker Daemon
      * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessWithHttpClient(String baseUrl, String certPath, LogHandler log) throws DockerAccessException {
-        this.baseUrl = stripSlash(baseUrl) + "/" + DOCKER_API_VERSION;
+    public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, LogHandler log) throws DockerAccessException {
+        this.baseUrl = stripSlash(baseUrl) + "/" + apiVersion;
         this.log = log;
         this.client = createHttpClient(certPath);
     }
