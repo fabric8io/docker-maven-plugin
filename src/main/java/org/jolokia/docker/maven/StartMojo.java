@@ -144,7 +144,7 @@ public class StartMojo extends AbstractDockerMojo {
     // visible for testing
     List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
-        for (String[] link : EnvUtil.splitLinks(links)) {
+        for (String[] link : EnvUtil.splitOnLastColon(links)) {
             String container = lookupContainer(link[0]);
             if (container == null) {
                 throw new DockerAccessException("Cannot find container for " + link[0] + " while preparing links");

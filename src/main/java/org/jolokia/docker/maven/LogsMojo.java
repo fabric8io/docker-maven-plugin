@@ -17,9 +17,9 @@ import org.jolokia.docker.maven.log.LogDispatcher;
  * @author roland
  * @since 26.03.14
  *
- * @goal log
+ * @goal logs
  */
-public class LogMojo extends AbstractDockerMojo {
+public class LogsMojo extends AbstractDockerMojo {
 
     /**
      * Whether to log infinitely or to show only the logs happened until now.
@@ -28,7 +28,7 @@ public class LogMojo extends AbstractDockerMojo {
      */
     private boolean follow;
 
-    // Whether to log all contaienrs or only the newest ones
+    // Whether to log all containers or only the newest ones
     /** @parameter property = "docker.logAll" default-value = "false" */
     private boolean logAll;
 

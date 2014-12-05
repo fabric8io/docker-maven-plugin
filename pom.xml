@@ -6,7 +6,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.10.5-SNAPSHOT</version>
+  <version>0.10.6-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>maven-docker-plugin</name>

@@ -92,7 +92,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
         if (runConfig.getLinks() != null) {
-            for (String[] link : EnvUtil.splitLinks(runConfig.getLinks())) {
+            for (String[] link : EnvUtil.splitOnLastColon(runConfig.getLinks())) {
                 ret.add(link[0]);
             }
         }

@@ -8,15 +8,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
+ * Utility class for various (loosely) environment related tasks.
+ *
  * @author roland
  * @since 04.04.14
  */
 public class EnvUtil {
 
-
     private EnvUtil() {}
-
-
 
     /**
      * Write out a property file
@@ -44,19 +43,27 @@ public class EnvUtil {
         }
     }
 
-    public static List<String[]> splitLinks(List<String> links) {
-        if (links != null) {
+    /**
+     * Splits every element in the given list on the last colon in the name and returns a list with
+     * two elements: The left part before the colon and the right part after the colon. If the string doesnt contain
+     * a colon, the value is used for both elements in the returned arrays.
+     *
+     * @param listToSplit list of strings to split
+     * @return return list of 2-element arrays or an empty list if the given list is empty or null
+     */
+    public static List<String[]> splitOnLastColon(List<String> listToSplit) {
+        if (listToSplit != null) {
             List<String[]> ret = new ArrayList<>();
 
-            for (String link : links) {
-                String[] p = link.split(":");
-                String linkAlias = p[p.length - 1];
+            for (String element : listToSplit) {
+                String[] p = element.split(":");
+                String rightValue = p[p.length - 1];
                 String[] nameParts = Arrays.copyOfRange(p, 0, p.length - 1);
-                String lookup = StringUtils.join(nameParts, ":");
-                if (lookup.length() == 0) {
-                    lookup = linkAlias;
+                String leftValue = StringUtils.join(nameParts, ":");
+                if (leftValue.length() == 0) {
+                    leftValue = rightValue;
                 }
-                ret.add(new String[]{lookup, linkAlias});
+                ret.add(new String[]{leftValue, rightValue});
             }
 
             return ret;
@@ -104,7 +111,7 @@ public class EnvUtil {
      *
      * @param prefix for selecting the properties from which the list should be extracted
      * @param properties properties from which to extract from
-     * @return parsed list or null if no element with prefixs exists
+     * @return parsed list or null if no element with prefixes exists
      */
     public static List<String> extractFromPropertiesAsList(String prefix, Properties properties) {
         TreeMap<Integer,String> orderedMap = new TreeMap<>();

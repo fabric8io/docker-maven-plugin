@@ -64,7 +64,7 @@ public class DockerFileBuilder {
 
         // Entries
         for (AddEntry entry : addEntries) {
-            b.append("ADD ").append(entry.source).append(" ")
+            b.append("COPY ").append(entry.source).append(" ")
              .append(exportDir).append("/").append(entry.destination).append("\n");
         }
 
@@ -78,7 +78,10 @@ public class DockerFileBuilder {
         }
 
         // Volume export
-        b.append("VOLUME [\"").append(exportDir).append("\"]\n");
+        if (exportDir.length() > 0) {
+            // Dont export a top level export dir
+            b.append("VOLUME [\"").append(exportDir).append("\"]\n");
+        }
 
         // Environment variable support
         for (Map.Entry<String,String> entry : envEntries.entrySet()) {
@@ -120,9 +123,13 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder exportDir(String exportDir) {
-        if (exportDir != null) {
-            this.exportDir = exportDir;
+    public DockerFileBuilder exportDir(String dir) {
+        if (dir != null) {
+            exportDir = dir;
+            // Strip trailing slashes
+            while (exportDir.endsWith("/")) {
+                exportDir = exportDir.substring(0,exportDir.length() - 1);
+            }
         }
         return this;
     }
