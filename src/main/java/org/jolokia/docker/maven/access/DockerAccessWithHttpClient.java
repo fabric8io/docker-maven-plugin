@@ -1,12 +1,8 @@
 package org.jolokia.docker.maven.access;
 
-import java.io.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.ArrayList;
@@ -28,10 +24,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.FileEntity;
@@ -40,8 +32,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.jolokia.docker.maven.access.log.*;
-import org.jolokia.docker.maven.util.*;
-import org.json.*;
 import org.jolokia.docker.maven.util.ImageName;
 import org.jolokia.docker.maven.util.LogHandler;
 import org.json.JSONArray;
@@ -107,16 +97,17 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public String createContainer(ContainerConfig configuration) throws DockerAccessException {
-        String createJson = configuration.toJson();
+    public void createContainer(Container container) throws DockerAccessException {
+        String createJson = container.toCreateJson();
         log.debug("Container create config: " + createJson);
 
         HttpUriRequest post = newPost(baseUrl + "/containers/create", createJson);
         HttpResponse resp = request(post);
-        checkReturnCode("Creating container for image '" + configuration.getImageName() + "'", resp, 201);
+        checkReturnCode("Creating container for image '" + container.getImageName() + "'", resp, 201);
         JSONObject json = asJsonObject(resp);
         logWarnings(json);
-        return json.getString("Id");
+        
+        container.setContainerId(json.getString("Id"));
     }
 
     @Override
@@ -130,10 +121,11 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public void startContainer(String containerId, ContainerHostConfig configuration) throws DockerAccessException {
-        String startJson = configuration.toJson();
+    public void startContainer(Container container) throws DockerAccessException {
+        String startJson = container.toStartJson();
         log.debug("Container start config: " + startJson);
 
+        String containerId = container.getContainerId();
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start", startJson);
         HttpResponse resp = request(req);
         checkReturnCode("Starting container with id " + containerId, resp, 204);
@@ -293,9 +285,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     private PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws DockerAccessException {
         if (certPath != null) {
             return new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath));
-        } else {
-            return new PoolingHttpClientConnectionManager();
         }
+        return new PoolingHttpClientConnectionManager();
     }
 
     // Lookup a keystore and add it to the client

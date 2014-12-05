@@ -5,6 +5,7 @@
     "Privileged":true,
     "Dns": ["8.8.8.8"],
     "DnsSearch": ["domain.com"],
+    "ExtraHosts" : ["localhost:127.0.0.1"],
     "VolumesFrom": [ "parent", "other:ro" ],
     "CapAdd": ["NET_ADMIN"],
     "CapDrop": ["MKNOD"],

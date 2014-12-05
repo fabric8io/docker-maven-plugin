@@ -10,8 +10,7 @@ import java.util.Properties;
 import java.util.Scanner;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jolokia.docker.maven.access.ContainerConfig;
-import org.jolokia.docker.maven.access.ContainerHostConfig;
+import org.jolokia.docker.maven.access.Container;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.PortMapping;
@@ -35,10 +34,26 @@ public class StartMojoContainerConfigsTest {
          * it didn't seem worth the effor to build a separate test to verify the json and then mock/verify all the calls here
          */
         final RunImageConfiguration runConfig =
-                new RunImageConfiguration.Builder().hostname("hostname").domainname("domain.com").user("user").memory(1).memorySwap(1)
-                        .env(env()).command("date").entrypoint("entrypoint").bind(bind()).workingDir("/foo").ports(ports()).links(links())
-                        .volumes(volumesFrom()).dns(dns()).dnsSearch(dnsSearch()).privileged(true).capAdd(capAdd()).capDrop(capDrop())
-                        .restartPolicy(restartPolicy()).build();
+                new RunImageConfiguration.Builder()
+                        .hostname("hostname")
+                        .domainname("domain.com")
+                        .user("user")
+                        .memory(1)
+                        .memorySwap(1)
+                        .env(env())
+                        .command("date")
+                        .entrypoint("entrypoint")
+                        .extraHosts(extraHosts())
+                        .bind(bind())
+                        .workingDir("/foo")
+                        .ports(ports())
+                        .links(links())
+                        .volumes(volumesFrom())
+                        .dns(dns()).dnsSearch(dnsSearch())
+                        .privileged(true).capAdd(capAdd())
+                        .capDrop(capDrop())
+                        .restartPolicy(restartPolicy())
+                        .build();
 
         StartMojo mojo = new StartMojo() {
             @Override
@@ -53,15 +68,13 @@ public class StartMojoContainerConfigsTest {
         };
 
         PortMapping portMapping = mojo.getPortMapping(runConfig, new Properties());
-
-        ContainerConfig config = mojo.createContainerConfig("base", runConfig, portMapping.getContainerPorts());
-        ContainerHostConfig hostConfig = mojo.createHostConfig(null, runConfig, portMapping);
+        Container container = mojo.createContainer("base", null, runConfig, portMapping);
 
         String expectedConfig = loadFile("docker/createContainerAll.json");
-        JSONAssert.assertEquals(expectedConfig, config.toJson(), true);
+        JSONAssert.assertEquals(expectedConfig, container.toCreateJson(), true);
 
         String expectedHostConfig = loadFile("docker/createHostConfigAll.json");
-        JSONAssert.assertEquals(expectedHostConfig, hostConfig.toJson(), true);
+        JSONAssert.assertEquals(expectedHostConfig, container.toStartJson(), true);
     }
 
     private List<String> bind() {
@@ -89,6 +102,11 @@ public class StartMojoContainerConfigsTest {
         env.put("foo", "bar");
 
         return env;
+    }
+    
+    private List<String> extraHosts()
+    {
+        return Arrays.asList("localhost:127.0.0.1");
     }
 
     private List<String> links() {

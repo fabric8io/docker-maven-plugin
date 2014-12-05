@@ -1,19 +1,11 @@
 package org.jolokia.docker.maven;
 
 /*
- * Copyright 2009-2014 Roland Huss
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2009-2014 Roland Huss Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+ * applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 import java.util.*;
@@ -28,18 +20,18 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.util.*;
 
+
 /**
  * Goal for creating and starting a docker container. This goal evaluates the image configuration
  *
  * @author roland
- *
  * @goal start
  * @phase pre-integration-test
  */
 public class StartMojo extends AbstractDockerMojo {
 
     /**
-     * @parameter property = "docker.autoPull"  defaultValue = "true"
+     * @parameter property = "docker.autoPull" defaultValue = "true"
      */
     private boolean autoPull;
 
@@ -57,87 +49,96 @@ public class StartMojo extends AbstractDockerMojo {
     @Override
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
 
-        getPluginContext().put(CONTEXT_KEY_START_CALLED,true);
+        getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
         LogDispatcher dispatcher = getLogDispatcher(docker);
 
         for (StartOrderResolver.Resolvable resolvable : getImagesConfigsInOrder()) {
             final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
             String imageName = imageConfig.getName();
-            checkImage(docker,imageName);
+            checkImage(docker, imageName);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-            ContainerConfig containerConfig = createContainerConfig(imageName, runConfig, mappedPorts.getContainerPorts());
-            String container = docker.createContainer(containerConfig);
-                                            
-            ContainerHostConfig hostConfig = createHostConfig(docker, runConfig, mappedPorts);
-            docker.startContainer(container, hostConfig);
+            Container container = createContainer(imageName, docker, runConfig, mappedPorts);
+            docker.createContainer(container);
+            docker.startContainer(container);
+
+            String containerId = container.getContainerId();
             
             if (showLog(imageConfig)) {
-                dispatcher.trackContainerLog(container, getContainerLogSpec(container, imageConfig));
+                dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
             }
-            registerContainer(container, imageConfig);
+            registerContainer(containerId, imageConfig);
 
-            info("Created and started container " +
-                 getContainerAndImageDescription(container, imageConfig.getDescription()));
+            info("Created and started container " + getContainerAndImageDescription(containerId, imageConfig.getDescription()));
 
             // Remember id for later stopping the container
-            registerShutdownAction(new ShutdownAction(imageConfig,container));
+            registerShutdownAction(new ShutdownAction(imageConfig, containerId));
 
             // Set maven properties for dynamically assigned ports.
             if (mappedPorts.containsDynamicPorts()) {
-                mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(container));
-                propagatePortVariables(mappedPorts,runConfig.getPortPropertyFile());
+                mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(containerId));
+                propagatePortVariables(mappedPorts, runConfig.getPortPropertyFile());
             }
 
             // Wait if requested
-            waitIfRequested(runConfig,mappedPorts,docker,container);
+            waitIfRequested(runConfig, mappedPorts, docker, containerId);
         }
     }
-    
+
     // visible for testing
-    ContainerConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, Set<Integer> ports)
+    Container createContainer(String imageName, DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts)
         throws MojoExecutionException {
         try {
-            return new ContainerConfig(imageName).hostname(runConfig.getHostname()).domainname(runConfig.getDomainname())
-                    .user(runConfig.getUser()).workingDir(runConfig.getWorkingDir()).memory(runConfig.getMemory())
-                    .memorySwap(runConfig.getMemorySwap()).entrypoint(runConfig.getEntrypoint()).exposedPorts(ports)
-                    .environment(runConfig.getEnv()).command(runConfig.getCommand()).bind(runConfig.getBind());
+            RunImageConfiguration.RestartPolicy restartPolicy = runConfig.getRestartPolicy();
+
+            return new Container(imageName).hostname(runConfig.getHostname())
+                    .domainname(runConfig.getDomainname())
+                    .user(runConfig.getUser())
+                    .workingDir(runConfig.getWorkingDir())
+                    .memory(runConfig.getMemory())
+                    .memorySwap(runConfig.getMemorySwap())
+                    .entrypoint(runConfig.getEntrypoint())
+                    .exposedPorts(mappedPorts.getContainerPorts())
+                    .environment(runConfig.getEnv())
+                    .extraHosts(runConfig.getExtraHosts())
+                    .command(runConfig.getCommand())
+                    .binds(runConfig.getBind())
+                    .volumesFrom(runConfig.getVolumesFrom())
+                    .links(findLinksWithContainerNames(docker, runConfig.getLinks()))
+                    .portBindings(mappedPorts)
+                    .privileged(runConfig.getPrivileged())
+                    .dns(runConfig.getDns())
+                    .dnsSearch(runConfig.getDnsSearch())
+                    .volumesFrom(findContainersForImages(runConfig.getVolumesFrom()))
+                    .capAdd(runConfig.getCapAdd())
+                    .capDrop(runConfig.getCapDrop())
+                    .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
         }
-        catch (IllegalArgumentException e) {
+        catch (IllegalArgumentException | DockerAccessException e) {
             throw new MojoExecutionException(String.format("Failed to create contained configuration for [%s]", imageName), e);
         }
     }
 
     // visible for testing
-    ContainerHostConfig createHostConfig(DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts)
-        throws DockerAccessException, MojoExecutionException {
-        RunImageConfiguration.RestartPolicy restartPolicy = runConfig.getRestartPolicy();        
-        return new ContainerHostConfig().bind(runConfig.getBind()).links(findLinksWithContainerNames(docker, runConfig.getLinks()))
-                .portBindings(mappedPorts).privileged(runConfig.getPrivileged()).dns(runConfig.getDns())
-                .dnsSearch(runConfig.getDnsSearch()).volumesFrom(findContainersForImages(runConfig.getVolumesFrom()))
-                .capAdd(runConfig.getCapAdd()).capDrop(runConfig.getCapDrop())
-                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
-    }
-    
-    // visible for testing
     PortMapping getPortMapping(RunImageConfiguration runConfig, Properties properties) throws MojoExecutionException {
         try {
             return new PortMapping(runConfig.getPorts(), properties);
-        } catch (IllegalArgumentException exp) {
-            throw new MojoExecutionException("Cannot parse port mapping",exp);
+        }
+        catch (IllegalArgumentException exp) {
+            throw new MojoExecutionException("Cannot parse port mapping", exp);
         }
     }
 
     private List<StartOrderResolver.Resolvable> getImagesConfigsInOrder() throws MojoExecutionException {
         try {
             return StartOrderResolver.resolve(convertToResolvables(getImages()));
-        } catch (MojoExecutionException e) {
+        }
+        catch (MojoExecutionException e) {
             error(e.getMessage());
-            throw new MojoExecutionException("No container start order could be found",e);
+            throw new MojoExecutionException("No container start order could be found", e);
         }
     }
 
@@ -160,7 +161,7 @@ public class StartMojo extends AbstractDockerMojo {
         if (images != null) {
             for (String image : images) {
                 String container = lookupContainer(image);
-                if (container  == null) {
+                if (container == null) {
                     throw new MojoExecutionException("No container for image " + image + " started.");
                 }
                 containers.add(container);
@@ -197,14 +198,14 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
-    public void checkImage(DockerAccess docker,String image) throws DockerAccessException,MojoExecutionException {
+    public void checkImage(DockerAccess docker, String image) throws DockerAccessException, MojoExecutionException {
         if (!docker.hasImage(image)) {
             if (autoPull) {
-                docker.pullImage(image,prepareAuthConfig(image));
-            } else {
-                throw new MojoExecutionException(this, "No image '" + image + "' found",
-                                                 "Please enable 'autoPull' or pull image '" + image +
-                                                 "' yourself (docker pull " + image + ")");
+                docker.pullImage(image, prepareAuthConfig(image));
+            }
+            else {
+                throw new MojoExecutionException(this, "No image '" + image + "' found", "Please enable 'autoPull' or pull image '" + image
+                        + "' yourself (docker pull " + image + ")");
             }
         }
     }
@@ -220,11 +221,11 @@ public class StartMojo extends AbstractDockerMojo {
                 logOut.add("on url " + waitUrl + " ");
             }
             if (wait.getLog() != null) {
-                checkers.add(getLogWaitChecker(wait.getLog(),docker,containerId));
+                checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
                 logOut.add("on log out '" + wait.getLog() + "' ");
             }
-            long waited = WaitUtil.wait(wait.getTime(),checkers.toArray(new WaitUtil.WaitChecker[0]));
-            info("Waited " + StringUtils.join(logOut.toArray(),"and") + waited + " ms");
+            long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
+            info("Waited " + StringUtils.join(logOut.toArray(), "and") + waited + " ms");
         }
     }
 
@@ -268,14 +269,14 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     // Store dynamically mapped ports
-    private void propagatePortVariables(PortMapping mappedPorts,String portPropertyFile) throws MojoExecutionException {
+    private void propagatePortVariables(PortMapping mappedPorts, String portPropertyFile) throws MojoExecutionException {
         Properties props = new Properties();
-        Map<String,Integer> dynamicPorts = mappedPorts.getPortVariables();
-        for (Map.Entry<String,Integer> entry : dynamicPorts.entrySet()) {
+        Map<String, Integer> dynamicPorts = mappedPorts.getPortVariables();
+        for (Map.Entry<String, Integer> entry : dynamicPorts.entrySet()) {
             String var = entry.getKey();
             String val = "" + entry.getValue();
-            project.getProperties().setProperty(var,val);
-            props.setProperty(var,val);
+            project.getProperties().setProperty(var, val);
+            props.setProperty(var, val);
         }
 
         // However, this can be to late since properties in pom.xml are resolved during the "validate" phase
@@ -291,20 +292,22 @@ public class StartMojo extends AbstractDockerMojo {
         if (showLog != null) {
             if (showLog.equalsIgnoreCase("true")) {
                 return true;
-            } else if (showLog.equalsIgnoreCase("false")) {
+            }
+            else if (showLog.equalsIgnoreCase("false")) {
                 return false;
-            } else {
-                return matchesConfiguredImages(showLog,imageConfig);
             }
-        } else {
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            if (runConfig != null) {
-                LogConfiguration logConfig = runConfig.getLog();
-                if (logConfig != null) {
-                    return logConfig.isEnabled();
-                }
+            else {
+                return matchesConfiguredImages(showLog, imageConfig);
             }
-            return false;
         }
+
+        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        if (runConfig != null) {
+            LogConfiguration logConfig = runConfig.getLog();
+            if (logConfig != null) {
+                return logConfig.isEnabled();
+            }
+        }
+        return false;
     }
 }

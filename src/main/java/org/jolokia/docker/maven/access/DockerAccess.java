@@ -27,11 +27,12 @@ public interface DockerAccess {
     /**
      * Create a container from the given image.
      *
+     * <p>The <code>container id</code> will be set on the <code>container</code> upon successful creation.</p>
+     *
      * @param configuration container configuration
-     * @return the container id
      * @throws DockerAccessException if the container could not be created.
      */
-    String createContainer(ContainerConfig configuration) throws DockerAccessException;
+    void createContainer(Container configuration) throws DockerAccessException;
 
     /**
      * Get the the name of a container for a given container id
@@ -45,11 +46,10 @@ public interface DockerAccess {
     /**
      * Start a container.
      *
-     * @param containerId container id
-     * @param configuration container host configuration
+     * @param container container
      * @throws DockerAccessException if the container could not be started.
      */
-    void startContainer(String containerId, ContainerHostConfig configuration) throws DockerAccessException;
+    void startContainer(Container container) throws DockerAccessException;
 
     /**
      * Stop a container.

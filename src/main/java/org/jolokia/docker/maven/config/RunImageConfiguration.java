@@ -19,7 +19,7 @@ public class RunImageConfiguration {
     private Map<String, String> env;
 
     private boolean privileged;
-    
+
     // Command to execute in container
     /**
      * @parameter
@@ -93,6 +93,11 @@ public class RunImageConfiguration {
      * @parameter
      */
     private List<String> capDrop;
+
+    /**
+     * @parameter
+     */
+    private List<String> extraHosts;
     
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
@@ -180,7 +185,7 @@ public class RunImageConfiguration {
     public String getWorkingDir() {
         return workingDir;
     }
-    
+
     public WaitConfiguration getWaitConfiguration() {
         return wait;
     }
@@ -192,7 +197,7 @@ public class RunImageConfiguration {
     public List<String> getBind() {
         return bind;
     }
-    
+
     public List<String> getCapAdd() {
         return capAdd;
     }
@@ -200,7 +205,7 @@ public class RunImageConfiguration {
     public List<String> getCapDrop() {
         return capDrop;
     }
-    
+
     public List<String> getDns() {
         return dns;
     }
@@ -209,6 +214,10 @@ public class RunImageConfiguration {
         return dnsSearch;
     }
 
+    public List<String> getExtraHosts() {
+        return extraHosts;
+    }
+    
     public List<String> getVolumesFrom() {
         return volumes;
     }
@@ -224,18 +233,10 @@ public class RunImageConfiguration {
     public RunImageConfiguration.RestartPolicy getRestartPolicy() {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
-    
+
 // ======================================================================================
 
     public static class Builder {
-        private Map<String, String> env;
-        private String command;
-        private String portPropertyFile;
-        private List<String> ports;
-        private List<String> volumes;
-        private List<String> links;
-        private WaitConfiguration wait;
-        private LogConfiguration log;
         private RunImageConfiguration config = new RunImageConfiguration();
 
         public Builder env(Map<String, String> env) {
@@ -297,19 +298,24 @@ public class RunImageConfiguration {
             config.capAdd = capAdd;
             return this;
         }
-        
+
         public Builder capDrop(List<String> capDrop) {
             config.capDrop = capDrop;
             return this;
         }
-        
+
         public Builder dns(List<String> dns) {
             config.dns = dns;
             return this;
         }
-        
+
         public Builder dnsSearch(List<String> dnsSearch) {
             config.dnsSearch = dnsSearch;
+            return this;
+        }
+
+        public Builder extraHosts(List<String> extraHosts) {
+            config.extraHosts = extraHosts;
             return this;
         }
         
@@ -342,12 +348,12 @@ public class RunImageConfiguration {
             config.privileged = privileged;
             return this;
         }
-        
+
         public Builder restartPolicy(RestartPolicy restartPolicy) {
             config.restartPolicy = restartPolicy;
             return this;
-        }    
-        
+        }
+
         public RunImageConfiguration build() {
             return config;
         }
@@ -355,7 +361,7 @@ public class RunImageConfiguration {
 
     public static class RestartPolicy {
 
-        private static final RestartPolicy DEFAULT = new RestartPolicy();
+        public static final RestartPolicy DEFAULT = new RestartPolicy();
         
         /**
          * @parameter
@@ -367,13 +373,13 @@ public class RunImageConfiguration {
          */
         private int retry;
 
-        public RestartPolicy() {}
-        
+        public RestartPolicy() { }
+
         public RestartPolicy(String name, int retry) {
             this.name = name;
             this.retry = retry;
         }
-        
+
         public String getName() {
             return name;
         }
