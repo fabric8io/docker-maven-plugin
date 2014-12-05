@@ -18,6 +18,7 @@ package org.jolokia.docker.maven.config.handler;/*
 import java.util.*;
 
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.util.EnvUtil;
 
 import static org.jolokia.docker.maven.util.EnvUtil.*;
 
@@ -39,6 +40,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
 
         String name = withPrefix(prefix, "name", properties);
+        if (name == null) {
+            throw new IllegalArgumentException("Mandatory property " + prefix + ".name is not defined");
+        }
         String alias = withPrefix(prefix, "alias", properties);
 
         return Collections.singletonList(
@@ -68,24 +72,29 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .command(withPrefix(prefix, "command", properties))
                 .wait(wait)
                 .env(extractFromPropertiesAsMap(prefix + ".env", properties))
-                .ports(extractPorts(prefix + ".ports", properties))
+                .ports(extractPorts(prefix, properties))
                 .links(extractFromPropertiesAsList(prefix + ".links", properties))
                 .volumes(extractFromPropertiesAsList(prefix + ".volumesFrom", properties))
                 .portPropertyFile(withPrefix(prefix, "portPropertyFile", properties))
                 .build();
     }
 
+    // Extract only the values of the port mapping
     private List<String> extractPortValues(String prefix, Properties properties) {
-        return new ArrayList<String>(extractFromPropertiesAsMap(prefix + ".ports", properties).values());
+        List<String> ret = new ArrayList<>();
+        List<String> ports = extractPorts(prefix,properties);
+        if (ports == null) {
+            return null;
+        }
+        List<String[]> parsedPorts = EnvUtil.splitOnLastColon(ports);
+        for (String[] port : parsedPorts) {
+            ret.add(port[1]);
+        }
+        return ret;
     }
 
     private List<String> extractPorts(String prefix, Properties properties) {
-        Map<String,String> portMap = extractFromPropertiesAsMap(prefix,properties);
-        List<String> ret = new ArrayList<>();
-        for (Map.Entry<String,String> entry : portMap.entrySet()) {
-            ret.add(entry.getKey() + ":" + entry.getValue());
-        }
-        return ret;
+        return extractFromPropertiesAsList(prefix + ".ports",properties);
     }
 
     private WaitConfiguration extractWaitConfig(String prefix, Properties properties) {
@@ -106,7 +115,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private String getPrefix(ImageConfiguration config) {
         Map<String, String> refConfig = config.getExternalConfig();
-        String prefix = refConfig.get("prefix");
+        String prefix = refConfig != null ? refConfig.get("prefix") : null;
         if (prefix == null) {
             prefix = "docker";
         }

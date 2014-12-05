@@ -7,6 +7,8 @@ New configuration syntax with support for multiple containers
 * **0.10.5**
   - Add hooks for external configurations
   - Add property based configuration for images (#42)
+  - Add new goal `docker:logs` for showing logs of configured containers (#49)
+  - Support for showing logs during `docker:start` (#8)
 
 * **0.10.4**
   - Restructured and updated documentation

@@ -17,7 +17,7 @@ public class EnvUtilTest {
 
     @Test
     public void splitPath() {
-        List<String[]> res = EnvUtil.splitLinks(Arrays.asList("db", "postgres:9:db", "postgres:db"));
+        List<String[]> res = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db"));
         assertEquals(3,res.size());
         String[][] expected = new String[][] {
                 { "db", "db"},

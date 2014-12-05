@@ -7,7 +7,7 @@
   - [`docker:build`](#dockerbuild)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
-  - [`docker:log`](#dockerlog)
+  - [`docker:logs`](#dockerlogs)
 * [External Configuration](#external-configuration)
 * [Authentication](#authentication)
 
@@ -191,7 +191,7 @@ in the following sections.
 | [`docker:build`](#dockerbuild)   | Build images                         |
 | [`docker:push`](#dockerpush)     | Push images to a registry            |
 | [`docker:remove`](#dockerremove) | Remove images from local docker host |
-| [`docker:log`](#dockerlog)       | Show container logs                  |
+| [`docker:logs`](#dockerlogs)       | Show container logs                  |
 
 Note that all goals are orthogonal to each other. For example in order
 to start a container for your application you typically have to build
@@ -318,7 +318,7 @@ A `port` stanza may take one of two forms:
 Another useful configuration option is `portPropertyFile` with which a
 file can be specified to which the real port mapping is written after
 all dynamic ports has been resolved. The keys of this property file
-are the variable names, the values are the dynamically assgined host
+are the variable names, the values are the dynamically assigned host
 ports. This property file might be useful together with other maven
 plugins which already resolved their maven variables earlier in the
 lifecycle than this plugin so that the port variables might not be
@@ -596,7 +596,7 @@ only data images this example demonstrates the effect of this goal:
 * `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove`
   will remove 'data' and 'tomcat' 
 
-#### `docker:log`
+#### `docker:logs`
 
 With this goal it is possible to print out the logs of containers
 started from images configured in this plugin. By default only the
@@ -624,7 +624,7 @@ properties can the behaviour of this goal:
 Example:
 
 ````
-$ mvn docker:log -Ddocker.follow -Ddocker.logDate=DEFAULT
+$ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT
 ````
 ### External Configuration
 
@@ -685,12 +685,13 @@ values in the `<build>` and `<run>` sections.
   sets the environment variable `JAVA_OPTS`. Multiple such entries can
   be provided. This environment is used both for building images and
   running containers. The value cannot be empty.
-* **docker.ports.PROP** Sets a port mapping. For example
-  `<docker.ports.jolokia.port>8080<docker.ports.jolokia.port>` maps
-  the container port 8080 dyamically to a host port and assigns this
+* **docker.ports.idx** Sets a port mapping. For example
+  `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps
+  the container port 8080 dynamically to a host port and assigns this
   host port to the Maven property `${jolokia.port}`. See
-  [Port mapping](#port-mapping) for possible mapping options. For
-  creating images only the value is used for exposing the port.
+  [Port mapping](#port-mapping) for possible mapping options. When creating images images only
+  the right most port is used for exposing the port. For providing multiple port mappings,
+  the index should be count up. 
 * **docker.portPropertyFile** specifies a path to a port mapping used
   when starting a container.
 * **docker.links.idx** defines a list of links to other containers when
