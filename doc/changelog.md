@@ -9,6 +9,8 @@ New configuration syntax with support for multiple containers
   - Add property based configuration for images (#42)
   - Add new goal `docker:logs` for showing logs of configured containers (#49)
   - Support for showing logs during `docker:start` (#8)
+  - Use `COPY` instead of `ADD` when putting a Maven assembly into the container (#53)
+  - If `exportDir` is `/` then do not actually export (since it doesn't make much sense) (see #62)
 
 * **0.10.4**
   - Restructured and updated documentation
