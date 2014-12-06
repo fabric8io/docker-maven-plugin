@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
 import org.jolokia.docker.maven.config.RunImageConfiguration.RestartPolicy;
@@ -19,6 +20,8 @@ import org.junit.Test;
 public class PropertyConfigHandlerTest {
     
     private static final String ALIAS = "alias";
+    private static final String ASSEMBLY = "assembly.xml";
+    private static final String ASSEMBLY_REF = "project";
     private static final String BIND1 = "/foo";
     private static final String BIND2 = "/tmp:/tmp";
     private static final String CAP = "CAP";
@@ -26,12 +29,15 @@ public class PropertyConfigHandlerTest {
     private static final String DOMAINNAME = "domain.com";
     private static final String DNS_IP = "8.8.8.8";
     private static final String ENTRYPOINT = "entrypoint.sh";
+    private static final String EXPORT = "/export";
     private static final String HOST = "localhost:127.0.0.1";
     private static final String HOSTNAME = "subdomain";
     private static final String IMAGE = "image";
     private static final String LINK = "redis";
-    private static final String PORT = "8080";
+    private static final String P8080 = "8080";
+    private static final String PORT = "8081:" + P8080;
     private static final String PROP_FILE = "/tmp/props.txt";
+    private static final String REGISTRY = "registry";
     private static final String RESTART_POLICY_NAME = "on-failure";    
     private static final String SEARCH = "example.com";
     private static final String TYPE = "type";
@@ -68,9 +74,29 @@ public class PropertyConfigHandlerTest {
         ImageConfiguration config = new ImageConfiguration.Builder().name(IMAGE).alias(ALIAS).externalConfig(external).build();
         ImageConfiguration resolved = handler.resolve(config, createProperties(PropertyConfigHandler.DOCKER)).get(0);
 
+        validateBuildConfiguration(resolved.getBuildConfiguration());
         validateRunConfiguration(resolved.getRunConfiguration());
     }
 
+    private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
+        assertEquals(ASSEMBLY, buildConfig.getAssemblyDescriptor());
+        assertEquals(ASSEMBLY_REF, buildConfig.getAssemblyDescriptorRef());
+        assertEquals(COMMAND, buildConfig.getCommand());
+        assertEquals(EXPORT, buildConfig.getExportDir());
+        assertEquals(IMAGE, buildConfig.getFrom());
+        assertEquals(Arrays.asList(P8080), buildConfig.getPorts());
+        assertEquals(REGISTRY, buildConfig.getRegistry());
+        assertEquals(Arrays.asList(BIND1), buildConfig.getVolumes());
+        
+        validateEnv(buildConfig.getEnv());
+    }
+
+    private void validateEnv(Map<String, String> env) {
+        assertTrue(env.containsKey(ALIAS));
+        assertEquals(USER, env.get(ALIAS));
+    }
+    
+    
     private void validateRunConfiguration(RunImageConfiguration runConfig) {
         assertEquals(BIND, runConfig.getBind());
         assertEquals(CAP_ADD_DROP, runConfig.getCapAdd());
@@ -92,9 +118,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(VOLUMES_FROM, runConfig.getVolumesFrom());
         assertEquals(WORKING_DIR, runConfig.getWorkingDir());
 
-        Map<String, String> env = runConfig.getEnv();
-        assertTrue(env.containsKey(ALIAS));
-        assertEquals(USER, env.get(ALIAS));
+        validateEnv(runConfig.getEnv());
             
         // not sure it's worth it to implement 'equals/hashcode' for these
         RestartPolicy policy = runConfig.getRestartPolicy();
@@ -106,12 +130,18 @@ public class PropertyConfigHandlerTest {
         assertEquals(WAIT_LOG, wait.getLog());
         assertEquals(WAIT_TIME, wait.getTime());
     }
-
+    
     private Properties createProperties(String prefix) {
         Properties properties = new Properties();
 
         properties.put(createKey(prefix, PropertyConfigHandler.NAME), IMAGE);
         properties.put(createKey(prefix, PropertyConfigHandler.ALIAS), ALIAS);
+        
+        properties.put(createKey(prefix, PropertyConfigHandler.FROM), IMAGE);
+        
+        // these both can't be active at once, but for testing it's ok
+        properties.put(createKey(prefix, PropertyConfigHandler.ASSEMBLY_DESCRIPTOR), ASSEMBLY);
+        properties.put(createKey(prefix, PropertyConfigHandler.ASSEMBLY_DESCRIPTOR_REF), ASSEMBLY_REF);
         
         properties.put(createKey(prefix, createKey(PropertyConfigHandler.BIND, "1")), BIND1);
         properties.put(createKey(prefix, createKey(PropertyConfigHandler.BIND, "2")), BIND2);
@@ -126,6 +156,7 @@ public class PropertyConfigHandlerTest {
         // don't care what these are, just that we get them...
         properties.put(createKey(prefix, createKey(PropertyConfigHandler.ENV, ALIAS)), USER);
         
+        properties.put(createKey(prefix, PropertyConfigHandler.EXPORT_DIR), EXPORT);
         properties.put(createKey(prefix, createKey(PropertyConfigHandler.EXTRA_HOSTS, "1")), HOST);
         properties.put(createKey(prefix, PropertyConfigHandler.HOSTNAME), HOSTNAME);
         properties.put(createKey(prefix, createKey(PropertyConfigHandler.LINKS, "1")), LINK);
@@ -134,10 +165,12 @@ public class PropertyConfigHandlerTest {
         properties.put(createKey(prefix, PropertyConfigHandler.PORT_PROP_FILE), PROP_FILE);
         properties.put(createKey(prefix, createKey(PropertyConfigHandler.PORTS, "1")), PORT);
         properties.put(createKey(prefix, PropertyConfigHandler.PRIVILEGED), String.valueOf(PRIVILEGED));
+        properties.put(createKey(prefix, PropertyConfigHandler.REGISTRY), REGISTRY);
         properties.put(createKey(prefix, PropertyConfigHandler.RESTART_POLICY_NAME), RESTART_POLICY_NAME);
         properties.put(createKey(prefix, PropertyConfigHandler.RESTART_POLICY_RETRY), String.valueOf(RESTART_POLICY_RETRIES));
-        properties.put(createKey(prefix, createKey(PropertyConfigHandler.VOLUMES_FROM, "1")), VOLUME_FROM);
         properties.put(createKey(prefix, PropertyConfigHandler.USER), USER);
+        properties.put(createKey(prefix, createKey(PropertyConfigHandler.VOLUMES, "1")), BIND1);
+        properties.put(createKey(prefix, createKey(PropertyConfigHandler.VOLUMES_FROM, "1")), VOLUME_FROM);
         properties.put(createKey(prefix, PropertyConfigHandler.WAIT_LOG), WAIT_LOG);
         properties.put(createKey(prefix, PropertyConfigHandler.WAIT_TIME), String.valueOf(WAIT_TIME));
         properties.put(createKey(prefix, PropertyConfigHandler.WAIT_URL), WAIT_URL);

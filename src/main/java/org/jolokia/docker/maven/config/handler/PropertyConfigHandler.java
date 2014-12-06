@@ -67,6 +67,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     static final String RESTART_POLICY_NAME = "restartPolicy.name";
     static final String RESTART_POLICY_RETRY = "restartPolicy.retry";
     static final String USER = "user";
+    static final String VOLUMES = "volumes";
     static final String VOLUMES_FROM = "volumesFrom";
     static final String WAIT_LOG = "wait.log";
     static final String WAIT_TIME = "wait.time";
@@ -110,6 +111,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .from(withPrefix(prefix, FROM, properties))
                 .exportDir(withPrefix(prefix, EXPORT_DIR, properties))
                 .registry(withPrefix(prefix, REGISTRY, properties))
+                .volumes(listWithPrefix(prefix, VOLUMES, properties))
                 .build();
     }
 

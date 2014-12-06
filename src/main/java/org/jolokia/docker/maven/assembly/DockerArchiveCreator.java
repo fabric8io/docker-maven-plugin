@@ -84,10 +84,11 @@ public class DockerArchiveCreator {
                             .exportDir(config.getExportDir())
                             .add("maven", "")
                             .expose(config.getPorts())
-                            .env(config.getEnv());
+                            .env(config.getEnv())
+                            .volumes(config.getVolumes());
             if (config.getFrom() != null) {
                 builder.baseImage(config.getFrom());
-                builder.command(null); // Use command from base image (gets overwritten below if explicitely set)
+                builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitely set)
             }
             if (config.getCommand() != null) {
                 builder.command(EnvUtil.splitWOnSpaceWithEscape(config.getCommand()));

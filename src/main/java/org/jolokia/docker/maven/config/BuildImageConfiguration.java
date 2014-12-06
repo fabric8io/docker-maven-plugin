@@ -41,6 +41,11 @@ public class BuildImageConfiguration {
     private List<String> ports;
 
     /**
+     * @paramter
+     */
+    private List<String> volumes;
+    
+    /**
      * @parameter
      */
      private Map<String,String> env;
@@ -51,20 +56,7 @@ public class BuildImageConfiguration {
     private String command;
 
     public BuildImageConfiguration() {}
-
-    private BuildImageConfiguration(String from, String exportDir, String registry,
-                                    String assemblyDescriptor, String assemblyDescriptorRef,
-                                    List<String> ports, Map<String, String> env, String command) {
-        this.from = from;
-        this.exportDir = exportDir;
-        this.registry = registry;
-        this.assemblyDescriptor = assemblyDescriptor;
-        this.assemblyDescriptorRef = assemblyDescriptorRef;
-        this.ports = ports;
-        this.env = env;
-        this.command = command;
-    }
-
+   
     public String getFrom() {
         return from;
     }
@@ -89,6 +81,10 @@ public class BuildImageConfiguration {
         return ports;
     }
 
+    public List<String> getVolumes() {
+        return volumes;
+    }
+    
     public Map<String, String> getEnv() {
         return env;
     }
@@ -97,60 +93,56 @@ public class BuildImageConfiguration {
         return command;
     }
 
-
     public static class Builder {
-        private String from;
-        private String exportDir;
-        private String registry;
-        private String assemblyDescriptor;
-        private String assemblyDescriptorRef;
-        private List<String> ports;
-        private Map<String, String> env;
-        private String command;
-
+        private final BuildImageConfiguration config = new BuildImageConfiguration();
+        
         public Builder from(String from) {
-            this.from = from;
+            config.from = from;
             return this;
         }
 
         public Builder exportDir(String exportDir) {
-            this.exportDir = exportDir;
+            config.exportDir = exportDir;
             return this;
         }
 
         public Builder registry(String registry) {
-            this.registry = registry;
+            config.registry = registry;
             return this;
         }
 
         public Builder assemblyDescriptor(String assemblyDescriptor) {
-            this.assemblyDescriptor = assemblyDescriptor;
+            config.assemblyDescriptor = assemblyDescriptor;
             return this;
         }
 
         public Builder assemblyDescriptorRef(String assemblyDescriptorRef) {
-            this.assemblyDescriptorRef = assemblyDescriptorRef;
+            config.assemblyDescriptorRef = assemblyDescriptorRef;
             return this;
         }
 
         public Builder ports(List<String> ports) {
-            this.ports = ports;
+            config.ports = ports;
+            return this;
+        }
+        
+        public Builder volumes(List<String> volumes) {
+            config.volumes = volumes;
             return this;
         }
 
         public Builder env(Map<String, String> env) {
-            this.env = env;
+            config.env = env;
             return this;
         }
 
         public Builder command(String command) {
-            this.command = command;
+            config.command = command;
             return this;
         }
 
         public BuildImageConfiguration build() {
-            return new BuildImageConfiguration(from, exportDir, registry, assemblyDescriptor,
-                                               assemblyDescriptorRef, ports, env, command);
+            return config;
         }
     }
 }

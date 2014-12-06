@@ -30,11 +30,14 @@ public class DockerFileBuilder {
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
     // See also http://docs.docker.io/reference/builder/#add
-    private List<AddEntry> addEntries;
+    private List<AddEntry> addEntries = new ArrayList<>();
 
     // list of ports to expose and environments to use
-    private List<Integer> ports;
-    private Map<String,String> envEntries;
+    private List<Integer> ports = new ArrayList<>();
+    private Map<String,String> envEntries = new HashMap<>();
+    
+    // exposed volumes
+    private List<String> volumes = new ArrayList<>();
 
     /**
      * Cretate a DockerFile in the given directory
@@ -53,43 +56,33 @@ public class DockerFileBuilder {
      * <a href="http://docs.docker.io/reference/builder/#usage">Docker reference manual</a>
      *
      * @return the dockerfile create
+     * @throws IllegalArgumentException if no src/dest entries have been added
      */
-    public String content() {
+    public String content() throws IllegalArgumentException {
         if (addEntries.size() == 0) {
             throw new IllegalArgumentException("No entries added");
         }
+
         StringBuilder b = new StringBuilder();
+        
         b.append("FROM ").append(baseImage).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
 
-        // Entries
-        for (AddEntry entry : addEntries) {
-            b.append("COPY ").append(entry.source).append(" ")
-             .append(exportDir).append("/").append(entry.destination).append("\n");
-        }
-
-        // Ports
-        if (ports.size() > 0) {
-            b.append("EXPOSE");
-            for (Integer port : ports) {
-                b.append(" " + port);
-            }
-            b.append("\n");
-        }
-
-        // Volume export
-        if (exportDir.length() > 0) {
-            // Dont export a top level export dir
-            b.append("VOLUME [\"").append(exportDir).append("\"]\n");
-        }
-
         // Environment variable support
-        for (Map.Entry<String,String> entry : envEntries.entrySet()) {
-            b.append("ENV ").append(entry.getKey()).append(" ")
-             .append(entry.getValue()).append("\n");
-        }
-
+        addEnv(b);
+        // Ports
+        addPorts(b);
+        // Volume export
+        addVolumes(b);
+        // Entries
+        addEntries(b);
         // Default command mit args
+        addCommands(b);
+
+        return b.toString();
+    }
+
+    private void addCommands(StringBuilder b) {
         if (command != null) {
             b.append("CMD [\"").append(command).append("\"");
             for (String arg : arguments) {
@@ -97,19 +90,52 @@ public class DockerFileBuilder {
             }
             b.append("]").append("\n");
         }
-
-        return b.toString();
+    }
+    
+    private void addEntries(StringBuilder b) {
+        for (AddEntry entry : addEntries) {
+            b.append("COPY ").append(entry.source).append(" ")
+             .append(exportDir).append("/").append(entry.destination).append("\n");
+        }
     }
 
+    private void addEnv(StringBuilder b) {
+        for (Map.Entry<String,String> entry : envEntries.entrySet()) {
+            b.append("ENV ").append(entry.getKey()).append(" ")
+             .append(entry.getValue()).append("\n");
+        }
+    }
+
+    private void addPorts(StringBuilder b) {
+        if (ports.size() > 0) {
+            b.append("EXPOSE");
+            for (Integer port : ports) {
+                b.append(" " + port);
+            }
+            b.append("\n");
+        }
+    }
+
+    private void addVolumes(StringBuilder b) {
+        addVolume(b, exportDir);
+        for (String volume : volumes) {
+            addVolume(b, volume);
+        }
+    }
+    
+    private void addVolume(StringBuilder buffer, String volume) {
+        while (volume.endsWith("/")) {
+            volume = volume.substring(0, volume.length() - 1);
+        }
+        // don't export '/'
+        if (volume.length() > 0) {        
+            buffer.append("VOLUME [\"").append(volume).append("\"]\n");
+        }
+    }
+    
     // ==========================================================================
     // Builder stuff ....
-    public DockerFileBuilder() {
-        addEntries = new ArrayList<AddEntry>();
-        
-        ports = new ArrayList<Integer>();
-        
-        envEntries = new HashMap<String, String>();
-    }
+    public DockerFileBuilder() {}
 
     public DockerFileBuilder baseImage(String baseImage) {
         if (baseImage != null) {
@@ -126,10 +152,6 @@ public class DockerFileBuilder {
     public DockerFileBuilder exportDir(String dir) {
         if (dir != null) {
             exportDir = dir;
-            // Strip trailing slashes
-            while (exportDir.endsWith("/")) {
-                exportDir = exportDir.substring(0,exportDir.length() - 1);
-            }
         }
         return this;
     }
@@ -150,16 +172,11 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder expose(int port) {
-        this.ports.add(port);
-        return this;
-    }
-
     public DockerFileBuilder expose(List<String> ports) {
         if (ports != null) {
             for (String port : ports) {
                 if (port != null) {
-                    expose(Integer.parseInt(port));
+                    this.ports.add(Integer.parseInt(port));
                 }
             }
         }
@@ -167,11 +184,21 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder env(Map<String, String> values) {
-        this.envEntries = values != null ? values : new HashMap<String,String>();
-        validateEnv(envEntries);
+        if (values != null) {
+            this.envEntries.putAll(values);
+            validateEnv(envEntries);
+        }
         return this;
     }
 
+    
+    public DockerFileBuilder volumes(List<String> volumes) {
+        if (volumes != null) {
+           this.volumes.addAll(volumes);
+        }
+        return this;
+    }
+    
     private void validateEnv(Map<String,String> env) {
         for (Map.Entry<String,String> entry : env.entrySet()) {
             if (entry.getValue() == null || entry.getValue().length() == 0) {
@@ -196,6 +223,5 @@ public class DockerFileBuilder {
                 destination = destination.substring(1);
             }
         }
-
     }
 }
