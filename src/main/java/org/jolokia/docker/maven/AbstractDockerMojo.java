@@ -59,8 +59,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** @component */
     protected ImageConfigResolver imageConfigResolver;
 
-    /** @parameter property = "docker.api.version" default-value = "v1.15" */
-    private String dockerAPI;
+    /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
+    private String apiVersion;
     
     // URL to docker daemon
     /** @parameter property = "docker.host" */
@@ -123,7 +123,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
             colorInit();
             DockerAccess access = null;
             try {
-                access = new DockerAccessWithHttpClient(dockerAPI, extractUrl(), getCertPath(), this);
+                access = new DockerAccessWithHttpClient(apiVersion, extractUrl(), getCertPath(), this);
                 access.start();
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot create docker access object ",e);
