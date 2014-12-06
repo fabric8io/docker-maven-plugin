@@ -7,6 +7,9 @@
 This is a Maven plugin for managing Docker images and containers for your builds.
 The current version ist **0.10.5** and works with Maven 3.2.1 or later.
 
+The current Docker API version used is `v1.15`. See the **[User Manual](doc/manual.md)** for details on how to override
+this value if you are running an older version of Docker and cannot upgrade.
+
 #### Goals
 
 | Goal                                          | Description                          |

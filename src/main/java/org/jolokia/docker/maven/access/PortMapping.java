@@ -1,11 +1,13 @@
 package org.jolokia.docker.maven.access;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Entity holding port mappings which can be set through the configuration.
@@ -172,41 +174,14 @@ public class PortMapping {
 		containerPortsMap.put(containerPort, hostPort);
 	}
 
-    /**
-     * Return this object as docker configuration which can be used during startup
-     * @return the JSON config holding the port mappings
-     */
-    public JSONObject toDockerConfig() {
-        if (containerPortsMap.size() > 0) {
-            JSONObject c = new JSONObject();
-            for (Map.Entry<Integer,Integer> entry : containerPortsMap.entrySet()) {
-                Integer port = entry.getKey();
-                Integer hostPort = entry.getValue();
-                JSONObject o = new JSONObject();
-                o.put("HostPort",hostPort != null ? hostPort.toString() : "");
-
-                if (bindToMap.containsKey(port)) {
-                    o.put("HostIp", bindToMap.get(port));
-                }
-
-                JSONArray a = new JSONArray();
-                a.put(o);
-                c.put(port + "/tcp",a);
-            }
-            return c;
-        } else {
-            return null;
-        }
-    }
-
-    /**
+	/**
      * Return true if this mapping contains no ports
      */
     public boolean isEmpty() {
         return containerPortsMap.isEmpty();
     }
 
-        Map<Integer, String> getBindToMap() {
+    Map<Integer, String> getBindToMap() {
     	return bindToMap;
     }
 
