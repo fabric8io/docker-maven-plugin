@@ -1,14 +1,13 @@
 package org.jolokia.docker.maven;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.Container;
 import org.jolokia.docker.maven.access.DockerAccess;
@@ -113,20 +112,8 @@ public class StartMojoContainerConfigsTest {
         return Arrays.asList("redis3:redis");
     }
 
-    private String loadFile(String fileName) {
-        StringBuilder buffer = new StringBuilder();
-        File file = new File(getClass().getClassLoader().getResource(fileName).getFile());
-
-        try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                buffer.append(scanner.nextLine());
-            }
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return buffer.toString();
+    private String loadFile(String fileName) throws IOException {
+        return IOUtils.toString(getClass().getClassLoader().getResource(fileName));
     }
 
     private List<String> ports() {
