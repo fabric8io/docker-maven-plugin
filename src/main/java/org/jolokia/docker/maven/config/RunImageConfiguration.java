@@ -18,8 +18,6 @@ public class RunImageConfiguration {
      */
     private Map<String, String> env;
 
-    private Boolean privileged;
-
     // Command to execute in container
     /**
      * @parameter
@@ -97,6 +95,11 @@ public class RunImageConfiguration {
     /**
      * @parameter
      */
+    private Boolean privileged;
+
+    /**
+     * @parameter
+     */
     private List<String> extraHosts;
     
     // Port mapping. Can contain symbolic names in which case dynamic
@@ -110,12 +113,7 @@ public class RunImageConfiguration {
     /**
      * @parameter
      */
-    private List<String> volumes;
-
-    /**
-     * @parameter
-     */
-    private List<String> bind;
+    private VolumeConfiguration volumes;
 
     // Links to other container started
     /**
@@ -194,10 +192,6 @@ public class RunImageConfiguration {
         return log;
     }
 
-    public List<String> getBind() {
-        return bind;
-    }
-
     public List<String> getCapAdd() {
         return capAdd;
     }
@@ -218,7 +212,7 @@ public class RunImageConfiguration {
         return extraHosts;
     }
     
-    public List<String> getVolumesFrom() {
+    public VolumeConfiguration getVolumeConfiguration() {
         return volumes;
     }
 
@@ -230,7 +224,7 @@ public class RunImageConfiguration {
         return privileged;
     }
 
-    public RunImageConfiguration.RestartPolicy getRestartPolicy() {
+    public RestartPolicy getRestartPolicy() {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
 
@@ -289,11 +283,6 @@ public class RunImageConfiguration {
             return this;
         }
 
-        public Builder bind(List<String> bind) {
-            config.bind = bind;
-            return this;
-        }
-
         public Builder capAdd(List<String> capAdd) {
             config.capAdd = capAdd;
             return this;
@@ -324,7 +313,7 @@ public class RunImageConfiguration {
             return this;
         }
 
-        public Builder volumes(List<String> volumes) {
+        public Builder volumes(VolumeConfiguration volumes) {
             config.volumes = volumes;
             return this;
         }
@@ -359,33 +348,4 @@ public class RunImageConfiguration {
         }
     }
 
-    public static class RestartPolicy {
-
-        public static final RestartPolicy DEFAULT = new RestartPolicy();
-        
-        /**
-         * @parameter
-         */
-        private String name;
-
-        /**
-         * @parameter
-         */
-        private int retry;
-
-        public RestartPolicy() { }
-
-        public RestartPolicy(String name, int retry) {
-            this.name = name;
-            this.retry = retry;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public int getRetry() {
-            return retry;
-        }
-    }
 }

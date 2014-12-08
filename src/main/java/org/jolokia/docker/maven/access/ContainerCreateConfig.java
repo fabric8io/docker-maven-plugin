@@ -20,7 +20,7 @@ public class ContainerCreateConfig {
             JSONObject extractedVolumes = new JSONObject();
 
             for (String volume : volumes) {
-                extractedVolumes.put(volume.contains(":") ? volume.split(":")[0] : volume,
+                extractedVolumes.put(extractContainerPath(volume),
                                      new JSONObject());
             }
             createConfig.put("Volumes", extractedVolumes);
@@ -114,5 +114,15 @@ public class ContainerCreateConfig {
             createConfig.put(name, value);
         }
         return this;
+    }
+
+    private String extractContainerPath(String volume) {
+        if (volume.contains(":")) {
+            String[] parts = volume.split(":");
+            if (parts.length > 1) {
+                return parts[1];
+            }
+        }
+        return volume;
     }
 }

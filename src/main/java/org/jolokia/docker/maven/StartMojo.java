@@ -104,7 +104,7 @@ public class StartMojo extends AbstractDockerMojo {
     ContainerCreateConfig createContainerCreateConfig(String imageName,RunImageConfiguration runConfig, PortMapping mappedPorts)
         throws MojoExecutionException {
         try {
-            return new ContainerCreateConfig(imageName)
+            ContainerCreateConfig config = new ContainerCreateConfig(imageName)
                     .hostname(runConfig.getHostname())
                     .domainname(runConfig.getDomainname())
                     .user(runConfig.getUser())
@@ -114,8 +114,12 @@ public class StartMojo extends AbstractDockerMojo {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnv())
-                    .command(runConfig.getCommand())
-                    .binds(runConfig.getBind());
+                    .command(runConfig.getCommand());
+            VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
+            if (volumeConfig != null) {
+                config.binds(volumeConfig.getBind());
+            }
+            return config;
         }
         catch (IllegalArgumentException e) {
             throw new MojoExecutionException(String.format("Failed to create contained configuration for [%s]", imageName), e);
@@ -124,21 +128,24 @@ public class StartMojo extends AbstractDockerMojo {
 
     ContainerStartConfig createContainerStartConfig(RunImageConfiguration runConfig, PortMapping mappedPorts, List<String> links)
             throws MojoExecutionException, DockerAccessException {
-            RunImageConfiguration.RestartPolicy restartPolicy = runConfig.getRestartPolicy();
+            RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
-        return new ContainerStartConfig()
+        ContainerStartConfig config = new ContainerStartConfig()
                     .extraHosts(runConfig.getExtraHosts())
-                    .binds(runConfig.getBind())
-                    .volumesFrom(runConfig.getVolumesFrom())
                     .links(links)
                     .portBindings(mappedPorts)
                     .privileged(runConfig.getPrivileged())
                     .dns(runConfig.getDns())
                     .dnsSearch(runConfig.getDnsSearch())
-                    .volumesFrom(findContainersForImages(runConfig.getVolumesFrom()))
                     .capAdd(runConfig.getCapAdd())
                     .capDrop(runConfig.getCapDrop())
                     .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
+        VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
+        if (volConfig != null) {
+            config.binds(volConfig.getBind())
+                  .volumesFrom(findContainersForImages(volConfig.getFrom()));
+        }
+        return config;
     }
 
     // visible for testing
@@ -175,8 +182,8 @@ public class StartMojo extends AbstractDockerMojo {
 
     // visible for testing
     List<String> findContainersForImages(List<String> images) throws MojoExecutionException {
-        List<String> containers = new ArrayList<>();
         if (images != null) {
+            List<String> containers = new ArrayList<>();
             for (String image : images) {
                 String container = lookupContainer(image);
                 if (container == null) {
@@ -184,8 +191,9 @@ public class StartMojo extends AbstractDockerMojo {
                 }
                 containers.add(container);
             }
+            return containers;
         }
-        return containers;
+        return null;
     }
 
     private String lookupContainer(String lookup) {

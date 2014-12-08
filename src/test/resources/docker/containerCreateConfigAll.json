@@ -8,7 +8,7 @@
 	"Cmd": [ "date" ],
 	"Entrypoint": "entrypoint",
 	"Image": "base",
-	"Volumes":  { "/tmp": { } },
+	"Volumes":  { "/container_tmp": { } },
 	"WorkingDir": "/foo",
 	"ExposedPorts": { "22/tcp": { } }
 }

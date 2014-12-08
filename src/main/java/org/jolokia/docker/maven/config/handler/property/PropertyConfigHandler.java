@@ -18,7 +18,7 @@ package org.jolokia.docker.maven.config.handler.property;/*
 import java.util.*;
 
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.config.RunImageConfiguration.RestartPolicy;
+import org.jolokia.docker.maven.config.RestartPolicy;
 import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.jolokia.docker.maven.util.EnvUtil;
 
@@ -74,8 +74,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private RunImageConfiguration extractRunConfiguration(String prefix, Properties properties) {
+
         return new RunImageConfiguration.Builder()
-                .bind(listWithPrefix(prefix, BIND, properties))
                 .capAdd(listWithPrefix(prefix, CAP_ADD, properties))
                 .capDrop(listWithPrefix(prefix, CAP_DROP, properties))
                 .command(withPrefix(prefix, COMMAND, properties))
@@ -94,12 +94,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
                 .restartPolicy(extractRestartPolicy(prefix, properties))
                 .user(withPrefix(prefix, USER, properties))
-                .volumes(listWithPrefix(prefix, VOLUMES_FROM, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
                 .wait(extractWaitConfig(prefix, properties))
+                .volumes(extractVolumeConfig(prefix, properties))
                 .build();
     }
-
 
     // Extract only the values of the port mapping
     private List<String> extractPortValues(String prefix, Properties properties) {
@@ -115,20 +114,29 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return ret;
     }
 
+
     private RestartPolicy extractRestartPolicy(String prefix, Properties properties) {
-        String name = withPrefix(prefix, RESTART_POLICY_NAME, properties);
-        int retry = asInt(withPrefix(prefix, RESTART_POLICY_RETRY, properties));
-        return new RestartPolicy(name, retry);
+        return new RestartPolicy.Builder()
+                .name(withPrefix(prefix, RESTART_POLICY_NAME, properties))
+                .retry(asInt(withPrefix(prefix, RESTART_POLICY_RETRY, properties)))
+                .build();
     }
 
     private WaitConfiguration extractWaitConfig(String prefix, Properties properties) {
         return new WaitConfiguration.Builder()
                 .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
-                .url(withPrefix(prefix,WAIT_URL,properties))
-                .log(withPrefix(prefix,WAIT_LOG,properties))
+                .url(withPrefix(prefix, WAIT_URL, properties))
+                .log(withPrefix(prefix, WAIT_LOG, properties))
                 .build();
     }
-    
+
+    private VolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {
+        return new VolumeConfiguration.Builder()
+                .bind(listWithPrefix(prefix, BIND, properties))
+                .from(listWithPrefix(prefix, VOLUMES_FROM, properties))
+                .build();
+    }
+
     private int asInt(String s) {
         return s != null ? Integer.parseInt(s) : 0;
     }

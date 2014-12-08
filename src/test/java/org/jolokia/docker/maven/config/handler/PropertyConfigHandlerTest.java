@@ -130,7 +130,7 @@ public class PropertyConfigHandlerTest {
     }
 
     private void validateRunConfiguration(RunImageConfiguration runConfig) {
-        assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getBind());
+        assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
         assertEquals("command.sh", runConfig.getCommand());
@@ -147,13 +147,13 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("8081:8080"), runConfig.getPorts());
         assertEquals(true, runConfig.getPrivileged());
         assertEquals("tomcat", runConfig.getUser());
-        assertEquals(a("from"), runConfig.getVolumesFrom());
+        assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
         assertEquals("foo", runConfig.getWorkingDir());
 
         validateEnv(runConfig.getEnv());
 
         // not sure it's worth it to implement 'equals/hashcode' for these
-        RunImageConfiguration.RestartPolicy policy = runConfig.getRestartPolicy();
+        RestartPolicy policy = runConfig.getRestartPolicy();
         assertEquals("on-failure", policy.getName());
         assertEquals(1, policy.getRetry());
 

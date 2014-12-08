@@ -23,6 +23,13 @@
         <role>Developer</role>
       </roles>
     </developer>
+    <developer>
+      <name>Jae Gangemi</name>
+      <id>jgangemi</id>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
   </developers>
 
   <properties>

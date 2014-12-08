@@ -1,5 +1,5 @@
 {
-    "Binds": [ "/tmp:/tmp" ],
+    "Binds": [ "/host_tmp:/container_tmp" ],
     "Links": [ "redis3:redis" ],
     "PortBindings": { "22/tcp": [ { "HostIp" : "0.0.0.0", "HostPort": "11022" }] },
     "Privileged":true,

@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.10.5</version>
+  <version>0.10.6-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -85,7 +85,13 @@
               <name>${image}</name>
               <run>
                 <volumes>
-                  <from>data</from>
+                  <bind>
+                    <volume>/test:/test</volume>
+                    <volume>/host:/container:ro</volume>
+                  </bind>
+                  <from>
+                    <image>data</image>
+                  </from>
                 </volumes>
                 <env>
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>

@@ -320,9 +320,8 @@ the configuration's `<run>` section of all given (and enabled images)
 
 The `<run>` configuration knows the following sub elements:
 
-* **bind** can contain a list of `volume` of bindings (or 'host mounts). Use `/path` to create and
-  expose a new volume in the containaer, `/host_path:/container_path` to mount a host path into the
-  container and `/host_path:/container_path:ro` to bind it read-only.
+* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]"
+ (#volume-binding) for details.
 * **capAdd** (*v1.14*) a list of `add` elements to specify kernel parameters to add to
   the container.
 * **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
@@ -363,8 +362,6 @@ The `<run>` configuration knows the following sub elements:
   list. This is probably most useful when used from the command line
   as system property `docker.showLogs`.   
 * **user** (*v1.11*) user used inside the container
-* **volumes** can contain a list of `<from>` elements which specify
-  image names or aliases of containers whose volumes should be imported.
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup) which subelements are
   available and how they can be specified.
@@ -374,13 +371,6 @@ Example:
 
 ````xml
 <run>
-  <bind>
-    <volume>/logs</volume>
-    <volume>/tmp:/tmp</volume>
-  </bind>
-  <volumes>
-    <from>jolokia/docker-demo</from>
-  </volumes>
   <env>
     <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
     <JOLOKIA_OFF/>
@@ -503,6 +493,36 @@ DB_PORT_5432_TCP_PROTO=tcp
 DB_PORT_5432_TCP_PORT=5432
 DB_PORT_5432_TCP_ADDR=172.17.0.5
 ```
+
+##### Volume binding
+
+A container can bind (or "mount") volumes from various source when starting up: Either from a directory of
+the host system or from another container which exports one or more directories. The mount configuration is
+specified within a `<volumes>` section of the run configuration. It can contain the following sub elements:
+
+* **from** can contain a list of `<image>` elements which specify
+  image names or aliases of containers whose volumes should be imported.
+* **bind** can contain a list of `<volume>` specifications (or 'host mounts). Use `/path` to create and
+  expose a new volume in the containaer, `/host_path:/container_path` to mount a host path into the
+  container and `/host_path:/container_path:ro` to bind it read-only.
+
+````xml
+<volumes>
+  <bind>
+    <volume>/logs</volume>
+    <volume>/opt/host_export:/opt/container_import</volume>
+  </bind>
+  <from>
+    <image>jolokia/docker-demo</image>
+  </from>
+</volumes>
+````
+
+In this example the container mounts from the host `/logs` as `/logs` on the container, and `/opt/host_export` from
+the host as `/opt/container_import` on the container. In addition all exported volumes from the container which has
+been created from the image `jolokia/docker-demo` are mounted directly into the container (with the same name as
+the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
+the full image name, an alias name like *service* can be used, too.
 
 ##### Container restart policy
 

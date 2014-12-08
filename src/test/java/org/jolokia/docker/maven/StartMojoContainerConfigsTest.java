@@ -6,14 +6,12 @@ import java.util.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.config.RunImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 
 public class StartMojoContainerConfigsTest {
-
-    private static final String BIND = "/tmp:/tmp";
 
     @Test
     @SuppressWarnings("unused")
@@ -25,6 +23,12 @@ public class StartMojoContainerConfigsTest {
          *  
          * it didn't seem worth the effor to build a separate test to verify the json and then mock/verify all the calls here
          */
+
+        VolumeConfiguration volumeConfiguration =
+                new VolumeConfiguration.Builder()
+                .bind(bind())
+                .from(volumesFrom())
+                .build();
         final RunImageConfiguration runConfig =
                 new RunImageConfiguration.Builder()
                         .hostname("hostname")
@@ -36,11 +40,10 @@ public class StartMojoContainerConfigsTest {
                         .command("date")
                         .entrypoint("entrypoint")
                         .extraHosts(extraHosts())
-                        .bind(bind())
                         .workingDir("/foo")
                         .ports(ports())
                         .links(links())
-                        .volumes(volumesFrom())
+                        .volumes(volumeConfiguration)
                         .dns(dns()).dnsSearch(dnsSearch())
                         .privileged(true).capAdd(capAdd())
                         .capDrop(capDrop())
@@ -66,7 +69,7 @@ public class StartMojoContainerConfigsTest {
     }
 
     private List<String> bind() {
-        return Arrays.asList(BIND);
+        return Arrays.asList("/host_tmp:/container_tmp");
     }
 
     private List<String> capAdd() {
@@ -109,8 +112,8 @@ public class StartMojoContainerConfigsTest {
         return Arrays.asList("0.0.0.0:11022:22");
     }
 
-    private RunImageConfiguration.RestartPolicy restartPolicy() {
-        return new RunImageConfiguration.RestartPolicy("on-failure", 1);
+    private RestartPolicy restartPolicy() {
+        return new RestartPolicy.Builder().name("on-failure").retry(1).build();
     }
 
     private List<String> volumesFrom() {
