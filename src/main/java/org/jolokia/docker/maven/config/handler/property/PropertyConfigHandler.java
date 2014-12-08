@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven.config.handler;/*
+package org.jolokia.docker.maven.config.handler.property;/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -19,7 +19,10 @@ import java.util.*;
 
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.RunImageConfiguration.RestartPolicy;
+import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.jolokia.docker.maven.util.EnvUtil;
+
+import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
 
 import static org.jolokia.docker.maven.util.EnvUtil.*;
 
@@ -28,47 +31,10 @@ import static org.jolokia.docker.maven.util.EnvUtil.*;
  * @since 18/11/14
  */
 public class PropertyConfigHandler implements ExternalConfigHandler {
-    
-    static final String ALIAS = "alias";
-    static final String ASSEMBLY_DESCRIPTOR = "assemblyDescriptor";
-    static final String ASSEMBLY_DESCRIPTOR_REF = "assemblyDescriptorRef";
-    static final String BIND = "bind";
-    static final String CAP_ADD = "capAdd";
-    static final String CAP_DROP = "capDrop";
-    static final String COMMAND = "command";
-    static final String DOCKER = "docker";
-    static final String DOMAINNAME = "domainname";
-    static final String DNS = "dns";
-    static final String DNS_SEARCH = "dnsSearch";
-    static final String ENTRYPOINT = "entrypoint";
-    static final String ENV = "env";
-    static final String EXPORT_DIR = "exportDir";
-    static final String EXTRA_HOSTS = "extraHosts";
-    static final String FROM = "from";
-    static final String HOSTNAME = "hostname";
-    static final String LINKS = "links";
-    static final String MEMORY = "memory";
-    static final String MEMORY_SWAP = "memorySwap";    
-    static final String NAME = "name";
-    static final String PREFIX = "prefix";
-    static final String PORT_PROP_FILE = "portPropertyFile";
-    static final String PORTS = "ports";
-    static final String PRIVILEGED = "privileged";
-    static final String PROPS = "props";
-    static final String REGISTRY = "registry";
-    static final String RESTART_POLICY_NAME = "restartPolicy.name";
-    static final String RESTART_POLICY_RETRY = "restartPolicy.retry";
-    static final String USER = "user";
-    static final String VOLUMES = "volumes";
-    static final String VOLUMES_FROM = "volumesFrom";
-    static final String WAIT_LOG = "wait.log";
-    static final String WAIT_TIME = "wait.time";
-    static final String WAIT_URL = "wait.url";
-    static final String WORKING_DIR = "workingDir";
-    
+
     @Override
     public String getType() {
-        return PROPS;
+        return "props";
     }
 
     @Override
@@ -123,14 +89,14 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .links(listWithPrefix(prefix, LINKS, properties))
                 .memory(longWithPrefix(prefix, MEMORY, properties))
                 .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
-                .portPropertyFile(withPrefix(prefix, PORT_PROP_FILE, properties))
+                .portPropertyFile(withPrefix(prefix, PORT_PROPERTY_FILE, properties))
                 .ports(listWithPrefix(prefix, PORTS, properties))
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
                 .restartPolicy(extractRestartPolicy(prefix, properties))
                 .user(withPrefix(prefix, USER, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES_FROM, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
-                .wait(extractWaitConfig(prefix,properties))
+                .wait(extractWaitConfig(prefix, properties))
                 .build();
     }
 
@@ -167,28 +133,24 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return s != null ? Integer.parseInt(s) : 0;
     }
 
-    private String getKey(String prefix, String key) {
-        return prefix + "." + key;
-    }
-    
-    private List<String> listWithPrefix(String prefix, String key, Properties properties) {
-        return extractFromPropertiesAsList(getKey(prefix, key), properties);
+    private List<String> listWithPrefix(String prefix, ConfigKey key, Properties properties) {
+        return extractFromPropertiesAsList(key.asPropertyKey(prefix), properties);
     }
    
-    private Map<String, String> mapWithPrefix(String prefix, String key, Properties properties) {
-        return extractFromPropertiesAsMap(getKey(prefix, key), properties);
+    private Map<String, String> mapWithPrefix(String prefix, ConfigKey key, Properties properties) {
+        return extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties);
     }
         
-    private String withPrefix(String prefix, String key, Properties properties) {
-        return properties.getProperty(getKey(prefix, key));
+    private String withPrefix(String prefix, ConfigKey key, Properties properties) {
+        return properties.getProperty(key.asPropertyKey(prefix));
     }
 
-    private Long longWithPrefix(String prefix, String key, Properties properties) {
+    private Long longWithPrefix(String prefix, ConfigKey key, Properties properties) {
         String prop = withPrefix(prefix, key, properties);
         return prop == null ? null : Long.valueOf(prop);
     }
 
-    private Boolean booleanWithPrefix(String prefix, String key, Properties properties) {
+    private Boolean booleanWithPrefix(String prefix, ConfigKey key, Properties properties) {
         String prop = withPrefix(prefix,key,properties);
         return prop == null ? null : Boolean.valueOf(prop);
     }
@@ -196,9 +158,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     
     private String getPrefix(ImageConfiguration config) {
         Map<String, String> refConfig = config.getExternalConfig();
-        String prefix = refConfig != null ? refConfig.get(PREFIX) : null;
+        String prefix = refConfig != null ? refConfig.get("prefix") : null;
         if (prefix == null) {
-            prefix = DOCKER;
+            prefix = "docker";
         }
         return prefix;
     }

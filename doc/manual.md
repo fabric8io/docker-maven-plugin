@@ -272,8 +272,8 @@ with following exceptions:
   used (no need to distinguish multiple descriptors) 
 
 Alternatively `assemblyDescriptorRef` can be used with the name of a
-predefined assembly descriptor. The followign symbolic names can be
-used for `assemblyDescritproRef`: 
+predefined assembly descriptor. The following symbolic names can be
+used for `assemblyDescriptorRef`:
 
 * **artifact-with-dependencies** will copy your project's artifact and
   all its dependencies 
@@ -320,9 +320,9 @@ the configuration's `<run>` section of all given (and enabled images)
 
 The `<run>` configuration knows the following sub elements:
 
-* **bind** can contain a list of `volume` of bindings. use `/path` to create and
-  expose a new volume in the containaer, `/path:/path` to bind a host path into the
-  container and `/path:/path:ro` to bind it read-only.
+* **bind** can contain a list of `volume` of bindings (or 'host mounts). Use `/path` to create and
+  expose a new volume in the containaer, `/host_path:/container_path` to mount a host path into the
+  container and `/host_path:/container_path:ro` to bind it read-only.
 * **capAdd** (*v1.14*) a list of `add` elements to specify kernel parameters to add to
   the container.
 * **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
@@ -377,6 +377,7 @@ Example:
   <bind>
     <volume>/logs</volume>
     <volume>/tmp:/tmp</volume>
+  </bind>
   <volumes>
     <from>jolokia/docker-demo</from>
   </volumes>

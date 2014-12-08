@@ -1,18 +1,11 @@
 package org.jolokia.docker.maven;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jolokia.docker.maven.access.Container;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.access.PortMapping;
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -59,21 +52,17 @@ public class StartMojoContainerConfigsTest {
             List<String> findContainersForImages(List<String> images) throws MojoExecutionException {
                 return images;
             }
-
-            @Override
-            List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
-                return links;
-            }
         };
 
         PortMapping portMapping = mojo.getPortMapping(runConfig, new Properties());
-        Container container = mojo.createContainer("base", null, runConfig, portMapping);
+        ContainerCreateConfig containerConfig = mojo.createContainerCreateConfig("base", runConfig, portMapping);
 
-        String expectedConfig = loadFile("docker/createContainerAll.json");
-        JSONAssert.assertEquals(expectedConfig, container.toCreateJson(), true);
+        String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
+        JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
 
-        String expectedHostConfig = loadFile("docker/createHostConfigAll.json");
-        JSONAssert.assertEquals(expectedHostConfig, container.toStartJson(), true);
+        ContainerStartConfig startConfig = mojo.createContainerStartConfig(runConfig,portMapping,links());
+        String expectedHostConfig = loadFile("docker/containerStartConfigAll.json");
+        JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }
 
     private List<String> bind() {

@@ -4,6 +4,11 @@
 
 New configuration syntax with support for multiple containers 
 
+* **0.10.6**
+  - Add support for binding/exporting containers during startup (#55)
+  - Allow selecting the API version with the configuration "apiVersion". Default is now "v1.15"
+  - 
+
 * **0.10.5**
   - Add hooks for external configurations
   - Add property based configuration for images (#42)

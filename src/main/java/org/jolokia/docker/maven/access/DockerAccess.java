@@ -32,7 +32,7 @@ public interface DockerAccess {
      * @param configuration container configuration
      * @throws DockerAccessException if the container could not be created.
      */
-    void createContainer(Container configuration) throws DockerAccessException;
+    String createContainer(ContainerCreateConfig configuration) throws DockerAccessException;
 
     /**
      * Get the the name of a container for a given container id
@@ -46,15 +46,16 @@ public interface DockerAccess {
     /**
      * Start a container.
      *
-     * @param container container
+     * @param containerId id of the container to start
+     * @param containerConfig container
      * @throws DockerAccessException if the container could not be started.
      */
-    void startContainer(Container container) throws DockerAccessException;
+    void startContainer(String containerId, ContainerStartConfig containerConfig) throws DockerAccessException;
 
     /**
      * Stop a container.
      *
-     * @param containerId the contaienr id
+     * @param containerId the container id
      * @throws DockerAccessException if the container could not be stopped.
      */
     void stopContainer(String containerId) throws DockerAccessException;

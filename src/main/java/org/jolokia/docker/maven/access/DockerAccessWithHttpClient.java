@@ -93,19 +93,19 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         return array.length() > 0;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @param containerConfig */
     @Override
-    public void createContainer(Container container) throws DockerAccessException {
-        String createJson = container.toCreateJson();
+    public String createContainer(ContainerCreateConfig containerConfig) throws DockerAccessException {
+        String createJson = containerConfig.toJson();
         log.debug("Container create config: " + createJson);
 
         HttpUriRequest post = newPost(baseUrl + "/containers/create", createJson);
         HttpResponse resp = request(post);
-        checkReturnCode("Creating container for image '" + container.getImageName() + "'", resp, 201);
+        checkReturnCode("Creating container for image '" + containerConfig.getImageName() + "'", resp, 201);
         JSONObject json = asJsonObject(resp);
         logWarnings(json);
-        
-        container.setContainerId(json.getString("Id"));
+        return json.getString("Id");
     }
 
     @Override
@@ -117,13 +117,14 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         return json.getString("Name");
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @param containerId
+     * @param containerConfig */
     @Override
-    public void startContainer(Container container) throws DockerAccessException {
-        String startJson = container.toStartJson();
+    public void startContainer(String containerId, ContainerStartConfig containerConfig) throws DockerAccessException {
+        String startJson = containerConfig.toJson();
         log.debug("Container start config: " + startJson);
 
-        String containerId = container.getContainerId();
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start", startJson);
         HttpResponse resp = request(req);
         checkReturnCode("Starting container with id " + containerId, resp, 204);
