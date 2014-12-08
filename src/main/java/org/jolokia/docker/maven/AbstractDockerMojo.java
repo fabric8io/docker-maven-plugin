@@ -149,7 +149,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     private String extractUrl() {
         String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
         if (connect == null) {
-            throw new IllegalArgumentException("No url given and now DOCKER_HOST environment variable set");
+            throw new IllegalArgumentException("No url given and no DOCKER_HOST environment variable set");
         }
         String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
         return connect.replaceFirst("^tcp:", protocol);
