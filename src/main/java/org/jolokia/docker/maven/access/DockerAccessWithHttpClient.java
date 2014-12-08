@@ -56,9 +56,6 @@ import static org.jolokia.docker.maven.access.util.RequestUtil.*;
  */
 public class DockerAccessWithHttpClient implements DockerAccess {
 
-    public static final String HEADER_ACCEPT = "Accept";
-    public static final String HEADER_ACCEPT_ALL = "*/*";
-
     // Logging
     private final LogHandler log;
     
