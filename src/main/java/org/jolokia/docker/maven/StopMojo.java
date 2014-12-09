@@ -37,8 +37,6 @@ public class StopMojo extends AbstractDockerMojo {
      * @parameter property = "docker.keepRunning" defaultValue = "false"
      */
     private boolean keepRunning;
-    /** @parameter property = "docker.showLogs" default-value="false" */
-    private boolean showLogs;
 
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
 
@@ -67,20 +65,5 @@ public class StopMojo extends AbstractDockerMojo {
         // Switch off all logging
         LogDispatcher dispatcher = getLogDispatcher(access);
         dispatcher.untrackAllContainerLogs();
-    }
-
-    protected boolean showLog(ImageConfiguration imageConfig) {
-        if (showLogs) {
-            return true;
-        } else {
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            if (runConfig != null) {
-                LogConfiguration logConfig = runConfig.getLog();
-                if (logConfig != null) {
-                    return logConfig.isEnabled();
-                }
-            }
-            return false;
-        }
     }
 }
