@@ -21,6 +21,12 @@ import org.jolokia.docker.maven.config.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.jolokia.docker.maven.config.handler.property.ConfigKey;
+import org.jolokia.docker.maven.config.handler.property.PropertyConfigHandler;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
 import static org.junit.Assert.*;
 
 /**
@@ -60,14 +66,15 @@ public class PropertyConfigHandlerTest {
                                         ));
         assertEquals(1,configs.size());
         RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
-        String[] ports = new ArrayList<String>(runConfig.getPorts()).toArray(new String[0]);
+        List<String> portsAsList = runConfig.getPorts();
+        String[] ports = new ArrayList<>(portsAsList).toArray(new String[portsAsList.size()]);
         assertArrayEquals(new String[] {
                 "jolokia.port:8080",
                 "9090",
                 "0.0.0.0:80:80"
         },ports);
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
-        ports = new ArrayList<String>(buildConfig.getPorts()).toArray(new String[0]);
+        ports = new ArrayList<>(buildConfig.getPorts()).toArray(new String[buildConfig.getPorts().size()]);
         assertArrayEquals(new String[] { "8080","9090","80"},ports);
     }
 
@@ -90,11 +97,125 @@ public class PropertyConfigHandlerTest {
         }
     }
 
+    @Test
+    public void testResolve() {
+        Map<String, String> external = new HashMap<>();
+        external.put("type", "props");
+
+        ImageConfiguration config = new ImageConfiguration.Builder().name("image").alias("alias").externalConfig(external).build();
+        PropertyConfigHandler handler = new PropertyConfigHandler();
+        List<ImageConfiguration> resolvedImageConfigs = handler.resolve(config, props(getTestData()));
+        assertEquals(1,resolvedImageConfigs.size());
+        ImageConfiguration resolved = resolvedImageConfigs.get(0);
+
+        validateBuildConfiguration(resolved.getBuildConfiguration());
+        validateRunConfiguration(resolved.getRunConfiguration());
+    }
+
+    private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
+        assertEquals("assembly.xml", buildConfig.getAssemblyDescriptor());
+        assertEquals("project", buildConfig.getAssemblyDescriptorRef());
+        assertEquals("command.sh", buildConfig.getCommand());
+        assertEquals("/export", buildConfig.getExportDir());
+        assertEquals("image", buildConfig.getFrom());
+        assertEquals(a("8080"), buildConfig.getPorts());
+        assertEquals("registry", buildConfig.getRegistry());
+        assertEquals(a("/foo"), buildConfig.getVolumes());
+
+        validateEnv(buildConfig.getEnv());
+    }
+
+    private void validateEnv(Map<String, String> env) {
+        assertTrue(env.containsKey("HOME"));
+        assertEquals("/Users/roland", env.get("HOME"));
+    }
+
+    private void validateRunConfiguration(RunImageConfiguration runConfig) {
+        assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
+        assertEquals(a("CAP"), runConfig.getCapAdd());
+        assertEquals(a("CAP"), runConfig.getCapDrop());
+        assertEquals("command.sh", runConfig.getCommand());
+        assertEquals(a("8.8.8.8"), runConfig.getDns());
+        assertEquals(a("example.com"), runConfig.getDnsSearch());
+        assertEquals("domain.com", runConfig.getDomainname());
+        assertEquals("entrypoint.sh", runConfig.getEntrypoint());
+        assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
+        assertEquals("subdomain", runConfig.getHostname());
+        assertEquals(a("redis"), runConfig.getLinks());
+        assertEquals((Long) 1L, runConfig.getMemory());
+        assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
+        assertEquals(a("8081:8080"), runConfig.getPorts());
+        assertEquals(true, runConfig.getPrivileged());
+        assertEquals("tomcat", runConfig.getUser());
+        assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
+        assertEquals("foo", runConfig.getWorkingDir());
+
+        validateEnv(runConfig.getEnv());
+
+        // not sure it's worth it to implement 'equals/hashcode' for these
+        RestartPolicy policy = runConfig.getRestartPolicy();
+        assertEquals("on-failure", policy.getName());
+        assertEquals(1, policy.getRetry());
+
+        WaitConfiguration wait = runConfig.getWaitConfiguration();
+        assertEquals("http://foo.com", wait.getUrl());
+        assertEquals("pattern", wait.getLog());
+        assertEquals(5, wait.getTime());
+    }
+
+    private List<String> a(String ... args) {
+        return Arrays.asList(args);
+    }
+
     private Properties props(String ... args) {
         Properties ret = new Properties();
-        for (int i = 0; i < args.length; i+= 2) {
-            ret.setProperty(args[i],args[i+1]);
+        for (int i = 0; i < args.length; i += 2) {
+            ret.setProperty(args[i], args[i + 1]);
         }
         return ret;
+    }
+
+    private String[] getTestData() {
+        return new String[] {
+                k(NAME), "image",
+                k(ALIAS),"alias",
+                k(FROM), "image",
+                k(ASSEMBLY_DESCRIPTOR), "assembly.xml",
+                k(ASSEMBLY_DESCRIPTOR_REF), "project",
+                k(BIND) + ".1", "/foo",
+                k(BIND) + ".2", "/tmp:/tmp",
+                k(CAP_ADD) + ".1", "CAP",
+                k(CAP_DROP) + ".1", "CAP",
+                k(COMMAND), "command.sh",
+                k(DNS) + ".1", "8.8.8.8",
+                k(DNS_SEARCH) + ".1", "example.com",
+                k(DOMAINNAME), "domain.com",
+                k(ENTRYPOINT), "entrypoint.sh",
+                k(ENV) + ".HOME","/Users/roland",
+                k(EXPORT_DIR), "/export",
+                k(EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
+                k(HOSTNAME), "subdomain",
+                k(LINKS) + ".1", "redis",
+                k(MEMORY), "1",
+                k(MEMORY_SWAP), "1",
+                k(PORT_PROPERTY_FILE), "/tmp/props.txt",
+                k(PORTS) + ".1", "8081:8080",
+                k(PRIVILEGED), "true",
+                k(REGISTRY), "registry",
+                k(RESTART_POLICY_NAME), "on-failure",
+                k(RESTART_POLICY_RETRY), "1",
+                k(USER), "tomcat",
+                k(VOLUMES) + ".1","/foo",
+                k(VOLUMES_FROM) + ".1", "from",
+                k(WAIT_LOG), "pattern",
+                k(WAIT_TIME), "5",
+                k(WAIT_URL), "http://foo.com",
+                k(WORKING_DIR), "foo"
+        };
+    }
+
+    private String k(ConfigKey from) {
+        return from.asPropertyKey();
     }
 }

@@ -4,6 +4,37 @@
 
 New configuration syntax with support for multiple containers 
 
+* **0.10.6**
+  - Add support for binding/exporting containers during startup (#55)
+  - Allow selecting the API version with the configuration "apiVersion". Default is now "v1.15"
+
+Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
+See "[Volume binding]"(manual.md#volume-binding) for details but in short:
+
+````xml
+<run>
+  <volumes>
+    <from>data</from>
+    <from>jolokia/demo</from>
+  </volumes>
+  ....
+</run>
+````
+
+becomes
+
+````
+<run>
+  <volumes>
+    <from>
+      <image>data</image>
+      <image>jolokia/demo</image>
+    </from>
+  </volumes>
+  ....
+</run>
+````
+
 * **0.10.5**
   - Add hooks for external configurations
   - Add property based configuration for images (#42)

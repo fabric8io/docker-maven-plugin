@@ -3,19 +3,20 @@ package org.jolokia.docker.maven.config;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * @author roland
  * @since 02.09.14
  */
 public class RunImageConfiguration {
 
-    public static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
+    static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
 
     // Environment variables to set when starting the container. key: variable name, value: env value
     /**
      * @parameter
      */
-    private Map<String,String> env;
+    private Map<String, String> env;
 
     // Command to execute in container
     /**
@@ -23,12 +24,84 @@ public class RunImageConfiguration {
      */
     private String command;
 
+    // container domain name
+    /**
+     * @parameter
+     */
+    private String domainname;
+
+    // container entry point
+    /**
+     * @parameter
+     */
+    private String entrypoint;
+
+    // container hostname
+    /**
+     * @parameter
+     */
+    private String hostname;
+
+    // container user
+    /**
+     * @parameter
+     */
+    private String user;
+
+    // working directory
+    /**
+     * @paramter
+     */
+    private String workingDir;
+
+    // memory in bytes
+    /**
+     * @parameter
+     */
+    private Long memory;
+
+    // total memory (swap + ram) in bytes, -1 to disable
+    /**
+     * @parameter
+     */
+    private Long memorySwap;
+
     // Path to a file where the dynamically mapped properties are written to
     /**
      * @parameter
      */
     private String portPropertyFile;
 
+    /**
+     * @parameter
+     */
+    private List<String> dns;
+
+    /**
+     * @parameter
+     */
+    private List<String> dnsSearch;
+
+    /**
+     * @parameter
+     */
+    private List<String> capAdd;
+
+    /**
+     * @parameter
+     */
+    private List<String> capDrop;
+
+    /**
+     * @parameter
+     */
+    private Boolean privileged;
+
+    /**
+     * @parameter
+     */
+    private List<String> extraHosts;
+    
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
     /**
@@ -40,7 +113,7 @@ public class RunImageConfiguration {
     /**
      * @parameter
      */
-    private List<String> volumes;
+    private VolumeConfiguration volumes;
 
     // Links to other container started
     /**
@@ -60,23 +133,39 @@ public class RunImageConfiguration {
      */
     private LogConfiguration log;
 
-    public RunImageConfiguration() {}
+    /**
+     * @parameter
+     */
+    private RestartPolicy restartPolicy;
 
-    RunImageConfiguration(Map<String, String> env, String command, String portPropertyFile,
-                          List<String> ports, List<String> volumes, List<String> links,
-                          WaitConfiguration wait, LogConfiguration log) {
-        this.env = env;
-        this.command = command;
-        this.portPropertyFile = portPropertyFile;
-        this.ports = ports;
-        this.volumes = volumes;
-        this.links = links;
-        this.wait = wait;
-        this.log = log;
-    }
+    public RunImageConfiguration() { }
 
     public Map<String, String> getEnv() {
         return env;
+    }
+
+    public String getEntrypoint() {
+        return entrypoint;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public String getDomainname() {
+        return domainname;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public Long getMemory() {
+        return memory;
+    }
+
+    public Long getMemorySwap() {
+        return memorySwap;
     }
 
     public List<String> getPorts() {
@@ -91,6 +180,10 @@ public class RunImageConfiguration {
         return portPropertyFile;
     }
 
+    public String getWorkingDir() {
+        return workingDir;
+    }
+
     public WaitConfiguration getWaitConfiguration() {
         return wait;
     }
@@ -99,7 +192,27 @@ public class RunImageConfiguration {
         return log;
     }
 
-    public List<String> getVolumesFrom() {
+    public List<String> getCapAdd() {
+        return capAdd;
+    }
+
+    public List<String> getCapDrop() {
+        return capDrop;
+    }
+
+    public List<String> getDns() {
+        return dns;
+    }
+
+    public List<String> getDnsSearch() {
+        return dnsSearch;
+    }
+
+    public List<String> getExtraHosts() {
+        return extraHosts;
+    }
+    
+    public VolumeConfiguration getVolumeConfiguration() {
         return volumes;
     }
 
@@ -107,61 +220,132 @@ public class RunImageConfiguration {
         return links;
     }
 
-    // ======================================================================================
+    public Boolean getPrivileged() {
+        return privileged;
+    }
+
+    public RestartPolicy getRestartPolicy() {
+        return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
+    }
+
+// ======================================================================================
 
     public static class Builder {
-        private Map<String, String> env;
-        private String command;
-        private String portPropertyFile;
-        private List<String> ports;
-        private List<String> volumes;
-        private List<String> links;
-        private WaitConfiguration wait;
-        private LogConfiguration log;
+        private RunImageConfiguration config = new RunImageConfiguration();
 
         public Builder env(Map<String, String> env) {
-            this.env = env;
+            config.env = env;
             return this;
         }
 
         public Builder command(String command) {
-            this.command = command;
+            config.command = command;
+            return this;
+        }
+
+        public Builder domainname(String domainname) {
+            config.domainname = domainname;
+            return this;
+        }
+
+        public Builder entrypoint(String entrypoint) {
+            config.entrypoint = entrypoint;
+            return this;
+        }
+
+        public Builder hostname(String hostname) {
+            config.hostname = hostname;
             return this;
         }
 
         public Builder portPropertyFile(String portPropertyFile) {
-            this.portPropertyFile = portPropertyFile;
+            config.portPropertyFile = portPropertyFile;
             return this;
         }
 
+        public Builder workingDir(String workingDir) {
+            config.workingDir = workingDir;
+            return this;
+        }
+
+        public Builder user(String user) {
+            config.user = user;
+            return this;
+        }
+
+        public Builder memory(Long memory) {
+            config.memory = memory;
+            return this;
+        }
+
+        public Builder memorySwap(Long memorySwap) {
+            config.memorySwap = memorySwap;
+            return this;
+        }
+
+        public Builder capAdd(List<String> capAdd) {
+            config.capAdd = capAdd;
+            return this;
+        }
+
+        public Builder capDrop(List<String> capDrop) {
+            config.capDrop = capDrop;
+            return this;
+        }
+
+        public Builder dns(List<String> dns) {
+            config.dns = dns;
+            return this;
+        }
+
+        public Builder dnsSearch(List<String> dnsSearch) {
+            config.dnsSearch = dnsSearch;
+            return this;
+        }
+
+        public Builder extraHosts(List<String> extraHosts) {
+            config.extraHosts = extraHosts;
+            return this;
+        }
+        
         public Builder ports(List<String> ports) {
-            this.ports = ports;
+            config.ports = ports;
             return this;
         }
 
-        public Builder volumes(List<String> volumes) {
-            this.volumes = volumes;
+        public Builder volumes(VolumeConfiguration volumes) {
+            config.volumes = volumes;
             return this;
         }
 
         public Builder links(List<String> links) {
-            this.links = links;
+            config.links = links;
             return this;
         }
 
         public Builder wait(WaitConfiguration wait) {
-            this.wait = wait;
+            config.wait = wait;
             return this;
         }
 
         public Builder log(LogConfiguration log) {
-            this.log = log;
+            config.log = log;
+            return this;
+        }
+
+        public Builder privileged(Boolean privileged) {
+            config.privileged = privileged;
+            return this;
+        }
+
+        public Builder restartPolicy(RestartPolicy restartPolicy) {
+            config.restartPolicy = restartPolicy;
             return this;
         }
 
         public RunImageConfiguration build() {
-            return new RunImageConfiguration(env, command, portPropertyFile, ports,
-                                             volumes, links, wait, log);
+            return config;
         }
     }
+
 }

@@ -2,9 +2,9 @@
 * [Global Configuration](#global-configuration)
 * [Image Configuration](#image-configuration)
 * [Maven Goals](#maven-goals)
+  - [`docker:build`](#dockerbuild)
   - [`docker:start`](#dockerstart)
   - [`docker:stop`](#dockerstop)
-  - [`docker:build`](#dockerbuild)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
   - [`docker:logs`](#dockerlogs)
@@ -82,6 +82,9 @@ parentheses.
   1.3.0). Or the scheme could be `tcp` in which case the protocol is
   determined via the IANA assigned port: 2375 for `http` and 2376 for
   `https`. 
+* **apiVersion** (`docker.apiVersion`) Use this variable if you are using
+  an older version of docker not compatible with the current default 
+  use to communicate with the server.
 * **certPath** (`docker.certPath`) Since 1.3.0 Docker remote API requires
   communication via SSL and authentication with certificates when used
   with boot2docker. These
@@ -173,7 +176,7 @@ Example:
       <name>jolokia/docker-demo:0.1</name>
       <alias>service</alias>
       <run>....</run>
-      <build>....</build>
+      <build>....</build>      
     </image>  
   </images>
 </configuration>
@@ -186,17 +189,129 @@ in the following sections.
 
 | Goal                             | Description                          |
 | -------------------------------- | ------------------------------------ |
+| [`docker:build`](#dockerbuild)   | Build images                         |
 | [`docker:start`](#dockerstart)   | Create and start containers          |
 | [`docker:stop`](#dockerstop)     | Stop and destroy containers          |
-| [`docker:build`](#dockerbuild)   | Build images                         |
 | [`docker:push`](#dockerpush)     | Push images to a registry            |
 | [`docker:remove`](#dockerremove) | Remove images from local docker host |
-| [`docker:logs`](#dockerlogs)       | Show container logs                  |
+| [`docker:logs`](#dockerlogs)     | Show container logs                  |
 
 Note that all goals are orthogonal to each other. For example in order
 to start a container for your application you typically have to build
 its image before. `docker:start` does **not** imply building the image
 so you should use it then in combination with `docker:build`.  
+
+#### `docker:build`
+
+This goal will build all images which have a `<build>` configuration
+section, or, if the global configuration `image` is set, only those
+images contained in this variable will be build. 
+
+All build relevant configuration is contained in the `<build>` section
+of an image configuration. The available subelements are
+
+* **assemblyDescriptor** is a reference to an assembly descriptor as
+  described in the section [Docker Assembly](#docker-assembly) below. 
+* **assemblyDescriptorRef** is an alias to a predefined assembly
+  descriptor. The available aliases are also described in the
+  [Docker Assembly](#docker-assembly) section.
+* **command** is the command to execute by default (i.e. if no command
+  is provided when a container for this image is started).
+* **env** hold environments as described in
+  [Setting Environment Variables](#setting-environment-variables). 
+* **exportDir** depicts the directory under which the files and
+  artifacts contained in the assembly will be copied within the
+  container. By default this is `/maven`. if this vale is set to the 
+  container root (`/`) it will not be exported. 
+* **from** specifies the base image which should be used for this
+  image. If not given this default to `busybox:latest` and is suitable
+  for a pure data image.
+* **ports** describes the exports ports. It contains a list of
+  `<port>` elements, one for each port to expose.
+* **volumes** contains a list of `volume` elements to create a container
+  volume.
+
+From this configuration this Plugin creates an in-memory Dockerfile,
+copies over the assembled files and calls the Docker daemon via its
+remote API. In a future version you will be able to specify
+alternatively an own Dockerfile (possibly containing maven properties)
+for better customization.
+
+Here's an example:
+
+````xml
+<build>
+  <from>java:8u40</from>
+  <assemblyDescriptor>src/main/assembly.xml</assemblyDescriptor>
+  <ports>
+    <port>8080</port>
+  </ports>
+  <volumes>
+    <volume>/path/to/expose</volume>
+  </volumes>
+  <exportDir>/opt/demo</exportDir>
+  <command>java /opt/demo/server.jar</command>
+</build>
+````
+
+##### Docker Assembly
+
+With using the `assemblyDescriptor` or `assemblyDescriptorRef` option
+it is possible to bring local files, artifacts and dependencies into
+the running Docker container. An `assemblyDescriptor` points to a file
+describing the data to put into an image to build. It has the same
+[format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
+as for creating assemblies with the
+[maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/)
+with following exceptions:
+
+* `<formats>` are ignored, the assembly will allways use a directory
+  when preparing the data container (i.e. the format is fixed to
+  `dir`) 
+* The `<id>` is ignored since only a single assembly descriptor is
+  used (no need to distinguish multiple descriptors) 
+
+Alternatively `assemblyDescriptorRef` can be used with the name of a
+predefined assembly descriptor. The following symbolic names can be
+used for `assemblyDescriptorRef`:
+
+* **artifact-with-dependencies** will copy your project's artifact and
+  all its dependencies 
+* **artifact** will copy only the project's artifact but no
+  dependencies. 
+* **project** will copy over the whole Maven project but with out
+  `target/` directory. 
+* **rootWar** will copy the artifact as `ROOT.war` to the exposed
+  directory. I.e. Tomcat will then deploy the war under the root
+  context. 
+
+All declared files end up in the configured `exportDir` (or `/maven`
+by default) in the created image.
+
+In the following example a dependency from the pom.xml is included and
+mapped to the name `jolokia.war`. With this configuration you will end
+up with an image, based on `busybox` which has a directory `/maven`
+containing a single file `jolokia.war`. This volume is also exported
+automatically. 
+
+```xml
+<assembly>
+  <dependencySets>
+    <dependencySet>
+      <includes>
+        <include>org.jolokia:jolokia-war</include>
+      </includes>
+      <outputDirectory>.</outputDirectory>
+      <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+    </dependencySet>
+  </dependencySets>
+</assembly>
+```
+
+Another container can now connect to the volume an 'mount' the 
+`/maven` directory. A container  from `consol/tomcat-7.0` will look
+into `/maven` and copy over everything to `/opt/tomcat/webapps` before
+starting Tomcat.
 
 #### `docker:start`
 
@@ -205,42 +320,57 @@ the configuration's `<run>` section of all given (and enabled images)
 
 The `<run>` configuration knows the following sub elements:
 
+* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]"
+ (#volume-binding) for details.
+* **capAdd** (*v1.14*) a list of `add` elements to specify kernel parameters to add to
+  the container.
+* **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
+  from the container.
 * **command** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
   used. 
+* **domainname** (*v1.12*) domain name for the container
+* **dns** (*v1.11*) list of `host` elements specifying dns servers for the container to use
+* **dnsSearch** (*v1.15*) list of `host` elements specying dns search domains 
+* **entrypoint** (*v1.15*) set the entry point for the container
 * **env** can contain environment variables as subelements which are
   set during startup of the container. The are specified in the
   typical maven property format as described [below](#setting-environment-variables).
-* **ports** declares how container exposed ports should be
-  mapped. This is described below in an extra
-  [section](#port-mapping). 
+* **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the
+  container's `/etc/hosts` file.
+* **hostname** (*v1.11*) desired hostname for the container
 * **links** declares how containers are linked together see
   description on [container linking](#container-linking). 
-* **portPropertyFile**, if given, specifies a file into which the
-  mapped properties should be written to. The format of this file and
-  its purpose are also described [below](#port-mapping)
-* **volumes** can contain a list mit `<from>` elements which specify
-  image names or aliases from which volumes should be imported.
-* **wait** specifies condition which must be fulfilled for the startup
-  to complete. See [below](#wait-during-startup) which subelements are
-  available and how they can be specified.
 * **log** specifies the log configuration for whether and how log
   messages from the running containers should be printed. See
   [below](#log-configuration) for a detailed description of this configuration
   section. 
+* **memory** (*v1.11*) memory limit in bytes
+* **memorySwap** (*v1.11*) total memory usage (memory + swap); use -1 to disable swap.
+* **portPropertyFile**, if given, specifies a file into which the
+  mapped properties should be written to. The format of this file and
+  its purpose are also described [below](#port-mapping)
+* **ports** declares how container exposed ports should be
+  mapped. This is described below in an extra
+  [section](#port-mapping).  
+* **privileged** (*v1.11*) give container full access to host (`true|false`)   
+* **restartPolicy** (*v1.15*) specifies the container restart policy, see 
+  [below](#container-restart-policy)
 * **showLogs** allows, if set, to see all standard output and standard
   error messages for all containers selected. As value the images for
   which logs should be shown can be given as a comma separated
   list. This is probably most useful when used from the command line
   as system property `docker.showLogs`.   
+* **user** (*v1.11*) user used inside the container
+* **wait** specifies condition which must be fulfilled for the startup
+  to complete. See [below](#wait-during-startup) which subelements are
+  available and how they can be specified.
+* **workingDir** (*v1.11*) working dir for commands to run in
 
 Example:
 
 ````xml
 <run>
-  <volumes>
-    <from>jolokia/docker-demo</from>
-  </volumes>
   <env>
     <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
     <JOLOKIA_OFF/>
@@ -289,8 +419,8 @@ equivalent to the port mapping when using the Docker CLI with option
 
 ```xml
 <ports>
-  <port>18080:8080</port>
-  <port>host.port:80</port>
+  <port>18080:8080</port> 
+  <port>host.port:80</port> 
 <ports>
 ```
 
@@ -314,6 +444,16 @@ A `port` stanza may take one of two forms:
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
   similar to `mvn -Dhost.port=10080 docker:start`
+
+Both forms of the `port` stanza also support binding to a specific ip 
+address on docker host.
+
+```xml
+<ports>
+  <port>1.2.3.4:80:80</port>
+  <port>1.2.3.4:host.port:80</port>
+</ports>
+```
 
 Another useful configuration option is `portPropertyFile` with which a
 file can be specified to which the real port mapping is written after
@@ -354,11 +494,58 @@ DB_PORT_5432_TCP_PORT=5432
 DB_PORT_5432_TCP_ADDR=172.17.0.5
 ```
 
+##### Volume binding
+
+A container can bind (or "mount") volumes from various source when starting up: Either from a directory of
+the host system or from another container which exports one or more directories. The mount configuration is
+specified within a `<volumes>` section of the run configuration. It can contain the following sub elements:
+
+* **from** can contain a list of `<image>` elements which specify
+  image names or aliases of containers whose volumes should be imported.
+* **bind** can contain a list of `<volume>` specifications (or 'host mounts). Use `/path` to create and
+  expose a new volume in the containaer, `/host_path:/container_path` to mount a host path into the
+  container and `/host_path:/container_path:ro` to bind it read-only.
+
+````xml
+<volumes>
+  <bind>
+    <volume>/logs</volume>
+    <volume>/opt/host_export:/opt/container_import</volume>
+  </bind>
+  <from>
+    <image>jolokia/docker-demo</image>
+  </from>
+</volumes>
+````
+
+In this example the container mounts from the host `/logs` as `/logs` on the container, and `/opt/host_export` from
+the host as `/opt/container_import` on the container. In addition all exported volumes from the container which has
+been created from the image `jolokia/docker-demo` are mounted directly into the container (with the same name as
+the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
+the full image name, an alias name like *service* can be used, too.
+
+##### Container restart policy
+
+Specify the behavior to apply when the container exits. These values can be
+specified withing a `<restartPolicy>` section with the following sub-elements:
+
+* **name** restart policy name, choose from:
+  -- `always` (*v1.15*) always restart
+  -- `on-failure` (*v1.15*) restart on container non-exit code of zero
+* **retry** if `on-failure` is used, controls max number of attempts to 
+  restart before giving up.
+
+The behavior to apply when the container exits. The value is an object with a Name 
+property of either "always" to always restart or "on-failure" to restart only when the 
+container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the
+ number of times to retry before giving up. The default is not to restart. (optional)
+
+
 ##### Wait during startup
 
 While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
-`<wait>` section which knows multiple sub-elements
+`<wait>` section which the following sub-elements:
 
 * **url** is an URL which is polled periodically until it returns a
   HTTP 200 status code.
@@ -457,112 +644,6 @@ parameters which are typically used as system properties:
 Example: 
 
     $ mvn -Ddocker.keepRuning clean install
-
-#### `docker:build`
-
-This goal will build all images which have a `<build>` configuration
-section, or, if the global configuration `image` is set, only those
-images contained in this variable will be build. 
-
-All build relevant configuration is contained in the `<build>` section
-of an image configuration. The available subelements are
-
-* **from** specifies the base image which should be used for this
-  image. If not given this default to `busybox:latest` and is suitable
-  for a pure data image.
-* **exportDir** depicts the directory under which the files and
-  artefacts contained in the assembly will be copied within the
-  container. By default this is `/maven`.
-* **assemblyDescriptor** is a reference to an assembly descriptor as
-  described in the section [Docker Assembly](#docker-assembly) below. 
-* **assemblyDescriptorRef** is an alias to a predefined assembly
-  descriptor. The available aliases are also described in the
-  [Docker Assembly](#docker-assembly) section.
-* **ports** describes the exports ports. It contains a list of
-  `<port>` elements, one for each port to expose.
-* **env** hold environments as described in
-  [Setting Environment Variables](#setting-environment-variables). 
-* **command** is the command to execute by default (i.e. if no command
-  is provided when a container for this image is started).
-
-From this configuration this Plugin creates an in-memory Dockerfile,
-copies over the assembled files and calls the Docker daemon via its
-remote API. In a future version you will be able to specify
-alternatively an own Dockerfile (possibly containing maven properties)
-for better customization.
-
-Here's an example:
-
-````xml
-<build>
-  <from>java:8u40</from>
-  <assemblyDescriptor>src/main/assembly.xml</assemblyDescriptor>
-  <ports>
-    <port>8080</port>
-  </ports>
-  <exportDir>/opt/demo</exportDir>
-  <command>java /opt/demo/server.jar</command>
-</build>
-````
-
-##### Docker Assembly
-
-With using the `assemblyDescriptor` or `assemblyDescriptorRef` option
-it is possible to bring local files, artifacts and dependencies into
-the running Docker container. An `assemblyDescriptor` points to a file
-describing the data to put into an image to build. It has the same
-[format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
-as for creating assemblies with the
-[maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/)
-with following exceptions:
-
-* `<formats>` are ignored, the assembly will allways use a directory
-  when preparing the data container (i.e. the format is fixed to
-  `dir`) 
-* The `<id>` is ignored since only a single assembly descriptor is
-  used (no need to distinguish multiple descriptors) 
-
-Alternatively `assemblyDescriptorRef` can be used with the name of a
-predefined assembly descriptor. The followign symbolic names can be
-used for `assemblyDescritproRef`: 
-
-* **artifact-with-dependencies** will copy your project's artifact and
-  all its dependencies 
-* **artifact** will copy only the project's artifact but no
-  dependencies. 
-* **project** will copy over the whole Maven project but with out
-  `target/` directory. 
-* **rootWar** will copy the artifact as `ROOT.war` to the exposed
-  directory. I.e. Tomcat will then deploy the war under the root
-  context. 
-
-All declared files end up in the configured `exportDir` (or `/maven`
-by default) in the created image.
-
-In the following example a dependency from the pom.xml is included and
-mapped to the name `jolokia.war`. With this configuration you will end
-up with an image, based on `busybox` which has a directory `/maven`
-containing a single file `jolokia.war`. This volume is also exported
-automatically. 
-
-```xml
-<assembly>
-  <dependencySets>
-    <dependencySet>
-      <includes>
-        <include>org.jolokia:jolokia-war</include>
-      </includes>
-      <outputDirectory>.</outputDirectory>
-      <outputFileNameMapping>jolokia.war</outputFileNameMapping>
-    </dependencySet>
-  </dependencySets>
-</assembly>
-```
-
-Another container can now connect to the volume an 'mount' the 
-`/maven` directory. A container  from `consol/tomcat-7.0` will look
-into `/maven` and copy over everything to `/opt/tomcat/webapps` before
-starting Tomcat.
 
 #### `docker:push`
 
@@ -668,32 +749,30 @@ Given this example configuration a single image configuration is build
 up from the following properties, which correspond to corresponding
 values in the `<build>` and `<run>` sections.
 
-* **docker.name** Image name
 * **docker.alias** Alias name
-* **docker.from** Base image for building an image
 * **docker.assemblyDescriptor** Path to the assembly descriptor when
   building an image
 * **docker.assemblyDescriptorRef** Name of a predefined assembly to
   use. 
-* **docker.exportDir** Directory name for the exported artifacts as
-  described in an assembly (which is `/maven` by default).
-* **docker.registry** Registry to use for pushing images.
+* **docker.bind.idx** Sets a list of paths to bind/expose in the container
+* **docker.capAdd.idx** List of kernel capabilities to add to the container
+* **docker.capDrop.idx** List of kernel capabilities to remove from the container
 * **docker.command** Command to execute. This is used both when
   running a container and as default command when creating an image.
+* **docker.domainname** Container domain name
+* **docker.dns.idx** List of dns servers to use
+* **docker.dnsSearch.idx** List of dns search domains
+* **docker.entrypoint** Container entry point
 * **docker.env.VARIABLE** Sets an environment
   variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>`
   sets the environment variable `JAVA_OPTS`. Multiple such entries can
   be provided. This environment is used both for building images and
   running containers. The value cannot be empty.
-* **docker.ports.idx** Sets a port mapping. For example
-  `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps
-  the container port 8080 dynamically to a host port and assigns this
-  host port to the Maven property `${jolokia.port}`. See
-  [Port mapping](#port-mapping) for possible mapping options. When creating images images only
-  the right most port is used for exposing the port. For providing multiple port mappings,
-  the index should be count up. 
-* **docker.portPropertyFile** specifies a path to a port mapping used
-  when starting a container.
+* **docker.exportDir** Directory name for the exported artifacts as
+  described in an assembly (which is `/maven` by default).
+* **docker.extraHosts.idx** List of `host:ip` to add to `/etc/hosts`
+* **docker.from** Base image for building an image
+* **docker.hostname** Container hostname
 * **docker.links.idx** defines a list of links to other containers when
   starting a container. *idx* can be any suffix which is not use
   except when *idx* is numeric it specifies the order within the
@@ -701,6 +780,23 @@ values in the `<build>` and `<run>` sections.
   indexes sorted and the all non-numeric indexes in arbitrary order).
   For example `<docker.links.1>db</docker.links.1>` specifies a link
   to the image with alias 'db'.
+* **docker.memory** Container memory (in bytes)
+* **docker.memorySwap** Total memory (swap + memory) `-1` to disable swap
+* **docker.name** Image name
+* **docker.portPropertyFile** specifies a path to a port mapping used
+  when starting a container.
+* **docker.ports.idx** Sets a port mapping. For example
+  `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps
+  the container port 8080 dynamically to a host port and assigns this
+  host port to the Maven property `${jolokia.port}`. See
+  [Port mapping](#port-mapping) for possible mapping options. When creating images images only
+  the right most port is used for exposing the port. For providing multiple port mappings,
+  the index should be count up. 
+* **docker.registry** Registry to use for pushing images.
+* **docker.restartPolicy.name** Container restart policy
+* **docker.restartPolicy.retry** Max restrart retries if `on-failure` used
+* **docker.user** Container user
+* **docker.volumes.idx** defined a list of volumes to expose when building an image
 * **docker.volumesFrom.idx** defines a list of image aliases from which
   the volumes should be mounted of the container. The list semantics
   is the same as for links (see above). For examples
@@ -710,6 +806,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.wait.time** Amount of time to wait during startup of a
     container (in ms)
 * **docker.wait.log** Wait for a log output to appear.
+* **docker.workingDir** Working dir for commands to run in
 
 Any other `<run>` or `<build>` sections are ignored when this handler
 is used. Multiple property configuration handlers can be used if they
