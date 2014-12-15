@@ -107,6 +107,10 @@ public class ContainerStartConfig {
         return startConfig.toString();
     }
 
+    public Object toJsonObject() {
+        return startConfig;
+    }
+
     ContainerStartConfig addAsArray(String propKey, List<String> props) {
         if (props != null) {
             startConfig.put(propKey, new JSONArray(props));
@@ -120,5 +124,4 @@ public class ContainerStartConfig {
         }
         return this;
     }
-
 }

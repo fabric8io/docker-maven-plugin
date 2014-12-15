@@ -58,7 +58,7 @@ public class StartMojoContainerConfigsTest {
         };
 
         PortMapping portMapping = mojo.getPortMapping(runConfig, new Properties());
-        ContainerCreateConfig containerConfig = mojo.createContainerCreateConfig("base", runConfig, portMapping);
+        ContainerCreateConfig containerConfig = mojo.createContainerCreateConfig("base", runConfig, portMapping, null);
 
         String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
         JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);

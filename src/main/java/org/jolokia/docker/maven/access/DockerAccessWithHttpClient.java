@@ -119,7 +119,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
      * @param containerConfig */
     @Override
     public void startContainer(String containerId, ContainerStartConfig containerConfig) throws DockerAccessException {
-        String startJson = containerConfig.toJson();
+        String startJson = containerConfig != null ? containerConfig.toJson() : "{}";
         log.debug("Container start config: " + startJson);
 
         HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start", startJson);

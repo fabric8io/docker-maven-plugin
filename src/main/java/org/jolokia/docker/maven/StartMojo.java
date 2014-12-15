@@ -61,8 +61,11 @@ public class StartMojo extends AbstractDockerMojo {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-            String containerId = createContainer(imageName, docker, runConfig, mappedPorts);
-            startContainer(imageName, containerId, docker, runConfig, mappedPorts);
+            List<String> links = findLinksWithContainerNames(docker, runConfig.getLinks());
+            ContainerStartConfig startConfig = createContainerStartConfig(runConfig, mappedPorts, links);
+            ContainerCreateConfig config = createContainerCreateConfig(imageName, runConfig, mappedPorts, startConfig);
+            String containerId = docker.createContainer(config);
+            docker.startContainer(containerId, null);
 
             if (showLog(imageConfig)) {
                 dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
@@ -85,23 +88,8 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private String createContainer(String imageName, DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts) throws MojoExecutionException, DockerAccessException {
-        ContainerCreateConfig config = createContainerCreateConfig(imageName, runConfig, mappedPorts);
-        return docker.createContainer(config);
-    }
-
-    private void startContainer(String imageName, String containerId, DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts) throws MojoExecutionException, DockerAccessException {
-        try {
-            List<String> links = findLinksWithContainerNames(docker, runConfig.getLinks());
-            ContainerStartConfig startConfig = createContainerStartConfig(runConfig, mappedPorts, links);
-            docker.startContainer(containerId, startConfig);
-        } catch (IllegalArgumentException exp) {
-            throw new MojoExecutionException(String.format("Cannot start container %s for image %s: %s",containerId,imageName,exp));
-        }
-    }
-
     // visible for testing
-    ContainerCreateConfig createContainerCreateConfig(String imageName,RunImageConfiguration runConfig, PortMapping mappedPorts)
+    ContainerCreateConfig createContainerCreateConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts, ContainerStartConfig startConfig)
         throws MojoExecutionException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
@@ -118,6 +106,9 @@ public class StartMojo extends AbstractDockerMojo {
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {
                 config.binds(volumeConfig.getBind());
+            }
+            if (startConfig != null) {
+                config.hostConfig(startConfig);
             }
             return config;
         }

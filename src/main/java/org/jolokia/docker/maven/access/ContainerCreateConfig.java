@@ -98,6 +98,10 @@ public class ContainerCreateConfig {
         return add("WorkingDir", workingDir);
     }
 
+    public ContainerCreateConfig hostConfig(ContainerStartConfig startConfig) {
+        return add("HostConfig", startConfig.toJsonObject());
+    }
+
     /**
      * Get JSON which is used for <em>creating</em> a container
      *
