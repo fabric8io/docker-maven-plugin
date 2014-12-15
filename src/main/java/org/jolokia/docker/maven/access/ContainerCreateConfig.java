@@ -98,7 +98,7 @@ public class ContainerCreateConfig {
         return add("WorkingDir", workingDir);
     }
 
-    public ContainerCreateConfig hostConfig(ContainerStartConfig startConfig) {
+    public ContainerCreateConfig hostConfig(ContainerHostConfig startConfig) {
         return add("HostConfig", startConfig.toJsonObject());
     }
 

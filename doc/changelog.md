@@ -1,12 +1,12 @@
 # ChangeLog
 
-## 0.10.x Series
-
-New configuration syntax with support for multiple containers 
-
 * **0.10.6**
   - Add support for binding/exporting containers during startup (#55)
-  - Allow selecting the API version with the configuration "apiVersion". Default is now "v1.15"
+  - When "creating" containers they get now all host configuration instead of during "start". This is
+    the default behaviour since v1.15 while the older variant where the host configuration is feed into
+    the "start" call is deprecated and will go away.
+  - Allow selecting the API version with the configuration "apiVersion".
+    Default and minimum API version is now "v1.15"
 
 Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
 See "[Volume binding]"(manual.md#volume-binding) for details but in short:

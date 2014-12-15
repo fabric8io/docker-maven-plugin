@@ -3,15 +3,22 @@ package org.jolokia.docker.maven;
 import java.io.IOException;
 import java.util.*;
 
+import mockit.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 
+/**
+ * This test need to be refactored. In fact, testing Mojos must be setup correctly
+ * at all. Blame on me that there are so few tests ...
+ */
 public class StartMojoContainerConfigsTest {
+
+    @Mocked
+    DockerAccess docker;
 
     @Test
     @SuppressWarnings("unused")
@@ -21,14 +28,14 @@ public class StartMojoContainerConfigsTest {
          *  - verify the start mojo calls all the methods to build the container configs
          *  - the container configs produce the correct json when all options are specified
          *  
-         * it didn't seem worth the effor to build a separate test to verify the json and then mock/verify all the calls here
+         * it didn't seem worth the effort to build a separate test to verify the json and then mock/verify all the calls here
          */
 
         VolumeConfiguration volumeConfiguration =
                 new VolumeConfiguration.Builder()
-                .bind(bind())
-                .from(volumesFrom())
-                .build();
+                        .bind(bind())
+                        .from(volumesFrom())
+                        .build();
         final RunImageConfiguration runConfig =
                 new RunImageConfiguration.Builder()
                         .hostname("hostname")
@@ -50,21 +57,26 @@ public class StartMojoContainerConfigsTest {
                         .restartPolicy(restartPolicy())
                         .build();
 
-        StartMojo mojo = new StartMojo() {
-            @Override
-            List<String> findContainersForImages(List<String> images) throws MojoExecutionException {
-                return images;
-            }
-        };
-
+        StartMojo mojo = new StartMojo();
         PortMapping portMapping = mojo.getPortMapping(runConfig, new Properties());
-        ContainerCreateConfig containerConfig = mojo.createContainerCreateConfig("base", runConfig, portMapping, null);
+
+        new Expectations() {{
+            docker.getContainerName((String) withNotNull());
+            result = "redis";
+            minTimes = 1;
+
+        }};
+
+        mojo.registerContainer("redisContainer", new ImageConfiguration.Builder().alias("db").name("redis3").build());
+        mojo.registerContainer("parentContainer", new ImageConfiguration.Builder().alias("parent").name("parentName").build());
+        mojo.registerContainer("otherContainer", new ImageConfiguration.Builder().alias("other:ro").name("otherName").build());
+        ContainerCreateConfig containerConfig = mojo.createContainerConfig(docker, "base", runConfig, portMapping);
 
         String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
         JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
 
-        ContainerStartConfig startConfig = mojo.createContainerStartConfig(runConfig,portMapping,links());
-        String expectedHostConfig = loadFile("docker/containerStartConfigAll.json");
+        ContainerHostConfig startConfig = mojo.createContainerHostConfig(docker, runConfig, portMapping);
+        String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }
 
@@ -94,9 +106,8 @@ public class StartMojoContainerConfigsTest {
 
         return env;
     }
-    
-    private List<String> extraHosts()
-    {
+
+    private List<String> extraHosts() {
         return Arrays.asList("localhost:127.0.0.1");
     }
 
@@ -120,3 +131,4 @@ public class StartMojoContainerConfigsTest {
         return Arrays.asList("parent", "other:ro");
     }
 }
+

@@ -85,10 +85,6 @@
               <name>${image}</name>
               <run>
                 <volumes>
-                  <bind>
-                    <volume>/test:/test</volume>
-                    <volume>/host:/container:ro</volume>
-                  </bind>
                   <from>
                     <image>data</image>
                   </from>

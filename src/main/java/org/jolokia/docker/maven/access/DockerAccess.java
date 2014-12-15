@@ -47,10 +47,9 @@ public interface DockerAccess {
      * Start a container.
      *
      * @param containerId id of the container to start
-     * @param containerConfig container
      * @throws DockerAccessException if the container could not be started.
      */
-    void startContainer(String containerId, ContainerStartConfig containerConfig) throws DockerAccessException;
+    void startContainer(String containerId) throws DockerAccessException;
 
     /**
      * Stop a container.

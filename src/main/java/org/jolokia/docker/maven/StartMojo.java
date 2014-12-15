@@ -61,11 +61,9 @@ public class StartMojo extends AbstractDockerMojo {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-            List<String> links = findLinksWithContainerNames(docker, runConfig.getLinks());
-            ContainerStartConfig startConfig = createContainerStartConfig(runConfig, mappedPorts, links);
-            ContainerCreateConfig config = createContainerCreateConfig(imageName, runConfig, mappedPorts, startConfig);
+            ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
             String containerId = docker.createContainer(config);
-            docker.startContainer(containerId, null);
+            docker.startContainer(containerId);
 
             if (showLog(imageConfig)) {
                 dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
@@ -89,8 +87,8 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     // visible for testing
-    ContainerCreateConfig createContainerCreateConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts, ContainerStartConfig startConfig)
-        throws MojoExecutionException {
+    ContainerCreateConfig createContainerConfig(DockerAccess docker, String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts)
+            throws MojoExecutionException, DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
                     .hostname(runConfig.getHostname())
@@ -102,13 +100,11 @@ public class StartMojo extends AbstractDockerMojo {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnv())
-                    .command(runConfig.getCommand());
+                    .command(runConfig.getCommand())
+                    .hostConfig(createContainerHostConfig(docker, runConfig, mappedPorts));
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {
                 config.binds(volumeConfig.getBind());
-            }
-            if (startConfig != null) {
-                config.hostConfig(startConfig);
             }
             return config;
         }
@@ -117,11 +113,13 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    ContainerStartConfig createContainerStartConfig(RunImageConfiguration runConfig, PortMapping mappedPorts, List<String> links)
+    ContainerHostConfig createContainerHostConfig(DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts)
             throws MojoExecutionException, DockerAccessException {
-            RestartPolicy restartPolicy = runConfig.getRestartPolicy();
+        RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
-        ContainerStartConfig config = new ContainerStartConfig()
+        List<String> links = findLinksWithContainerNames(docker, runConfig.getLinks());
+
+        ContainerHostConfig config = new ContainerHostConfig()
                     .extraHosts(runConfig.getExtraHosts())
                     .links(links)
                     .portBindings(mappedPorts)
@@ -198,7 +196,7 @@ public class StartMojo extends AbstractDockerMojo {
         return null;
     }
 
-    private void registerContainer(String container, ImageConfiguration imageConfig) {
+    void registerContainer(String container, ImageConfiguration imageConfig) {
         containerImageNameMap.put(imageConfig.getName(), container);
         if (imageConfig.getAlias() != null) {
             imageAliasMap.put(imageConfig.getAlias(), imageConfig.getName());
