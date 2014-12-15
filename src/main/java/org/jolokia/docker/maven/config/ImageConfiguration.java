@@ -37,6 +37,11 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
      */
     private Map<String,String> external;
 
+    /**
+     * @parameter
+     */
+    private String registry;
+
     // Used for injection
     public ImageConfiguration() {}
 
@@ -112,6 +117,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     public String getDescription() {
         return "[" + name + "]" +
                (alias != null ? " \"" + alias + "\"" : "");
+    }
+
+    public String getRegistry() {
+        return registry;
     }
 
     // =========================================================================

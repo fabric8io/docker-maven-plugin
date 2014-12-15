@@ -119,25 +119,43 @@ public interface DockerAccess {
      *
      * @param image the image to pull.
      * @param authConfig authentication configuration used when pulling an image
+     * @param registry an optional registry from where to pull the image. Can be null.
      * @throws DockerAccessException if the image couldn't be pulled.
      */
-    void pullImage(String image, AuthConfig authConfig) throws DockerAccessException;
+    void pullImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
 
     /**
-     * Push an image to a registry.
-     * @param image image name to push (can be an alias)
+     * Push an image to a registry. An registry can be specified which is used as target
+     * if the image name the image does not contain a registry.
+     *
+     * If an optional registry is used, the image is also tagged with the full name containing the registry as
+     * part (if not already existent)
+     *
+     * @param image image name to push
+     * @param authConfig authentication configuration
+     * @param registry optional registry to which the image should be pushed.
      * @throws DockerAccessException in case pushing fails
      */
-    void pushImage(String image, AuthConfig authConfig) throws DockerAccessException;
+    void pushImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
 
     /**
      * Create an docker image from a given archive
      *
      * @param image name of the image to build or <code>null</code> if none should be used
      * @param dockerArchive from which the docker image should be build
-     * @throws DockerAccessException if dockerhost reporst an error during building of an image
+     * @throws DockerAccessException if docker host reports an error during building of an image
      */
     void buildImage(String image, File dockerArchive) throws DockerAccessException;
+
+    /**
+     * Alias an image in the repository with a complete new name. (Note that this maps to a Docker Remote API 'tag'
+     * operation, which IMO is badly named since it also can generate a complete alias to a given image)
+     *
+     * @param sourceImage full name (including tag) of the image to alias
+     * @param targetImage the alias name
+     * @throws DockerAccessException if the original image doesnt exist or another error occurs somehow.
+     */
+    void tag(String sourceImage, String targetImage) throws DockerAccessException;
 
     /**
      * Remove an image from this docker installation
@@ -159,5 +177,4 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
-
 }

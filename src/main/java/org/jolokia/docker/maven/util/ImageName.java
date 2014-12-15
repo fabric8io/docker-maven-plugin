@@ -35,7 +35,10 @@ public class ImageName {
     // Tag name
     private String tag;
 
+    private String fullName;
+
     public ImageName(String fullName) {
+        this.fullName = fullName;
         Pattern tagPattern = Pattern.compile("^(.+?)(?::([^:/]+))?$");
         Matcher matcher = tagPattern.matcher(fullName);
         if (!matcher.matches()) {
@@ -56,8 +59,6 @@ public class ImageName {
                 registry = null;
                 repository = rest;
             }
-        } else {
-            throw new IllegalArgumentException("Invalid name " + fullName);
         }
     }
 
@@ -71,14 +72,6 @@ public class ImageName {
 
     public String getTag() {
         return tag;
-    }
-
-    public String getRepositoryWithRegistry() {
-        if (hasRegistry()) {
-            return registry + "/" + repository;
-        } else {
-            return repository;
-        }
     }
 
     public boolean hasRegistry() {
@@ -98,5 +91,18 @@ public class ImageName {
 
     private boolean isRegistry(String part) {
         return part.contains(".") || part.contains(":");
+    }
+
+    public String getFullName(String alternateRegistry) {
+        StringBuilder ret = new StringBuilder();
+        if (registry != null || alternateRegistry != null) {
+            ret.append(registry != null ? registry : alternateRegistry).append("/");
+        }
+        ret.append(repository);
+        return ret.toString();
+    }
+
+    public String getFullNameWithTag(String alternateRegistry) {
+        return getFullName(alternateRegistry) + ":" + (tag != null ? tag : "latest");
     }
 }

@@ -55,8 +55,13 @@ public class StartMojo extends AbstractDockerMojo {
 
         for (StartOrderResolver.Resolvable resolvable : getImagesConfigsInOrder()) {
             final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+
+            // Still to check: How to work with linking, volumes, etc ....
+            //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
+
             String imageName = imageConfig.getName();
-            checkImage(docker, imageName);
+
+            checkImageAndAutoPull(docker, imageConfig);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
@@ -197,14 +202,8 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     private String lookupContainer(String lookup) {
-        if (imageAliasMap.containsKey(lookup)) {
-            String image = imageAliasMap.get(lookup);
-            return containerImageNameMap.get(image);
-        }
-        if (containerImageNameMap.containsKey(lookup)) {
-            return containerImageNameMap.get(lookup);
-        }
-        return null;
+        String image = imageAliasMap.containsKey(lookup) ? imageAliasMap.get(lookup) : lookup;
+        return containerImageNameMap.get(image);
     }
 
     private void registerContainer(String container, ImageConfiguration imageConfig) {
@@ -224,14 +223,19 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
-    public void checkImage(DockerAccess docker, String image) throws DockerAccessException, MojoExecutionException {
-        if (!docker.hasImage(image)) {
+    private void checkImageAndAutoPull(DockerAccess docker, ImageConfiguration imageConfig) throws DockerAccessException, MojoExecutionException {
+        String name = imageConfig.getName();
+        if (!docker.hasImage(name)) {
             if (autoPull) {
-                docker.pullImage(image, prepareAuthConfig(image));
+                String registry = getRegistry(imageConfig);
+                docker.pullImage(name, prepareAuthConfig(name), registry);
+                if (registry != null) {
+                    docker.tag(new ImageName(name).getFullNameWithTag(registry),name);
+                }
             }
             else {
-                throw new MojoExecutionException(this, "No image '" + image + "' found", "Please enable 'autoPull' or pull image '" + image
-                        + "' yourself (docker pull " + image + ")");
+                throw new MojoExecutionException(this, "No image '" + imageConfig + "' found", "Please enable 'autoPull' or pull image '" + imageConfig
+                        + "' yourself (docker pull " + imageConfig + ")");
             }
         }
     }
@@ -244,14 +248,14 @@ public class StartMojo extends AbstractDockerMojo {
             if (wait.getUrl() != null) {
                 String waitUrl = mappedPorts.replaceVars(wait.getUrl());
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
-                logOut.add("on url " + waitUrl + " ");
+                logOut.add("on url " + waitUrl);
             }
             if (wait.getLog() != null) {
                 checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
-                logOut.add("on log out '" + wait.getLog() + "' ");
+                logOut.add("on log out '" + wait.getLog() + "'");
             }
             long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
-            info("Waited " + StringUtils.join(logOut.toArray(), "and") + waited + " ms");
+            info("Waited " + StringUtils.join(logOut.toArray(), " and ") + waited + " ms");
         }
     }
 
