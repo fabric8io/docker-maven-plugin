@@ -139,4 +139,14 @@ public class EnvUtil {
     private static boolean propMatchesPrefix(String prefix, String key) {
         return key.startsWith(prefix) && key.length() >= prefix.length();
     }
+
+    public static String findRegistry(String ... checkFirst) {
+        for (String registry : checkFirst) {
+            if (registry != null) {
+                return registry;
+            }
+        }
+        // Check environment as last resort
+        return System.getenv("DOCKER_REGISTRY");
+    }
 }

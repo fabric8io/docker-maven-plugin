@@ -27,27 +27,17 @@ public class BuildMojo extends AbstractDockerMojo {
     // Parameters required from Maven when building an assembly. They cannot be injected directly
     // into DockerAssemblyCreator.
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private MavenArchiveConfiguration archive;
 
-    /**
-     * @component
-     */
+    /** @component */
     private MavenSession session;
 
-    /**
-     * @component
-     */
+    /** @component */
     private MavenFileFilter mavenFileFilter;
 
-    /**
-     * @component
-     */
+    /** @component */
     private DockerArchiveCreator dockerArchiveCreator;
-    /** @parameter property = "docker.showLogs" default-value="false" */
-    private boolean showLogs;
 
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
@@ -68,18 +58,4 @@ public class BuildMojo extends AbstractDockerMojo {
         dockerAccess.buildImage(imageName, dockerArchive);
     }
 
-    protected boolean showLog(ImageConfiguration imageConfig) {
-        if (showLogs) {
-            return true;
-        } else {
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            if (runConfig != null) {
-                LogConfiguration logConfig = runConfig.getLog();
-                if (logConfig != null) {
-                    return logConfig.isEnabled();
-                }
-            }
-            return false;
-        }
-    }
 }
