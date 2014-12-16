@@ -9,6 +9,7 @@
   - [`docker:remove`](#dockerremove)
   - [`docker:logs`](#dockerlogs)
 * [External Configuration](#external-configuration)
+* [Registry Handling](#registry-handling)
 * [Authentication](#authentication)
 
 ## User Manual
