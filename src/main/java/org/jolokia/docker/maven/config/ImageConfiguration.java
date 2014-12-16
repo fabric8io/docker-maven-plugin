@@ -123,6 +123,14 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return registry;
     }
 
+    @Override
+    public String toString() {
+        return "ImageConfiguration{" +
+               "name='" + name + '\'' +
+               ", alias='" + alias + '\'' +
+               '}';
+    }
+
     // =========================================================================
     // Builder for image configurations
 

@@ -110,6 +110,9 @@ parentheses.
 * **skip** (`docker.skip`)
   With this parameter the execution of this plugin can be skipped
   completely. 
+* **registry** (`docker.registry`)
+  Specify globally a registry to use for pulling and pushing
+  images. See [Registry handling](#registry-handling) for details. 
 * **autoPull** (`docker.autoPull`)
   By default external images (base image for building or images to
   start) are downloaded automatically. With this options this can be
@@ -149,6 +152,9 @@ The `<image>` element can contain the following sub elements:
   identifying the image within this configuration. This is used when
   linking images together or for specifying it with the global
   **image** configuration.
+* **registry** is a registry to use for this image. If the `name`
+  already contains a registry this takes precedence. See
+  [Registry handling](#registry-handling) for more details.
 * **build** is a complex element which contains all the configuration
   aspects when doing a `docker:build` or `docker:push`. This element
   can be omitted if the image is only pulled from a registry e.g. as
@@ -848,6 +854,76 @@ Example:
 </build>
 ```
 
+### Registry handling
+
+Docker uses registries to store images. The registry is typically
+specified as part of the name. I.e. if the first part (everything
+before the first `/`) contains a dot (`.`) or colon (`:`) this part is
+interpreted as an address (an optionally port) of a remote
+registry. This registry (or the default `index.docker.io` if no
+registry is given) is used during push and pull operations. This
+plugin follows the same semantics, so if an image name is specified
+with a registry part, this registry is contacted. Authentication is
+explained in the next [section](#authentication). 
+
+There are some situations however where you want to have more
+flexibility for specifying a remote registry. This might be, because
+you do not want to hard code a registry within the `pom.xml` but
+provide it from the outside with an environment variable or a system
+property. 
+
+This plugin supports various ways for specifying a registry:
+
+* If the image name contains a registry part, this registry is used
+  unconditionally and can not be overwritten from the outside.
+* If an image name doesn't contain a registry, then by default the
+  default Docker registry `index.docker.io` is used for push and pull
+  operations. But this can be overwritten through various means:
+  - If the `<image>` configuration contains a `<registry>` subelement
+    this registry is used.
+  - Otherwise, a global configuration element `<registry>` is
+    evaluated which can be also provided as system property via
+    `-Ddocker.registry`. 
+  - Finally a environment variable `DOCKER_REGISTRY` is looked up for
+    detecting a registry.
+    
+Example:
+
+```xml
+<configuration>
+  <registry>docker.jolokia.org:443</registry>
+  <images>
+    <image>
+      <!-- Without an explicit registry ... -->
+      <name>jolokia/jolokia-java</name>
+      <!-- ... hence use this registry -->
+      <registry>docker.consol.de</registry>
+      ....
+    <image>
+    <image>
+      <name>postgresql</name>
+      <!-- No registry in the name, hence use the globally 
+           configured docker.jolokia.org:443 as registry -->
+      ....
+    </image>
+    <image>
+      <!-- Explicitely specified always wins -->
+      <name>docker.example.com:5000/another/server</name>
+    </image>
+  </images>
+</configuration>
+```
+
+There is some special behaviour when using an externally provided
+registry like described above:
+
+* When *pulling*, the image pulled will be also tagged with repository
+  naem **without** registry. The reasoning behind this is that this
+  image then can be referenced also by the configuration when the
+  registry is not specified anymore.
+* When *pushing* a local image, temporarily an tag including the
+  registry is added and removed after the push. This is required
+  because Docker an only push registry-named images.
 
 ### Authentication
 
