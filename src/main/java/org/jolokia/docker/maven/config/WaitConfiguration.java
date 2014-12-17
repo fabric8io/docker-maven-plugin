@@ -21,12 +21,18 @@ public class WaitConfiguration {
      */
     private String log;
 
+    /**
+     * @parameter
+     */
+    private int shutdown;
+
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, String url, String log) {
+    private WaitConfiguration(int time, String url, String log, int shutdown) {
         this.time = time;
         this.url = url;
         this.log = log;
+        this.shutdown = shutdown;
     }
 
     public int getTime() {
@@ -41,10 +47,14 @@ public class WaitConfiguration {
         return log;
     }
 
+    public int getShutdown() {
+        return shutdown;
+    }
+
     // =============================================================================
 
     public static class Builder {
-        private int time;
+        private int time = 0,shutdown = 0;
         private String url,log;
 
         public Builder time(int time) {
@@ -62,8 +72,13 @@ public class WaitConfiguration {
             return this;
         }
 
+        public Builder shutdown(int shutdown) {
+            this.shutdown = shutdown;
+            return this;
+        }
+
         public WaitConfiguration build() {
-            return new WaitConfiguration(time,url,log);
+            return new WaitConfiguration(time,url,log,shutdown);
         }
     }
 }

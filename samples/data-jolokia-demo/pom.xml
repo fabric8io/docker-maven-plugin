@@ -105,6 +105,7 @@
                   <log>Server startup</log>
                   <url>http://localhost:${jolokia.port}/jolokia</url>
                   <time>10000</time>
+                  <shutdown>500</shutdown>
                 </wait>
                 <log>
                   <enabled>true</enabled>

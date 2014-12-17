@@ -370,7 +370,7 @@ The `<run>` configuration knows the following sub elements:
   as system property `docker.showLogs`.   
 * **user** (*v1.11*) user used inside the container
 * **wait** specifies condition which must be fulfilled for the startup
-  to complete. See [below](#wait-during-startup) which subelements are
+  to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
 * **workingDir** (*v1.11*) working dir for commands to run in
 
@@ -548,7 +548,7 @@ container exit code is non-zero. If on-failure is used, MaximumRetryCount contro
  number of times to retry before giving up. The default is not to restart. (optional)
 
 
-##### Wait during startup
+##### Wait during startup and shutdown
 
 While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
@@ -559,6 +559,9 @@ some condition is met. These conditions can be specified within a
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
+* **shutdown** is the time to wait in milliseconds between stopping a container
+  and removing it. This might be helpful in situation where a Docker croaks with an
+  error when trying to remove a container to fast after it has been stopped.
 
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
@@ -570,12 +573,15 @@ Example:
 <wait>
   <url>http://localhost:${host.port}</url>
   <time>10000</time>
+  <shutdown>500</shutdown>
 </wait>
 ```` 
 
 This setup will wait for the given URL to be reachable but ten seconds
-at most. You can use maven properties in each
-condition, too. In the example, the `${host.port}` propertu is
+at most. Also, when stopping the container after an integration tests, the
+build wait for 500 ms before it tries to remove the container (if not `keepContainer`
+or `keepRunning` is used). You can use maven properties in each
+condition, too. In the example, the `${host.port}` property is
 probably set before within a port mapping section. 
 
 ##### Log configuration
@@ -813,6 +819,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.wait.time** Amount of time to wait during startup of a
     container (in ms)
 * **docker.wait.log** Wait for a log output to appear.
+* **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
 * **docker.workingDir** Working dir for commands to run in
 
 Any other `<run>` or `<build>` sections are ignored when this handler
