@@ -21,7 +21,7 @@ public class DockerFileBuilder {
     private String maintainer = "docker-maven-plugin@jolokia.org";
 
     // Basedir to be export
-    private String exportDir = "/maven";
+    private String basedir = "/maven";
 
     // Default command and arguments
     private String command = "true";
@@ -45,7 +45,7 @@ public class DockerFileBuilder {
      * @return the full path to the docker file
      * @throws IOException if writing fails
      */
-    public File create(File destDir) throws IOException {
+    public File write(File destDir) throws IOException {
         File target = new File(destDir,"Dockerfile");
         FileUtils.fileWrite(target, content());
         return target;
@@ -95,7 +95,7 @@ public class DockerFileBuilder {
     private void addEntries(StringBuilder b) {
         for (AddEntry entry : addEntries) {
             b.append("COPY ").append(entry.source).append(" ")
-             .append(exportDir).append("/").append(entry.destination).append("\n");
+             .append(basedir).append("/").append(entry.destination).append("\n");
         }
     }
 
@@ -117,7 +117,7 @@ public class DockerFileBuilder {
     }
 
     private void addVolumes(StringBuilder b) {
-        addVolume(b, exportDir);
+        addVolume(b, basedir);
         for (String volume : volumes) {
             addVolume(b, volume);
         }
@@ -149,9 +149,9 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder exportDir(String dir) {
+    public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
-            exportDir = dir;
+            basedir = dir;
         }
         return this;
     }

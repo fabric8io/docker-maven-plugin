@@ -11,85 +11,96 @@ import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
+import org.jolokia.docker.maven.config.AssemblyConfiguration;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
  * @author roland
  * @since 07.05.14
  */
-public class DockerArchiveConfigurationSource implements AssemblerConfigurationSource {
+public class DockerAssemblyConfigurationSource implements AssemblerConfigurationSource {
 
-
-    private String[] descriptors;
-    private String[] descriptorRefs;
-
-    private MojoParameters params;
-
-    public DockerArchiveConfigurationSource(MojoParameters params, String descriptor, String descriptorRef) {
-        this.descriptors = descriptor != null ? new String[] { descriptor } : null;
-        this.descriptorRefs = descriptorRef != null ? new String[] { descriptorRef } : null;
+    private final AssemblyConfiguration assemblyConfig;
+    private final MojoParameters params;
+    
+    public DockerAssemblyConfigurationSource(MojoParameters params, AssemblyConfiguration assemblyConfig) {
         this.params = params;
+        this.assemblyConfig = assemblyConfig;
     }
 
+    @Override
     public String[] getDescriptors() {
-        return descriptors;
+        return assemblyConfig.getDescriptors();
     }
 
+    @Override
     public String[] getDescriptorReferences() {
-        return descriptorRefs;
+        return assemblyConfig.getDescriptorRefs();
     }
 
     // ============================================================================================
 
+    @Override
     public File getOutputDirectory() {
-        return new File(params.getProject().getBasedir(),"target/docker");
+        return getFileForDirectory("docker");
     }
 
+    @Override
     public File getWorkingDirectory() {
-        return new File(params.getProject().getBasedir(),"target/docker-work");
+        return getFileForDirectory("docker-work");
     }
 
     // X
+    @Override
     public File getTemporaryRootDirectory() {
-        return new File(params.getProject().getBasedir(),"target/docker-tmp");
+        return getFileForDirectory("docker-tmp");
     }
 
+    @Override
     public String getFinalName() {
         //return params.getProject().getBuild().getFinalName();
         return ".";
     }
 
+    @Override
     public ArtifactRepository getLocalRepository() {
         return params.getSession().getLocalRepository();
     }
+    
     public MavenFileFilter getMavenFileFilter() {
         return params.getMavenFileFilter();
     }
 
     // Maybe use injection
+    @Override
     public List<MavenProject> getReactorProjects() {
         return params.getProject().getCollectedProjects();
     }
 
     // Maybe use injection
+    @Override
     public List<ArtifactRepository> getRemoteRepositories() {
         return params.getProject().getRemoteArtifactRepositories();
     }
 
+    @Override
     public MavenSession getMavenSession() {
         return params.getSession();
     }
 
+    @Override
     public MavenArchiveConfiguration getJarArchiveConfiguration() {
         return params.getArchiveConfiguration();
     }
 
     // X
+    @Override
     public String getEncoding() {
         return params.getProject().getProperties().getProperty("project.build.sourceEncoding");
     }
 
     // X
+    @Override
     public String getEscapeString() {
         return null;
     }
@@ -100,31 +111,37 @@ public class DockerArchiveConfigurationSource implements AssemblerConfigurationS
     }
 
     // X
+    @Override
     public MavenProject getProject() {
         return params.getProject();
     }
 
     // X
+    @Override
     public File getBasedir() {
         return params.getProject().getBasedir();
     }
 
     // X
+    @Override
     public boolean isIgnoreDirFormatExtensions() {
         return true;
     }
 
     // X
+    @Override
     public boolean isDryRun() {
-        return false;
+        return assemblyConfig.isDryRun();
     }
 
     // X
+    @Override
     public String getClassifier() {
         return null;
     }
 
     // X
+    @Override
     public List<String> getFilters() {
         return Collections.emptyList();
     }
@@ -135,51 +152,61 @@ public class DockerArchiveConfigurationSource implements AssemblerConfigurationS
     }
 
     // X
+    @Override
     public File getDescriptorSourceDirectory() {
-        return null;
+        return (assemblyConfig.getDescriptor() == null) ? new File(assemblyConfig.getSourceDirectory()) : null;
     }
 
     // X
+    @Override
     public File getArchiveBaseDirectory() {
         return null;
     }
 
     // X
+    @Override
     public String getDescriptorId() {
         return null;
     }
 
     // X
+    @Override
     public String getDescriptor() {
         return null;
     }
 
     // X
+    @Override
     public String getTarLongFileMode() {
         return "warn";
     }
 
     // X
+    @Override
     public File getSiteDirectory() {
         return null;
     }
 
     // X
+    @Override
     public boolean isSiteIncluded() {
         return false;
     }
 
     // X
+    @Override
     public boolean isAssemblyIdAppended() {
         return false;
     }
 
     // X
+    @Override
     public boolean isIgnoreMissingDescriptor() {
         return false;
     }
 
     // X: (maybe inject MavenArchiveConfiguration)
+    @Override
     public String getArchiverConfig() {
         return null;
     }
@@ -189,15 +216,23 @@ public class DockerArchiveConfigurationSource implements AssemblerConfigurationS
         return null;
     }
 
+    @Override
     public boolean isUpdateOnly() {
         return false;
     }
 
+    @Override
     public boolean isUseJvmChmod() {
         return false;
     }
 
+    @Override
     public boolean isIgnorePermissions() {
-        return true;
+        return assemblyConfig.isIgnorePermissions();
+    }
+    
+    private File getFileForDirectory(String name) {
+        String child = params.getProject().getBuild().getOutputDirectory() + File.separator + name;
+        return new File(params.getProject().getBasedir(), child);
     }
 }

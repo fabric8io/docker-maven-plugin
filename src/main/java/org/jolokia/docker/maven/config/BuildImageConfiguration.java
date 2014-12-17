@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,11 @@ import java.util.Map;
  */
 public class BuildImageConfiguration {
 
+    /**
+     * @parameter 
+     */
+    private String dockerfile;
+    
     // Base Image name of the data image to use.
     /**
      * @parameter
@@ -17,6 +23,7 @@ public class BuildImageConfiguration {
 
     /**
      * @parameter
+     * @deprecated use <code>assembly</code> element
      */
     private String exportDir;
 
@@ -27,11 +34,13 @@ public class BuildImageConfiguration {
 
     /**
      * @parameter
+     * @deprecated use <code>assembly</code> element
      */
     private String assemblyDescriptor;
 
     /**
      * @parameter
+     * @deprecated use <code>assembly</code> element
      */
     private String assemblyDescriptorRef;
 
@@ -55,26 +64,37 @@ public class BuildImageConfiguration {
      */
     private String command;
 
+    /**
+     * @parameter
+     */
+    private AssemblyConfiguration assembly;
+    
     public BuildImageConfiguration() {}
    
+    public String getDockerfile() { 
+        return dockerfile;
+    }
+    
     public String getFrom() {
         return from;
-    }
-
-    public String getExportDir() {
-        return exportDir;
     }
 
     public String getRegistry() {
         return registry;
     }
 
-    public String getAssemblyDescriptor() {
-        return assemblyDescriptor;
-    }
+    public AssemblyConfiguration getAssemblyConfiguration() {
+        if (assembly != null) {
+            return assembly;
+        }
 
-    public String getAssemblyDescriptorRef() {
-        return assemblyDescriptorRef;
+        return new AssemblyConfiguration.Builder().basedir(exportDir)
+                .descriptor(assemblyDescriptor)
+                .descriptorRef(assemblyDescriptorRef)
+                // preserve existing behavior
+                .exportBasedir(true)
+                .ignorePermissions(true)
+                .build();
     }
 
     public List<String> getPorts() {
@@ -82,7 +102,7 @@ public class BuildImageConfiguration {
     }
 
     public List<String> getVolumes() {
-        return volumes;
+        return (volumes != null) ? volumes : Collections.<String>emptyList();
     }
     
     public Map<String, String> getEnv() {
