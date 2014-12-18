@@ -89,6 +89,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** @parameter property = "docker.image" */
     private String image;
 
+    // Default registry to use if no registry is specified
+    /** @parameter property = "docker.registry" */
+    private String registry;
+
     // Authentication information
     /** @parameter */
     Map authConfig;
@@ -422,6 +426,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
             logConfig = LogConfiguration.DEFAULT;
         }
         return logConfig;
+    }
+
+    /**
+     * Try to get the registry from various parameters
+     *
+     * @param imageConfig image config which might contain the registry
+     * @return the registry found or null if none could be extracted
+     */
+    protected String getRegistry(ImageConfiguration imageConfig) {
+        return EnvUtil.findRegistry(imageConfig.getRegistry(),registry);
     }
 
     // ==========================================================================================

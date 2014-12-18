@@ -114,7 +114,7 @@
             </image>
             <image>
               <alias>data</alias>
-              <!-- Artefact Image-->
+              <!-- Artifact Image-->
               <name>jolokia/${project.artifactId}:${project.version}</name>
               <build>
                 <!-- The assembly descriptor prepares the "/maven" directory in the temporary data

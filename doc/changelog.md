@@ -7,6 +7,8 @@
     the "start" call is deprecated and will go away.
   - Allow selecting the API version with the configuration "apiVersion".
     Default and minimum API version is now "v1.15"
+  - A registry can be specified as system property `docker.registry` or
+    environment variable `DOCKER_REGISTRY` (#26)
 
 Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
 See "[Volume binding]"(manual.md#volume-binding) for details but in short:
@@ -23,7 +25,7 @@ See "[Volume binding]"(manual.md#volume-binding) for details but in short:
 
 becomes
 
-````
+````xml
 <run>
   <volumes>
     <from>
