@@ -62,12 +62,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     private BuildImageConfiguration extractBuildConfiguration(String prefix, Properties properties) {
         return new BuildImageConfiguration.Builder()
                 .command(withPrefix(prefix, COMMAND, properties))
-                .assemblyDescriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
-                .assemblyDescriptorRef(withPrefix(prefix, ASSEMBLY_DESCRIPTOR_REF, properties))
+                .assembly(extractAssembly(prefix, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
                 .ports(extractPortValues(prefix, properties))
                 .from(withPrefix(prefix, FROM, properties))
-                .exportDir(withPrefix(prefix, EXPORT_DIR, properties))
                 .registry(withPrefix(prefix, REGISTRY, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES, properties))
                 .build();
@@ -100,6 +98,19 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
+    private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {
+        return new AssemblyConfiguration.Builder()
+                .basedir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))        
+                .descriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
+                .descriptorRef(withPrefix(prefix, ASSEMBLY_DESCRIPTOR_REF, properties))
+                .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
+                .dryRun(booleanWithPrefix(prefix, ASSEMBLY_DRY_RUN, properties))
+                .exportBasedir(booleanWithPrefix(prefix, ASSEMBLY_EXPORT_BASEDIR, properties))
+                .ignorePermissions(booleanWithPrefix(prefix, ASSEMBLY_IGNORE_PERMISSIONS, properties))
+                .user(withPrefix(prefix, ASSEMBLY_USER, properties))
+                .build();
+    }
+    
     // Extract only the values of the port mapping
     private List<String> extractPortValues(String prefix, Properties properties) {
         List<String> ret = new ArrayList<>();
@@ -136,7 +147,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .from(listWithPrefix(prefix, VOLUMES_FROM, properties))
                 .build();
     }
-
+  
     private int asInt(String s) {
         return s != null ? Integer.parseInt(s) : 0;
     }
@@ -162,7 +173,6 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         String prop = withPrefix(prefix,key,properties);
         return prop == null ? null : Boolean.valueOf(prop);
     }
-
     
     private String getPrefix(ImageConfiguration config) {
         Map<String, String> refConfig = config.getExternalConfig();

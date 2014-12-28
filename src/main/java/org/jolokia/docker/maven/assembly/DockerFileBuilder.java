@@ -27,6 +27,8 @@ public class DockerFileBuilder {
     private String command = "true";
     private String[] arguments = new String[0];
 
+    private boolean exportBasedir = true;
+    
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
     // See also http://docs.docker.io/reference/builder/#add
@@ -117,7 +119,10 @@ public class DockerFileBuilder {
     }
 
     private void addVolumes(StringBuilder b) {
-        addVolume(b, basedir);
+        if (exportBasedir) {
+            addVolume(b, basedir);
+        }
+        
         for (String volume : volumes) {
             addVolume(b, volume);
         }
@@ -183,6 +188,11 @@ public class DockerFileBuilder {
         return this;
     }
 
+    public DockerFileBuilder exportBasedir(boolean exportBasedir) {
+        this.exportBasedir = exportBasedir;
+        return this;
+    }
+    
     public DockerFileBuilder env(Map<String, String> values) {
         if (values != null) {
             this.envEntries.putAll(values);
@@ -224,4 +234,5 @@ public class DockerFileBuilder {
             }
         }
     }
+
 }

@@ -35,11 +35,11 @@ public class MojoParameters {
         return archive;
     }
 
-    public String getDockerSourceDirectory() {
+    public String getSourceDirectory() {
         return sourceDirectory;
     }
 
-    public String getDockerOutputDirectory() {
+    public String getOutputDirectory() {
         return outputDirectory;
     }
 

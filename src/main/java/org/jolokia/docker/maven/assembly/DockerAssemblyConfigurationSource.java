@@ -30,30 +30,38 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public String[] getDescriptors() {
-        return assemblyConfig.getDescriptors();
+        String[] descriptors = null;
+        String descriptor = assemblyConfig.getDescriptor();
+        
+        if (descriptor != null) {
+            descriptors = new String[] { params.getSourceDirectory() + File.separator + descriptor };
+        }
+
+        return descriptors;
     }
 
     @Override
     public String[] getDescriptorReferences() {
-        return assemblyConfig.getDescriptorRefs();
+        String descriptorRef = assemblyConfig.getDescriptorRef();
+        return (descriptorRef != null) ? new String[] { descriptorRef } : null;
     }
 
     // ============================================================================================
 
     @Override
     public File getOutputDirectory() {
-        return getFileForDirectory("docker");
+        return getFileForDirectory("build");
     }
 
     @Override
     public File getWorkingDirectory() {
-        return getFileForDirectory("docker-work");
+        return getFileForDirectory("work");
     }
 
     // X
     @Override
     public File getTemporaryRootDirectory() {
-        return getFileForDirectory("docker-tmp");
+        return getFileForDirectory("tmp");
     }
 
     @Override
@@ -154,7 +162,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     // X
     @Override
     public File getDescriptorSourceDirectory() {
-        return (assemblyConfig.getDescriptor() == null) ? new File(assemblyConfig.getSourceDirectory()) : null;
+        return null;
     }
 
     // X
@@ -232,7 +240,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     }
     
     private File getFileForDirectory(String name) {
-        String child = params.getProject().getBuild().getOutputDirectory() + File.separator + name;
-        return new File(params.getProject().getBasedir(), child);
+        return new File(params.getOutputDirectory() + File.separator + name);
     }
 }

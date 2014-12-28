@@ -23,26 +23,8 @@ public class BuildImageConfiguration {
 
     /**
      * @parameter
-     * @deprecated use <code>assembly</code> element
-     */
-    private String exportDir;
-
-    /**
-     * @parameter
      */
     private String registry;
-
-    /**
-     * @parameter
-     * @deprecated use <code>assembly</code> element
-     */
-    private String assemblyDescriptor;
-
-    /**
-     * @parameter
-     * @deprecated use <code>assembly</code> element
-     */
-    private String assemblyDescriptorRef;
 
     /**
      * @parameter
@@ -84,17 +66,7 @@ public class BuildImageConfiguration {
     }
 
     public AssemblyConfiguration getAssemblyConfiguration() {
-        if (assembly != null) {
-            return assembly;
-        }
-
-        return new AssemblyConfiguration.Builder().basedir(exportDir)
-                .descriptor(assemblyDescriptor)
-                .descriptorRef(assemblyDescriptorRef)
-                // preserve existing behavior
-                .exportBasedir(true)
-                .ignorePermissions(true)
-                .build();
+        return assembly;
     }
 
     public List<String> getPorts() {
@@ -121,26 +93,16 @@ public class BuildImageConfiguration {
             return this;
         }
 
-        public Builder exportDir(String exportDir) {
-            config.exportDir = exportDir;
-            return this;
-        }
-
         public Builder registry(String registry) {
             config.registry = registry;
             return this;
         }
 
-        public Builder assemblyDescriptor(String assemblyDescriptor) {
-            config.assemblyDescriptor = assemblyDescriptor;
+        public Builder assembly(AssemblyConfiguration assembly) {
+            config.assembly = assembly;
             return this;
         }
-
-        public Builder assemblyDescriptorRef(String assemblyDescriptorRef) {
-            config.assemblyDescriptorRef = assemblyDescriptorRef;
-            return this;
-        }
-
+        
         public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;

@@ -3,19 +3,13 @@ package org.jolokia.docker.maven.config;
 
 public class AssemblyConfiguration {
 
-    private static final String DEFAULT_ADD = "maven";
-    private static final String DEFAULT_SRC = "src/main/docker";
-    
-    /**
-     * @parameter
-     */
-    private String addFrom;
-    
+    private static final String DEFAULT_BASE_DIR = "/maven";
+
     /**
      * @parameter
      */
     private String basedir;
-    
+
     /**
      * @parameter
      */
@@ -25,32 +19,27 @@ public class AssemblyConfiguration {
      * @parameter
      */
     private String descriptorRef;
-    
-    /**
-     * @parameter
-     */
-    private String dockerfile;
-    
-    /**
-     * @parameter
-     */
-    private boolean dryRun;
-    
-    /**
-     * @parameter
-     */
-    private boolean export;
-    
-    /**
-     * @paramter
-     */
-    private boolean ignorePermissions;
 
     /**
-     * @paramaeter
+     * @parameter
      */
-    private String sourceDirectory;
-    
+    private String dockerFileDir;
+
+    /**
+     * @parameter default-value="false"
+     */
+    private Boolean dryRun;
+
+    /**
+     * @parameter default-value="true"
+     */
+    private Boolean exportBasedir;
+
+    /**
+     * @paramter default-value="false"
+     */
+    private Boolean ignorePermissions;
+
     /**
      * @parameter
      */
@@ -58,90 +47,77 @@ public class AssemblyConfiguration {
 
     public AssemblyConfiguration() { }
 
-    public String getAddFrom() {
-        return (addFrom != null) ? addFrom: DEFAULT_ADD;
+    public Boolean exportBasedir() {
+        return (exportBasedir != null) ? exportBasedir : Boolean.TRUE;
     }
-    
+
     public String getBasedir() {
-        return basedir;
+        return (basedir != null) ? basedir : DEFAULT_BASE_DIR;
     }
 
     public String getDescriptor() {
         return descriptor;
     }
-    
-    public String[] getDescriptors() {
-        return (descriptor != null) ? new String[] { descriptor } : null;
-    }
-    
+
     public String getDescriptorRef() {
         return descriptorRef;
     }
 
-    public String[] getDescriptorRefs() {
-        return (descriptorRef != null) ? new String[] { descriptorRef } : null;
+    public String getDockerFileDir() {
+        return dockerFileDir;
     }
-   
-    public String getDockerfile()
-    {
-        return dockerfile;
-    }
-    
-    public String getSourceDirectory() {
-        return (sourceDirectory != null) ? sourceDirectory : DEFAULT_SRC;
-    }
-    
+
     public String getUser() {
         return user;
     }
-   
-    public boolean isDryRun() {
-        return dryRun;
+
+    public Boolean isDryRun() {
+        return (dryRun != null) ? dryRun : Boolean.FALSE;
     }
-    
-    public boolean exportBasedir() {
-        return export;
+
+    public Boolean isIgnorePermissions() {
+        return (ignorePermissions != null) ? ignorePermissions : Boolean.FALSE;
     }
-    
-    public boolean isIgnorePermissions() {
-        return ignorePermissions;
-    }
-    
+            
     public static class Builder {
-        
+
         private final AssemblyConfiguration config = new AssemblyConfiguration();
-        
-        public Builder addFrom(String addFrom) {
-            config.addFrom = addFrom;
-            return this;
-        }
-        
+
         public Builder basedir(String baseDir) {
             config.basedir = baseDir;
             return this;
+        }
+
+        public AssemblyConfiguration build() {
+            return config;
         }
 
         public Builder descriptor(String descriptor) {
             config.descriptor = descriptor;
             return this;
         }
-        
+
         public Builder descriptorRef(String descriptorRef) {
             config.descriptorRef = descriptorRef;
             return this;
         }
 
-        public Builder dryRun(boolean dryRun) {
+        public Builder dockerFileDir(String dockerFileDir) {
+            config.dockerFileDir = dockerFileDir;
+            return this;
+        }
+        
+        public Builder dryRun(Boolean dryRun) {
             config.dryRun = dryRun;
             return this;
         }
 
-        public Builder exportBasedir(boolean export) {
-            config.export = export;
+        public Builder exportBasedir(Boolean export) {
+            config.exportBasedir = export;
             return this;
         }
 
-        public Builder ignorePermissions(boolean ignorePermissions) {
+        public Builder ignorePermissions(Boolean ignorePermissions) {
             config.ignorePermissions = ignorePermissions;
             return this;
         }
@@ -150,11 +126,5 @@ public class AssemblyConfiguration {
             config.user = user;
             return this;
         }
-
-        public AssemblyConfiguration build() {
-            return config;
-        }
     }
-
-   
 }
