@@ -138,6 +138,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
                 .url(withPrefix(prefix, WAIT_URL, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
+                .shutdown(asInt(withPrefix(prefix,WAIT_SHUTDOWN,properties)))
                 .build();
     }
 

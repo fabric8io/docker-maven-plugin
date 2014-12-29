@@ -368,7 +368,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         return authConfigFactory.createAuthConfig(authConfig, image,settings);
     }
 
-    protected static String getContainerAndImageDescription(String container, String description) {
+    protected static String toContainerAndImageDescription(String container, String description) {
         return container.substring(0, 12) + " " + description;
     }
 
@@ -441,74 +441,4 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // ==========================================================================================
     // Class for registering a shutdown action
 
-    protected static class ShutdownAction {
-
-        // The image used
-        private String image;
-
-        // Alias of the image
-        private final String alias;
-
-        // Data container create from image
-        private String container;
-
-        // Description
-        private String description;
-
-        protected ShutdownAction(ImageConfiguration imageConfig, String container) {
-            this.image = imageConfig.getName();
-            this.alias = imageConfig.getAlias();
-            this.description = imageConfig.getDescription();
-            this.container = container;
-        }
-
-        /**
-         * Check whether this shutdown actions applies to the given image and/or container
-         *
-         * @param pImage image to check
-         * @return true if this action should be applied
-         */
-        public boolean applies(String pImage) {
-            return pImage == null || pImage.equals(image);
-        }
-
-        /**
-         * Clean up according to the given parameters
-         *
-         * @param access access object for reaching docker
-         * @param log logger to use
-         * @param keepContainer whether to keep the container (and its data container)
-         */
-        public void shutdown(DockerAccess access, LogHandler log,boolean keepContainer)
-                throws MojoExecutionException {
-            // Stop the container
-            try {
-                access.stopContainer(container);
-                if (!keepContainer) {
-                    // Remove the container
-                    access.removeContainer(container);
-                }
-                log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " +
-                         getContainerAndImageDescription(container, description));
-            } catch (DockerAccessException e) {
-                throw new MojoExecutionException("Cannot shutdown",e);
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) { return true; }
-            if (o == null || getClass() != o.getClass()) {return false;}
-
-            ShutdownAction that = (ShutdownAction) o;
-
-            return container.equals(that.container);
-
-        }
-
-        @Override
-        public int hashCode() {
-            return container.hashCode();
-        }
-    }
 }

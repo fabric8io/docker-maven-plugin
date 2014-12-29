@@ -9,6 +9,8 @@
     Default and minimum API version is now "v1.15"
   - A registry can be specified as system property `docker.registry` or
     environment variable `DOCKER_REGISTRY` (#26)
+  - Add new wait parameter `shutdown` which allows to specify the amount of time to wait between stopping
+    a container and removing it (#54)
 
 Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
 See "[Volume binding]"(manual.md#volume-binding) for details but in short:
