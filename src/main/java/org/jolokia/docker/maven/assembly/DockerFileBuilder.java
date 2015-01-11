@@ -42,7 +42,7 @@ public class DockerFileBuilder {
     private List<String> volumes = new ArrayList<>();
 
     /**
-     * Cretate a DockerFile in the given directory
+     * Create a DockerFile in the given directory
      * @param  destDir directory where to store the dockerfile
      * @return the full path to the docker file
      * @throws IOException if writing fails

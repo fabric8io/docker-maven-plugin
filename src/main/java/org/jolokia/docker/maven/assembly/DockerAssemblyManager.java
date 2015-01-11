@@ -98,7 +98,7 @@ public class DockerAssemblyManager {
         
         if (buildConfig.getFrom() != null) {
             builder.baseImage(buildConfig.getFrom());
-            builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitely set)
+            builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
         }
         
         if (buildConfig.getCommand() != null) {
