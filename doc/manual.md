@@ -118,7 +118,7 @@ parentheses.
   By default external images (base image for building or images to
   start) are downloaded automatically. With this options this can be
   switched off by setting this value to `false`.
-* **authConfig** holds the authencation information when pulling from
+* **authConfig** holds the authentication information when pulling from
   or pushing to Docker registry. There is a dedicated
   [section](#authentication) for how doing security.
 * **logDate** (`docker.logDate`) specifies the date format which is used for printing out
@@ -170,7 +170,7 @@ The `<image>` element can contain the following sub elements:
   this image is only used a *data container* for exporting artifacts
   via volumes this section can be missing.
 * **external** can be used to fetch the configuration through other
-  means than the intrinisic configuration with `run` and `build`. It
+  means than the intrinsic configuration with `run` and `build`. It
   contains a `<type>` element specifying the handler for getting the
   configuration. See [External configuration](#external-configuration)
   for details.
@@ -948,19 +948,18 @@ Example:
 There is some special behaviour when using an externally provided
 registry like described above:
 
-* When *pulling*, the image pulled will be also tagged with repository
-  naem **without** registry. The reasoning behind this is that this
+* When *pulling*, the image pulled will be also tagged with a repository
+  name **without** registry. The reasoning behind this is that this
   image then can be referenced also by the configuration when the
-  registry is not specified anymore.
+  registry is not specified anymore explicitely.
 * When *pushing* a local image, temporarily an tag including the
   registry is added and removed after the push. This is required
   because Docker an only push registry-named images.
 
 ### Authentication
 
-When pulling (via the `autoPull` mode of `docker:start` and
-`docker:push`) or pushing image, it might be necessary to authenticate
-against a Docker registry. 
+When pulling (via the `autoPull` mode of `docker:start`) or pushing image, it
+might be necessary to authenticate against a Docker registry.
 
 There are three different ways for providing credentials:
  
