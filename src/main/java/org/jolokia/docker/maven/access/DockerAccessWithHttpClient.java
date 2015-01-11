@@ -208,12 +208,14 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public void pullImage(String image,AuthConfig authConfig) throws DockerAccessException {
+    public void pullImage(String image, AuthConfig authConfig) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepository());
+        String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepositoryWithRegistry());
         pullUrl = addTag(pullUrl, name);
+        // adding registry parameter seems to have no effect, added it to the fromName instead
         pullUrl = addRegistry(pullUrl, name);
-        pullOrPushImage(image, pullUrl, "pulling", authConfig);
+        // do not add the authConfig if the fromImage is from the public registry
+        pullOrPushImage(image, pullUrl, "pulling", name.hasRegistry() ? authConfig : null);
     }
 
     /** {@inheritDoc} */
@@ -222,7 +224,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         ImageName name = new ImageName(image);
         String pushUrl = baseUrl + "/images/" + encode(name.getRepositoryWithRegistry()) + "/push";
         pushUrl = addTag(pushUrl, name);
-            pullOrPushImage(image, pushUrl, "pushing", authConfig);
+        pullOrPushImage(image, pushUrl, "pushing", authConfig);
     }
 
     /** {@inheritDoc} */

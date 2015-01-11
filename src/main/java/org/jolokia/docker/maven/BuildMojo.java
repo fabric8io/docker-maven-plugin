@@ -61,6 +61,10 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private void buildImage(ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
+        String fromName = imageConfig.getBuildConfiguration().getFrom();
+        info("Pulling base image " + fromName);
+        dockerAccess.pullImage(fromName, prepareAuthConfig(fromName));
+
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
         File dockerArchive = dockerArchiveCreator.create(params, imageConfig.getBuildConfiguration());
         String imageName = getImageName(imageConfig.getName());
