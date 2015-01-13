@@ -1,9 +1,5 @@
 package org.jolokia.docker.maven.assembly;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
@@ -13,14 +9,19 @@ import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.apache.maven.plugin.assembly.io.AssemblyReadException;
 import org.apache.maven.plugin.assembly.io.AssemblyReader;
 import org.apache.maven.plugin.assembly.model.Assembly;
-import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
+import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.codehaus.plexus.archiver.tar.TarLongFileMode;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -64,7 +65,8 @@ public class DockerArchiveCreator {
 
     private File createDockerBuildArchive(File archive, File dockerDir) throws MojoExecutionException {
         try {
-            Archiver archiver = archiverManager.getArchiver("tar");
+            TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
+            archiver.setLongfile(TarLongFileMode.posix);
             archiver.addDirectory(dockerDir);
             archiver.setDestFile(archive);
             archiver.createArchive();
