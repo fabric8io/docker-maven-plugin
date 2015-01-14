@@ -13,10 +13,11 @@ import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.apache.maven.plugin.assembly.io.AssemblyReadException;
 import org.apache.maven.plugin.assembly.io.AssemblyReader;
 import org.apache.maven.plugin.assembly.model.Assembly;
-import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
+import org.codehaus.plexus.archiver.tar.TarArchiver;
+import org.codehaus.plexus.archiver.tar.TarLongFileMode;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.jolokia.docker.maven.config.AssemblyConfiguration;
@@ -71,7 +72,8 @@ public class DockerAssemblyManager {
     
     private File fillTarball(File archive, File dockerFileDir, File outputDir) throws MojoExecutionException {
         try {
-            Archiver archiver = archiverManager.getArchiver("tar");
+            TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
+            archiver.setLongfile(TarLongFileMode.posix);
             archiver.addFileSet(DefaultFileSet.fileSet(outputDir));
             if (dockerFileDir != null) {
                 archiver.addFileSet(DefaultFileSet.fileSet(dockerFileDir));
