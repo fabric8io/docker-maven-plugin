@@ -276,8 +276,6 @@ Here's an example:
   directory will also be added to the image. Usage of this directive will take
   precedence over any configuration specifed in the `build` element and any 
   artifacts produced by the build must be manually included.
-* **dryRun** indicates if dry run of creating the archive should be executed.
-  This value is `false` by default.
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
   the container root (`/`), which cannot be exported. 

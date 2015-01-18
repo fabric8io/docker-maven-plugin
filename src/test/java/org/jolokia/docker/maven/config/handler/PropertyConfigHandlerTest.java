@@ -103,7 +103,6 @@ public class PropertyConfigHandlerTest {
         AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
         assertEquals("user", config.getUser());
         assertEquals("project", config.getDescriptorRef());
-        assertTrue(config.isDryRun());
         assertFalse(config.exportBasedir());
         assertTrue(config.isIgnorePermissions());
     }
@@ -142,7 +141,6 @@ public class PropertyConfigHandlerTest {
         assertEquals("assembly.xml", assemblyConfig.getDescriptor());
         assertNull(assemblyConfig.getUser());
         assertTrue(assemblyConfig.exportBasedir());
-        assertFalse(assemblyConfig.isDryRun());
         assertFalse(assemblyConfig.isIgnorePermissions());        
     }
 
@@ -201,7 +199,6 @@ public class PropertyConfigHandlerTest {
         return new String[] { 
                 k(ASSEMBLY_BASEDIR), "/basedir",
                 k(ASSEMBLY_DESCRIPTOR_REF), "project",
-                k(ASSEMBLY_DRY_RUN), "true",
                 k(ASSEMBLY_EXPORT_BASEDIR), "false",
                 k(ASSEMBLY_IGNORE_PERMISSIONS), "true",
                 k(ASSEMBLY_USER), "user",

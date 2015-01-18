@@ -139,7 +139,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     // X
     @Override
     public boolean isDryRun() {
-        return assemblyConfig.isDryRun();
+        return false;
     }
 
     // X

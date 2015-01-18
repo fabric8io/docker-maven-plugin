@@ -26,11 +26,6 @@ public class AssemblyConfiguration {
     private String dockerFileDir;
 
     /**
-     * @parameter default-value="false"
-     */
-    private Boolean dryRun;
-
-    /**
      * @parameter default-value="true"
      */
     private Boolean exportBasedir;
@@ -71,10 +66,6 @@ public class AssemblyConfiguration {
         return user;
     }
 
-    public Boolean isDryRun() {
-        return (dryRun != null) ? dryRun : Boolean.FALSE;
-    }
-
     public Boolean isIgnorePermissions() {
         return (ignorePermissions != null) ? ignorePermissions : Boolean.FALSE;
     }
@@ -104,11 +95,6 @@ public class AssemblyConfiguration {
 
         public Builder dockerFileDir(String dockerFileDir) {
             config.dockerFileDir = dockerFileDir;
-            return this;
-        }
-        
-        public Builder dryRun(Boolean dryRun) {
-            config.dryRun = dryRun;
             return this;
         }
 

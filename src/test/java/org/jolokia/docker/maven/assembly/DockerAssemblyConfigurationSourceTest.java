@@ -20,11 +20,10 @@ public class DockerAssemblyConfigurationSourceTest {
     public void setup() {
         this.params = new MojoParameters(null, null, null, null, "src/docker", "output/docker");
         
-        // set 'dryRun' and 'ignorePermissions' to something other then their defaults
+        // set 'ignorePermissions' to something other then default
         this.assemblyConfig = new AssemblyConfiguration.Builder()
             .descriptor("assembly.xml")
             .descriptorRef("project")
-            .dryRun(true)
             .ignorePermissions(false)
             .build();
     }
@@ -42,7 +41,6 @@ public class DockerAssemblyConfigurationSourceTest {
         assertEquals(1, descriptorRefs.length);
         assertEquals("project", descriptorRefs[0]);
         
-        assertTrue(source.isDryRun());
         assertFalse(source.isIgnorePermissions());
         
         assertTrue(containsOutputDir(source.getOutputDirectory().toString()));

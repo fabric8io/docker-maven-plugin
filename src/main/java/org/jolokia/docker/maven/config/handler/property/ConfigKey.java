@@ -27,7 +27,6 @@ public enum ConfigKey {
     ASSEMBLY_BASEDIR,
     ASSEMBLY_DESCRIPTOR("assembly.descriptor"),
     ASSEMBLY_DESCRIPTOR_REF("assembly.descriptorRef"),
-    ASSEMBLY_DRY_RUN("assembly.dryRun"),
     ASSEMBLY_EXPORT_BASEDIR("assembly.exportBase"),
     ASSEMBLY_IGNORE_PERMISSIONS("assembly.ignorePermissions"),
     ASSEMBLY_USER("assembly.user"),
