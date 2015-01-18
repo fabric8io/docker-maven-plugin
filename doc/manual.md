@@ -125,6 +125,11 @@ parentheses.
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
   the [section](#log-configuration) below. 
+* **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains 
+  the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`.
+* **outputDirectory** (`docker.target.dir`) specifies the default output directory to be 
+  used by the plugin. The default value is `target/docker`.   
+
 
 Example:
 
@@ -217,19 +222,12 @@ images contained in this variable will be build.
 All build relevant configuration is contained in the `<build>` section
 of an image configuration. The available subelements are
 
-* **assemblyDescriptor** is a reference to an assembly descriptor as
-  described in the section [Docker Assembly](#docker-assembly) below. 
-* **assemblyDescriptorRef** is an alias to a predefined assembly
-  descriptor. The available aliases are also described in the
-  [Docker Assembly](#docker-assembly) section.
+* **assembly** specifies the assembly configuration as described in
+  [Build Assembly](#build-assembly)
 * **command** is the command to execute by default (i.e. if no command
   is provided when a container for this image is started).
 * **env** hold environments as described in
   [Setting Environment Variables](#setting-environment-variables). 
-* **exportDir** depicts the directory under which the files and
-  artifacts contained in the assembly will be copied within the
-  container. By default this is `/maven`. if this vale is set to the 
-  container root (`/`) it will not be exported. 
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
@@ -249,23 +247,46 @@ Here's an example:
 ````xml
 <build>
   <from>java:8u40</from>
-  <assemblyDescriptor>src/main/assembly.xml</assemblyDescriptor>
   <ports>
     <port>8080</port>
   </ports>
   <volumes>
     <volume>/path/to/expose</volume>
   </volumes>
-  <exportDir>/opt/demo</exportDir>
   <command>java /opt/demo/server.jar</command>
+  <assembly>
+    <basedir>/opt/demo</basedir>
+    <descriptor>assembly.xml</descriptor>
+  </assembly>
 </build>
 ````
 
+##### Build Assembly
+
+* **basedir** depicts the directory under which the files and
+  artifacts contained in the assembly will be copied within the
+  container. The default value for this is `/maven`.
+* **descriptor** is a reference to an assembly descriptor as
+  described in the section [Docker Assembly](#docker-assembly) below. 
+* **descriptorRef** is an alias to a predefined assembly
+  descriptor. The available aliases are also described in the
+  [Docker Assembly](#docker-assembly) section.
+* **dockerFileDir** specifies a directory containing an external dockerfile 
+  that will be used to create the image. Any additional files located in this
+  directory will also be added to the image. Usage of this directive will take
+  precedence over any configuration specifed in the `build` element and any 
+  artifacts produced by the build must be manually included.
+* **exportBasedir** indicates if the `basedir` should be exported as a volume.
+  This value is `true` by default except in the case the `basedir` is set to 
+  the container root (`/`), which cannot be exported. 
+* **ignorePermissions** indicates if existing file permissions should be ignored
+  when creating the assembly archive. This value is `false` by default.
+
 ##### Docker Assembly
 
-With using the `assemblyDescriptor` or `assemblyDescriptorRef` option
+With using the `descriptor` or `descriptorRef` option
 it is possible to bring local files, artifacts and dependencies into
-the running Docker container. An `assemblyDescriptor` points to a file
+the running Docker container. A `descriptor` points to a file
 describing the data to put into an image to build. It has the same
 [format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
 as for creating assemblies with the
@@ -278,7 +299,7 @@ with following exceptions:
 * The `<id>` is ignored since only a single assembly descriptor is
   used (no need to distinguish multiple descriptors) 
 
-Alternatively `assemblyDescriptorRef` can be used with the name of a
+Alternatively `descriptorRef` can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
 used for `assemblyDescriptorRef`:
 
@@ -292,7 +313,7 @@ used for `assemblyDescriptorRef`:
   directory. I.e. Tomcat will then deploy the war under the root
   context. 
 
-All declared files end up in the configured `exportDir` (or `/maven`
+All declared files end up in the configured `basedir` (or `/maven`
 by default) in the created image.
 
 In the following example a dependency from the pom.xml is included and

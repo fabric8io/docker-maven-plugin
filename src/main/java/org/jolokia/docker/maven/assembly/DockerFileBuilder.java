@@ -21,12 +21,14 @@ public class DockerFileBuilder {
     private String maintainer = "docker-maven-plugin@jolokia.org";
 
     // Basedir to be export
-    private String exportDir = "/maven";
+    private String basedir = "/maven";
 
     // Default command and arguments
     private String command = "true";
     private String[] arguments = new String[0];
 
+    private boolean exportBasedir = true;
+    
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
     // See also http://docs.docker.io/reference/builder/#add
@@ -45,7 +47,7 @@ public class DockerFileBuilder {
      * @return the full path to the docker file
      * @throws IOException if writing fails
      */
-    public File create(File destDir) throws IOException {
+    public File write(File destDir) throws IOException {
         File target = new File(destDir,"Dockerfile");
         FileUtils.fileWrite(target, content());
         return target;
@@ -95,7 +97,7 @@ public class DockerFileBuilder {
     private void addEntries(StringBuilder b) {
         for (AddEntry entry : addEntries) {
             b.append("COPY ").append(entry.source).append(" ")
-             .append(exportDir).append("/").append(entry.destination).append("\n");
+             .append(basedir).append("/").append(entry.destination).append("\n");
         }
     }
 
@@ -117,7 +119,10 @@ public class DockerFileBuilder {
     }
 
     private void addVolumes(StringBuilder b) {
-        addVolume(b, exportDir);
+        if (exportBasedir) {
+            addVolume(b, basedir);
+        }
+        
         for (String volume : volumes) {
             addVolume(b, volume);
         }
@@ -149,9 +154,9 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder exportDir(String dir) {
+    public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
-            exportDir = dir;
+            basedir = dir;
         }
         return this;
     }
@@ -183,6 +188,11 @@ public class DockerFileBuilder {
         return this;
     }
 
+    public DockerFileBuilder exportBasedir(boolean exportBasedir) {
+        this.exportBasedir = exportBasedir;
+        return this;
+    }
+    
     public DockerFileBuilder env(Map<String, String> values) {
         if (values != null) {
             this.envEntries.putAll(values);
@@ -224,4 +234,5 @@ public class DockerFileBuilder {
             }
         }
     }
+
 }

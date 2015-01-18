@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,11 @@ import java.util.Map;
  */
 public class BuildImageConfiguration {
 
+    /**
+     * @parameter 
+     */
+    private String dockerfile;
+    
     // Base Image name of the data image to use.
     /**
      * @parameter
@@ -18,22 +24,7 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
-    private String exportDir;
-
-    /**
-     * @parameter
-     */
     private String registry;
-
-    /**
-     * @parameter
-     */
-    private String assemblyDescriptor;
-
-    /**
-     * @parameter
-     */
-    private String assemblyDescriptorRef;
 
     /**
      * @parameter
@@ -55,26 +46,27 @@ public class BuildImageConfiguration {
      */
     private String command;
 
+    /**
+     * @parameter
+     */
+    private AssemblyConfiguration assembly;
+    
     public BuildImageConfiguration() {}
    
+    public String getDockerfile() { 
+        return dockerfile;
+    }
+    
     public String getFrom() {
         return from;
-    }
-
-    public String getExportDir() {
-        return exportDir;
     }
 
     public String getRegistry() {
         return registry;
     }
 
-    public String getAssemblyDescriptor() {
-        return assemblyDescriptor;
-    }
-
-    public String getAssemblyDescriptorRef() {
-        return assemblyDescriptorRef;
+    public AssemblyConfiguration getAssemblyConfiguration() {
+        return assembly;
     }
 
     public List<String> getPorts() {
@@ -82,7 +74,7 @@ public class BuildImageConfiguration {
     }
 
     public List<String> getVolumes() {
-        return volumes;
+        return (volumes != null) ? volumes : Collections.<String>emptyList();
     }
     
     public Map<String, String> getEnv() {
@@ -101,26 +93,16 @@ public class BuildImageConfiguration {
             return this;
         }
 
-        public Builder exportDir(String exportDir) {
-            config.exportDir = exportDir;
-            return this;
-        }
-
         public Builder registry(String registry) {
             config.registry = registry;
             return this;
         }
 
-        public Builder assemblyDescriptor(String assemblyDescriptor) {
-            config.assemblyDescriptor = assemblyDescriptor;
+        public Builder assembly(AssemblyConfiguration assembly) {
+            config.assembly = assembly;
             return this;
         }
-
-        public Builder assemblyDescriptorRef(String assemblyDescriptorRef) {
-            config.assemblyDescriptorRef = assemblyDescriptorRef;
-            return this;
-        }
-
+        
         public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;

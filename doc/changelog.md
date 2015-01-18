@@ -2,8 +2,13 @@
 
 * **0.10.6**
   - Add support for binding/exporting containers during startup (#55)
+  - Provide better control of the build assembly configuration. In addition, the plugin will now search
+    for assembly descriptors in `src/main/docker`. This default can be overriden via the global
+    configuration option `sourceDirectory`.
+  - An external `Dockerfile` can now be specified to build an image, however any project artifacts must
+    be manually included.
   - When "creating" containers they get now all host configuration instead of during "start". This is
-    the default behaviour since v1.15 while the older variant where the host configuration is feed into
+    the default behaviour since v1.15 while the older variant where the host configuration is fed into
     the "start" call is deprecated and will go away.
   - Allow selecting the API version with the configuration "apiVersion".
     Default and minimum API version is now "v1.15"
@@ -37,6 +42,29 @@ becomes
   </volumes>
   ....
 </run>
+````
+
+The syntax for specifying the build assembly configuration has also changed. See "[Build Assembly]"
+(manual.md#build-assembly) for details but in short:
+
+`````xml
+<build>
+  ...
+  <exportDir>/export</exportDir>
+  <assemblyDescriptor>src/main/docker/assembly.xml</assemblyDescriptor>  
+</build>  
+````
+
+becomes
+
+`````xml
+<build>
+  ...
+  <assembly>
+    <basedir>/export</basedir>
+    <descriptor>assembly.xml</descriptor>
+  </assembly>
+</build>           
 ````
 
 * **0.10.5**

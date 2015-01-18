@@ -24,7 +24,7 @@ public class DockerFileBuilderTest {
                         .baseImage("image")
                         .command("c1", "c2")
                         .env(env)
-                        .exportDir("/export")
+                        .basedir("/export")
                         .expose(Arrays.asList("8080"))
                         .maintainer("maintainer")
                         .volumes(Arrays.asList("/vol1"));
@@ -35,7 +35,7 @@ public class DockerFileBuilderTest {
 
     @Test
     public void testNoRootExport() {
-        assertFalse(new DockerFileBuilder().add("/src", "/dest").exportDir("/").content().contains("VOLUME"));
+        assertFalse(new DockerFileBuilder().add("/src", "/dest").basedir("/").content().contains("VOLUME"));
     }
 
     private String loadFile(String fileName) throws IOException {
