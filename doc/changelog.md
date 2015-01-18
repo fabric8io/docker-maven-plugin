@@ -1,8 +1,71 @@
 # ChangeLog
 
-## 0.10.x Series
+* **0.10.6**
+  - Add support for binding/exporting containers during startup (#55)
+  - Provide better control of the build assembly configuration. In addition, the plugin will now search
+    for assembly descriptors in `src/main/docker`. This default can be overriden via the global
+    configuration option `sourceDirectory`.
+  - An external `Dockerfile` can now be specified to build an image, however any project artifacts must
+    be manually included.
+  - When "creating" containers they get now all host configuration instead of during "start". This is
+    the default behaviour since v1.15 while the older variant where the host configuration is fed into
+    the "start" call is deprecated and will go away.
+  - Allow selecting the API version with the configuration "apiVersion".
+    Default and minimum API version is now "v1.15"
+  - A registry can be specified as system property `docker.registry` or
+    environment variable `DOCKER_REGISTRY` (#26)
+  - Add new wait parameter `shutdown` which allows to specify the amount of time to wait between stopping
+    a container and removing it (#54)
 
-New configuration syntax with support for multiple containers 
+Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
+See "[Volume binding]"(manual.md#volume-binding) for details but in short:
+
+````xml
+<run>
+  <volumes>
+    <from>data</from>
+    <from>jolokia/demo</from>
+  </volumes>
+  ....
+</run>
+````
+
+becomes
+
+````xml
+<run>
+  <volumes>
+    <from>
+      <image>data</image>
+      <image>jolokia/demo</image>
+    </from>
+  </volumes>
+  ....
+</run>
+````
+
+The syntax for specifying the build assembly configuration has also changed. See "[Build Assembly]"
+(manual.md#build-assembly) for details but in short:
+
+`````xml
+<build>
+  ...
+  <exportDir>/export</exportDir>
+  <assemblyDescriptor>src/main/docker/assembly.xml</assemblyDescriptor>  
+</build>  
+````
+
+becomes
+
+`````xml
+<build>
+  ...
+  <assembly>
+    <basedir>/export</basedir>
+    <descriptor>assembly.xml</descriptor>
+  </assembly>
+</build>           
+````
 
 * **0.10.5**
   - Add hooks for external configurations

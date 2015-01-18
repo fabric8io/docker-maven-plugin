@@ -1,15 +1,23 @@
 package org.jolokia.docker.maven.access;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.*;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -24,8 +32,11 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.jolokia.docker.maven.access.log.*;
-import org.jolokia.docker.maven.util.*;
-import org.json.*;
+import org.jolokia.docker.maven.util.ImageName;
+import org.jolokia.docker.maven.util.LogHandler;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import static org.jolokia.docker.maven.access.util.RequestUtil.*;
 
@@ -45,26 +56,23 @@ import static org.jolokia.docker.maven.access.util.RequestUtil.*;
  */
 public class DockerAccessWithHttpClient implements DockerAccess {
 
-    // Used Docker API
-    static private final String DOCKER_API_VERSION = "v1.10";
-
     // Logging
     private final LogHandler log;
-
+    
     // Base Docker URL
     private final String baseUrl;
 
     // HttpClient to use
     private final HttpClient client;
-
+    
     /**
      * Create a new access for the given URL
      * @param baseUrl base URL for accessing the docker Daemon
      * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessWithHttpClient(String baseUrl, String certPath, LogHandler log) throws DockerAccessException {
-        this.baseUrl = stripSlash(baseUrl) + "/" + DOCKER_API_VERSION;
+    public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, LogHandler log) throws DockerAccessException {
+        this.baseUrl = stripSlash(baseUrl) + "/" + apiVersion;
         this.log = log;
         this.client = createHttpClient(certPath);
     }
@@ -82,12 +90,16 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         return array.length() > 0;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @param containerConfig */
     @Override
-    public String createContainer(String image, String command, Set<Integer> ports, Map<String, String> env) throws DockerAccessException {
-        HttpUriRequest post = newPost(baseUrl + "/containers/create", getContainerConfig(image, ports, command, env));
+    public String createContainer(ContainerCreateConfig containerConfig) throws DockerAccessException {
+        String createJson = containerConfig.toJson();
+        log.debug("Container create config: " + createJson);
+
+        HttpUriRequest post = newPost(baseUrl + "/containers/create", createJson);
         HttpResponse resp = request(post);
-        checkReturnCode("Creating container for image '" + image + "'", resp, 201);
+        checkReturnCode("Creating container for image '" + containerConfig.getImageName() + "'", resp, 201);
         JSONObject json = asJsonObject(resp);
         logWarnings(json);
         return json.getString("Id");
@@ -104,10 +116,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public void startContainer(String containerId, PortMapping portMapping,List<String> volumesFrom, List<String> links)
-            throws DockerAccessException {
-        HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start",
-                                     getStartConfig(portMapping, volumesFrom, links));
+    public void startContainer(String containerId) throws DockerAccessException {
+        HttpUriRequest req = newPost(baseUrl + "/containers/" + encode(containerId) + "/start", null);
         HttpResponse resp = request(req);
         checkReturnCode("Starting container with id " + containerId, resp, 204);
     }
@@ -208,21 +218,52 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public void pullImage(String image,AuthConfig authConfig) throws DockerAccessException {
+    public void pullImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getRepository());
-        pullUrl = addTag(pullUrl, name);
-        pullUrl = addRegistry(pullUrl, name);
+        String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getFullName(registry));
+        pullUrl = addTagParam(pullUrl, name.getTag());
         pullOrPushImage(image, pullUrl, "pulling", authConfig);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void pushImage(String image, AuthConfig authConfig) throws DockerAccessException {
+    public void pushImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        String pushUrl = baseUrl + "/images/" + encode(name.getRepositoryWithRegistry()) + "/push";
-        pushUrl = addTag(pushUrl, name);
+
+        String temporaryImage = tagTemporaryImage(name, registry);
+        try {
+            String pushUrl = baseUrl + "/images/" + encode(name.getFullName(registry)) + "/push";
+            pushUrl = addTagParam(pushUrl, name.getTag());
             pullOrPushImage(image, pushUrl, "pushing", authConfig);
+        } finally {
+            if (temporaryImage != null) {
+                removeImage(temporaryImage);
+            }
+        }
+    }
+
+    private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
+        String targetImage = name.getFullNameWithTag(registry);
+
+        if (!name.hasRegistry() && registry != null && !hasImage(targetImage)) {
+            tag(name.getFullNameWithTag(null), targetImage);
+            return targetImage;
+        } else {
+            return null;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void tag(String sourceImage, String targetImage) throws DockerAccessException {
+        ImageName source = new ImageName(sourceImage);
+        ImageName target = new ImageName(targetImage);
+        String url = baseUrl + "/images/" + encode(source.getFullNameWithTag(null)) + "/tag";
+        url = addRepositoryParam(url, target.getFullName(null));
+        url = addTagParam(url,  target.getTag());
+        HttpUriRequest req = newPost(url, null);
+        HttpResponse resp = request(req);
+        checkReturnCode("Adding tag " + targetImage + " to " + sourceImage, resp, 201);
     }
 
     /** {@inheritDoc} */
@@ -266,9 +307,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     private PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws DockerAccessException {
         if (certPath != null) {
             return new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath));
-        } else {
-            return new PoolingHttpClientConnectionManager();
         }
+        return new PoolingHttpClientConnectionManager();
     }
 
     // Lookup a keystore and add it to the client
@@ -374,54 +414,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
     }
 
-    private String getContainerConfig(String image, Set<Integer> ports, String command, Map<String, String> env) {
-        JSONObject ret = new JSONObject();
-        ret.put("Image", image);
-        if (ports != null && ports.size() > 0) {
-            JSONObject exposedPorts = new JSONObject();
-            for (Integer port : ports) {
-                exposedPorts.put(port.toString() + "/tcp", new JSONObject());
-            }
-            ret.put("ExposedPorts", exposedPorts);
-        }
-        if (command != null) {
-            JSONArray a = new JSONArray();
-            for (String s : EnvUtil.splitWOnSpaceWithEscape(command)) {
-                a.put(s);
-            }
-            ret.put("Cmd",a);
-        }
-        if (env != null && env.size() > 0) {
-            JSONArray a = new JSONArray();
-            for (Map.Entry<String,String> entry : env.entrySet()) {
-                String value = entry.getValue();
-                if (value == null || value.length() == 0) {
-                    throw new IllegalArgumentException("Env variable '" + entry.getKey() +
-                                                       "' must not be null or empty when running " + image);
-                }
-                a.put(entry.getKey() + "=" + entry.getValue());
-            }
-            ret.put("Env", a);
-        }
-        log.debug("Container create config: " + ret.toString());
-        return ret.toString();
-    }
-
-    private String getStartConfig(PortMapping portMapping, List<String> volumesFrom, List<String> links) {
-        JSONObject ret = new JSONObject();
-        if (portMapping != null && !portMapping.isEmpty()) {
-            ret.put("PortBindings", portMapping.toDockerConfig());
-        }
-        if (volumesFrom != null) {
-            ret.put("VolumesFrom", new JSONArray(volumesFrom));
-        }
-        if (links != null) {
-            ret.put("Links", new JSONArray(links));
-        }
-        log.debug("Container start config: " + ret.toString());
-        return ret.toString();
-    }
-
     // ======================================================================================================
 
     private void dump(HttpResponse resp) {
@@ -466,20 +458,19 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
     }
 
-    private String addTag(String url, ImageName name) {
-        return addQueryParam(url, "tag", name.getTag());
+    private String addTagParam(String url, String tag) {
+        return addQueryParam(url, "tag", tag);
     }
 
-    private String addRegistry(String url, ImageName name) {
-        return addQueryParam(url,"registry",name.getRegistry());
+    private String addRepositoryParam(String url, String repository) {
+        return addQueryParam(url, "repo", repository);
     }
 
     private String addQueryParam(String url, String param, String value) {
         if (value != null) {
             return url + (url.contains("?") ? "&" : "?") + param + "=" + encode(value);
-        } else {
-            return url;
-        }
+        } 
+        return url;
     }
 
     private void processPullOrPushResponse(final String image, HttpResponse resp, final String action)
@@ -596,7 +587,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 return;
             }
         }
-        throw new DockerAccessException("Error while calling docker: " + msg + " (code: " + statusCode + ")");
+        throw new DockerAccessException("Error while calling docker: " + msg + " (" + status.getReasonPhrase() + ": " + statusCode + ")");
     }
 
     private String stripSlash(String url) {

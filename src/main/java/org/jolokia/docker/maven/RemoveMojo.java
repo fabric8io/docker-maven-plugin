@@ -44,8 +44,6 @@ public class RemoveMojo extends AbstractDockerMojo {
      * @parameter property = "docker.removeAll" default-value = "false"
      */
     private boolean removeAll;
-    /** @parameter property = "docker.showLogs" default-value="false" */
-    private boolean showLogs;
 
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
@@ -58,21 +56,6 @@ public class RemoveMojo extends AbstractDockerMojo {
                     }
                 }
             }
-        }
-    }
-
-    protected boolean showLog(ImageConfiguration imageConfig) {
-        if (showLogs) {
-            return true;
-        } else {
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            if (runConfig != null) {
-                LogConfiguration logConfig = runConfig.getLog();
-                if (logConfig != null) {
-                    return logConfig.isEnabled();
-                }
-            }
-            return false;
         }
     }
 }

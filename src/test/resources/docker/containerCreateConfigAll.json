@@ -1,0 +1,40 @@
+{
+  "Env": ["foo=bar"],
+  "User": "user",
+  "Entrypoint": "entrypoint",
+  "Memory": 1,
+  "MemorySwap": 1,
+  "Domainname": "domain.com",
+  "ExposedPorts": {"22/tcp": {}},
+  "Image": "base",
+  "Cmd": ["date"],
+  "HostConfig": {
+    "RestartPolicy": {
+      "Name": "on-failure",
+      "MaximumRetryCount": 1
+    },
+    "Dns": ["8.8.8.8"],
+    "CapDrop": ["MKNOD"],
+    "Links": ["redis:redis"],
+    "DnsSearch": ["domain.com"],
+    "Privileged": true,
+    "CapAdd": ["NET_ADMIN"],
+    "Binds": ["/host_tmp:/container_tmp"],
+    "ExtraHosts": ["localhost:127.0.0.1"],
+    "VolumesFrom": [
+      "parentContainer",
+      "otherContainer"
+    ],
+    "PortBindings": {
+      "22/tcp": [
+        {
+          "HostIp": "0.0.0.0",
+          "HostPort": "11022"
+        }
+      ]
+    }
+  },
+  "WorkingDir": "/foo",
+  "Hostname": "hostname",
+  "Volumes": {"/container_tmp": {}}
+}

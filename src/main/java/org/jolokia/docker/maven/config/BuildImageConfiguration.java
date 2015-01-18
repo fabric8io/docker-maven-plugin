@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,11 @@ import java.util.Map;
  */
 public class BuildImageConfiguration {
 
+    /**
+     * @parameter 
+     */
+    private String dockerfile;
+    
     // Base Image name of the data image to use.
     /**
      * @parameter
@@ -18,28 +24,18 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
-    private String exportDir;
-
-    /**
-     * @parameter
-     */
     private String registry;
-
-    /**
-     * @parameter
-     */
-    private String assemblyDescriptor;
-
-    /**
-     * @parameter
-     */
-    private String assemblyDescriptorRef;
 
     /**
      * @parameter
      */
     private List<String> ports;
 
+    /**
+     * @paramter
+     */
+    private List<String> volumes;
+    
     /**
      * @parameter
      */
@@ -50,45 +46,37 @@ public class BuildImageConfiguration {
      */
     private String command;
 
+    /**
+     * @parameter
+     */
+    private AssemblyConfiguration assembly;
+    
     public BuildImageConfiguration() {}
-
-    private BuildImageConfiguration(String from, String exportDir, String registry,
-                                    String assemblyDescriptor, String assemblyDescriptorRef,
-                                    List<String> ports, Map<String, String> env, String command) {
-        this.from = from;
-        this.exportDir = exportDir;
-        this.registry = registry;
-        this.assemblyDescriptor = assemblyDescriptor;
-        this.assemblyDescriptorRef = assemblyDescriptorRef;
-        this.ports = ports;
-        this.env = env;
-        this.command = command;
+   
+    public String getDockerfile() { 
+        return dockerfile;
     }
-
+    
     public String getFrom() {
         return from;
-    }
-
-    public String getExportDir() {
-        return exportDir;
     }
 
     public String getRegistry() {
         return registry;
     }
 
-    public String getAssemblyDescriptor() {
-        return assemblyDescriptor;
-    }
-
-    public String getAssemblyDescriptorRef() {
-        return assemblyDescriptorRef;
+    public AssemblyConfiguration getAssemblyConfiguration() {
+        return assembly;
     }
 
     public List<String> getPorts() {
         return ports;
     }
 
+    public List<String> getVolumes() {
+        return (volumes != null) ? volumes : Collections.<String>emptyList();
+    }
+    
     public Map<String, String> getEnv() {
         return env;
     }
@@ -97,60 +85,46 @@ public class BuildImageConfiguration {
         return command;
     }
 
-
     public static class Builder {
-        private String from;
-        private String exportDir;
-        private String registry;
-        private String assemblyDescriptor;
-        private String assemblyDescriptorRef;
-        private List<String> ports;
-        private Map<String, String> env;
-        private String command;
-
+        private final BuildImageConfiguration config = new BuildImageConfiguration();
+        
         public Builder from(String from) {
-            this.from = from;
-            return this;
-        }
-
-        public Builder exportDir(String exportDir) {
-            this.exportDir = exportDir;
+            config.from = from;
             return this;
         }
 
         public Builder registry(String registry) {
-            this.registry = registry;
+            config.registry = registry;
             return this;
         }
 
-        public Builder assemblyDescriptor(String assemblyDescriptor) {
-            this.assemblyDescriptor = assemblyDescriptor;
+        public Builder assembly(AssemblyConfiguration assembly) {
+            config.assembly = assembly;
             return this;
         }
-
-        public Builder assemblyDescriptorRef(String assemblyDescriptorRef) {
-            this.assemblyDescriptorRef = assemblyDescriptorRef;
-            return this;
-        }
-
+        
         public Builder ports(List<String> ports) {
-            this.ports = ports;
+            config.ports = ports;
+            return this;
+        }
+        
+        public Builder volumes(List<String> volumes) {
+            config.volumes = volumes;
             return this;
         }
 
         public Builder env(Map<String, String> env) {
-            this.env = env;
+            config.env = env;
             return this;
         }
 
         public Builder command(String command) {
-            this.command = command;
+            config.command = command;
             return this;
         }
 
         public BuildImageConfiguration build() {
-            return new BuildImageConfiguration(from, exportDir, registry, assemblyDescriptor,
-                                               assemblyDescriptorRef, ports, env, command);
+            return config;
         }
     }
 }

@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.10.5</version>
+  <version>0.11.0-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -85,7 +85,9 @@
               <name>${image}</name>
               <run>
                 <volumes>
-                  <from>data</from>
+                  <from>
+                    <image>data</image>
+                  </from>
                 </volumes>
                 <env>
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
@@ -103,6 +105,7 @@
                   <log>Server startup</log>
                   <url>http://localhost:${jolokia.port}/jolokia</url>
                   <time>10000</time>
+                  <shutdown>500</shutdown>
                 </wait>
                 <log>
                   <enabled>true</enabled>
@@ -112,7 +115,7 @@
             </image>
             <image>
               <alias>data</alias>
-              <!-- Artefact Image-->
+              <!-- Artifact Image-->
               <name>jolokia/${project.artifactId}:${project.version}</name>
               <build>
                 <!-- The assembly descriptor prepares the "/maven" directory in the temporary data

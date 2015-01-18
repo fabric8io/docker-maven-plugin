@@ -1,0 +1,13 @@
+{
+    "Binds": [ "/host_tmp:/container_tmp" ],
+    "Links": [ "redis:redis" ],
+    "PortBindings": { "22/tcp": [ { "HostIp" : "0.0.0.0", "HostPort": "11022" }] },
+    "Privileged":true,
+    "Dns": ["8.8.8.8"],
+    "DnsSearch": ["domain.com"],
+    "ExtraHosts" : ["localhost:127.0.0.1"],
+    "VolumesFrom": [ "parentContainer", "otherContainer" ],
+    "CapAdd": ["NET_ADMIN"],
+    "CapDrop": ["MKNOD"],
+    "RestartPolicy": { "Name": "on-failure", "MaximumRetryCount": 1 }
+}

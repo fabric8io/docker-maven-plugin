@@ -1,0 +1,8 @@
+FROM image
+MAINTAINER maintainer
+ENV foo bar
+EXPOSE 8080
+VOLUME ["/export"]
+VOLUME ["/vol1"]
+COPY /src /export/dest
+CMD ["c1","c2"]

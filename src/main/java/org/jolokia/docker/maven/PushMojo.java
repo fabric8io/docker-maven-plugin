@@ -15,32 +15,14 @@ import org.jolokia.docker.maven.config.*;
  */
 public class PushMojo extends AbstractDockerMojo {
 
-    /** @parameter property = "docker.showLogs" default-value="false" */
-    private boolean showLogs;
-
     /** {@inheritDoc} */
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = getImageName(imageConfig.getName());
             if (buildConfig != null) {
-                docker.pushImage(name,prepareAuthConfig(name));
+                docker.pushImage(name, prepareAuthConfig(name), getRegistry(imageConfig));
             }
-        }
-    }
-
-    protected boolean showLog(ImageConfiguration imageConfig) {
-        if (showLogs) {
-            return true;
-        } else {
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-            if (runConfig != null) {
-                LogConfiguration logConfig = runConfig.getLog();
-                if (logConfig != null) {
-                    return logConfig.isEnabled();
-                }
-            }
-            return false;
         }
     }
 }
