@@ -30,14 +30,16 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public String[] getDescriptors() {
-        String[] descriptors = null;
         String descriptor = assemblyConfig.getDescriptor();
         
         if (descriptor != null) {
-            descriptors = new String[] { params.getSourceDirectory() + File.separator + descriptor };
+            File file = new File(descriptor);
+            if (!file.isAbsolute()) {
+                descriptor = params.getSourceDirectory() + File.separator + descriptor;
+            }  
         }
 
-        return descriptors;
+        return new String[] { descriptor };
     }
 
     @Override
@@ -240,6 +242,11 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     }
     
     private File getFileForDirectory(String name) {
+        File file = new File(name);
+        if (file.isAbsolute()) {
+            return file;
+        }
+
         return new File(params.getOutputDirectory() + File.separator + name);
     }
 }
