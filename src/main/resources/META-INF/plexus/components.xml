@@ -3,8 +3,8 @@
 <component-set>
   <components>
     <component>
-      <role>org.jolokia.docker.maven.assembly.DockerArchiveCreator</role>
-      <implementation>org.jolokia.docker.maven.assembly.DockerArchiveCreator</implementation>
+      <role>org.jolokia.docker.maven.assembly.DockerAssemblyManager</role>
+      <implementation>org.jolokia.docker.maven.assembly.DockerAssemblyManager</implementation>
       <instantiation-strategy>per-lookup</instantiation-strategy>
     </component>
 

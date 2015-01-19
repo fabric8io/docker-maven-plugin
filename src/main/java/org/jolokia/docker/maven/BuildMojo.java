@@ -8,8 +8,9 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.assembly.DockerArchiveCreator;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
+import org.jolokia.docker.maven.config.BuildImageConfiguration;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -37,8 +38,18 @@ public class BuildMojo extends AbstractDockerMojo {
     private MavenFileFilter mavenFileFilter;
 
     /** @component */
-    private DockerArchiveCreator dockerArchiveCreator;
+    private DockerAssemblyManager dockerAssemblyManager;
 
+    /**
+     * @parameter default-value="src/main/docker" property="docker.source.dir"
+     */
+    private String sourceDirectory;
+    
+    /**
+     * @parameter default-value="target/docker" property="docker.target.dir"
+     */
+    private String outputDirectory;
+    
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
@@ -48,14 +59,16 @@ public class BuildMojo extends AbstractDockerMojo {
             }
         }
     }
-
+        
     private void buildImage(ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
-        MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter);
-        File dockerArchive = dockerArchiveCreator.create(params, imageConfig.getBuildConfiguration());
+        MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter, sourceDirectory, outputDirectory);
+        File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
+
         String imageName = getImageName(imageConfig.getName());
         info("Creating image " + imageConfig.getDescription());
         dockerAccess.buildImage(imageName, dockerArchive);
     }
+
 
 }

@@ -10,23 +10,37 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
  *
  * @author roland
  * @since 09.05.14
-*/
-
+ */
 public class MojoParameters {
     private MavenArchiveConfiguration archive;
     private MavenSession session;
     private MavenFileFilter mavenFileFilter;
     private MavenProject project;
 
-    public MojoParameters(MavenSession session, MavenProject project, MavenArchiveConfiguration archive, MavenFileFilter mavenFileFilter) {
+    private final String outputDirectory;
+    private final String sourceDirectory;
+
+    public MojoParameters(MavenSession session, MavenProject project, MavenArchiveConfiguration archive, MavenFileFilter mavenFileFilter,
+            String sourceDirectory, String outputDirectory) {
         this.archive = archive;
         this.session = session;
         this.mavenFileFilter = mavenFileFilter;
         this.project = project;
+
+        this.sourceDirectory = sourceDirectory;
+        this.outputDirectory = outputDirectory;
     }
 
     public MavenArchiveConfiguration getArchiveConfiguration() {
         return archive;
+    }
+
+    public String getSourceDirectory() {
+        return sourceDirectory;
+    }
+
+    public String getOutputDirectory() {
+        return outputDirectory;
     }
 
     public MavenSession getSession() {
