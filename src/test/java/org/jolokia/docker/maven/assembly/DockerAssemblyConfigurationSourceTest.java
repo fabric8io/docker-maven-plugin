@@ -14,41 +14,48 @@ import org.junit.Test;
 public class DockerAssemblyConfigurationSourceTest {
 
     private AssemblyConfiguration assemblyConfig;
-    private MojoParameters params;
-    
+
     @Before
     public void setup() {
-        this.params = new MojoParameters(null, null, null, null, "src/docker", "output/docker");
-        
         // set 'ignorePermissions' to something other then default
         this.assemblyConfig = new AssemblyConfiguration.Builder()
-            .descriptor("assembly.xml")
-            .descriptorRef("project")
-            .ignorePermissions(false)
-            .build();
+                .descriptor("assembly.xml")
+                .descriptorRef("project")
+                .ignorePermissions(false)
+                .build();
     }
-    
+
     @Test
-    public void testCreateSource() {
+    public void testCreateSourceAbsolute() {
+        testCreateSource(new MojoParameters(null, null, null, null, "/src/docker", "/output/docker"));
+    }
+
+    @Test
+    public void testCreateSourceRelative() {
+        testCreateSource(new MojoParameters(null, null, null, null, "src/docker", "output/docker"));
+    }
+
+    private void testCreateSource(MojoParameters params) {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig);
-        
+
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();
 
         assertEquals(1, descriptors.length);
-        assertEquals("src/docker/assembly.xml", descriptors[0]);
+        assertEquals(params.getSourceDirectory() + "/assembly.xml", descriptors[0]);
 
         assertEquals(1, descriptorRefs.length);
         assertEquals("project", descriptorRefs[0]);
-        
+
         assertFalse(source.isIgnorePermissions());
-        
-        assertTrue(containsOutputDir(source.getOutputDirectory().toString()));
-        assertTrue(containsOutputDir(source.getWorkingDirectory().toString()));
-        assertTrue(containsOutputDir(source.getTemporaryRootDirectory().toString()));
+
+        String outputDir = params.getOutputDirectory();
+        assertTrue(containsOutputDir(outputDir, source.getOutputDirectory().toString()));
+        assertTrue(containsOutputDir(outputDir, source.getWorkingDirectory().toString()));
+        assertTrue(containsOutputDir(outputDir, source.getTemporaryRootDirectory().toString()));
     }
-    
-    private boolean containsOutputDir(String path) {
-        return path.startsWith("output/docker" + File.separator);
+
+    private boolean containsOutputDir(String outputDir, String path) {
+        return path.startsWith(outputDir + File.separator);
     }
 }
