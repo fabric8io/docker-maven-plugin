@@ -23,8 +23,6 @@ import org.junit.Test;
 
 import org.jolokia.docker.maven.config.handler.property.ConfigKey;
 import org.jolokia.docker.maven.config.handler.property.PropertyConfigHandler;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
 import static org.junit.Assert.*;
@@ -98,6 +96,18 @@ public class PropertyConfigHandlerTest {
     }
 
     @Test
+    public void testAssembly() throws Exception {
+        List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props(getTestAssemblyData()));
+        assertEquals(1, configs.size());
+
+        AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
+        assertEquals("user", config.getUser());
+        assertEquals("project", config.getDescriptorRef());
+        assertFalse(config.exportBasedir());
+        assertTrue(config.isIgnorePermissions());
+    }
+    
+    @Test
     public void testResolve() {
         Map<String, String> external = new HashMap<>();
         external.put("type", "props");
@@ -113,16 +123,25 @@ public class PropertyConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
-        assertEquals("assembly.xml", buildConfig.getAssemblyDescriptor());
-        assertEquals("project", buildConfig.getAssemblyDescriptorRef());
         assertEquals("command.sh", buildConfig.getCommand());
-        assertEquals("/export", buildConfig.getExportDir());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
 
         validateEnv(buildConfig.getEnv());
+        
+        /*
+         * validate only the descriptor is required and defaults are all used, 'testAssembly' validates 
+         * all options can be set 
+         */
+        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+
+        assertEquals("/maven", assemblyConfig.getBasedir());
+        assertEquals("assembly.xml", assemblyConfig.getDescriptor());
+        assertNull(assemblyConfig.getUser());
+        assertTrue(assemblyConfig.exportBasedir());
+        assertFalse(assemblyConfig.isIgnorePermissions());        
     }
 
     private void validateEnv(Map<String, String> env) {
@@ -176,13 +195,21 @@ public class PropertyConfigHandlerTest {
         return ret;
     }
 
+    private String[] getTestAssemblyData() {
+        return new String[] { 
+                k(ASSEMBLY_BASEDIR), "/basedir",
+                k(ASSEMBLY_DESCRIPTOR_REF), "project",
+                k(ASSEMBLY_EXPORT_BASEDIR), "false",
+                k(ASSEMBLY_IGNORE_PERMISSIONS), "true",
+                k(ASSEMBLY_USER), "user",
+                k(NAME), "image",
+        };
+    }
+    
     private String[] getTestData() {
         return new String[] {
-                k(NAME), "image",
                 k(ALIAS),"alias",
-                k(FROM), "image",
                 k(ASSEMBLY_DESCRIPTOR), "assembly.xml",
-                k(ASSEMBLY_DESCRIPTOR_REF), "project",
                 k(BIND) + ".1", "/foo",
                 k(BIND) + ".2", "/tmp:/tmp",
                 k(CAP_ADD) + ".1", "CAP",
@@ -193,12 +220,13 @@ public class PropertyConfigHandlerTest {
                 k(DOMAINNAME), "domain.com",
                 k(ENTRYPOINT), "entrypoint.sh",
                 k(ENV) + ".HOME","/Users/roland",
-                k(EXPORT_DIR), "/export",
                 k(EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
+                k(FROM), "image",
                 k(HOSTNAME), "subdomain",
                 k(LINKS) + ".1", "redis",
                 k(MEMORY), "1",
                 k(MEMORY_SWAP), "1",
+                k(NAME), "image",
                 k(PORT_PROPERTY_FILE), "/tmp/props.txt",
                 k(PORTS) + ".1", "8081:8080",
                 k(PRIVILEGED), "true",

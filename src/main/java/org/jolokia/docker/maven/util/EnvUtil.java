@@ -149,4 +149,12 @@ public class EnvUtil {
         // Check environment as last resort
         return System.getenv("DOCKER_REGISTRY");
     }
+
+    public static File prepareAbsolutePath(String parent,String path) {
+        File file = new File(path);
+        if (file.isAbsolute()) {
+            return file;
+        }
+        return new File(parent + File.separator + path);
+    }
 }
