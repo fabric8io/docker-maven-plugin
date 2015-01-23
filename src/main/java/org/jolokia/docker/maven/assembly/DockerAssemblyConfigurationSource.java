@@ -50,18 +50,18 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public File getOutputDirectory() {
-        return new File(params.getOutputDirectory() + File.pathSeparator +  "build");
+        return new File(params.getOutputDirectory() +  "/build");
     }
 
     @Override
     public File getWorkingDirectory() {
-        return new File(params.getOutputDirectory() + File.pathSeparator +  "work");
+        return new File(params.getOutputDirectory() + "/work");
     }
 
     // X
     @Override
     public File getTemporaryRootDirectory() {
-        return new File(params.getOutputDirectory() + File.pathSeparator +  "tmp");
+        return new File(params.getOutputDirectory() +  "/tmp");
     }
 
     @Override

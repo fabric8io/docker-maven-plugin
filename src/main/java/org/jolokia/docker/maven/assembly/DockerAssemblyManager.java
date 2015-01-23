@@ -78,8 +78,8 @@ public class DockerAssemblyManager {
     }
 
     private File createTarball(DockerAssemblyConfigurationSource source, File extraDir) throws MojoExecutionException {
+        File archive = new File(source.getTemporaryRootDirectory(), "docker-build.tar");
         try {
-            File archive = new File(source.getTemporaryRootDirectory(), "docker-build.tar");
             TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
             archiver.setLongfile(TarLongFileMode.posix);
             archiver.addFileSet(DefaultFileSet.fileSet(source.getOutputDirectory()));

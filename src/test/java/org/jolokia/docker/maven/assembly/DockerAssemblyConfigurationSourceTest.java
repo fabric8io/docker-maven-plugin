@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.assembly;
 import java.io.File;
 
 import org.jolokia.docker.maven.config.AssemblyConfiguration;
+import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class DockerAssemblyConfigurationSourceTest {
         String[] descriptorRefs = source.getDescriptorReferences();
 
         assertEquals(1, descriptors.length);
-        assertEquals(params.getSourceDirectory() + "/assembly.xml", descriptors[0]);
+        assertEquals(EnvUtil.prepareAbsolutePath(params.getSourceDirectory(),"assembly.xml").getAbsolutePath(), descriptors[0]);
 
         assertEquals(1, descriptorRefs.length);
         assertEquals("project", descriptorRefs[0]);
