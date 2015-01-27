@@ -125,10 +125,11 @@ parentheses.
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
   the [section](#log-configuration) below. 
-* **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains 
-  the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`.
-* **outputDirectory** (`docker.target.dir`) specifies the default output directory to be 
-  used by the plugin. The default value is `target/docker`.   
+* **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
+  the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
+  option is only relevant for the `docker:build` goal.
+* **outputDirectory** (`docker.target.dir`) specifies the default output directory to be
+  used by the plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
 
 
 Example:
