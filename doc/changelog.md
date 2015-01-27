@@ -17,7 +17,7 @@
     a container and removing it (#54)
 
 Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
-See "[Volume binding]"(manual.md#volume-binding) for details but in short:
+See "[Volume binding](manual.md#volume-binding)" for details but in short:
 
 ````xml
 <run>
@@ -43,8 +43,8 @@ becomes
 </run>
 ````
 
-The syntax for specifying the build assembly configuration has also changed. See "[Build Assembly]"
-(manual.md#build-assembly) for details but in short:
+The syntax for specifying the build assembly configuration has also changed. See "[Build Assembly]
+(manual.md#build-assembly)" for details but in short:
 
 `````xml
 <build>
