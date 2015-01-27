@@ -64,7 +64,7 @@ public class DockerAssemblyManager {
                 return createTarball(source,null);
             }
         } catch (IOException e) {
-            throw new MojoExecutionException(String.format("Cannot create DockerFile in %s", outputDir, e));
+            throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", outputDir, e));
         }
     }
 

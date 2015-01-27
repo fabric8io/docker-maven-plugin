@@ -271,11 +271,12 @@ Here's an example:
 * **descriptorRef** is an alias to a predefined assembly
   descriptor. The available aliases are also described in the
   [Docker Assembly](#docker-assembly) section.
-* **dockerFileDir** specifies a directory containing an external dockerfile 
+* **dockerFileDir** specifies a directory containing an external Dockerfile
   that will be used to create the image. Any additional files located in this
   directory will also be added to the image. Usage of this directive will take
-  precedence over any configuration specifed in the `build` element and any 
-  artifacts produced by the build must be manually included.
+  precedence over any configuration specified in the `build` element. In addition to
+  the files specified within the assembly also all files contained in this directory
+  are added to the docker build directory.
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
   the container root (`/`), which cannot be exported. 

@@ -1,12 +1,11 @@
 # ChangeLog
 
-* **0.10.6**
+* **0.11.0**
   - Add support for binding/exporting containers during startup (#55)
   - Provide better control of the build assembly configuration. In addition, the plugin will now search
-    for assembly descriptors in `src/main/docker`. This default can be overriden via the global
+    for assembly descriptors in `src/main/docker`. This default can be overridden via the global
     configuration option `sourceDirectory`.
-  - An external `Dockerfile` can now be specified to build an image, however any project artifacts must
-    be manually included.
+  - An external `Dockerfile` can now be specified to build an image.
   - When "creating" containers they get now all host configuration instead of during "start". This is
     the default behaviour since v1.15 while the older variant where the host configuration is fed into
     the "start" call is deprecated and will go away.

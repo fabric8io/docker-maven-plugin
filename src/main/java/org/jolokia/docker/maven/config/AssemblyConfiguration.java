@@ -43,11 +43,11 @@ public class AssemblyConfiguration {
     public AssemblyConfiguration() { }
 
     public Boolean exportBasedir() {
-        return (exportBasedir != null) ? exportBasedir : Boolean.TRUE;
+        return exportBasedir != null ? exportBasedir : Boolean.TRUE;
     }
 
     public String getBasedir() {
-        return (basedir != null) ? basedir : DEFAULT_BASE_DIR;
+        return basedir != null ? basedir : DEFAULT_BASE_DIR;
     }
 
     public String getDescriptor() {
