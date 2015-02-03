@@ -184,14 +184,7 @@ public class PortMapping {
 		containerPortsMap.put(containerPortSpec, hostPort);
 	}
 
-	/**
-     * Return true if this mapping contains no ports
-     */
-    public boolean isEmpty() {
-        return containerPortsMap.isEmpty();
-    }
-
-    Map<String, String> getBindToHostMap() {
+	Map<String, String> getBindToHostMap() {
     	return bindToHostMap;
     }
 

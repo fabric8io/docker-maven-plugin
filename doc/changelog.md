@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.11.1**
+  - Add support for binding UDP ports (#83)
+
 * **0.11.0**
   - Add support for binding/exporting containers during startup (#55)
   - Provide better control of the build assembly configuration. In addition, the plugin will now search

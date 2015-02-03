@@ -57,6 +57,23 @@ public class PortMappingTest {
     }
 
     @Test
+    public void udpAsProtocol() {
+        PortMapping mapping = createPortMapping("49000:8080/udp","127.0.0.1:49001:8081/udp");
+        Map<String,Integer> p = mapping.getPortsMap();
+        assertEquals(2,p.size());
+        assertEquals(49000, (long) p.get("8080/udp"));
+        assertEquals(49001, (long) p.get("8081/udp"));
+
+        assertEquals("127.0.0.1",mapping.getBindToHostMap().get("8081/udp"));
+        assertNull(mapping.getBindToHostMap().get("8080/udp"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidProtocol() {
+        createPortMapping("49000:8080/abc");
+    }
+
+    @Test
     public void variableReplacementWitProps() throws MojoExecutionException {
         PortMapping mapping = createPortMapping(p("jolokia.port","50000"),"jolokia.port:8080");
         updateDynamicMapping(mapping, 8080, 49900);
