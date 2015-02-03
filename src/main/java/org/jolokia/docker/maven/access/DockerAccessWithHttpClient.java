@@ -141,7 +141,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public Map<Integer, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException {
+    public Map<String, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException {
         HttpUriRequest req = newGet(baseUrl + "/containers/" + encode(containerId) + "/json");
         HttpResponse resp = request(req);
         checkReturnCode("Getting container information for " + containerId, resp, 200);
@@ -368,7 +368,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     // ===========================================================================================================
     // Preparation for performing requests
 
-    private Map<Integer, Integer> extractPorts(JSONObject info) {
+    private Map<String, Integer> extractPorts(JSONObject info) {
         JSONObject networkSettings = info.getJSONObject("NetworkSettings");
         if (networkSettings != null) {
             JSONObject ports = networkSettings.getJSONObject("Ports");
@@ -379,8 +379,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         return Collections.emptyMap();
     }
 
-    private Map<Integer, Integer> createPortMapping(JSONObject ports) {
-        Map<Integer, Integer> portMapping = new HashMap<>();
+    private Map<String, Integer> createPortMapping(JSONObject ports) {
+        Map<String, Integer> portMapping = new HashMap<>();
         for (Object portSpecO : ports.keySet()) {
             String portSpec = portSpecO.toString();
             if (!ports.isNull(portSpec)) {
@@ -391,7 +391,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         return portMapping;
     }
 
-    private void parseHostSpecsAndUpdateMapping(Map<Integer, Integer> portMapping, JSONArray hostSpecs, String portSpec) {
+    private void parseHostSpecsAndUpdateMapping(Map<String, Integer> portMapping, JSONArray hostSpecs, String portSpec) {
         if (hostSpecs != null && hostSpecs.length() > 0) {
             // We take only the first
             JSONObject hostSpec = hostSpecs.getJSONObject(0);
@@ -402,13 +402,21 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
     }
 
-    private void parsePortSpecAndUpdateMapping(Map<Integer, Integer> portMapping, Object hostPort, String portSpec) {
+    private void parsePortSpecAndUpdateMapping(Map<String, Integer> portMapping, Object hostPort, String portSpec) {
         try {
             Integer hostP = (Integer.parseInt(hostPort.toString()));
             int idx = portSpec.indexOf('/');
-            String p = idx > 0 ? portSpec.substring(0, idx) : portSpec;
-            Integer containerPort = Integer.parseInt(p);
-            portMapping.put(containerPort, hostP);
+            if (idx > 0) {
+                int port = Integer.parseInt(portSpec.substring(0, idx));
+                String prot = portSpec.substring(idx + 1);
+                if (!prot.equals("tcp") && !prot.equals("udp")) {
+                    prot = "tcp";
+                    log.warn("Invalid protocol '" + prot + "' in port spec " + portSpec + ". Assuming tcp");
+                }
+                portMapping.put(port + "/" + prot, hostP);
+            } else {
+                portMapping.put(Integer.parseInt(portSpec) + "/tcp", hostP);
+            }
         } catch (NumberFormatException exp) {
             log.warn("Cannot parse " + hostPort + " or " + portSpec + " as a port number. Ignoring in mapping");
         }

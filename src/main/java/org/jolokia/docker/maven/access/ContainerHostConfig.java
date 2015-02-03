@@ -55,26 +55,26 @@ public class ContainerHostConfig {
     }
 
     public ContainerHostConfig portBindings(PortMapping portMapping) {
-        Map<Integer, Integer> portMap = portMapping.getPortsMap();
+        Map<String, Integer> portMap = portMapping.getPortsMap();
         if (!portMap.isEmpty()) {
             JSONObject portBindings = new JSONObject();
-            Map<Integer, String> bindToMap = portMapping.getBindToMap();
+            Map<String, String> bindToMap = portMapping.getBindToHostMap();
 
-            for (Map.Entry<Integer, Integer> entry : portMap.entrySet()) {
-                Integer port = entry.getKey();
+            for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
+                String containerPortSpec = entry.getKey();
                 Integer hostPort = entry.getValue();
 
                 JSONObject o = new JSONObject();
                 o.put("HostPort", hostPort != null ? hostPort.toString() : "");
 
-                if (bindToMap.containsKey(port)) {
-                    o.put("HostIp", bindToMap.get(port));
+                if (bindToMap.containsKey(containerPortSpec)) {
+                    o.put("HostIp", bindToMap.get(containerPortSpec));
                 }
 
                 JSONArray array = new JSONArray();
                 array.put(o);
 
-                portBindings.put(port + "/tcp", array);
+                portBindings.put(containerPortSpec, array);
             }
 
             startConfig.put("PortBindings", portBindings);

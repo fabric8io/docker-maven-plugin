@@ -17,17 +17,23 @@ import java.util.regex.Pattern;
  */
 public class PortMapping {
 
-    // variables (container port -> variable name)
-    private final Map<Integer, String> dynamicPortVariables = new HashMap<>();
+    // Pattern for splitting of the protocol
+    private static final Pattern PROTOCOL_SPLIT_PATTERN = Pattern.compile("(.*?)(?:/(tcp|udp))?$");
+
+    // Pattern for detecting variables
+    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{\\s*([^\\s]+)\\s*}");
+
+    // variables (container port spec -> variable name)
+    private final Map<String, String> dynamicPortVariables = new HashMap<>();
 
     // ports map (container port -> host port)
-    private final Map<Integer, Integer> containerPortsMap = new HashMap<>();
+    private final Map<String, Integer> containerPortsMap = new HashMap<>();
 
     // Mapping between vars and dynamics ports which gets filled in lately
     private final Map<String, Integer> portVariables = new HashMap<>();
 
     // Mapping between ports and the IP they should bind to
-    private final Map<Integer, String> bindToMap = new HashMap<>();
+    private final Map<String, String> bindToHostMap = new HashMap<>();
     
     /**
      * Create the mapping from a configuration. The configuation is list of port mapping specifications which has the
@@ -51,21 +57,37 @@ public class PortMapping {
         if (config != null) {
             for (String port : config) {
                 try {
-                	String ps[] = port.split(":", 3);
+                    Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(port);
+                    if (!matcher.matches()) {
+                        throw new IllegalArgumentException("Invalid mapping '" + port + "'");
+                    }
+                    String portMapping = matcher.group(1);
+                    String protocol = matcher.group(2);
+                    if (protocol == null) {
+                        protocol = "tcp";
+                    }
+                    String ps[] = portMapping.split(":", 3);
                     if (ps.length == 3) {
-                    	mapPorts(ps[0], ps[1], ps[2], variables);
+                    	mapPorts(ps[0], ps[1], checkInt(ps[2]) + "/" + protocol, variables);
                     } else if (ps.length == 2) {
-                    	mapPorts(null, ps[0], ps[1], variables);
+                    	mapPorts(null, ps[0], checkInt(ps[1]) + "/" + protocol, variables);
                     } else {
                         throw new IllegalArgumentException("Invalid mapping '" + port + "' (must contain at least one :)");
                     }
                 } catch (NumberFormatException exp) {
                     throw new IllegalArgumentException("Port mappings must be given in the format <hostPort>:<mappedPort> or " +
                     								 "<bindTo>:<hostPort>:<mappedPort> (e.g. 8080:8080 / 127.0.0.1:8080:8080). " +
-                                                     "The given config '" + port + "' doesn't match this",exp);
+                                                     "A protocol can be appended with '/tcp' or '/udp'. " +
+                                                     "The given config '" + port + "' doesn't match this format",exp);
                 }
             }
         }
+    }
+
+    private String checkInt(String p) throws NumberFormatException {
+        // Just check, whether p is an integer or not
+        Integer.parseInt(p);
+        return p;
     }
 
     /**
@@ -77,23 +99,12 @@ public class PortMapping {
     }
 
     /**
-     * The name of the variable for a dynamically mapped port
-     *
-     * @param containerPort the port
-     * @return name of the variable or <code>null</code> if there is no such mapping.
-     */
-    public String getVariableForPort(Integer containerPort) {
-        return dynamicPortVariables.get(containerPort);
-    }
-
-    /**
      * @return Set of all mapped container ports
      */
-    public Set<Integer> getContainerPorts() {
+    public Set<String> getContainerPorts() {
         return containerPortsMap.keySet();
     }
 
-    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{\\s*([^\\s]+)\\s*}");
 
     /**
      * Replace all variable expressions with the respective port
@@ -126,8 +137,8 @@ public class PortMapping {
      *
      * @param dockerObtainedDynamicPorts keys are the container ports, values are the dynamically mapped host ports,
      */
-    public void updateVariablesWithDynamicPorts(Map<Integer, Integer> dockerObtainedDynamicPorts) {
-        for (Map.Entry<Integer,Integer> entry : dockerObtainedDynamicPorts.entrySet()) {
+    public void updateVariablesWithDynamicPorts(Map<String, Integer> dockerObtainedDynamicPorts) {
+        for (Map.Entry<String,Integer> entry : dockerObtainedDynamicPorts.entrySet()) {
             String variable = dynamicPortVariables.get(entry.getKey());
             if (variable != null) {
                 portVariables.put(variable, entry.getValue());
@@ -148,9 +159,8 @@ public class PortMapping {
         return null;
     }
     
-	private void mapPorts(String bindTo, String hPort,String cPort, Properties variables) {
-		Integer containerPort = Integer.parseInt(cPort);
-		Integer hostPort;
+	private void mapPorts(String bindToHost, String hPort,String containerPortSpec, Properties variables) {
+        Integer hostPort;
 		try {
 		    hostPort = Integer.parseInt(hPort);
 		} catch (NumberFormatException exp) {
@@ -162,16 +172,16 @@ public class PortMapping {
 		        portVariables.put(varName, hostPort);
 		    } else {
                 // containerPort: Port from container, hPort: Variable name to be filled later on
-		        dynamicPortVariables.put(containerPort, varName);
+		        dynamicPortVariables.put(containerPortSpec, varName);
 		    }
 		}
 		
-		if (bindTo != null) {
+		if (bindToHost != null) {
 			// the container port can never be null, so use that as the key
-			bindToMap.put(containerPort, bindTo);
+			bindToHostMap.put(containerPortSpec, bindToHost);
 		}
 		
-		containerPortsMap.put(containerPort, hostPort);
+		containerPortsMap.put(containerPortSpec, hostPort);
 	}
 
 	/**
@@ -181,11 +191,11 @@ public class PortMapping {
         return containerPortsMap.isEmpty();
     }
 
-    Map<Integer, String> getBindToMap() {
-    	return bindToMap;
+    Map<String, String> getBindToHostMap() {
+    	return bindToHostMap;
     }
 
-    Map<Integer, Integer> getPortsMap() {
+    Map<String, Integer> getPortsMap() {
         return containerPortsMap;
     }
 

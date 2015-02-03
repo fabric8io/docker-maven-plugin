@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.11.0</version>
+  <version>0.11.1-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -100,6 +100,7 @@
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${jolokia.port}. Multiple port mappings can be specified here-->
                   <port>jolokia.port:8080</port>
+                  <port>8600:53/udp</port>
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->

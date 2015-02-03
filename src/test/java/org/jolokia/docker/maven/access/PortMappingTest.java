@@ -28,8 +28,8 @@ public class PortMappingTest {
                                 "http://pirx:49900/", "http://pirx:${    jolokia.port}/");
 
         mapAndVerifyReplacement(mapping,
-                				"http://localhost:49901/", "http://localhost:${other.port}/",
-                				"http://pirx:49901/", "http://pirx:${    other.port}/");
+                                "http://localhost:49901/", "http://localhost:${other.port}/",
+                                "http://pirx:49901/", "http://pirx:${    other.port}/");
 
         assertEquals((int) mapping.getPortVariables().get("jolokia.port"), 49900);
         assertEquals((int) mapping.getPortVariables().get("other.port"), 49901);
@@ -37,26 +37,23 @@ public class PortMappingTest {
         assertTrue(mapping.containsDynamicPorts());
         assertEquals(4, mapping.getContainerPorts().size());
 
-        assertEquals("jolokia.port", mapping.getVariableForPort(8080));
-        assertEquals("other.port", mapping.getVariableForPort(5678));
-
         assertEquals(4, mapping.getPortsMap().size());
-        assertEquals(2, mapping.getBindToMap().size());
+        assertEquals(2, mapping.getBindToHostMap().size());
 
         assertEquals(49900, (long) mapping.getPortVariables().get("jolokia.port"));
         assertEquals(49901, (long) mapping.getPortVariables().get("other.port"));
 
-        Map<Integer,Integer> p = mapping.getPortsMap();
+        Map<String,Integer> p = mapping.getPortsMap();
         assertEquals(p.size(),4);
 
-        assertNull(p.get(8080));
-        assertNull(p.get(5678));
+        assertNull(p.get("8080/tcp"));
+        assertNull(p.get("5678/tcp"));
 
-        assertEquals(18181, (long) p.get(8181));
-        assertEquals(9090, (long) p.get(9090));
+        assertEquals(18181, (long) p.get("8181/tcp"));
+        assertEquals(9090, (long) p.get("9090/tcp"));
 
-        assertEquals("127.0.0.1", mapping.getBindToMap().get(9090));
-        assertEquals("127.0.0.1", mapping.getBindToMap().get(5678));
+        assertEquals("127.0.0.1", mapping.getBindToHostMap().get("9090/tcp"));
+        assertEquals("127.0.0.1", mapping.getBindToHostMap().get("5678/tcp"));
     }
 
     @Test
@@ -85,9 +82,9 @@ public class PortMappingTest {
     }
 
     private void updateDynamicMapping(PortMapping mapping, int ... ports) {
-        Map<Integer,Integer> dynMapping = new HashMap<>();
+        Map<String,Integer> dynMapping = new HashMap<>();
         for (int i = 0; i < ports.length; i+=2) {
-            dynMapping.put(ports[i],ports[i+1]);
+            dynMapping.put(ports[i] + "/tcp",ports[i+1]);
         }
         mapping.updateVariablesWithDynamicPorts(dynMapping);
     }

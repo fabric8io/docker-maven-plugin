@@ -63,11 +63,11 @@ public class ContainerCreateConfig {
         return this;
     }
 
-    public ContainerCreateConfig exposedPorts(Set<Integer> ports) {
-        if (ports != null && ports.size() > 0) {
+    public ContainerCreateConfig exposedPorts(Set<String> portSpecs) {
+        if (portSpecs != null && portSpecs.size() > 0) {
             JSONObject exposedPorts = new JSONObject();
-            for (Integer port : ports) {
-                exposedPorts.put(port.toString() + "/tcp", new JSONObject());
+            for (String portSpec : portSpecs) {
+                exposedPorts.put(portSpec, new JSONObject());
             }
             createConfig.put("ExposedPorts", exposedPorts);
         }
