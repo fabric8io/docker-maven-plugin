@@ -34,6 +34,15 @@ public class DockerAssemblyConfigurationSourceTest {
         testCreateSource(new MojoParameters(null, null, null, null, "src/docker", "output/docker"));
     }
 
+    @Test
+    public void testEmptyAssemblyConfig() {
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
+                new MojoParameters(null, null, null, null, "/src/docker", "/output/docker"),
+                null
+        );
+        assertEquals(0,source.getDescriptors().length);
+    }
+
     private void testCreateSource(MojoParameters params) {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig);
 
