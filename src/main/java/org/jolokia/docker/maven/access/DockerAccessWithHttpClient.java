@@ -80,14 +80,23 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     /** {@inheritDoc} */
     @Override
     public boolean hasImage(String image) throws DockerAccessException {
-        Matcher matcher = Pattern.compile("^(.*?):([^:]+)?$").matcher(image);
-        String base = matcher.matches() ? matcher.group(1) : image;
-
-        HttpUriRequest req = newGet(baseUrl + "/images/json?filter=" + base);
+        ImageName name = new ImageName(image);
+        HttpUriRequest req = newGet(baseUrl + "/images/json?filter=" + name.getFullName(null));
         HttpResponse resp = request(req);
         checkReturnCode("Checking for image '" + image + "'", resp, 200);
         JSONArray array = asJsonArray(resp);
-        return array.length() > 0;
+        if (array.length() > 0) {
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject imageObject = array.getJSONObject(i);
+                JSONArray repoTags = imageObject.getJSONArray("RepoTags");
+                for (int j = 0; j < repoTags.length(); j++) {
+                     if (name.getFullNameWithTag(null).equals(repoTags.getString(j))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** {@inheritDoc}
@@ -156,7 +165,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     @Override
     public String getNewestImageForContainer(String image) throws DockerAccessException {
-        List<String> newestContainer = getContainerIds(image,true);
+        List<String> newestContainer = getContainerIds(image, true);
         assert newestContainer.size() == 0 || newestContainer.size() == 1;
         return newestContainer.size() == 0 ? null : newestContainer.get(0);
     }

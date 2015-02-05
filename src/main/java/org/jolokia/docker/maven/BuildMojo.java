@@ -11,6 +11,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.util.ImageName;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -30,6 +31,11 @@ public class BuildMojo extends AbstractDockerMojo {
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
     /** @parameter */
     private MavenArchiveConfiguration archive;
+
+    /**
+     * @parameter property = "docker.autoPull" default-value = "true"
+     */
+    private boolean autoPull;
 
     /** @component */
     private MavenSession session;
@@ -62,12 +68,29 @@ public class BuildMojo extends AbstractDockerMojo {
         
     private void buildImage(ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
+        String imageName = getImageName(imageConfig.getName());
+        info("Creating image " + imageConfig.getDescription());
+
+        String fromImage = imageConfig.getBuildConfiguration().getFrom();
+        info("Checking if base image exists locally " + fromImage);
+
+        boolean hasFromImage = dockerAccess.hasImage(fromImage);
+        if (!hasFromImage || autoPull) {
+            if (!hasFromImage) {
+                info("Base image does not exist locally");
+            } else {
+                info("Base image already exists but auto pull is enabled");
+            }
+            info("Pulling base image...");
+            dockerAccess.pullImage(fromImage, prepareAuthConfig(fromImage), new ImageName(fromImage).getRegistry());
+        } else {
+            info("Base image already exists and auto pull is disabled, not pulling base image...");
+        }
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter, sourceDirectory, outputDirectory);
         File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
 
-        String imageName = getImageName(imageConfig.getName());
-        info("Creating image " + imageConfig.getDescription());
         dockerAccess.buildImage(imageName, dockerArchive);
+        info("Build successful!");
     }
 
 
