@@ -64,12 +64,12 @@ public class DockerAssemblyManager {
                 return createTarball(source,null);
             }
         } catch (IOException e) {
-            throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", outputDir, e));
+            throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", outputDir), e);
         }
     }
 
     private File validateDockerDir(MojoParameters params, String dockerFileDir) throws MojoExecutionException {
-        File dockerDir = EnvUtil.prepareAbsolutePath(params.getSourceDirectory(), dockerFileDir);
+        File dockerDir = EnvUtil.prepareAbsolutePath(params, dockerFileDir);
         if (! new File(dockerDir,"Dockerfile").exists()) {
             throw new MojoExecutionException("Specified dockerFileDir " + dockerFileDir +
                                              " doesn't contain a 'Dockerfile'");

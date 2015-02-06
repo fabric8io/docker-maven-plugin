@@ -150,11 +150,11 @@ public class EnvUtil {
         return System.getenv("DOCKER_REGISTRY");
     }
 
-    public static File prepareAbsolutePath(String parent,String path) {
+    public static File prepareAbsolutePath(MojoParameters params, String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(parent + File.separator + path);
+        return new File(new File(params.getProject().getBasedir(), params.getSourceDirectory()), path);
     }
 }
