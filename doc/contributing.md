@@ -55,6 +55,17 @@ with your real name (first and last name)
 If you set your `user.name` and `user.email` git configs, you can sign your
 commit automatically with `git commit -s`. If you forgot this you can
 use `git commit -s --amend` to add this in retrospective for the last commit.
+If you need to sign-off multiple commits within a branch, you need to to do an interactive
+rebase with `git rebase -i`. A nice shortcut for signing off every commit in a branch can
+be provided with this [alias](http://stackoverflow.com/questions/25570947/how-to-use-git-interactive-rebase-for-signing-off-a-series-of-commits)
+which you can put into your `~/.gitconfig`:
+
+````
+[alias]
+  # Usage: git signoff-rebase [base-commit]
+  signoff-rebase = "!EDITOR='sed -i -re s/^pick/e/' sh -c 'git rebase -i $1 && while test -f .git/rebase-merge/interactive; do git commit --amend --signoff --no-edit && git rebase --continue; done' -"
+  # Ideally we would use GIT_SEQUENCE_EDITOR in the above instead of EDITOR but that's not supported for git < 1.7.8.
+````
 
 When sending pull request we prefer that to be a single commit. So please squash your commits
 with an interactive rebase before sending the pull request. And of course your pull request should be
