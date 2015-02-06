@@ -2,6 +2,8 @@
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)
+  - "Entrypoint" supports now arguments (#84)
+  
 
 * **0.11.0**
   - Add support for binding/exporting containers during startup (#55)
