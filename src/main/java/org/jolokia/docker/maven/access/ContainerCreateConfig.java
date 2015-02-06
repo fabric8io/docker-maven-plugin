@@ -30,11 +30,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig command(String command) {
         if (command != null) {
-            JSONArray a = new JSONArray();
-            for (String s : EnvUtil.splitWOnSpaceWithEscape(command)) {
-                a.put(s);
-            }
-            createConfig.put("Cmd", a);
+            createConfig.put("Cmd", splitOnWhiteSpace(command));
         }
         return this;
     }
@@ -44,7 +40,18 @@ public class ContainerCreateConfig {
     }
 
     public ContainerCreateConfig entrypoint(String entrypoint) {
-        return add("Entrypoint", entrypoint);
+        if (entrypoint != null) {
+            createConfig.put("Entrypoint", splitOnWhiteSpace(entrypoint));
+        }
+        return this;
+    }
+
+    private JSONArray splitOnWhiteSpace(String entrypoint) {
+        JSONArray a = new JSONArray();
+        for (String s : EnvUtil.splitWOnSpaceWithEscape(entrypoint)) {
+            a.put(s);
+        }
+        return a;
     }
 
     public ContainerCreateConfig environment(Map<String, String> env) throws IllegalArgumentException {
