@@ -31,7 +31,7 @@ import org.jolokia.docker.maven.util.*;
 public class StartMojo extends AbstractDockerMojo {
 
     /**
-     * @parameter property = "docker.autoPull" defaultValue = "true"
+     * @parameter property = "docker.autoPull" default-value = "true"
      */
     private boolean autoPull;
 

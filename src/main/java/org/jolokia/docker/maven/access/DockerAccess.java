@@ -18,7 +18,7 @@ public interface DockerAccess {
     /**
      * Check whether the given Image is locally available.
      *
-     * @param image name of image to check
+     * @param image name of image to check, the image can contain a tag, otherwise 'latest' will be appended
      * @return true if the image is locally available or false if it must be pulled.
      * @throws DockerAccessException in case of an request error
      */
