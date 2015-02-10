@@ -1,23 +1,13 @@
 package org.jolokia.docker.maven.access;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -34,9 +24,7 @@ import org.apache.http.util.EntityUtils;
 import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.util.ImageName;
 import org.jolokia.docker.maven.util.LogHandler;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.*;
 
 import static org.jolokia.docker.maven.access.util.RequestUtil.*;
 
@@ -81,7 +69,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     @Override
     public boolean hasImage(String image) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        HttpUriRequest req = newGet(baseUrl + "/images/json?filter=" + name.getFullName(null));
+        HttpUriRequest req = newGet(baseUrl + "/images/json?filter=" + name.getFullName());
         HttpResponse resp = request(req);
         checkReturnCode("Checking for image '" + image + "'", resp, 200);
         JSONArray array = asJsonArray(resp);
@@ -90,7 +78,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 JSONObject imageObject = array.getJSONObject(i);
                 JSONArray repoTags = imageObject.getJSONArray("RepoTags");
                 for (int j = 0; j < repoTags.length(); j++) {
-                     if (name.getFullNameWithTag(null).equals(repoTags.getString(j))) {
+                     if (name.getFullNameWithTag().equals(repoTags.getString(j))) {
                         return true;
                     }
                 }

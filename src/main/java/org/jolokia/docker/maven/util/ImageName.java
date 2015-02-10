@@ -35,10 +35,7 @@ public class ImageName {
     // Tag name
     private String tag;
 
-    private String fullName;
-
     public ImageName(String fullName) {
-        this.fullName = fullName;
         Pattern tagPattern = Pattern.compile("^(.+?)(?::([^:/]+))?$");
         Matcher matcher = tagPattern.matcher(fullName);
         if (!matcher.matches()) {
@@ -93,16 +90,55 @@ public class ImageName {
         return part.contains(".") || part.contains(":");
     }
 
-    public String getFullName(String alternateRegistry) {
+    /**
+     * Get the full name of this image, including the registry but without
+     * any tag (e.g. <code>privateregistry:rhuss/java</code>)
+     *
+     * @return full name with the original registry
+     */
+    public String getFullName() {
+        return getFullName(null);
+    }
+
+    /**
+     * Get the full name of this image like {@link #getFullName()} does, but allow
+     * an optional registry. This registry is used when this image does not already
+     * contain a registry.
+     *
+     * @param optionalRegistry optional registry to use when this image does not provide
+     *                         a registry. Can be null in which case no optional registry is used*
+     * @return full name with original registry (if set) or optional registry (if not <code>null</code>)
+     */
+    public String getFullName(String optionalRegistry) {
         StringBuilder ret = new StringBuilder();
-        if (registry != null || alternateRegistry != null) {
-            ret.append(registry != null ? registry : alternateRegistry).append("/");
+        if (registry != null || optionalRegistry != null) {
+            ret.append(registry != null ? registry : optionalRegistry).append("/");
         }
         ret.append(repository);
         return ret.toString();
     }
 
-    public String getFullNameWithTag(String alternateRegistry) {
-        return getFullName(alternateRegistry) + ":" + (tag != null ? tag : "latest");
+
+    /**
+     * Get the full name of this image, including the registry and tag
+     * (e.g. <code>privateregistry:rhuss/java:7u53</code>)
+     *
+     * @return full name with the original registry and the original tag given (if any).
+     */
+    public String getFullNameWithTag() {
+        return getFullNameWithTag(null);
+    }
+
+    /**
+     * Get the full name of this image like {@link #getFullNameWithTag(String)} does, but allow
+     * an optional registry. This registry is used when this image does not already
+     * contain a registry. If no tag was provided in the initial name, <code>latest</code> is used.
+     *
+     * @param optionalRegistry optional registry to use when this image does not provide
+     *                         a registry. Can be null in which case no optional registry is used*
+     * @return full name with original registry (if set) or optional registry (if not <code>null</code>).
+     */
+    public String getFullNameWithTag(String optionalRegistry) {
+        return getFullName(optionalRegistry) + ":" + (tag != null ? tag : "latest");
     }
 }

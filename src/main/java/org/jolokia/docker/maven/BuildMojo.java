@@ -72,25 +72,22 @@ public class BuildMojo extends AbstractDockerMojo {
         info("Creating image " + imageConfig.getDescription());
 
         String fromImage = imageConfig.getBuildConfiguration().getFrom();
-        info("Checking if base image exists locally " + fromImage);
 
         boolean hasFromImage = dockerAccess.hasImage(fromImage);
         if (!hasFromImage || autoPull) {
-            if (!hasFromImage) {
-                info("Base image does not exist locally");
-            } else {
-                info("Base image already exists but auto pull is enabled");
-            }
+            debug(hasFromImage ?
+                          "Base image already exists but auto pull is enabled" :
+                          "Base image does not exist locally");
             info("Pulling base image...");
             dockerAccess.pullImage(fromImage, prepareAuthConfig(fromImage), new ImageName(fromImage).getRegistry());
         } else {
-            info("Base image already exists and auto pull is disabled, not pulling base image...");
+            debug("Base image already exists and auto pull is disabled, not pulling base image...");
         }
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter, sourceDirectory, outputDirectory);
         File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
-        info("Build successful!");
+        debug("Build successful!");
     }
 
 
