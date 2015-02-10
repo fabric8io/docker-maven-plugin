@@ -10,11 +10,6 @@ import java.util.Map;
  */
 public class BuildImageConfiguration {
 
-    /**
-     * @parameter 
-     */
-    private String dockerfile;
-    
     // Base Image name of the data image to use.
     /**
      * @parameter
@@ -52,11 +47,7 @@ public class BuildImageConfiguration {
     private AssemblyConfiguration assembly;
     
     public BuildImageConfiguration() {}
-   
-    public String getDockerfile() { 
-        return dockerfile;
-    }
-    
+
     public String getFrom() {
         return from;
     }
