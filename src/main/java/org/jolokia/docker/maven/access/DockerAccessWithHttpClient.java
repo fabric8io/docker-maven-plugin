@@ -159,6 +159,10 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     private List<String> getContainerIds(String image,boolean onlyLatest) throws DockerAccessException {
+        if (!image.contains(":")) {
+            image = image + ":latest";
+        }
+        
         List<String> ret = new ArrayList<>();
         HttpUriRequest req = newGet(baseUrl + "/containers/json?limit=100");
         HttpResponse resp = request(req);
