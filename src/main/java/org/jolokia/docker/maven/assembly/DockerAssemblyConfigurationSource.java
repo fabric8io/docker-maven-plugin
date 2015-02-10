@@ -32,7 +32,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     @Override
     public String[] getDescriptors() {
         if (assemblyConfig != null) {
-
           String descriptor = assemblyConfig.getDescriptor();
 
           if (descriptor != null) {

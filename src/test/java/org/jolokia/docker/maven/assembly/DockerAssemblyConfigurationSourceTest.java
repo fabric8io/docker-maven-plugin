@@ -27,17 +27,17 @@ public class DockerAssemblyConfigurationSourceTest {
 
     @Test
     public void testCreateSourceAbsolute() {
-        testCreateSource(buildParameters("/src/docker", "/output/docker"));
+        testCreateSource(buildParameters(".", "/src/docker", "/output/docker"));
     }
 
     @Test
     public void testCreateSourceRelative() {
-        testCreateSource(buildParameters("src/docker", "output/docker"));
+        testCreateSource(buildParameters(".","src/docker", "output/docker"));
     }
 
-    private MojoParameters buildParameters(String sourceDir, String outputDir) {
+    private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
-        mavenProject.setFile(new File("."));
+        mavenProject.setFile(new File(projectDir));
         return new MojoParameters(null, mavenProject, null, null, sourceDir, outputDir);
     }
 
