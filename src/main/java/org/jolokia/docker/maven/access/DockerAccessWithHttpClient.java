@@ -159,21 +159,24 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     private List<String> getContainerIds(String image,boolean onlyLatest) throws DockerAccessException {
-        if (!image.contains(":")) {
-            image = image + ":latest";
-        }
-        
-        List<String> ret = new ArrayList<>();
+        ImageName imageName = new ImageName(image);
+        String imageFullName = imageName.getFullNameWithTag();
+
         HttpUriRequest req = newGet(baseUrl + "/containers/json?limit=100");
         HttpResponse resp = request(req);
         checkReturnCode("Fetching container information", resp, 200);
         JSONArray configs = asJsonArray(resp);
+        return extractMatchingContainers(onlyLatest, imageFullName, configs);
+    }
+
+    private List<String> extractMatchingContainers(boolean onlyLatest, String imageFullName, JSONArray configs) {
         long newest = 0;
+        List<String> ret = new ArrayList<>();
         for (int i = 0; i < configs.length(); i ++) {
             JSONObject config = configs.getJSONObject(i);
             String containerImage = config.getString("Image");
 
-            if (image.equals(containerImage)) {
+            if (imageFullName.equals(containerImage)) {
                 String id = config.getString("Id");
                 if (!onlyLatest) {
                     ret.add(id);

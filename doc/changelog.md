@@ -5,7 +5,8 @@
   - "Entrypoint" supports now arguments (#84)
   - Fix basedir for multi module projects (#89)
   - Pull base images before building when "autoPull" is switched on (#76, #77, #88)
-
+  - Fix for stopping containers without tag (#86)
+  
 * **0.11.0**
   - Add support for binding/exporting containers during startup (#55)
   - Provide better control of the build assembly configuration. In addition, the plugin will now search
