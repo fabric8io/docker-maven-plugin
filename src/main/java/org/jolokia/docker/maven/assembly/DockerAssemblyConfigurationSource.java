@@ -32,11 +32,12 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     @Override
     public String[] getDescriptors() {
         if (assemblyConfig != null) {
-            String descriptor = assemblyConfig.getDescriptor();
 
-            if (descriptor != null) {
-                return new String[]{EnvUtil.prepareAbsolutePath(params.getSourceDirectory(), descriptor).getAbsolutePath()};
-            }
+          String descriptor = assemblyConfig.getDescriptor();
+
+          if (descriptor != null) {
+            return new String[] { EnvUtil.prepareAbsolutePath(params, descriptor).getAbsolutePath() };
+          }
         }
         return new String[0];
     }
