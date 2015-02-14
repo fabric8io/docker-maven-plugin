@@ -30,11 +30,6 @@ import org.jolokia.docker.maven.util.*;
  */
 public class StartMojo extends AbstractDockerMojo {
 
-    /**
-     * @parameter property = "docker.autoPull" default-value = "true"
-     */
-    private boolean autoPull;
-
     /** @parameter property = "docker.showLog" */
     private String showLog;
 
@@ -61,7 +56,7 @@ public class StartMojo extends AbstractDockerMojo {
 
             String imageName = imageConfig.getName();
 
-            checkImageAndAutoPull(docker, imageConfig);
+            checkImageWithAutoPull(docker, imageName, getRegistry(imageConfig));
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
@@ -211,23 +206,6 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     // ========================================================================================================
-
-    private void checkImageAndAutoPull(DockerAccess docker, ImageConfiguration imageConfig) throws DockerAccessException, MojoExecutionException {
-        String name = imageConfig.getName();
-        if (!docker.hasImage(name)) {
-            if (autoPull) {
-                String registry = getRegistry(imageConfig);
-                docker.pullImage(name, prepareAuthConfig(name), registry);
-                if (registry != null) {
-                    docker.tag(new ImageName(name).getFullNameWithTag(registry),name);
-                }
-            }
-            else {
-                throw new MojoExecutionException(this, "No image '" + imageConfig + "' found", "Please enable 'autoPull' or pull image '" + imageConfig
-                        + "' yourself (docker pull " + imageConfig + ")");
-            }
-        }
-    }
 
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();

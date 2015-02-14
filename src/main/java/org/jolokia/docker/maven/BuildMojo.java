@@ -32,11 +32,6 @@ public class BuildMojo extends AbstractDockerMojo {
     /** @parameter */
     private MavenArchiveConfiguration archive;
 
-    /**
-     * @parameter property = "docker.autoPull" default-value = "true"
-     */
-    private boolean autoPull;
-
     /** @component */
     private MavenSession session;
 
@@ -72,17 +67,12 @@ public class BuildMojo extends AbstractDockerMojo {
         info("Creating image " + imageConfig.getDescription());
 
         String fromImage = imageConfig.getBuildConfiguration().getFrom();
-
-        boolean hasFromImage = dockerAccess.hasImage(fromImage);
-        if (!hasFromImage || autoPull) {
-            debug(hasFromImage ?
-                          "Base image already exists but auto pull is enabled" :
-                          "Base image does not exist locally");
-            info("Pulling base image...");
-            dockerAccess.pullImage(fromImage, prepareAuthConfig(fromImage), new ImageName(fromImage).getRegistry());
-        } else {
-            debug("Base image already exists and auto pull is disabled, not pulling base image...");
+        if (fromImage == null) {
+            fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
         }
+
+        checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry());
+
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter, sourceDirectory, outputDirectory);
         File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
 

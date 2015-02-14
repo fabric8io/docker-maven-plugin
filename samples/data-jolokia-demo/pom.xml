@@ -77,7 +77,6 @@
         <version>${project.version}</version>
         <configuration>
           <logDate>default</logDate>
-          <autoPull>true</autoPull>
           <images>
             <!-- Docker Image to use -->
             <image>
@@ -127,7 +126,6 @@
                    does this. -->
                 <assembly>
                   <descriptor>assembly.xml</descriptor>
-
                 </assembly>
               </build>
             </image>

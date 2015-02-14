@@ -36,6 +36,9 @@ public class ImageName {
     private String tag;
 
     public ImageName(String fullName) {
+        if (fullName == null) {
+            throw new NullPointerException("Image name must not be null");
+        }
         Pattern tagPattern = Pattern.compile("^(.+?)(?::([^:/]+))?$");
         Matcher matcher = tagPattern.matcher(fullName);
         if (!matcher.matches()) {

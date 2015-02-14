@@ -59,6 +59,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** @component */
     protected ImageConfigResolver imageConfigResolver;
 
+    /** @parameter property = "docker.autoPull" default-value = "true" */
+    protected boolean autoPull;
+
     /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
     private String apiVersion;
     
@@ -438,7 +441,33 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
         return EnvUtil.findRegistry(imageConfig.getRegistry(),registry);
     }
 
-    // ==========================================================================================
-    // Class for registering a shutdown action
+    /**
+     * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
+     * is not existant, throw an error
+     *
+     * @param docker access object to lookup an image (if autoPull is enabled)
+     * @param name image name
+     * @param registry optional registry which is used if the image itself doesn't have a registry.
+     *
+     * @throws DockerAccessException
+     * @throws MojoExecutionException
+     */
+    protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry) throws DockerAccessException, MojoExecutionException {
+        if (!docker.hasImage(name)) {
+            if (autoPull) {
+                docker.pullImage(name, prepareAuthConfig(name), registry);
+                ImageName imageName = new ImageName(name);
+                if (registry != null && !imageName.hasRegistry()) {
+                    // If coming from a registry which was not contained in the original name, add a tag from the
+                    // short name with no-registry to the full name with the registry.
+                    docker.tag(imageName.getFullNameWithTag(registry),name);
+                }
+            }
+            else {
+                throw new MojoExecutionException(this, "No image '" + name + "' found", "Please enable 'autoPull' or pull image '" + name
+                        + "' yourself (docker pull " + name + ")");
+            }
+        }
+    }
 
 }

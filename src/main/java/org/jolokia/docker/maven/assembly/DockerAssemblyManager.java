@@ -35,6 +35,8 @@ import org.jolokia.docker.maven.util.MojoParameters;
 @Component(role = DockerAssemblyManager.class)
 public class DockerAssemblyManager {
 
+    public static final String DEFAULT_DATA_BASE_IMAGE = "busybox:latest";;
+
     @Requirement
     private AssemblyArchiver assemblyArchiver;
 
@@ -109,8 +111,10 @@ public class DockerAssemblyManager {
         if (buildConfig.getFrom() != null) {
             builder.baseImage(buildConfig.getFrom());
             builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
+        } else {
+            builder.baseImage(DEFAULT_DATA_BASE_IMAGE);
         }
-        
+
         if (buildConfig.getCommand() != null) {
             builder.command(EnvUtil.splitWOnSpaceWithEscape(buildConfig.getCommand()));
         }
