@@ -485,6 +485,15 @@ address on docker host.
 </ports>
 ```
 
+As a convienence, a hostname pointing to the docker host may also
+be specified. The container will fail to start if the hostname resolves
+to an ip address of something other then the docker host.
+
+```
+<ports>
+  <port>example.com:80:80</port>
+</ports>
+
 Another useful configuration option is `portPropertyFile` with which a
 file can be specified to which the real port mapping is written after
 all dynamic ports has been resolved. The keys of this property file
