@@ -33,7 +33,7 @@ public class RestartPolicy {
      */
     private int retry;
 
-    private RestartPolicy() {};
+    public RestartPolicy() {};
 
     public String getName() {
         return name;
