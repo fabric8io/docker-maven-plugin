@@ -1,5 +1,7 @@
 package org.jolokia.docker.maven.access;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,8 +179,13 @@ public class PortMapping {
 		}
 		
 		if (bindToHost != null) {
-			// the container port can never be null, so use that as the key
-			bindToHostMap.put(containerPortSpec, bindToHost);
+	          // the container port can never be null, so use that as the key
+		    try {
+		        String ipAddress = InetAddress.getByName(bindToHost).getHostAddress();
+		        bindToHostMap.put(containerPortSpec, ipAddress);
+		    } catch (UnknownHostException e) {
+		        throw new IllegalArgumentException("bind host [" + bindToHost + "] cannot be resolved");
+		    }
 		}
 		
 		containerPortsMap.put(containerPortSpec, hostPort);
