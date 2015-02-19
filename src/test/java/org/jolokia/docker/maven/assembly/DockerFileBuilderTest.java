@@ -30,15 +30,19 @@ public class DockerFileBuilderTest {
                         .volumes(Arrays.asList("/vol1"));
 
         String expected = loadFile("docker/Dockerfile.test");
-        assertEquals(expected, builder.content());
+        assertEquals(expected, stripCR(builder.content()));
     }
 
     @Test
     public void testNoRootExport() {
         assertFalse(new DockerFileBuilder().add("/src", "/dest").basedir("/").content().contains("VOLUME"));
     }
+    
+    private String stripCR(String input){
+    	return input.replaceAll("\r", "");
+    }
 
     private String loadFile(String fileName) throws IOException {
-        return IOUtils.toString(getClass().getClassLoader().getResource(fileName));
+        return stripCR(IOUtils.toString(getClass().getClassLoader().getResource(fileName)));
     }
 }
