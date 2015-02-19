@@ -87,7 +87,7 @@ public class PortMappingTest {
         assertTrue(mapping.getBindToHostMap().values().contains("127.0.0.1"));
     }
     
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidHostname() {
         createPortMapping("does-not-exist.pvt:80:80");
     }
