@@ -150,8 +150,8 @@ public class EnvUtil {
         return System.getenv("DOCKER_REGISTRY");
     }
 
-    public static File prepareAbsoluteOutputDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getOutputDirectory(), path);
+    public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
+        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
     }
     
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {

@@ -1,5 +1,9 @@
 package org.jolokia.docker.maven.assembly;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 
 import org.apache.maven.project.MavenProject;
@@ -8,8 +12,6 @@ import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class DockerAssemblyConfigurationSourceTest {
 
@@ -35,6 +37,17 @@ public class DockerAssemblyConfigurationSourceTest {
         testCreateSource(buildParameters(".","src/docker", "output/docker"));
     }
 
+    @Test
+    public void testOutputDirHasImage() {
+        String image = "image";
+        MojoParameters params = buildParameters(".","src/docker", "output/docker");
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig, image);
+        
+        assertTrue(containsDir(image, source.getOutputDirectory()));
+        assertTrue(containsDir(image, source.getWorkingDirectory()));
+        assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
+    }
+    
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
         mavenProject.setFile(new File(projectDir));
@@ -45,13 +58,12 @@ public class DockerAssemblyConfigurationSourceTest {
     public void testEmptyAssemblyConfig() {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
                 new MojoParameters(null, null, null, null, "/src/docker", "/output/docker"),
-                null
-        );
+                null, null);
         assertEquals(0,source.getDescriptors().length);
     }
 
     private void testCreateSource(MojoParameters params) {
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig);
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig, "image");
 
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();
@@ -65,12 +77,16 @@ public class DockerAssemblyConfigurationSourceTest {
         assertFalse(source.isIgnorePermissions());
 
         String outputDir = params.getOutputDirectory();
-        assertTrue(containsOutputDir(outputDir, source.getOutputDirectory().toString()));
-        assertTrue(containsOutputDir(outputDir, source.getWorkingDirectory().toString()));
-        assertTrue(containsOutputDir(outputDir, source.getTemporaryRootDirectory().toString()));
+        assertTrue(startsWithDir(outputDir, source.getOutputDirectory()));
+        assertTrue(startsWithDir(outputDir, source.getWorkingDirectory()));
+        assertTrue(startsWithDir(outputDir, source.getTemporaryRootDirectory()));
     }
 
-    private boolean containsOutputDir(String outputDir, String path) {
-        return path.startsWith(outputDir + File.separator);
+    private boolean containsDir(String outputDir, File path) {
+        return path.toString().contains(outputDir + File.separator);
+    }
+    
+    private boolean startsWithDir(String outputDir, File path) {
+        return path.toString().startsWith(outputDir + File.separator);
     }
 }

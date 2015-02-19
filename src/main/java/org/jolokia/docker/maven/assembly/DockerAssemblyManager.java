@@ -22,6 +22,7 @@ import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.jolokia.docker.maven.config.AssemblyConfiguration;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 
@@ -46,9 +47,11 @@ public class DockerAssemblyManager {
     @Requirement
     private ArchiverManager archiverManager;
 
-    public File create(MojoParameters params, BuildImageConfiguration buildConfig) throws MojoExecutionException {
+    public File create(MojoParameters params, ImageConfiguration imageConfig) throws MojoExecutionException {
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig);
+        
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig, imageConfig.getName());
 
         File outputDir = source.getOutputDirectory();
 
