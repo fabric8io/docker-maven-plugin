@@ -6,6 +6,7 @@ import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
@@ -38,6 +39,9 @@ public class BuildMojo extends AbstractDockerMojo {
     /** @component */
     private MavenFileFilter mavenFileFilter;
 
+    /** @component */
+    private MavenReaderFilter mavenFilterReader;
+    
     /** @component */
     private DockerAssemblyManager dockerAssemblyManager;
 
@@ -73,12 +77,15 @@ public class BuildMojo extends AbstractDockerMojo {
 
         checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry());
 
-        MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter, sourceDirectory, outputDirectory);
+        MojoParameters params = createMojoParameters();
         File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
         debug("Build successful!");
     }
 
-
+    private MojoParameters createMojoParameters() {
+        return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
+                sourceDirectory, outputDirectory);
+    }
 }

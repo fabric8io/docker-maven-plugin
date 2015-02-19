@@ -38,13 +38,13 @@ public class DockerAssemblyConfigurationSourceTest {
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
         mavenProject.setFile(new File(projectDir));
-        return new MojoParameters(null, mavenProject, null, null, sourceDir, outputDir);
+        return new MojoParameters(null, mavenProject, null, null, null, sourceDir, outputDir);
     }
 
     @Test
     public void testEmptyAssemblyConfig() {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-                new MojoParameters(null, null, null, null, "/src/docker", "/output/docker"),
+                new MojoParameters(null, null, null, null, null, "/src/docker", "/output/docker"),
                 null
         );
         assertEquals(0,source.getDescriptors().length);

@@ -222,7 +222,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public MavenReaderFilter getMavenReaderFilter() {
-        return null;
+        return params.getMavenFilterReader();
     }
 
     @Override
