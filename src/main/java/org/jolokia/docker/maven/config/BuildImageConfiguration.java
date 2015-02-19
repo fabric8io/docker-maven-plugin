@@ -57,6 +57,10 @@ public class BuildImageConfiguration {
     }
 
     public AssemblyConfiguration getAssemblyConfiguration() {
+        if (assembly == null) {
+            return AssemblyConfiguration.EMPTY;
+        }
+
         return assembly;
     }
 

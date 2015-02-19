@@ -53,18 +53,20 @@ public class DockerAssemblyManager {
         File outputDir = source.getOutputDirectory();
 
         try {
-            // Create assembly in output directory (specified in source)
             createArchiveFromAssembly(source);
             
             String dockerFileDir = assemblyConfig.getDockerFileDir();
             if (dockerFileDir != null) {
                 // Use specified docker directory which must include a Dockerfile.
                 return createTarball(source, validateDockerDir(params, dockerFileDir));
-            } else {
-                // Create custom docker file in output dir
-                createDockerFile(buildConfig, assemblyConfig, outputDir);
-                return createTarball(source,null);
-            }
+            } 
+
+            // Create custom docker file in output dir
+            DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
+            builder.write(outputDir);
+            
+            return createTarball(source, null);
+            
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", outputDir), e);
         }
@@ -97,17 +99,23 @@ public class DockerAssemblyManager {
             throw new MojoExecutionException("Cannot create archive " + archive, e);
         }
     }
-
-    private void createDockerFile(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig, File outputDir) 
-        throws IOException {
+    
+    // visible for testing
+    DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig) {
         DockerFileBuilder builder =
-                new DockerFileBuilder().basedir(assemblyConfig.getBasedir())
-                        .add("maven", "")
+                new DockerFileBuilder()
                         .env(buildConfig.getEnv())
-                        .exportBasedir(assemblyConfig.exportBasedir())
                         .expose(buildConfig.getPorts())
                         .volumes(buildConfig.getVolumes());
-        
+
+        if (assemblyConfig.isEmpty()) {
+            builder.emptyArchive();
+        } else {
+            builder.add("maven", "")
+                    .basedir(assemblyConfig.getBasedir())
+                    .exportBasedir(assemblyConfig.exportBasedir());
+        }
+
         if (buildConfig.getFrom() != null) {
             builder.baseImage(buildConfig.getFrom());
             builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
@@ -118,8 +126,8 @@ public class DockerAssemblyManager {
         if (buildConfig.getCommand() != null) {
             builder.command(EnvUtil.splitWOnSpaceWithEscape(buildConfig.getCommand()));
         }
-        
-        builder.write(outputDir);
+
+        return builder;
     }
 
     private void createArchiveFromAssembly(DockerAssemblyConfigurationSource source) throws MojoExecutionException {

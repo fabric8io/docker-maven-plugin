@@ -29,6 +29,8 @@ public class DockerFileBuilder {
 
     private boolean exportBasedir = true;
     
+    private boolean emptyArchive;
+    
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
     // See also http://docs.docker.io/reference/builder/#add
@@ -61,7 +63,7 @@ public class DockerFileBuilder {
      * @throws IllegalArgumentException if no src/dest entries have been added
      */
     public String content() throws IllegalArgumentException {
-        if (addEntries.size() == 0) {
+        if (!emptyArchive && addEntries.size() == 0) {
             throw new IllegalArgumentException("No entries added");
         }
 
@@ -188,6 +190,13 @@ public class DockerFileBuilder {
         return this;
     }
 
+    public DockerFileBuilder emptyArchive() {
+        this.emptyArchive = true;
+        this.exportBasedir = false;
+
+        return this;
+    }
+    
     public DockerFileBuilder exportBasedir(boolean exportBasedir) {
         this.exportBasedir = exportBasedir;
         return this;
