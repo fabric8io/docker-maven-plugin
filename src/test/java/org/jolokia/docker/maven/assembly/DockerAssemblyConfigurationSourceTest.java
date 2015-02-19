@@ -64,7 +64,7 @@ public class DockerAssemblyConfigurationSourceTest {
 
         assertFalse(source.isIgnorePermissions());
 
-        String outputDir = params.getOutputDirectory();
+        String outputDir = new File(params.getOutputDirectory()).toString();
         assertTrue(containsOutputDir(outputDir, source.getOutputDirectory().toString()));
         assertTrue(containsOutputDir(outputDir, source.getWorkingDirectory().toString()));
         assertTrue(containsOutputDir(outputDir, source.getTemporaryRootDirectory().toString()));
