@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.11.2**
+  - Add support for tagging at build and push time
+
 * **0.11.1**
   - Add support for binding UDP ports (#83)
   - "Entrypoint" supports now arguments (#84)

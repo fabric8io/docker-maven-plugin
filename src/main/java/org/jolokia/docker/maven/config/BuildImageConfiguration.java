@@ -30,6 +30,11 @@ public class BuildImageConfiguration {
      * @paramter
      */
     private List<String> volumes;
+
+    /**
+     * @paramter
+     */
+    private List<String> tags;
     
     /**
      * @parameter
@@ -67,7 +72,11 @@ public class BuildImageConfiguration {
     public List<String> getVolumes() {
         return (volumes != null) ? volumes : Collections.<String>emptyList();
     }
-    
+
+    public List<String> getTags() {
+        return (tags != null) ? tags : Collections.<String>emptyList();
+    }
+
     public Map<String, String> getEnv() {
         return env;
     }
@@ -101,6 +110,11 @@ public class BuildImageConfiguration {
         
         public Builder volumes(List<String> volumes) {
             config.volumes = volumes;
+            return this;
+        }
+        
+        public Builder tags(List<String> tags) {
+            config.tags = tags;
             return this;
         }
 

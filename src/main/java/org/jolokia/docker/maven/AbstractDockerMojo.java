@@ -460,7 +460,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
                 if (registry != null && !imageName.hasRegistry()) {
                     // If coming from a registry which was not contained in the original name, add a tag from the
                     // short name with no-registry to the full name with the registry.
-                    docker.tag(imageName.getFullNameWithTag(registry),name);
+                    docker.tag(imageName.getFullNameWithTag(registry), name, false);
                 }
             }
             else {

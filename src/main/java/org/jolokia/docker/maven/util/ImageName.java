@@ -144,4 +144,8 @@ public class ImageName {
     public String getFullNameWithTag(String optionalRegistry) {
         return getFullName(optionalRegistry) + ":" + (tag != null ? tag : "latest");
     }
+
+    public String getFullNameWithCustomTag(String tag) {
+        return getFullName() + ":" + tag;
+    }
 }

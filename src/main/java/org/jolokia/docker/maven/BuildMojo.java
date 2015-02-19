@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven;
 
 import java.io.File;
+import java.util.List;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
@@ -56,14 +57,15 @@ public class BuildMojo extends AbstractDockerMojo {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
-                buildImage(imageConfig, dockerAccess);
+                String imageName = getImageName(imageConfig.getName());
+                buildImage(imageName, imageConfig, dockerAccess);
+                tagImage(imageName, imageConfig, dockerAccess);
             }
         }
     }
-        
-    private void buildImage(ImageConfiguration imageConfig, DockerAccess dockerAccess)
+
+    private void buildImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
-        String imageName = getImageName(imageConfig.getName());
         info("Creating image " + imageConfig.getDescription());
 
         String fromImage = imageConfig.getBuildConfiguration().getFrom();
@@ -77,8 +79,20 @@ public class BuildMojo extends AbstractDockerMojo {
         File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
-        debug("Build successful!");
+        debug("Creating image successful!");
     }
 
+    private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
+            throws DockerAccessException, MojoExecutionException {
+        info("Tagging image " + imageConfig.getDescription());
+
+        for (String tag : imageConfig.getBuildConfiguration().getTags()) {
+            if (tag != null) {
+                dockerAccess.tag(imageName, new ImageName(imageName).getFullNameWithCustomTag(tag), true);
+            }
+        }
+
+        debug("Tagging image successful!");
+    }
 
 }

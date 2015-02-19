@@ -1,9 +1,11 @@
 package org.jolokia.docker.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.jolokia.docker.maven.access.AuthConfig;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.util.ImageName;
 
 /**
  * Goal for pushing a data-docker container
@@ -21,7 +23,16 @@ public class PushMojo extends AbstractDockerMojo {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = getImageName(imageConfig.getName());
             if (buildConfig != null) {
-                docker.pushImage(name, prepareAuthConfig(name), getRegistry(imageConfig));
+                AuthConfig authConfig = prepareAuthConfig(name);
+                String registry = getRegistry(imageConfig);
+
+                docker.pushImage(name, authConfig, registry);
+
+                for (String tag : imageConfig.getBuildConfiguration().getTags()) {
+                    if (tag != null) {
+                        docker.pushImage(new ImageName(name).getFullNameWithCustomTag(tag), authConfig, registry);
+                    }
+                }
             }
         }
     }
