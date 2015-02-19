@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.11.2**
+  - fix NPE when filtering enabled during assembly creation (#82)
+
 * **0.11.1**
   - Add support for binding UDP ports (#83)
   - "Entrypoint" supports now arguments (#84)
