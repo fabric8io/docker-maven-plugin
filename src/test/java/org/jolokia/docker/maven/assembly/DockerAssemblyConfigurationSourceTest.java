@@ -57,7 +57,7 @@ public class DockerAssemblyConfigurationSourceTest {
         String[] descriptorRefs = source.getDescriptorReferences();
 
         assertEquals(1, descriptors.length);
-        assertEquals(EnvUtil.prepareAbsolutePath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
+        assertEquals(EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
 
         assertEquals(1, descriptorRefs.length);
         assertEquals("project", descriptorRefs[0]);

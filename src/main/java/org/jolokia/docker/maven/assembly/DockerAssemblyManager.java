@@ -71,7 +71,7 @@ public class DockerAssemblyManager {
     }
 
     private File validateDockerDir(MojoParameters params, String dockerFileDir) throws MojoExecutionException {
-        File dockerDir = EnvUtil.prepareAbsolutePath(params, dockerFileDir);
+        File dockerDir = EnvUtil.prepareAbsoluteSourceDirPath(params, dockerFileDir);
         if (! new File(dockerDir,"Dockerfile").exists()) {
             throw new MojoExecutionException("Specified dockerFileDir " + dockerFileDir +
                                              " doesn't contain a 'Dockerfile'");

@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.11.2**
+  - Use correct output dir during multi-project builds (#97)
+
 * **0.11.1**
   - Add support for binding UDP ports (#83)
   - "Entrypoint" supports now arguments (#84)
