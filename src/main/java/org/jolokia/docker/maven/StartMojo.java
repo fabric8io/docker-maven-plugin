@@ -70,7 +70,7 @@ public class StartMojo extends AbstractDockerMojo {
             }
             registerContainer(containerId, imageConfig);
 
-            info("Created and started container " + toContainerAndImageDescription(containerId, imageConfig.getDescription()));
+            ansiLogger.info("Created and started container " + toContainerAndImageDescription(containerId, imageConfig.getDescription()));
 
             // Remember id for later stopping the container
             registerShutdownAction(new ShutdownAction(imageConfig, containerId));
@@ -152,7 +152,7 @@ public class StartMojo extends AbstractDockerMojo {
             return StartOrderResolver.resolve(convertToResolvables(getImages()));
         }
         catch (MojoExecutionException e) {
-            error(e.getMessage());
+            ansiLogger.error(e.getMessage());
             throw new MojoExecutionException("No container start order could be found", e);
         }
     }
@@ -222,7 +222,7 @@ public class StartMojo extends AbstractDockerMojo {
                 logOut.add("on log out '" + wait.getLog() + "'");
             }
             long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
-            info("Waited " + StringUtils.join(logOut.toArray(), " and ") + waited + " ms");
+            ansiLogger.info("Waited " + StringUtils.join(logOut.toArray(), " and ") + waited + " ms");
         }
     }
 
@@ -248,7 +248,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                         @Override
                         public void error(String error) {
-                            StartMojo.this.error(error);
+                            ansiLogger.error(error);
                         }
                     });
                     first = false;
