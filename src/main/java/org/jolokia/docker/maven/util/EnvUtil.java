@@ -28,6 +28,16 @@ public class EnvUtil {
         return connect.replaceFirst("^tcp:", protocol);
     }
     
+    public static String getCertPath(String certPath) {
+        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
+        if (path == null) {
+            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
+            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
+                return dockerHome.getAbsolutePath();
+            }
+        }
+        return path;
+    }
 
     /**
      * Write out a property file
@@ -38,20 +48,10 @@ public class EnvUtil {
      */
     public static void writePortProperties(Properties props,String portPropertyFile) throws MojoExecutionException {
         File propFile = new File(portPropertyFile);
-        OutputStream os = null;
-        try {
-            os = new FileOutputStream(propFile);
+        try (OutputStream os = new FileOutputStream(propFile)) {
             props.store(os,"Docker ports");
         } catch (IOException e) {
             throw new MojoExecutionException("Cannot write properties to " + portPropertyFile + ": " + e,e);
-        } finally {
-            if (os != null) {
-                try {
-                    os.close();
-                } catch (IOException e) {
-                    // best try ...
-                }
-            }
         }
     }
 
@@ -79,9 +79,8 @@ public class EnvUtil {
             }
 
             return ret;
-        } else {
-            return Collections.emptyList();
         }
+        return Collections.emptyList();
     }
 
     public static String[] splitWOnSpaceWithEscape(String toSplit) {
@@ -143,7 +142,7 @@ public class EnvUtil {
                 }
             }
         }
-        List<String> ret = new ArrayList<String>(orderedMap.values());
+        List<String> ret = new ArrayList<>(orderedMap.values());
         ret.addAll(rest);
         return ret.size() > 0 ? ret : null;
     }
