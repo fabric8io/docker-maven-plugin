@@ -40,6 +40,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
 
+    // don't forget to change 'apiVersion' default-value as well
+    public static final String API_VERSION = "v1.15";
+    
     // Current maven project
     /** @parameter default-value="${project}" */
     protected MavenProject project;
@@ -55,6 +58,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.autoPull" default-value = "true" */
     protected boolean autoPull;
 
+    // don't forget to change 'API_VERSION'
     /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
     private String apiVersion;
     
@@ -118,14 +122,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         if (!skip) {
             DockerAccess access;
             try {
-                access = new DockerAccessWithHttpClient(apiVersion, extractUrl(), getCertPath(), ansiLogger);
+                access = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost), getCertPath(), ansiLogger);
                 access.start();
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot create docker access object ",e);
             }
             try {
                 executeInternal(access);
-            } catch (DockerAccessException exp) {
+            } catch (DockerAccessException exp) {  
                 throw new MojoExecutionException(AnsiLogger.colorError(exp.getMessage()), exp);
             } finally {
                 access.shutdown();
@@ -142,16 +146,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             }
         }
         return path;
-    }
-
-    // Check both, url and env DOCKER_HOST (first takes precedence)
-    private String extractUrl() {
-        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
-        if (connect == null) {
-            throw new IllegalArgumentException("No url given and no DOCKER_HOST environment variable set");
-        }
-        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
-        return connect.replaceFirst("^tcp:", protocol);
     }
 
     /**
