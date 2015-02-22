@@ -20,4 +20,8 @@ public class DockerAccessException extends Exception {
     public DockerAccessException(String message) {
         super(message);
     }
+    
+    public DockerAccessException(String format, Object...args) {
+        super(String.format(format, args));
+    }
 }
