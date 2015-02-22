@@ -15,7 +15,10 @@ package org.jolokia.docker.maven.access.log;/*
  * limitations under the License.
  */
 
-import java.io.*;
+import static org.jolokia.docker.maven.access.util.RequestUtil.newGet;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,10 +27,8 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.access.UrlBuilder;
 import org.jolokia.docker.maven.util.Timestamp;
-
-import static org.jolokia.docker.maven.access.util.RequestUtil.encode;
-import static org.jolokia.docker.maven.access.util.RequestUtil.newGet;
 
 /**
  * Extractor for parsing the response of a log request
@@ -40,7 +41,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
     // Patter for matching log entries
     private static final Pattern LOG_LINE = Pattern.compile("^\\[?([^\\s\\]]*)]?\\s+(.*)\\s*$");
     private final HttpClient client;
-    private final String baseUrl;
+
     private final String containerId;
 
     // callback called for each line extracted
@@ -51,18 +52,23 @@ public class LogRequestor extends Thread implements LogGetHandle {
     // Remember for asynchronous handling
     private HttpUriRequest request;
 
+    private final UrlBuilder urlBuilder;
+    
     /**
      * Create a helper object for requesting log entries synchronously ({@link #fetchLogs()}) or asynchronously ({@link #start()}.
      *
      * @param client HTTP client to use for requesting the docker host
-     * @param baseUrl base URL of the docker Host
+     * @param urlBuilder builder that creates docker urls
      * @param containerId container for which to fetch the host
      * @param callback callback to call for each line received
      */
-    public LogRequestor(HttpClient client, String baseUrl, String containerId, LogCallback callback) {
+    public LogRequestor(HttpClient client, UrlBuilder urlBuilder, String containerId, LogCallback callback) {
         this.client = client;
-        this.baseUrl = baseUrl;
         this.containerId = containerId;
+        
+        this.urlBuilder = urlBuilder;
+        
+        
         this.callback = callback;
         this.exception = null;
         this.setDaemon(true);
@@ -143,8 +149,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
 
     private HttpUriRequest getLogRequest(boolean follow) {
-        return newGet(baseUrl + "/containers/" + encode(containerId) + "/logs?stdout=1&stderr=1&timestamps=1" +
-                      "&follow=" + (follow ? "1" : "0"));
+        return newGet(urlBuilder.containerLogs(containerId, follow));
     }
 
     @Override

@@ -2,9 +2,12 @@ package org.jolokia.docker.maven.access.http;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.net.ssl.SSLContext;
 
@@ -47,15 +50,26 @@ public class ApacheHttpDelegate {
     public Result get(String url, int statusCode, int... additional) throws IOException, HttpRequestException {
         return parseResponse(httpClient.execute(newGet(url)), statusCode, additional);
     }
-        
-    public Result post(String url, String body, int statusCode, int... additional) throws IOException, HttpRequestException {
+
+    public Result post(String url, Object body, Map<String, String> headers, int statusCode, int... additional) throws IOException,
+        HttpRequestException {
+
+        HttpUriRequest request = newPost(url, body);
+        for (Entry<String, String> entry : headers.entrySet()) {
+            request.addHeader(entry.getKey(), entry.getValue());
+        }
+
+        return parseResponse(httpClient.execute(request), statusCode, additional);
+    }
+
+    public Result post(String url, Object body, int statusCode, int... additional) throws IOException, HttpRequestException {
         return parseResponse(httpClient.execute(newPost(url, body)), statusCode, additional);
     }
     
     public CloseableHttpClient getHttpClient() {
         return httpClient;
     }
-        
+
     private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
         req.addHeader(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
         req.addHeader("Content-Type", "application/json");
@@ -79,7 +93,7 @@ public class ApacheHttpDelegate {
         }
         return new PoolingHttpClientConnectionManager();
     }
-    
+
     private Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {
         try
         {
@@ -110,46 +124,65 @@ public class ApacheHttpDelegate {
 
     private HttpUriRequest newPost(String url, Object body) {
         HttpPost post = new HttpPost(url);
-        
+
         if (body != null) {
             if (body instanceof File) {
                 post.setEntity(new FileEntity((File) body));
-            } else {
+            }
+            else {
                 post.setEntity(new StringEntity((String) body, Charset.defaultCharset()));
             }
         }
         return addDefaultHeaders(post);
     }
 
-    private Result parseResponse(HttpResponse response, int successCode, int... additional) throws IOException, HttpRequestException {
+    private Result parseResponse(HttpResponse response, int successCode, int... additional) throws HttpRequestException {
         HttpEntity entity = response.getEntity();
-        String message = (entity == null) ? null : EntityUtils.toString(response.getEntity()).trim();
 
         StatusLine statusLine = response.getStatusLine();
         int statusCode = statusLine.getStatusCode();
+        String reason = statusLine.getReasonPhrase().trim();
 
         if (statusCode == successCode) {
-            return new Result(statusCode, message);
+            return new Result(statusCode, entity);
         }
 
         for (int code : additional) {
             if (statusCode == code) {
-                return new Result(code, message);
+                return new Result(code, entity);
             }
         }
 
-        throw new HttpRequestException(String.format("%s (%s: %d)", message, statusLine.getReasonPhrase().trim(), statusCode));
+        Result result = new Result(statusCode, entity);
+        throw new HttpRequestException(String.format("%s (%s: %d)", result.getMessage(), reason, statusCode));
     }
 
     public static class Result
     {
-        public final int code;
-        public final String response;
-        
-        public Result(int code, String response)
+        private final int code;
+        private final HttpEntity entity;
+
+        public Result(int code, HttpEntity entity)
         {
             this.code = code;
-            this.response = response;
+            this.entity = entity;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public InputStream getInputStream() throws IOException {
+            return entity.getContent();
+        }
+
+        public String getMessage() {
+            try {
+                return (entity == null) ? null : EntityUtils.toString(entity).trim();
+            }
+            catch (IOException e) {
+                return "Unknown error - failed to read response content";
+            }
         }
     }
 }
