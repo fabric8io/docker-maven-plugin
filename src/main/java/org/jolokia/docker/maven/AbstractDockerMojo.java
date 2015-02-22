@@ -130,7 +130,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             try {
                 executeInternal(access);
             } catch (DockerAccessException exp) {  
-                throw new MojoExecutionException(AnsiLogger.colorError(exp.getMessage()), exp);
+                throw new MojoExecutionException(AnsiLogger.colorError(exp.getMessage(), false), exp);
             } finally {
                 access.shutdown();
             }

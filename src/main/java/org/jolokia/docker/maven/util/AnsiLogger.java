@@ -38,16 +38,16 @@ public class AnsiLogger {
         initializeColor(useColor);
     }
 
-    public static String colorInfo(String message) {
-        return ansi().fg(COLOR_INFO).a(LOG_PREFIX).a(message).reset().toString();
+    public static String colorInfo(String message, boolean addPrefix) {
+        return addColor(message, COLOR_INFO, addPrefix);
     }
 
-    public static String colorWarning(String message) {
-        return ansi().fg(COLOR_WARNING).a(LOG_PREFIX).a(message).reset().toString();
+    public static String colorWarning(String message, boolean addPrefix) {
+        return addColor(message, COLOR_WARNING, addPrefix);
     }
 
-    public static String colorError(String message) {
-        return ansi().fg(COLOR_ERROR).a(LOG_PREFIX).a(message).reset().toString();
+    public static String colorError(String message, boolean addPrefix) {
+        return addColor(message, COLOR_ERROR, addPrefix);
     }
 
     /**
@@ -59,13 +59,17 @@ public class AnsiLogger {
         log.debug(LOG_PREFIX + message);
     }
 
+    public void debug(String format, Object... args) {
+        log.debug(LOG_PREFIX + String.format(format, args));
+    }
+    
     /**
      * Informational message
      *
      * @param message info
      */
     public void info(String message) {
-        log.info(colorInfo(message));
+        log.info(colorInfo(message, true));
     }
 
     /**
@@ -74,7 +78,7 @@ public class AnsiLogger {
      * @param message warning
      */
     public void warn(String message) {
-        log.warn(colorWarning(message));
+        log.warn(colorWarning(message, true));
     }
 
     /**
@@ -83,7 +87,7 @@ public class AnsiLogger {
      * @param message error
      */
     public void error(String message) {
-        log.error(colorError(message));
+        log.error(colorError(message, true));
     }
 
     /**
@@ -134,19 +138,22 @@ public class AnsiLogger {
             total = 0;
         }
     }
-
+    
     private void flush() {
         System.out.flush();
     }
     
     private void initializeColor(boolean useColor) {
-        if (System.console() != null) {
-            if (useColor) {
-                AnsiConsole.systemInstall();
-                Ansi.setEnabled(true);
-            } else {
-                Ansi.setEnabled(false);
-            }
+        if (System.console() == null || log.isDebugEnabled()) {
+            useColor = false;
+        }
+        
+        if (useColor) {
+            AnsiConsole.systemInstall();
+            Ansi.setEnabled(true);
+        }
+        else {
+            Ansi.setEnabled(false);
         }
     }
     
@@ -156,5 +163,13 @@ public class AnsiLogger {
 
     private void print(String txt) {
         System.out.print(txt);
+    }
+    
+    private static String addColor(String message, Ansi.Color color, boolean addPrefix) { 
+        Ansi ansi = ansi().fg(color);
+        if (addPrefix) {
+            ansi.a(LOG_PREFIX);
+        }
+        return ansi.a(message).reset().toString();
     }
 }
