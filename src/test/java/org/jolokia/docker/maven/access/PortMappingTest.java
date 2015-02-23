@@ -81,6 +81,17 @@ public class PortMappingTest {
                                 "http://localhost:50000/", "http://localhost:${jolokia.port}/");
     }
 
+    @Test
+    public void testValidHostname() {
+        PortMapping mapping = createPortMapping("localhost:80:80");
+        assertTrue(mapping.getBindToHostMap().values().contains("127.0.0.1"));
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidHostname() {
+        createPortMapping("does-not-exist.pvt:80:80");
+    }
+    
     @Test(expected = IllegalArgumentException.class)
     public void invalidMapping() throws MojoExecutionException {
         createPortMapping("bla");
