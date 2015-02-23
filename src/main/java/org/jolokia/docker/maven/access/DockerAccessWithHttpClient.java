@@ -148,7 +148,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     /** {@inheritDoc} */
     @Override
     public List<String> getContainersForImage(String image) throws DockerAccessException {
-        return getContainerIds(image,false);
+        return getContainerIds(image, false);
     }
 
     @Override
@@ -250,7 +250,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         String targetImage = name.getFullNameWithTag(registry);
 
         if (!name.hasRegistry() && registry != null && !hasImage(targetImage)) {
-            tag(name.getFullNameWithTag(null), targetImage);
+            tag(name.getFullNameWithTag(null), targetImage, false);
             return targetImage;
         } else {
             return null;
@@ -259,12 +259,15 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public void tag(String sourceImage, String targetImage) throws DockerAccessException {
+    public void tag(String sourceImage, String targetImage, boolean force) throws DockerAccessException {
         ImageName source = new ImageName(sourceImage);
         ImageName target = new ImageName(targetImage);
         String url = baseUrl + "/images/" + encode(source.getFullNameWithTag(null)) + "/tag";
         url = addRepositoryParam(url, target.getFullName(null));
         url = addTagParam(url,  target.getTag());
+        if (force) {
+            url = addQueryParam(url, "force", "1");
+        }
         HttpUriRequest req = newPost(url, null);
         HttpResponse resp = request(req);
         checkReturnCode("Adding tag " + targetImage + " to " + sourceImage, resp, 201);
@@ -447,7 +450,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                     log.debug("|||| " + h.getName() + "=" + h.getValue());
                 }
             }
-            if (req.getMethod() == "POST") {
+            if ("POST".equals(req.getMethod())) {
                 HttpPost post = (HttpPost) req;
                 log.debug("---- " + (post.getEntity() != null ? EntityUtils.toString(post.getEntity()) : "[empty]"));
             }

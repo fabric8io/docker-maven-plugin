@@ -3,6 +3,7 @@
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)
   - Allow hostnames to be used in port bindings
+  - Add support for tagging at build and push time (#104)
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)
