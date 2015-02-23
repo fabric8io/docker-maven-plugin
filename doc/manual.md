@@ -476,7 +476,7 @@ A `port` stanza may take one of two forms:
   similar to `mvn -Dhost.port=10080 docker:start`
 
 Both forms of the `port` stanza also support binding to a specific ip 
-address on docker host.
+address on the docker host.
 
 ```xml
 <ports>
@@ -485,14 +485,15 @@ address on docker host.
 </ports>
 ```
 
-As a convienence, a hostname pointing to the docker host may also
+As a convenience, a hostname pointing to the docker host may also
 be specified. The container will fail to start if the hostname resolves
-to an ip address of something other then the docker host.
+to an ip address of something other then the docker host itself.
 
 ```
 <ports>
-  <port>example.com:80:80</port>
+  <port>docker.example.com:80:80</port>
 </ports>
+```
 
 Another useful configuration option is `portPropertyFile` with which a
 file can be specified to which the real port mapping is written after

@@ -177,21 +177,25 @@ public class PortMapping {
 		        dynamicPortVariables.put(containerPortSpec, varName);
 		    }
 		}
-		
-		if (bindToHost != null) {
-			// the container port can never be null, so use that as the key
-		    try {
-		        String ipAddress = InetAddress.getByName(bindToHost).getHostAddress();
-		        bindToHostMap.put(containerPortSpec, ipAddress);
-		    } catch (UnknownHostException e) {
-		        throw new IllegalArgumentException("bind host [" + bindToHost + "] cannot be resolved");
-		    }
-		}
-		
-		containerPortsMap.put(containerPortSpec, hostPort);
+
+        updateBindMap(bindToHost, containerPortSpec);
+
+        containerPortsMap.put(containerPortSpec, hostPort);
 	}
 
-	Map<String, String> getBindToHostMap() {
+    private void updateBindMap(String bindToHost, String containerPortSpec) {
+        if (bindToHost != null) {
+            // the container port can never be null, so use that as the key
+            try {
+                String ipAddress = InetAddress.getByName(bindToHost).getHostAddress();
+                bindToHostMap.put(containerPortSpec, ipAddress);
+            } catch (UnknownHostException e) {
+                throw new IllegalArgumentException("Host '" + bindToHost + "' to bind to cannot be resolved");
+            }
+        }
+    }
+
+    Map<String, String> getBindToHostMap() {
     	return bindToHostMap;
     }
 
