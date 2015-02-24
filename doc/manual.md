@@ -123,8 +123,12 @@ parentheses.
   images. See [Registry handling](#registry-handling) for details. 
 * **autoPull** (`docker.autoPull`)
   By default external images (base image for building or images to
-  start) are downloaded automatically. With this options this can be
-  switched off by setting this value to `false`.
+  start) are downloaded automatically if they don't exist locally.
+  With this options this can be switched off by setting this value to `off`.
+  Checking for a newer version of an image and downloading it if it
+  exists can be forced by setting this value to `always`. This will force an image 
+  to be always pulled. This is true for any base image during build and for any image 
+  during run which has no `<build>` section. Valid values are `on|off|always`.
 * **authConfig** holds the authentication information when pulling from
   or pushing to Docker registry. There is a dedicated
   [section](#authentication) for how doing security.

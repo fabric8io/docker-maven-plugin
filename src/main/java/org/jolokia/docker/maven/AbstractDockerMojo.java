@@ -55,8 +55,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @component */
     protected ImageConfigResolver imageConfigResolver;
 
-    /** @parameter property = "docker.autoPull" default-value = "true" */
-    protected boolean autoPull;
+    /** @parameter property = "docker.autoPull" default-value = "on" */
+    protected String autoPull;
 
     /**
      * Whether to keep the containers afters stopping (start/watch/stop)
@@ -351,26 +351,49 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @param docker access object to lookup an image (if autoPull is enabled)
      * @param name image name
      * @param registry optional registry which is used if the image itself doesn't have a registry.
+     * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
      *
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry) throws DockerAccessException, MojoExecutionException {
-        if (!docker.hasImage(name)) {
-            if (autoPull) {
-                docker.pullImage(withLatestIfNoTag(name), prepareAuthConfig(name,registry), registry);
-                ImageName imageName = new ImageName(name);
-                if (registry != null && !imageName.hasRegistry()) {
-                    // If coming from a registry which was not contained in the original name, add a tag from the
-                    // short name with no-registry to the full name with the registry.
-                    docker.tag(imageName.getFullName(registry), name, false);
-                }
+    protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry, boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
+        AutoPullMode mode = AutoPullMode.fromString(autoPull);
+        // The logic here is like this (see also #96):
+        // If the image is not available and mode is either ON or ALWAYS --> pull
+        // If mode == ALWAYS and no build config is available (so its a pulled-image anyway) --> pull
+        // otherwise: don't pull
+        Boolean hasImage = null;
+        if ((mode.doPullIfNotPresent() && !(hasImage = docker.hasImage(name))) ||
+            (autoPullAlwaysAllowed && mode == AutoPullMode.ALWAYS)) {
+            docker.pullImage(withLatestIfNoTag(name), prepareAuthConfig(name, registry), registry);
+            ImageName imageName = new ImageName(name);
+            if (registry != null && !imageName.hasRegistry()) {
+                // If coming from a registry which was not contained in the original name, add a tag from the
+                // short name with no-registry to the full name with the registry.
+                docker.tag(imageName.getFullName(registry), name, false);
             }
-            else {
+        } else {
+            if (hasImage == null) {
+                // Not already fetched, we fetch it now
+                hasImage = docker.hasImage(name);
+            }
+            if (!hasImage) {
                 throw new MojoExecutionException(this, "No image '" + name + "' found", "Please enable 'autoPull' or pull image '" + name
-                        + "' yourself (docker pull " + name + ")");
+                                                                                        + "' yourself (docker pull " + name + ")");
             }
         }
+    }
+
+    private boolean isAutoPullEnabled() {
+        // don't break current configurations by also accepting true|false as valid values
+        if ("off".equalsIgnoreCase(autoPull) || "false".equalsIgnoreCase(autoPull)) {
+            return false;
+        }
+        if ("on".equalsIgnoreCase(autoPull) || "true".equalsIgnoreCase(autoPull) || "always".equalsIgnoreCase(autoPull)) {
+            return true;
+        }
+        log.warn("Unknown value set for docker.autoPull (on|off|always) - treating as default = 'on'");
+        return true;
     }
 
     // Fetch only latest if no tag is given

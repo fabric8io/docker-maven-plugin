@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.13.1**
+  - Allow autoPull to be forced on docker:build and docker:start (#96)
+
 * **0.13.0**
   - Add `docker:watch` (#187) 
   - Allow `extraHosts` IPs to be resolved at runtime (#196)

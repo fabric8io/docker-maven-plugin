@@ -93,7 +93,7 @@ abstract public class AbstractBuildSupporMojo extends AbstractDockerMojo {
             }
         }
         if (fromImage != null) {
-            checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry());
+            checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry(),true);
         }
     }
 

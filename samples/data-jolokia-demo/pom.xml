@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.13.0</version>
+  <version>0.13.1-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -79,6 +79,7 @@
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
+          <autoPull>always</autoPull>
           <images>
             <!-- Docker Image to use -->
             <image>
