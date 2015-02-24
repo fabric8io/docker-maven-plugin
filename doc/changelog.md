@@ -3,6 +3,7 @@
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)
   - Allow hostnames to be used in port bindings
+  - Allow autoPull to be forced on docker:build and docker:start (#96)
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)

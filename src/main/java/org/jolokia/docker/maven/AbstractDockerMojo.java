@@ -59,8 +59,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** @component */
     protected ImageConfigResolver imageConfigResolver;
 
-    /** @parameter property = "docker.autoPull" default-value = "true" */
-    protected boolean autoPull;
+    /** @parameter property = "docker.autoPull" default-value = "on" */
+    protected String autoPull;
 
     /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
     private String apiVersion;
@@ -453,21 +453,34 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      * @throws MojoExecutionException
      */
     protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry) throws DockerAccessException, MojoExecutionException {
-        if (!docker.hasImage(name)) {
-            if (autoPull) {
-                docker.pullImage(name, prepareAuthConfig(name), registry);
-                ImageName imageName = new ImageName(name);
-                if (registry != null && !imageName.hasRegistry()) {
-                    // If coming from a registry which was not contained in the original name, add a tag from the
-                    // short name with no-registry to the full name with the registry.
-                    docker.tag(imageName.getFullNameWithTag(registry),name);
-                }
+        if ((isAutoPullEnabled() && !docker.hasImage(name)) || isAutoPullForced()) {
+            docker.pullImage(name, prepareAuthConfig(name), registry);
+            ImageName imageName = new ImageName(name);
+            if (registry != null && !imageName.hasRegistry()) {
+                // If coming from a registry which was not contained in the original name, add a tag from the
+                // short name with no-registry to the full name with the registry.
+                docker.tag(imageName.getFullNameWithTag(registry),name);
             }
-            else {
-                throw new MojoExecutionException(this, "No image '" + name + "' found", "Please enable 'autoPull' or pull image '" + name
-                        + "' yourself (docker pull " + name + ")");
-            }
+        }
+        else {
+            throw new MojoExecutionException(this, "No image '" + name + "' found", "Please enable 'autoPull' or pull image '" + name
+                    + "' yourself (docker pull " + name + ")");
         }
     }
 
+    private boolean isAutoPullEnabled() {
+        // don't break current configurations by also accepting true|false as valid values
+        if ("off".equalsIgnoreCase(autoPull) || "false".equalsIgnoreCase(autoPull)) {
+            return false;
+        }
+        if ("on".equalsIgnoreCase(autoPull) || "true".equalsIgnoreCase(autoPull) || "always".equalsIgnoreCase(autoPull)) {
+            return true;
+        }
+        warn("Unknow value set for docker.autoPull (on|off|always) - treating as default = 'on'");
+        return true;
+    }
+
+    private boolean isAutoPullForced() {
+        return "always".equalsIgnoreCase(autoPull);
+    }
 }
