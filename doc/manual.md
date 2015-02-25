@@ -343,6 +343,23 @@ Another container can now connect to the volume an 'mount' the
 into `/maven` and copy over everything to `/opt/tomcat/webapps` before
 starting Tomcat.
 
+If you are using the `artifact` or `artifact-with-dependencies` descriptor, it is
+possible to change the name of the final build artifact with the following:
+
+```xml
+<build>
+  <finalName>your-desired-final-name</build>
+  ...
+</build>
+```
+
+Please note, based upon the following documentation listed [here](http://maven.apache.org/pom.html#BaseBuild_Element),
+there is no guarentee the plugin creating your artifact will honor it in which case you will need to use a custom
+descriptor like above to achieve the desired naming.
+
+At the time of this writing, the `jar` and `war` plugins properly honor the usage of `finalName`.
+
+
 #### `docker:start`
 
 Creates and starts docker containers. This goals evaluates

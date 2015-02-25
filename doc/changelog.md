@@ -3,6 +3,8 @@
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)
   - Allow hostnames to be used in port bindings
+  - Allow `${project.build.finalName}` to be overridden when using a pre-packged assembly descriptor
+    for artifacts (#111)
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)
