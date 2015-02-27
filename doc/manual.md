@@ -679,7 +679,7 @@ parameters which are typically used as system properties:
 
 Example: 
 
-    $ mvn -Ddocker.keepRuning clean install
+    $ mvn -Ddocker.keepRunning clean install
 
 #### `docker:push`
 
