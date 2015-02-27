@@ -5,6 +5,7 @@
   - Allow hostnames to be used in port bindings (#101)
   - Add support for tagging at build and push time (#104)
   - Use correct output dir during multi-project builds (#97)
+  - Allow `assembly` configuration to be optional (#66)
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)
