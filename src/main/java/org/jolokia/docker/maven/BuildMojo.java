@@ -69,7 +69,7 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private void buildImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
-        info("Creating image " + imageConfig.getDescription());
+        ansiLogger.info("Creating image " + imageConfig.getDescription());
 
         String fromImage = imageConfig.getBuildConfiguration().getFrom();
         if (fromImage == null) {
@@ -82,14 +82,14 @@ public class BuildMojo extends AbstractDockerMojo {
         File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName,params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
-        debug("Creating image successful!");
+        ansiLogger.debug("Build successful!");
     }
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (tags.size() > 0) {
-            info("Tagging image " + imageConfig.getDescription() + ": " + EnvUtil.stringJoin(tags,","));
+            ansiLogger.info("Tagging image " + imageConfig.getDescription() + ": " + EnvUtil.stringJoin(tags,","));
 
             for (String tag : tags) {
                 if (tag != null) {
@@ -97,7 +97,7 @@ public class BuildMojo extends AbstractDockerMojo {
                 }
             }
 
-            debug("Tagging image successful!");
+            ansiLogger.debug("Tagging image successful!");
         }
     }
 

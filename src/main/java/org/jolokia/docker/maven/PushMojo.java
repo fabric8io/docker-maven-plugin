@@ -18,6 +18,7 @@ import org.jolokia.docker.maven.util.ImageName;
 public class PushMojo extends AbstractDockerMojo {
 
     /** {@inheritDoc} */
+    @Override
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();

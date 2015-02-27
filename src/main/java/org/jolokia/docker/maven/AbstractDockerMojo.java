@@ -11,8 +11,6 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiConsole;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
@@ -20,8 +18,6 @@ import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.util.*;
 
-import static org.fusesource.jansi.Ansi.Color.*;
-import static org.fusesource.jansi.Ansi.ansi;
 
 /**
  * Base class for this plugin.
@@ -29,10 +25,7 @@ import static org.fusesource.jansi.Ansi.ansi;
  * @author roland
  * @since 26.03.14
  */
-public abstract class AbstractDockerMojo extends AbstractMojo implements LogHandler,Contextualizable {
-
-    // prefix used for console output
-    private static final String LOG_PREFIX = "DOCKER> ";
+public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable {
 
     // Key in plugin context specifying shutdown actions
     public static final String CONTEXT_KEY_SHUTDOWN_ACTIONS = "CONTEXT_KEY_DOCKER_SHUTDOWN_ACTIONS";
@@ -47,6 +40,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
 
+    // don't forget to change 'apiVersion' default-value as well
+    public static final String API_VERSION = "v1.15";
+    
     // Current maven project
     /** @parameter default-value="${project}" */
     protected MavenProject project;
@@ -62,6 +58,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     /** @parameter property = "docker.autoPull" default-value = "true" */
     protected boolean autoPull;
 
+    // don't forget to change 'API_VERSION'
     /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
     private String apiVersion;
     
@@ -107,16 +104,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      * @required */
     private List<ImageConfiguration> images;
 
-    // ANSI escapes for various colors (or empty strings if no coloring is used)
-    private Ansi.Color
-            COLOR_ERROR = RED,
-            COLOR_INFO = GREEN,
-            COLOR_WARNING = YELLOW,
-            COLOR_PROGRESS = CYAN;
-
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
 
+    protected AnsiLogger ansiLogger;
+    
     /**
      * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
      * which must be implemented by subclass.
@@ -126,19 +118,19 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        this.ansiLogger = new AnsiLogger(getLog(), useColor);
         if (!skip) {
-            colorInit();
             DockerAccess access;
             try {
-                access = new DockerAccessWithHttpClient(apiVersion, extractUrl(), getCertPath(), this);
+                access = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost), getCertPath(), ansiLogger);
                 access.start();
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot create docker access object ",e);
             }
             try {
                 executeInternal(access);
-            } catch (DockerAccessException exp) {
-                throw new MojoExecutionException(ansi().fg(COLOR_ERROR).a(exp.getMessage()).reset().toString(), exp);
+            } catch (DockerAccessException exp) {  
+                throw new MojoExecutionException(AnsiLogger.colorError(exp.getMessage(), false), exp);
             } finally {
                 access.shutdown();
             }
@@ -154,16 +146,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
             }
         }
         return path;
-    }
-
-    // Check both, url and env DOCKER_HOST (first takes precedence)
-    private String extractUrl() {
-        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
-        if (connect == null) {
-            throw new IllegalArgumentException("No url given and no DOCKER_HOST environment variable set");
-        }
-        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
-        return connect.replaceFirst("^tcp:", protocol);
     }
 
     /**
@@ -191,7 +173,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      * @return registered shutdown actions
      */
     protected List<ShutdownAction> getShutdownActionsInExecutionOrder() {
-        List<ShutdownAction> ret = new ArrayList<ShutdownAction>(getShutdownActions());
+        List<ShutdownAction> ret = new ArrayList<>(getShutdownActions());
         Collections.reverse(ret);
         return ret;
     }
@@ -210,9 +192,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
             Set<ShutdownAction> actions = Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
             getPluginContext().put(CONTEXT_KEY_SHUTDOWN_ACTIONS, actions);
             return actions;
-        } else {
-            return (Set<ShutdownAction>) obj;
-        }
+        } 
+       
+        return (Set<ShutdownAction>) obj;
     }
 
     /**
@@ -262,9 +244,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
      protected String getImageName(String name) {
         if (name != null) {
             return name;
-        } else {
-            return getDefaultUserName() + "/" + getDefaultRepoName() + ":" + project.getVersion();
-        }
+        } 
+        
+        return getDefaultUserName() + "/" + getDefaultRepoName() + ":" + project.getVersion();
     }
 
     private String getDefaultRepoName() {
@@ -283,89 +265,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements LogHand
     }
 
     // =================================================================================
-
-    // Color init
-    private void colorInit() {
-        if (System.console() == null) {
-            useColor = false;
-        }
-        if (useColor) {
-            AnsiConsole.systemInstall();
-            Ansi.setEnabled(true);
-        } else {
-            Ansi.setEnabled(false);
-        }
-    }
-
-    /** {@inheritDoc} */
-    public void debug(String message) {
-        getLog().debug(LOG_PREFIX + message);
-    }
-    /** {@inheritDoc} */
-    public void info(String info) {
-        getLog().info(ansi().fg(COLOR_INFO).a(LOG_PREFIX).a(info).reset().toString());
-    }
-    /** {@inheritDoc} */
-    public void warn(String warn) {
-        getLog().warn(ansi().fg(COLOR_WARNING).a(LOG_PREFIX).a(warn).reset().toString());
-    }
-    /** {@inheritDoc} */
-    public boolean isDebugEnabled() {
-        return getLog().isDebugEnabled();
-    }
-    /** {@inheritDoc} */
-    public void error(String error) {
-        getLog().error(ansi().fg(COLOR_ERROR).a(error).reset().toString());
-    }
-
-    private int oldProgress = 0;
-    private int total = 0;
-
-    // A progress indicator is always written out to standard out if a tty is enabled.
-
-    /** {@inheritDoc} */
-    public void progressStart(int t) {
-        if (getLog().isInfoEnabled()) {
-            print(ansi().fg(COLOR_PROGRESS) + "       ");
-            oldProgress = 0;
-            total = t;
-        }
-    }
-
-    /** {@inheritDoc} */
-    public void progressUpdate(int current) {
-        if (getLog().isInfoEnabled()) {
-            print("=");
-            int newProgress = (current * 10 + 5) / total;
-            if (newProgress > oldProgress) {
-                print(" " + newProgress + "0% ");
-                oldProgress = newProgress;
-            }
-            flush();
-        }
-    }
-
-
-    /** {@inheritDoc} */
-    public void progressFinished() {
-        if (getLog().isInfoEnabled()) {
-            println(ansi().reset().toString());
-            oldProgress = 0;
-            total = 0;
-        }
-    }
-
-    private void println(String txt) {
-        System.out.println(txt);
-    }
-
-    private void print(String txt) {
-        System.out.print(txt);
-    }
-
-    private void flush() {
-        System.out.flush();
-    }
 
     protected AuthConfig prepareAuthConfig(String image) throws MojoExecutionException {
         return authConfigFactory.createAuthConfig(authConfig, image,settings);

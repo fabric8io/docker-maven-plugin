@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
+import org.jolokia.docker.maven.AbstractDockerMojo;
 
 /**
  * Utility class for various (loosely) environment related tasks.
@@ -16,6 +17,17 @@ import org.codehaus.plexus.util.StringUtils;
 public class EnvUtil {
 
     private EnvUtil() {}
+
+    // Check both, url and env DOCKER_HOST (first takes precedence)
+    public static String extractUrl(String dockerHost) {
+        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
+        if (connect == null) {
+            throw new IllegalArgumentException("No url given and no DOCKER_HOST environment variable set");
+        }
+        String protocol = connect.contains(":" + AbstractDockerMojo.DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        return connect.replaceFirst("^tcp:", protocol);
+    }
+    
 
     /**
      * Write out a property file

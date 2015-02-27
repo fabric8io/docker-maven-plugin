@@ -38,6 +38,7 @@ public class StopMojo extends AbstractDockerMojo {
      */
     private boolean keepRunning;
 
+    @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
 
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
@@ -48,14 +49,14 @@ public class StopMojo extends AbstractDockerMojo {
                 for (ImageConfiguration image : getImages()) {
                     String imageName = image.getName();
                     for (String container : access.getContainersForImage(imageName)) {
-                        new ShutdownAction(image, container).shutdown(access, this, keepContainer);
+                        new ShutdownAction(image, container).shutdown(access, ansiLogger, keepContainer);
                     }
                 }
             } else {
                 // Called from a lifecycle phase ...
                 List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
                 for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
-                    action.shutdown(access, this, keepContainer);
+                    action.shutdown(access, ansiLogger, keepContainer);
                     appliedShutdownActions.add(action);
                 }
                 removeShutdownActions(appliedShutdownActions);

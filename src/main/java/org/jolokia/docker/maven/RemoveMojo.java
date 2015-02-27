@@ -15,7 +15,6 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
@@ -46,13 +45,13 @@ public class RemoveMojo extends AbstractDockerMojo {
     private boolean removeAll;
 
     @Override
-    protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
+    protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException {
         for (ImageConfiguration image : getImages()) {
             String name = image.getName();
             if (removeAll || image.isDataImage()) {
                 if (dockerAccess.hasImage(name)) {
                     if (dockerAccess.removeImage(name,true)) {
-                        info("Removed image " + image.getDescription());
+                        ansiLogger.info("Removed image " + image.getDescription());
                     }
                 }
             }
