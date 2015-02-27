@@ -1,14 +1,11 @@
 package org.jolokia.docker.maven.util;
 
-import static org.fusesource.jansi.Ansi.ansi;
-import static org.fusesource.jansi.Ansi.Color.CYAN;
-import static org.fusesource.jansi.Ansi.Color.GREEN;
-import static org.fusesource.jansi.Ansi.Color.RED;
-import static org.fusesource.jansi.Ansi.Color.YELLOW;
-
 import org.apache.maven.plugin.logging.Log;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+
+import static org.fusesource.jansi.Ansi.Color.*;
+import static org.fusesource.jansi.Ansi.ansi;
 
 /**
  * Simple log handler for printing used during the maven build
@@ -16,7 +13,7 @@ import org.fusesource.jansi.AnsiConsole;
  * @author roland
  * @since 31.03.14
  */
-public class AnsiLogger {
+public class AnsiLogger implements Logger {
 
     // prefix used for console output
     private static final String LOG_PREFIX = "DOCKER> ";
@@ -38,17 +35,6 @@ public class AnsiLogger {
         initializeColor(useColor);
     }
 
-    public static String colorInfo(String message, boolean addPrefix) {
-        return addColor(message, COLOR_INFO, addPrefix);
-    }
-
-    public static String colorWarning(String message, boolean addPrefix) {
-        return addColor(message, COLOR_WARNING, addPrefix);
-    }
-
-    public static String colorError(String message, boolean addPrefix) {
-        return addColor(message, COLOR_ERROR, addPrefix);
-    }
 
     /**
      * Debug message if debugging is enabled.
@@ -69,7 +55,7 @@ public class AnsiLogger {
      * @param message info
      */
     public void info(String message) {
-        log.info(colorInfo(message, true));
+        log.info(colored(message, COLOR_INFO, true));
     }
 
     /**
@@ -78,7 +64,7 @@ public class AnsiLogger {
      * @param message warning
      */
     public void warn(String message) {
-        log.warn(colorWarning(message, true));
+        log.warn(colored(message, COLOR_WARNING, true));
     }
 
     /**
@@ -87,7 +73,12 @@ public class AnsiLogger {
      * @param message error
      */
     public void error(String message) {
-        log.error(colorError(message, true));
+        log.error(colored(message, COLOR_ERROR, true));
+    }
+
+    @Override
+    public String errorMessage(String message) {
+        return colored(message, COLOR_ERROR, false);
     }
 
     /**
@@ -164,8 +155,8 @@ public class AnsiLogger {
     private void print(String txt) {
         System.out.print(txt);
     }
-    
-    private static String addColor(String message, Ansi.Color color, boolean addPrefix) { 
+
+    private static String colored(String message, Ansi.Color color, boolean addPrefix) {
         Ansi ansi = ansi().fg(color);
         if (addPrefix) {
             ansi.a(LOG_PREFIX);

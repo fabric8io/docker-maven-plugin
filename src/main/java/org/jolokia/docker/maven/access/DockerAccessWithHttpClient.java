@@ -22,8 +22,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.jolokia.docker.maven.access.log.*;
-import org.jolokia.docker.maven.util.ImageName;
-import org.jolokia.docker.maven.util.AnsiLogger;
+import org.jolokia.docker.maven.util.*;
 import org.json.*;
 
 import static org.jolokia.docker.maven.access.util.RequestUtil.*;
@@ -45,7 +44,7 @@ import static org.jolokia.docker.maven.access.util.RequestUtil.*;
 public class DockerAccessWithHttpClient implements DockerAccess {
 
     // Logging
-    private final AnsiLogger log;
+    private final Logger log;
     
     // Base Docker URL
     private final String baseUrl;
@@ -59,7 +58,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
      * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, AnsiLogger log) throws DockerAccessException {
+    public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, Logger log) throws DockerAccessException {
         this.baseUrl = stripSlash(baseUrl) + "/" + apiVersion;
         this.log = log;
         this.client = createHttpClient(certPath);

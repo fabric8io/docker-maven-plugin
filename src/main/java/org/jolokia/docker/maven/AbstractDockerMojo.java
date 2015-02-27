@@ -107,7 +107,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
 
-    protected AnsiLogger ansiLogger;
+    protected Logger log;
     
     /**
      * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
@@ -118,11 +118,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.ansiLogger = new AnsiLogger(getLog(), useColor);
+        this.log = new AnsiLogger(getLog(), useColor);
         if (!skip) {
             DockerAccess access;
             try {
-                access = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost), getCertPath(), ansiLogger);
+                access = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost), getCertPath(), log);
                 access.start();
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Cannot create docker access object ",e);
@@ -130,7 +130,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             try {
                 executeInternal(access);
             } catch (DockerAccessException exp) {  
-                throw new MojoExecutionException(AnsiLogger.colorError(exp.getMessage(), false), exp);
+                throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } finally {
                 access.shutdown();
             }

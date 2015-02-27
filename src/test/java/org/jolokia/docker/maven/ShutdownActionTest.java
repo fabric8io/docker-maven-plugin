@@ -5,7 +5,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.util.AnsiLogger;
+import org.jolokia.docker.maven.util.Logger;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -18,7 +18,7 @@ public class ShutdownActionTest {
     DockerAccess docker;
 
     @Mocked
-    AnsiLogger log;
+    Logger log;
 
     private String container = "testContainer";
 

@@ -19,7 +19,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.util.AnsiLogger;
+import org.jolokia.docker.maven.util.Logger;
 
 import static org.jolokia.docker.maven.util.WaitUtil.sleep;
 
@@ -71,7 +71,7 @@ class ShutdownAction {
      * @param log logger to use
      * @param keepContainer whether to keep the container (and its data container)
      */
-    public void shutdown(DockerAccess access, AnsiLogger log,boolean keepContainer)
+    public void shutdown(DockerAccess access, Logger log,boolean keepContainer)
             throws MojoExecutionException {
         // Stop the container
         try {
