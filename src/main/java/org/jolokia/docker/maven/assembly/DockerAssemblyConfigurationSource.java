@@ -23,9 +23,11 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     private final AssemblyConfiguration assemblyConfig;
     private final MojoParameters params;
+    private final String imageName;
     
-    public DockerAssemblyConfigurationSource(MojoParameters params, AssemblyConfiguration assemblyConfig) {
+    public DockerAssemblyConfigurationSource(MojoParameters params, AssemblyConfiguration assemblyConfig, String imageName) {
         this.params = params;
+        this.imageName = imageName;
         this.assemblyConfig = assemblyConfig;
     }
 
@@ -35,7 +37,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
           String descriptor = assemblyConfig.getDescriptor();
 
           if (descriptor != null) {
-            return new String[] { EnvUtil.prepareAbsolutePath(params, descriptor).getAbsolutePath() };
+            return new String[] { EnvUtil.prepareAbsoluteSourceDirPath(params, descriptor).getAbsolutePath() };
           }
         }
         return new String[0];
@@ -51,18 +53,18 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public File getOutputDirectory() {
-        return new File(params.getOutputDirectory() +  "/build");
+        return EnvUtil.prepareAbsoluteOutputDirPath(params, imageName, "build");
     }
 
     @Override
     public File getWorkingDirectory() {
-        return new File(params.getOutputDirectory() + "/work");
+        return EnvUtil.prepareAbsoluteOutputDirPath(params, imageName, "work");
     }
 
     // X
     @Override
     public File getTemporaryRootDirectory() {
-        return new File(params.getOutputDirectory() +  "/tmp");
+        return EnvUtil.prepareAbsoluteOutputDirPath(params, imageName, "tmp");
     }
 
     @Override
