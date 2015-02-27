@@ -1,8 +1,8 @@
 # ChangeLog
 
 * **0.11.2**
-  - Fix maven parse error when specifying restart policy (#99)
-  - Allow hostnames to be used in port bindings (#101)
+  - Fixed maven parse error when specifying restart policy (#99)
+  - Allow host names to be used in port bindings (#101)
   - Add support for tagging at build and push time (#104)
   - Use correct output dir during multi-project builds (#97)
   - `descriptor` and `descriptorRef` in the assembly configuration are now optional (#66)

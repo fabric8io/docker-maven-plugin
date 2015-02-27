@@ -55,6 +55,7 @@ public enum ConfigKey {
     RESTART_POLICY_RETRY("restartPolicy.retry"),
     USER,
     VOLUMES,
+    TAGS,
     VOLUMES_FROM,
     WAIT_LOG("wait.log"),
     WAIT_TIME("wait.time"),
