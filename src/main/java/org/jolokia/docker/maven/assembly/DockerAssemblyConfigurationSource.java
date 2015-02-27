@@ -25,7 +25,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     private final MojoParameters params;
     private final String imageName;
     
-    public DockerAssemblyConfigurationSource(MojoParameters params, AssemblyConfiguration assemblyConfig, String imageName) {
+    public DockerAssemblyConfigurationSource(String imageName, MojoParameters params, AssemblyConfiguration assemblyConfig) {
         this.params = params;
         this.imageName = imageName;
         this.assemblyConfig = assemblyConfig;

@@ -75,7 +75,7 @@ public class BuildMojo extends AbstractDockerMojo {
         checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry());
 
         MojoParameters params =  new MojoParameters(session, project, archive, mavenFileFilter, sourceDirectory, outputDirectory);
-        File dockerArchive = dockerAssemblyManager.create(params, imageConfig);
+        File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName,params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
         debug("Creating image successful!");

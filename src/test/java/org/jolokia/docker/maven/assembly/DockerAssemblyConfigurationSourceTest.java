@@ -1,9 +1,5 @@
 package org.jolokia.docker.maven.assembly;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 
 import org.apache.maven.project.MavenProject;
@@ -12,6 +8,8 @@ import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class DockerAssemblyConfigurationSourceTest {
 
@@ -41,7 +39,7 @@ public class DockerAssemblyConfigurationSourceTest {
     public void testOutputDirHasImage() {
         String image = "image";
         MojoParameters params = buildParameters(".","src/docker", "output/docker");
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig, image);
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(image, params, assemblyConfig);
         
         assertTrue(containsDir(image, source.getOutputDirectory()));
         assertTrue(containsDir(image, source.getWorkingDirectory()));
@@ -57,13 +55,13 @@ public class DockerAssemblyConfigurationSourceTest {
     @Test
     public void testEmptyAssemblyConfig() {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-                new MojoParameters(null, null, null, null, "/src/docker", "/output/docker"),
-                null, null);
+                null, new MojoParameters(null, null, null, null, "/src/docker", "/output/docker"),
+                null);
         assertEquals(0,source.getDescriptors().length);
     }
 
     private void testCreateSource(MojoParameters params) {
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig, "image");
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource("image", params, assemblyConfig);
 
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();

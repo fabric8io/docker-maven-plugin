@@ -22,7 +22,6 @@ import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.jolokia.docker.maven.config.AssemblyConfiguration;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
-import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 
@@ -47,11 +46,20 @@ public class DockerAssemblyManager {
     @Requirement
     private ArchiverManager archiverManager;
 
-    public File create(MojoParameters params, ImageConfiguration imageConfig) throws MojoExecutionException {
-        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+    /**
+     * Create an docker tar archive from the given configuration which can be send to the Docker host for
+     * creating the image.
+     *
+     * @param imageName Name of the image to create (used for creating build directories)
+     * @param params Mojos parameters (used for finding the directories)
+     * @param buildConfig configuration for how to build the image
+     * @return file holding the path to the created assembly tar file
+     * @throws MojoExecutionException
+     */
+    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig) throws MojoExecutionException {
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, assemblyConfig, imageConfig.getName());
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(imageName, params, assemblyConfig);
 
         File outputDir = source.getOutputDirectory();
 
