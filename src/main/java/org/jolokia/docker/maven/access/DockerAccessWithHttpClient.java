@@ -69,7 +69,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     @Override
     public boolean hasImage(String image) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        HttpUriRequest req = newGet(baseUrl + "/images/json?filter=" + name.getFullName());
+        HttpUriRequest req = newGet(baseUrl + "/images/json?filter=" + name.getNameWithoutTag());
         HttpResponse resp = request(req);
         checkReturnCode("Checking for image '" + image + "'", resp, 200);
         JSONArray array = asJsonArray(resp);
@@ -78,7 +78,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 JSONObject imageObject = array.getJSONObject(i);
                 JSONArray repoTags = imageObject.getJSONArray("RepoTags");
                 for (int j = 0; j < repoTags.length(); j++) {
-                     if (name.getFullNameWithTag().equals(repoTags.getString(j))) {
+                     if (name.getFullName().equals(repoTags.getString(j))) {
                         return true;
                     }
                 }
@@ -148,7 +148,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     /** {@inheritDoc} */
     @Override
     public List<String> getContainersForImage(String image) throws DockerAccessException {
-        return getContainerIds(image,false);
+        return getContainerIds(image, false);
     }
 
     @Override
@@ -160,7 +160,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     private List<String> getContainerIds(String image,boolean onlyLatest) throws DockerAccessException {
         ImageName imageName = new ImageName(image);
-        String imageFullName = imageName.getFullNameWithTag();
+        String imageFullName = imageName.getFullName();
 
         HttpUriRequest req = newGet(baseUrl + "/containers/json?limit=100");
         HttpResponse resp = request(req);
@@ -224,7 +224,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     @Override
     public void pullImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException {
         ImageName name = new ImageName(image);
-        String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getFullName(registry));
+        String pullUrl = baseUrl + "/images/create?fromImage=" + encode(name.getNameWithoutTag(registry));
         pullUrl = addTagParam(pullUrl, name.getTag());
         pullOrPushImage(image, pullUrl, "pulling", authConfig);
     }
@@ -236,7 +236,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
         String temporaryImage = tagTemporaryImage(name, registry);
         try {
-            String pushUrl = baseUrl + "/images/" + encode(name.getFullName(registry)) + "/push";
+            String pushUrl = baseUrl + "/images/" + encode(name.getNameWithoutTag(registry)) + "/push";
             pushUrl = addTagParam(pushUrl, name.getTag());
             pullOrPushImage(image, pushUrl, "pushing", authConfig);
         } finally {
@@ -247,10 +247,10 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
-        String targetImage = name.getFullNameWithTag(registry);
+        String targetImage = name.getFullName(registry);
 
         if (!name.hasRegistry() && registry != null && !hasImage(targetImage)) {
-            tag(name.getFullNameWithTag(null), targetImage);
+            tag(name.getFullName(null), targetImage, false);
             return targetImage;
         } else {
             return null;
@@ -259,12 +259,15 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     /** {@inheritDoc} */
     @Override
-    public void tag(String sourceImage, String targetImage) throws DockerAccessException {
+    public void tag(String sourceImage, String targetImage, boolean force) throws DockerAccessException {
         ImageName source = new ImageName(sourceImage);
         ImageName target = new ImageName(targetImage);
-        String url = baseUrl + "/images/" + encode(source.getFullNameWithTag(null)) + "/tag";
-        url = addRepositoryParam(url, target.getFullName(null));
+        String url = baseUrl + "/images/" + encode(source.getFullName(null)) + "/tag";
+        url = addRepositoryParam(url, target.getNameWithoutTag(null));
         url = addTagParam(url,  target.getTag());
+        if (force) {
+            url = addQueryParam(url, "force", "1");
+        }
         HttpUriRequest req = newPost(url, null);
         HttpResponse resp = request(req);
         checkReturnCode("Adding tag " + targetImage + " to " + sourceImage, resp, 201);
@@ -447,7 +450,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                     log.debug("|||| " + h.getName() + "=" + h.getValue());
                 }
             }
-            if (req.getMethod() == "POST") {
+            if ("POST".equals(req.getMethod())) {
                 HttpPost post = (HttpPost) req;
                 log.debug("---- " + (post.getEntity() != null ? EntityUtils.toString(post.getEntity()) : "[empty]"));
             }

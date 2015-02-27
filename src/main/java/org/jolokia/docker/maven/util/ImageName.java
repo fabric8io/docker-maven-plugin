@@ -35,7 +35,23 @@ public class ImageName {
     // Tag name
     private String tag;
 
+    /**
+     * Create an image name
+     *
+     * @param fullName The fullname of the image in Docker format.
+     */
     public ImageName(String fullName) {
+        this(fullName,null);
+    }
+
+    /**
+     * Create an image name with a tag. If a tag is provided (i.e. is not null) then this tag is used.
+     * Otherwise the tag of the provided name is used (if any).
+     *
+     * @param fullName The fullname of the image in Docker format. I
+     * @param givenTag tag to use. Can be null in which case the tag specified in fullName is used.
+     */
+    public ImageName(String fullName,String givenTag) {
         if (fullName == null) {
             throw new NullPointerException("Image name must not be null");
         }
@@ -44,7 +60,9 @@ public class ImageName {
         if (!matcher.matches()) {
             throw new IllegalArgumentException(fullName + " is not a proper image name ([registry/][repo][:port]");
         }
-        tag = matcher.groupCount() > 1 ? matcher.group(2) : null;
+        tag = givenTag != null ?
+                givenTag :
+                matcher.groupCount() > 1 ? matcher.group(2) : null;
         String rest = matcher.group(1);
 
         String[] parts = rest.split("\\s*/\\s*");
@@ -99,12 +117,12 @@ public class ImageName {
      *
      * @return full name with the original registry
      */
-    public String getFullName() {
-        return getFullName(null);
+    public String getNameWithoutTag() {
+        return getNameWithoutTag(null);
     }
 
     /**
-     * Get the full name of this image like {@link #getFullName()} does, but allow
+     * Get the full name of this image like {@link #getNameWithoutTag()} does, but allow
      * an optional registry. This registry is used when this image does not already
      * contain a registry.
      *
@@ -112,7 +130,7 @@ public class ImageName {
      *                         a registry. Can be null in which case no optional registry is used*
      * @return full name with original registry (if set) or optional registry (if not <code>null</code>)
      */
-    public String getFullName(String optionalRegistry) {
+    public String getNameWithoutTag(String optionalRegistry) {
         StringBuilder ret = new StringBuilder();
         if (registry != null || optionalRegistry != null) {
             ret.append(registry != null ? registry : optionalRegistry).append("/");
@@ -128,12 +146,12 @@ public class ImageName {
      *
      * @return full name with the original registry and the original tag given (if any).
      */
-    public String getFullNameWithTag() {
-        return getFullNameWithTag(null);
+    public String getFullName() {
+        return getFullName(null);
     }
 
     /**
-     * Get the full name of this image like {@link #getFullNameWithTag(String)} does, but allow
+     * Get the full name of this image like {@link #getFullName(String)} does, but allow
      * an optional registry. This registry is used when this image does not already
      * contain a registry. If no tag was provided in the initial name, <code>latest</code> is used.
      *
@@ -141,7 +159,7 @@ public class ImageName {
      *                         a registry. Can be null in which case no optional registry is used*
      * @return full name with original registry (if set) or optional registry (if not <code>null</code>).
      */
-    public String getFullNameWithTag(String optionalRegistry) {
-        return getFullName(optionalRegistry) + ":" + (tag != null ? tag : "latest");
+    public String getFullName(String optionalRegistry) {
+        return getNameWithoutTag(optionalRegistry) + ":" + (tag != null ? tag : "latest");
     }
 }

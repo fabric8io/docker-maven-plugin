@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven;
 
 import java.io.File;
+import java.util.List;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
@@ -11,8 +12,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.util.ImageName;
-import org.jolokia.docker.maven.util.MojoParameters;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * Mojo for building a data image
@@ -56,14 +56,15 @@ public class BuildMojo extends AbstractDockerMojo {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
-                buildImage(imageConfig, dockerAccess);
+                String imageName = getImageName(imageConfig.getName());
+                buildImage(imageName, imageConfig, dockerAccess);
+                tagImage(imageName, imageConfig, dockerAccess);
             }
         }
     }
-        
-    private void buildImage(ImageConfiguration imageConfig, DockerAccess dockerAccess)
+
+    private void buildImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
-        String imageName = getImageName(imageConfig.getName());
         info("Creating image " + imageConfig.getDescription());
 
         String fromImage = imageConfig.getBuildConfiguration().getFrom();
@@ -77,8 +78,23 @@ public class BuildMojo extends AbstractDockerMojo {
         File dockerArchive = dockerAssemblyManager.create(params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
-        debug("Build successful!");
+        debug("Creating image successful!");
     }
 
+    private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
+            throws DockerAccessException, MojoExecutionException {
+        List<String> tags = imageConfig.getBuildConfiguration().getTags();
+        if (tags.size() > 0) {
+            info("Tagging image " + imageConfig.getDescription() + ": " + EnvUtil.stringJoin(tags,","));
+
+            for (String tag : tags) {
+                if (tag != null) {
+                    dockerAccess.tag(imageName, new ImageName(imageName, tag).getFullName(), true);
+                }
+            }
+
+            debug("Tagging image successful!");
+        }
+    }
 
 }

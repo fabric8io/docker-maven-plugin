@@ -153,9 +153,10 @@ public interface DockerAccess {
      *
      * @param sourceImage full name (including tag) of the image to alias
      * @param targetImage the alias name
-     * @throws DockerAccessException if the original image doesnt exist or another error occurs somehow.
+     * @param force forced tagging
+     * @throws DockerAccessException if the original image doesn't exist or another error occurs somehow.
      */
-    void tag(String sourceImage, String targetImage) throws DockerAccessException;
+    void tag(String sourceImage, String targetImage, boolean force) throws DockerAccessException;
 
     /**
      * Remove an image from this docker installation

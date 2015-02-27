@@ -49,23 +49,23 @@ public class ImageNameTest {
             assertEquals("Registry " + i,res.registry,name.getRegistry());
             assertEquals("Repository " + i,res.repository,name.getRepository());
             assertEquals("Tag " + i,res.tag,name.getTag());
-            assertEquals("RepoWithRegistry " + i,res.fullName, name.getFullName(null));
-            assertEquals("FullName " + i,res.fullNameWithTag,name.getFullNameWithTag(null));
+            assertEquals("RepoWithRegistry " + i,res.fullName, name.getNameWithoutTag(null));
+            assertEquals("FullName " + i,res.fullNameWithTag,name.getFullName(null));
         }
     }
 
     @Test
     public void testRegistryNaming() throws Exception {
         assertEquals("docker.jolokia.org/jolokia/jolokia_demo:0.18",
-                     new ImageName("jolokia/jolokia_demo:0.18").getFullNameWithTag("docker.jolokia.org"));
+                     new ImageName("jolokia/jolokia_demo:0.18").getFullName("docker.jolokia.org"));
         assertEquals("docker.jolokia.org/jolokia/jolokia_demo:latest",
-                     new ImageName("jolokia/jolokia_demo").getFullNameWithTag("docker.jolokia.org"));
+                     new ImageName("jolokia/jolokia_demo").getFullName("docker.jolokia.org"));
         assertEquals("jolokia/jolokia_demo:latest",
-                     new ImageName("jolokia/jolokia_demo").getFullNameWithTag(null));
+                     new ImageName("jolokia/jolokia_demo").getFullName(null));
         assertEquals("docker.jolokia.org/jolokia/jolokia_demo:latest",
-                     new ImageName("docker.jolokia.org/jolokia/jolokia_demo").getFullNameWithTag("another.registry.org"));
+                     new ImageName("docker.jolokia.org/jolokia/jolokia_demo").getFullName("another.registry.org"));
         assertEquals("docker.jolokia.org/jolokia/jolokia_demo:latest",
-                     new ImageName("docker.jolokia.org/jolokia/jolokia_demo").getFullNameWithTag(null));
+                     new ImageName("docker.jolokia.org/jolokia/jolokia_demo").getFullName(null));
     }
 
 
