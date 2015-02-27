@@ -26,13 +26,14 @@ public interface DockerAccess {
 
     /**
      * Create a container from the given image.
-     *
+     * 
      * <p>The <code>container id</code> will be set on the <code>container</code> upon successful creation.</p>
      *
      * @param configuration container configuration
+     * @param containerName name container should be created with or <code>null</code> for a docker provided name
      * @throws DockerAccessException if the container could not be created.
      */
-    String createContainer(ContainerCreateConfig configuration) throws DockerAccessException;
+    String createContainer(ContainerCreateConfig configuration, String containerName) throws DockerAccessException;
 
     /**
      * Get the the name of a container for a given container id

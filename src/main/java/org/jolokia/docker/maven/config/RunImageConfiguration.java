@@ -11,7 +11,7 @@ import java.util.Map;
 public class RunImageConfiguration {
 
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
-
+    
     // Environment variables to set when starting the container. key: variable name, value: env value
     /**
      * @parameter
@@ -109,6 +109,9 @@ public class RunImageConfiguration {
      */
     private List<String> ports;
 
+    /** @parameter */
+    private NamingScheme namingScheme;
+    
     // Mount volumes from the given image's started containers
     /**
      * @parameter
@@ -220,6 +223,10 @@ public class RunImageConfiguration {
         return links;
     }
 
+    public NamingScheme getNamingScheme() {
+        return (namingScheme == null) ? NamingScheme.none : namingScheme;
+    }
+    
     public Boolean getPrivileged() {
         return privileged;
     }
@@ -227,8 +234,12 @@ public class RunImageConfiguration {
     public RestartPolicy getRestartPolicy() {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
+    
+    public enum NamingScheme {
+        none, alias;
+    }
 
-// ======================================================================================
+    // ======================================================================================
 
     public static class Builder {
         private RunImageConfiguration config = new RunImageConfiguration();
@@ -333,6 +344,11 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder namingScheme(String namingScheme) {
+            config.namingScheme = (namingScheme == null) ? NamingScheme.none : NamingScheme.valueOf(namingScheme);
+            return this;
+        }
+        
         public Builder privileged(Boolean privileged) {
             config.privileged = privileged;
             return this;

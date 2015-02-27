@@ -38,8 +38,11 @@ public final class UrlBuilder {
         return url;
     }
     
-    public String createContainer() {
-        return createUrl("/containers/create");
+    public String createContainer(String name) {
+        String url = createUrl("/containers/create");
+        url = addQueryParam(url, "name", name);
+        
+        return url;
     }
 
     public String deleteImage(String name, boolean force) {
