@@ -23,11 +23,13 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     private final AssemblyConfiguration assemblyConfig;
     private final MojoParameters params;
-    private final String imageName;
+    private final String buildTopDir;
     
     public DockerAssemblyConfigurationSource(String imageName, MojoParameters params, AssemblyConfiguration assemblyConfig) {
         this.params = params;
-        this.imageName = imageName;
+        // Replace tag separator with a slash to avoid problems
+        // with OSs which gets confused by colons.
+        this.buildTopDir = imageName != null ? imageName.replace(':','/') : null;
         this.assemblyConfig = assemblyConfig;
     }
 
@@ -53,18 +55,18 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public File getOutputDirectory() {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, imageName, "build");
+        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, "build");
     }
 
     @Override
     public File getWorkingDirectory() {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, imageName, "work");
+        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, "work");
     }
 
     // X
     @Override
     public File getTemporaryRootDirectory() {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, imageName, "tmp");
+        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, "tmp");
     }
 
     @Override
