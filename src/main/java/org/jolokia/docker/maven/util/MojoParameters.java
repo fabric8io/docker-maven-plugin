@@ -4,6 +4,7 @@ import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
+import org.apache.maven.shared.filtering.MavenReaderFilter;
 
 /**
  * Helper class for encapsulating Mojo params which are not Plexus components
@@ -12,19 +13,21 @@ import org.apache.maven.shared.filtering.MavenFileFilter;
  * @since 09.05.14
  */
 public class MojoParameters {
-    private MavenArchiveConfiguration archive;
-    private MavenSession session;
-    private MavenFileFilter mavenFileFilter;
-    private MavenProject project;
+    private final MavenArchiveConfiguration archive;
+    private final MavenSession session;
+    private final MavenFileFilter mavenFileFilter;
+    private final MavenReaderFilter mavenFilterReader;
+    private final MavenProject project;
 
     private final String outputDirectory;
     private final String sourceDirectory;
 
     public MojoParameters(MavenSession session, MavenProject project, MavenArchiveConfiguration archive, MavenFileFilter mavenFileFilter,
-            String sourceDirectory, String outputDirectory) {
+            MavenReaderFilter mavenFilterReader, String sourceDirectory, String outputDirectory) {
         this.archive = archive;
         this.session = session;
         this.mavenFileFilter = mavenFileFilter;
+        this.mavenFilterReader = mavenFilterReader;
         this.project = project;
 
         this.sourceDirectory = sourceDirectory;
@@ -49,6 +52,10 @@ public class MojoParameters {
 
     public MavenFileFilter getMavenFileFilter() {
         return mavenFileFilter;
+    }
+    
+    public MavenReaderFilter getMavenFilterReader() {
+        return mavenFilterReader;
     }
 
     public MavenProject getProject() {
