@@ -12,8 +12,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.util.ImageName;
-import org.jolokia.docker.maven.util.MojoParameters;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * Mojo for building a data image
@@ -84,15 +83,18 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
-        info("Tagging image " + imageConfig.getDescription());
+        List<String> tags = imageConfig.getBuildConfiguration().getTags();
+        if (tags.size() > 0) {
+            info("Tagging image " + imageConfig.getDescription() + ": " + EnvUtil.stringJoin(tags,","));
 
-        for (String tag : imageConfig.getBuildConfiguration().getTags()) {
-            if (tag != null) {
-                dockerAccess.tag(imageName, new ImageName(imageName).getFullNameWithCustomTag(tag), true);
+            for (String tag : tags) {
+                if (tag != null) {
+                    dockerAccess.tag(imageName, new ImageName(imageName, tag).getFullName(), true);
+                }
             }
-        }
 
-        debug("Tagging image successful!");
+            debug("Tagging image successful!");
+        }
     }
 
 }

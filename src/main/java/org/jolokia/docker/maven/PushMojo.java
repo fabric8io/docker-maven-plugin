@@ -30,7 +30,7 @@ public class PushMojo extends AbstractDockerMojo {
 
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {
-                        docker.pushImage(new ImageName(name).getFullNameWithCustomTag(tag), authConfig, registry);
+                        docker.pushImage(new ImageName(name,tag).getFullName(), authConfig, registry);
                     }
                 }
             }

@@ -83,6 +83,26 @@ public class EnvUtil {
 
 
     /**
+     * Join a list of objects to a string with a given separator by calling Object.toString() on the elements.
+     *
+     * @param list to join
+     * @param separator separator to use
+     * @return the joined string.
+     */
+    public static String stringJoin(List list, String separator) {
+        StringBuilder ret = new StringBuilder();
+        boolean first = true;
+        for (Object o : list) {
+            if (!first) {
+                ret.append(separator);
+            }
+            ret.append(o);
+            first = false;
+        }
+        return ret.toString();
+    }
+
+    /**
      * Extract part of given properties as a map. The given prefix is used to find the properties,
      * the rest of the property name is used as key for the map.
      *

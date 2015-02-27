@@ -70,11 +70,11 @@ public class BuildImageConfiguration {
     }
 
     public List<String> getVolumes() {
-        return (volumes != null) ? volumes : Collections.<String>emptyList();
+        return volumes != null ? volumes : Collections.<String>emptyList();
     }
 
     public List<String> getTags() {
-        return (tags != null) ? tags : Collections.<String>emptyList();
+        return tags != null ? tags : Collections.<String>emptyList();
     }
 
     public Map<String, String> getEnv() {
