@@ -108,6 +108,16 @@ public class PropertyConfigHandlerTest {
     }
     
     @Test
+    public void testNoAssembly() throws Exception {
+        Properties props = props(new String[] { k(NAME), "image" });
+        List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);
+        assertEquals(1, configs.size());
+
+        AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
+        assertNull(config);
+    }
+    
+    @Test
     public void testResolve() {
         Map<String, String> external = new HashMap<>();
         external.put("type", "props");

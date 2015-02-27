@@ -23,14 +23,12 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     private final AssemblyConfiguration assemblyConfig;
     private final MojoParameters params;
-    private final String buildTopDir;
-    
-    public DockerAssemblyConfigurationSource(String imageName, MojoParameters params, AssemblyConfiguration assemblyConfig) {
+    private final BuildDirs buildDirs;
+
+    public DockerAssemblyConfigurationSource(MojoParameters params, BuildDirs buildDirs, AssemblyConfiguration assemblyConfig) {
         this.params = params;
-        // Replace tag separator with a slash to avoid problems
-        // with OSs which gets confused by colons.
-        this.buildTopDir = imageName != null ? imageName.replace(':','/') : null;
         this.assemblyConfig = assemblyConfig;
+        this.buildDirs = buildDirs;
     }
 
     @Override
@@ -47,26 +45,31 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public String[] getDescriptorReferences() {
-        String descriptorRef = assemblyConfig.getDescriptorRef();
-        return (descriptorRef != null) ? new String[] { descriptorRef } : null;
+        if (assemblyConfig != null) {
+            String descriptorRef = assemblyConfig.getDescriptorRef();
+            if (descriptorRef != null) {
+                return new String[]{descriptorRef};
+            }
+        }
+        return null;
     }
 
     // ============================================================================================
 
     @Override
     public File getOutputDirectory() {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, "build");
+        return buildDirs.getOutputDirectory();
     }
 
     @Override
     public File getWorkingDirectory() {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, "work");
+        return buildDirs.getWorkingDirectory();
     }
 
     // X
     @Override
     public File getTemporaryRootDirectory() {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, "tmp");
+        return buildDirs.getTemporaryRootDirectory();
     }
 
     @Override
@@ -241,7 +244,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public boolean isIgnorePermissions() {
-        return assemblyConfig.isIgnorePermissions();
+        return assemblyConfig != null ? assemblyConfig.isIgnorePermissions() : false;
     }
 
 }

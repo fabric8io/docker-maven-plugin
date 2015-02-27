@@ -132,6 +132,12 @@
                 </assembly>
               </build>
             </image>
+            <image>
+              <name>jolokia/empty-demo:${project.version}</name>
+              <build>
+
+              </build>
+            </image>
           </images>
         </configuration>
         <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container

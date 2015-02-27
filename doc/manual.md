@@ -290,6 +290,9 @@ Here's an example:
 * **ignorePermissions** indicates if existing file permissions should be ignored
   when creating the assembly archive. This value is `false` by default.
 
+In the event you do not need to include any artifacts with the image, you may
+safely omit this element from the configuration. 
+
 ##### Docker Assembly
 
 With using the `descriptor` or `descriptorRef` option

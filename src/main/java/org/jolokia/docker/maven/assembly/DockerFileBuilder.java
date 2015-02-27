@@ -61,9 +61,6 @@ public class DockerFileBuilder {
      * @throws IllegalArgumentException if no src/dest entries have been added
      */
     public String content() throws IllegalArgumentException {
-        if (addEntries.size() == 0) {
-            throw new IllegalArgumentException("No entries added");
-        }
 
         StringBuilder b = new StringBuilder();
         
