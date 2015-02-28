@@ -44,6 +44,15 @@ public interface DockerAccess {
     String getContainerName(String id) throws DockerAccessException;
 
     /**
+     * Determine if the container is running
+     * 
+     * @param containerId id of container to query
+     * @return true if the container is running, false otherwise
+     * @throws DockerAccessException
+     */
+    boolean isContainerRunning(String containerId) throws DockerAccessException;
+    
+    /**
      * Start a container.
      *
      * @param containerId id of the container to start

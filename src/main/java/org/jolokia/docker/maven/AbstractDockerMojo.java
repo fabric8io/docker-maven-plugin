@@ -1,6 +1,6 @@
 package org.jolokia.docker.maven;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
@@ -120,13 +120,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.log = new AnsiLogger(getLog(), useColor);
         if (!skip) {
-            DockerAccess access;
-            try {
-                access = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost), getCertPath(), log);
-                access.start();
-            } catch (DockerAccessException e) {
-                throw new MojoExecutionException("Cannot create docker access object ",e);
-            }
+            DockerAccess access = createDockerClient();
             try {
                 executeInternal(access);
             } catch (DockerAccessException exp) {  
@@ -135,17 +129,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 access.shutdown();
             }
         }
-    }
-
-    private String getCertPath() {
-        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
-        if (path == null) {
-            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
-            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
-                return dockerHome.getAbsolutePath();
-            }
-        }
-        return path;
     }
 
     /**
@@ -231,6 +214,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return imagesAllowed.contains(imageConfig.getName()) || imagesAllowed.contains(imageConfig.getAlias());
     }
 
+    // visible for testing
+    DockerAccess createDockerClient() throws MojoExecutionException {
+        try {
+            DockerAccess client = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost),
+                    EnvUtil.getCertPath(certPath), log);
+            client.start();
+
+            return client;
+        }
+        catch (IOException | DockerAccessException e) {
+            throw new MojoExecutionException("Cannot create docker access object ", e);
+        }
+    }
+    
     // =================================================================================
     // Extract authentication information
 
