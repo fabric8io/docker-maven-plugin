@@ -9,8 +9,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.util.AnsiLogger;
-import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.util.*;
 import org.junit.*;
 
 import static org.junit.Assert.*;
@@ -21,7 +20,7 @@ import static org.junit.Assert.*;
  * it also assumes that 'removeImage' does what it's supposed to do as it's used in test setup.
  */
 @Ignore
-public class DockerClientIT {
+public class DockerAccessIT {
 
     private static final String IMAGE = "busybox:buildroot-2014.02";
     
@@ -31,7 +30,7 @@ public class DockerClientIT {
     private String containerId;
     private final DockerAccessWithHttpClient dockerClient; 
     
-    public DockerClientIT() {
+    public DockerAccessIT() {
         this.dockerClient = createClient(EnvUtil.extractUrl(null), new AnsiLogger(new SystemStreamLog(), true));
     }
 
@@ -68,7 +67,7 @@ public class DockerClientIT {
         }
     }
  
-    private DockerAccessWithHttpClient createClient(String baseUrl, AnsiLogger logger) {
+    private DockerAccessWithHttpClient createClient(String baseUrl, Logger logger) {
         try {
             return new DockerAccessWithHttpClient(AbstractDockerMojo.API_VERSION, baseUrl, null, logger);
         } catch (IOException e) {

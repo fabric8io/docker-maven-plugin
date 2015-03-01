@@ -1,63 +1,19 @@
 package org.jolokia.docker.maven.access;
 
-import org.jolokia.docker.maven.util.Logger;
-
 import java.io.*;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.util.*;
 
-import javax.net.ssl.SSLContext;
-
-import org.apache.http.*;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.util.EntityUtils;
-import org.jolokia.docker.maven.access.log.*;
-import org.jolokia.docker.maven.util.*;
-import org.json.*;
-
-import static org.jolokia.docker.maven.access.util.RequestUtil.*;
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
-import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
-import static java.net.HttpURLConnection.HTTP_OK;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.jolokia.docker.maven.access.chunked.BuildResponseHandler;
-import org.jolokia.docker.maven.access.chunked.ChunkedResponseHandler;
-import org.jolokia.docker.maven.access.chunked.ChunkedResponseReader;
-import org.jolokia.docker.maven.access.chunked.PullOrPushResponseHandler;
-import org.jolokia.docker.maven.access.chunked.TextToJsonBridgeCallback;
+import org.jolokia.docker.maven.access.chunked.*;
 import org.jolokia.docker.maven.access.http.ApacheHttpDelegate;
 import org.jolokia.docker.maven.access.http.ApacheHttpDelegate.Result;
 import org.jolokia.docker.maven.access.http.HttpRequestException;
-import org.jolokia.docker.maven.access.log.LogCallback;
-import org.jolokia.docker.maven.access.log.LogGetHandle;
-import org.jolokia.docker.maven.access.log.LogRequestor;
-import org.jolokia.docker.maven.util.AnsiLogger;
+import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.util.ImageName;
+import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import static java.net.HttpURLConnection.*;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a> for accessing remotely
@@ -89,7 +45,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
      */
     public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, Logger log) throws IOException {
         this.log = log;
-        this.delegate = createHttpClient(certPath);
+        this.delegate = new ApacheHttpDelegate(certPath);
         this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
     }
 
@@ -302,11 +258,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     @Override
     public void shutdown() {}
-
-    // visible for testing
-    ApacheHttpDelegate createHttpClient(String certPath) throws IOException {
-        return new ApacheHttpDelegate(certPath);
-    }
 
     // visible for testing?
     private BuildResponseHandler createBuildResponseHandler() {

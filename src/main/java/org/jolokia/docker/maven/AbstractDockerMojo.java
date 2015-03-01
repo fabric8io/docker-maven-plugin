@@ -120,7 +120,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.log = new AnsiLogger(getLog(), useColor);
         if (!skip) {
-            DockerAccess access = createDockerClient();
+            DockerAccess access = createDockerAccess();
             try {
                 executeInternal(access);
             } catch (DockerAccessException exp) {  
@@ -215,7 +215,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // visible for testing
-    DockerAccess createDockerClient() throws MojoExecutionException {
+    DockerAccess createDockerAccess() throws MojoExecutionException {
         try {
             DockerAccess client = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost),
                     EnvUtil.getCertPath(certPath), log);

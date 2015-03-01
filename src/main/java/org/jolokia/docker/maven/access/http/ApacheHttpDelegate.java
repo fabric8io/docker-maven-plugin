@@ -70,6 +70,8 @@ public class ApacheHttpDelegate {
         return httpClient;
     }
 
+    // =========================================================================================
+
     private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
         req.addHeader(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
         req.addHeader("Content-Type", "application/json");
@@ -88,10 +90,9 @@ public class ApacheHttpDelegate {
     }
 
     private PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws IOException {
-        if (certPath != null) {
-            return new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath));
-        }
-        return new PoolingHttpClientConnectionManager();
+        return certPath != null ?
+                new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath)) :
+                new PoolingHttpClientConnectionManager();
     }
 
     private Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {

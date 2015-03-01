@@ -98,6 +98,8 @@ public final class UrlBuilder {
         return url;
     }
 
+    // ============================================================================
+
     private String addQueryParam(String url, String param, boolean value) {
         return addQueryParam(url, param, (value) ? "1" : "0");
     }
