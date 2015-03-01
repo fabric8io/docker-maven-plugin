@@ -15,8 +15,6 @@ package org.jolokia.docker.maven.access.log;/*
  * limitations under the License.
  */
 
-import static org.jolokia.docker.maven.access.util.RequestUtil.newGet;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.regex.Matcher;
@@ -29,6 +27,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.UrlBuilder;
 import org.jolokia.docker.maven.util.Timestamp;
+
+import static org.jolokia.docker.maven.access.util.RequestUtil.newGet;
 
 /**
  * Extractor for parsing the response of a log request
