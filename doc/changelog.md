@@ -7,6 +7,8 @@
   - Use correct output dir during multi-project builds (#97)
   - `descriptor` and `descriptorRef` in the assembly configuration are now optional (#66)
   - Fix NPE when filtering enabled during assembly creation (#82)
+  - Allow `${project.build.finalName}` to be overridden when using a pre-packged assembly descriptor
+    for artifacts (#111)
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)

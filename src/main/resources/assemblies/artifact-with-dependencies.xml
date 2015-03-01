@@ -6,6 +6,13 @@
   <dependencySets>
     <dependencySet>
       <useProjectArtifact>true</useProjectArtifact>
+      <includes>
+        <include>${project.groupId}:${project.artifactId}</include>
+      </includes>
+      <outputFileNameMapping>${project.build.finalName}.${artifact.extension}</outputFileNameMapping>
+    </dependencySet>
+    <dependencySet>
+      <useProjectArtifact>false</useProjectArtifact>
       <scope>runtime</scope>
     </dependencySet>
   </dependencySets>
