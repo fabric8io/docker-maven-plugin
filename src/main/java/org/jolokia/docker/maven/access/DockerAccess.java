@@ -119,9 +119,10 @@ public interface DockerAccess {
      * Remove a container with the given id
      *
      * @param containerId container id for the container to remove
+     * @param removeVolumes if true, will remove any volumes associated to container
      * @throws DockerAccessException if the container couldn't be removed.
      */
-    void removeContainer(String containerId) throws DockerAccessException;
+    void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException;
 
     /**
      * Pull an image from a remote registry and store it locally.

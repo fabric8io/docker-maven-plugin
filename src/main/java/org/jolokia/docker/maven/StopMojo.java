@@ -38,6 +38,12 @@ public class StopMojo extends AbstractDockerMojo {
      */
     private boolean keepRunning;
 
+    // Whether to remove volumes when removing the container
+    /**
+     * @parameter property = "docker.removeVolumes" defaultValue = "false"
+     */
+    private boolean removeVolumes;
+
     @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
 
@@ -49,14 +55,14 @@ public class StopMojo extends AbstractDockerMojo {
                 for (ImageConfiguration image : getImages()) {
                     String imageName = image.getName();
                     for (String container : access.getContainersForImage(imageName)) {
-                        new ShutdownAction(image, container).shutdown(access, log, keepContainer);
+                        new ShutdownAction(image, container).shutdown(access, log, keepContainer, removeVolumes);
                     }
                 }
             } else {
                 // Called from a lifecycle phase ...
                 List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
                 for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
-                    action.shutdown(access, log, keepContainer);
+                    action.shutdown(access, log, keepContainer, removeVolumes);
                     appliedShutdownActions.add(action);
                 }
                 removeShutdownActions(appliedShutdownActions);

@@ -180,9 +180,9 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     @Override
-    public void removeContainer(String containerId) throws DockerAccessException {
+    public void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException {
         try {
-            delete(urlBuilder.removeContainer(containerId), HTTP_NO_CONTENT); 
+            delete(urlBuilder.removeContainer(containerId, removeVolumes), HTTP_NO_CONTENT); 
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to remove container [%s]", containerId);

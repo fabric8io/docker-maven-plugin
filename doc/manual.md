@@ -712,6 +712,9 @@ parameters which are typically used as system properties:
   during a lifecycle binding) so that the container are still running
   after an integration test. This is useful for analysis of the
   containers (e.g. by entering it with `docker exec`). 
+* **removeVolumes** (`docker.removeVolumes`) If given will remove any
+  volumes associated to the container as well. Will be Ignored if either
+  `keepContainer` or `keepRunning` are true.
 
 Example: 
 
