@@ -202,7 +202,17 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         for (ImageConfiguration image : images) {
             ret.addAll(imageConfigResolver.resolve(image,project.getProperties()));
         }
+        verifyImageNames(ret);
         return ret;
+    }
+
+    // Extract authentication information
+    private void verifyImageNames(List<ImageConfiguration> ret) {
+        for (ImageConfiguration config : ret) {
+            if (config.getName() == null) {
+                throw new IllegalArgumentException("Configuration error: <image> must have a non-null <name>");
+            }
+        }
     }
 
     // Check if the provided image configuration matches the given
@@ -227,38 +237,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             throw new MojoExecutionException("Cannot create docker access object ", e);
         }
     }
-    
+
     // =================================================================================
-    // Extract authentication information
 
     @Override
     public void contextualize(Context context) throws ContextException {
         authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
-    }
-
-    // =================================================================================
-
-     protected String getImageName(String name) {
-        if (name != null) {
-            return name;
-        } 
-        
-        return getDefaultUserName() + "/" + getDefaultRepoName() + ":" + project.getVersion();
-    }
-
-    private String getDefaultRepoName() {
-        String repoName = project.getBuild().getFinalName();
-        if (repoName == null || repoName.length() == 0) {
-            repoName = project.getArtifactId();
-        }
-        return repoName;
-    }
-
-    // Repo names with '.' are considered to be remote registries
-    private String getDefaultUserName() {
-        String groupId = project.getGroupId();
-        String repo = groupId.replace('.','_').replace('-','_');
-        return repo.length() > 30 ? repo.substring(0,30) : repo;
     }
 
     // =================================================================================

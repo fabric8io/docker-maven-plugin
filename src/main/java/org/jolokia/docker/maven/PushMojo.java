@@ -22,7 +22,7 @@ public class PushMojo extends AbstractDockerMojo {
     public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            String name = getImageName(imageConfig.getName());
+            String name = imageConfig.getName();
             if (buildConfig != null) {
                 AuthConfig authConfig = prepareAuthConfig(name);
                 String registry = getRegistry(imageConfig);
