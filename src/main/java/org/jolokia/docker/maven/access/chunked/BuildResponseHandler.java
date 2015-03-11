@@ -21,7 +21,7 @@ public class BuildResponseHandler implements ChunkedResponseHandler<JSONObject> 
             }
         } else if (json.has("stream")) {
             String message = json.getString("stream");
-            log.debug(message.trim());
+            log.info(message.trim());
         } else if (json.has("status")) {
             String status = json.getString("status").trim();
             String id = json.has("id") ? json.getString("id") : null;
