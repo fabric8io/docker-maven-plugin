@@ -2,27 +2,27 @@
 
 It focuses on two major aspects:
 
-* **Building** and **pushing** Docker images which contains build artifacts
+* **Building** and **pushing** Docker images which contain build artifacts
 * **Starting** and **stopping** Docker containers for integration
   testing and development 
 
 Docker *images* are the central entity which can be configured. 
-Containers on the other hand are more or less volatil. They are
+Containers, on the other hand, are more or less volatile. They are
 created and destroyed on the fly from the configured images and are
 completely managed internally.
 
 ### Building docker images
 
 One purpose of this plugin is to create docker images holding the
-actual application. This can be done with the `docker:build` goal.  It
+actual application. This is done with the `docker:build` goal.  It
 is easy to include build artifacts and their dependencies into an
-image. Therefor this plugin uses the
+image. Therefore, this plugin uses the
 [assembly descriptor format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
 from the
 [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/)
-for specifying the content which will be added below a directory in
-the image (`/maven` by default). Image which are build with this
-plugin can be also pushed to public or private registries with
+to specify the content which will be added from a sub-directory in
+the image (`/maven` by default). Images that are built with this
+plugin can be pushed to public or private Docker registries with
 `docker:push`.
 
 ### Running containers
@@ -32,26 +32,26 @@ tests so you don't need to take care of shared resources. Ports can be
 mapped dynamically and made available as Maven properties to your
 integration test code. 
 
-Multiple containers can be managed at once which can be linked
+Multiple containers can be managed at once, which can be linked
 together or share data via volumes. Containers are created and started
 with the `docker:start` goal and stopped and destroyed with the
-`docker:stop` goal. For integrations tests both goals are typically
+`docker:stop` goal. For integration tests both goals are typically
 bound to the the `pre-integration-test` and `post-integration-test`,
-respectively. It is recommended to use the `maven-failsafe-plugin` for
+respectively. It is recommended to use the [`maven-failsafe-plugin`](http://maven.apache.org/surefire/maven-failsafe-plugin/) for
 integration testing in order to stop the docker container even when
-the tests are failing.
+the tests fail.
 
-For proper isolation container exposed ports can be dynamically and
+For proper isolation, container exposed ports can be dynamically and
 flexibly mapped to local host ports. It is easy to specify a Maven
 property which will be filled in with a dynamically assigned port
-after a container has been started and which can then be used as
+after a container has been started, which can then be used as
 parameter for integration tests to connect to the application.
 
 ### Configuration
 
 You can use a single configuration for all goals (in fact, that's the
 recommended way). The configuration contains a general part and a list
-of image specific configuration, one for each image. 
+of image-specific configurations, one for each image. 
 
 The general part contains global configuration like the Docker URL or
 the path to the SSL certificates for communication with the Docker Host.
@@ -59,12 +59,12 @@ the path to the SSL certificates for communication with the Docker Host.
 Then, each image configuration has three parts:
 
 * A general part containing the image's name and alias.
-* A `<build>` configuration specifying how images are build.
-* A `<run>` configuration telling how container should be created and started.
+* A `<build>` configuration specifying how images are built.
+* A `<run>` configuration describing how containers should be created and started.
 
-Either `<build>` or `<run>` can be also omitted.
+The `<build>` and `<run>` parts are optional and can be omitted.
 
-Let's have a look at a plugin configuration example:
+Let's look at a plugin configuration example:
 
 ````xml
 <configuration>
@@ -110,102 +110,100 @@ Let's have a look at a plugin configuration example:
 </configuration>
 ````
 
-Here two images are specified. One is the official PostgreSQL 9 image from
-Docker Hub, which internally can be referenced as "*database*" (`<alias>`). It
+Here, two images are specified. One is the official PostgreSQL 9 image from
+Docker Hub, which internally is referenced as "*database*" (`<alias>`). It
 only has a `<run>` section which declares that the startup should wait
 until the given text pattern is matched in the log output. Next is a
-"*service*" image, which is specified in its `<build>` section. It
+"*service*" image, which is specified in the `<build>` section. It
 creates an image which has artifacts and dependencies in the
 `/maven` directory (and which are specified with an assembly
 descriptor). Additionally it specifies the startup command for the
-container which in this example fires up a microservices from a jar
-file just copied over via the assmebly descriptor. Also it exposes
+container, which in this example fires up a microservice from a jar
+file copied over via the assembly descriptor. It also exposes
 port 8080. In the `<run>` section this port is dynamically mapped to a
-port out of the Docker range 49000 ... 49900 and then assigned to the
-Maven property `${jolokia.port}`. This property could be used for an
-integration test to access this micro service. An important part is
-the `<links>` section which tells that the image aliased "*database*" is
-linked into the "*service*" container, which can access the internal
-ports in the usual Docker way (via environments variables prefixed
-with `DB_`). 
+port from the Docker range of 49000 ... 49900, and is then assigned to the
+Maven property `${jolokia.port}`. This property could be used, for example,
+by an integration test to access this microservice. An important part is
+the `<links>` section which indicates that the image with the alias of
+"*database*" is linked into the "*service*" container, which can access
+the internal ports in the usual Docker way (via environment variables
+prefixed with `DB_`).
 
-Images can be specified in any order, the plugin will take care of the
-proper startup order (and will bail out in case of circular
+Images can be specified in any order and the plugin will take care of the
+proper startup order (and will bail out if it detects circular
 dependencies). 
 
 ### Other highlights
 
 Some other highlights in random order (and not complete):
 
-* Auto pulling of images (with progress indicator)
+* Auto pulling of images (with a progress indicator)
 * Waiting for a container to startup based on time, the reachability
-  of an URL or a pattern in the log output
+  of an URL, or a pattern in the log output
 * Support for SSL authentication (since Docker 1.3)
 * Specification of encrypted registry passwords for push and pull in
-  `~/.m2/settings.xml` (i.e. outside the `pom.xml`)
+  `~/.m2/settings.xml` (i.e., outside the `pom.xml`)
 * Color output ;-)
 
 ### Why another Maven Plugin ?
 
 If you search it GitHub you will find a whole cosmos of Maven Docker
-plugins (November 2014: 12 (!) plugins which 4 actively maintained
-). On the one hand, variety is a good thing on the other hand for
+plugins (As of November 2014: 12 (!) plugins which 4 actively maintained).
+On the one hand, variety is a good thing, but on the other hand for
 users it is hard to decide which one to choose. So, you might wonder
 why you should choose this one.
 
-I setup a dedicated
-[shootout project](https://github.com/rhuss/shootout-docker-maven)
+I setup a dedicated [shootout project](https://github.com/rhuss/shootout-docker-maven)
 which compares the four most active plugins. It contains a simple demo
-project with a database and microservice image and an integration
+project with a database and a microservice image, along with an integration
 test. Each plugin is configured to create images and run the
 integration test (if possible). Although it might be a bit biased, I
-think its a good decision help for finding out which plugin suites you
-best.
+think it can be useful for figuring out which plugin suites you best.
 
-But here is my motivation for writing this plugin. 
+But here is my motivation for writing this plugin: 
 
-First of all, you might wonder, why I started this plugin if there
-were already quite some out here ?
+First of all, you might wonder, why did I start this plugin if there
+were already quite a few out there?
 
-The reason is quite simple: I didn't knew them when I started and if
+The reason is quite simple: I didn't know about them when I started, and if
 you look at the commit history you will see that they all started
-their life roughly at the same time (March 2014).
+roughly at the same time (March 2014).
 
-My design goals where quite simple and here are my initial needs for
+My design goals were quite simple, and these were my initial needs for
 this plugin:
 
 * I needed a flexible, **dynamic port mapping** from container to host
-  ports so that truly isolated build can be achieved. This should
+  ports so that truly isolated builds could be made. This should
   work on indirect setups with VMs like
   [boot2docker](https://github.com/boot2docker/boot2docker) for
   running on OS X.
 
 * It should be possible to **pull images** on the fly to get
   self-contained and repeatable builds with the only requirement to
-  have docker installed.
+  have Docker installed.
 
-* The configuration of the plugin should be **simple** since usually
-  developers don't want to dive into specific Docker details only to
-  start a container. So, only a handful options should be exposed
+* The configuration of the plugin should be **simple**, since developers
+  don't want to be forced to dive into specific Docker details only to
+  start a container. So, only a handful options should be exposed,
   which needs not necessarily map directly to docker config setup.
 
 * The plugin should play nicely with
   [Cargo](http://cargo.codehaus.org/) so that deployments into
-  containers can be easy.
+  containers is easy.
 
-* I want as **less dependencies** as possible for this plugin. So I
+* I wanted as **few dependencies** as possible for this plugin. So I
   decided to *not* use the Java Docker API
   [docker-java](https://github.com/docker-java/docker-java) which is
   external to docker and has a different lifecycle than Docker's
   [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/).
   That is probably the biggest difference to the other
   docker-maven-plugins since AFAIK they all rely on this API. Since
-  for this plugin I really need only a small subset of the whole API,
-  I think it is ok to do the REST calls directly. That way I only have
-  to deal with Docker peculiarities and not also with docker-java's
-  one. As a side effect this plugin has less transitive dependencies.
-  FYI: There are now yet other Docker Java/Groovy client libraries out, which
-  might be used for plugins like this, too:
+  this plugin needs only a small subset of the whole API,
+  I think it is OK to do the REST calls directly. That way I only have
+  to deal with Docker peculiarities and not docker-java's as well.
+  As a side-effect, this plugin has fewer transitive dependencies.
+  FYI: There are other Docker Java/Groovy client libraries out, which
+  might be suitable for plugins like this:
   [fabric/fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api),
   [sprotify/docker-client](https://github.com/spotify/docker-client)
   or
@@ -214,6 +212,5 @@ this plugin:
   
 So, final words: Enjoy this plugin, and please use the
 [issue tracker](https://github.com/rhuss/docker-maven-plugin/issues)
-for anything what hurts or when you have a wish list. I'm quite
-committed to this plugin and have quite some plans. Please stay tuned
-...
+for anything what hurts, or when you have a wish list. I'm quite
+committed to this plugin and have quite some plans. Please stay tuned...
