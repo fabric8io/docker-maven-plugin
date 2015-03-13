@@ -70,8 +70,9 @@ class ShutdownAction {
      * @param access access object for reaching docker
      * @param log logger to use
      * @param keepContainer whether to keep the container (and its data container)
+     * @param removeVolumes whether to remove associated volumes along with the container (ignored if keepContainer is true)
      */
-    public void shutdown(DockerAccess access, Logger log,boolean keepContainer)
+    public void shutdown(DockerAccess access, Logger log,boolean keepContainer, boolean removeVolumes)
             throws MojoExecutionException {
         // Stop the container
         try {
@@ -82,7 +83,7 @@ class ShutdownAction {
                     sleep(shutdownGracePeriod);
                 }
                 // Remove the container
-                access.removeContainer(container);
+                access.removeContainer(container, removeVolumes);
             }
             log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " +
                      AbstractDockerMojo.toContainerAndImageDescription(container, description));
