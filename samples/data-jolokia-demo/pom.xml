@@ -297,7 +297,7 @@
         <server.name>tomcat</server.name>
         <server.version>7.0</server.version>
       </properties>
-      <activation><activeByDefault/></activation>
+      <activation><activeByDefault>true</activeByDefault></activation>
     </profile>
 
     <profile>

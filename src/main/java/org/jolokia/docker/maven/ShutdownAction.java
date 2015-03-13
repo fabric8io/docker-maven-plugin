@@ -72,7 +72,7 @@ class ShutdownAction {
      * @param keepContainer whether to keep the container (and its data container)
      * @param removeVolumes whether to remove associated volumes along with the container (ignored if keepContainer is true)
      */
-    public void shutdown(DockerAccess access, Logger log,boolean keepContainer, boolean removeVolumes)
+    public void shutdown(DockerAccess access, Logger log, boolean keepContainer, boolean removeVolumes)
             throws MojoExecutionException {
         // Stop the container
         try {
