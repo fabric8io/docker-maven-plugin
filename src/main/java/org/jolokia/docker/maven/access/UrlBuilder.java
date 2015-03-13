@@ -75,8 +75,13 @@ public final class UrlBuilder {
         return url;
     }
 
-    public String removeContainer(String containerId) {
-        return createUrl(String.format("/containers/%s", encode(containerId)));
+    public String removeContainer(String containerId, boolean removeVolumes) {
+        String url = createUrl(String.format("/containers/%s", encode(containerId)));
+        if (removeVolumes) {
+            url = addQueryParam(url, "v", "1");
+        }
+
+        return url;
     }
 
     public String startContainer(String containerId) {

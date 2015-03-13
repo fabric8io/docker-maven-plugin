@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.11.3**
+  - Add support for removeVolumes in `docker:stop` configuration (#120)
+
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)
   - Allow host names to be used in port bindings (#101)

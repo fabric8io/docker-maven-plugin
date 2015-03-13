@@ -37,12 +37,29 @@ public class ShutdownActionTest {
         new Expectations() {{
             docker.stopContainer(container);
             log.debug(anyString); minTimes = 1;
-            docker.removeContainer(container);
+            docker.removeContainer(container, false);
             log.info(with(getLogArgCheck(container, true)));
         }};
 
         long start = System.currentTimeMillis();
-        action.shutdown(docker,log,false);
+        action.shutdown(docker,log,false,false);
+        assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
+                   System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+    }
+
+    @Test
+    public void shutdownWithoutKeepingContainersAndRemovingVolumes() throws Exception {
+        ShutdownAction action = new ShutdownAction(createImageConfig(SHUTDOWN_WAIT),container);
+
+        new Expectations() {{
+            docker.stopContainer(container);
+            log.debug(anyString); minTimes = 1;
+            docker.removeContainer(container, true);
+            log.info(with(getLogArgCheck(container, true)));
+        }};
+
+        long start = System.currentTimeMillis();
+        action.shutdown(docker,log,false,true);
         assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
                    System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
     }
@@ -56,7 +73,7 @@ public class ShutdownActionTest {
             log.info(with(getLogArgCheck(container, false)));
         }};
         long start = System.currentTimeMillis();
-        action.shutdown(docker,log,true);
+        action.shutdown(docker,log,true,false);
         assertTrue("No wait",
                    System.currentTimeMillis() - start < SHUTDOWN_WAIT);
 
@@ -69,12 +86,12 @@ public class ShutdownActionTest {
         new Expectations() {{
             docker.stopContainer(container);
             log.debug(anyString); times = 0;
-            docker.removeContainer(container);
+            docker.removeContainer(container, false);
             log.info(with(getLogArgCheck(container, true)));
         }};
 
         long start = System.currentTimeMillis();
-        action.shutdown(docker,log,false);
+        action.shutdown(docker,log,false,false);
         assertTrue("No wait", System.currentTimeMillis() - start < SHUTDOWN_WAIT);
 
     }
@@ -87,7 +104,7 @@ public class ShutdownActionTest {
             docker.stopContainer(container); result = new DockerAccessException("Test");
         }};
 
-        action.shutdown(docker,log,false);
+        action.shutdown(docker,log,false,false);
     }
 
     private Delegate<String> getLogArgCheck(final String container, final boolean withRemove) {
