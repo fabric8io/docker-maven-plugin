@@ -241,9 +241,7 @@ of an image configuration. The available subelements are
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
-remote API. In a future version you will be able to specify
-alternatively an own Dockerfile (possibly containing maven properties)
-for better customization.
+remote API. 
 
 Here's an example:
 
