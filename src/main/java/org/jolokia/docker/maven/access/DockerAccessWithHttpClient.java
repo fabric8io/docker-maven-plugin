@@ -215,7 +215,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             processChunkedResponse(result, createPullOrPushResponseHandler());
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException("Unable to push image [%s] to registry [%s]", image, registry);
+            throw new DockerAccessException(e,"Unable to push image [%s] to registry [%s] : %s", image, registry, e.getMessage());
         } finally {
             if (temporaryImage != null) {
                 removeImage(temporaryImage);
@@ -352,7 +352,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         try {
             return delegate.delete(url, statusCode, additional);
         } catch (IOException e) {            
-            throw new DockerAccessException("communication error occurred with the docker daemon", e);
+            throw new DockerAccessException(e, "Communication error with the docker daemon");
         }
     }
     
@@ -360,7 +360,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         try {
             return delegate.get(url, statusCode, additional);
         } catch (IOException e) {            
-            throw new DockerAccessException("communication error occurred with the docker daemon", e);
+            throw new DockerAccessException(e, "Communication error with the docker daemon");
         }
     }
     
@@ -368,7 +368,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
        try {
            return delegate.post(url, body, createAuthHeader(authConfig), statusCode);
        } catch (IOException e) {            
-           throw new DockerAccessException("communication error occurred with the docker daemon", e);
+           throw new DockerAccessException(e, "communication error occurred with the docker daemon");
        }
     }
     
@@ -376,7 +376,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         try {
             return delegate.post(url, body, statusCode, additional);
         } catch (IOException e) {            
-            throw new DockerAccessException("communication error occurred with the docker daemon", e);
+            throw new DockerAccessException(e, "communication error occurred with the docker daemon");
         }
     }
     
@@ -443,7 +443,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             new ChunkedResponseReader(stream, new TextToJsonBridgeCallback(log, handler)).process();
         }
         catch (IOException e) {
-            throw new DockerAccessException("Cannot process chunk response: " + e, e);
+            throw new DockerAccessException(e, "Cannot process chunk response: " + e);
         }
     }
 

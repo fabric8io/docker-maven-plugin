@@ -9,11 +9,12 @@ package org.jolokia.docker.maven.access;
 public class DockerAccessException extends Exception {
 
     /**
+     * Constructor
      *
-     * @param message error message
      * @param cause root cause
+     * @param message error message
      */
-    public DockerAccessException(String message, Throwable cause) {
+    public DockerAccessException(Throwable cause, String message) {
         super(message, cause);
     }
 
@@ -23,5 +24,9 @@ public class DockerAccessException extends Exception {
     
     public DockerAccessException(String format, Object...args) {
         super(String.format(format, args));
+    }
+
+    public DockerAccessException(Throwable cause, String format, Object ... args) {
+        super(String.format(format, args),cause);
     }
 }
