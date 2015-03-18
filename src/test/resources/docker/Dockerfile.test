@@ -1,5 +1,5 @@
 FROM image
-MAINTAINER maintainer
+MAINTAINER maintainer@example.com
 ENV foo bar
 EXPOSE 8080
 VOLUME ["/export"]

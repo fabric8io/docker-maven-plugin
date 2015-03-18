@@ -238,6 +238,7 @@ of an image configuration. The available subelements are
   volume.
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
+* **maintainer** specifies the Author field of the generated image
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
@@ -250,6 +251,7 @@ Here's an example:
 ````xml
 <build>
   <from>java:8u40</from>
+  <maintainer>john.doe@example.com</maintainer>
   <tags>
     <tag>latest</tag>
     <tag>${project.version}</tag>

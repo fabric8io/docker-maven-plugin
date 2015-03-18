@@ -1,9 +1,5 @@
 package org.jolokia.docker.maven.assembly;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
@@ -24,6 +20,10 @@ import org.jolokia.docker.maven.config.AssemblyConfiguration;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -123,7 +123,9 @@ public class DockerAssemblyManager {
                         .env(buildConfig.getEnv())
                         .expose(buildConfig.getPorts())
                         .volumes(buildConfig.getVolumes());
-
+        if (buildConfig.getMaintainer() != null) {
+            builder.maintainer(buildConfig.getMaintainer());
+        }
         if (assemblyConfig != null) {
             builder.add("maven", "")
                     .basedir(assemblyConfig.getBasedir())

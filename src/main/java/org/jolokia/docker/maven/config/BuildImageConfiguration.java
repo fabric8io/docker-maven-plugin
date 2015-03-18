@@ -24,6 +24,11 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
+    private String maintainer;
+
+    /**
+     * @parameter
+     */
     private List<String> ports;
 
     /**
@@ -61,6 +66,10 @@ public class BuildImageConfiguration {
         return registry;
     }
 
+    public String getMaintainer() {
+        return maintainer;
+    }
+
     public AssemblyConfiguration getAssemblyConfiguration() {
         return assembly;
     }
@@ -95,6 +104,11 @@ public class BuildImageConfiguration {
 
         public Builder registry(String registry) {
             config.registry = registry;
+            return this;
+        }
+
+        public Builder maintainer(String maintainer) {
+            config.maintainer = maintainer;
             return this;
         }
 
