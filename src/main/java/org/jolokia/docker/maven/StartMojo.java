@@ -216,7 +216,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
         
         if (alias == null) {
-            throw new MojoExecutionException("use of 'namingScheme' requires an alias to be set");
+            throw new MojoExecutionException("A naming scheme 'alias' requires an image alias to be set");
         }
 
         return alias;

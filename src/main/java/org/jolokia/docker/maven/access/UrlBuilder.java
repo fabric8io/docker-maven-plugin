@@ -96,8 +96,8 @@ public final class UrlBuilder {
     }
 
     public String tagContainer(ImageName source, ImageName target, boolean force) {
-        String url = createUrl(String.format("/images/%s/tag", encode(source.getNameWithoutTag(null))));
-        url = addRepositoryParam(url, target.getNameWithoutTag(null));
+        String url = createUrl(String.format("/images/%s/tag", encode(source.getFullName())));
+        url = addRepositoryParam(url, target.getNameWithoutTag());
         url = addTagParam(url, target.getTag());
         if (force) {
             url = addQueryParam(url, "force", "1");

@@ -111,7 +111,12 @@ public class RunImageConfiguration {
 
     /** @parameter */
     private NamingScheme namingScheme;
-    
+
+    // Naming scheme for how to name container
+    public enum NamingScheme {
+        none,  // No extra naming
+        alias; // Use the alias as defined in the configuration
+    }
     // Mount volumes from the given image's started containers
     /**
      * @parameter
@@ -224,7 +229,7 @@ public class RunImageConfiguration {
     }
 
     public NamingScheme getNamingScheme() {
-        return (namingScheme == null) ? NamingScheme.none : namingScheme;
+        return namingScheme == null ? NamingScheme.none : namingScheme;
     }
     
     public Boolean getPrivileged() {
@@ -235,15 +240,11 @@ public class RunImageConfiguration {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
     
-    public enum NamingScheme {
-        none, alias;
-    }
-
     // ======================================================================================
 
     public static class Builder {
-        private RunImageConfiguration config = new RunImageConfiguration();
 
+        private RunImageConfiguration config = new RunImageConfiguration();
         public Builder env(Map<String, String> env) {
             config.env = env;
             return this;
@@ -318,7 +319,7 @@ public class RunImageConfiguration {
             config.extraHosts = extraHosts;
             return this;
         }
-        
+
         public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;
@@ -345,10 +346,10 @@ public class RunImageConfiguration {
         }
 
         public Builder namingScheme(String namingScheme) {
-            config.namingScheme = (namingScheme == null) ? NamingScheme.none : NamingScheme.valueOf(namingScheme);
+            config.namingScheme = namingScheme == null ? NamingScheme.none : NamingScheme.valueOf(namingScheme.toLowerCase());
             return this;
         }
-        
+
         public Builder privileged(Boolean privileged) {
             config.privileged = privileged;
             return this;
