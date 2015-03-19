@@ -238,7 +238,7 @@ of an image configuration. The available subelements are
   volume.
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
-* **maintainer** specifies the Author field of the generated image
+* **maintainer** specifies the author (MAINTAINER) field for the generated image
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
