@@ -1,10 +1,10 @@
 package org.jolokia.docker.maven.assembly;
 
+import org.codehaus.plexus.util.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
-import org.codehaus.plexus.util.FileUtils;
 
 /**
  * Create a dockerfile
@@ -14,11 +14,13 @@ import org.codehaus.plexus.util.FileUtils;
  */
 public class DockerFileBuilder {
 
+    public static final String DEFAULT_MAINTAINER = "docker-maven-plugin@jolokia.org";
+
     // Defaults, shouldnt be overwritten
     private String baseImage;
 
     // Maintainer of this image
-    private String maintainer = "docker-maven-plugin@jolokia.org";
+    private String maintainer = DEFAULT_MAINTAINER;
 
     // Basedir to be export
     private String basedir = "/maven";
