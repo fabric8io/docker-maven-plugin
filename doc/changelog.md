@@ -13,6 +13,7 @@
   - Fix NPE when filtering enabled during assembly creation (#82)
   - Allow `${project.build.finalName}` to be overridden when using a pre-packaged assembly descriptor
     for artifacts (#111)
+  - allow containers to be named using `alias` when started (#48)
 
 * **0.11.1**
   - Add support for binding UDP ports (#83)

@@ -18,12 +18,10 @@ package org.jolokia.docker.maven.config.handler.property;/*
 import java.util.*;
 
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.config.RestartPolicy;
 import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.jolokia.docker.maven.util.EnvUtil;
 
 import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
-
 import static org.jolokia.docker.maven.util.EnvUtil.*;
 
 /**
@@ -44,12 +42,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         RunImageConfiguration run = extractRunConfiguration(prefix,properties);
         BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
 
-        String name = withPrefix(prefix, NAME, properties);
-        if (name == null) {
-            throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
-        }
+        String name = extractName(prefix, properties);
         String alias = withPrefix(prefix, ALIAS, properties);
-
+        
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
@@ -88,6 +83,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .links(listWithPrefix(prefix, LINKS, properties))
                 .memory(longWithPrefix(prefix, MEMORY, properties))
                 .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
+                .namingScheme(withPrefix(prefix, NAMING_SCHEME, properties))
                 .portPropertyFile(withPrefix(prefix, PORT_PROPERTY_FILE, properties))
                 .ports(listWithPrefix(prefix, PORTS, properties))
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
@@ -111,6 +107,14 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
     
+    private String extractName(String prefix, Properties properties) throws IllegalArgumentException {
+        String name = withPrefix(prefix, NAME, properties);
+        if (name == null) {
+            throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
+        }
+        return name;
+    }
+    
     // Extract only the values of the port mapping
     private List<String> extractPortValues(String prefix, Properties properties) {
         List<String> ret = new ArrayList<>();
@@ -124,7 +128,6 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         }
         return ret;
     }
-
 
     private RestartPolicy extractRestartPolicy(String prefix, Properties properties) {
         return new RestartPolicy.Builder()
@@ -174,7 +177,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         String prop = withPrefix(prefix,key,properties);
         return prop == null ? null : Boolean.valueOf(prop);
     }
-    
+
     private String getPrefix(ImageConfiguration config) {
         Map<String, String> refConfig = config.getExternalConfig();
         String prefix = refConfig != null ? refConfig.get("prefix") : null;

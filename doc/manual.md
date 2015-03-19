@@ -403,6 +403,9 @@ The `<run>` configuration knows the following sub elements:
   section. 
 * **memory** (*v1.11*) memory limit in bytes
 * **memorySwap** (*v1.11*) total memory usage (memory + swap); use -1 to disable swap.
+* **namingScheme** sets the name of the container
+-- `none` : uses randomly assigned names from docker, default value
+-- `alias` : uses the `alias` specifed in the `image` configuration 
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
   its purpose are also described [below](#port-mapping)
@@ -858,6 +861,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.memory** Container memory (in bytes)
 * **docker.memorySwap** Total memory (swap + memory) `-1` to disable swap
 * **docker.name** Image name
+* **docker.namingScheme** Container naming
 * **docker.portPropertyFile** specifies a path to a port mapping used
   when starting a container.
 * **docker.ports.idx** Sets a port mapping. For example

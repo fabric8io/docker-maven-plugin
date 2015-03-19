@@ -17,6 +17,7 @@ import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.RunImageConfiguration.NamingScheme;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.util.*;
 
@@ -61,8 +62,10 @@ public class StartMojo extends AbstractDockerMojo {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
+            String name = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingScheme());
             ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
-            String containerId = docker.createContainer(config);
+            
+            String containerId = docker.createContainer(config, name);
             docker.startContainer(containerId);
 
             if (showLog(imageConfig)) {
@@ -207,6 +210,18 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
+    private String calculateContainerName(String alias, NamingScheme namingScheme) throws MojoExecutionException { 
+        if (namingScheme == NamingScheme.none) {
+            return null;
+        }
+        
+        if (alias == null) {
+            throw new MojoExecutionException("use of 'namingScheme' requires an alias to be set");
+        }
+
+        return alias;
+    }
+    
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
