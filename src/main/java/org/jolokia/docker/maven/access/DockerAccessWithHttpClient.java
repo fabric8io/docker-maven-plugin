@@ -64,12 +64,12 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     @Override
-    public String createContainer(ContainerCreateConfig containerConfig) throws DockerAccessException {
+    public String createContainer(ContainerCreateConfig containerConfig, String containerName) throws DockerAccessException {
         String createJson = containerConfig.toJson();
         log.debug("Container create config: " + createJson);
 
         try {
-            String response = post(urlBuilder.createContainer(), createJson, HTTP_CREATED).getMessage();
+            String response = post(urlBuilder.createContainer(containerName), createJson, HTTP_CREATED).getMessage();
             JSONObject json = new JSONObject(response);
             logWarnings(json);
 
@@ -88,7 +88,12 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             String response = get(urlBuilder.inspectContainer(containerId), HTTP_OK).getMessage();
             JSONObject json = new JSONObject(response);
             
-            return json.getString("Name");
+            String name =  json.getString("Name");
+            if (name.startsWith("/")) {
+                name = name.substring(1);
+            }
+            
+            return name;
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to retrieve container name for [%s]", containerId);

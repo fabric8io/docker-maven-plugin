@@ -11,7 +11,7 @@ import java.util.Map;
 public class RunImageConfiguration {
 
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
-
+    
     // Environment variables to set when starting the container. key: variable name, value: env value
     /**
      * @parameter
@@ -109,6 +109,14 @@ public class RunImageConfiguration {
      */
     private List<String> ports;
 
+    /** @parameter */
+    private NamingStrategy namingStrategy;
+
+    // Naming scheme for how to name container
+    public enum NamingStrategy {
+        none,  // No extra naming
+        alias; // Use the alias as defined in the configuration
+    }
     // Mount volumes from the given image's started containers
     /**
      * @parameter
@@ -220,6 +228,10 @@ public class RunImageConfiguration {
         return links;
     }
 
+    public NamingStrategy getNamingStrategy() {
+        return namingStrategy == null ? NamingStrategy.none : namingStrategy;
+    }
+    
     public Boolean getPrivileged() {
         return privileged;
     }
@@ -227,12 +239,12 @@ public class RunImageConfiguration {
     public RestartPolicy getRestartPolicy() {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
-
-// ======================================================================================
+    
+    // ======================================================================================
 
     public static class Builder {
-        private RunImageConfiguration config = new RunImageConfiguration();
 
+        private RunImageConfiguration config = new RunImageConfiguration();
         public Builder env(Map<String, String> env) {
             config.env = env;
             return this;
@@ -307,7 +319,7 @@ public class RunImageConfiguration {
             config.extraHosts = extraHosts;
             return this;
         }
-        
+
         public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;
@@ -330,6 +342,11 @@ public class RunImageConfiguration {
 
         public Builder log(LogConfiguration log) {
             config.log = log;
+            return this;
+        }
+
+        public Builder namingScheme(String namingScheme) {
+            config.namingStrategy = namingScheme == null ? NamingStrategy.none : NamingStrategy.valueOf(namingScheme.toLowerCase());
             return this;
         }
 

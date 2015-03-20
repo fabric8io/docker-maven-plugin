@@ -18,9 +18,9 @@ package org.jolokia.docker.maven.config.handler;/*
 import java.util.*;
 
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.jolokia.docker.maven.config.handler.property.ConfigKey;
 import org.jolokia.docker.maven.config.handler.property.PropertyConfigHandler;
 
@@ -106,6 +106,14 @@ public class PropertyConfigHandlerTest {
         assertFalse(config.exportBasedir());
         assertTrue(config.isIgnorePermissions());
     }
+
+    @Test
+    public void testNamingScheme() throws Exception  {
+        String[] testData = new String[] { k(NAME), "image", k(NAMING_SCHEME), NamingStrategy.alias.toString() };
+        
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());
+    }
     
     @Test
     public void testNoAssembly() throws Exception {
@@ -119,17 +127,24 @@ public class PropertyConfigHandlerTest {
     
     @Test
     public void testResolve() {
+        ImageConfiguration resolved = resolveExternalImageConfig(getTestData());
+
+        validateBuildConfiguration(resolved.getBuildConfiguration());
+        validateRunConfiguration(resolved.getRunConfiguration());
+    }
+    
+    private ImageConfiguration resolveExternalImageConfig(String[] testData) {
         Map<String, String> external = new HashMap<>();
         external.put("type", "props");
 
         ImageConfiguration config = new ImageConfiguration.Builder().name("image").alias("alias").externalConfig(external).build();
         PropertyConfigHandler handler = new PropertyConfigHandler();
-        List<ImageConfiguration> resolvedImageConfigs = handler.resolve(config, props(getTestData()));
+        
+        List<ImageConfiguration> resolvedImageConfigs = handler.resolve(config, props(testData));
         assertEquals(1,resolvedImageConfigs.size());
         ImageConfiguration resolved = resolvedImageConfigs.get(0);
 
-        validateBuildConfiguration(resolved.getBuildConfiguration());
-        validateRunConfiguration(resolved.getRunConfiguration());
+        return resolved;
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
@@ -174,6 +189,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals(NamingStrategy.none, runConfig.getNamingStrategy());
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
         assertEquals(a("8081:8080"), runConfig.getPorts());
         assertEquals(true, runConfig.getPrivileged());

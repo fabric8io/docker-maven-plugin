@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 @Ignore
 public class DockerAccessIT {
 
+    private static final String CONTAINER_NAME = "integration-test";
     private static final String IMAGE = "busybox:buildroot-2014.02";
     
     private static final String IMAGE_TAG = "busybox:tagged";
@@ -81,12 +82,11 @@ public class DockerAccessIT {
         ContainerHostConfig hostConfig = new ContainerHostConfig().portBindings(portMapping);
         ContainerCreateConfig createConfig = new ContainerCreateConfig(IMAGE).command("ping google.com").hostConfig(hostConfig);
         
-        containerId = dockerClient.createContainer(createConfig);
+        containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
         assertNotNull(containerId);
 
-        // TODO: enhance this to check/set container name when issue 48 is resolved
         String name = dockerClient.getContainerName(containerId);
-        assertNotNull(name);       
+        assertEquals(CONTAINER_NAME, name);    
     }
     
     private void testDoesNotHave() throws DockerAccessException {

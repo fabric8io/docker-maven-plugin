@@ -38,8 +38,11 @@ public final class UrlBuilder {
         return url;
     }
     
-    public String createContainer() {
-        return createUrl("/containers/create");
+    public String createContainer(String name) {
+        String url = createUrl("/containers/create");
+        url = addQueryParam(url, "name", name);
+        
+        return url;
     }
 
     public String deleteImage(String name, boolean force) {
@@ -93,8 +96,8 @@ public final class UrlBuilder {
     }
 
     public String tagContainer(ImageName source, ImageName target, boolean force) {
-        String url = createUrl(String.format("/images/%s/tag", encode(source.getNameWithoutTag(null))));
-        url = addRepositoryParam(url, target.getNameWithoutTag(null));
+        String url = createUrl(String.format("/images/%s/tag", encode(source.getFullName())));
+        url = addRepositoryParam(url, target.getNameWithoutTag());
         url = addTagParam(url, target.getTag());
         if (force) {
             url = addQueryParam(url, "force", "1");
