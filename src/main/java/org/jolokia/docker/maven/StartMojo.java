@@ -17,7 +17,7 @@ import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.config.RunImageConfiguration.NamingScheme;
+import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.util.*;
 
@@ -62,7 +62,7 @@ public class StartMojo extends AbstractDockerMojo {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-            String name = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingScheme());
+            String name = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
             ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
             
             String containerId = docker.createContainer(config, name);
@@ -210,8 +210,8 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
-    private String calculateContainerName(String alias, NamingScheme namingScheme) throws MojoExecutionException { 
-        if (namingScheme == NamingScheme.none) {
+    private String calculateContainerName(String alias, NamingStrategy namingStrategy) throws MojoExecutionException {
+        if (namingStrategy == NamingStrategy.none) {
             return null;
         }
         

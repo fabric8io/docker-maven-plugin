@@ -110,10 +110,10 @@ public class RunImageConfiguration {
     private List<String> ports;
 
     /** @parameter */
-    private NamingScheme namingScheme;
+    private NamingStrategy namingStrategy;
 
     // Naming scheme for how to name container
-    public enum NamingScheme {
+    public enum NamingStrategy {
         none,  // No extra naming
         alias; // Use the alias as defined in the configuration
     }
@@ -228,8 +228,8 @@ public class RunImageConfiguration {
         return links;
     }
 
-    public NamingScheme getNamingScheme() {
-        return namingScheme == null ? NamingScheme.none : namingScheme;
+    public NamingStrategy getNamingStrategy() {
+        return namingStrategy == null ? NamingStrategy.none : namingStrategy;
     }
     
     public Boolean getPrivileged() {
@@ -346,7 +346,7 @@ public class RunImageConfiguration {
         }
 
         public Builder namingScheme(String namingScheme) {
-            config.namingScheme = namingScheme == null ? NamingScheme.none : NamingScheme.valueOf(namingScheme.toLowerCase());
+            config.namingStrategy = namingScheme == null ? NamingStrategy.none : NamingStrategy.valueOf(namingScheme.toLowerCase());
             return this;
         }
 

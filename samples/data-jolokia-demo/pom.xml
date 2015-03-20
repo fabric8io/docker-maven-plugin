@@ -84,7 +84,7 @@
               <alias>server</alias>
               <name>${image}</name>
               <run>
-                <namingScheme>alias</namingScheme>
+                <namingStrategy>alias</namingStrategy>
                 <volumes>
                   <from>
                     <image>data</image>

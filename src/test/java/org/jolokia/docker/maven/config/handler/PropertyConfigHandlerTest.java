@@ -18,7 +18,7 @@ package org.jolokia.docker.maven.config.handler;/*
 import java.util.*;
 
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.config.RunImageConfiguration.NamingScheme;
+import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.junit.Before;
 import org.junit.Test;
 import org.jolokia.docker.maven.config.handler.property.ConfigKey;
@@ -109,10 +109,10 @@ public class PropertyConfigHandlerTest {
 
     @Test
     public void testNamingScheme() throws Exception  {
-        String[] testData = new String[] { k(NAME), "image", k(NAMING_SCHEME), NamingScheme.alias.toString() };
+        String[] testData = new String[] { k(NAME), "image", k(NAMING_SCHEME), NamingStrategy.alias.toString() };
         
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(NamingScheme.alias, config.getRunConfiguration().getNamingScheme());
+        assertEquals(NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());
     }
     
     @Test
@@ -188,7 +188,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
-        assertEquals(NamingScheme.none, runConfig.getNamingScheme());
+        assertEquals(NamingStrategy.none, runConfig.getNamingStrategy());
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
         assertEquals(a("8081:8080"), runConfig.getPorts());
         assertEquals(true, runConfig.getPrivileged());
