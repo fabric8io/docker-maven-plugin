@@ -56,6 +56,7 @@ public enum ConfigKey {
     USER,
     VOLUMES,
     TAGS,
+    MAINTAINER,
     VOLUMES_FROM,
     WAIT_LOG("wait.log"),
     WAIT_TIME("wait.time"),

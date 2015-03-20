@@ -69,6 +69,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .registry(withPrefix(prefix, REGISTRY, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES, properties))
                 .tags(listWithPrefix(prefix, TAGS, properties))
+                .maintainer(withPrefix(prefix, MAINTAINER, properties))
                 .build();
     }
 

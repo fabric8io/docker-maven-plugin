@@ -871,7 +871,9 @@ values in the `<build>` and `<run>` sections.
 * **docker.restartPolicy.name** Container restart policy
 * **docker.restartPolicy.retry** Max restrart retries if `on-failure` used
 * **docker.user** Container user
-* **docker.volumes.idx** defined a list of volumes to expose when building an image
+* **docker.volumes.idx** defines a list of volumes to expose when building an image
+* **docker.tags.idx** defines a list of tags to apply to a built image
+* **docker.maintainer** defines the maintainer's email as used when building an image
 * **docker.volumesFrom.idx** defines a list of image aliases from which
   the volumes should be mounted of the container. The list semantics
   is the same as for links (see above). For examples

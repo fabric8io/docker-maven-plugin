@@ -138,6 +138,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("8080"), buildConfig.getPorts());
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
+        assertEquals("rhuss@redhat.com",buildConfig.getMaintainer());
 
         validateEnv(buildConfig.getEnv());
         
@@ -234,6 +235,7 @@ public class PropertyConfigHandlerTest {
                 k(FROM), "image",
                 k(HOSTNAME), "subdomain",
                 k(LINKS) + ".1", "redis",
+                k(MAINTAINER), "rhuss@redhat.com",
                 k(MEMORY), "1",
                 k(MEMORY_SWAP), "1",
                 k(NAME), "image",
