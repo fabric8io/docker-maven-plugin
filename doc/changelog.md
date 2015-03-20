@@ -3,7 +3,7 @@
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)
   - Add support for setting a custom maintainer in images (#117)
-  - Allow containers to be named using `alias` when started (#48)
+  - Allow containers to be named using `<namingStrategy>alias</namingStrategy>` when started (#48)
 
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)

@@ -405,7 +405,8 @@ The `<run>` configuration knows the following sub elements:
 * **memorySwap** (*v1.11*) total memory usage (memory + swap); use -1 to disable swap.
 * **namingStrategy** sets the name of the container
   - `none` : uses randomly assigned names from docker (default)
-  - `alias` : uses the `alias` specified in the `image` configuration
+  - `alias` : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists
+    with this name.
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
   its purpose are also described [below](#port-mapping)
