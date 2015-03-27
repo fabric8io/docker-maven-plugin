@@ -117,6 +117,7 @@ public class RunImageConfiguration {
         none,  // No extra naming
         alias; // Use the alias as defined in the configuration
     }
+
     // Mount volumes from the given image's started containers
     /**
      * @parameter

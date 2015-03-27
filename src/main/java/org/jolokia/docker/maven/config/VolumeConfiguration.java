@@ -33,7 +33,7 @@ public class VolumeConfiguration {
     private List<String> from;
 
     /**
-     * List of bind parameters for binding/mountng host directories
+     * List of bind parameters for binding/mounting host directories
      * into the container
      *
      * @parameter
