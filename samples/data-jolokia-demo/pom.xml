@@ -96,6 +96,7 @@
                   <!-- Base starts jolokia by default. With this, it can be disabled -->
                   <JOLOKIA_OFF>1</JOLOKIA_OFF>
                 </env>
+                <envPropertyFile>${project.basedir}/src/main/docker/environment.properties</envPropertyFile>
                 <ports>
                   <!-- Port mappings: Container internal port (which must be exposed) will be
                  dynamically mapped and this (random) port will be assigned to the maven variable
