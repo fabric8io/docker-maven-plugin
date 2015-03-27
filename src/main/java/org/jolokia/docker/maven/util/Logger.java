@@ -23,6 +23,13 @@ public interface Logger {
     void info(String message);
 
     /**
+     * Verbose messag
+     *
+     * @param message
+     */
+    void verbose(String message);
+
+    /**
      * A warning.
      *
      * @param message warning
@@ -67,4 +74,5 @@ public interface Logger {
      * used.
      */
     void progressFinished();
+
 }

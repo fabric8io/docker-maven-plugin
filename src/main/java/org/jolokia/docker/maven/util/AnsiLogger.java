@@ -23,6 +23,8 @@ public class AnsiLogger implements Logger {
     private int oldProgress = 0;
     private int total = 0;
 
+    private boolean verbose;
+
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     private static Ansi.Color
             COLOR_ERROR = RED,
@@ -30,8 +32,9 @@ public class AnsiLogger implements Logger {
             COLOR_WARNING = YELLOW,
             COLOR_PROGRESS = CYAN;
 
-    public AnsiLogger(Log log, boolean useColor) {
+    public AnsiLogger(Log log, boolean useColor, boolean verbose) {
         this.log = log;
+        this.verbose = verbose;
         initializeColor(useColor);
     }
 
@@ -56,6 +59,13 @@ public class AnsiLogger implements Logger {
      */
     public void info(String message) {
         log.info(colored(message, COLOR_INFO, true));
+    }
+
+    @Override
+    public void verbose(String message) {
+        if (verbose) {
+            log.info(ansi().fgBright(BLACK).a(LOG_PREFIX).a(message).reset().toString());
+        }
     }
 
     /**

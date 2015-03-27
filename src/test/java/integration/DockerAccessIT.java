@@ -32,7 +32,7 @@ public class DockerAccessIT {
     private final DockerAccessWithHttpClient dockerClient; 
     
     public DockerAccessIT() {
-        this.dockerClient = createClient(EnvUtil.extractUrl(null), new AnsiLogger(new SystemStreamLog(), true));
+        this.dockerClient = createClient(EnvUtil.extractUrl(null), new AnsiLogger(new SystemStreamLog(), true, true));
     }
 
     @Before

@@ -104,6 +104,8 @@ parentheses.
   name (either its alias or full name) or it can be a comma separated
   list with multiple image names. Any name which doesn't refer an
   image in the configuration will be ignored. 
+* **verbose** (`docker.verbose`) Switch on the verbose mode, which e.g. will 
+  print single build steps when creating an image. Switched off by default.
 * **useColor** (`docker.useColor`)
   If set to `true` the log output of this plugin will be colored. By
   default the output is colored if the build is running with a TTY,

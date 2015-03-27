@@ -75,6 +75,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.useColor" default-value = "true" */
     protected boolean useColor;
 
+    // For verbose output
+    /** @parameter property = "docker.verbose" default-value = "false" */
+    protected boolean verbose;
+
     // The date format to use when putting out logs
     /** @parameter property = "docker.logDate" */
     private String logDate;
@@ -118,7 +122,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.log = new AnsiLogger(getLog(), useColor);
+        this.log = new AnsiLogger(getLog(), useColor, verbose);
         if (!skip) {
             DockerAccess access = createDockerAccess();
             try {

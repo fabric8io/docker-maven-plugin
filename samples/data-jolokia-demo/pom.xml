@@ -77,6 +77,7 @@
         <version>${project.version}</version>
         <configuration>
           <logDate>default</logDate>
+          <verbose>true</verbose>
           <images>
             <!-- Docker Image to use -->
             <image>
@@ -131,12 +132,6 @@
                 <assembly>
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
-              </build>
-            </image>
-            <image>
-              <name>jolokia/empty-demo:${project.version}</name>
-              <build>
-
               </build>
             </image>
           </images>
