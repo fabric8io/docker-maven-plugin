@@ -85,7 +85,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .links(listWithPrefix(prefix, LINKS, properties))
                 .memory(longWithPrefix(prefix, MEMORY, properties))
                 .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
-                .namingScheme(withPrefix(prefix, NAMING_SCHEME, properties))
+                .namingStrategy(withPrefix(prefix, NAMING_STRATEGY, properties))
                 .portPropertyFile(withPrefix(prefix, PORT_PROPERTY_FILE, properties))
                 .ports(listWithPrefix(prefix, PORTS, properties))
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))

@@ -107,7 +107,7 @@ public class PropertyConfigHandlerTest {
 
     @Test
     public void testNamingScheme() throws Exception  {
-        String[] testData = new String[] { k(NAME), "image", k(NAMING_SCHEME), NamingStrategy.alias.toString() };
+        String[] testData = new String[] { k(NAME), "image", k(NAMING_STRATEGY), NamingStrategy.alias.toString() };
         
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());

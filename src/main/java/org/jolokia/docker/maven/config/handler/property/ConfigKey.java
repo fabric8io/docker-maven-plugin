@@ -48,7 +48,7 @@ public enum ConfigKey {
     MEMORY,
     MEMORY_SWAP,
     NAME,
-    NAMING_SCHEME,
+    NAMING_STRATEGY,
     PORT_PROPERTY_FILE,
     PORTS,
     PRIVILEGED,

@@ -363,8 +363,8 @@ public class RunImageConfiguration {
             return this;
         }
 
-        public Builder namingScheme(String namingScheme) {
-            config.namingStrategy = namingScheme == null ? NamingStrategy.none : NamingStrategy.valueOf(namingScheme.toLowerCase());
+        public Builder namingStrategy(String namingStrategy) {
+            config.namingStrategy = namingStrategy == null ? NamingStrategy.none : NamingStrategy.valueOf(namingStrategy.toLowerCase());
             return this;
         }
 
