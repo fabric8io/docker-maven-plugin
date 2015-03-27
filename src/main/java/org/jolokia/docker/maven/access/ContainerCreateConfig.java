@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.access;
 
+import java.io.*;
 import java.util.*;
 
 import org.jolokia.docker.maven.util.EnvUtil;
@@ -54,18 +55,19 @@ public class ContainerCreateConfig {
         return a;
     }
 
-    public ContainerCreateConfig environment(Map<String, String> env) throws IllegalArgumentException {
+    public ContainerCreateConfig environment(String envPropsFile, Map<String, String> env) throws IllegalArgumentException {
+
+        Properties envProps = new Properties();
         if (env != null && env.size() > 0) {
-            JSONArray a = new JSONArray();
-            for (Map.Entry<String, String> entry : env.entrySet()) {
-                String value = entry.getValue();
-                if (value == null || value.length() == 0) {
-                    throw new IllegalArgumentException(String.format("Env variable '%s' must not be null or empty",
-                                                                     entry.getKey()));
-                }
-                a.put(entry.getKey() + "=" + entry.getValue());
-            }
-            createConfig.put("Env", a);
+            envProps.putAll(env);
+        }
+        if (envPropsFile != null) {
+            // Props from external file take precedence
+            addPropertiesFromFile(envPropsFile, envProps);
+        }
+
+        if (envProps.size() > 0) {
+            addEnvironment(envProps);
         }
         return this;
     }
@@ -135,5 +137,31 @@ public class ContainerCreateConfig {
             }
         }
         return volume;
+    }
+
+    private void addEnvironment(Properties envProps) {
+        JSONArray containerEnv = new JSONArray();
+        Enumeration keys = envProps.keys();
+        while (keys.hasMoreElements()) {
+            String key = (String) keys.nextElement();
+            String value = envProps.getProperty(key);
+            if (value == null || value.length() == 0) {
+                throw new IllegalArgumentException(String.format("Env variable '%s' must not be null or empty",key));
+            }
+            containerEnv.put(key + "=" + value);
+        }
+        createConfig.put("Env", containerEnv);
+    }
+
+    private void addPropertiesFromFile(String envPropsFile, Properties envProps) {
+        // External properties override internally specified properties
+        try {
+            FileReader reader = new FileReader(envPropsFile);
+            envProps.load(reader);
+        } catch (FileNotFoundException e) {
+            throw new IllegalArgumentException(String.format("Cannot find environment property file '%s'", envPropsFile));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(String.format("Error while loading environment properties: %s", e.getMessage()), e);
+        }
     }
 }

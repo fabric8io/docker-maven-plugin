@@ -392,8 +392,10 @@ The `<run>` configuration knows the following sub elements:
 * **dnsSearch** (*v1.15*) list of `host` elements specying dns search domains 
 * **entrypoint** (*v1.15*) set the entry point for the container
 * **env** can contain environment variables as subelements which are
-  set during startup of the container. The are specified in the
+  set during startup of the container. They are specified in the
   typical maven property format as described [below](#setting-environment-variables).
+* **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
+  specified in this property file overrides the environment variables specified in the configuration.
 * **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the
   container's `/etc/hosts` file.
 * **hostname** (*v1.11*) desired hostname for the container
@@ -471,6 +473,11 @@ via configuration with the `env` parameter
 If you put this configuration into profiles you can easily create
 various test variants with a single image (e.g. by
 switching the JDK or whatever).
+
+It is also possible to set the environment variables from the outside of the plugin's 
+configuration with the parameter `envPropertyFile`. If given, this property file
+is used to set the environment variables where the keys and values specify the environment variable. 
+Environment variables specified in this file override any environment variables specified in the configuration.
 
 ##### Port Mapping
 
@@ -849,6 +856,9 @@ values in the `<build>` and `<run>` sections.
   sets the environment variable `JAVA_OPTS`. Multiple such entries can
   be provided. This environment is used both for building images and
   running containers. The value cannot be empty.
+* **docker.envPropertyFile** specifies the path to a property file whose properties are 
+  used as environment variables. The environment variables takes precedence over any other environment
+  variables specified.
 * **docker.exportDir** Directory name for the exported artifacts as
   described in an assembly (which is `/maven` by default).
 * **docker.extraHosts.idx** List of `host:ip` to add to `/etc/hosts`

@@ -79,6 +79,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
                 .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
+                .envPropertyFile(withPrefix(prefix,ENV_PROPERTY_FILE,properties))
                 .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
                 .hostname(withPrefix(prefix, HOSTNAME, properties))
                 .links(listWithPrefix(prefix, LINKS, properties))

@@ -5,6 +5,7 @@
   - Add support for setting a custom maintainer in images (#117)
   - Allow containers to be named using `<namingStrategy>alias</namingStrategy>` when started (#48)
   - Add new global property 'docker.verbose' for switching verbose image build output (#36)
+  - Ass support for environment variables specified in a property file (#128)
 
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)

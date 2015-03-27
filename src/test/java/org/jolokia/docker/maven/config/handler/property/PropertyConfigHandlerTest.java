@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven.config.handler;/*
+package org.jolokia.docker.maven.config.handler.property;/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -21,8 +21,6 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.junit.Before;
 import org.junit.Test;
-import org.jolokia.docker.maven.config.handler.property.ConfigKey;
-import org.jolokia.docker.maven.config.handler.property.PropertyConfigHandler;
 
 import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
 import static org.junit.Assert.*;
@@ -190,6 +188,7 @@ public class PropertyConfigHandlerTest {
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
         assertEquals(NamingStrategy.none, runConfig.getNamingStrategy());
+        assertEquals("/tmp/envProps.txt",runConfig.getEnvPropertyFile());
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
         assertEquals(a("8081:8080"), runConfig.getPorts());
         assertEquals(true, runConfig.getPrivileged());
@@ -247,6 +246,7 @@ public class PropertyConfigHandlerTest {
                 k(DOMAINNAME), "domain.com",
                 k(ENTRYPOINT), "entrypoint.sh",
                 k(ENV) + ".HOME","/Users/roland",
+                k(ENV_PROPERTY_FILE),"/tmp/envProps.txt",
                 k(EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
                 k(FROM), "image",
                 k(HOSTNAME), "subdomain",

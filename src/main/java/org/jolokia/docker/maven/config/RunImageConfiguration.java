@@ -18,6 +18,13 @@ public class RunImageConfiguration {
      */
     private Map<String, String> env;
 
+    /**
+     * Path to a property file holding environment variables
+     *
+     * @parameter
+     */
+    private String envPropertyFile;
+
     // Command to execute in container
     /**
      * @parameter
@@ -101,7 +108,7 @@ public class RunImageConfiguration {
      * @parameter
      */
     private List<String> extraHosts;
-    
+
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
     /**
@@ -151,6 +158,10 @@ public class RunImageConfiguration {
 
     public Map<String, String> getEnv() {
         return env;
+    }
+
+    public String getEnvPropertyFile() {
+        return envPropertyFile;
     }
 
     public String getEntrypoint() {
@@ -250,6 +261,12 @@ public class RunImageConfiguration {
             config.env = env;
             return this;
         }
+
+        public Builder envPropertyFile(String envPropertyFile) {
+            config.envPropertyFile = envPropertyFile;
+            return this;
+        }
+
 
         public Builder command(String command) {
             config.command = command;
