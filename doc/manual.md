@@ -328,6 +328,19 @@ used for `assemblyDescriptorRef`:
 
 All declared files end up in the configured `basedir` (or `/maven`
 by default) in the created image.
+ 
+If the assembly references the artifact to build with this pom, it is 
+required that the `package` phase is included in the run. This happens 
+either automatically when the `docker:build` target is called as part 
+of a binding (e.g. is `docker:build` is bound to the `pre-integration-test` 
+phase) or it must be ensured when called on the command line:
+
+````bash
+mvn package docker:build
+````
+
+This is a general restriction of the Maven lifecycle which applies also 
+for the `maven-assembly-plugin` itself.
 
 In the following example a dependency from the pom.xml is included and
 mapped to the name `jolokia.war`. With this configuration you will end
@@ -368,7 +381,8 @@ Please note, based upon the following documentation listed [here](http://maven.a
 there is no guarantee the plugin creating your artifact will honor it in which case you will need to use a custom
 descriptor like above to achieve the desired naming.
 
-At the time of this writing, the `jar` and `war` plugins properly honor the usage of `finalName`.
+Currently the `jar` and `war` plugins properly honor the usage of `finalName`.
+
 
 
 #### `docker:start`
