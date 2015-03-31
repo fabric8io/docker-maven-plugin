@@ -44,6 +44,23 @@ Example:
 mvn -Dserver.name=jetty -Dserver.version=9 clean install
 ```
 
+In addition to running the integration test with building images, starting containers, 
+running tests and stopping containers one can also only start the containers:
+
+```bash
+mvn docker:start
+```
+
+In order to get the dynamically exposed port, use `docker ps`. You can connect to the 
+Jolokia agent inside the container then with an URL like `http://localhost:http://localhost:49171/jolokia` to 
+the Agent.
+
+For stopping the server simply call
+
+```bash
+mvn docker:stop
+```
+
 ### Cargo Demo
 
 [cargo-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
