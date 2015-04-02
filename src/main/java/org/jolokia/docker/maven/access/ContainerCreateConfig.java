@@ -2,6 +2,7 @@ package org.jolokia.docker.maven.access;
 
 import java.util.*;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -54,7 +55,7 @@ public class ContainerCreateConfig {
         return a;
     }
 
-    public ContainerCreateConfig environment(Map<String, String> env) throws IllegalArgumentException {
+    public ContainerCreateConfig environment(Map<String, String> env, Properties properties) throws IllegalArgumentException {
         if (env != null && env.size() > 0) {
             JSONArray a = new JSONArray();
             for (Map.Entry<String, String> entry : env.entrySet()) {
@@ -63,7 +64,10 @@ public class ContainerCreateConfig {
                     throw new IllegalArgumentException(String.format("Env variable '%s' must not be null or empty",
                                                                      entry.getKey()));
                 }
-                a.put(entry.getKey() + "=" + entry.getValue());
+
+                StrSubstitutor substitutor = new StrSubstitutor();
+                String jsonString = entry.getKey() + "=" + substitutor.replace(value, properties);
+                a.put(jsonString);
             }
             createConfig.put("Env", a);
         }
