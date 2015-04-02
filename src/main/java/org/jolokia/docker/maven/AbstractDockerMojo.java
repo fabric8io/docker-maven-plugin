@@ -34,7 +34,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
 
     // Key holding the log dispatcher
-    public static final Object CONTEXT_KEY_LOG_DISPATCHER = "CONTEXT_KEY_DOCKER_LOG_DISPATCHER";
+    public static final String CONTEXT_KEY_LOG_DISPATCHER = "CONTEXT_KEY_DOCKER_LOG_DISPATCHER";
 
     // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
     // docker installations.
