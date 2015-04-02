@@ -7,6 +7,7 @@ package org.jolokia.docker.maven;
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -15,21 +16,14 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.access.PortMapping;
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
-import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.config.LogConfiguration;
-import org.jolokia.docker.maven.config.RunImageConfiguration;
-import org.jolokia.docker.maven.config.WaitConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
-import org.jolokia.docker.maven.util.StartOrderResolver;
-import org.jolokia.docker.maven.util.Timestamp;
-import org.jolokia.docker.maven.util.WaitUtil;
+import org.jolokia.docker.maven.util.*;
 
 
 /**
@@ -64,6 +58,9 @@ public class StartMojo extends AbstractDockerMojo {
         RunService runService = serviceHub.getRunService();
 
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
+        
+        ContainerLabel label = new ContainerLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
+        
 
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
         
