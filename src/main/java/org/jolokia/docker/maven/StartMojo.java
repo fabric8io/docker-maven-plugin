@@ -222,7 +222,7 @@ public class StartMojo extends AbstractDockerMojo {
                 logOut.add("on log out '" + wait.getLog() + "'");
             }
             long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
-            log.info("Waited " + StringUtils.join(logOut.toArray(), " and ") + waited + " ms");
+            log.info("Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
         }
     }
 
