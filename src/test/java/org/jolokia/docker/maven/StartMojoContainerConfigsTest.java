@@ -5,6 +5,7 @@ import java.util.*;
 
 import mockit.*;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
 import org.junit.Test;
@@ -18,7 +19,10 @@ import org.skyscreamer.jsonassert.JSONAssert;
 public class StartMojoContainerConfigsTest {
 
     @Mocked
-    DockerAccess docker;
+    private DockerAccess docker;
+
+    @Mocked
+    private MavenProject mavenProject;
 
     @Test
     @SuppressWarnings("unused")
@@ -58,7 +62,14 @@ public class StartMojoContainerConfigsTest {
                         .build();
 
         StartMojo mojo = new StartMojo();
+        mojo.project = mavenProject;
         PortMapping portMapping = mojo.getPortMapping(runConfig, new Properties());
+
+        new Expectations() {{
+            mavenProject.getProperties();
+            result = new Properties();
+            minTimes = 1;
+        }};
 
         new Expectations() {{
             docker.getContainerName((String) withNotNull());
