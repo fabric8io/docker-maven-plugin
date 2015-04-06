@@ -8,7 +8,6 @@
       <includes>
         <include>${project.groupId}:${project.artifactId}</include>
       </includes>
-      <outputDirectory>.</outputDirectory>
       <outputFileNameMapping>ROOT.war</outputFileNameMapping>
     </dependencySet>
   </dependencySets>
