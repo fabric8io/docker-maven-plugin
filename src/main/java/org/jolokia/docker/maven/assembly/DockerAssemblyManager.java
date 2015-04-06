@@ -104,10 +104,15 @@ public class DockerAssemblyManager {
             archiver.setLongfile(TarLongFileMode.posix);
 //            archiver.addFileSet(DefaultFileSet.fileSet(buildDirs.getOutputDirectory()));
             archiver.addArchivedFileSet(new File(buildDirs.getOutputDirectory(),"maven.tgz"),"maven/");
-            archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
+          
             if (extraDir != null) {
                 archiver.addFileSet(DefaultFileSet.fileSet(extraDir));
-            }    
+                
+            }
+            if( extraDir == null || ! new File(extraDir,"Dockerfile").exists()) 
+            {//only add docker file if not in extra
+            	  archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
+            }
             archiver.setDestFile(archive);
             archiver.createArchive();
             return archive;
