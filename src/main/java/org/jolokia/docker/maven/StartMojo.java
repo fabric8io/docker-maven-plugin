@@ -31,8 +31,8 @@ import org.jolokia.docker.maven.util.*;
  */
 public class StartMojo extends AbstractDockerMojo {
 
-    /** @parameter property = "docker.showLog" */
-    private String showLog;
+    /** @parameter property = "docker.showLogs" */
+    private String showLogs;
 
     // Map holding associations between started containers and their images via name and aliases
     // Key: Image, Value: Container
@@ -68,7 +68,7 @@ public class StartMojo extends AbstractDockerMojo {
             String containerId = docker.createContainer(config, name);
             docker.startContainer(containerId);
 
-            if (showLog(imageConfig)) {
+            if (showLogs(imageConfig)) {
                 dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
             }
             registerContainer(containerId, imageConfig);
@@ -300,16 +300,16 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    protected boolean showLog(ImageConfiguration imageConfig) {
-        if (showLog != null) {
-            if (showLog.equalsIgnoreCase("true")) {
+    protected boolean showLogs(ImageConfiguration imageConfig) {
+        if (showLogs != null) {
+            if (showLogs.equalsIgnoreCase("true")) {
                 return true;
             }
-            else if (showLog.equalsIgnoreCase("false")) {
+            else if (showLogs.equalsIgnoreCase("false")) {
                 return false;
             }
             else {
-                return matchesConfiguredImages(showLog, imageConfig);
+                return matchesConfiguredImages(showLogs, imageConfig);
             }
         }
 
