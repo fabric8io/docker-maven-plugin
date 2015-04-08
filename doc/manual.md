@@ -392,8 +392,6 @@ the configuration's `<run>` section of all given (and enabled images)
 
 The `<run>` configuration knows the following sub elements:
 
-* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]"
- (#volume-binding) for details.
 * **capAdd** (*v1.14*) a list of `add` elements to specify kernel parameters to add to
   the container.
 * **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
@@ -440,6 +438,8 @@ The `<run>` configuration knows the following sub elements:
   list. This is probably most useful when used from the command line
   as system property `docker.showLogs`.   
 * **user** (*v1.11*) user used inside the container
+* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]
+ (#volume-binding)" for details.
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
