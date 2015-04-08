@@ -617,6 +617,18 @@ been created from the image `jolokia/docker-demo` are mounted directly into the 
 the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
 the full image name, an alias name like *service* can be used, too.
 
+Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This
+should even work for boot2docker:
+
+````xml
+<volumes>
+  <bind>
+    <volume>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}</volume> 
+    <volume>${project.basedir}/data:/data</volume>
+  </bind>
+</volumes>
+````xml
+
 ##### Container restart policy
 
 Specify the behavior to apply when the container exits. These values can be
