@@ -623,8 +623,8 @@ Specify the behavior to apply when the container exits. These values can be
 specified withing a `<restartPolicy>` section with the following sub-elements:
 
 * **name** restart policy name, choose from:
-  -- `always` (*v1.15*) always restart
-  -- `on-failure` (*v1.15*) restart on container non-exit code of zero
+  * `always` (*v1.15*) always restart
+  * `on-failure` (*v1.15*) restart on container non-exit code of zero
 * **retry** if `on-failure` is used, controls max number of attempts to 
   restart before giving up.
 
