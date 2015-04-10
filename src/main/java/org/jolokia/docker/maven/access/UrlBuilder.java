@@ -30,6 +30,10 @@ public final class UrlBuilder {
         return url;
     }
 
+    public String inspectImage(String name) {
+        return createUrl(String.format("/images/%s/json", encode(name)));
+    }
+
     public String containerLogs(String containerId, boolean follow) {
         String url = createUrl(String.format("/containers/%s/logs", containerId));
         url += "?stdout=1&stderr=1&timestamps=1";
