@@ -128,6 +128,15 @@ public class RunImageConfiguration {
      */
     private WaitConfiguration wait;
 
+
+    // Wait that many milliseconds after starting the container in order to allow the
+    // container to warm up
+    /**
+     * @parameter
+     */
+    private WatchConfiguration watch;
+
+
     /**
      * @parameter
      */
@@ -186,6 +195,10 @@ public class RunImageConfiguration {
 
     public WaitConfiguration getWaitConfiguration() {
         return wait;
+    }
+
+    public WatchConfiguration getWatchConfiguration() {
+        return watch;
     }
 
     public LogConfiguration getLog() {
@@ -325,6 +338,11 @@ public class RunImageConfiguration {
 
         public Builder wait(WaitConfiguration wait) {
             config.wait = wait;
+            return this;
+        }
+
+        public Builder watch(WatchConfiguration watch) {
+            config.watch = watch;
             return this;
         }
 

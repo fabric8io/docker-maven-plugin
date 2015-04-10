@@ -9,6 +9,7 @@ package org.jolokia.docker.maven;
  */
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -39,6 +40,12 @@ public class StartMojo extends AbstractDockerMojo {
 
     // Key: Alias, Value: Image
     private Map<String, String> imageAliasMap = new HashMap<>();
+    
+    /** @parameter property = "docker.watch.enabled" default-value = "false" */
+    protected boolean watchEnabled;
+
+    /** @parameter property = "docker.watch.interval" default-value = "5000" */
+    protected Integer watchInterval;
 
     /** {@inheritDoc} */
     @Override
@@ -69,7 +76,6 @@ public class StartMojo extends AbstractDockerMojo {
                 dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
             }
             registerContainer(containerId, imageConfig);
-
             log.info("Created and started container " + toContainerAndImageDescription(containerId, imageConfig.getDescription()));
 
             // Remember id for later stopping the container
@@ -83,6 +89,7 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Wait if requested
             waitIfRequested(runConfig, mappedPorts, docker, containerId);
+            watchIfRequested(runConfig, mappedPorts, docker, containerId, imageName);
         }
     }
 
@@ -207,6 +214,44 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
+    private void watchIfRequested(final RunImageConfiguration runConfig, final PortMapping mappedPorts, final DockerAccess docker, final String initialContainerId, final String imageName) throws DockerAccessException {
+        WatchConfiguration watch = runConfig.getWatchConfiguration();
+        
+        final AtomicReference<String> imageId = new AtomicReference<>();
+        final AtomicReference<String> containerId = new AtomicReference<>(initialContainerId);
+
+        imageId.set(docker.getImageId(imageName));
+        boolean keepRunning = true;
+        if (watch != null || watchEnabled) {
+            watch = watch != null ? watch : new WatchConfiguration.Builder().time(watchInterval).build();
+            while (keepRunning && !Thread.interrupted()) {
+                try {
+                    String currentImageId = docker.getImageId(imageName);
+                    String oldValue = imageId.getAndSet(currentImageId);
+                    if (!currentImageId.equals(oldValue)) {
+                        log.info("Image: "+imageName+" has been updated. Recreating container:"+containerId.get());
+                        log.info("Stopping container:"+containerId.get());
+                        docker.stopContainer(containerId.get());
+                        ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
+                        containerId.set(docker.createContainer(config));
+                        log.info("Starting container:"+containerId.get());
+                        docker.startContainer(containerId.get());
+                    }
+                    Thread.sleep(watch.getInterval());
+                } catch (DockerAccessException e) {
+                    log.warn("Error while watching for image:" + imageName);
+                } catch (MojoExecutionException e) {
+                    log.warn("Error while recreating container for image:" + imageName);
+                    keepRunning = false;
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while watching for image:" + imageName);
+                    keepRunning = false;
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+    
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {

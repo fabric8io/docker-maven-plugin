@@ -64,6 +64,18 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     @Override
+    public String getImageId(String image) throws DockerAccessException {
+        try {
+            String response = get(urlBuilder.inspectImage(image), HTTP_OK).getMessage();
+            JSONObject json = new JSONObject(response);
+            return json.getString("Id");
+        } catch (HttpRequestException e) {
+            log.error(e.getMessage());
+            throw new DockerAccessException("Unable to find Id for image [%s]", image);
+        }
+    }
+
+    @Override
     public String createContainer(ContainerCreateConfig containerConfig) throws DockerAccessException {
         String createJson = containerConfig.toJson();
         log.debug("Container create config: " + createJson);

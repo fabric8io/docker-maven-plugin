@@ -25,6 +25,14 @@ public interface DockerAccess {
     boolean hasImage(String image) throws DockerAccessException;
 
     /**
+     * Finds the id of an image.
+     * @param image name of the image.
+     * @return  the id of the image
+     * @throws DockerAccessException in case of a request error
+     */
+    String getImageId(String image) throws DockerAccessException;
+
+    /**
      * Create a container from the given image.
      *
      * <p>The <code>container id</code> will be set on the <code>container</code> upon successful creation.</p>
