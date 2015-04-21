@@ -106,7 +106,7 @@ public class ApacheHttpDelegate {
                             .loadKeyMaterial(keyStore, "docker".toCharArray())
                             .loadTrustMaterial(keyStore)
                             .build();
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
             return RegistryBuilder.<ConnectionSocketFactory> create().register("https", sslsf).build();
         }
         catch (GeneralSecurityException e) {
