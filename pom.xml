@@ -293,7 +293,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.4</version>
+            <version>1.6</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -306,6 +306,9 @@
             <configuration>
               <useAgent>true</useAgent>
               <keyname>roland@jolokia.org</keyname>
+               <gpgArguments>
+                <arg>--allow-weak-digest-algos</arg>
+              </gpgArguments>
             </configuration>
           </plugin>
         </plugins>
