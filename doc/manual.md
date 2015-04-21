@@ -285,7 +285,9 @@ Here's an example:
   directory will also be added to the image. Usage of this directive will take
   precedence over any configuration specified in the `build` element. In addition to
   the files specified within the assembly also all files contained in this directory
-  are added to the docker build directory.
+  are added to the docker build directory. If this path is not an absolute path it 
+  is resolved relatively to `src/main/docker`. You can make easily an absolute path by 
+  using `${project.baseDir}` as prefix for your path
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
   the container root (`/`), which cannot be exported. 
@@ -388,7 +390,11 @@ Currently the `jar` and `war` plugins properly honor the usage of `finalName`.
 #### `docker:start`
 
 Creates and starts docker containers. This goals evaluates
-the configuration's `<run>` section of all given (and enabled images)
+the configuration's `<run>` section of all given (and enabled images). In order to switch on 
+globally the logs **showLogs** can be used as global configuration (i.e. outside of `<images>`).
+If set it will print out all standard output and standard error messages for all containers started. 
+As value the images for which logs should be shown can be given as a comma separated list. This is probably most 
+useful when used from the command line as system property `docker.showLogs`.   
 
 The `<run>` configuration knows the following sub elements:
 
@@ -432,11 +438,6 @@ The `<run>` configuration knows the following sub elements:
 * **privileged** (*v1.11*) give container full access to host (`true|false`)   
 * **restartPolicy** (*v1.15*) specifies the container restart policy, see 
   [below](#container-restart-policy)
-* **showLogs** allows, if set, to see all standard output and standard
-  error messages for all containers selected. As value the images for
-  which logs should be shown can be given as a comma separated
-  list. This is probably most useful when used from the command line
-  as system property `docker.showLogs`.   
 * **user** (*v1.11*) user used inside the container
 * **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]
  (#volume-binding)" for details.

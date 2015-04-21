@@ -1,6 +1,8 @@
 package org.jolokia.docker.maven;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
@@ -112,7 +114,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private AuthConfigFactory authConfigFactory;
 
     protected Logger log;
-    
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
      * which must be implemented by subclass.
@@ -124,10 +126,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.log = new AnsiLogger(getLog(), useColor, verbose);
         if (!skip) {
-            DockerAccess access = createDockerAccess();
+
+            String dockerUrl = EnvUtil.extractUrl(dockerHost);
+            DockerAccess access = createDockerAccess(dockerUrl);
+            setDockerHostAddressProperty(dockerUrl);
             try {
                 executeInternal(access);
-            } catch (DockerAccessException exp) {  
+            } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } finally {
                 access.shutdown();
@@ -144,8 +149,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             throws DockerAccessException, MojoExecutionException;
 
     // =============================================================================================
-    // Registry for managed containers
-
 
     /**
      * Register a shutdown action executed during "stop"
@@ -154,6 +157,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected void registerShutdownAction(ShutdownAction shutdownAction) {
         getShutdownActions().add(shutdownAction);
     }
+
 
     /**
      * Return shutdown actions in reverse registration order
@@ -179,8 +183,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             Set<ShutdownAction> actions = Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
             getPluginContext().put(CONTEXT_KEY_SHUTDOWN_ACTIONS, actions);
             return actions;
-        } 
-       
+        }
+
         return (Set<ShutdownAction>) obj;
     }
 
@@ -229,9 +233,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // visible for testing
-    DockerAccess createDockerAccess() throws MojoExecutionException {
+    private DockerAccess createDockerAccess(String baseUrl) throws MojoExecutionException {
         try {
-            DockerAccess client = new DockerAccessWithHttpClient(apiVersion, EnvUtil.extractUrl(dockerHost),
+            DockerAccess client = new DockerAccessWithHttpClient(apiVersion, baseUrl,
                     EnvUtil.getCertPath(certPath), log);
             client.start();
 
@@ -239,6 +243,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
         catch (IOException | DockerAccessException e) {
             throw new MojoExecutionException("Cannot create docker access object ", e);
+        }
+    }
+
+    // Registry for managed containers
+    private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {
+        try {
+            project.getProperties().setProperty("docker.host.address", new URL(dockerUrl).getHost());
+        } catch (MalformedURLException e) {
+            throw new MojoFailureException("Cannot parse " + dockerUrl + " as URL: " + e.getMessage(),e);
         }
     }
 
@@ -353,5 +366,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             }
         }
     }
+
 
 }

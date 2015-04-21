@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven.access;
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 
 import org.jolokia.docker.maven.access.chunked.*;

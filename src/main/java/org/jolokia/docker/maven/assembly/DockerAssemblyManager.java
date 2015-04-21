@@ -1,5 +1,9 @@
 package org.jolokia.docker.maven.assembly;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
@@ -20,10 +24,6 @@ import org.jolokia.docker.maven.config.AssemblyConfiguration;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -61,7 +61,7 @@ public class DockerAssemblyManager {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
         try {
-            if (assemblyConfig != null) {
+            if (assemblyConfig != null && (assemblyConfig.getDescriptor() != null || assemblyConfig.getDescriptorRef() != null)) {
                 createAssemblyDirArchive(assemblyConfig, params, buildDirs);
             }
 
@@ -91,7 +91,7 @@ public class DockerAssemblyManager {
     private File validateDockerDir(MojoParameters params, String dockerFileDir) throws MojoExecutionException {
         File dockerDir = EnvUtil.prepareAbsoluteSourceDirPath(params, dockerFileDir);
         if (! new File(dockerDir,"Dockerfile").exists()) {
-            throw new MojoExecutionException("Specified dockerFileDir " + dockerFileDir +
+            throw new MojoExecutionException("Specified dockerFileDir \"" + dockerFileDir + "\" (resolved to \"" + dockerDir + "\") " +
                                              " doesn't contain a 'Dockerfile'");
         }
         return dockerDir;

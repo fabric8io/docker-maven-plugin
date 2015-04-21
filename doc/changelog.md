@@ -7,7 +7,9 @@
   - Add new global property 'docker.verbose' for switching verbose image build output (#36)
   - Ass support for environment variables specified in a property file (#128)
   - Documentation improvements (#107, #121)
-
+  - Allow to use a dockerFileDir without any assembly
+  - Switched off strict host address checking in certificates when SSL is used
+  
 * **0.11.2**
   - Fix maven parse error when specifying restart policy (#99)
   - Allow host names to be used in port bindings (#101)
