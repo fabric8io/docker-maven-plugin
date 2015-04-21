@@ -5,7 +5,7 @@
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](http://flattr.com/thing/73919/Jolokia-JMX-on-Capsaicin)
 
 This is a Maven plugin for managing Docker images and containers for your builds.
-The current version ist **0.11.2** and works with Maven 3.2.1 and Docker 1.3.0 or later.
+The current version ist **0.11.3** and works with Maven 3.2.1 and Docker 1.3.0 or later.
 
 The current Docker API version used is `v1.15` (which is the minimal required API version).
 See the **[User Manual](doc/manual.md)** for details on how to override this value for new
