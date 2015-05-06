@@ -1,11 +1,15 @@
 package org.jolokia.docker.maven.assembly;
 
-import java.io.IOException;
-import java.util.*;
-
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
+import org.jolokia.docker.maven.config.Arguments;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.*;
@@ -13,34 +17,40 @@ import static org.junit.Assert.*;
 
 public class DockerFileBuilderTest {
 
-    private String dockerfileContent;
-    private Map<String, String> dockerfileMap;
-
-    @Before
-    public void setUp() throws Exception {
-        Map<String, String> env = new HashMap<>(1);
-        env.put("foo", "bar");
-
-        dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
-                .baseImage("image")
-                .command("c1", "c2")
-                .env(env)
-                .basedir("/export")
-                .expose(Arrays.asList("8080"))
-                .maintainer("maintainer@example.com")
-                .volumes(Arrays.asList("/vol1")).content();
-        dockerfileMap = dockerfileToMap(dockerfileContent);
-    }
-
     @Test
     public void testBuildDockerFile() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080"))
+                .maintainer("maintainer@example.com")
+                .volumes(Collections.singletonList("/vol1")).content();
+
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
 
     @Test
     public void testMaintainer() {
-        assertThat(dockerfileMap, hasEntry("MAINTAINER", "maintainer@example.com"));
+        String dockerfileContent = new DockerFileBuilder().maintainer("maintainer@example.com").content();
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("MAINTAINER", "maintainer@example.com"));
+    }
+
+    @Test
+    public void testEntryPointShell() {
+        Arguments a = Arguments.Builder.get().withShell("java -jar /my-app-1.1.1.jar server").build();
+        String dockerfileContent = new DockerFileBuilder().entryPoint(a).content();
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("ENTRYPOINT", "java -jar /my-app-1.1.1.jar server"));
+    }
+
+    @Test
+    public void testEntryPointParams() {
+        Arguments a = Arguments.Builder.get().withParam("java").withParam("-jar").withParam("/my-app-1.1.1.jar").withParam("server").build();
+        String dockerfileContent = new DockerFileBuilder().entryPoint(a).content();
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("ENTRYPOINT", "[\"java\",\"-jar\",\"/my-app-1.1.1.jar\",\"server\"]"));
     }
 
     @Test

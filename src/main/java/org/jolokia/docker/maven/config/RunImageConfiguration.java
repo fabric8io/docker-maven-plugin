@@ -29,7 +29,7 @@ public class RunImageConfiguration {
     /**
      * @parameter
      */
-    private String command;
+    private String cmd;
 
     // container domain name
     /**
@@ -197,8 +197,8 @@ public class RunImageConfiguration {
         return ports;
     }
 
-    public String getCommand() {
-        return command;
+    public String getCmd() {
+        return cmd;
     }
 
     public String getPortPropertyFile() {
@@ -277,8 +277,8 @@ public class RunImageConfiguration {
         }
 
 
-        public Builder command(String command) {
-            config.command = command;
+        public Builder cmd(String cmd) {
+            config.cmd = cmd;
             return this;
         }
 

@@ -56,7 +56,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private BuildImageConfiguration extractBuildConfiguration(String prefix, Properties properties) {
         return new BuildImageConfiguration.Builder()
-                .command(withPrefix(prefix, COMMAND, properties))
+                .cmd(withPrefix(prefix, CMD, properties))
+                .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
                 .ports(extractPortValues(prefix, properties))
@@ -73,7 +74,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new RunImageConfiguration.Builder()
                 .capAdd(listWithPrefix(prefix, CAP_ADD, properties))
                 .capDrop(listWithPrefix(prefix, CAP_DROP, properties))
-                .command(withPrefix(prefix, COMMAND, properties))
+                .cmd(withPrefix(prefix, CMD, properties))
                 .dns(listWithPrefix(prefix, DNS, properties))
                 .dnsSearch(listWithPrefix(prefix, DNS_SEARCH, properties))
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
