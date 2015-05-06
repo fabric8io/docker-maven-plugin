@@ -276,8 +276,10 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
     private Map<String, String> createAuthHeader(AuthConfig authConfig) {
-        return (authConfig == null) ? Collections.<String, String> emptyMap() :
-                Collections.singletonMap("X-Registry-Auth", authConfig.toHeaderValue());
+        if (authConfig == null) {
+            authConfig = AuthConfig.getEmpty();
+        }
+        return Collections.singletonMap("X-Registry-Auth", authConfig.toHeaderValue());
     }
     
     private boolean containsImage(ImageName name, JSONArray array) {

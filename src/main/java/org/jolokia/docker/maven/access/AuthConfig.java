@@ -27,7 +27,7 @@ public class AuthConfig {
         putNonNull(params, "username", user);
         putNonNull(params, "password", password);
         putNonNull(params, "email", email);
-        putNonNull(params, "auth",auth);
+        putNonNull(params, "auth", auth);
     }
 
     public String toHeaderValue() {
@@ -57,4 +57,9 @@ public class AuthConfig {
             ret.put(key,value);
         }
     }
+
+    public static AuthConfig getEmpty(){
+        return new AuthConfig("", "", "", "");
+    }
+
 }
