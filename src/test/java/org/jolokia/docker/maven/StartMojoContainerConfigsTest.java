@@ -48,7 +48,7 @@ public class StartMojoContainerConfigsTest {
                         .memory(1L)
                         .memorySwap(1L)
                         .env(env())
-                        .command("date")
+                        .cmd("date")
                         .entrypoint("entrypoint")
                         .extraHosts(extraHosts())
                         .workingDir("/foo")
@@ -92,23 +92,23 @@ public class StartMojoContainerConfigsTest {
     }
 
     private List<String> bind() {
-        return Arrays.asList("/host_tmp:/container_tmp");
+        return Collections.singletonList("/host_tmp:/container_tmp");
     }
 
     private List<String> capAdd() {
-        return Arrays.asList("NET_ADMIN");
+        return Collections.singletonList("NET_ADMIN");
     }
 
     private List<String> capDrop() {
-        return Arrays.asList("MKNOD");
+        return Collections.singletonList("MKNOD");
     }
 
     private List<String> dns() {
-        return Arrays.asList("8.8.8.8");
+        return Collections.singletonList("8.8.8.8");
     }
 
     private List<String> dnsSearch() {
-        return Arrays.asList("domain.com");
+        return Collections.singletonList("domain.com");
     }
 
     private Map<String, String> env() {
@@ -119,11 +119,11 @@ public class StartMojoContainerConfigsTest {
     }
 
     private List<String> extraHosts() {
-        return Arrays.asList("localhost:127.0.0.1");
+        return Collections.singletonList("localhost:127.0.0.1");
     }
 
     private List<String> links() {
-        return Arrays.asList("redis3:redis");
+        return Collections.singletonList("redis3:redis");
     }
 
     private String loadFile(String fileName) throws IOException {
@@ -131,7 +131,7 @@ public class StartMojoContainerConfigsTest {
     }
 
     private List<String> ports() {
-        return Arrays.asList("0.0.0.0:11022:22");
+        return Collections.singletonList("0.0.0.0:11022:22");
     }
 
     private RestartPolicy restartPolicy() {

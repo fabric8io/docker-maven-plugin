@@ -65,6 +65,7 @@ public class BuildMojo extends AbstractDockerMojo {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
+                buildConfig.validate();
                 String imageName = imageConfig.getName();
                 buildImage(imageName, imageConfig, dockerAccess);
                 tagImage(imageName, imageConfig, dockerAccess);
