@@ -16,6 +16,8 @@ import org.json.JSONObject;
  */
 public class AuthConfig {
 
+    public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "");
+
     private Map<String,String> params;
 
     public AuthConfig(Map<String,String> params) {
@@ -27,7 +29,7 @@ public class AuthConfig {
         putNonNull(params, "username", user);
         putNonNull(params, "password", password);
         putNonNull(params, "email", email);
-        putNonNull(params, "auth",auth);
+        putNonNull(params, "auth", auth);
     }
 
     public String toHeaderValue() {
