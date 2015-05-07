@@ -75,7 +75,9 @@ Let's look at a plugin configuration example:
 
       <build>
          <from>java:8</from>
-         <assemblyDescriptor>docker-assembly.xml</assemblyDescriptor>
+         <assembly>
+           <descriptor>docker-assembly.xml</descriptor>
+         </assembly>
          <ports>
            <port>8080</port>
          </ports>
