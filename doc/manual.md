@@ -519,8 +519,10 @@ A `port` stanza may take one of two forms:
   `:`. In this form, the string portion of the tuple will correspond
   to a Maven property. If the property is undefined when the `start`
   task executes, a port will be dynamically selected by Docker in the
-  range 49000 ... 49900 and assigned to the property which may then be
-  used later in the same POM file. If the property exists and has a
+  ephemeral port range and assigned to the property which may then be
+  used later in the same POM file. The ephemeral port range is configured
+  by the `/proc/sys/net/ipv4/ip_local_port_range` kernel parameter, which
+  typically ranges from 32678 to 61000.  If the property exists and has a
   numeric value, that value will be used as the exposed port on the
   docker host as in the previous form. In the above example, the
   docker service will elect a new port and assign the value to the
