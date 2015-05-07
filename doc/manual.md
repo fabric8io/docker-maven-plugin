@@ -275,6 +275,8 @@ Here's an example:
 * **basedir** depicts the directory under which the files and
   artifacts contained in the assembly will be copied within the
   container. The default value for this is `/maven`.
+* **assemblyDef** inlined assembly descriptor as
+  described in the section [Docker Assembly](#docker-assembly) below. 
 * **descriptor** is a reference to an assembly descriptor as
   described in the section [Docker Assembly](#docker-assembly) below. 
 * **descriptorRef** is an alias to a predefined assembly
@@ -299,7 +301,7 @@ safely omit this element from the configuration.
 
 ##### Docker Assembly
 
-With using the `descriptor` or `descriptorRef` option
+With using the `assemblyDef` `descriptor` or `descriptorRef` option
 it is possible to bring local files, artifacts and dependencies into
 the running Docker container. A `descriptor` points to a file
 describing the data to put into an image to build. It has the same
@@ -313,6 +315,8 @@ with following exceptions:
   `dir`) 
 * The `<id>` is ignored since only a single assembly descriptor is
   used (no need to distinguish multiple descriptors) 
+
+Also you can inline assembly into `assemblyDef` in the pom file 
 
 Alternatively `descriptorRef` can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
