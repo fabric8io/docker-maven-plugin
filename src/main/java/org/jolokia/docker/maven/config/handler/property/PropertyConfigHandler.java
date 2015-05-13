@@ -102,7 +102,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .basedir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))        
                 .descriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
                 .descriptorRef(withPrefix(prefix, ASSEMBLY_DESCRIPTOR_REF, properties))
-                .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
+                .dockerFileDir(withPrefix(prefix, ASSEMBLY_DOCKER_FILE_DIR, properties))
                 .exportBasedir(booleanWithPrefix(prefix, ASSEMBLY_EXPORT_BASEDIR, properties))
                 .ignorePermissions(booleanWithPrefix(prefix, ASSEMBLY_IGNORE_PERMISSIONS, properties))
                 .user(withPrefix(prefix, ASSEMBLY_USER, properties))

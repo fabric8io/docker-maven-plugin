@@ -1,5 +1,10 @@
 # ChangeLog
 
+* **0.11.4**
+  - Fixed documentation for available properties
+  - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)
+  - Changed default behaviour of `exportBaseDir` (true if no base image used with `from`, false otherwise)
+  
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)
   - Add support for setting a custom maintainer in images (#117)

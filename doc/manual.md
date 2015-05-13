@@ -597,7 +597,7 @@ specified within a `<volumes>` section of the run configuration. It can contain 
 * **from** can contain a list of `<image>` elements which specify
   image names or aliases of containers whose volumes should be imported.
 * **bind** can contain a list of `<volume>` specifications (or 'host mounts). Use `/path` to create and
-  expose a new volume in the containaer, `/host_path:/container_path` to mount a host path into the
+  expose a new volume in the container, `/host_path:/container_path` to mount a host path into the
   container and `/host_path:/container_path:ro` to bind it read-only.
 
 ````xml
@@ -612,7 +612,7 @@ specified within a `<volumes>` section of the run configuration. It can contain 
 </volumes>
 ````
 
-In this example the container mounts from the host `/logs` as `/logs` on the container, and `/opt/host_export` from
+In this example the container creates a new volume named  `/logs` on the container and mounts `/opt/host_export` from
 the host as `/opt/container_import` on the container. In addition all exported volumes from the container which has
 been created from the image `jolokia/docker-demo` are mounted directly into the container (with the same name as
 the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
@@ -865,10 +865,17 @@ up from the following properties, which correspond to corresponding
 values in the `<build>` and `<run>` sections.
 
 * **docker.alias** Alias name
-* **docker.assemblyDescriptor** Path to the assembly descriptor when
+* **docker.assembly.baseDir** Directory name for the exported artifacts as
+  described in an assembly (which is `/maven` by default).
+* **docker.assembly.descriptor** Path to the assembly descriptor when
   building an image
-* **docker.assemblyDescriptorRef** Name of a predefined assembly to
+* **docker.assembly.descriptorRef** Name of a predefined assembly to
   use. 
+* **docker.assembly.exportBaseDir** If `true` export base directory
+* **docker.assembly.ignorePermissions** If set to `true` existing file permissions are ignored
+  when creating the assembly archive
+* **docker.assembly.dockerFileDir** specifies a directory containing an external Dockerfile
+  that will be used to create the image
 * **docker.bind.idx** Sets a list of paths to bind/expose in the container
 * **docker.capAdd.idx** List of kernel capabilities to add to the container
 * **docker.capDrop.idx** List of kernel capabilities to remove from the container
@@ -886,8 +893,6 @@ values in the `<build>` and `<run>` sections.
 * **docker.envPropertyFile** specifies the path to a property file whose properties are 
   used as environment variables. The environment variables takes precedence over any other environment
   variables specified.
-* **docker.exportDir** Directory name for the exported artifacts as
-  described in an assembly (which is `/maven` by default).
 * **docker.extraHosts.idx** List of `host:ip` to add to `/etc/hosts`
 * **docker.from** Base image for building an image
 * **docker.hostname** Container hostname
