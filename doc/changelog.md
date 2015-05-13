@@ -4,6 +4,7 @@
   - Fixed documentation for available properties
   - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)
   - Changed default behaviour of `exportBaseDir` (true if no base image used with `from`, false otherwise)
+  - Fix log messages getting cut off in the build (#163)
   
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)
