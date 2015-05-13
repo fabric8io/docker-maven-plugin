@@ -134,12 +134,8 @@ public class DockerAssemblyManager {
             builder.exportBasedir(false);
         }
 
-        if (buildConfig.getFrom() != null) {
-            builder.baseImage(buildConfig.getFrom());
-            builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
-        } else {
-            builder.baseImage(DEFAULT_DATA_BASE_IMAGE);
-        }
+        builder.baseImage(buildConfig.getFrom());
+        builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
 
         if (buildConfig.getCommand() != null) {
             builder.command(EnvUtil.splitWOnSpaceWithEscape(buildConfig.getCommand()));

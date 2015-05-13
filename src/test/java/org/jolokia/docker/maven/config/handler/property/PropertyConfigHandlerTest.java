@@ -48,7 +48,7 @@ public class PropertyConfigHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testEmpty() throws Exception {
-        configHandler.resolve(imageConfiguration,props());
+        configHandler.resolve(imageConfiguration, props());
     }
 
     @Test
@@ -139,7 +139,7 @@ public class PropertyConfigHandlerTest {
         PropertyConfigHandler handler = new PropertyConfigHandler();
         
         List<ImageConfiguration> resolvedImageConfigs = handler.resolve(config, props(testData));
-        assertEquals(1,resolvedImageConfigs.size());
+        assertEquals(1, resolvedImageConfigs.size());
         ImageConfiguration resolved = resolvedImageConfigs.get(0);
 
         return resolved;
@@ -164,8 +164,8 @@ public class PropertyConfigHandlerTest {
         assertEquals("/maven", assemblyConfig.getBasedir());
         assertEquals("assembly.xml", assemblyConfig.getDescriptor());
         assertNull(assemblyConfig.getUser());
-        assertTrue(assemblyConfig.exportBasedir());
-        assertFalse(assemblyConfig.isIgnorePermissions());        
+        assertNull(assemblyConfig.exportBasedir());
+        assertFalse(assemblyConfig.isIgnorePermissions());
     }
 
     private void validateEnv(Map<String, String> env) {

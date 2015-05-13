@@ -14,7 +14,7 @@ import org.codehaus.plexus.util.FileUtils;
  */
 public class DockerFileBuilder {
 
-    // Defaults, shouldnt be overwritten
+    // Base image to use as from
     private String baseImage;
 
     // Maintainer of this image
@@ -27,7 +27,7 @@ public class DockerFileBuilder {
     private String command = "true";
     private String[] arguments = new String[0];
 
-    private boolean exportBasedir = true;
+    private Boolean exportBasedir = null;
     
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
@@ -64,7 +64,7 @@ public class DockerFileBuilder {
 
         StringBuilder b = new StringBuilder();
         
-        b.append("FROM ").append(baseImage).append("\n");
+        b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
 
         // Environment variable support
@@ -116,10 +116,10 @@ public class DockerFileBuilder {
     }
 
     private void addVolumes(StringBuilder b) {
-        if (exportBasedir) {
+        if (exportBasedir != null ? exportBasedir : baseImage == null) {
             addVolume(b, basedir);
         }
-        
+
         for (String volume : volumes) {
             addVolume(b, volume);
         }

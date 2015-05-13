@@ -44,7 +44,7 @@ public class AssemblyConfiguration {
     }
 
     public Boolean exportBasedir() {
-        return exportBasedir != null ? exportBasedir : Boolean.TRUE;
+        return exportBasedir;
     }
 
     public String getBasedir() {

@@ -1,14 +1,11 @@
 package org.jolokia.docker.maven.assembly;
 
+import java.io.IOException;
+import java.util.*;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
 
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.*;
@@ -49,6 +46,14 @@ public class DockerFileBuilderTest {
     @Test
     public void testNoRootExport() {
         assertFalse(new DockerFileBuilder().add("/src", "/dest").basedir("/").content().contains("VOLUME"));
+    }
+
+    @Test
+    public void testExportBaseDir() {
+        assertTrue(new DockerFileBuilder().basedir("/export").content().contains("/export"));
+        assertFalse(new DockerFileBuilder().baseImage("java").basedir("/export").content().contains("/export"));
+        assertTrue(new DockerFileBuilder().baseImage("java").exportBasedir(true).basedir("/export").content().contains("/export"));
+        assertFalse(new DockerFileBuilder().baseImage("java").exportBasedir(false).basedir("/export").content().contains("/export"));
     }
     
     private String stripCR(String input){

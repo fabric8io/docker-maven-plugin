@@ -290,7 +290,8 @@ Here's an example:
   using `${project.baseDir}` as prefix for your path
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
-  the container root (`/`), which cannot be exported. 
+  the container root (`/`). It is also `false` by default when a base image is used with `from` 
+  since exporting makes no sense in this case and will waste disk space unnecessarily.    
 * **ignorePermissions** indicates if existing file permissions should be ignored
   when creating the assembly archive. This value is `false` by default.
 
