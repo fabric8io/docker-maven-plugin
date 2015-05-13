@@ -185,7 +185,7 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder exportBasedir(boolean exportBasedir) {
+    public DockerFileBuilder exportBasedir(Boolean exportBasedir) {
         this.exportBasedir = exportBasedir;
         return this;
     }
