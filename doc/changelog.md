@@ -5,6 +5,7 @@
   - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)
   - Changed default behaviour of `exportBaseDir` (true if no base image used with `from`, false otherwise)
   - Fix log messages getting cut off in the build (#163)
+  - Allow system properties to overwrite dynamic port mapping (#161)
   
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)
