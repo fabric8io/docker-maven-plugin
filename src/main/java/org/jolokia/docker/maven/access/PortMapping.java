@@ -149,26 +149,34 @@ public class PortMapping {
     }
 
     // Check for a variable containing a port, return it as integer or <code>null</code> is not found or not a number
-    private Integer getPortFromVariable(Properties variables, String var) {
+    // First check system properties, then the variables given
+    private Integer getPortFromVariableOrSystemProperty(Properties variables, String var) {
+        String sysProp = System.getProperty(var);
+        if (sysProp != null) {
+            return getAsIntOrNull(sysProp);
+        }
         if (variables.containsKey(var)) {
-            try {
-                return Integer.parseInt(variables.getProperty(var));
-            } catch (NumberFormatException exp) {
-                return null;
-            }
-        } 
-        
+            return getAsIntOrNull(variables.getProperty(var));
+        }
         return null;
     }
-    
-	private void mapPorts(String bindToHost, String hPort,String containerPortSpec, Properties variables) {
+
+    private Integer getAsIntOrNull(String val) {
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException exp) {
+            return null;
+        }
+    }
+
+    private void mapPorts(String bindToHost, String hPort,String containerPortSpec, Properties variables) {
         Integer hostPort;
 		try {
 		    hostPort = Integer.parseInt(hPort);
 		} catch (NumberFormatException exp) {
             String varName = hPort;
 		    // Port should be dynamically assigned and set to the variable give in hPort
-		    hostPort = getPortFromVariable(variables, varName);
+		    hostPort = getPortFromVariableOrSystemProperty(variables, varName);
 		    if (hostPort != null) {
                 // hPort: Variable name, hostPort: Port coming from the variable
 		        portVariables.put(varName, hostPort);

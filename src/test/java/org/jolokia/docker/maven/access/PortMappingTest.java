@@ -74,11 +74,23 @@ public class PortMappingTest {
     }
 
     @Test
-    public void variableReplacementWitProps() throws MojoExecutionException {
+    public void variableReplacementWithProps() throws MojoExecutionException {
         PortMapping mapping = createPortMapping(p("jolokia.port","50000"),"jolokia.port:8080");
         updateDynamicMapping(mapping, 8080, 49900);
         mapAndVerifyReplacement(mapping,
                                 "http://localhost:50000/", "http://localhost:${jolokia.port}/");
+    }
+
+    @Test
+    public void variableReplacementWithSystemPropertyOverwrite() throws MojoExecutionException {
+        try {
+            System.setProperty("jolokia.port","99999");
+            PortMapping mapping = createPortMapping(p("jolokia.port","50000"),"jolokia.port:8080");
+            mapAndVerifyReplacement(mapping,
+                                    "http://localhost:99999/", "http://localhost:${jolokia.port}/");
+        } finally {
+            System.getProperties().remove("jolokia.port");
+        }
     }
 
     @Test
@@ -107,7 +119,7 @@ public class PortMappingTest {
 
     private void mapAndVerifyReplacement(PortMapping mapping, String... args) {
         for (int i = 0; i < args.length; i+=2) {
-            assertEquals(args[i],mapping.replaceVars(args[i+1]));
+            assertEquals(args[i],mapping.replaceVars(args[i + 1]));
         }
     }
 
