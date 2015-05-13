@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
@@ -103,11 +104,11 @@ public class LogRequestor extends Thread implements LogGetHandle {
         try (InputStream is = response.getEntity().getContent()) {
             byte[] headBuf = new byte[8];
             byte[] buf = new byte[8129];
-            while (is.read(headBuf, 0, 8) != -1) {
+            while (IOUtils.read(is, headBuf, 0, 8) > 0) {
                 int type = headBuf[0];
                 int declaredLength = extractLength(headBuf);
-                int len = is.read(buf, 0, declaredLength);
-                if (len == -1) {
+                int len = IOUtils.read(is, buf, 0, declaredLength);
+                if (len < 1) {
                     callback.error("Invalid log format: Couldn't read " + declaredLength + " bytes from stream");
                     finish();
                     return;
