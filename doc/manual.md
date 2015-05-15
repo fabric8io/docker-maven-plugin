@@ -694,6 +694,8 @@ build wait for 500 ms before it tries to remove the container (if not `keepConta
 or `keepRunning` is used). You can use maven properties in each
 condition, too. In the example, the `${host.port}` property is
 probably set before within a port mapping section. 
+ 
+The property `${docker.host.address}` is set implicitly to the address of the Docker host.
 
 ##### Log configuration
 

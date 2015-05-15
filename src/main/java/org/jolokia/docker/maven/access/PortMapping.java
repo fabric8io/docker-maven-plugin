@@ -22,9 +22,6 @@ public class PortMapping {
     // Pattern for splitting of the protocol
     private static final Pattern PROTOCOL_SPLIT_PATTERN = Pattern.compile("(.*?)(?:/(tcp|udp))?$");
 
-    // Pattern for detecting variables
-    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{\\s*([^\\s]+)\\s*}");
-
     // variables (container port spec -> variable name)
     private final Map<String, String> dynamicPortVariables = new HashMap<>();
 
@@ -107,24 +104,6 @@ public class PortMapping {
         return containerPortsMap.keySet();
     }
 
-
-    /**
-     * Replace all variable expressions with the respective port
-     *
-     * @param value value to replace
-     * @return the modified string
-     */
-    public String replaceVars(String value) {
-        Matcher matcher = VAR_PATTERN.matcher(value);
-        StringBuffer ret = new StringBuffer();
-        while (matcher.find()) {
-            String var = matcher.group(1);
-            Integer port = portVariables.get(var);
-            matcher.appendReplacement(ret, port != null ? "" + port : "$0");
-        }
-        matcher.appendTail(ret);
-        return ret.toString();
-    }
 
     /**
      * Get all variables which are used for ports

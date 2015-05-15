@@ -319,7 +319,7 @@
         <docker.name>jolokia/${project.artifactId}:${project.version}</docker.name>
         <docker.alias>service</docker.alias>
         <docker.from>${image}</docker.from>
-        <docker.assemblyDescriptor>src/main/docker-assembly.xml</docker.assemblyDescriptor>
+        <docker.assembly.descriptor>assembly.xml</docker.assembly.descriptor>
         <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
         <docker.env.JOLOKIA_OPTS>1</docker.env.JOLOKIA_OPTS>
         <docker.ports.0>jolokia.port:8080</docker.ports.0>

@@ -102,7 +102,7 @@ public class StartMojo extends AbstractDockerMojo {
                 }
 
                 // Wait if requested
-                waitIfRequested(docker, runConfig, mappedPorts, containerId);
+                waitIfRequested(docker, runConfig, project.getProperties(), containerId);
                 // Start a watch task if requested
                 watchIfRequested(docker, imageConfig, executor, mappedPorts, containerId);
             }
@@ -261,12 +261,14 @@ public class StartMojo extends AbstractDockerMojo {
 
     private void watchIfRequested(DockerAccess docker, ImageConfiguration imageConfig, ScheduledExecutorService executor,
                                   PortMapping mappedPorts, String containerId) throws DockerAccessException {
-        WatchConfiguration watchConfiguration = imageConfig.getRunConfiguration().getWatchConfiguration();
-        watchConfiguration = watchConfiguration != null ? watchConfiguration : new WatchConfiguration.Builder().time(watchInterval).build();
-        executor.scheduleAtFixedRate(
-                createWatchTask(docker, imageConfig, mappedPorts, containerId),
-                0,
-                watchConfiguration.getInterval(), TimeUnit.MILLISECONDS);
+        if (watch) {
+            WatchConfiguration watchConfiguration = imageConfig.getRunConfiguration().getWatchConfiguration();
+            watchConfiguration = watchConfiguration != null ? watchConfiguration : new WatchConfiguration.Builder().time(watchInterval).build();
+            executor.scheduleAtFixedRate(
+                    createWatchTask(docker, imageConfig, mappedPorts, containerId),
+                    0,
+                    watchConfiguration.getInterval(), TimeUnit.MILLISECONDS);
+        }
     }
 
 
@@ -308,13 +310,13 @@ public class StartMojo extends AbstractDockerMojo {
         };
     }
 
-    private void waitIfRequested(DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts, String containerId) {
+    private void waitIfRequested(DockerAccess docker, RunImageConfiguration runConfig, Properties projectProperties, String containerId) {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
             ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
             ArrayList<String> logOut = new ArrayList<>();
             if (wait.getUrl() != null) {
-                String waitUrl = mappedPorts.replaceVars(wait.getUrl());
+                String waitUrl = EnvUtil.replaceVars(wait.getUrl(),projectProperties);
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
                 logOut.add("on url " + waitUrl);
             }
