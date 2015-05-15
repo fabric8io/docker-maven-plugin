@@ -1,6 +1,8 @@
 package org.jolokia.docker.maven.config;
 
 
+import org.apache.maven.plugin.assembly.model.Assembly;
+
 public class AssemblyConfiguration {
 
     private static final String DEFAULT_BASE_DIR = "/maven";
@@ -14,6 +16,11 @@ public class AssemblyConfiguration {
      * @parameter
      */
     private String descriptor;
+
+    /**
+     * @parameter
+     */
+    private Assembly assemblyDef;
 
     /**
      * @parameter
@@ -51,7 +58,11 @@ public class AssemblyConfiguration {
         return basedir != null ? basedir : DEFAULT_BASE_DIR;
     }
 
-    public String getDescriptor() {        
+    public Assembly getAssemblyDef() {
+        return assemblyDef;
+    }
+
+    public String getDescriptor() {
         return descriptor;
     }
 
@@ -85,8 +96,13 @@ public class AssemblyConfiguration {
             return this;
         }
 
-        public Builder descriptor(String descriptor) {
-            config.descriptor = set(descriptor);
+        public Builder assemblyDef(Assembly descriptor) {
+            config.assemblyDef = set(descriptor);
+            return this;
+        }
+
+        public Builder descriptor(String descriptorFile) {
+            config.descriptor = set(descriptorFile);
             return this;
         }
 

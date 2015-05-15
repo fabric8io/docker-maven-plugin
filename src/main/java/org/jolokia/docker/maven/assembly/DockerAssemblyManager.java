@@ -61,7 +61,7 @@ public class DockerAssemblyManager {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
         try {
-            if (assemblyConfig != null && (assemblyConfig.getDescriptor() != null || assemblyConfig.getDescriptorRef() != null)) {
+            if (assemblyConfig != null && (assemblyConfig.getAssemblyDef() != null || assemblyConfig.getDescriptor() != null || assemblyConfig.getDescriptorRef() != null)) {
                 createAssemblyDirArchive(assemblyConfig, params, buildDirs);
             }
 
@@ -148,7 +148,10 @@ public class DockerAssemblyManager {
         DockerAssemblyConfigurationSource source =
                         new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
 
-        Assembly assembly = extractAssembly(source);
+        Assembly assembly = assemblyConfig.getAssemblyDef();
+        if (assembly == null) {
+            assembly = extractAssembly(source);
+        }
 
         try {
             assembly.setId("docker");
