@@ -18,4 +18,15 @@
       <outputFileNameMapping>jolokia-it.war</outputFileNameMapping>
     </dependencySet>
   </dependencySets>
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}/src/main/docker</directory>
+      <outputDirectory>.</outputDirectory>
+      <filtered>true</filtered>
+      <includes>
+        <include>hello.sh</include>
+      </includes>
+      <fileMode>755</fileMode>
+    </fileSet>
+  </fileSets>
 </assembly>
