@@ -9,6 +9,7 @@
   - Fix for empty authentication when pushing to registries (#102)
   - Added watch mode for images with `-Ddocker.watch` (#141)
   - Added support for inline assemblies (#157, #158)
+  - Add support for variable substitution is environment declarations (#137)
   
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)

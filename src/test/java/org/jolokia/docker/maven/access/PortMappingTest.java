@@ -2,8 +2,8 @@ package org.jolokia.docker.maven.access;
 
 import java.util.*;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jolokia.docker.maven.util.EnvUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -26,11 +26,11 @@ public class PortMappingTest {
 
         mapAndVerifyReplacement(mapping,
                                 "http://localhost:49900/", "http://localhost:${jolokia.port}/",
-                                "http://pirx:49900/", "http://pirx:${    jolokia.port}/");
+                                "http://pirx:49900/", "http://pirx:${jolokia.port}/");
 
         mapAndVerifyReplacement(mapping,
                                 "http://localhost:49901/", "http://localhost:${other.port}/",
-                                "http://pirx:49901/", "http://pirx:${    other.port}/",
+                                "http://pirx:49901/", "http://pirx:${other.port}/",
                                 "http://49900/49901","http://${jolokia.port}/${other.port}");
 
         assertEquals((int) mapping.getPortVariables().get("jolokia.port"), 49900);
@@ -121,7 +121,7 @@ public class PortMappingTest {
 
     private void mapAndVerifyReplacement(PortMapping mapping, String... args) {
         for (int i = 0; i < args.length; i+=2) {
-            assertEquals(args[i], EnvUtil.replaceVars(args[i + 1],mapping.getPortVariables()));
+            assertEquals(args[i], StrSubstitutor.replace(args[i + 1], mapping.getPortVariables()));
         }
     }
 

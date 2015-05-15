@@ -38,7 +38,7 @@ public class ContainerCreateConfigTest {
     public void testEnvironment() throws Exception {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         Map<String, String> envMap = getEnvMap();
-        cc.environment(copyPropsToFile(), envMap);
+        cc.environment(copyPropsToFile(), envMap, Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertNotNull(env);
         assertEquals(3, env.length());
@@ -51,7 +51,7 @@ public class ContainerCreateConfigTest {
     @Test
     public void testEnvironmentEmptyPropertiesFile() {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
-        cc.environment(null, getEnvMap());
+        cc.environment(null, getEnvMap(),Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertEquals(2, env.length());
     }
@@ -59,7 +59,7 @@ public class ContainerCreateConfigTest {
     @Test
     public void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment(null,null);
+        cc.environment(null,null,Collections.<String, String>emptyMap());
         JSONObject config = new JSONObject(cc.toJson());
         assertFalse(config.has("Env"));
     }
@@ -67,7 +67,7 @@ public class ContainerCreateConfigTest {
     @Test
     public void testEnvNoMap() throws IOException {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment(copyPropsToFile(),null);
+        cc.environment(copyPropsToFile(),null,Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertEquals(2, env.length());
         List<String> envAsString = convertToList(env);
@@ -77,7 +77,7 @@ public class ContainerCreateConfigTest {
     @Test(expected = IllegalArgumentException.class)
     public void testNoPropFile() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment("/not/really/a/file",null);
+        cc.environment("/not/really/a/file",null,Collections.<String, String>emptyMap());
     }
 
 

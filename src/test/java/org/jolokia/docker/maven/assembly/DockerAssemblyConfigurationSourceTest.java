@@ -77,17 +77,19 @@ public class DockerAssemblyConfigurationSourceTest {
 
         assertFalse(source.isIgnorePermissions());
 
-        String outputDir = new File(params.getOutputDirectory()).getPath();
-        assertTrue(startsWithDir(outputDir, source.getOutputDirectory()));
-        assertTrue(startsWithDir(outputDir, source.getWorkingDirectory()));
-        assertTrue(startsWithDir(outputDir, source.getTemporaryRootDirectory()));
+        String outputDir = params.getOutputDirectory();
+        assertStartsWithDir(outputDir, source.getOutputDirectory());
+        assertStartsWithDir(outputDir, source.getWorkingDirectory());
+        assertStartsWithDir(outputDir, source.getTemporaryRootDirectory());
     }
 
     private boolean containsDir(String outputDir, File path) {
         return path.toString().contains(outputDir + File.separator);
     }
     
-    private boolean startsWithDir(String outputDir, File path) {
-        return path.toString().startsWith(outputDir + File.separator);
+    private void assertStartsWithDir(String outputDir, File path) {
+        String expectedStartsWith = outputDir + File.separator;
+        int length = expectedStartsWith.length();
+        assertEquals(expectedStartsWith, path.toString().substring(0, length));
     }
 }

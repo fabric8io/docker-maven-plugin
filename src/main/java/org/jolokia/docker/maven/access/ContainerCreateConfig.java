@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.access;
 import java.io.*;
 import java.util.*;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -55,11 +56,19 @@ public class ContainerCreateConfig {
         return a;
     }
 
-    public ContainerCreateConfig environment(String envPropsFile, Map<String, String> env) throws IllegalArgumentException {
+    public ContainerCreateConfig environment(String envPropsFile, Map<String, String> env, Map mavenProps) throws IllegalArgumentException {
 
         Properties envProps = new Properties();
         if (env != null && env.size() > 0) {
-            envProps.putAll(env);
+            JSONArray a = new JSONArray();
+            for (Map.Entry<String, String> entry : env.entrySet()) {
+                String value = entry.getValue();
+                if (value == null || value.length() == 0) {
+                    throw new IllegalArgumentException(String.format("Env variable '%s' must not be null or empty",
+                                                                     entry.getKey()));
+                }
+                envProps.put(entry.getKey(), StrSubstitutor.replace(value, mavenProps));
+            }
         }
         if (envPropsFile != null) {
             // Props from external file take precedence

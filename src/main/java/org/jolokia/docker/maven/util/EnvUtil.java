@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.util;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -197,27 +196,4 @@ public class EnvUtil {
         }
         return new File(new File(params.getProject().getBasedir(), directory), path);
     }
-
-
-    // Pattern for detecting variables
-    private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{\\s*([^\\s}]+)\\s*}");
-
-    /**
-     * Replace all variable expressions with the respective port
-     *
-     * @param value value to replace
-     * @return the modified string
-     */
-    public static String replaceVars(String value,Map properties) {
-        Matcher matcher = VAR_PATTERN.matcher(value);
-        StringBuffer ret = new StringBuffer();
-        while (matcher.find()) {
-            String var = matcher.group(1);
-            Object val = properties.get(var);
-            matcher.appendReplacement(ret, val != null ? "" + val : "$0");
-        }
-        matcher.appendTail(ret);
-        return ret.toString();
-    }
-
 }

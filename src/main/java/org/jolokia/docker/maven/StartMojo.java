@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
@@ -142,7 +143,7 @@ public class StartMojo extends AbstractDockerMojo {
                     .memorySwap(runConfig.getMemorySwap())
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
-                    .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv())
+                    .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), project.getProperties())
                     .command(runConfig.getCommand())
                     .hostConfig(createContainerHostConfig(docker, runConfig, mappedPorts));
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
@@ -316,7 +317,7 @@ public class StartMojo extends AbstractDockerMojo {
             ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
             ArrayList<String> logOut = new ArrayList<>();
             if (wait.getUrl() != null) {
-                String waitUrl = EnvUtil.replaceVars(wait.getUrl(),projectProperties);
+                String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
                 logOut.add("on url " + waitUrl);
             }
