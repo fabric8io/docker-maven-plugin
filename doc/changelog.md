@@ -11,7 +11,8 @@
   - Added support for inline assemblies (#157, #158)
   - Add support for variable substitution is environment declarations (#137)
   - Use Tar archive as intermediate container when creating image (#139)  
-   
+  - Better error handling for Docker errors wrapped in JSON response only (#167) 
+  
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)
   - Add support for setting a custom maintainer in images (#117)
