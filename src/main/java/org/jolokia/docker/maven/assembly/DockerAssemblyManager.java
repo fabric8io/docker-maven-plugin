@@ -105,10 +105,17 @@ public class DockerAssemblyManager {
         try {
             TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
             archiver.setLongfile(TarLongFileMode.posix);
-            archiver.addFileSet(DefaultFileSet.fileSet(buildDirs.getOutputDirectory()));
+//            archiver.addFileSet(DefaultFileSet.fileSet(buildDirs.getOutputDirectory()));
+            archiver.addArchivedFileSet(new File(buildDirs.getOutputDirectory(),"maven.tgz"),"maven/");
+          
             if (extraDir != null) {
                 archiver.addFileSet(DefaultFileSet.fileSet(extraDir));
-            }    
+                
+            }
+            if( extraDir == null || ! new File(extraDir,"Dockerfile").exists()) 
+            {//only add docker file if not in extra
+            	  archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
+            }
             archiver.setDestFile(archive);
             archiver.createArchive();
             return archive;
@@ -158,7 +165,7 @@ public class DockerAssemblyManager {
 
         try {
             assembly.setId("docker");
-            assemblyArchiver.createArchive(assembly, "maven", "dir", source, false);
+            assemblyArchiver.createArchive(assembly, "maven", "tgz", source, false);
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
             throw new MojoExecutionException( "Failed to create assembly for docker image: " + e.getMessage(), e );
         } catch (InvalidAssemblerConfigurationException e) {

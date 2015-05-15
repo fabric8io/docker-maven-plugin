@@ -1,5 +1,9 @@
 package org.jolokia.docker.maven.assembly;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 
 import org.apache.maven.project.MavenProject;
@@ -8,8 +12,6 @@ import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class DockerAssemblyConfigurationSourceTest {
 
@@ -27,12 +29,12 @@ public class DockerAssemblyConfigurationSourceTest {
 
     @Test
     public void testCreateSourceAbsolute() {
-        testCreateSource(buildParameters(".", "/src/docker", "/output/docker"));
+        testCreateSource(buildParameters(".", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
     }
 
     @Test
     public void testCreateSourceRelative() {
-        testCreateSource(buildParameters(".","src/docker", "output/docker"));
+        testCreateSource(buildParameters(".","src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
     }
 
     @Test
@@ -69,15 +71,16 @@ public class DockerAssemblyConfigurationSourceTest {
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();
 
-        assertEquals(1, descriptors.length);
-        assertEquals(EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
+        assertEquals("count of descriptors", 1, descriptors.length);
+        assertEquals("directory of assembly", EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
 
-        assertEquals(1, descriptorRefs.length);
-        assertEquals("project", descriptorRefs[0]);
+        assertEquals("count of descriptors references", 1, descriptorRefs.length);
+        assertEquals("reference must be project", "project", descriptorRefs[0]);
 
-        assertFalse(source.isIgnorePermissions());
+        assertFalse("We must not ignore permissions problems", source.isIgnorePermissions());
 
         String outputDir = params.getOutputDirectory();
+
         assertStartsWithDir(outputDir, source.getOutputDirectory());
         assertStartsWithDir(outputDir, source.getWorkingDirectory());
         assertStartsWithDir(outputDir, source.getTemporaryRootDirectory());
