@@ -939,7 +939,8 @@ values in the `<build>` and `<run>` sections.
   variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>`
   sets the environment variable `JAVA_OPTS`. Multiple such entries can
   be provided. This environment is used both for building images and
-  running containers. The value cannot be empty.
+  running containers. The value cannot be empty but can contain Maven property names which are
+  resolved before the Dockerfile is created
 * **docker.envPropertyFile** specifies the path to a property file whose properties are 
   used as environment variables. The environment variables takes precedence over any other environment
   variables specified.
