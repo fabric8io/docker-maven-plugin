@@ -107,7 +107,7 @@
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <log>Server startup</log>
-                  <url>http://localhost:${jolokia.port}/jolokia</url>
+                  <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
                   <time>10000</time>
                   <shutdown>500</shutdown>
                 </wait>
@@ -184,7 +184,7 @@
             <jolokia.port>${jolokia.port}</jolokia.port>
 
             <!-- Map maven variables to system properties which in turn can be used in the test classes -->
-            <jolokia.url>http://localhost:${jolokia.port}/jolokia</jolokia.url>
+            <jolokia.url>http://${docker.host.address}:${jolokia.port}/jolokia</jolokia.url>
             <jolokia.version>${jolokia.version}</jolokia.version>
           </systemPropertyVariables>
         </configuration>
@@ -228,7 +228,9 @@
                   <name>jolokia/${project.artifactId}:${project.version}</name>
                   <build>
                     <from>${image}</from>
-                    <assemblyDescriptor>src/main/docker-assembly.xml</assemblyDescriptor>
+                    <assembly>
+                      <descriptor>assembly.xml</descriptor>
+                    </assembly>
                   </build>
                   <run>
                     <env>
@@ -243,7 +245,63 @@
                     </ports>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <url>http://localhost:${jolokia.port}/jolokia</url>
+                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <time>10000</time>
+                    </wait>
+                  </run>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>inline</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration combine.self="override">
+              <images>
+                <image>
+                  <!-- Artifact Image-->
+                  <name>jolokia/${project.artifactId}:${project.version}</name>
+                  <build>
+                    <from>${image}</from>
+                    <assembly>
+                      <inline xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+                              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                              xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+                        <id>jolokia-it</id>
+                        <dependencySets>
+                          <dependencySet>
+                            <includes>
+                              <include>org.jolokia:jolokia-war</include>
+                            </includes>
+                            <outputDirectory>.</outputDirectory>
+                            <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+                          </dependencySet>
+                          <dependencySet>
+                            <includes>
+                              <include>org.jolokia:jolokia-it-war</include>
+                            </includes>
+                            <outputDirectory>.</outputDirectory>
+                            <outputFileNameMapping>jolokia-it.war</outputFileNameMapping>
+                          </dependencySet>
+                        </dependencySets>
+                      </inline>
+                    </assembly>
+                  </build>
+                  <run>
+                    <ports>
+                      <port>jolokia.port:8080</port>
+                    </ports>
+                    <wait>
+                      <!-- The plugin waits until this URL is reachable via HTTP ... -->
+                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
                       <time>10000</time>
                     </wait>
                   </run>
@@ -264,9 +322,9 @@
         <docker.assemblyDescriptor>src/main/docker-assembly.xml</docker.assemblyDescriptor>
         <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
         <docker.env.JOLOKIA_OPTS>1</docker.env.JOLOKIA_OPTS>
-        <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
-        <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
-        <docker.time>10000</docker.time>
+        <docker.ports.0>jolokia.port:8080</docker.ports.0>
+        <docker.wait.url>http://${docker.host.address}:${jolokia.port}/jolokia</docker.wait.url>
+        <docker.wait.time>10000</docker.wait.time>
       </properties>
       <build>
         <plugins>

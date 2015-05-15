@@ -20,7 +20,7 @@ public class AssemblyConfiguration {
     /**
      * @parameter
      */
-    private Assembly assemblyDef;
+    private Assembly inline;
 
     /**
      * @parameter
@@ -58,8 +58,8 @@ public class AssemblyConfiguration {
         return basedir != null ? basedir : DEFAULT_BASE_DIR;
     }
 
-    public Assembly getAssemblyDef() {
-        return assemblyDef;
+    public Assembly getInline() {
+        return inline;
     }
 
     public String getDescriptor() {
@@ -97,7 +97,7 @@ public class AssemblyConfiguration {
         }
 
         public Builder assemblyDef(Assembly descriptor) {
-            config.assemblyDef = set(descriptor);
+            config.inline = set(descriptor);
             return this;
         }
 

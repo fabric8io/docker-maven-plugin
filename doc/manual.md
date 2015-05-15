@@ -275,7 +275,7 @@ Here's an example:
 * **basedir** depicts the directory under which the files and
   artifacts contained in the assembly will be copied within the
   container. The default value for this is `/maven`.
-* **assemblyDef** inlined assembly descriptor as
+* **inline** inlined assembly descriptor as
   described in the section [Docker Assembly](#docker-assembly) below. 
 * **descriptor** is a reference to an assembly descriptor as
   described in the section [Docker Assembly](#docker-assembly) below. 
@@ -302,7 +302,7 @@ safely omit this element from the configuration.
 
 ##### Docker Assembly
 
-With using the `assemblyDef` `descriptor` or `descriptorRef` option
+With using the `inline`, `descriptor` or `descriptorRef` option
 it is possible to bring local files, artifacts and dependencies into
 the running Docker container. A `descriptor` points to a file
 describing the data to put into an image to build. It has the same
@@ -317,7 +317,10 @@ with following exceptions:
 * The `<id>` is ignored since only a single assembly descriptor is
   used (no need to distinguish multiple descriptors) 
 
-Also you can inline assembly into `assemblyDef` in the pom file 
+Also you can inline the assembly description with a `inline` description 
+directly into the pom file. Adding the proper namespace even allows for 
+IDE autocompletion. As an example, refer to the profile `inline` in 
+the `data-jolokia-demo`'s pom.xml. 
 
 Alternatively `descriptorRef` can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
@@ -994,7 +997,7 @@ Example:
   <docker.name>jolokia/demo</docker.name>
   <docker.alias>service</docker.alias>
   <docker.from>consol/tomcat:7.0</docker.from>
-  <docker.assemblyDescriptor>src/main/docker-assembly.xml</docker.assemblyDescriptor>
+  <docker.assembly.descriptor>src/main/docker-assembly.xml</docker.assembly.descriptor>
   <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
   <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
   <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
