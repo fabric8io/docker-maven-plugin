@@ -21,7 +21,6 @@ public class WatchConfiguration {
     public static class Builder {
 
         private int time = 1000;
-        private String log;
 
         public Builder time(int time) {
             this.time = time;

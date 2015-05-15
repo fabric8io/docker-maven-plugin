@@ -137,21 +137,17 @@ public class RunImageConfiguration {
      */
     private List<String> links;
 
-    // Wait that many milliseconds after starting the container in order to allow the
-    // container to warm up
+    // Configuration for how to wait during startup of the container
     /**
      * @parameter
      */
     private WaitConfiguration wait;
-
-
-    // Wait that many milliseconds after starting the container in order to allow the
-    // container to warm up
+    
+    // Configuration how to watch for the image if watching is enabled
     /**
      * @parameter
      */
     private WatchConfiguration watch;
-
 
     /**
      * @parameter
