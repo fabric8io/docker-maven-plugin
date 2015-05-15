@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.access.chunked;
 
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +17,7 @@ public class TextToJsonBridgeCallback implements ChunkedResponseHandler<String>
     }
 
     @Override
-    public void process(String text) {
+    public void process(String text) throws DockerAccessException {
         try {
             JSONObject json = new JSONObject(text);
             handler.process(json);

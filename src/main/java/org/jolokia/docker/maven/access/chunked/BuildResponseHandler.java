@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.access.chunked;
 
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONObject;
 
@@ -12,13 +13,19 @@ public class BuildResponseHandler implements ChunkedResponseHandler<JSONObject> 
     }
     
     @Override
-    public void process(JSONObject json) {
+    public void process(JSONObject json) throws DockerAccessException {
         if (json.has("error")) {
-            log.error("Error building image: " + json.get("error"));
+            String msg = json.getString("error");
+            log.error("Error building image: " + msg);
+
+            String detailMsg = "";
             if (json.has("errorDetail")) {
                 JSONObject details = json.getJSONObject("errorDetail");
-                log.error(details.getString("message"));
+                detailMsg = details.getString("message");
+                log.error(detailMsg);
             }
+            throw new DockerAccessException("%s %s", json.get("error"),
+                    (msg.equals(detailMsg) || "".equals(detailMsg) ? "" : "(" + detailMsg + ")"));
         } else if (json.has("stream")) {
             String message = json.getString("stream");
             log.verbose(message.trim());
