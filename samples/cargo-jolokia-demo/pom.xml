@@ -20,8 +20,8 @@
   -->
 
   <groupId>org.jolokia</groupId>
-  <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.11.3</version>
+  <artifactId>cargo-jolokia-demo</artifactId>
+  <version>0.11.4</version>
 
   <url>http://www.jolokia.org</url>
 
