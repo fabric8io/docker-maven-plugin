@@ -64,6 +64,7 @@ public enum ConfigKey {
     WAIT_TIME("wait.time"),
     WAIT_URL("wait.url"),
     WAIT_SHUTDOWN("wait.shutdown"),
+    WATCH_INTERVAL("watch.interval"),
     WORKING_DIR;
 
     ConfigKey() {

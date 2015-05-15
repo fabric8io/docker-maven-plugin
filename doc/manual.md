@@ -445,6 +445,8 @@ The `<run>` configuration knows the following sub elements:
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
+* **watch** enables the image watch See [below](#watching-for-image-changes) which subelements are
+  available and how they can be specified.
 * **workingDir** (*v1.11*) working dir for commands to run in
 
 Example:
@@ -730,6 +732,28 @@ Example (values can be case insensitive, too) :
   <color>cyan</color>
 </log>
 ````
+##### Watching for image changes
+When developing docker images, building the image and manually starting 
+stopping containers, can become a real burden. To slightly increase the user
+experience, you can enable the `image watch` on `<docker:start>` the image
+watch will poll for changes on the image, and if any change is spotted, the 
+container will get recreated, using the later image.
+
+Image watch can be configured as part of the run configuration like:
+
+````xml
+<run>
+  <watch>
+    <interval>5000</interval>
+  </watch>
+</run>
+````
+
+In many cases it would make sense to be able to enable/disable the `image watch`
+without having to modify the plugin configuration, but using the command line.
+You can both enable the `image watch` and configure the interval using the cli:
+`mvn docker:start -Ddocker.watch.enabled=true -Ddocker.watch.interval=5000`
+
 
 #### `docker:stop`
 

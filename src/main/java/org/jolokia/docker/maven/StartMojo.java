@@ -9,6 +9,7 @@ package org.jolokia.docker.maven;
  */
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -40,6 +41,12 @@ public class StartMojo extends AbstractDockerMojo {
 
     // Key: Alias, Value: Image
     private Map<String, String> imageAliasMap = new HashMap<>();
+    
+    /** @parameter property = "docker.watch.enabled" default-value = "false" */
+    protected boolean watchEnabled;
+
+    /** @parameter property = "docker.watch.interval" default-value = "5000" */
+    protected Integer watchInterval;
 
     /** {@inheritDoc} */
     @Override
@@ -62,17 +69,13 @@ public class StartMojo extends AbstractDockerMojo {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-            String name = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-            ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
-            
-            String containerId = docker.createContainer(config, name);
+            String containerId = createContainer(docker, imageConfig, mappedPorts);
             docker.startContainer(containerId);
 
             if (showLogs(imageConfig)) {
                 dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
             }
             registerContainer(containerId, imageConfig);
-
             log.info("Created and started container " + toContainerAndImageDescription(containerId, imageConfig.getDescription()));
 
             // Remember id for later stopping the container
@@ -86,7 +89,19 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Wait if requested
             waitIfRequested(runConfig, mappedPorts, docker, containerId);
+            watchIfRequested(docker, imageConfig, mappedPorts, containerId);
         }
+    }
+
+    private String createContainer(DockerAccess docker,
+                                   ImageConfiguration imageConfig,
+                                   PortMapping mappedPorts) throws MojoExecutionException, DockerAccessException {
+        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        String imageName = imageConfig.getName();
+        String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
+        ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
+
+        return docker.createContainer(config, containerName);
     }
 
     // visible for testing
@@ -214,12 +229,54 @@ public class StartMojo extends AbstractDockerMojo {
         if (namingStrategy == NamingStrategy.none) {
             return null;
         }
-        
+
         if (alias == null) {
             throw new MojoExecutionException("A naming scheme 'alias' requires an image alias to be set");
         }
 
         return alias;
+    }
+
+    // If configured watch for image changes and automatically restart
+    private void watchIfRequested(DockerAccess docker, ImageConfiguration imageConfig, PortMapping mappedPorts, String initialContainerId)
+            throws DockerAccessException {
+
+        String imageName = imageConfig.getName();
+        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        WatchConfiguration watch = runConfig.getWatchConfiguration();
+
+        final AtomicReference<String> imageId = new AtomicReference<>();
+        final AtomicReference<String> containerId = new AtomicReference<>(initialContainerId);
+
+        imageId.set(docker.getImageId(imageName));
+        boolean keepRunning = true;
+        if (watch != null || watchEnabled) {
+            watch = watch != null ? watch : new WatchConfiguration.Builder().time(watchInterval).build();
+            while (keepRunning && !Thread.interrupted()) {
+                try {
+                    String currentImageId = docker.getImageId(imageName);
+                    String oldValue = imageId.getAndSet(currentImageId);
+                    if (!currentImageId.equals(oldValue)) {
+                        log.info("Image " + imageName + " has been updated. Recreating container " + containerId.get());
+                        log.info("Stopping container  " + containerId.get());
+                        docker.stopContainer(containerId.get());
+                        containerId.set(createContainer(docker,imageConfig,mappedPorts));
+                        log.info("Starting container " + containerId.get());
+                        docker.startContainer(containerId.get());
+                    }
+                    Thread.sleep(watch.getInterval());
+                } catch (DockerAccessException e) {
+                    log.warn("Error while watching for image:" + imageName);
+                } catch (MojoExecutionException e) {
+                    log.warn("Error while recreating container for image:" + imageName);
+                    keepRunning = false;
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while watching for image:" + imageName);
+                    keepRunning = false;
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
     }
     
     private void waitIfRequested(RunImageConfiguration runConfig, PortMapping mappedPorts, DockerAccess docker, String containerId) {

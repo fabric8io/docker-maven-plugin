@@ -93,6 +93,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .user(withPrefix(prefix, USER, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
                 .wait(extractWaitConfig(prefix, properties))
+                .watch(extractWatchConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .build();
     }
@@ -144,6 +145,12 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .url(withPrefix(prefix, WAIT_URL, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
                 .shutdown(asInt(withPrefix(prefix,WAIT_SHUTDOWN,properties)))
+                .build();
+    }
+    
+    private WatchConfiguration extractWatchConfig(String prefix, Properties properties) {
+        return new WatchConfiguration.Builder()
+                .time(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
                 .build();
     }
 
