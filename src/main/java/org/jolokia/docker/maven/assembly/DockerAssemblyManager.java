@@ -17,6 +17,7 @@ import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
 import org.codehaus.plexus.archiver.tar.TarLongFileMode;
+import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -65,7 +66,7 @@ public class DockerAssemblyManager {
                 (assemblyConfig.getInline() != null ||
                  assemblyConfig.getDescriptor() != null ||
                  assemblyConfig.getDescriptorRef() != null)) {
-                createAssemblyDirArchive(assemblyConfig, params, buildDirs);
+                createAssemblyTarArchive(assemblyConfig, params, buildDirs);
             }
 
             File extraDir = null;
@@ -103,20 +104,15 @@ public class DockerAssemblyManager {
     private File createTarball(BuildDirs buildDirs, File extraDir) throws MojoExecutionException {
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
         try {
-            TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
-            archiver.setLongfile(TarLongFileMode.posix);
-//            archiver.addFileSet(DefaultFileSet.fileSet(buildDirs.getOutputDirectory()));
-            archiver.addArchivedFileSet(new File(buildDirs.getOutputDirectory(),"maven.tgz"),"maven/");
-          
+            TarArchiver archiver = createArchiver(buildDirs.getOutputDirectory(), archive);
             if (extraDir != null) {
+                // User Dockerfile from extra dir
                 archiver.addFileSet(DefaultFileSet.fileSet(extraDir));
-                
+            } else {
+                // Add own Dockerfile
+                archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
             }
-            if( extraDir == null || ! new File(extraDir,"Dockerfile").exists()) 
-            {//only add docker file if not in extra
-            	  archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
-            }
-            archiver.setDestFile(archive);
+
             archiver.createArchive();
             return archive;
         } catch (NoSuchArchiverException e) {
@@ -125,7 +121,20 @@ public class DockerAssemblyManager {
             throw new MojoExecutionException("Cannot create archive " + archive, e);
         }
     }
-    
+
+    private TarArchiver createArchiver(File outputDir, File archive) throws NoSuchArchiverException {
+        TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
+        archiver.setLongfile(TarLongFileMode.posix);
+
+        DefaultArchivedFileSet archiveSet =
+                DefaultArchivedFileSet.archivedFileSet(new File(outputDir,"maven.tgz"));
+        archiveSet.setPrefix("maven/");
+        archiveSet.setIncludingEmptyDirectories(true);
+        archiver.addArchivedFileSet(archiveSet);
+        archiver.setDestFile(archive);
+        return archiver;
+    }
+
     // visible for testing
     DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig) {
         DockerFileBuilder builder =
@@ -154,7 +163,7 @@ public class DockerAssemblyManager {
         return builder;
     }
 
-    private void createAssemblyDirArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs) throws MojoExecutionException {
+    private void createAssemblyTarArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs) throws MojoExecutionException {
         DockerAssemblyConfigurationSource source =
                         new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
 
