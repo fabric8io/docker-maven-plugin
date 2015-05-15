@@ -732,12 +732,14 @@ Example (values can be case insensitive, too) :
   <color>cyan</color>
 </log>
 ````
+
 ##### Watching for image changes
+
 When developing docker images, building the image and manually starting 
 stopping containers, can become a real burden. To slightly increase the user
-experience, you can enable the `image watch` on `<docker:start>` the image
-watch will poll for changes on the image, and if any change is spotted, the 
-container will get recreated, using the later image.
+experience, you can enable image watching on `<docker:start>` in which case the image
+will polled for changes, and if any change is spotted, the 
+container will get recreated and restarted, using the given image.
 
 Image watch can be configured as part of the run configuration like:
 
@@ -749,11 +751,23 @@ Image watch can be configured as part of the run configuration like:
 </run>
 ````
 
-In many cases it would make sense to be able to enable/disable the `image watch`
-without having to modify the plugin configuration, but using the command line.
-You can both enable the `image watch` and configure the interval using the cli:
-`mvn docker:start -Ddocker.watch.enabled=true -Ddocker.watch.interval=5000`
+In order to start watching for image updates, the property `docker.watch` must be 
+set to true:
 
+    mvn docker:start -Ddocker.watch=true -Ddocker.watch.interval=5000
+
+As you can see in this example, the watch interval can be provided on the command line, too.
+Please note that the Maven process will the run forever until it is killed. The containers will then be still running 
+ and must be stopped with `docker:stop`, though.
+
+When a watched image is removed, error message will be print out periodically while watching.
+So don't do that ;-)
+
+If containers are linked together network or volume wise, and you update a container which other containers dependent on, 
+the dependant containers are not restarted. E.g. when you have a "service" container accessing a "db" container and the
+"db" container is updated, then you "service" container will faill until it is restarted, too. A future version of this 
+plugin will take care of restarting these containers, too (in the right order), but for now you would have to do this 
+manually.
 
 #### `docker:stop`
 

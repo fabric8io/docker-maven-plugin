@@ -7,7 +7,8 @@
   - Fix log messages getting cut off in the build (#163)
   - Allow system properties to overwrite dynamic port mapping (#161)
   - Fix for empty authentication when pushing to registries (#102)
-   
+  - Added watch mode for images with 
+  
 * **0.11.3**
   - Add support for removeVolumes in `docker:stop` configuration (#120)
   - Add support for setting a custom maintainer in images (#117)

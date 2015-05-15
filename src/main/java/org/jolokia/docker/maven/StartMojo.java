@@ -48,9 +48,9 @@ public class StartMojo extends AbstractDockerMojo {
     private Map<String, String> imageAliasMap = new HashMap<>();
 
     /**
-     * @parameter property = "docker.watch.enabled" default-value = "false"
+     * @parameter property = "docker.watch" default-value = "false"
      */
-    protected boolean watchEnabled;
+    protected boolean watch;
 
     /**
      * @parameter property = "docker.watch.interval" default-value = "5000"
@@ -106,7 +106,8 @@ public class StartMojo extends AbstractDockerMojo {
                 // Start a watch task if requested
                 watchIfRequested(docker, imageConfig, executor, mappedPorts, containerId);
             }
-            if (watchEnabled) {
+            if (watch) {
+                log.info("Waiting on image updates ...");
                 wait();
             }
         } catch (InterruptedException e) {
@@ -115,16 +116,6 @@ public class StartMojo extends AbstractDockerMojo {
             executor.shutdownNow();
 
         }
-    }
-
-    private void watchIfRequested(DockerAccess docker, ImageConfiguration imageConfig, ScheduledExecutorService executor,
-                                  PortMapping mappedPorts, String containerId) throws DockerAccessException {
-        WatchConfiguration watchConfiguration = imageConfig.getRunConfiguration().getWatchConfiguration();
-        watchConfiguration = watchConfiguration != null ? watchConfiguration : new WatchConfiguration.Builder().time(watchInterval).build();
-        executor.scheduleAtFixedRate(
-                createWatchTask(docker, imageConfig, mappedPorts, containerId),
-                0,
-                watchConfiguration.getInterval(), TimeUnit.MILLISECONDS);
     }
 
     private String createContainer(DockerAccess docker,
@@ -268,6 +259,17 @@ public class StartMojo extends AbstractDockerMojo {
         return alias;
     }
 
+    private void watchIfRequested(DockerAccess docker, ImageConfiguration imageConfig, ScheduledExecutorService executor,
+                                  PortMapping mappedPorts, String containerId) throws DockerAccessException {
+        WatchConfiguration watchConfiguration = imageConfig.getRunConfiguration().getWatchConfiguration();
+        watchConfiguration = watchConfiguration != null ? watchConfiguration : new WatchConfiguration.Builder().time(watchInterval).build();
+        executor.scheduleAtFixedRate(
+                createWatchTask(docker, imageConfig, mappedPorts, containerId),
+                0,
+                watchConfiguration.getInterval(), TimeUnit.MILLISECONDS);
+    }
+
+
     private Runnable createWatchTask(final DockerAccess docker,
                                      final ImageConfiguration imageConfig,
                                      final PortMapping mappedPorts,
@@ -276,29 +278,30 @@ public class StartMojo extends AbstractDockerMojo {
         final String imageName = imageConfig.getName();
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
 
-        final AtomicReference<String> imageId = new AtomicReference<>();
+        final AtomicReference<String> imageId = new AtomicReference<>(docker.getImageId(imageName));
         final AtomicReference<String> containerId = new AtomicReference<>(initialContainerId);
 
         return new Runnable() {
             @Override
             public void run() {
 
-                if (watchEnabled) {
+                if (watch) {
                     try {
                         String currentImageId = docker.getImageId(imageName);
                         String oldValue = imageId.getAndSet(currentImageId);
                         if (!currentImageId.equals(oldValue)) {
-                            log.info("Image: " + imageName + " has been updated. Recreating container:" + containerId.get());
-                            log.info("Stopping container:" + containerId.get());
+                            log.info("Image " + imageName + " has been updated. Recreating container " + containerId.get());
+                            log.info("Stopping container " + containerId.get());
                             docker.stopContainer(containerId.get());
+                            docker.removeContainer(containerId.get(),true);
                             containerId.set(createContainer(docker, imageConfig, mappedPorts));
-                            log.info("Starting container:" + containerId.get());
+                            log.info("Starting container " + containerId.get());
                             docker.startContainer(containerId.get());
                         }
                     } catch (DockerAccessException e) {
-                        log.warn("Error while watching for image:" + imageName);
+                        log.warn("Error while watching for image " + imageName);
                     } catch (MojoExecutionException e) {
-                        log.warn("Error while recreating container for image:" + imageName);
+                        log.warn("Error while recreating container for image " + imageName);
                     }
                 }
             }
