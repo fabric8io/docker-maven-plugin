@@ -226,7 +226,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
         
-        String temporaryImage = tagTemporaryImage(name, registry);
+        String temporaryImage = tagTemporaryImage(name, registry, true);
         
         try {
             Result result = post(pushUrl, null, authConfig, HTTP_OK);
@@ -356,11 +356,11 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     }
 
 
-    private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
+    private String tagTemporaryImage(ImageName name, String registry, boolean force) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
 
         if (!name.hasRegistry() && registry != null && !hasImage(targetImage)) {
-            tag(name.getFullName(null), targetImage,false);
+            tag(name.getFullName(null), targetImage, force);
             return targetImage;
         }
         return null;
