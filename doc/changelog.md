@@ -1,11 +1,13 @@
 # ChangeLog
 
-* **0.11.5**
+* **0.11.5-M1**
   - Fix problem when creating intermediate archive for collecting assembly files introduced with #139. The 
     container can be now set with "mode" in the assembly configuration with the possible values `dir`, `tar`, `tgz`
     and `zip` (#171)
-  - Workaround Docker problem when using an implicit registry `index.docker.io` when no registry is explitely given. 
-    
+  - Workaround Docker problem when using an implicit registry `index.docker.io` when no registry is explicitly given. 
+  - Fixed references to docker hub in documentation (#169)
+  - Fixed registry authentication lookup (#146)
+  
 * **0.11.4**
   - Fixed documentation for available properties
   - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)
