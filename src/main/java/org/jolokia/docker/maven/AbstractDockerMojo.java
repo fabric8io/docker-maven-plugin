@@ -270,11 +270,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Determine the 'real' registry, externally provided registries overwritting internal ones
     private String extractRegistry(String image, String registry) {
-        if (registry != null) {
-            return registry;
+        ImageName name = new ImageName(image);
+        if (name.getRegistry() != null) {
+            // Registry as name part takes precedence
+            return name.getRegistry();
         } else {
-            ImageName name = new ImageName(image);
-            return name.getRegistry() != null ? name.getRegistry() : "registry.hub.docker.com";
+            // If name doesnt contain a registry, then the provided registry is used (or a default)
+            return registry != null ? registry : "registry.hub.docker.com";
         }
     }
 
@@ -339,12 +341,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     /**
-     * Try to get the registry from various parameters
+     * Try to get the registry from various configuration parameters
      *
      * @param imageConfig image config which might contain the registry
      * @return the registry found or null if none could be extracted
      */
-    protected String getRegistry(ImageConfiguration imageConfig) {
+    protected String getConfiguredRegistry(ImageConfiguration imageConfig) {
         return EnvUtil.findRegistry(imageConfig.getRegistry(),registry);
     }
 

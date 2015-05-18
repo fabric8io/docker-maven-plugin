@@ -77,7 +77,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                 String imageName = imageConfig.getName();
 
-                checkImageWithAutoPull(docker, imageName, getRegistry(imageConfig));
+                checkImageWithAutoPull(docker, imageName, getConfiguredRegistry(imageConfig));
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());

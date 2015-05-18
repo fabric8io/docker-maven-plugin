@@ -822,7 +822,7 @@ This goals uploads images to the registry which have a `<build>`
 configuration section. The images to push can be restricted with with
 the global option `image` (see
 [Global Configuration](#global-configuration) for details). The
-registry to push is by default `registry.hub.docker.io` but can be
+registry to push is by default `registry.hub.docker.com` but can be
 specified as part of the images's `name` name the Docker
 way. E.g. `docker.test.org:5000/data:1.5` will push the image `data`
 with tag `1.5` to the registry `docker.test.org` at port
@@ -1038,7 +1038,7 @@ Docker uses registries to store images. The registry is typically
 specified as part of the name. I.e. if the first part (everything
 before the first `/`) contains a dot (`.`) or colon (`:`) this part is
 interpreted as an address (an optionally port) of a remote
-registry. This registry (or the default `index.docker.io` if no
+registry. This registry (or the default `registry.hub.docker.com` if no
 registry is given) is used during push and pull operations. This
 plugin follows the same semantics, so if an image name is specified
 with a registry part, this registry is contacted. Authentication is
@@ -1055,7 +1055,7 @@ This plugin supports various ways for specifying a registry:
 * If the image name contains a registry part, this registry is used
   unconditionally and can not be overwritten from the outside.
 * If an image name doesn't contain a registry, then by default the
-  default Docker registry `index.docker.io` is used for push and pull
+  default Docker registry `registry.hub.docker.com` is used for push and pull
   operations. But this can be overwritten through various means:
   - If the `<image>` configuration contains a `<registry>` subelement
     this registry is used.
@@ -1075,7 +1075,7 @@ Example:
       <!-- Without an explicit registry ... -->
       <name>jolokia/jolokia-java</name>
       <!-- ... hence use this registry -->
-      <registry>docker.consol.de</registry>
+      <registry>docker.ro14nd.de</registry>
       ....
     <image>
     <image>
@@ -1146,7 +1146,7 @@ the Maven settings file `~/.m2/settings.xml`:
 ```xml
 <servers>
   <server>
-    <id>registry.hub.docker.io</id>
+    <id>registry.hub.docker.com</id>
     <username>jolokia</username>
     <password>s!cr!t</password>
   </server>
@@ -1155,7 +1155,7 @@ the Maven settings file `~/.m2/settings.xml`:
 ```
 
 The server id must specify the registry to push to/pull from, which by
-default is central index `registry.hub.docker.io`. Here you should add
+default is central index `registry.hub.docker.com`. Here you should add
 you docker.io account for your repositories.
 
 #### Password encryption
