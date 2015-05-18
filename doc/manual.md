@@ -264,6 +264,7 @@ Here's an example:
   </volumes>
   <command>java /opt/demo/server.jar</command>
   <assembly>
+    <mode>dir</mode>
     <basedir>/opt/demo</basedir>
     <descriptor>assembly.xml</descriptor>
   </assembly>
@@ -296,6 +297,11 @@ Here's an example:
   since exporting makes no sense in this case and will waste disk space unnecessarily.    
 * **ignorePermissions** indicates if existing file permissions should be ignored
   when creating the assembly archive. This value is `false` by default.
+* **mode** specifies how the assembled files should be collected. By default the files a simply
+  copied (`dir`), but can be set to be a Tar- (`tar`), compressed Tar- (`tgz`) or Zip- (`zip`) Archive. 
+  The archive formats have the advantage that file permission can be preserved better (since the copying is 
+  independent from the underlying files systems), but might trigges internal bugs from the Maven assembler (as 
+  it has been in #171)
 
 In the event you do not need to include any artifacts with the image, you may
 safely omit this element from the configuration. 

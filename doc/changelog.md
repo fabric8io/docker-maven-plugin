@@ -1,5 +1,11 @@
 # ChangeLog
 
+* **0.11.5**
+  - Fix problem when creating intermediate archive for collecting assembly files introduced with #139. The 
+    container can be now set with "mode" in the assembly configuration with the possible values `dir`, `tar`, `tgz`
+    and `zip` (#171)
+  
+    
 * **0.11.4**
   - Fixed documentation for available properties
   - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)

@@ -1,8 +1,6 @@
 package org.jolokia.docker.maven.config;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author roland

@@ -131,6 +131,7 @@
                    for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
                    does this. -->
                 <assembly>
+                  <mode>zip</mode>
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
               </build>

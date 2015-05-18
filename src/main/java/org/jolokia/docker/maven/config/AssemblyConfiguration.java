@@ -45,6 +45,11 @@ public class AssemblyConfiguration {
     /**
      * @parameter
      */
+    private AssemblyMode mode;
+
+    /**
+     * @parameter
+     */
     private String user;
     
     public AssemblyConfiguration() {
@@ -76,6 +81,10 @@ public class AssemblyConfiguration {
 
     public String getUser() {
         return user;
+    }
+
+    public AssemblyMode getMode() {
+        return mode != null ? mode : AssemblyMode.dir;
     }
 
     public Boolean isIgnorePermissions() {
@@ -128,6 +137,11 @@ public class AssemblyConfiguration {
 
         public Builder user(String user) {
             config.user = set(user);
+            return this;
+        }
+
+        public Builder mode(AssemblyMode mode) {
+            config.mode = mode;
             return this;
         }
 
