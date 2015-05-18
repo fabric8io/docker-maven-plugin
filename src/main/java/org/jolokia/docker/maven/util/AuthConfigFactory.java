@@ -59,13 +59,13 @@ public class AuthConfigFactory {
      *
      * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
-     * @param image an image name used for looked up as "server" in the settings
      * @param settings the global Maven settings object
+     * @param registry
      * @return the authentication configuration or <code>null</code> if none could be found
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(Map authConfig, String image, Settings settings) throws MojoExecutionException {
+    public AuthConfig createAuthConfig(Map authConfig, Settings settings, String registry) throws MojoExecutionException {
         Properties props = System.getProperties();
         if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
             return getAuthConfigFromProperties(props);
@@ -73,7 +73,7 @@ public class AuthConfigFactory {
         if (authConfig != null) {
             return getAuthConfigFromPluginConfiguration(authConfig);
         }
-        return getAuthConfigFromSettings(image,settings);
+        return getAuthConfigFromSettings(settings,registry);
     }
 
     // ===================================================================================================
@@ -102,8 +102,7 @@ public class AuthConfigFactory {
         return new AuthConfig(cloneConfig);
     }
 
-    private AuthConfig getAuthConfigFromSettings(String image, Settings settings) throws MojoExecutionException {
-        String registry = getRegistryFromImageNameOrDefault(image);
+    private AuthConfig getAuthConfigFromSettings(Settings settings, String registry) throws MojoExecutionException {
         Server server = settings.getServer(registry);
         if (server != null) {
             return new AuthConfig(
@@ -140,8 +139,4 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private String getRegistryFromImageNameOrDefault(String image) {
-        ImageName name = new ImageName(image);
-        return name.getRegistry() != null ? name.getRegistry() : "registry.hub.docker.io";
-    }
 }

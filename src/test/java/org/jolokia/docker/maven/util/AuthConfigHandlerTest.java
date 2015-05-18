@@ -54,7 +54,7 @@ public class AuthConfigHandlerTest {
 
     @Test
     public void testEmpty() throws Exception {
-        assertNull(factory.createAuthConfig(null, "test/test", settings));
+        assertNull(factory.createAuthConfig(null, settings, null));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class AuthConfigHandlerTest {
         System.setProperty("docker.password", "secret");
         System.setProperty("docker.email", "roland@jolokia.org");
         try {
-            AuthConfig config = factory.createAuthConfig(null,"test/test",settings);
+            AuthConfig config = factory.createAuthConfig(null,settings, null);
             verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
         } finally {
             System.clearProperty("docker.username");
@@ -85,7 +85,7 @@ public class AuthConfigHandlerTest {
     private void checkException(String key) throws MojoExecutionException {
         System.setProperty(key, "secret");
         try {
-            factory.createAuthConfig(null, "test/test", settings);
+            factory.createAuthConfig(null, settings, null);
         } finally {
             System.clearProperty(key);
         }
@@ -98,7 +98,7 @@ public class AuthConfigHandlerTest {
         pluginConfig.put("password", "secret");
         pluginConfig.put("email", "roland@jolokia.org");
 
-        AuthConfig config = factory.createAuthConfig(pluginConfig,"test/test",settings);
+        AuthConfig config = factory.createAuthConfig(pluginConfig,settings,null);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
 
@@ -107,7 +107,7 @@ public class AuthConfigHandlerTest {
     public void testFromPluginConfigurationFailed() throws MojoExecutionException {
         Map pluginConfig = new HashMap();
         pluginConfig.put("password", "secret");
-        factory.createAuthConfig(pluginConfig, "test/test", settings);
+        factory.createAuthConfig(pluginConfig, settings, null);
     }
 
     @Test
@@ -125,7 +125,7 @@ public class AuthConfigHandlerTest {
             result = server;
         }};
 
-        AuthConfig config = factory.createAuthConfig(null,"test.org/test",settings);
+        AuthConfig config = factory.createAuthConfig(null,settings, "test.org");
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
 

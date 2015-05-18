@@ -122,10 +122,10 @@
               <!-- Artifact Image-->
               <name>jolokia/${project.artifactId}:${project.version}</name>
               <build>
-                <tags>
-                  <tag>latest</tag>
-                </tags>
-                <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
+                <!--<tags>-->
+                  <!--<tag>latest</tag>-->
+                <!--</tags>-->
+                <!--&lt;!&ndash; The assembly descriptor prepares the "/maven" directory in the temporary data-->
                    container which will be made available to the specified container. The startup script in the
                    container (jolokia/tomcat-7.0) should check for files in this directory and use them
                    for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly

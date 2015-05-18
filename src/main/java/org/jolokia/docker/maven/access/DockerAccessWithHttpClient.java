@@ -1,7 +1,6 @@
 package org.jolokia.docker.maven.access;
 
 import java.io.*;
-import java.net.URL;
 import java.util.*;
 
 import org.jolokia.docker.maven.access.chunked.*;
@@ -359,7 +358,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
 
-        if (!name.hasRegistry() && registry != null && !hasImage(targetImage)) {
+        if (!name.hasRegistry() && registry != null && !registry.equals("index.docker.io") && !hasImage(targetImage)) {
             tag(name.getFullName(null), targetImage,false);
             return targetImage;
         }

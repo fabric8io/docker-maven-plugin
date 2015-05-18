@@ -264,8 +264,18 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    protected AuthConfig prepareAuthConfig(String image) throws MojoExecutionException {
-        return authConfigFactory.createAuthConfig(authConfig, image,settings);
+    protected AuthConfig prepareAuthConfig(String image, String registry) throws MojoExecutionException {
+        return authConfigFactory.createAuthConfig(authConfig, settings, extractRegistry(image,registry));
+    }
+
+    // Determine the 'real' registry, externally provided registries overwritting internal ones
+    private String extractRegistry(String image, String registry) {
+        if (registry != null) {
+            return registry;
+        } else {
+            ImageName name = new ImageName(image);
+            return name.getRegistry() != null ? name.getRegistry() : "registry.hub.docker.com";
+        }
     }
 
     protected static String toContainerAndImageDescription(String container, String description) {
@@ -352,7 +362,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry) throws DockerAccessException, MojoExecutionException {
         if (!docker.hasImage(name)) {
             if (autoPull) {
-                docker.pullImage(name, prepareAuthConfig(name), registry);
+                docker.pullImage(name, prepareAuthConfig(image,registry), registry);
                 ImageName imageName = new ImageName(name);
                 if (registry != null && !imageName.hasRegistry()) {
                     // If coming from a registry which was not contained in the original name, add a tag from the
@@ -366,6 +376,5 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             }
         }
     }
-
 
 }
