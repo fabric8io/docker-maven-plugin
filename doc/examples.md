@@ -79,7 +79,7 @@ which has more complex sample project involving two images:
 * Vanilla PostgreSQL 9 Image
 * HTTP Request Logging Service
   - MicroService mit embedded Tomcat
-  - DB Schema is created during startup vai [Flyway](http://flywaydb.org/)
+  - DB Schema is created during startup via [Flyway](http://flywaydb.org/)
 * PostgreSQL container is connected via a Docker 'link'
 * Simple integration test which excercises the service
 
