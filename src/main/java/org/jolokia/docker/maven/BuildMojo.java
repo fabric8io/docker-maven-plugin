@@ -69,8 +69,6 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private void buildImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
-        log.info("Creating image " + imageConfig.getDescription());
-
         String fromImage = imageConfig.getBuildConfiguration().getFrom();
         if (fromImage == null) {
             fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
@@ -82,7 +80,7 @@ public class BuildMojo extends AbstractDockerMojo {
         File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName,params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
-        log.debug("Build successful!");
+        log.info("Created image " + imageConfig.getDescription());
     }
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)

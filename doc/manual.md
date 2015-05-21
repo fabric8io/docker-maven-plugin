@@ -1037,7 +1037,7 @@ Example:
 Docker uses registries to store images. The registry is typically
 specified as part of the name. I.e. if the first part (everything
 before the first `/`) contains a dot (`.`) or colon (`:`) this part is
-interpreted as an address (an optionally port) of a remote
+interpreted as an address (with an optionally port) of a remote
 registry. This registry (or the default `registry.hub.docker.com` if no
 registry is given) is used during push and pull operations. This
 plugin follows the same semantics, so if an image name is specified
@@ -1050,7 +1050,7 @@ you do not want to hard code a registry within the `pom.xml` but
 provide it from the outside with an environment variable or a system
 property. 
 
-This plugin supports various ways for specifying a registry:
+This plugin supports various ways of specifying a registry:
 
 * If the image name contains a registry part, this registry is used
   unconditionally and can not be overwritten from the outside.
@@ -1062,7 +1062,7 @@ This plugin supports various ways for specifying a registry:
   - Otherwise, a global configuration element `<registry>` is
     evaluated which can be also provided as system property via
     `-Ddocker.registry`. 
-  - Finally a environment variable `DOCKER_REGISTRY` is looked up for
+  - Finally an environment variable `DOCKER_REGISTRY` is looked up for
     detecting a registry.
     
 Example:
@@ -1098,10 +1098,10 @@ registry like described above:
 * When *pulling*, the image pulled will be also tagged with a repository
   name **without** registry. The reasoning behind this is that this
   image then can be referenced also by the configuration when the
-  registry is not specified anymore explicitely.
-* When *pushing* a local image, temporarily an tag including the
+  registry is not specified anymore explicitly.
+* When *pushing* a local image, temporarily a tag including the
   registry is added and removed after the push. This is required
-  because Docker an only push registry-named images.
+  because Docker can only push registry-named images.
 
 ### Authentication
 

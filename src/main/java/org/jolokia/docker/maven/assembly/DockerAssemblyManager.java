@@ -151,7 +151,7 @@ public class DockerAssemblyManager {
         if (assemblyConfig != null) {
             builder.add("maven", "")
                    .basedir(assemblyConfig.getBasedir())
-                    .exportBasedir(assemblyConfig.exportBasedir());
+                   .exportBasedir(assemblyConfig.exportBasedir());
         } else {
             builder.exportBasedir(false);
         }

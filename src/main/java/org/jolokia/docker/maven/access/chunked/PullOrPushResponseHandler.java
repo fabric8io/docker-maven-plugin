@@ -38,7 +38,18 @@ public class PullOrPushResponseHandler implements ChunkedResponseHandler<JSONObj
             log.error(msg + (msg.equals(details) ? "" : "(" + details + ")"));
             throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
         } else {
-            log.info("... " + (json.has("id") ? json.getString("id") + ": " : "") + json.getString("status"));
+            if (json.length() > 0) {
+                log.info("... " + extractInfo(json, "id", "status", "stream"));
+            }
         }
+    }
+
+    private String extractInfo(JSONObject json, String ... keys) {
+        for (String key : keys) {
+            if (json.has(key)) {
+                return json.getString(key);
+            }
+        }
+        return "";
     }
 }
