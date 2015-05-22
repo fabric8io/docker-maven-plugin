@@ -151,6 +151,7 @@ public class DockerAssemblyManager {
         if (assemblyConfig != null) {
             builder.add("maven", "")
                    .basedir(assemblyConfig.getBasedir())
+                   .user(assemblyConfig.getUser())
                    .exportBasedir(assemblyConfig.exportBasedir());
         } else {
             builder.exportBasedir(false);
@@ -160,7 +161,7 @@ public class DockerAssemblyManager {
         builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
 
         if (buildConfig.getCommand() != null) {
-            builder.command(EnvUtil.splitWOnSpaceWithEscape(buildConfig.getCommand()));
+            builder.command(EnvUtil.splitOnSpaceWithEscape(buildConfig.getCommand()));
         }
 
         return builder;

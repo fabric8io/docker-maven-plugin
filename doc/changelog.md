@@ -3,12 +3,15 @@
 * **0.11.5**
   - Fix problem with http:// URLs when a CERT path is set
   - Fix warnings when parsing a pull response
+  - Add a new parameter 'docker.follow' which makes a `docker:start` blocking until the CTRL-C is pressed (#176)
+  - Add a `user` parameter to the assembly configuration so that the added files are created for this user 
   - Fix problem when creating intermediate archive for collecting assembly files introduced with #139. The 
     container can be now set with "mode" in the assembly configuration with the possible values `dir`, `tar`, `tgz`
     and `zip` (#171)
   - Workaround Docker problem when using an implicit registry `index.docker.io` when no registry is explicitly given. 
   - Fixed references to docker hub in documentation (#169)
   - Fixed registry authentication lookup (#146)
+  
   
 * **0.11.4**
   - Fixed documentation for available properties

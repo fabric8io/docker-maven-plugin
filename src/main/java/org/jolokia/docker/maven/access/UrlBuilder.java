@@ -51,7 +51,7 @@ public final class UrlBuilder {
 
     public String deleteImage(String name, boolean force) {
         String url = createUrl(String.format("/images/%s", name));
-        url = addQueryParam(url, name, force);
+        url = addQueryParam(url, "force", force);
         
         return url;
     }

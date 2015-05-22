@@ -50,7 +50,7 @@ public class ContainerCreateConfig {
 
     private JSONArray splitOnWhiteSpace(String entrypoint) {
         JSONArray a = new JSONArray();
-        for (String s : EnvUtil.splitWOnSpaceWithEscape(entrypoint)) {
+        for (String s : EnvUtil.splitOnSpaceWithEscape(entrypoint)) {
             a.put(s);
         }
         return a;

@@ -8,6 +8,7 @@
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
   - [`docker:logs`](#dockerlogs)
+* [Assembly Configuration](#build-assembly)
 * [External Configuration](#external-configuration)
 * [Registry Handling](#registry-handling)
 * [Authentication](#authentication)
@@ -300,8 +301,18 @@ Here's an example:
 * **mode** specifies how the assembled files should be collected. By default the files a simply
   copied (`dir`), but can be set to be a Tar- (`tar`), compressed Tar- (`tgz`) or Zip- (`zip`) Archive. 
   The archive formats have the advantage that file permission can be preserved better (since the copying is 
-  independent from the underlying files systems), but might trigges internal bugs from the Maven assembler (as 
+  independent from the underlying files systems), but might triggers internal bugs from the Maven assembler (as 
   it has been in #171)
+* **user** can be used to specify the user and group under which the files should be added. It has the general format 
+  `user[:group[:run-user]]`. The user and group can be given either as numeric user- and group-id or as names. The group 
+  id is optional. If a third part is given, then the build changes to user `root` before changing the ownerships, 
+  changes the ownerships and then change to user `run-user` which is then used for the final command to execute. This feature
+  might be needed, if the base image already changed the user (e.g. to 'jboss') so that a `chown` from root to this user would fail. 
+  For example, the image `jboss/wildfly` use a "jboss" user under which all commands are executed. Adding files in Docker
+  always happens under the UID root. These files can only be changed to "jboss" is the `chown` command is executed as root. 
+  For the following commands to be run again as "jboss" (like the final `standalone.sh`), the plugin switches back to 
+  user `jboss` (this is this "run-user") after changing the file ownership. For this example a specification of 
+  `jboss:jboss:jboss` would be required. 
 
 In the event you do not need to include any artifacts with the image, you may
 safely omit this element from the configuration. 
@@ -409,6 +420,11 @@ globally the logs **showLogs** can be used as global configuration (i.e. outside
 If set it will print out all standard output and standard error messages for all containers started. 
 As value the images for which logs should be shown can be given as a comma separated list. This is probably most 
 useful when used from the command line as system property `docker.showLogs`.   
+
+Also you can specify `docker.follow` as system property so that the `docker:start` will never return but block until
+CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that 
+ you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but 
+ not removed so that you can make postmortem analysis).
 
 The `<run>` configuration knows the following sub elements:
 
@@ -672,7 +688,7 @@ some condition is met. These conditions can be specified within a
 `<wait>` section which the following sub-elements:
 
 * **url** is an URL which is polled periodically until it returns a
-  HTTP 200 status code.
+  HTTP status code between 200 and 399.
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
@@ -682,7 +698,8 @@ some condition is met. These conditions can be specified within a
 
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
-conditions. 
+conditions. Please note, that the wait mechanism never aborts a build, but only 
+waits until one of the conditions occurs. 
 
 Example:
 

@@ -83,7 +83,7 @@ public class EnvUtil {
         return Collections.emptyList();
     }
 
-    public static String[] splitWOnSpaceWithEscape(String toSplit) {
+    public static String[] splitOnSpaceWithEscape(String toSplit) {
         String[] split = toSplit.split("(?<!" + Pattern.quote("\\") + ")\\s+");
         String[] res = new String[split.length];
         for (int i = 0; i < split.length; i++) {
