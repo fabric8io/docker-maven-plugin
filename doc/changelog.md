@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.11.5-M1**
+* **0.11.5**
   - Add a new parameter 'docker.follow' which makes a `docker:start` blocking until the CTRL-C is pressed (#176)
   - Add a `user` parameter to the assembly configuration so that the added files are created for this user 
     (#53, #175) 
