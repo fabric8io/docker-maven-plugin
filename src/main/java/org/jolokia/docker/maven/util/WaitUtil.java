@@ -87,7 +87,7 @@ public class WaitUtil {
                 connection.setReadTimeout(HTTP_PING_TIMEOUT);
                 connection.setRequestMethod("HEAD");
                 int responseCode = connection.getResponseCode();
-                return (200 <= responseCode && responseCode <= 399);
+                return (responseCode >= 200 && responseCode <= 399);
             } catch (IOException exception) {
                 return false;
             }

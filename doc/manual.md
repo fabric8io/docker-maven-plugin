@@ -688,7 +688,7 @@ some condition is met. These conditions can be specified within a
 `<wait>` section which the following sub-elements:
 
 * **url** is an URL which is polled periodically until it returns a
-  HTTP 200 status code.
+  HTTP status code between 200 and 399.
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
@@ -698,7 +698,8 @@ some condition is met. These conditions can be specified within a
 
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
-conditions. 
+conditions. Please note, that the wait mechanism never aborts a build, but only 
+waits until one of the conditions occurs. 
 
 Example:
 
