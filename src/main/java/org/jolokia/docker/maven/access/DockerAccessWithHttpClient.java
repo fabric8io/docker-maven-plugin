@@ -33,10 +33,10 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     // Logging
     private final Logger log;
-    
+
     private final ApacheHttpDelegate delegate;
     private final UrlBuilder urlBuilder;
-    
+
     /**
      * Create a new access for the given URL
      * @param baseUrl base URL for accessing the docker Daemon
@@ -45,7 +45,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
      */
     public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, Logger log) throws IOException {
         this.log = log;
-        this.delegate = new ApacheHttpDelegate(certPath);
+        this.delegate = new ApacheHttpDelegate(isSSL(baseUrl) ? certPath : null);
         this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
     }
 
@@ -55,7 +55,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         try {
             String response = get(urlBuilder.listImages(name), HTTP_OK).getMessage();
             JSONArray array = new JSONArray(response);
-            
+
             return containsImage(name, array);
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
@@ -99,12 +99,12 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         try {
             String response = get(urlBuilder.inspectContainer(containerId), HTTP_OK).getMessage();
             JSONObject json = new JSONObject(response);
-            
+
             String name =  json.getString("Name");
             if (name.startsWith("/")) {
                 name = name.substring(1);
             }
-            
+
             return name;
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
@@ -145,14 +145,14 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             throw new DockerAccessException(String.format("Unable to build image [%s]", image));
         }
     }
-    
+
     @Override
     public Map<String, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException {
         try {
             String response = get(urlBuilder.inspectContainer(containerId), HTTP_OK).getMessage();
             JSONObject json = new JSONObject(response);
-            
-            return extractPorts(json);           
+
+            return extractPorts(json);
         } catch (HttpRequestException e) {
             throw new DockerAccessException("Unable to query port mappings for container [%s]", containerId);
         }
@@ -172,11 +172,11 @@ public class DockerAccessWithHttpClient implements DockerAccess {
 
     @Override
     public boolean isContainerRunning(String containerId) throws DockerAccessException {
-        try {            
+        try {
             String response = get(urlBuilder.inspectContainer(containerId), HTTP_OK).getMessage();
             JSONObject json = new JSONObject(response);
-        
-            return json.getJSONObject("State").getBoolean("Running"); 
+
+            return json.getJSONObject("State").getBoolean("Running");
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to determine state of container [%s]", containerId);
@@ -199,7 +199,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     @Override
     public void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException {
         try {
-            delete(urlBuilder.removeContainer(containerId, removeVolumes), HTTP_NO_CONTENT); 
+            delete(urlBuilder.removeContainer(containerId, removeVolumes), HTTP_NO_CONTENT);
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to remove container [%s]", containerId);
@@ -224,9 +224,9 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     public void pushImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
-        
+
         String temporaryImage = tagTemporaryImage(name, registry);
-        
+
         try {
             Result result = post(pushUrl, null, authConfig, HTTP_OK);
             processChunkedResponse(result, createPullOrPushResponseHandler());
@@ -260,7 +260,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
             if (log.isDebugEnabled()) {
                 logRemoveResponse(new JSONArray(result.getMessage()));
             }
-            
+
             return result.getCode() == HTTP_OK;
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
@@ -280,7 +280,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
     private BuildResponseHandler createBuildResponseHandler() {
         return new BuildResponseHandler(log);
     }
-    
+
     // visible for testing?
     private PullOrPushResponseHandler createPullOrPushResponseHandler() {
         return new PullOrPushResponseHandler(log);
@@ -292,7 +292,7 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
         return Collections.singletonMap("X-Registry-Auth", authConfig.toHeaderValue());
     }
-    
+
     private boolean containsImage(ImageName name, JSONArray array) {
         if (array.length() > 0) {
             for (int i = 0; i < array.length(); i++) {
@@ -307,7 +307,6 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
         return false;
     }
-
 
     private List<String> extractMatchingContainers(boolean onlyLatest, String imageFullName, JSONArray configs) {
         long newest = 0;
@@ -347,13 +346,12 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         try {
             String response = get(urlBuilder.listContainers(100), HTTP_OK).getMessage();
             JSONArray array = new JSONArray(response);
-            
+
             return extractMatchingContainers(onlyLatest, imageFullName, array);
         } catch (HttpRequestException e) {
             throw new DockerAccessException(e.getMessage());
         }
     }
-
 
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
@@ -364,41 +362,42 @@ public class DockerAccessWithHttpClient implements DockerAccess {
         }
         return null;
     }
-    
+
+
     // ===========================================================================================================
-    
+
     private Result delete(String url, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
         try {
             return delegate.delete(url, statusCode, additional);
-        } catch (IOException e) {            
+        } catch (IOException e) {
             throw new DockerAccessException(e, "Communication error with the docker daemon");
         }
     }
-    
+
     private Result get(String url, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
         try {
             return delegate.get(url, statusCode, additional);
-        } catch (IOException e) {            
+        } catch (IOException e) {
             throw new DockerAccessException(e, "Communication error with the docker daemon");
         }
     }
-    
+
     private Result post(String url, Object body, AuthConfig authConfig, int statusCode) throws HttpRequestException, DockerAccessException {
        try {
            return delegate.post(url, body, createAuthHeader(authConfig), statusCode);
-       } catch (IOException e) {            
+       } catch (IOException e) {
            throw new DockerAccessException(e, "communication error occurred with the docker daemon");
        }
     }
-    
+
     private Result post(String url, Object body, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
         try {
             return delegate.post(url, body, statusCode, additional);
-        } catch (IOException e) {            
+        } catch (IOException e) {
             throw new DockerAccessException(e, "communication error occurred with the docker daemon");
         }
     }
-    
+
     // ===========================================================================================================
     // Preparation for performing requests
 
@@ -484,5 +483,9 @@ public class DockerAccessWithHttpClient implements DockerAccess {
                 log.debug(key + ": " + entry.get(key.toString()));
             }
         }
+    }
+
+    private boolean isSSL(String url) {
+        return url != null && url.toLowerCase().startsWith("https");
     }
 }

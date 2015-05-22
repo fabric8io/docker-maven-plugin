@@ -1,6 +1,8 @@
 # ChangeLog
 
-* **0.11.5-M1**
+* **0.11.5**
+  - Fix problem with http:// URLs when a CERT path is set
+  - Fix warnings when parsing a pull response
   - Fix problem when creating intermediate archive for collecting assembly files introduced with #139. The 
     container can be now set with "mode" in the assembly configuration with the possible values `dir`, `tar`, `tgz`
     and `zip` (#171)
