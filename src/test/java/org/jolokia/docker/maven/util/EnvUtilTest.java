@@ -40,7 +40,7 @@ public class EnvUtilTest {
                 "bla blub\\ blubber", new String[] { "bla", "blub blubber"}
         };
         for (int i = 0; i < data.length; i += 2) {
-            String[] result = EnvUtil.splitWOnSpaceWithEscape((String) data[i]);
+            String[] result = EnvUtil.splitOnSpaceWithEscape((String) data[i]);
             String[] expected = (String[]) data[i+1];
             assertEquals(expected.length, result.length);
             for (int j = 0; j < expected.length; j++) {

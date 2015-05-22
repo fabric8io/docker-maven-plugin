@@ -364,7 +364,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry) throws DockerAccessException, MojoExecutionException {
         if (!docker.hasImage(name)) {
             if (autoPull) {
-                docker.pullImage(name, prepareAuthConfig(image,registry), registry);
+                docker.pullImage(name, prepareAuthConfig(name,registry), registry);
                 ImageName imageName = new ImageName(name);
                 if (registry != null && !imageName.hasRegistry()) {
                     // If coming from a registry which was not contained in the original name, add a tag from the

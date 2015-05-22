@@ -356,6 +356,45 @@
       </build>
     </profile>
 
+
+    <profile>
+      <id>wildfly</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration combine.self="override">
+              <images>
+                <image>
+                  <!-- Artifact Image-->
+                  <name>jolokia/${project.artifactId}-wildfly:${project.version}</name>
+                  <build>
+                    <from>jboss/wildfly:8.2.0.Final</from>
+                    <assembly>
+                      <user>jboss:jboss:jboss</user>
+                      <basedir>/opt/jboss/wildfly/standalone/deployments</basedir>
+                      <descriptor>assembly.xml</descriptor>
+                    </assembly>
+                  </build>
+                  <run>
+                    <ports>
+                      <port>jolokia.port:8080</port>
+                    </ports>
+                    <wait>
+                      <!-- The plugin waits until this URL is reachable via HTTP ... -->
+                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <time>10000</time>
+                    </wait>
+                  </run>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>tomcat</id>
       <properties>

@@ -8,6 +8,7 @@
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
   - [`docker:logs`](#dockerlogs)
+* [Assembly Configuration](#build-assembly)
 * [External Configuration](#external-configuration)
 * [Registry Handling](#registry-handling)
 * [Authentication](#authentication)
@@ -300,8 +301,18 @@ Here's an example:
 * **mode** specifies how the assembled files should be collected. By default the files a simply
   copied (`dir`), but can be set to be a Tar- (`tar`), compressed Tar- (`tgz`) or Zip- (`zip`) Archive. 
   The archive formats have the advantage that file permission can be preserved better (since the copying is 
-  independent from the underlying files systems), but might trigges internal bugs from the Maven assembler (as 
+  independent from the underlying files systems), but might triggers internal bugs from the Maven assembler (as 
   it has been in #171)
+* **user** can be used to specify the user and group under which the files should be added. It has the general format 
+  `user[:group[:run-user]]`. The user and group can be given either as numeric user- and group-id or as names. The group 
+  id is optional. If a third part is given, then the build changes to user `root` before changing the ownerships, 
+  changes the ownerships and then change to user `run-user` which is then used for the final command to execute. This feature
+  might be needed, if the base image already changed the user (e.g. to 'jboss') so that a `chown` from root to this user would fail. 
+  For example, the image `jboss/wildfly` use a "jboss" user under which all commands are executed. Adding files in Docker
+  always happens under the UID root. These files can only be changed to "jboss" is the `chown` command is executed as root. 
+  For the following commands to be run again as "jboss" (like the final `standalone.sh`), the plugin switches back to 
+  user `jboss` (this is this "run-user") after changing the file ownership. For this example a specification of 
+  `jboss:jboss:jboss` would be required. 
 
 In the event you do not need to include any artifacts with the image, you may
 safely omit this element from the configuration. 

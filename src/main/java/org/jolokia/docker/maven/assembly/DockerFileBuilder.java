@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
@@ -28,7 +29,10 @@ public class DockerFileBuilder {
     private String[] arguments = new String[0];
 
     private Boolean exportBasedir = null;
-    
+
+    // User under which the files should be added
+    private String user;
+
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
     // See also http://docs.docker.io/reference/builder/#add
@@ -67,15 +71,10 @@ public class DockerFileBuilder {
         b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
 
-        // Environment variable support
         addEnv(b);
-        // Ports
         addPorts(b);
-        // Volume export
         addVolumes(b);
-        // Entries
         addEntries(b);
-        // Default command mit args
         addCommands(b);
 
         return b.toString();
@@ -90,11 +89,26 @@ public class DockerFileBuilder {
             b.append("]").append("\n");
         }
     }
-    
+
     private void addEntries(StringBuilder b) {
+        List<String> destinations = new ArrayList<>();
         for (AddEntry entry : addEntries) {
-            b.append("COPY ").append(entry.source).append(" ")
-             .append(basedir).append("/").append(entry.destination).append("\n");
+            String dest =  (basedir.equals("/") ? "" : basedir) +  "/" + entry.destination;
+            destinations.add(dest);
+            b.append("COPY ").append(entry.source).append(" ").append(dest).append("\n");
+        }
+        if (user != null) {
+            String[] userParts = StringUtils.split(user,':');
+            String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
+            String cmd = "RUN [\"chown\", \"-R\", \"" + userArg + "\",\"" +
+                         StringUtils.join(destinations, "\",\"") + "\"]\n";
+            if (userParts.length > 2) {
+                b.append("USER root\n");
+                b.append(cmd);
+                b.append("USER ").append(userParts[2]).append("\n");
+            } else {
+                b.append(cmd);
+            }
         }
     }
 
@@ -166,6 +180,11 @@ public class DockerFileBuilder {
             this.command = args[0];
             this.arguments = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         }
+        return this;
+    }
+
+    public DockerFileBuilder user(String user) {
+        this.user = user;
         return this;
     }
 
