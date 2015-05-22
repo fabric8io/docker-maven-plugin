@@ -421,6 +421,11 @@ If set it will print out all standard output and standard error messages for all
 As value the images for which logs should be shown can be given as a comma separated list. This is probably most 
 useful when used from the command line as system property `docker.showLogs`.   
 
+Also you can specify `docker.follow` as system property so that the `docker:start` will never return but block until
+CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that 
+ you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but 
+ not removed so that you can make postmortem analysis).
+
 The `<run>` configuration knows the following sub elements:
 
 * **capAdd** (*v1.14*) a list of `add` elements to specify kernel parameters to add to

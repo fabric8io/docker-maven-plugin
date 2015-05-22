@@ -54,15 +54,23 @@ public class StartMojo extends AbstractDockerMojo {
     protected boolean watch;
 
     /**
+     * @parameter property = "docker.follow" default-value = "false"
+     */
+    protected boolean follow;
+
+    /**
      * @parameter property = "docker.watch.interval" default-value = "5000"
      */
     protected Integer watchInterval;
+
+    // Set of container ids which are currently running in the foregroun
+    final private Set<String> containersStarted = Collections.synchronizedSet(new HashSet<String>());
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public synchronized void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
+    public synchronized void executeInternal(final DockerAccess docker) throws DockerAccessException, MojoExecutionException {
 
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
@@ -82,17 +90,12 @@ public class StartMojo extends AbstractDockerMojo {
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping mappedPorts = getPortMapping(runConfig, project.getProperties());
 
-                String name = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-                ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
-
-                String containerId = createContainer(docker, imageConfig, mappedPorts);
-                docker.startContainer(containerId);
+                String containerId = createAndStartContainer(docker, imageConfig, mappedPorts);
 
                 if (showLogs(imageConfig)) {
                     dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
                 }
                 registerContainer(containerId, imageConfig);
-                log.info("Created and started container " + toContainerAndImageDescription(containerId, imageConfig.getDescription()));
                 // Remember id for later stopping the container
                 registerShutdownAction(new ShutdownAction(imageConfig, containerId));
 
@@ -107,27 +110,65 @@ public class StartMojo extends AbstractDockerMojo {
                 // Start a watch task if requested
                 watchIfRequested(docker, imageConfig, executor, mappedPorts, containerId);
             }
-            if (watch) {
-                log.info("Waiting on image updates ...");
+            if (isBlocking()) {
+                addShutdownHookForStoppingContainers(docker);
+                if (watch) {
+                    log.info("Waiting on image updates ...");
+                }
                 wait();
             }
         } catch (InterruptedException e) {
             log.warn("Interrupted");
         } finally {
             executor.shutdownNow();
-
         }
     }
 
-    private String createContainer(DockerAccess docker,
-                                   ImageConfiguration imageConfig,
-                                   PortMapping mappedPorts) throws MojoExecutionException, DockerAccessException {
+    private void addShutdownHookForStoppingContainers(final DockerAccess docker) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if (isBlocking()) {
+                    try {
+                        stopStartedContainers(docker);
+                    } catch (DockerAccessException e) {
+                        log.error("Error while stopping containers: " + e);
+                    }
+                }
+            }
+        });
+    }
+
+    private void stopStartedContainers(DockerAccess docker) throws DockerAccessException {
+        synchronized (containersStarted) {
+            for (String containerId : containersStarted) {
+                stopContainer(docker, containerId);
+            }
+        }
+    }
+
+    private boolean isBlocking() {
+        return watch || follow;
+    }
+
+    private String createAndStartContainer(DockerAccess docker,
+                                           ImageConfiguration imageConfig,
+                                           PortMapping mappedPorts) throws MojoExecutionException, DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
         String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
         ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts);
 
-        return docker.createContainer(config, containerName);
+        String id = docker.createContainer(config, containerName);
+        startContainer(docker,id);
+        containersStarted.add(id);
+        log.info("Creating and starting container " + toContainerAndImageDescription(id, imageConfig.getDescription()));
+        return id;
+    }
+
+    private void stopContainer(DockerAccess docker, String containerId) throws DockerAccessException {
+        log.info("Stopping container " + containerId);
+        docker.stopContainer(containerId);
     }
 
     // visible for testing
@@ -294,12 +335,15 @@ public class StartMojo extends AbstractDockerMojo {
                         String oldValue = imageId.getAndSet(currentImageId);
                         if (!currentImageId.equals(oldValue)) {
                             log.info("Image " + imageName + " has been updated. Recreating container " + containerId.get());
-                            log.info("Stopping container " + containerId.get());
-                            docker.stopContainer(containerId.get());
-                            docker.removeContainer(containerId.get(),true);
-                            containerId.set(createContainer(docker, imageConfig, mappedPorts));
-                            log.info("Starting container " + containerId.get());
-                            docker.startContainer(containerId.get());
+
+                            // Stop old one
+                            String id = containerId.get();
+                            stopContainer(docker, id);
+                            docker.removeContainer(id, true);
+                            containersStarted.remove(id);
+
+                            // Start new onew
+                            containerId.set(createAndStartContainer(docker, imageConfig, mappedPorts));
                         }
                     } catch (DockerAccessException e) {
                         log.warn("Error while watching for image " + imageName);
@@ -309,6 +353,12 @@ public class StartMojo extends AbstractDockerMojo {
                 }
             }
         };
+    }
+
+    private void startContainer(DockerAccess docker, String id) throws DockerAccessException {
+        log.info("Starting container " + id);
+        docker.startContainer(id);
+        containersStarted.add(id);
     }
 
     private void waitIfRequested(DockerAccess docker, RunImageConfiguration runConfig, Properties projectProperties, String containerId) {
@@ -405,6 +455,9 @@ public class StartMojo extends AbstractDockerMojo {
             LogConfiguration logConfig = runConfig.getLog();
             if (logConfig != null) {
                 return logConfig.isEnabled();
+            } else {
+                // Default is to show logs if "follow" is true
+                return follow;
             }
         }
         return false;
