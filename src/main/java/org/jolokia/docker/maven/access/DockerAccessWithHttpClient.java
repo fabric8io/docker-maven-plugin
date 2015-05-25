@@ -45,8 +45,8 @@ public class DockerAccessWithHttpClient implements DockerAccess {
      */
     public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, Logger log) throws IOException {
         this.log = log;
-        this.delegate = new ApacheHttpDelegate(isSSL(baseUrl) ? certPath : null);
-        this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
+        this.delegate = ApacheHttpDelegate.create(baseUrl, isSSL(baseUrl) ? certPath : null);
+        this.urlBuilder = delegate.createUrlBuilder(baseUrl, apiVersion);
     }
 
     @Override

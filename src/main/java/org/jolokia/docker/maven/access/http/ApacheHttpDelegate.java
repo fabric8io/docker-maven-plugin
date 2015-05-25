@@ -31,6 +31,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.jolokia.docker.maven.access.KeyStoreUtil;
+import org.jolokia.docker.maven.access.UrlBuilder;
+import org.jolokia.docker.maven.access.http.unix.ApacheUnixSocketHttpDelegate;
 
 public class ApacheHttpDelegate {
 
@@ -39,8 +41,24 @@ public class ApacheHttpDelegate {
 
     private final CloseableHttpClient httpClient;
 
-    public ApacheHttpDelegate(String certPath) throws IOException {
-        this.httpClient = createHttpClient(certPath);
+    public static ApacheHttpDelegate create(String baseUrl, String certPath) throws IOException {
+        if (ApacheUnixSocketHttpDelegate.isSchemeSupported(baseUrl)) {
+            return new ApacheUnixSocketHttpDelegate();
+        }
+
+        return new ApacheHttpDelegate(certPath);
+    }
+
+    protected ApacheHttpDelegate(CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    private ApacheHttpDelegate(String certPath) throws IOException {
+        this(createHttpClient(certPath));
+    }
+
+    public UrlBuilder createUrlBuilder(String baseUrl, String apiVersion) {
+        return new UrlBuilder(baseUrl, apiVersion);
     }
 
     public Result delete(String url, int statusCode, int... additional) throws IOException, HttpRequestException {
@@ -78,7 +96,7 @@ public class ApacheHttpDelegate {
         return req;
     }
 
-    private CloseableHttpClient createHttpClient(String certPath) throws IOException {
+    private static CloseableHttpClient createHttpClient(String certPath) throws IOException {
         HttpClientBuilder builder = HttpClients.custom();
         PoolingHttpClientConnectionManager manager = getPoolingConnectionFactory(certPath);
         manager.setDefaultMaxPerRoute(10);
@@ -89,13 +107,13 @@ public class ApacheHttpDelegate {
         return builder.build();
     }
 
-    private PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws IOException {
+    private static PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws IOException {
         return certPath != null ?
                 new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath)) :
                 new PoolingHttpClientConnectionManager();
     }
 
-    private Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {
+    private static Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {
         try
         {
             KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath);
