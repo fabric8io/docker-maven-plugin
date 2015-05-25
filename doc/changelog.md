@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.12**
+  - Add a new parameter 'docker.skipTags' that suppresses tagging of images that have been built.
+
 * **0.11.5**
   - Fix problem with http:// URLs when a CERT path is set
   - Fix warnings when parsing a pull response
