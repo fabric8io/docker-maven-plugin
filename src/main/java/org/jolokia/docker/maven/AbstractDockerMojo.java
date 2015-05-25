@@ -1,8 +1,8 @@
 package org.jolokia.docker.maven;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 import org.apache.maven.plugin.*;
@@ -248,11 +248,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {
+        final String host;
         try {
-            project.getProperties().setProperty("docker.host.address", new URL(dockerUrl).getHost());
-        } catch (MalformedURLException e) {
-            throw new MojoFailureException("Cannot parse " + dockerUrl + " as URL: " + e.getMessage(),e);
+            host = new URI(dockerUrl).getHost();
+        } catch (URISyntaxException e) {
+            throw new MojoFailureException("Cannot parse " + dockerUrl + " as URI: " + e.getMessage(), e);
         }
+
+        project.getProperties().setProperty("docker.host.address", host == null ? "" : host);
     }
 
     // =================================================================================
