@@ -114,6 +114,8 @@ parentheses.
 * **skip** (`docker.skip`)
   With this parameter the execution of this plugin can be skipped
   completely. 
+* **skipTags** (`docker.skipTags`)
+  If set to `true` the plugin won't add any tags to images that have been built.
 * **registry** (`docker.registry`)
   Specify globally a registry to use for pulling and pushing
   images. See [Registry handling](#registry-handling) for details. 
