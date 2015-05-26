@@ -29,6 +29,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.UrlBuilder;
 import org.jolokia.docker.maven.util.Timestamp;
 
+import static java.lang.Math.min;
 import static org.jolokia.docker.maven.access.util.RequestUtil.newGet;
 
 /**
@@ -103,10 +104,10 @@ public class LogRequestor extends Thread implements LogGetHandle {
     private void parseResponse(HttpResponse response) {
         try (InputStream is = response.getEntity().getContent()) {
             byte[] headBuf = new byte[8];
-            byte[] buf = new byte[8129];
             while (IOUtils.read(is, headBuf, 0, 8) > 0) {
                 int type = headBuf[0];
                 int declaredLength = extractLength(headBuf);
+                byte[] buf = new byte[declaredLength];
                 int len = IOUtils.read(is, buf, 0, declaredLength);
                 if (len < 1) {
                     callback.error("Invalid log format: Couldn't read " + declaredLength + " bytes from stream");
