@@ -85,7 +85,7 @@ public class PropertyConfigHandlerTest {
 
         assertEquals(1,configs.size());
         ImageConfiguration calcConfig = configs.get(0);
-        for (Map<String,String> env : new Map[] { calcConfig.getBuildConfiguration().getEnv(),
+        for (Map env : new Map[] { calcConfig.getBuildConfiguration().getEnv(),
                                                   calcConfig.getRunConfiguration().getEnv()}) {
             assertEquals(2,env.size());
             assertEquals("/tmp",env.get("HOME"));
@@ -115,7 +115,7 @@ public class PropertyConfigHandlerTest {
     
     @Test
     public void testNoAssembly() throws Exception {
-        Properties props = props(new String[] { k(NAME), "image" });
+        Properties props = props(k(NAME), "image");
         List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);
         assertEquals(1, configs.size());
 
@@ -140,13 +140,12 @@ public class PropertyConfigHandlerTest {
         
         List<ImageConfiguration> resolvedImageConfigs = handler.resolve(config, props(testData));
         assertEquals(1, resolvedImageConfigs.size());
-        ImageConfiguration resolved = resolvedImageConfigs.get(0);
 
-        return resolved;
+        return resolvedImageConfigs.get(0);
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
-        assertEquals("command.sh", buildConfig.getCommand());
+        assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());
         assertEquals("registry", buildConfig.getRegistry());
@@ -177,7 +176,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
-        assertEquals("command.sh", runConfig.getCommand());
+        assertEquals("command.sh", runConfig.getCmd());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
         assertEquals(a("example.com"), runConfig.getDnsSearch());
         assertEquals("domain.com", runConfig.getDomainname());
@@ -240,7 +239,7 @@ public class PropertyConfigHandlerTest {
                 k(BIND) + ".2", "/tmp:/tmp",
                 k(CAP_ADD) + ".1", "CAP",
                 k(CAP_DROP) + ".1", "CAP",
-                k(COMMAND), "command.sh",
+                k(CMD), "command.sh",
                 k(DNS) + ".1", "8.8.8.8",
                 k(DNS_SEARCH) + ".1", "example.com",
                 k(DOMAINNAME), "domain.com",

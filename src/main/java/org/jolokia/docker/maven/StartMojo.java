@@ -185,7 +185,7 @@ public class StartMojo extends AbstractDockerMojo {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), project.getProperties())
-                    .command(runConfig.getCommand())
+                    .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(docker, runConfig, mappedPorts));
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {

@@ -228,8 +228,10 @@ of an image configuration. The available subelements are
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
-* **command** is the command to execute by default (i.e. if no command
-  is provided when a container for this image is started).
+* **cmd** A command to execute by default.
+  [Start-up Arguments]
+* **entrypoint** An ENTRYPOINT allows you to configure a container that will run as an executable.  
+  [Start-up Arguments]
 * **env** hold environments as described in
   [Setting Environment Variables](#setting-environment-variables). 
 * **from** specifies the base image which should be used for this
@@ -263,7 +265,16 @@ Here's an example:
   <volumes>
     <volume>/path/to/expose</volume>
   </volumes>
-  <command>java /opt/demo/server.jar</command>
+  
+  <entryPoint>
+    <!-- exec form for ENTRYPOINT -->
+    <params>
+      <param>java</param>
+      <param>-jar</param>
+      <param>/opt/demo/server.jar</param>
+    </params>
+  </entryPoint>
+
   <assembly>
     <mode>dir</mode>
     <basedir>/opt/demo</basedir>
@@ -315,7 +326,29 @@ Here's an example:
   `jboss:jboss:jboss` would be required. 
 
 In the event you do not need to include any artifacts with the image, you may
-safely omit this element from the configuration. 
+safely omit this element from the configuration.
+
+##### Start-up Arguments
+Using `entryPoint` and `cmd` it is possible to specify [entry point](https://docs.docker.com/reference/builder/#entrypoint) or [cmd](https://docs.docker.com/reference/builder/#cmd) for a container
+
+* **shell** shell form, translated to the docker file as is
+* **params** list of arguments which will transformed into exec form
+Either shell or params should be specified. 
+
+Example:
+ 
+````xml
+ <entryPoint>
+    <!-- shell form for entry point -->
+    <shell>java -jar /opt/demo/server.jar</shell>
+    <!-- or exec form for entry -->
+    <params>
+      <param>java</param>
+      <param>-jar</param>
+      <param>/opt/demo/server.jar</param>
+    </params>
+  </entryPoint>
+````
 
 ##### Docker Assembly
 

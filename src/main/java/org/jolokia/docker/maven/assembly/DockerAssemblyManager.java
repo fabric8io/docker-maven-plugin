@@ -78,7 +78,7 @@ public class DockerAssemblyManager {
                 DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
                 builder.write(buildDirs.getOutputDirectory());
             }
-            return createTarball(buildDirs,extraDir,assemblyConfig.getMode());
+            return createTarball(buildDirs, extraDir, assemblyConfig.getMode());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
@@ -158,12 +158,15 @@ public class DockerAssemblyManager {
         }
 
         builder.baseImage(buildConfig.getFrom());
-        builder.command((String[]) null); // Use command from base image (gets overwritten below if explicitly set)
 
-        if (buildConfig.getCommand() != null) {
-            builder.command(EnvUtil.splitOnSpaceWithEscape(buildConfig.getCommand()));
+        if (buildConfig.getCmd() != null){
+            builder.cmd(buildConfig.getCmd());
         }
 
+        if (buildConfig.getEntryPoint() != null){
+            builder.entryPoint(buildConfig.getEntryPoint());
+        }
+        
         return builder;
     }
 

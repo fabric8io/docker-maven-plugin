@@ -1,6 +1,10 @@
 package org.jolokia.docker.maven.config;
 
-import java.util.*;
+import org.apache.maven.plugin.MojoExecutionException;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author roland
@@ -42,12 +46,17 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
-     private Map<String,String> env;
+    private Map<String,String> env;
 
     /**
      * @parameter
      */
-    private String command;
+    private Arguments entryPoint;
+
+    /**
+     * @parameter
+     */
+    private Arguments cmd;
 
     /**
      * @parameter
@@ -88,8 +97,12 @@ public class BuildImageConfiguration {
         return env;
     }
     
-    public String getCommand() {
-        return command;
+    public Arguments getCmd() {
+        return cmd;
+    }
+
+    public Arguments getEntryPoint() {
+        return entryPoint;
     }
 
     public static class Builder {
@@ -135,13 +148,33 @@ public class BuildImageConfiguration {
             return this;
         }
 
-        public Builder command(String command) {
-            config.command = command;
+        public Builder cmd(String cmd) {
+            if (config.cmd == null) {
+                config.cmd = new Arguments();
+            }
+            config.cmd.setShell(cmd);
+            return this;
+        }
+
+        public Builder entryPoint(String entryPoint) {
+            if (config.entryPoint == null) {
+                config.entryPoint = new Arguments();
+            }
+            config.entryPoint.setShell(entryPoint);
             return this;
         }
 
         public BuildImageConfiguration build() {
             return config;
+        }
+    }
+
+    public void validate() throws MojoExecutionException {
+        if (entryPoint != null) {
+            entryPoint.validate();
+        }
+        if (cmd != null) {
+            cmd.validate();
         }
     }
 }

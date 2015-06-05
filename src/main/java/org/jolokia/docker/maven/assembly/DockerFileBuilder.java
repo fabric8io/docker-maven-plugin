@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
+import org.jolokia.docker.maven.config.Arguments;
 
 /**
  * Create a dockerfile
@@ -14,6 +16,8 @@ import org.codehaus.plexus.util.FileUtils;
  * @since 17.04.14
  */
 public class DockerFileBuilder {
+
+    private static final Joiner JOIN_ON_COMMA = Joiner.on("\",\"");
 
     // Base image to use as from
     private String baseImage;
@@ -24,9 +28,8 @@ public class DockerFileBuilder {
     // Basedir to be export
     private String basedir = "/maven";
 
-    // Default command and arguments
-    private String command = "true";
-    private String[] arguments = new String[0];
+    private Arguments entryPoint;
+    private Arguments cmd;
 
     private Boolean exportBasedir = null;
 
@@ -75,21 +78,34 @@ public class DockerFileBuilder {
         addPorts(b);
         addVolumes(b);
         addEntries(b);
-        addCommands(b);
+        addCmd(b);
+        addEntryPoint(b);
 
         return b.toString();
     }
 
-    private void addCommands(StringBuilder b) {
-        if (command != null) {
-            b.append("CMD [\"").append(command).append("\"");
-            for (String arg : arguments) {
-                b.append(",\"").append(arg).append("\"");
-            }
-            b.append("]").append("\n");
+    private void addEntryPoint(StringBuilder b){
+        if (entryPoint != null) {
+            buildArguments(b, "ENTRYPOINT", entryPoint);
         }
     }
 
+    private void addCmd(StringBuilder b){
+        if (cmd != null) {
+            buildArguments(b, "CMD", cmd);
+        }
+    }
+
+    private static void buildArguments(StringBuilder b, String name, Arguments arguments) {
+        b.append(name).append(" ");
+        if (arguments.getShell() != null) {
+            b.append(arguments.getShell());
+        } else {
+            b.append("[\"").append(JOIN_ON_COMMA.join(arguments.getParams())).append("\"]");
+        }
+        b.append("\n");
+    }
+    
     private void addEntries(StringBuilder b) {
         List<String> destinations = new ArrayList<>();
         for (AddEntry entry : addEntries) {
@@ -123,7 +139,7 @@ public class DockerFileBuilder {
         if (ports.size() > 0) {
             b.append("EXPOSE");
             for (Integer port : ports) {
-                b.append(" " + port);
+                b.append(" ").append(port);
             }
             b.append("\n");
         }
@@ -172,22 +188,23 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder command(String ... args) {
-        if (args == null || args.length == 0) {
-            this.command = null;
-            this.arguments = new String[0];
-        } else {
-            this.command = args[0];
-            this.arguments = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
-        }
+    public DockerFileBuilder cmd(Arguments cmd) {
+        cmd.validate();
+        this.cmd = cmd;
         return this;
     }
 
+    public DockerFileBuilder entryPoint(Arguments entryPoint) {
+        entryPoint.validate();
+        this.entryPoint = entryPoint;
+        return this;
+    }
+    
     public DockerFileBuilder user(String user) {
         this.user = user;
         return this;
     }
-
+    
     public DockerFileBuilder add(String source, String destination) {
         this.addEntries.add(new AddEntry(source, destination));
         return this;
