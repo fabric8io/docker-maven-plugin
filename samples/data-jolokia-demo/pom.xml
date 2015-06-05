@@ -119,7 +119,6 @@
             </image>
             <image>
               <alias>data</alias>
-              <registry>registry.hub.docker.com</registry>
               <!-- Artifact Image-->
               <name>jolokia/${project.artifactId}:${project.version}</name>
               <build>
