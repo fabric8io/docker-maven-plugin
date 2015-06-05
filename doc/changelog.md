@@ -34,7 +34,7 @@ or
 ````xml
   <build>
     <cmd>
-      <shell>java -jar /server.jar
+      <shell>java -jar /server.jar</shell>
     </cmd>
   </build>
 ````
