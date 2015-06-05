@@ -17,6 +17,7 @@ public class ContainerHostConfig {
             JSONArray binds = new JSONArray();
 
             for (String volume : bind) {
+                volume = volume.replace("\\", "/").replaceAll("^C:", "/c");
                 if (volume.contains(":")) {
                     binds.put(volume);
                 }
