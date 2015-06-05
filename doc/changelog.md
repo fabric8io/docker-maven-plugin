@@ -1,5 +1,45 @@
 # ChangeLog
 
+* **0.12.0**
+  - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
+  
+Please note that for consistencies sake `<command>` has been renamed to `<cmd>` which contains inner elements 
+to match better the equivalent Dockerfile argument. The update should be trivial and easy to spot since a build will croak immediately.
+
+The old format
+
+````xml
+  <build>
+    <command>java -jar /server.jar</command>
+  </build>
+````
+
+becomes now
+
+````xml
+  <build>
+    <cmd>
+      <exec>
+         <arg>java</arg>
+         <arg>-jar</arg>
+         <arg>/server.jar</arg>
+      </exec>         
+    </cmd>
+  </build>
+````
+ 
+or 
+
+````xml
+  <build>
+    <cmd>
+      <shell>java -jar /server.jar
+    </cmd>
+  </build>
+````
+
+depending on whether you prefer the `exec` or `shell` form.
+
 * **0.11.5**
   - Fix problem with http:// URLs when a CERT path is set
   - Fix warnings when parsing a pull response
@@ -11,8 +51,7 @@
   - Workaround Docker problem when using an implicit registry `index.docker.io` when no registry is explicitly given. 
   - Fixed references to docker hub in documentation (#169)
   - Fixed registry authentication lookup (#146)
-  
-  
+    
 * **0.11.4**
   - Fixed documentation for available properties
   - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)

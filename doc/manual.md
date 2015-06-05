@@ -231,8 +231,8 @@ of an image configuration. The available subelements are
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See 
   [Start-up Arguments](#start-up-arguments) for details.
-* **entrypoint** An entrypoint allows you to configure a container that will run as an executable where the entrypoint 
-  points to the non-overidable executable. Set [Start-up Arguments](#start-up-arguments) for details. 
+* **entrypoint** An entrypoint allows you to configure a container that will run as an executable. 
+  See [Start-up Arguments](#start-up-arguments) for details. 
 * **env** hold environments as described in
   [Setting Environment Variables](#setting-environment-variables). 
 * **from** specifies the base image which should be used for this
@@ -269,11 +269,11 @@ Here's an example:
   
   <entryPoint>
     <!-- exec form for ENTRYPOINT -->
-    <params>
-      <param>java</param>
-      <param>-jar</param>
-      <param>/opt/demo/server.jar</param>
-    </params>
+    <exec>
+      <arg>java</arg>
+      <arg>-jar</arg>
+      <arg>/opt/demo/server.jar</arg>
+    </exec>
   </entryPoint>
 
   <assembly>
@@ -345,7 +345,7 @@ for an even more detailed explanation.
 A entry point or command can be specified in two alternative formats:
 
 * **shell** shell form in which the whole line is given to `shell -c` for interpretation.
-* **params** list of arguments which will be given to the `exec` call directly without any shell interpretation. 
+* **exec** list of arguments (with inner `<args>`) arguments which will be given to the `exec` call directly without any shell interpretation. 
 
 Either shell or params should be specified. 
 
@@ -363,11 +363,11 @@ or
 ````xml
  <entryPoint>
     <!-- exec form  -->
-    <params>
-      <param>java</param>
-      <param>-jar</param>
-      <param>/opt/demo/server.jar</param>
-    </params>
+    <exec>
+      <args>java</args>
+      <args>-jar</args>
+      <args>/opt/demo/server.jar</args>
+    </exec>
  </entryPoint>
 ```
 

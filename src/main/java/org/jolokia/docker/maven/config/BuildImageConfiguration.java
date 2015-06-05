@@ -1,10 +1,8 @@
 package org.jolokia.docker.maven.config;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import java.util.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * @author roland
@@ -57,6 +55,7 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private Arguments cmd;
+
 
     /**
      * @parameter
