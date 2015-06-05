@@ -199,12 +199,12 @@ public class DockerFileBuilder {
         this.entryPoint = entryPoint;
         return this;
     }
-    
+
     public DockerFileBuilder user(String user) {
         this.user = user;
         return this;
     }
-    
+
     public DockerFileBuilder add(String source, String destination) {
         this.addEntries.add(new AddEntry(source, destination));
         return this;

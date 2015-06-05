@@ -230,10 +230,11 @@ of an image configuration. The available subelements are
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
-* **cmd** A command to execute by default.
-  [Start-up Arguments]
-* **entrypoint** An ENTRYPOINT allows you to configure a container that will run as an executable.  
-  [Start-up Arguments]
+* **cmd** A command to execute by default (i.e. if no command
+  is provided when a container for this image is started). See 
+  [Start-up Arguments](#start-up-arguments) for details.
+* **entrypoint** An entrypoint allows you to configure a container that will run as an executable where the entrypoint 
+  points to the non-overidable executable. Set [Start-up Arguments](#start-up-arguments) for details. 
 * **env** hold environments as described in
   [Setting Environment Variables](#setting-environment-variables). 
 * **from** specifies the base image which should be used for this
@@ -331,26 +332,46 @@ In the event you do not need to include any artifacts with the image, you may
 safely omit this element from the configuration.
 
 ##### Start-up Arguments
-Using `entryPoint` and `cmd` it is possible to specify [entry point](https://docs.docker.com/reference/builder/#entrypoint) or [cmd](https://docs.docker.com/reference/builder/#cmd) for a container
 
-* **shell** shell form, translated to the docker file as is
-* **params** list of arguments which will transformed into exec form
+Using `entryPoint` and `cmd` it is possible to specify the [entry point](https://docs.docker.com/reference/builder/#entrypoint) 
+or [cmd](https://docs.docker.com/reference/builder/#cmd) for a container.
+
+The difference is, that an `entrypoint` is the command that always be executed, with the `cmd` as argument.
+If no `entryPoint` is provided, it defaults to `/bin/sh -c` so any `cmd` given is executed 
+with a shell. The arguments given to `docker run` are always given as arguments to the 
+`entrypoint`, overriding any given `cmd` option. On the other hand if no extra arguments
+are given to `docker run` the default `cmd` is used as argument to `entrypoint`. See also
+this [stackoverflow question](http://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile)
+for an even more detailed explanation.
+
+A entry point or command can be specified in two alternative formats:
+
+* **shell** shell form in which the whole line is given to `shell -c` for interpretation.
+* **params** list of arguments which will be given to the `exec` call directly without any shell interpretation. 
+
 Either shell or params should be specified. 
 
 Example:
  
 ````xml
  <entryPoint>
-    <!-- shell form for entry point -->
-    <shell>java -jar /opt/demo/server.jar</shell>
-    <!-- or exec form for entry -->
+    <!-- shell form  -->
+    <shell>java -jar $HOME/server.jar</shell>
+ </entryPoint>
+````
+
+or 
+
+````xml
+ <entryPoint>
+    <!-- exec form  -->
     <params>
       <param>java</param>
       <param>-jar</param>
       <param>/opt/demo/server.jar</param>
     </params>
-  </entryPoint>
-````
+ </entryPoint>
+```
 
 ##### Docker Assembly
 
