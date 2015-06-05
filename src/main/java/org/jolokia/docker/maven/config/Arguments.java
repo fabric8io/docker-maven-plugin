@@ -13,7 +13,7 @@ public class Arguments {
     /**
      * @parameter
      */
-    private List<String> params;
+    private List<String> exec;
 
     public void setShell(String shell) {
         this.shell = shell;
@@ -23,19 +23,19 @@ public class Arguments {
         return shell;
     }
 
-    public void setParams(List<String> params) {
-        this.params = params;
+    public void setExec(List<String> exec) {
+        this.exec = exec;
     }
 
-    public List<String> getParams() {
-        return params;
+    public List<String> getExec() {
+        return exec;
     }
 
     public void validate() throws IllegalArgumentException {
-        if (shell == null && (params == null || params.isEmpty())){
+        if (shell == null && (exec == null || exec.isEmpty())){
             throw new IllegalArgumentException("Argument conflict, either shell or params should be specified");
         }
-        if (shell != null && params != null) {
+        if (shell != null && exec != null) {
             throw new IllegalArgumentException("Argument conflict, either shell or params should be specified");
         }
     }
@@ -64,7 +64,7 @@ public class Arguments {
         public Arguments build(){
             Arguments a = new Arguments();
             a.setShell(shell);
-            a.setParams(params);
+            a.setExec(params);
             return a;
         }
     }

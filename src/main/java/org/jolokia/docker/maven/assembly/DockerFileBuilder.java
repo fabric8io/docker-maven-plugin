@@ -101,7 +101,7 @@ public class DockerFileBuilder {
         if (arguments.getShell() != null) {
             b.append(arguments.getShell());
         } else {
-            b.append("[\"").append(JOIN_ON_COMMA.join(arguments.getParams())).append("\"]");
+            b.append("[\"").append(JOIN_ON_COMMA.join(arguments.getExec())).append("\"]");
         }
         b.append("\n");
     }
