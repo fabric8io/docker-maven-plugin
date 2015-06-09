@@ -1,12 +1,14 @@
-package org.jolokia.docker.maven.access;
+package org.jolokia.docker.maven.access.hc;
 
 import java.io.*;
+import java.net.URI;
 import java.util.*;
 
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.chunked.*;
-import org.jolokia.docker.maven.access.http.ApacheHttpDelegate;
-import org.jolokia.docker.maven.access.http.ApacheHttpDelegate.Result;
-import org.jolokia.docker.maven.access.http.HttpRequestException;
+import org.jolokia.docker.maven.access.hc.http.*;
+import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
+import org.jolokia.docker.maven.access.hc.ApacheHttpClientDelegate.Result;
 import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.util.ImageName;
 import org.jolokia.docker.maven.util.Logger;
@@ -29,12 +31,12 @@ import static java.net.HttpURLConnection.*;
  * @author roland
  * @since 26.03.14
  */
-public class DockerAccessWithHttpClient implements DockerAccess {
+public class DockerAccessWithHcClient implements DockerAccess {
 
     // Logging
     private final Logger log;
 
-    private final ApacheHttpDelegate delegate;
+    private final ApacheHttpClientDelegate delegate;
     private final UrlBuilder urlBuilder;
 
     /**
@@ -43,10 +45,19 @@ public class DockerAccessWithHttpClient implements DockerAccess {
      * @param certPath used to build up a keystore with the given keys and certificates found in this directory
      * @param log a log handler for printing out logging information
      */
-    public DockerAccessWithHttpClient(String apiVersion, String baseUrl, String certPath, Logger log) throws IOException {
+    public DockerAccessWithHcClient(String apiVersion, String baseUrl, String certPath, Logger log) throws IOException {
         this.log = log;
-        this.delegate = ApacheHttpDelegate.create(baseUrl, isSSL(baseUrl) ? certPath : null);
-        this.urlBuilder = delegate.createUrlBuilder(baseUrl, apiVersion);
+        this.delegate = createDelegate(baseUrl, certPath);
+        this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
+    }
+
+    private ApacheHttpClientDelegate createDelegate(String baseUrl, String certPath) throws IOException {
+        URI uri = URI.create(baseUrl);
+        if (uri.getScheme().equalsIgnoreCase("unix")) {
+            return new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build());
+        } else {
+            return new ApacheHttpClientDelegate(new ApacheHttpClientBuilder(isSSL(baseUrl) ? certPath : null).build());
+        }
     }
 
     @Override

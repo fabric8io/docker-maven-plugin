@@ -14,6 +14,7 @@ import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
 import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
@@ -235,7 +236,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // visible for testing
     private DockerAccess createDockerAccess(String baseUrl) throws MojoExecutionException {
         try {
-            DockerAccess client = new DockerAccessWithHttpClient(apiVersion, baseUrl,
+            DockerAccess client = new DockerAccessWithHcClient(apiVersion, baseUrl,
                     EnvUtil.getCertPath(certPath), log);
             client.start();
 

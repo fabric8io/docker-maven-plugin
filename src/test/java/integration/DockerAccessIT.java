@@ -9,6 +9,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
 import org.jolokia.docker.maven.util.*;
 import org.junit.*;
 
@@ -29,7 +30,7 @@ public class DockerAccessIT {
     private static final int PORT = 5677;
 
     private String containerId;
-    private final DockerAccessWithHttpClient dockerClient; 
+    private final DockerAccessWithHcClient dockerClient;
     
     public DockerAccessIT() {
         this.dockerClient = createClient(EnvUtil.extractUrl(null), new AnsiLogger(new SystemStreamLog(), true, true));
@@ -68,9 +69,9 @@ public class DockerAccessIT {
         }
     }
  
-    private DockerAccessWithHttpClient createClient(String baseUrl, Logger logger) {
+    private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
-            return new DockerAccessWithHttpClient(AbstractDockerMojo.API_VERSION, baseUrl, null, logger);
+            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, null, logger);
         } catch (IOException e) {
             // not using ssl, so not going to happen
             throw new RuntimeException();

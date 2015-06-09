@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven.access.http.unix;
+package org.jolokia.docker.maven.access.hc.unix;
 
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;

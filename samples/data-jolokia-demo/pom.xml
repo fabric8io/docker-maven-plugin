@@ -412,5 +412,38 @@
       </properties>
     </profile>
 
+    <profile>
+      <id>test</id>
+      <build>
+        <plugins><plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+          <configuration>
+            <images>
+              <image>
+                <name>fabric8/elasticsearch-logstash-template:${project.version}</name>
+                <build>
+                  <from>centos:7</from>
+                  <assembly>
+                    <inline xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+                      <id>logstash-template</id>
+                      <fileSets>
+                        <fileSet>
+                          <directory>${project.basedir}/src/main/docker</directory>
+                          <outputDirectory>.</outputDirectory>
+                        </fileSet>
+                      </fileSets>
+                    </inline>
+                  </assembly>
+                </build>
+              </image>
+            </images>
+          </configuration>
+        </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
