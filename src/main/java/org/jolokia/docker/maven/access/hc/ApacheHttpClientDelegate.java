@@ -1,64 +1,27 @@
-package org.jolokia.docker.maven.access.http;
+package org.jolokia.docker.maven.access.hc;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.Charset;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.net.ssl.SSLContext;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.*;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
-import org.jolokia.docker.maven.access.KeyStoreUtil;
-import org.jolokia.docker.maven.access.UrlBuilder;
-import org.jolokia.docker.maven.access.http.unix.ApacheUnixSocketHttpDelegate;
+import org.jolokia.docker.maven.access.hc.http.HttpRequestException;
 
-public class ApacheHttpDelegate {
+public class ApacheHttpClientDelegate {
 
     private static final String HEADER_ACCEPT = "Accept";
     private static final String HEADER_ACCEPT_ALL = "*/*";
 
     private final CloseableHttpClient httpClient;
 
-    public static ApacheHttpDelegate create(String baseUrl, String certPath) throws IOException {
-        if (ApacheUnixSocketHttpDelegate.isSchemeSupported(baseUrl)) {
-            return new ApacheUnixSocketHttpDelegate();
-        }
-
-        return new ApacheHttpDelegate(certPath);
-    }
-
-    protected ApacheHttpDelegate(CloseableHttpClient httpClient) {
+    public ApacheHttpClientDelegate(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
-    }
-
-    private ApacheHttpDelegate(String certPath) throws IOException {
-        this(createHttpClient(certPath));
-    }
-
-    public UrlBuilder createUrlBuilder(String baseUrl, String apiVersion) {
-        return new UrlBuilder(baseUrl, apiVersion);
     }
 
     public Result delete(String url, int statusCode, int... additional) throws IOException, HttpRequestException {
@@ -96,43 +59,7 @@ public class ApacheHttpDelegate {
         return req;
     }
 
-    private static CloseableHttpClient createHttpClient(String certPath) throws IOException {
-        HttpClientBuilder builder = HttpClients.custom();
-        PoolingHttpClientConnectionManager manager = getPoolingConnectionFactory(certPath);
-        manager.setDefaultMaxPerRoute(10);
-        builder.setConnectionManager(manager);
-        // TODO: Tune client if needed (e.g. add pooling factoring .....
-        // But I think, that's not really required.
 
-        return builder.build();
-    }
-
-    private static PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws IOException {
-        return certPath != null ?
-                new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath)) :
-                new PoolingHttpClientConnectionManager();
-    }
-
-    private static Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {
-        try
-        {
-            KeyStore keyStore = KeyStoreUtil.createDockerKeyStore(certPath);
-
-            SSLContext sslContext =
-                    SSLContexts.custom()
-                            .useTLS()
-                            .loadKeyMaterial(keyStore, "docker".toCharArray())
-                            .loadTrustMaterial(keyStore)
-                            .build();
-            //SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
-            return RegistryBuilder.<ConnectionSocketFactory> create().register("https", sslsf).build();
-        }
-        catch (GeneralSecurityException e) {
-            // this isn't ideal but the net effect is the same
-            throw new IOException(e);
-        }
-    }
 
     private HttpUriRequest newDelete(String url) {
         return addDefaultHeaders(new HttpDelete(url));

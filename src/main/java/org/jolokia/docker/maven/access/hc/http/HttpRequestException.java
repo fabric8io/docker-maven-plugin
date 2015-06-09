@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven.access.http;
+package org.jolokia.docker.maven.access.hc.http;
 
 public class HttpRequestException extends Exception {
 
