@@ -56,7 +56,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             return new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build());
         } else {
-            return new ApacheHttpClientDelegate(new ApacheHttpClientBuilder(isSSL(baseUrl) ? certPath : null).build());
+            return new ApacheHttpClientDelegate(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null).build());
         }
     }
 
