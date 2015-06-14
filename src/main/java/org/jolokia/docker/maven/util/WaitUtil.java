@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.util;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author roland
@@ -21,7 +22,7 @@ public class WaitUtil {
 
     private WaitUtil() {}
 
-    public static long wait(int maxWait,WaitChecker ... checkers) {
+    public static long wait(int maxWait, WaitChecker ... checkers) throws TimeoutException {
         long max = maxWait > 0 ? maxWait : HARD_MAX_WAIT;
         long now = System.currentTimeMillis();
         do {
@@ -33,6 +34,11 @@ public class WaitUtil {
             }
             sleep(WAIT_RETRY_WAIT);
         } while (delta(now) < max);
+        if (checkers.length > 0) {
+            // There has been several checkes, but none has matched. So we ware throwing an exception and break
+            // the build
+            throw new TimeoutException("No checker finished successfully");
+        }
         return delta(now);
     }
 
@@ -74,6 +80,7 @@ public class WaitUtil {
          * Ping the given URL
          *
          * @param url URL to check
+         * @param timeout
          */
         public HttpPingChecker(String url) {
             this.url = url;

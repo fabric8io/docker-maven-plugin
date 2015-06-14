@@ -9,9 +9,7 @@ package org.jolokia.docker.maven;
  */
 
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -361,7 +359,7 @@ public class StartMojo extends AbstractDockerMojo {
         containersStarted.add(id);
     }
 
-    private void waitIfRequested(DockerAccess docker, RunImageConfiguration runConfig, Properties projectProperties, String containerId) {
+    private void waitIfRequested(DockerAccess docker, RunImageConfiguration runConfig, Properties projectProperties, String containerId) throws MojoExecutionException {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         if (wait != null) {
             ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
@@ -375,8 +373,13 @@ public class StartMojo extends AbstractDockerMojo {
                 checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
                 logOut.add("on log out '" + wait.getLog() + "'");
             }
-            long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
-            log.info("Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
+            try {
+                long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
+                log.info("Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
+            } catch (TimeoutException exp) {
+                log.error("Timeout after " + wait.getTime() + " ms while waiting on " + StringUtils.join(logOut.toArray(), " and "));
+                throw new MojoExecutionException("Timeout received after " + wait.getTime());
+            }
         }
     }
 

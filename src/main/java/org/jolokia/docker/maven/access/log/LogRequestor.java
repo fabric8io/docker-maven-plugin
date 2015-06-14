@@ -68,8 +68,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
         this.containerId = containerId;
         
         this.urlBuilder = urlBuilder;
-        
-        
+
         this.callback = callback;
         this.exception = null;
         this.setDaemon(true);
