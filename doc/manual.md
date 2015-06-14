@@ -77,13 +77,14 @@ parentheses.
   to on your Docker Daemon is listening. This plugin requires the
   usage of the Docker remote API so this must be enabled. If this
   configuration option is not given, the environment variable
-  `DOCKER_HOST` is evaluated. If this is also not set the plugin will
-  stop with an error. The scheme of this URL can be either given
+  `DOCKER_HOST` is evaluated. If this is also not set the plugin will use `unix:///var/run/docker.sock`
+  as a default. The scheme of this URL can be either given
   directly as `http` or `https` depending on whether plain HTTP
-  communication is enabled (< 1.3.0) or SSL should be used (>=
-  1.3.0). Or the scheme could be `tcp` in which case the protocol is
+  communication is enabled or SSL should be used (default since Docker
+  1.3.0). Alternatively the scheme could be `tcp` in which case the protocol is
   determined via the IANA assigned port: 2375 for `http` and 2376 for
-  `https`. 
+  `https`. Finally Unix sockets are supported with when a scheme `unix` is used together with the 
+  filesystem path to the unix socket.
 * **apiVersion** (`docker.apiVersion`) Use this variable if you are using
   an older version of docker not compatible with the current default 
   use to communicate with the server.
@@ -774,7 +775,10 @@ or `keepRunning` is used). You can use maven properties in each
 condition, too. In the example, the `${host.port}` property is
 probably set before within a port mapping section. 
  
-The property `${docker.host.address}` is set implicitly to the address of the Docker host.
+The property `${docker.host.address}` is set implicitly to the address of the Docker host. This host will 
+be taken from the `docker.host` configuration if HTTP or HTTPS is used. If a Unix socket is used for communication
+with the docker daemon, then `localhost` is assumed. You can override this property always by setting this Maven 
+property explicitly. 
 
 ##### Log configuration
 

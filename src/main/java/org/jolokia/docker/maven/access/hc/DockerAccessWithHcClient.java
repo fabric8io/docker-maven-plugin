@@ -33,6 +33,9 @@ import static java.net.HttpURLConnection.*;
  */
 public class DockerAccessWithHcClient implements DockerAccess {
 
+    // Base URL which is given through when using UnixSocket communication but is not really used
+    private static final String DUMMY_BASE_URL = "unix://127.0.0.1:1/";
+
     // Logging
     private final Logger log;
 
@@ -47,16 +50,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
      */
     public DockerAccessWithHcClient(String apiVersion, String baseUrl, String certPath, Logger log) throws IOException {
         this.log = log;
-        this.delegate = createDelegate(baseUrl, certPath);
-        this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
-    }
-
-    private ApacheHttpClientDelegate createDelegate(String baseUrl, String certPath) throws IOException {
         URI uri = URI.create(baseUrl);
         if (uri.getScheme().equalsIgnoreCase("unix")) {
-            return new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build());
+            this.delegate = new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath()));
+            this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL,apiVersion);
         } else {
-            return new ApacheHttpClientDelegate(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null).build());
+            this.delegate = new ApacheHttpClientDelegate(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null).build());
+            this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
     }
 

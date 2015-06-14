@@ -13,6 +13,12 @@ import org.apache.http.protocol.HttpContext;
 
 final class UnixConnectionSocketFactory implements ConnectionSocketFactory {
 
+    private final File unixSocketFile;
+
+    public UnixConnectionSocketFactory(String unixSocketPath) {
+        this.unixSocketFile = new File(unixSocketPath);
+    }
+
     @Override
     public Socket createSocket(HttpContext context) throws IOException {
         return new UnixSocket();
@@ -22,7 +28,7 @@ final class UnixConnectionSocketFactory implements ConnectionSocketFactory {
     public Socket connectSocket(int connectTimeout, Socket sock, HttpHost host, InetSocketAddress remoteAddress,
             InetSocketAddress localAddress, HttpContext context)
             throws IOException {
-        sock.connect(new UnixSocketAddress(new File(host.getHostName())), connectTimeout);
+        sock.connect(new UnixSocketAddress(unixSocketFile), connectTimeout);
         return sock;
     }
 }
