@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.12**
+* **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
   - Unix Socket support (#179)
   - Add a new parameter 'skipTags' for avoiding configured tagging of images (#145)
