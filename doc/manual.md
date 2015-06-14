@@ -28,7 +28,7 @@ available goals are described below.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.11.5</version>
+  <version>0.12.0</version>
 
   <configuration>
      ....
