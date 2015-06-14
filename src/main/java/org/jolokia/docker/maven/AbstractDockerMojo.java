@@ -249,14 +249,21 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {
-        final String host;
-        try {
-            host = new URI(dockerUrl).getHost();
-        } catch (URISyntaxException e) {
-            throw new MojoFailureException("Cannot parse " + dockerUrl + " as URI: " + e.getMessage(), e);
+        Properties props = project.getProperties();
+        if (props.getProperty("docker.host.address") == null) {
+            final String host;
+            try {
+                URI uri = new URI(dockerUrl);
+                if (uri.getHost() == null && uri.getScheme().equals("unix")) {
+                    host = "localhost";
+                } else {
+                    host = uri.getHost();
+                }
+            } catch (URISyntaxException e) {
+                throw new MojoFailureException("Cannot parse " + dockerUrl + " as URI: " + e.getMessage(), e);
+            }
+            props.setProperty("docker.host.address", host == null ? "" : host);
         }
-
-        project.getProperties().setProperty("docker.host.address", host == null ? "" : host);
     }
 
     // =================================================================================

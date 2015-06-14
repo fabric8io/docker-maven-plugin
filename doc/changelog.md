@@ -2,7 +2,7 @@
 
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
-  - Add Unix Socker support (#179)
+  - Unix Socket support (#179)
   
 Please note that for consistencies sake `<command>` has been renamed to `<cmd>` which contains inner elements 
 to match better the equivalent Dockerfile argument. The update should be trivial and easy to spot since a build will croak immediately.

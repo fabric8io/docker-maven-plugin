@@ -12,18 +12,19 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 public class UnixSocketClientBuilder {
 
-    public CloseableHttpClient build() {
+
+    public CloseableHttpClient build(String unixSocketPath) {
         final HttpClientBuilder httpBuilder = HttpClients.custom();
-        final Registry<ConnectionSocketFactory> registry = buildRegistry();
+        final Registry<ConnectionSocketFactory> registry = buildRegistry(unixSocketPath);
         final DnsResolver dnsResolver = nullDnsResolver();
         final HttpClientConnectionManager manager = new PoolingHttpClientConnectionManager(registry, dnsResolver);
         httpBuilder.setConnectionManager(manager);
         return httpBuilder.build();
     }
 
-    private Registry<ConnectionSocketFactory> buildRegistry() {
+    private Registry<ConnectionSocketFactory> buildRegistry(String path) {
         final RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.create();
-        registryBuilder.register("unix", new UnixConnectionSocketFactory());
+        registryBuilder.register("unix", new UnixConnectionSocketFactory(path));
         return registryBuilder.build();
     }
 

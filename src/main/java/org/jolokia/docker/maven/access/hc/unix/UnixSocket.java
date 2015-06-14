@@ -243,7 +243,7 @@ final class UnixSocket extends Socket {
 
     @Override
     public boolean getReuseAddress() throws SocketException {
-        throw new UnsupportedOperationException("Getting the SO_RESUEADDR option is not supported");
+        throw new UnsupportedOperationException("Getting the SO_REUSEADDR option is not supported");
     }
 
     @Override
