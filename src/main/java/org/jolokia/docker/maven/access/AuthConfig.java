@@ -25,7 +25,7 @@ public class AuthConfig {
     }
 
     public AuthConfig(String user, String password, String email,String auth) {
-        params = new HashMap<String,String>();
+        params = new HashMap<>();
         putNonNull(params, "username", user);
         putNonNull(params, "password", password);
         putNonNull(params, "email", email);
