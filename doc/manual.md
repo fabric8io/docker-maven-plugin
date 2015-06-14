@@ -634,7 +634,7 @@ As a convenience, a hostname pointing to the docker host may also
 be specified. The container will fail to start if the hostname resolves
 to an ip address of something other then the docker host itself.
 
-```
+```xml
 <ports>
   <port>docker.example.com:80:80</port>
 </ports>
@@ -719,7 +719,7 @@ should even work for boot2docker:
     <volume>${project.basedir}/data:/data</volume>
   </bind>
 </volumes>
-````xml
+````
 
 ##### Container restart policy
 
@@ -755,8 +755,8 @@ some condition is met. These conditions can be specified within a
 
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
-conditions. Please note, that the wait mechanism never aborts a build, but only 
-waits until one of the conditions occurs. 
+conditions. The build will abort if you wait on an url or log output and reach the timeout. 
+If only a `<time>` is specified, the build will wait that amount of milliseconds and then continues.
 
 Example:
 

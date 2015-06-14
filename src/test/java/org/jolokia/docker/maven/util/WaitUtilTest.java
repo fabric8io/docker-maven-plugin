@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.util;
 import java.io.IOException;
 import java.net.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 import com.sun.net.httpserver.*;
 import org.junit.BeforeClass;
@@ -22,15 +23,14 @@ public class WaitUtilTest {
     static String httpPingUrl;
 
 
-    @Test
-    public void httpFail() {
+    @Test(expected = TimeoutException.class)
+    public void httpFail() throws TimeoutException {
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
         long waited = WaitUtil.wait(500,checker);
-        assertTrue("Waited only " + waited + " instead of min. 500ms", waited >= 500);
     }
 
     @Test
-    public void httpSuccess() {
+    public void httpSuccess() throws TimeoutException {
         server.start();
         System.out.println("Check URL " + httpPingUrl);
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
