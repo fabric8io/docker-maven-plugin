@@ -78,10 +78,27 @@ public class BuildMojo extends AbstractDockerMojo {
         checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry());
 
         MojoParameters params = createMojoParameters();
+        warnIfDeprecatedCommandConfigIsUsed(imageConfig.getBuildConfiguration());
         File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName,params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
         log.info("Created image " + imageConfig.getDescription());
+    }
+
+    private void warnIfDeprecatedCommandConfigIsUsed(BuildImageConfiguration buildConfiguration) {
+        if (buildConfiguration.getCommand() != null) {
+            log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
+            log.warn("Please use <cmd> with nested <shell> or <exec> sections instead.");
+            log.warn("");
+            log.warn("More on this is explained in the user manual: ");
+            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/manual.md#start-up-arguments");
+            log.warn("");
+            log.warn("Migration is trivial, see changelog to version 0.12.0 -->");
+            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/changelog.md");
+            log.warn("");
+            log.warn("For now, the command is automatically translated for you to the shell form:");
+            log.warn("   <cmd><shell>" + buildConfiguration.getCommand() + "</shell></cmd>");
+        }
     }
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
