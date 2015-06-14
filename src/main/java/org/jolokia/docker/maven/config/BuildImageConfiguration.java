@@ -53,9 +53,14 @@ public class BuildImageConfiguration {
 
     /**
      * @parameter
+     * @deprecated
+     */
+    private String command;
+
+    /**
+     * @parameter
      */
     private Arguments cmd;
-
 
     /**
      * @parameter
@@ -98,6 +103,11 @@ public class BuildImageConfiguration {
     
     public Arguments getCmd() {
         return cmd;
+    }
+
+    @Deprecated
+    public String getCommand() {
+        return command;
     }
 
     public Arguments getEntryPoint() {

@@ -161,6 +161,9 @@ public class DockerAssemblyManager {
 
         if (buildConfig.getCmd() != null){
             builder.cmd(buildConfig.getCmd());
+        } else if (buildConfig.getCommand() != null) {
+            Arguments args = Arguments.Builder.get().withShell(buildConfig.getCommand()).build();
+            builder.cmd(args);
         }
 
         if (buildConfig.getEntryPoint() != null){
