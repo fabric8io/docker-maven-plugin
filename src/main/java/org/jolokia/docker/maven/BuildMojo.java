@@ -55,6 +55,11 @@ public class BuildMojo extends AbstractDockerMojo {
      */
     private String outputDirectory;
     
+    /**
+     * @parameter default-value="false" property="docker.skipTags"
+     */
+    private boolean skipTags;
+
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
@@ -103,6 +108,11 @@ public class BuildMojo extends AbstractDockerMojo {
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
+
+        if (skipTags) {
+            return;
+        }
+
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (tags.size() > 0) {
             log.info("Tagging image " + imageConfig.getDescription() + ": " + EnvUtil.stringJoin(tags, ","));
