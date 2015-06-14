@@ -687,7 +687,7 @@ specified within a `<volumes>` section of the run configuration. It can contain 
 
 * **from** can contain a list of `<image>` elements which specify
   image names or aliases of containers whose volumes should be imported.
-* **bind** can contain a list of `<volume>` specifications (or 'host mounts). Use `/path` to create and
+* **bind** can contain a list of `<volume>` specifications (or *host mounts*). Use `/path` to create and
   expose a new volume in the container, `/host_path:/container_path` to mount a host path into the
   container and `/host_path:/container_path:ro` to bind it read-only.
 
