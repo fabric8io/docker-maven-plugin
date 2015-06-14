@@ -6,7 +6,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.12.0</version>
+  <version>0.12.1-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>maven-docker-plugin</name>
@@ -289,7 +289,7 @@
   <scm>
     <connection>scm:git:git://github.com/rhuss/docker-maven-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/rhuss/docker-maven-plugin.git</developerConnection>
-    <tag>v0.12.0</tag>
+    <tag>HEAD</tag>
     <url>git://github.com/rhuss/docker-maven-plugin.git</url>
   </scm>
 
