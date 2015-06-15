@@ -1,7 +1,6 @@
-package org.jolokia.docker.maven;
+package org.jolokia.docker.maven.service;
 
 import mockit.*;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
@@ -96,7 +95,7 @@ public class ShutdownActionTest {
 
     }
 
-    @Test(expected = MojoExecutionException.class)
+    @Test(expected = DockerAccessException.class)
     public void testWithException() throws Exception {
         ShutdownAction action = new ShutdownAction(createImageConfig(SHUTDOWN_WAIT),container);
 

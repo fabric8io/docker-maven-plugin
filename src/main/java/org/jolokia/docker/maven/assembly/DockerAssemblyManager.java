@@ -13,6 +13,7 @@ import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.apache.maven.plugin.assembly.io.AssemblyReadException;
 import org.apache.maven.plugin.assembly.io.AssemblyReader;
 import org.apache.maven.plugin.assembly.model.Assembly;
+import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
@@ -45,6 +46,9 @@ public class DockerAssemblyManager {
 
     @Requirement
     private ArchiverManager archiverManager;
+
+    @Requirement(hint = "track")
+    private Archiver trackArchiver;
 
     /**
      * Create an docker tar archive from the given configuration which can be send to the Docker host for
@@ -85,6 +89,29 @@ public class DockerAssemblyManager {
         }
     }
 
+    /**
+     * Extract all files with a tracking archiver. These can be used to track changes in the filesystem and triggering
+     * a rebuild of the image if needed
+     */
+    public AssemblyFiles getAssemblyFiles(String imageName, BuildImageConfiguration buildConfig, MojoParameters params)
+            throws InvalidAssemblerConfigurationException, ArchiveCreationException, AssemblyFormattingException, MojoExecutionException {
+
+        BuildDirs buildDirs = createBuildDirs(imageName,params);
+        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        DockerAssemblyConfigurationSource source =
+                        new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
+        Assembly assembly = getAssemblyConfig(assemblyConfig, source);
+
+
+        synchronized (trackArchiver) {
+            MappingTrackArchiver ta = (MappingTrackArchiver) trackArchiver;
+            ta.clear();
+            assembly.setId("tracker");
+            assemblyArchiver.createArchive(assembly, "maven", "track", source, false);
+            return ta.getAssemblyFiles();
+        }
+    }
+
     private BuildDirs createBuildDirs(String imageName, MojoParameters params) {
         BuildDirs buildDirs = new BuildDirs(params,imageName);
         buildDirs.createDirs();
@@ -111,7 +138,6 @@ public class DockerAssemblyManager {
                 // Add own Dockerfile
                 archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
             }
-
             archiver.createArchive();
             return archive;
         } catch (NoSuchArchiverException e) {
@@ -177,10 +203,7 @@ public class DockerAssemblyManager {
         DockerAssemblyConfigurationSource source =
                         new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
 
-        Assembly assembly = assemblyConfig.getInline();
-        if (assembly == null) {
-            assembly = extractAssembly(source);
-        }
+        Assembly assembly = getAssemblyConfig(assemblyConfig, source);
 
         AssemblyMode buildMode = assemblyConfig.getMode();
         try {
@@ -195,6 +218,15 @@ public class DockerAssemblyManager {
                                             + e.getMessage());
         }
     }
+
+    private Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfig, DockerAssemblyConfigurationSource source) throws MojoExecutionException {
+        Assembly assembly = assemblyConfig.getInline();
+        if (assembly == null) {
+            assembly = extractAssembly(source);
+        }
+        return assembly;
+    }
+
 
     private Assembly extractAssembly(AssemblerConfigurationSource config) throws MojoExecutionException {
         try {

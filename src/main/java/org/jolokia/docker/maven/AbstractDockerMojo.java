@@ -30,9 +30,6 @@ import org.jolokia.docker.maven.util.*;
  */
 public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable {
 
-    // Key in plugin context specifying shutdown actions
-    public static final String CONTEXT_KEY_SHUTDOWN_ACTIONS = "CONTEXT_KEY_DOCKER_SHUTDOWN_ACTIONS";
-
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
 
@@ -60,6 +57,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     /** @parameter property = "docker.autoPull" default-value = "true" */
     protected boolean autoPull;
+
+    /**
+     * Whether to keep the containers afters stopping (start/watch/stop)
+     *
+     * @parameter property = "docker.keepContainer" default-value = "false"
+     */
+    protected boolean keepContainer;
+
+    /**
+     * Whether to remove volumes when removing the container (start/watch/stop)
+     *
+     * @parameter property = "docker.removeVolumes" defaultValue = "false"
+     */
+    protected boolean removeVolumes;
 
     // don't forget to change 'API_VERSION'
     /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
@@ -126,6 +137,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.log = new AnsiLogger(getLog(), useColor, verbose);
+        initLog(log);
         if (!skip) {
 
             String dockerUrl = EnvUtil.extractUrl(dockerHost);
@@ -142,6 +154,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     /**
+     * Hook for giving a chance to init the logger, e.g. to pass it down
+     * to components.
+     *
+     * @param log the logger just initialized
+     */
+    protected void initLog(Logger log) {
+
+    }
+
+    /**
      * Hook for subclass for doing the real job
      *
      * @param dockerAccess access object for getting to the DockerServer
@@ -151,43 +173,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =============================================================================================
 
-    /**
-     * Register a shutdown action executed during "stop"
-     * @param shutdownAction action to register
-     */
-    protected void registerShutdownAction(ShutdownAction shutdownAction) {
-        getShutdownActions().add(shutdownAction);
-    }
-
-
-    /**
-     * Return shutdown actions in reverse registration order
-     * @return registered shutdown actions
-     */
-    protected List<ShutdownAction> getShutdownActionsInExecutionOrder() {
-        List<ShutdownAction> ret = new ArrayList<>(getShutdownActions());
-        Collections.reverse(ret);
-        return ret;
-    }
-
-    /**
-     * Remove a list of shutdown actions
-     * @param actions actions to remove
-     */
-    protected void removeShutdownActions(List<ShutdownAction> actions) {
-        getShutdownActions().removeAll(actions);
-    }
-
-    private Set<ShutdownAction> getShutdownActions() {
-        Object obj = getPluginContext().get(CONTEXT_KEY_SHUTDOWN_ACTIONS);
-        if (obj == null) {
-            Set<ShutdownAction> actions = Collections.synchronizedSet(new LinkedHashSet<ShutdownAction>());
-            getPluginContext().put(CONTEXT_KEY_SHUTDOWN_ACTIONS, actions);
-            return actions;
-        }
-
-        return (Set<ShutdownAction>) obj;
-    }
 
     /**
      * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images. The values
@@ -289,10 +274,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             // If name doesnt contain a registry, then the provided registry is used (or a default)
             return registry != null ? registry : "registry.hub.docker.com";
         }
-    }
-
-    protected static String toContainerAndImageDescription(String container, String description) {
-        return container.substring(0, 12) + " " + description;
     }
 
     protected LogDispatcher getLogDispatcher(DockerAccess docker) {

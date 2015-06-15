@@ -142,12 +142,6 @@ public class RunImageConfiguration {
      * @parameter
      */
     private WaitConfiguration wait;
-    
-    // Configuration how to watch for the image if watching is enabled
-    /**
-     * @parameter
-     */
-    private WatchConfiguration watch;
 
     /**
      * @parameter
@@ -211,10 +205,6 @@ public class RunImageConfiguration {
 
     public WaitConfiguration getWaitConfiguration() {
         return wait;
-    }
-
-    public WatchConfiguration getWatchConfiguration() {
-        return watch;
     }
 
     public LogConfiguration getLog() {
@@ -364,11 +354,6 @@ public class RunImageConfiguration {
 
         public Builder wait(WaitConfiguration wait) {
             config.wait = wait;
-            return this;
-        }
-
-        public Builder watch(WatchConfiguration watch) {
-            config.watch = watch;
             return this;
         }
 

@@ -1,0 +1,274 @@
+package org.jolokia.docker.maven;/*
+ * 
+ * Copyright 2014 Roland Huss
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
+import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
+import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
+import org.codehaus.plexus.util.StringUtils;
+import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.assembly.AssemblyFiles;
+import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.util.*;
+
+import static org.jolokia.docker.maven.config.WatchMode.*;
+
+/**
+ * Mojo for watching source code changes.
+ *
+ * This Mojo does essentially
+ * two things when it detects a image content change:
+ *
+ * <ul>
+ *     <li>Rebuilding one or more images</li>
+ *     <li>Restarting restarting one or more containers </li>
+ * </ul>
+ *
+ * @goal watch
+ *
+ * @author roland
+ * @since 16/06/15
+ */
+public class WatchMojo extends AbstractBuildSupporMojo {
+
+    /** @parameter property = "docker.watchMode" default-value="both" **/
+    private WatchMode watchMode;
+
+    /** @component **/
+    protected RunService runService;
+
+    /**
+     * @parameter property = "docker.watchInterval" default-value = "5000"
+     */
+    private int watchInterval;
+
+    /**
+     * @parameter property = "docker.keepRunning" default-value = "false"
+     */
+    private boolean keepRunning;
+
+    // Scheduler
+    private ScheduledExecutorService executor;
+
+    @Override
+    protected void initLog(Logger log) {
+        runService.initLog(log);
+    }
+
+    @Override
+    protected synchronized void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
+
+        // Important to be be a single threaded scheduler since watch jobs must run serialized
+        executor = Executors.newSingleThreadScheduledExecutor();
+        MojoParameters mojoParameters = createMojoParameters();
+        try {
+            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(getImages())) {
+                final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+
+                ImageWatcher watcher = new ImageWatcher(imageConfig,dockerAccess.getImageId(imageConfig.getName()));
+
+                ArrayList<String> tasks = new ArrayList<>();
+
+                if (watcher.getContainerId() != null) {
+
+                    if (imageConfig.getBuildConfiguration() != null && watcher.isBuild()) {
+                        scheduleBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both);
+                        tasks.add("rebuilding");
+                    }
+
+                    if (watcher.isRun()) {
+                        scheduleRestartWatchTask(dockerAccess, watcher);
+                        tasks.add("restarting");
+                    }
+                }
+                if (tasks.size() > 0) {
+                    log.info(imageConfig.getDescription() + ": Watching for " + StringUtils.join(tasks.toArray()," and "));
+                }
+            }
+            log.info("Waiting ...");
+            if (!keepRunning) {
+                runService.addShutdownHookForStoppingContainers(dockerAccess, keepContainer, removeVolumes);
+            }
+            wait();
+        } catch (InterruptedException e) {
+            log.warn("Interrupted");
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private void scheduleBuildWatchTask(DockerAccess dockerAccess, ImageWatcher watcher, MojoParameters mojoParameters, boolean doRestart)
+            throws MojoExecutionException {
+        executor.scheduleAtFixedRate(
+                createBuildWatchTask(dockerAccess, watcher, mojoParameters, doRestart),
+                0, watcher.getInterval(), TimeUnit.MILLISECONDS);
+    }
+
+    private void scheduleRestartWatchTask(DockerAccess dockerAccess, ImageWatcher watcher) throws DockerAccessException {
+        executor.scheduleAtFixedRate(
+                createRestartWatchTask(dockerAccess, watcher),
+                0, watcher.getInterval(), TimeUnit.MILLISECONDS);
+    }
+
+    private Runnable createBuildWatchTask(final DockerAccess docker, final ImageWatcher watcher,
+                                          final MojoParameters mojoParameters, final boolean doRestart) throws MojoExecutionException {
+        final ImageConfiguration imageConfig = watcher.getImageConfiguration();
+        final String name = imageConfig.getName();
+        final AssemblyFiles files = getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters);
+        return new Runnable() {
+            @Override
+            public void run() {
+                List<AssemblyFiles.Entry> entry = files.getUpdatedEntriesAndRefresh();
+                if (entry != null && entry.size() > 0) {
+                    try {
+                        log.info(imageConfig.getDescription() + ": Assembly changed. Rebuilding ...");
+                        // Rebuild whole image for now ...
+                        buildImage(docker, name, imageConfig);
+                        watcher.setImageId(docker.getImageId(name));
+                        if (doRestart) {
+                            restartContainer(docker,watcher);
+                        }
+                    } catch (DockerAccessException | MojoExecutionException e) {
+                        log.error(imageConfig.getDescription() + ": Error when rebuilding " + e);
+                    }
+                }
+            }
+        };
+    }
+
+    private Runnable createRestartWatchTask(final DockerAccess docker,
+                                            final ImageWatcher watcher)
+            throws DockerAccessException {
+
+        final String imageName = watcher.getImageName();
+
+        return new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    String currentImageId = docker.getImageId(imageName);
+                    String oldValue = watcher.getAndSetImageId(currentImageId);
+                    if (!currentImageId.equals(oldValue)) {
+                        restartContainer(docker, watcher);
+                    }
+                } catch (DockerAccessException e) {
+                    log.warn(watcher.getImageConfiguration().getDescription() + ": Error while restarting image " + e);
+                }
+            }
+        };
+    }
+
+    private AssemblyFiles getAssemblyFiles(String name, BuildImageConfiguration buildConfiguration, MojoParameters mojoParameters)
+            throws MojoExecutionException {
+        try {
+            return dockerAssemblyManager.getAssemblyFiles(name, buildConfiguration, mojoParameters);
+        } catch (InvalidAssemblerConfigurationException | ArchiveCreationException | AssemblyFormattingException  e) {
+            throw new MojoExecutionException("Cannot extract assembly files for image " + name + ": " + e,e);
+        }
+    }
+
+    private void restartContainer(DockerAccess docker, ImageWatcher watcher) throws DockerAccessException {
+        // Stop old one
+        ImageConfiguration imageConfig = watcher.getImageConfiguration();
+        PortMapping mappedPorts = runService.getPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
+        String id = watcher.getContainerId();
+        runService.stopContainer(docker, id, false, false);
+
+        // Start new one
+        watcher.setContainerId(runService.createAndStartContainer(docker, imageConfig, mappedPorts, project.getProperties()));
+    }
+
+
+    // ===============================================================================================================
+
+    // Helper class for holding state and parameter when watching images
+    private class ImageWatcher {
+
+        private final WatchMode mode;
+        private final AtomicReference<String> imageIdRef, containerIdRef;
+        private final long interval;
+        private final ImageConfiguration imageConfig;
+
+        public ImageWatcher(ImageConfiguration imageConfig, String imageId) {
+            this.imageConfig = imageConfig;
+
+            this.imageIdRef = new AtomicReference<>(imageId);
+            this.containerIdRef = new AtomicReference<>(runService.lookupContainer(imageConfig.getName()));
+
+            this.interval = getWatchInterval(imageConfig);
+            this.mode = getWatchMode(imageConfig);
+        }
+
+        public String getContainerId() {
+            return containerIdRef.get();
+        }
+
+        public long getInterval() {
+            return interval;
+        }
+
+        public boolean isBuild() {
+            return mode.isBuild();
+        }
+
+        public boolean isRun() {
+            return mode.isRun();
+        }
+
+        public ImageConfiguration getImageConfiguration() {
+            return imageConfig;
+        }
+
+        public void setImageId(String imageId) {
+            imageIdRef.set(imageId);
+        }
+
+        public void setContainerId(String containerId) {
+            containerIdRef.set(containerId);
+        }
+
+        public String getImageName() {
+            return imageConfig.getName();
+        }
+
+        public String getAndSetImageId(String currentImageId) {
+            return imageIdRef.getAndSet(currentImageId);
+        }
+
+        // =========================================================
+
+        private int getWatchInterval(ImageConfiguration imageConfig) {
+            WatchImageConfiguration watchConfiguration = imageConfig.getWatchConfiguration();
+            int interval = watchConfiguration != null ? watchConfiguration.getInterval() : watchInterval;
+            return interval < 100 ? 100 : interval;
+        }
+
+        private WatchMode getWatchMode(ImageConfiguration imageConfig) {
+            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchMode mode = watchConfig != null ? watchConfig.getMode() : null;
+            return mode != null ? mode : WatchMojo.this.watchMode;
+        }
+
+    }
+}

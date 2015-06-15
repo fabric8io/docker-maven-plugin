@@ -5,6 +5,7 @@
   - [`docker:build`](#dockerbuild)
   - [`docker:start`](#dockerstart)
   - [`docker:stop`](#dockerstop)
+  - [`docker:watch`](#dockerwatch)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
   - [`docker:logs`](#dockerlogs)
@@ -825,42 +826,6 @@ Example (values can be case insensitive, too) :
 </log>
 ````
 
-##### Watching for image changes
-
-When developing docker images, building the image and manually starting 
-stopping containers, can become a real burden. To slightly increase the user
-experience, you can enable image watching on `<docker:start>` in which case the image
-will polled for changes, and if any change is spotted, the 
-container will get recreated and restarted, using the given image.
-
-Image watch can be configured as part of the run configuration like:
-
-````xml
-<run>
-  <watch>
-    <interval>5000</interval>
-  </watch>
-</run>
-````
-
-In order to start watching for image updates, the property `docker.watch` must be 
-set to true:
-
-    mvn docker:start -Ddocker.watch=true -Ddocker.watch.interval=5000
-
-As you can see in this example, the watch interval can be provided on the command line, too.
-Please note that the Maven process will the run forever until it is killed. The containers will then be still running 
- and must be stopped with `docker:stop`, though.
-
-When a watched image is removed, error message will be print out periodically while watching.
-So don't do that ;-)
-
-If containers are linked together network or volume wise, and you update a container which other containers dependent on, 
-the dependant containers are not restarted. E.g. when you have a "service" container accessing a "db" container and the
-"db" container is updated, then you "service" container will faill until it is restarted, too. A future version of this 
-plugin will take care of restarting these containers, too (in the right order), but for now you would have to do this 
-manually.
-
 #### `docker:stop`
 
 Stops and removes a docker container. This goals starts every
@@ -892,6 +857,142 @@ parameters which are typically used as system properties:
 Example: 
 
     $ mvn -Ddocker.keepRunning clean install
+
+#### `docker:watch`
+
+When developing and testing you application you will often have to
+rebuild Docker images and restart containers. Typing `docker:build`
+and `docker:start` all the type is cumbersome. With `docker:watch` you
+can enable automatic rebuilding of images and restarting of containers
+in case of updates.
+
+`docker:watch` is the top-level goal which perform this tasks. There
+are two watch modes, which can be specified in multiple ways as wee
+see below:
+
+* `build` : Automatically rebuild one or more Docker images when one
+  of the files selected by assembly changes. This works for all files
+  referenced in `assembly.xml` but also for arbitrary dependencies
+  since this goal watches the local Maven repository. Examples:
+
+        $ mvn package docker:build docker:watch -Ddocker.watch.mode=build
+
+  This mode works only when there is a `<build>` configuration section
+  for an image. Otherwise no automatically build will ever
+  occur. Please note that you need the `package` phase to be executed
+  otherwise any artefact created by this build can not be included
+  into the assembly. As desribed in the section on `docker:start` this
+  is a Maven limitation. 
+  
+* `run` : Automatically restart container when their associated images
+  changes. This is useful if you pull a new version of an image
+  externally or especially in combination with the `build` mode to
+  restart container when their image has been automatically
+  rebuilt. This mode works reliably only when used together with
+  `docker:start`.
+
+        $ mvn docker:start docker:watch -Ddocker.watch.mode=run
+
+The mode can also be `both` or `none` to select both or none of the
+variants, respectively. The default is `both`. 
+
+`docker:watch` will run forever until it is interrupted with `CTRL-C`
+after it will stop all containers. Depending on the configuration
+parameters `keepContainer` and `removeVolumes` the stopped containers
+with their volumes will be removed, too.
+
+When a watched image is removed, error messages will be printed out
+periodically while watching.  So don't do that ;-)
+
+Dynamically assigned ports stay stable in that they won't change after
+an container has been stopped and a new container is created. The new
+container will try to allocate the same ports as the previous
+containers.
+
+If containers are linked together network or volume wise, and you
+update a container which other containers dependent on, the dependant
+containers are not restarted for now. E.g. when you have a "service"
+container accessing a "db" container and the "db" container is
+updated, then you "service" container will fail until it is restarted,
+too. A future version of this plugin will take care of restarting
+these containers, too (in the right order), but for now you would have
+to do this manually.
+
+This maven goal can be configured with the following top-level
+parameters:
+
+* **watchMode** `docker.watch.mode`: The watch mode specifies what should be watched
+  - `build` : Watch changes in the assembly and rebuild the image in
+  case
+  - `run` : Watch a container's image whether it changes and restart
+  the container in case
+  - `both` : `build` and `run` combined
+  - `none` : Neither watching for builds nor images. This is useful if
+  you use prefactored images which won't be changed and hence don't
+  need any watching.
+* **watchInterval** `docker.watch.interval` specifies the interval in
+  milliseconds how  often to check for changes, which must be larger
+  than 100ms. The default are 5 seconds.
+* **keepRunning** `docker.keepRunning` if set to `true` all
+  container will be kept running after `docker:watch` has been
+  stopped. By default this is set to `false`. 
+* **keepContainer** `docker.keepContainer` similar to `docker:stop`, if this is set to `true`
+  (and `watchCleanup` is enabled) then all container will be removed
+  after they have been stopped. The default is `true`.
+* **removeVolumes** `docker.removeVolumes` if given will remove any
+  volumes associated to the container as well. This option will be ignored
+  if either `keepContainer` or `keepRunning` are true.
+
+Image specific watch configuration goes into an extra image-level
+`<watch>` section. The following parameters are recognized.
+
+* **mode** Each image can be configured for having individual watch mode. These
+  take precedence of the global watch mode. The mode specified in this
+  configuration takes precedence over the globally specified mode.  
+* **interval** The watch interval can be specified in milliseconds on
+  image level. If given this will override the global watch interval.
+
+Here is an example how the watch mode can be tuned:
+
+````xml
+<configuration>
+   <!-- Check every 10 seconds by default -->
+   <watchInterval>10000</watchInterval>
+   <!-- Watch for doing rebuilds and restarts --> 
+   <watchMode>both</watch>
+   <images>
+      <image>
+         <!-- Service checks every 5 seconds -->
+         <alias>service</alias>
+         ....
+         <watch>
+            <interval>5000</interval>
+         </watch>
+      </image>
+      <image>
+         <!-- Database needs no watching -->
+         <alias>db<alias>
+         ....
+         <watch>
+            <mode>none</mode>
+         </watch>
+      </image>
+      ....   
+   </images>
+</configuration>
+````
+
+Now with
+
+````sh
+mvn package docker:build docker:start docker:watch
+````
+
+you can build the image, start up all containers and go into a watch
+loop. Again, you neeed the `package` phase in order that the assembly
+can find the artifact build by this project. This is a Maven
+limitation. 
+
 
 #### `docker:push`
 

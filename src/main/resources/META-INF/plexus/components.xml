@@ -21,8 +21,21 @@
     </component>
 
     <component>
+      <role>org.jolokia.docker.maven.service.RunService</role>
+      <implementation>org.jolokia.docker.maven.service.RunService</implementation>
+      <instantiation-strategy>singleton</instantiation-strategy>
+    </component>
+
+    <component>
       <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
       <implementation>org.jolokia.docker.maven.config.handler.property.PropertyConfigHandler</implementation>
+    </component>
+
+    <component>
+      <role>org.codehaus.plexus.archiver.Archiver</role>
+      <role-hint>track</role-hint>
+      <implementation>org.jolokia.docker.maven.assembly.MappingTrackArchiver</implementation>
+      <instantiation-strategy>singleton</instantiation-strategy>
     </component>
   </components>
 </component-set>

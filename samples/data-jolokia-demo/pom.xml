@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.12.0</version>
+  <version>0.12.1-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -29,7 +29,7 @@
     <server.version>7.0</server.version>
     <server.name>tomcat</server.name>
     <image>consol/${server.name}-${server.version}:latest</image>
-    <jolokia.version>1.2.2</jolokia.version>
+    <jolokia.version>1.3.2-SNAPSHOT</jolokia.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -85,7 +85,7 @@
               <alias>server</alias>
               <name>${image}</name>
               <run>
-                <namingStrategy>alias</namingStrategy>
+                <namingStrategy>none</namingStrategy>
                 <volumes>
                   <from>
                     <image>data</image>
@@ -102,7 +102,6 @@
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${jolokia.port}. Multiple port mappings can be specified here-->
                   <port>jolokia.port:8080</port>
-                  <port>8600:53/udp</port>
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
@@ -131,7 +130,7 @@
                    for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
                    does this. -->
                 <assembly>
-                  <mode>zip</mode>
+                  <mode>dir</mode>
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
               </build>
