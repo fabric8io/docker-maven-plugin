@@ -631,8 +631,8 @@ address on the docker host.
 ```
 
 As a convenience, a hostname pointing to the docker host may also
-be specified. The container will fail to start if the hostname resolves
-to an ip address of something other then the docker host itself.
+be specified. The container will fail to start if the hostname can not be 
+resolved.
 
 ```xml
 <ports>
