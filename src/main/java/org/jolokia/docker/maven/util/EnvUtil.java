@@ -26,7 +26,7 @@ public class EnvUtil {
             if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
                 connect = "unix:///var/run/docker.sock";
             } else {
-                throw new IllegalArgumentException("No url given and no DOCKER_HOST environment variable set");
+                throw new IllegalArgumentException("No url given, no DOCKER_HOST environment variable and no read/writable '/var/run/docker.sock'");
             }
         }
         String protocol = connect.contains(":" + AbstractDockerMojo.DOCKER_HTTPS_PORT) ? "https:" : "http:";
