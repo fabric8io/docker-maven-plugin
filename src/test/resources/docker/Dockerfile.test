@@ -4,4 +4,5 @@ ENV foo bar
 EXPOSE 8080
 VOLUME ["/vol1"]
 COPY /src /export/dest
+WORKDIR /tmp
 CMD ["c1","c2"]

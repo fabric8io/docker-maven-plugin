@@ -237,6 +237,7 @@ of an image configuration. The available subelements are
   [Start-up Arguments](#start-up-arguments) for details.
 * **entrypoint** An entrypoint allows you to configure a container that will run as an executable. 
   See [Start-up Arguments](#start-up-arguments) for details. 
+* **workdir** the directory to change to when starting the container.  
 * **env** hold environments as described in
   [Setting Environment Variables](#setting-environment-variables). 
 * **from** specifies the base image which should be used for this
@@ -1118,6 +1119,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.dns.idx** List of dns servers to use
 * **docker.dnsSearch.idx** List of dns search domains
 * **docker.entrypoint** Container entry point
+* **docker.workdir** Container working directory
 * **docker.env.VARIABLE** Sets an environment
   variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>`
   sets the environment variable `JAVA_OPTS`. Multiple such entries can

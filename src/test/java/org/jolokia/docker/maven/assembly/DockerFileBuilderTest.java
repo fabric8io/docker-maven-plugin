@@ -1,15 +1,12 @@
 package org.jolokia.docker.maven.assembly;
 
+import java.io.IOException;
+import java.util.*;
+
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.jolokia.docker.maven.config.Arguments;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
 
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.*;
@@ -27,6 +24,7 @@ public class DockerFileBuilderTest {
                 .basedir("/export")
                 .expose(Collections.singletonList("8080"))
                 .maintainer("maintainer@example.com")
+                .workdir("/tmp")
                 .volumes(Collections.singletonList("/vol1")).content();
 
         String expected = loadFile("docker/Dockerfile.test");

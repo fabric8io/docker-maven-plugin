@@ -174,6 +174,9 @@ public class DockerAssemblyManager {
         if (buildConfig.getMaintainer() != null) {
             builder.maintainer(buildConfig.getMaintainer());
         }
+        if (buildConfig.getWorkdir() != null) {
+            builder.workdir(buildConfig.getWorkdir());
+        }
         if (assemblyConfig != null) {
             builder.add("maven", "")
                    .basedir(assemblyConfig.getBasedir())

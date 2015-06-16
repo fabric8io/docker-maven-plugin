@@ -2,8 +2,9 @@
 
 * **0.12.1**
   - Add `docker:watch` (#187) 
-  - Allow `extraHosts` ips to be resolved at runtime (#196)
-
+  - Allow `extraHosts` IPs to be resolved at runtime (#196)
+  - Add `workDir` as configuration option to `<build>` (#204) 
+  
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
   - Unix Socket support (#179)
