@@ -256,6 +256,8 @@ of an image configuration. The available subelements are
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
 * **maintainer** specifies the author (MAINTAINER) field for the generated image
+* **runCmds** specifies commands to be run during the building process. It contains **runCmd** Elements 
+  which are passed to bash. The **workdir**-Attribute applies before the command executions.
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
