@@ -51,6 +51,7 @@ public enum ConfigKey {
     NAMING_STRATEGY,
     PORT_PROPERTY_FILE,
     PORTS,
+    RUNCMDS,
     PRIVILEGED,
     REGISTRY,
     RESTART_POLICY_NAME("restartPolicy.name"),

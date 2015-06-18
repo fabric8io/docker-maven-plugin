@@ -40,6 +40,10 @@ public class DockerFileBuilder {
 
     // list of ports to expose and environments to use
     private List<Integer> ports = new ArrayList<>();
+
+    // list of RUN Commands to run along with image build see issue #191 on github
+    private List<String> runcmds = new ArrayList<>();
+
     private Map<String,String> envEntries = new HashMap<>();
     
     // exposed volumes
@@ -68,11 +72,15 @@ public class DockerFileBuilder {
 
         StringBuilder b = new StringBuilder();
         
-        b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
-        b.append("MAINTAINER ").append(maintainer).append("\n");
+        b.append(DockerFileDictionaryEnum.FROM.name()).append(" ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
+
+        b.append(DockerFileDictionaryEnum.MAINTAINER.name()).append(" ").append(maintainer).append("\n");
 
         addEnv(b);
         addPorts(b);
+        //RUN COMMANDS See https://docs.docker.com/reference/builder/#run
+        addRunCmds(b);
+
         addVolumes(b);
         addEntries(b);
         addCommands(b);
@@ -121,11 +129,19 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            b.append("EXPOSE");
+            b.append(DockerFileDictionaryEnum.EXPOSE.name());
             for (Integer port : ports) {
                 b.append(" " + port);
             }
             b.append("\n");
+        }
+    }
+
+    private void addRunCmds(StringBuilder b) {
+        if (runcmds.size() > 0) {
+            for (String runCmd : runcmds) {
+                b.append(DockerFileDictionaryEnum.RUN.name()).append(" ").append(runCmd).append("\n");
+            }
         }
     }
 
@@ -198,6 +214,22 @@ public class DockerFileBuilder {
             for (String port : ports) {
                 if (port != null) {
                     this.ports.add(Integer.parseInt(port));
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Adds the RUN Commands within the build image section
+     * @param runCmds
+     * @return
+     */
+    public DockerFileBuilder runCommands(List<String> runCmds) {
+        if (runCmds != null) {
+            for (String cmd : runCmds) {
+                if (!StringUtils.isEmpty(cmd)) {
+                    this.runcmds.add(cmd);
                 }
             }
         }

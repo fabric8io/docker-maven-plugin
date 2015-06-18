@@ -28,6 +28,7 @@ public class DockerFileBuilderTest {
                 .basedir("/export")
                 .expose(Arrays.asList("8080"))
                 .maintainer("maintainer@example.com")
+                .runCommands(Arrays.asList("echo something","echo second"))
                 .volumes(Arrays.asList("/vol1")).content();
         dockerfileMap = dockerfileToMap(dockerfileContent);
     }

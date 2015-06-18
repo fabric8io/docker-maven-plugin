@@ -2,6 +2,8 @@ FROM image
 MAINTAINER maintainer@example.com
 ENV foo bar
 EXPOSE 8080
+RUN echo something
+RUN echo second
 VOLUME ["/vol1"]
 COPY /src /export/dest
 CMD ["c1","c2"]
