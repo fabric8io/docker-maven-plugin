@@ -2,6 +2,7 @@
 
 * **0.12.1**
   - Add `docker:watch` (#187) 
+  - Allow `extraHosts` ips to be resolved at runtime (#196)
 
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
