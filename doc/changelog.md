@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.12.1**
+  - allow `extraHosts` ips to be resolved at runtime
+
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
   - Unix Socket support (#179)

@@ -28,7 +28,7 @@ available goals are described below.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.11.5</version>
+  <version>0.12.0</version>
 
   <configuration>
      ....
@@ -501,8 +501,9 @@ The `<run>` configuration knows the following sub elements:
   typical maven property format as described [below](#setting-environment-variables).
 * **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
   specified in this property file overrides the environment variables specified in the configuration.
-* **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the
-  container's `/etc/hosts` file.
+* **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
+  Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved 
+  at container startup.
 * **hostname** (*v1.11*) desired hostname for the container
 * **links** declares how containers are linked together see
   description on [container linking](#container-linking). 
@@ -1215,7 +1216,7 @@ The system property provided credentials are a good compromise when
 using CI servers like Jenkins. You simply provide the credentials from
 the outside:
 
-	mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
+    mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
 
 The most secure and also the most *mavenish* way is to add a server to
 the Maven settings file `~/.m2/settings.xml`:
