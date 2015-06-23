@@ -29,7 +29,6 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.UrlBuilder;
 import org.jolokia.docker.maven.util.Timestamp;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
 import static java.lang.Math.min;
 import static org.jolokia.docker.maven.access.util.RequestUtil.newGet;
 
@@ -131,15 +130,6 @@ public class LogRequestor extends Thread implements LogGetHandle {
         } catch (LogCallback.DoneException e) {
             // Can be thrown by a log callback which indicates that we are done.
             finish();
-        }
-    }
-
-    private void sleep() {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
     }
 
