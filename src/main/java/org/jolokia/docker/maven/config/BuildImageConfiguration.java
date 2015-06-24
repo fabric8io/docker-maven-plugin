@@ -86,6 +86,10 @@ public class BuildImageConfiguration {
         return maintainer;
     }
 
+    public String getWorkdir() {
+        return workdir;
+    }
+
     public AssemblyConfiguration getAssemblyConfiguration() {
         return assembly;
     }

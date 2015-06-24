@@ -25,6 +25,9 @@ public class DockerFileBuilder {
     // Maintainer of this image
     private String maintainer = "docker-maven-plugin@jolokia.org";
 
+    // Workdir
+    private String workdir = null;
+
     // Basedir to be export
     private String basedir = "/maven";
 
@@ -73,11 +76,11 @@ public class DockerFileBuilder {
         
         b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
-
         addEnv(b);
         addPorts(b);
         addVolumes(b);
         addEntries(b);
+        if (workdir != null) b.append("WORKDIR ").append(workdir).append("\n");
         addCmd(b);
         addEntryPoint(b);
 
@@ -178,6 +181,11 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder maintainer(String maintainer) {
         this.maintainer = maintainer;
+        return this;
+    }
+
+    public DockerFileBuilder workdir(String workdir) {
+        this.workdir = workdir;
         return this;
     }
 
