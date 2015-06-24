@@ -60,6 +60,11 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
+    private String workdir;
+
+    /**
+     * @parameter
+     */
     private Arguments cmd;
 
     /**
@@ -129,6 +134,11 @@ public class BuildImageConfiguration {
 
         public Builder maintainer(String maintainer) {
             config.maintainer = maintainer;
+            return this;
+        }
+
+        public Builder workdir(String workdir) {
+            config.workdir = workdir;
             return this;
         }
 
