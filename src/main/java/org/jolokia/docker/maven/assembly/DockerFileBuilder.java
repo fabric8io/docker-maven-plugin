@@ -25,6 +25,9 @@ public class DockerFileBuilder {
     // Maintainer of this image
     private String maintainer = "docker-maven-plugin@jolokia.org";
 
+    // Workdir
+    private String workdir = null;
+
     // Basedir to be export
     private String basedir = "/maven";
 
@@ -42,7 +45,7 @@ public class DockerFileBuilder {
     private List<AddEntry> addEntries = new ArrayList<>();
 
     // list of ports to expose and environments to use
-    private List<Integer> ports = new ArrayList<>();
+    private List<String> ports = new ArrayList<>();
     private Map<String,String> envEntries = new HashMap<>();
     
     // exposed volumes
@@ -73,11 +76,11 @@ public class DockerFileBuilder {
         
         b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
-
         addEnv(b);
         addPorts(b);
         addVolumes(b);
         addEntries(b);
+        if (workdir != null) b.append("WORKDIR ").append(workdir).append("\n");
         addCmd(b);
         addEntryPoint(b);
 
@@ -138,7 +141,7 @@ public class DockerFileBuilder {
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
             b.append("EXPOSE");
-            for (Integer port : ports) {
+            for (String port : ports) {
                 b.append(" ").append(port);
             }
             b.append("\n");
@@ -181,6 +184,11 @@ public class DockerFileBuilder {
         return this;
     }
 
+    public DockerFileBuilder workdir(String workdir) {
+        this.workdir = workdir;
+        return this;
+    }
+
     public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
             basedir = dir;
@@ -214,7 +222,7 @@ public class DockerFileBuilder {
         if (ports != null) {
             for (String port : ports) {
                 if (port != null) {
-                    this.ports.add(Integer.parseInt(port));
+                    this.ports.add(port);
                 }
             }
         }
