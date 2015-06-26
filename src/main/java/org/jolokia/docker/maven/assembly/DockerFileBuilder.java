@@ -45,7 +45,7 @@ public class DockerFileBuilder {
     private List<AddEntry> addEntries = new ArrayList<>();
 
     // list of ports to expose and environments to use
-    private List<Integer> ports = new ArrayList<>();
+    private List<String> ports = new ArrayList<>();
     private Map<String,String> envEntries = new HashMap<>();
     
     // exposed volumes
@@ -141,7 +141,7 @@ public class DockerFileBuilder {
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
             b.append("EXPOSE");
-            for (Integer port : ports) {
+            for (String port : ports) {
                 b.append(" ").append(port);
             }
             b.append("\n");
@@ -222,7 +222,7 @@ public class DockerFileBuilder {
         if (ports != null) {
             for (String port : ports) {
                 if (port != null) {
-                    this.ports.add(Integer.parseInt(port));
+                    this.ports.add(port);
                 }
             }
         }
