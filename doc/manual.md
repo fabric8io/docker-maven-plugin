@@ -468,8 +468,6 @@ descriptor like above to achieve the desired naming.
 
 Currently the `jar` and `war` plugins properly honor the usage of `finalName`.
 
-
-
 #### `docker:start`
 
 Creates and starts docker containers. This goals evaluates
@@ -860,54 +858,52 @@ Example:
 
 #### `docker:watch`
 
-When developing and testing you application you will often have to
+When developing and testing applications you will often have to
 rebuild Docker images and restart containers. Typing `docker:build`
-and `docker:start` all the type is cumbersome. With `docker:watch` you
+and `docker:start` all the time is cumbersome. With `docker:watch` you
 can enable automatic rebuilding of images and restarting of containers
 in case of updates.
 
-`docker:watch` is the top-level goal which perform this tasks. There
-are two watch modes, which can be specified in multiple ways as wee
-see below:
+`docker:watch` is the top-level goal which perform these tasks. There
+are two watch modes, which can be specified in multiple ways:
 
 * `build` : Automatically rebuild one or more Docker images when one
-  of the files selected by assembly changes. This works for all files
-  referenced in `assembly.xml` but also for arbitrary dependencies
-  since this goal watches the local Maven repository. Examples:
+  of the files selected by an assembly changes. This works for all files
+  included directly in `assembly.xml` but also for arbitrary dependencies. 
+  For example:
 
         $ mvn package docker:build docker:watch -Ddocker.watch.mode=build
 
-  This mode works only when there is a `<build>` configuration section
-  for an image. Otherwise no automatically build will ever
-  occur. Please note that you need the `package` phase to be executed
-  otherwise any artefact created by this build can not be included
-  into the assembly. As desribed in the section on `docker:start` this
+  This mode works only when there is a `<build>` section
+  in an image configuration. Otherwise no automatically build will be triggered for an 
+  image with only a `<run>` section. Note that you need the `package` phase to be executed before
+  otherwise any artifact created by this build can not be included
+  into the assembly. As described in the section about `docker:start` this
   is a Maven limitation. 
   
 * `run` : Automatically restart container when their associated images
   changes. This is useful if you pull a new version of an image
   externally or especially in combination with the `build` mode to
-  restart container when their image has been automatically
+  restart containers when their image has been automatically
   rebuilt. This mode works reliably only when used together with
   `docker:start`.
 
         $ mvn docker:start docker:watch -Ddocker.watch.mode=run
 
-The mode can also be `both` or `none` to select both or none of the
+The mode can also be `both` or `none` to select both or none of these
 variants, respectively. The default is `both`. 
 
 `docker:watch` will run forever until it is interrupted with `CTRL-C`
-after it will stop all containers. Depending on the configuration
+after which it will stop all containers. Depending on the configuration
 parameters `keepContainer` and `removeVolumes` the stopped containers
 with their volumes will be removed, too.
 
-When a watched image is removed, error messages will be printed out
-periodically while watching.  So don't do that ;-)
+When an image is removed while watching it, error messages will be printed out
+periodically.  So don't do that ;-)
 
 Dynamically assigned ports stay stable in that they won't change after
-an container has been stopped and a new container is created. The new
-container will try to allocate the same ports as the previous
-containers.
+a container has been stopped and a new container is created and started. The new
+container will try to allocate the same ports as the previous container.
 
 If containers are linked together network or volume wise, and you
 update a container which other containers dependent on, the dependant
@@ -929,7 +925,8 @@ parameters:
   - `both` : `build` and `run` combined
   - `none` : Neither watching for builds nor images. This is useful if
   you use prefactored images which won't be changed and hence don't
-  need any watching.
+  need any watching. `none` is best used on an per image level, see below how this can 
+  be specified.
 * **watchInterval** `docker.watch.interval` specifies the interval in
   milliseconds how  often to check for changes, which must be larger
   than 100ms. The default are 5 seconds.
@@ -937,14 +934,15 @@ parameters:
   container will be kept running after `docker:watch` has been
   stopped. By default this is set to `false`. 
 * **keepContainer** `docker.keepContainer` similar to `docker:stop`, if this is set to `true`
-  (and `watchCleanup` is enabled) then all container will be removed
+  (and `keepRunning` is disabled) then all container will be removed
   after they have been stopped. The default is `true`.
 * **removeVolumes** `docker.removeVolumes` if given will remove any
   volumes associated to the container as well. This option will be ignored
-  if either `keepContainer` or `keepRunning` are true.
+  if either `keepContainer` or `keepRunning` are `true`.
 
 Image specific watch configuration goes into an extra image-level
-`<watch>` section. The following parameters are recognized.
+`<watch>` section (i.e. `<image><watch>...</watch></image>`). 
+The following parameters are recognized:
 
 * **mode** Each image can be configured for having individual watch mode. These
   take precedence of the global watch mode. The mode specified in this
@@ -982,17 +980,17 @@ Here is an example how the watch mode can be tuned:
 </configuration>
 ````
 
-Now with
+Given this configuration 
 
 ````sh
 mvn package docker:build docker:start docker:watch
 ````
 
-you can build the image, start up all containers and go into a watch
-loop. Again, you neeed the `package` phase in order that the assembly
+you can build the service image, start up all containers and go into a watch
+loop. Again, you need the `package` phase in order that the assembly
 can find the artifact build by this project. This is a Maven
-limitation. 
-
+limitation. The `db` image will never be watch since it assumed to not change 
+while watching. 
 
 #### `docker:push`
 
