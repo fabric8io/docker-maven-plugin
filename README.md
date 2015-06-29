@@ -14,14 +14,15 @@ minimal API version.
 
 #### Goals
 
-| Goal                                          | Description                          |
-| --------------------------------------------- | ------------------------------------ |
-| [`docker:start`](doc/manual.md#dockerstart)   | Create and start containers          |
-| [`docker:stop`](doc/manual.md#dockerstop)     | Stop and destroy containers          |
-| [`docker:build`](doc/manual.md#dockerbuild)   | Build images                         |
-| [`docker:push`](doc/manual.md#dockerpush)     | Push images to a registry            |
-| [`docker:remove`](doc/manual.md#dockerremove) | Remove images from local docker host |
-| [`docker:logs`](doc/manual.md#dockerlogs)       | Show container logs                  |
+| Goal                                          | Description                           |
+| --------------------------------------------- | ------------------------------------- |
+| [`docker:start`](doc/manual.md#dockerstart)   | Create and start containers           |
+| [`docker:stop`](doc/manual.md#dockerstop)     | Stop and destroy containers           |
+| [`docker:build`](doc/manual.md#dockerbuild)   | Build images                          |
+| [`docker:watch`](doc/manual.md#dockerwatch)   | Watch for doing rebuilds and restarts |
+| [`docker:push`](doc/manual.md#dockerpush)     | Push images to a registry             |
+| [`docker:remove`](doc/manual.md#dockerremove) | Remove images from local docker host  |
+| [`docker:logs`](doc/manual.md#dockerlogs)     | Show container logs                   |
 
 #### Documentation
 
