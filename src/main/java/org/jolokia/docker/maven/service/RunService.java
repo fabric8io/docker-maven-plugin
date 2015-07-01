@@ -293,7 +293,7 @@ public class RunService {
     }
 
     private void startContainer(DockerAccess docker, ImageConfiguration imageConfig, String id) throws DockerAccessException {
-        log.info(imageConfig.getDescription() + ": Starting container " + id.substring(0, 12));
+        log.info(imageConfig.getDescription() + ": Start container " + id.substring(0, 12));
         docker.startContainer(id);
         shutdownActionMap.put(id, new ShutdownAction(imageConfig, id));
         updateImageToContainerMapping(imageConfig, id);

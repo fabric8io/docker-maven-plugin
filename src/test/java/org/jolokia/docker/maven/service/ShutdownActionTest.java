@@ -109,8 +109,8 @@ public class ShutdownActionTest {
     private Delegate<String> getLogArgCheck(final String container, final boolean withRemove) {
         return new Delegate<String>() {
             boolean checkArg(String txt) {
-                assertTrue(txt.toLowerCase().contains("stopped"));
-                assertEquals(withRemove, txt.toLowerCase().contains("removed"));
+                assertTrue(txt.toLowerCase().contains("stop"));
+                assertEquals(withRemove, txt.toLowerCase().contains("remove"));
                 assertTrue("Log '" + txt + "' contains " + container,txt.contains(container.substring(0,12)));
                 return true;
             }

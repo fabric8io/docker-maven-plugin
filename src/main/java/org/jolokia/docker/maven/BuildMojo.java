@@ -46,7 +46,7 @@ public class BuildMojo extends AbstractBuildSupporMojo {
 
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (tags.size() > 0) {
-            log.info(imageConfig.getDescription() + ": Tagging with " + EnvUtil.stringJoin(tags, ","));
+            log.info(imageConfig.getDescription() + ": Tag with " + EnvUtil.stringJoin(tags, ","));
 
             for (String tag : tags) {
                 if (tag != null) {

@@ -110,6 +110,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .exportBasedir(booleanWithPrefix(prefix, ASSEMBLY_EXPORT_BASEDIR, properties))
                 .ignorePermissions(booleanWithPrefix(prefix, ASSEMBLY_IGNORE_PERMISSIONS, properties))
                 .user(withPrefix(prefix, ASSEMBLY_USER, properties))
+                .mode(withPrefix(prefix, ASSEMBLY_MODE, properties))
                 .build();
     }
     
@@ -154,6 +155,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     private WatchImageConfiguration extractWatchConfig(String prefix, Properties properties) {
         return new WatchImageConfiguration.Builder()
                 .interval(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
+                .postGoal(withPrefix(prefix, WATCH_POSTGOAL, properties))
+                .mode(withPrefix(prefix, WATCH_POSTGOAL, properties))
                 .build();
     }
 

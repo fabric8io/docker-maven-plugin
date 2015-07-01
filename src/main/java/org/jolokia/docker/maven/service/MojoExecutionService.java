@@ -59,7 +59,7 @@ public class MojoExecutionService {
         String goal = parts[1];
 
         if (plugin == null) {
-            throw new MojoFailureException("No goal " + goal + " found in pom.xml");
+            throw new MojoFailureException("No goal " + fullGoal + " found in pom.xml");
         }
 
         try {

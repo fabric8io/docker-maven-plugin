@@ -73,13 +73,13 @@ class ShutdownAction {
         access.stopContainer(containerId);
         if (!keepContainer) {
             if (shutdownGracePeriod != 0) {
-                log.debug("Shutdown: Waiting " + shutdownGracePeriod + " ms before removing container");
+                log.debug("Shutdown: Wait " + shutdownGracePeriod + " ms before removing container");
                 sleep(shutdownGracePeriod);
             }
             // Remove the container
             access.removeContainer(containerId, removeVolumes);
         }
-        log.info(description + ": Stopped" + (keepContainer ? "" : " and removed") + " container " +
+        log.info(description + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
                  containerId.substring(0, 12));
     }
 }

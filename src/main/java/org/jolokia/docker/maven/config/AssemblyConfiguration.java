@@ -140,8 +140,11 @@ public class AssemblyConfiguration {
             return this;
         }
 
-        public Builder mode(AssemblyMode mode) {
-            config.mode = mode;
+        public Builder mode(String mode) {
+            if (mode != null) {
+                config.mode = AssemblyMode.valueOf(mode.toLowerCase());
+                isEmpty = false;
+            }
             return this;
         }
 

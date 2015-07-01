@@ -31,6 +31,7 @@ public enum ConfigKey {
     ASSEMBLY_IGNORE_PERMISSIONS("assembly.ignorePermissions"),
     ASSEMBLY_DOCKER_FILE_DIR("assembly.dockerFileDir"),
     ASSEMBLY_USER("assembly.user"),
+    ASSEMBLY_MODE("assembly.mode"),
     BIND,
     CAP_ADD,
     CAP_DROP,
@@ -66,6 +67,8 @@ public enum ConfigKey {
     WAIT_URL("wait.url"),
     WAIT_SHUTDOWN("wait.shutdown"),
     WATCH_INTERVAL("watch.interval"),
+    WATCH_MODE("watch.mode"),
+    WATCH_POSTGOAL("watch.postGoal"),
     WORKING_DIR;
 
     ConfigKey() {

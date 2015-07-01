@@ -99,20 +99,17 @@ public class WatchMojo extends AbstractBuildSupporMojo {
 
                 ArrayList<String> tasks = new ArrayList<>();
 
-                if (watcher.getContainerId() != null) {
 
-                    if (imageConfig.getBuildConfiguration() != null && watcher.isBuild()) {
-                        scheduleBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both);
-                        tasks.add("rebuilding");
-                    }
-
-                    if (watcher.isRun()) {
-                        scheduleRestartWatchTask(dockerAccess, watcher);
-                        tasks.add("restarting");
-                    }
+                if (imageConfig.getBuildConfiguration() != null && watcher.isBuild()) {
+                    scheduleBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both);
+                    tasks.add("rebuilding");
+                }
+                if (watcher.isRun() && watcher.getContainerId() != null) {
+                    scheduleRestartWatchTask(dockerAccess, watcher);
+                    tasks.add("restarting");
                 }
                 if (tasks.size() > 0) {
-                    log.info(imageConfig.getDescription() + ": Watching for " + StringUtils.join(tasks.toArray()," and "));
+                    log.info(imageConfig.getDescription() + ": Watch for " + StringUtils.join(tasks.toArray()," and "));
                 }
             }
             log.info("Waiting ...");
@@ -151,7 +148,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
                 List<AssemblyFiles.Entry> entry = files.getUpdatedEntriesAndRefresh();
                 if (entry != null && entry.size() > 0) {
                     try {
-                        log.info(imageConfig.getDescription() + ": Assembly changed. Rebuilding ...");
+                        log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
                         // Rebuild whole image for now ...
                         buildImage(docker, name, imageConfig);
                         watcher.setImageId(docker.getImageId(name));
@@ -185,7 +182,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
                         callPostGoal(watcher);
                     }
                 } catch (DockerAccessException | MojoFailureException | MojoExecutionException e) {
-                    log.warn(watcher.getImageConfiguration().getDescription() + ": Error while restarting image " + e);
+                    log.warn(watcher.getImageConfiguration().getDescription() + ": Error when restarting image " + e);
                 }
             }
         };

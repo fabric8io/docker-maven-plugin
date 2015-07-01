@@ -47,8 +47,10 @@ public class WatchImageConfiguration {
             return this;
         }
 
-        public Builder mode(WatchMode mode) {
-            c.mode = mode;
+        public Builder mode(String mode) {
+            if (mode != null) {
+                c.mode = WatchMode.valueOf(mode.toLowerCase());
+            }
             return this;
         }
 

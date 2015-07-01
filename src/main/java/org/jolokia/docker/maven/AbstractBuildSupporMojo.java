@@ -79,7 +79,7 @@ abstract public class AbstractBuildSupporMojo extends AbstractDockerMojo {
         File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName, params, imageConfig.getBuildConfiguration());
 
         dockerAccess.buildImage(imageName, dockerArchive);
-        log.info(imageConfig.getDescription() + ": Built image ");
+        log.info(imageConfig.getDescription() + ": Build image ");
     }
 
     private void autoPullBaseImage(DockerAccess dockerAccess, ImageConfiguration imageConfig)
