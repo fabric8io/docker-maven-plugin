@@ -21,6 +21,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
 import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
@@ -28,10 +29,11 @@ import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.service.MojoExecutionService;
 import org.jolokia.docker.maven.service.RunService;
 import org.jolokia.docker.maven.util.*;
 
-import static org.jolokia.docker.maven.config.WatchMode.*;
+import static org.jolokia.docker.maven.config.WatchMode.both;
 
 /**
  * Mojo for watching source code changes.
@@ -57,6 +59,9 @@ public class WatchMojo extends AbstractBuildSupporMojo {
     /** @component **/
     protected RunService runService;
 
+    /** @component **/
+    protected MojoExecutionService mojoExecutionService;
+
     /**
      * @parameter property = "docker.watchInterval" default-value = "5000"
      */
@@ -66,6 +71,11 @@ public class WatchMojo extends AbstractBuildSupporMojo {
      * @parameter property = "docker.keepRunning" default-value = "false"
      */
     private boolean keepRunning;
+
+    /**
+     * @parameter property = "docker.watchPostGoal"
+     */
+    private String watchPostGoal;
 
     // Scheduler
     private ScheduledExecutorService executor;
@@ -148,7 +158,8 @@ public class WatchMojo extends AbstractBuildSupporMojo {
                         if (doRestart) {
                             restartContainer(docker,watcher);
                         }
-                    } catch (DockerAccessException | MojoExecutionException e) {
+                        callPostGoal(watcher);
+                    } catch (DockerAccessException | MojoExecutionException | MojoFailureException e) {
                         log.error(imageConfig.getDescription() + ": Error when rebuilding " + e);
                     }
                 }
@@ -171,8 +182,9 @@ public class WatchMojo extends AbstractBuildSupporMojo {
                     String oldValue = watcher.getAndSetImageId(currentImageId);
                     if (!currentImageId.equals(oldValue)) {
                         restartContainer(docker, watcher);
+                        callPostGoal(watcher);
                     }
-                } catch (DockerAccessException e) {
+                } catch (DockerAccessException | MojoFailureException | MojoExecutionException e) {
                     log.warn(watcher.getImageConfiguration().getDescription() + ": Error while restarting image " + e);
                 }
             }
@@ -188,6 +200,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
         }
     }
 
+
     private void restartContainer(DockerAccess docker, ImageWatcher watcher) throws DockerAccessException {
         // Stop old one
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
@@ -197,6 +210,13 @@ public class WatchMojo extends AbstractBuildSupporMojo {
 
         // Start new one
         watcher.setContainerId(runService.createAndStartContainer(docker, imageConfig, mappedPorts, project.getProperties()));
+    }
+
+    private void callPostGoal(ImageWatcher watcher) throws MojoFailureException, MojoExecutionException {
+        String postGoal = watcher.getPostGoal();
+        if (postGoal != null) {
+            mojoExecutionService.callPluginGoal(postGoal);
+        }
     }
 
 
@@ -209,6 +229,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
         private final AtomicReference<String> imageIdRef, containerIdRef;
         private final long interval;
         private final ImageConfiguration imageConfig;
+        private final String postGoal;
 
         public ImageWatcher(ImageConfiguration imageConfig, String imageId) {
             this.imageConfig = imageConfig;
@@ -218,6 +239,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
 
             this.interval = getWatchInterval(imageConfig);
             this.mode = getWatchMode(imageConfig);
+            this.postGoal = getPostGoal(imageConfig);
         }
 
         public String getContainerId() {
@@ -226,6 +248,10 @@ public class WatchMojo extends AbstractBuildSupporMojo {
 
         public long getInterval() {
             return interval;
+        }
+
+        public String getPostGoal() {
+            return postGoal;
         }
 
         public boolean isBuild() {
@@ -262,6 +288,11 @@ public class WatchMojo extends AbstractBuildSupporMojo {
             WatchImageConfiguration watchConfiguration = imageConfig.getWatchConfiguration();
             int interval = watchConfiguration != null ? watchConfiguration.getInterval() : watchInterval;
             return interval < 100 ? 100 : interval;
+        }
+
+        private String getPostGoal(ImageConfiguration imageConfig) {
+            WatchImageConfiguration watchConfiguration = imageConfig.getWatchConfiguration();
+            return watchConfiguration != null ? watchConfiguration.getPostGoal() : watchPostGoal;
         }
 
         private WatchMode getWatchMode(ImageConfiguration imageConfig) {

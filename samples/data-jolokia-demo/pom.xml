@@ -76,6 +76,7 @@
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
         <configuration>
+          <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
           <images>
@@ -210,6 +211,11 @@
           <target>1.7</target>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-help-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -231,6 +237,7 @@
             <groupId>org.jolokia</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
+              <watchPostGoal>org.apache.maven.plugins:maven-help-plugin:help</watchPostGoal>
               <images>
                 <image>
                   <!-- Artifact Image-->

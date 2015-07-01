@@ -119,7 +119,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // images
     /**
      * @parameter
-     * @required */
+     */
     private List<ImageConfiguration> images;
 
     // Handler dealing with authentication credentials
@@ -193,10 +193,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     private List<ImageConfiguration> resolveImages() {
         List<ImageConfiguration> ret = new ArrayList<>();
-        for (ImageConfiguration image : images) {
-            ret.addAll(imageConfigResolver.resolve(image,project.getProperties()));
+        if (images != null) {
+            for (ImageConfiguration image : images) {
+                ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
+            }
+            verifyImageNames(ret);
         }
-        verifyImageNames(ret);
         return ret;
     }
 
@@ -344,7 +346,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     /**
      * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
-     * is not existant, throw an error
+     * is not existent, throw an error
      *
      * @param docker access object to lookup an image (if autoPull is enabled)
      * @param name image name
@@ -356,7 +358,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry) throws DockerAccessException, MojoExecutionException {
         if (!docker.hasImage(name)) {
             if (autoPull) {
-                docker.pullImage(name, prepareAuthConfig(name,registry), registry);
+                docker.pullImage(withLatestIfNoTag(name), prepareAuthConfig(name,registry), registry);
                 ImageName imageName = new ImageName(name);
                 if (registry != null && !imageName.hasRegistry()) {
                     // If coming from a registry which was not contained in the original name, add a tag from the
@@ -371,4 +373,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
+    // Fetch only latest if no tag is given
+    private String withLatestIfNoTag(String name) {
+        ImageName imageName = new ImageName(name);
+        return imageName.getTag() == null ? imageName.getNameWithoutTag() + ":latest" : name;
+    }
 }

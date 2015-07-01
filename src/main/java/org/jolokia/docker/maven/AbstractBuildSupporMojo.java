@@ -42,7 +42,7 @@ abstract public class AbstractBuildSupporMojo extends AbstractDockerMojo {
     private MavenArchiveConfiguration archive;
 
     /** @component */
-    private MavenSession session;
+    protected MavenSession session;
 
     /** @component */
     private MavenFileFilter mavenFileFilter;

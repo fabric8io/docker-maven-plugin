@@ -932,6 +932,12 @@ parameters:
 * **watchInterval** `docker.watch.interval` specifies the interval in
   milliseconds how  often to check for changes, which must be larger
   than 100ms. The default are 5 seconds.
+* **watchPostGoal** A maven goal which should be called if a rebuild or a restart has 
+  been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and 
+  the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will 
+  trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the 
+  Kubernetes cluster. The value specified here is the the default post goal which can be overridden 
+  by `<postGoal>` in a `<watch>` configuration.
 * **keepRunning** `docker.keepRunning` if set to `true` all
   container will be kept running after `docker:watch` has been
   stopped. By default this is set to `false`. 
@@ -951,7 +957,9 @@ The following parameters are recognized:
   configuration takes precedence over the globally specified mode.  
 * **interval** The watch interval can be specified in milliseconds on
   image level. If given this will override the global watch interval.
-
+* **postGoal** A post Maven plugin goal after a rebuild or restart. The value here must have the 
+  format `<pluginGroupId>:<pluginArtifactId>:<goal>` (e.g. `io.fabric8:fabric8:delete-pods`)
+  
 Here is an example how the watch mode can be tuned:
 
 ````xml

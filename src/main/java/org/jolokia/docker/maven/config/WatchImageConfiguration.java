@@ -16,6 +16,11 @@ public class WatchImageConfiguration {
      */
     private WatchMode mode;
 
+    /**
+     * @parameter
+     */
+    private String postGoal;
+
     public WatchImageConfiguration() {
     }
 
@@ -25,6 +30,10 @@ public class WatchImageConfiguration {
 
     public WatchMode getMode() {
         return mode;
+    }
+
+    public String getPostGoal() {
+        return postGoal;
     }
 
     public static class Builder {
@@ -40,6 +49,11 @@ public class WatchImageConfiguration {
 
         public Builder mode(WatchMode mode) {
             c.mode = mode;
+            return this;
+        }
+
+        public Builder postGoal(String goal) {
+            c.postGoal = goal;
             return this;
         }
 
