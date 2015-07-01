@@ -70,8 +70,12 @@ public class HttpClientBuilder {
                             .loadKeyMaterial(keyStore, "docker".toCharArray())
                             .loadTrustMaterial(keyStore)
                             .build();
-            //SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+            String tlsVerify = System.getenv("DOCKER_TLS_VERIFY");
+            SSLConnectionSocketFactory sslsf =
+                    tlsVerify != null && !tlsVerify.equals("0") && !tlsVerify.equals("false") ?
+                            new SSLConnectionSocketFactory(sslContext) :
+                            new SSLConnectionSocketFactory(sslContext,
+                                                           SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
             return RegistryBuilder.<ConnectionSocketFactory> create().register("https", sslsf).build();
         }
         catch (GeneralSecurityException e) {
