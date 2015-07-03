@@ -595,11 +595,11 @@ Environment variables specified in this file override any environment variables 
 Labels can be set inline the same way as environment variables:
 
 ```xml
-<label>
+<labels>
    <com.example.label-with-value>foo</com.example.label-with-value>
    <version>${project.version}</version>
    <artifactId>${project.artifactId}</artifactId>
-</label>
+</labels>
 ```
 
 ##### Port Mapping
