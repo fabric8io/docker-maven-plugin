@@ -41,7 +41,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public static final String DOCKER_HTTPS_PORT = "2376";
 
     // don't forget to change 'apiVersion' default-value as well
-    public static final String API_VERSION = "v1.15";
+    public static final String API_VERSION = "v1.17";
     
     // Current maven project
     /** @parameter default-value="${project}" */

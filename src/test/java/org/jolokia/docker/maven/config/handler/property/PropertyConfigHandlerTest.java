@@ -71,25 +71,33 @@ public class PropertyConfigHandlerTest {
         },ports);
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         ports = new ArrayList<>(buildConfig.getPorts()).toArray(new String[buildConfig.getPorts().size()]);
-        assertArrayEquals(new String[] { "8080","9090","80"},ports);
+        assertArrayEquals(new String[]{"8080", "9090", "80"}, ports);
     }
 
     @Test
-    public void testEnv() throws Exception {
+    public void testEnvAndLabels() throws Exception {
         List<ImageConfiguration> configs = configHandler.resolve(
                 imageConfiguration,props(
                         "docker.name","demo",
                         "docker.env.HOME", "/tmp",
-                        "docker.env.root.dir", "/bla"
+                        "docker.env.root.dir", "/bla",
+                        "docker.labels.version", "1.0.0",
+                        "docker.labels.blub.bla.foobar", "yep"
                                         ));
 
         assertEquals(1,configs.size());
         ImageConfiguration calcConfig = configs.get(0);
         for (Map env : new Map[] { calcConfig.getBuildConfiguration().getEnv(),
-                                                  calcConfig.getRunConfiguration().getEnv()}) {
+                                   calcConfig.getRunConfiguration().getEnv()}) {
             assertEquals(2,env.size());
             assertEquals("/tmp",env.get("HOME"));
             assertEquals("/bla",env.get("root.dir"));
+        }
+        for (Map labels : new Map[] { calcConfig.getBuildConfiguration().getLabels(),
+                                      calcConfig.getRunConfiguration().getLabels()}) {
+            assertEquals(2, labels.size());
+            assertEquals("1.0.0", labels.get("version"));
+            assertEquals("yep", labels.get("blub.bla.foobar"));
         }
     }
 
@@ -153,7 +161,7 @@ public class PropertyConfigHandlerTest {
         assertEquals("rhuss@redhat.com",buildConfig.getMaintainer());
 
         validateEnv(buildConfig.getEnv());
-        
+        validateLabels(buildConfig.getLabels());
         /*
          * validate only the descriptor is required and defaults are all used, 'testAssembly' validates 
          * all options can be set 
@@ -165,6 +173,10 @@ public class PropertyConfigHandlerTest {
         assertNull(assemblyConfig.getUser());
         assertNull(assemblyConfig.exportBasedir());
         assertFalse(assemblyConfig.isIgnorePermissions());
+    }
+
+    private void validateLabels(Map<String, String> labels) {
+        assertEquals("Hello\"World",labels.get("com.acme.label"));
     }
 
     private void validateEnv(Map<String, String> env) {
@@ -245,6 +257,7 @@ public class PropertyConfigHandlerTest {
                 k(DOMAINNAME), "domain.com",
                 k(ENTRYPOINT), "entrypoint.sh",
                 k(ENV) + ".HOME","/Users/roland",
+                k(LABELS) + ".com.acme.label","Hello\"World",
                 k(ENV_PROPERTY_FILE),"/tmp/envProps.txt",
                 k(EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
                 k(FROM), "image",

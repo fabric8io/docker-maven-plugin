@@ -169,6 +169,7 @@ public class DockerAssemblyManager {
         DockerFileBuilder builder =
                 new DockerFileBuilder()
                         .env(buildConfig.getEnv())
+                        .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
                         .volumes(buildConfig.getVolumes());
         if (buildConfig.getMaintainer() != null) {

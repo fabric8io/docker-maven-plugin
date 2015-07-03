@@ -153,7 +153,7 @@ Example:
 ### Image configuration
 
 The plugin's configuration is centered around *images*. These are
-lockspecified for each image within the `<images>` element of the
+specified for each image within the `<images>` element of the
 configuration with one `<image>` element per image to use. 
 
 The `<image>` element can contain the following sub elements:
@@ -238,8 +238,10 @@ of an image configuration. The available subelements are
 * **entrypoint** An entrypoint allows you to configure a container that will run as an executable. 
   See [Start-up Arguments](#start-up-arguments) for details. 
 * **workdir** the directory to change to when starting the container.  
-* **env** hold environments as described in
-  [Setting Environment Variables](#setting-environment-variables). 
+* **env** holds environments as described in
+  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
+* **labels** holds labels  as described in
+  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
@@ -356,16 +358,16 @@ Either shell or params should be specified.
 
 Example:
  
-````xml
+```xml
  <entryPoint>
     <!-- shell form  -->
     <shell>java -jar $HOME/server.jar</shell>
  </entryPoint>
-````
+```
 
 or 
 
-````xml
+```xml
  <entryPoint>
     <!-- exec form  -->
     <exec>
@@ -498,7 +500,9 @@ The `<run>` configuration knows the following sub elements:
 * **entrypoint** (*v1.15*) set the entry point for the container
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
-  typical maven property format as described [below](#setting-environment-variables).
+  typical maven property format as described [below](#setting-environment-variables-and-labels).
+* **labels** specifies one or more labels which should be attached to the container. They are specified in the
+  typical maven property format as described [below](#setting-environment-variables-and-labels).
 * **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
   specified in this property file overrides the environment variables specified in the configuration.
 * **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
@@ -544,6 +548,10 @@ Example:
     <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
     <JOLOKIA_OFF/>
   </env>
+  <labels>
+    <environment>development</environment>
+    <version>${project.version}</version>
+  </labels>
   <ports>
     <port>jolokia.port:8080</port>
   </ports>
@@ -563,7 +571,7 @@ Example:
 </run>
 ````
 
-##### Setting environment variables
+##### Setting environment variables and labels
 
 When creating a container one or more environment variables can be set
 via configuration with the `env` parameter 
@@ -583,6 +591,16 @@ It is also possible to set the environment variables from the outside of the plu
 configuration with the parameter `envPropertyFile`. If given, this property file
 is used to set the environment variables where the keys and values specify the environment variable. 
 Environment variables specified in this file override any environment variables specified in the configuration.
+
+Labels can be set inline the same way as environment variables:
+
+```xml
+<label>
+   <com.example.label-with-value>foo</com.example.label-with-value>
+   <version>${project.version}</version>
+   <artifactId>${project.artifactId}</artifactId>
+</label>
+```
 
 ##### Port Mapping
 
@@ -1134,6 +1152,7 @@ values in the `<build>` and `<run>` sections.
   be provided. This environment is used both for building images and
   running containers. The value cannot be empty but can contain Maven property names which are
   resolved before the Dockerfile is created
+* **docker.labels.LABEL** Sets a label which works similarly like setting environment variables. 
 * **docker.envPropertyFile** specifies the path to a property file whose properties are 
   used as environment variables. The environment variables takes precedence over any other environment
   variables specified.
@@ -1195,6 +1214,7 @@ Example:
   <docker.from>consol/tomcat:7.0</docker.from>
   <docker.assembly.descriptor>src/main/docker-assembly.xml</docker.assembly.descriptor>
   <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
+  <docker.label.version>${project.version}</docker.label.version>
   <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
   <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
 </properties>

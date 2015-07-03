@@ -8,6 +8,9 @@
   - Don't verify SSL server certificates if `DOCKER_TLS_VERIFY` is not set (#192)
   - For bind path on Windows machines (#188)
   - No 'from' required when using a Dockerfile (#201)
+  - Support for LABEL for build and run.
+
+Note that since version 0.13.0 this plugin requires Docker API version v1.17 or later in order to support labels.  
   
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)

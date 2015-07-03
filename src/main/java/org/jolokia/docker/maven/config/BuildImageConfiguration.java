@@ -49,6 +49,11 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
+    private Map<String,String> labels;
+
+    /**
+     * @parameter
+     */
     private Arguments entryPoint;
 
     /**
@@ -109,7 +114,11 @@ public class BuildImageConfiguration {
     public Map<String, String> getEnv() {
         return env;
     }
-    
+
+    public Map<String, String> getLabels() {
+        return labels;
+    }
+
     public Arguments getCmd() {
         return cmd;
     }
@@ -122,6 +131,7 @@ public class BuildImageConfiguration {
     public Arguments getEntryPoint() {
         return entryPoint;
     }
+
 
     public static class Builder {
         private final BuildImageConfiguration config = new BuildImageConfiguration();
@@ -168,6 +178,11 @@ public class BuildImageConfiguration {
 
         public Builder env(Map<String, String> env) {
             config.env = env;
+            return this;
+        }
+
+        public Builder labels(Map<String, String> labels) {
+            config.labels = labels;
             return this;
         }
 

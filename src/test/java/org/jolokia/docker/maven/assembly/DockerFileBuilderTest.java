@@ -25,6 +25,7 @@ public class DockerFileBuilderTest {
                 .expose(Collections.singletonList("8080"))
                 .maintainer("maintainer@example.com")
                 .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
                 .volumes(Collections.singletonList("/vol1")).content();
 
         String expected = loadFile("docker/Dockerfile.test");

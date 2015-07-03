@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.12.0</version>
+  <version>0.12.1-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -245,6 +245,10 @@
                   <name>jolokia/${project.artifactId}:${project.version}</name>
                   <build>
                     <from>${image}</from>
+                    <labels>
+                      <dmp.version>${project.version}</dmp.version>
+                      <dmp.name>${project.artifactId}</dmp.name>
+                    </labels>
                     <assembly>
                       <descriptor>assembly.xml</descriptor>
                     </assembly>
@@ -260,6 +264,9 @@
                          ${tomcat.port}. Multiple port mapping can be specified here-->
                       <port>jolokia.port:8080</port>
                     </ports>
+                    <labels>
+                      <dmp.type>example</dmp.type>
+                    </labels>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
                       <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>

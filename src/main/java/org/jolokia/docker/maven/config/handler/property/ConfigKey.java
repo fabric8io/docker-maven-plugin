@@ -41,6 +41,7 @@ public enum ConfigKey {
     DNS_SEARCH,
     ENTRYPOINT,
     ENV,
+    LABELS,
     ENV_PROPERTY_FILE,
     EXTRA_HOSTS,
     FROM,

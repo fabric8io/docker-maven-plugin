@@ -213,6 +213,7 @@ public class RunService {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
+                    .labels(runConfig.getLabels())
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(docker, runConfig, mappedPorts));
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();

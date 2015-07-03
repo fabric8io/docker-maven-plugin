@@ -19,6 +19,11 @@ public class RunImageConfiguration {
     private Map<String, String> env;
 
     /**
+     * @parameter
+     */
+    private Map<String,String> labels;
+
+    /**
      * Path to a property file holding environment variables
      *
      * @parameter
@@ -159,6 +164,10 @@ public class RunImageConfiguration {
         return env;
     }
 
+    public Map<String, String> getLabels() {
+        return labels;
+    }
+
     public String getEnvPropertyFile() {
         return envPropertyFile;
     }
@@ -256,16 +265,22 @@ public class RunImageConfiguration {
     public static class Builder {
 
         private RunImageConfiguration config = new RunImageConfiguration();
+
         public Builder env(Map<String, String> env) {
             config.env = env;
             return this;
         }
 
+        public Builder labels(Map<String, String> labels) {
+            config.labels = labels;
+            return this;
+        }
+
+
         public Builder envPropertyFile(String envPropertyFile) {
             config.envPropertyFile = envPropertyFile;
             return this;
         }
-
 
         public Builder cmd(String cmd) {
             config.cmd = cmd;
