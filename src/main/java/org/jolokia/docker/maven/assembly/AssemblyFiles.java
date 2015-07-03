@@ -72,6 +72,9 @@ public class AssemblyFiles {
             if (!srcFile.exists()) {
                 throw new IllegalArgumentException("Source " + srcFile + " does not exist");
             }
+            if (srcFile.isDirectory()) {
+                throw new IllegalArgumentException("Can only watch files, not directories: " + srcFile);
+            }
             if (destFile.isAbsolute()) {
                 throw new IllegalArgumentException("Destination " + destFile + " must not be absolute");
             }
@@ -86,7 +89,7 @@ public class AssemblyFiles {
             return destFile;
         }
 
-        public boolean isUpdated() {
+        boolean isUpdated() {
             if (srcFile.lastModified() > lastModified) {
                 // Update last modified as a side effect
                 lastModified = srcFile.lastModified();

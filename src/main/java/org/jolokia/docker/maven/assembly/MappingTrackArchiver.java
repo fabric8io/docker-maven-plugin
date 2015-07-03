@@ -30,7 +30,6 @@ import org.codehaus.plexus.archiver.diags.TrackingArchiver;
  */
 public class MappingTrackArchiver extends TrackingArchiver {
 
-
     public void clear() {
         added.clear();
     }
@@ -44,7 +43,7 @@ public class MappingTrackArchiver extends TrackingArchiver {
         AssemblyFiles ret = new AssemblyFiles();
         for (Addition addition : added) {
             Object resource = addition.resource;
-            if (resource instanceof File) {
+            if (resource instanceof File && addition.destination != null) {
                 ret.addEntry((File) resource,new File(addition.destination));
             } else if (resource instanceof FileSet) {
                 FileSet fs = (FileSet) resource;

@@ -1,4 +1,6 @@
-package org.jolokia.docker.maven.service;/*
+package org.jolokia.docker.maven.service;
+
+/*
  * 
  * Copyright 2014 Roland Huss
  *
