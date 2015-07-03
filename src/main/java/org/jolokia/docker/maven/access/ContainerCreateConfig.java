@@ -60,7 +60,6 @@ public class ContainerCreateConfig {
 
         Properties envProps = new Properties();
         if (env != null && env.size() > 0) {
-            JSONArray a = new JSONArray();
             for (Map.Entry<String, String> entry : env.entrySet()) {
                 String value = entry.getValue();
                 if (value == null || value.length() == 0) {
@@ -77,6 +76,13 @@ public class ContainerCreateConfig {
 
         if (envProps.size() > 0) {
             addEnvironment(envProps);
+        }
+        return this;
+    }
+
+    public ContainerCreateConfig labels(Map<String,String> labels) {
+        if (labels != null && labels.size() > 0) {
+            createConfig.put("Labels", new JSONObject(labels));
         }
         return this;
     }

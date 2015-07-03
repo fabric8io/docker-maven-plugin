@@ -21,7 +21,7 @@
   <fileSets>
     <fileSet>
       <directory>${project.basedir}/src/main/docker</directory>
-      <outputDirectory>.</outputDirectory>
+      <outputDirectory>test/</outputDirectory>
       <filtered>true</filtered>
       <includes>
         <include>hello.sh</include>

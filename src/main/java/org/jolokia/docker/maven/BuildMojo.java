@@ -1,19 +1,14 @@
 package org.jolokia.docker.maven;
 
-import java.io.File;
 import java.util.List;
 
-import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.shared.filtering.MavenFileFilter;
-import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.util.ImageName;
 
 /**
  * Mojo for building a data image
@@ -24,37 +19,8 @@ import org.jolokia.docker.maven.util.*;
  * @goal build
  * @phase install
  */
-public class BuildMojo extends AbstractDockerMojo {
+public class BuildMojo extends AbstractBuildSupporMojo {
 
-    // ==============================================================================================================
-    // Parameters required from Maven when building an assembly. They cannot be injected directly
-    // into DockerAssemblyCreator.
-    // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
-    /** @parameter */
-    private MavenArchiveConfiguration archive;
-
-    /** @component */
-    private MavenSession session;
-
-    /** @component */
-    private MavenFileFilter mavenFileFilter;
-
-    /** @component */
-    private MavenReaderFilter mavenFilterReader;
-    
-    /** @component */
-    private DockerAssemblyManager dockerAssemblyManager;
-
-    /**
-     * @parameter default-value="src/main/docker" property="docker.source.dir"
-     */
-    private String sourceDirectory;
-    
-    /**
-     * @parameter default-value="target/docker" property="docker.target.dir"
-     */
-    private String outputDirectory;
-    
     /**
      * @parameter default-value="false" property="docker.skipTags"
      */
@@ -67,55 +33,20 @@ public class BuildMojo extends AbstractDockerMojo {
             if (buildConfig != null) {
                 buildConfig.validate();
                 String imageName = imageConfig.getName();
-                buildImage(imageName, imageConfig, dockerAccess);
-                tagImage(imageName, imageConfig, dockerAccess);
+                buildImage(dockerAccess, imageName, imageConfig);
+                if (!skipTags) {
+                    tagImage(imageName, imageConfig, dockerAccess);
+                }
             }
-        }
-    }
-
-    private void buildImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
-            throws DockerAccessException, MojoExecutionException {
-        String fromImage = imageConfig.getBuildConfiguration().getFrom();
-        if (fromImage == null) {
-            fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
-        }
-
-        checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry());
-
-        MojoParameters params = createMojoParameters();
-        warnIfDeprecatedCommandConfigIsUsed(imageConfig.getBuildConfiguration());
-        File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName,params, imageConfig.getBuildConfiguration());
-
-        dockerAccess.buildImage(imageName, dockerArchive);
-        log.info("Created image " + imageConfig.getDescription());
-    }
-
-    private void warnIfDeprecatedCommandConfigIsUsed(BuildImageConfiguration buildConfiguration) {
-        if (buildConfiguration.getCommand() != null) {
-            log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
-            log.warn("Please use <cmd> with nested <shell> or <exec> sections instead.");
-            log.warn("");
-            log.warn("More on this is explained in the user manual: ");
-            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/manual.md#start-up-arguments");
-            log.warn("");
-            log.warn("Migration is trivial, see changelog to version 0.12.0 -->");
-            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/changelog.md");
-            log.warn("");
-            log.warn("For now, the command is automatically translated for you to the shell form:");
-            log.warn("   <cmd><shell>" + buildConfiguration.getCommand() + "</shell></cmd>");
         }
     }
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
 
-        if (skipTags) {
-            return;
-        }
-
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (tags.size() > 0) {
-            log.info("Tagging image " + imageConfig.getDescription() + ": " + EnvUtil.stringJoin(tags, ","));
+            log.info(imageConfig.getDescription() + ": Tag with " + EnvUtil.stringJoin(tags, ","));
 
             for (String tag : tags) {
                 if (tag != null) {
@@ -127,8 +58,4 @@ public class BuildMojo extends AbstractDockerMojo {
         }
     }
 
-    private MojoParameters createMojoParameters() {
-        return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
-                sourceDirectory, outputDirectory);
-    }
 }

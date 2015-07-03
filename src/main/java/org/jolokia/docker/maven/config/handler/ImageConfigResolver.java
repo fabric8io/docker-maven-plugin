@@ -61,12 +61,11 @@ public class ImageConfigResolver implements Initializable {
         if (referenceConfig != null) {
             String type = referenceConfig.get("type");
             if (type == null) {
-                throw new IllegalArgumentException("No config type for image " + unresolvedConfig.getDescription() + " given");
+                throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No config type given");
             }
             ExternalConfigHandler handler = registry.get(type);
             if (handler == null) {
-                throw new IllegalArgumentException("No handler for type " + type + " and image " +
-                                                   unresolvedConfig.getDescription() + " given");
+                throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");
             }
             return handler.resolve(unresolvedConfig,properties);
         } else {
@@ -74,4 +73,4 @@ public class ImageConfigResolver implements Initializable {
         }
     }
 
-    }
+}

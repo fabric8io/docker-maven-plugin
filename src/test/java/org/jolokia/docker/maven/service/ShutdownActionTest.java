@@ -1,7 +1,6 @@
-package org.jolokia.docker.maven;
+package org.jolokia.docker.maven.service;
 
 import mockit.*;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
@@ -96,7 +95,7 @@ public class ShutdownActionTest {
 
     }
 
-    @Test(expected = MojoExecutionException.class)
+    @Test(expected = DockerAccessException.class)
     public void testWithException() throws Exception {
         ShutdownAction action = new ShutdownAction(createImageConfig(SHUTDOWN_WAIT),container);
 
@@ -110,8 +109,8 @@ public class ShutdownActionTest {
     private Delegate<String> getLogArgCheck(final String container, final boolean withRemove) {
         return new Delegate<String>() {
             boolean checkArg(String txt) {
-                assertTrue(txt.toLowerCase().contains("stopped"));
-                assertEquals(withRemove, txt.toLowerCase().contains("removed"));
+                assertTrue(txt.toLowerCase().contains("stop"));
+                assertEquals(withRemove, txt.toLowerCase().contains("remove"));
                 assertTrue("Log '" + txt + "' contains " + container,txt.contains(container.substring(0,12)));
                 return true;
             }

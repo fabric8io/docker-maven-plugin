@@ -1,7 +1,9 @@
 FROM image
 MAINTAINER maintainer@example.com
-ENV foo bar
+ENV foo=bar
+LABEL com.acme.foobar="How are \"you\" ?"
 EXPOSE 8080
 VOLUME ["/vol1"]
 COPY /src /export/dest
+WORKDIR /tmp
 CMD ["c1","c2"]

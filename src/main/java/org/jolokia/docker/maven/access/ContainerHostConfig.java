@@ -1,5 +1,8 @@
 package org.jolokia.docker.maven.access;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +21,9 @@ public class ContainerHostConfig {
 
             for (String volume : bind) {
                 if (volume.contains(":")) {
+                    // Hack-fix for mounting on Windows where the ${projectDir} variable and other
+                    // contain backslashes and what not. Related to #188
+                    volume = volume.replace("\\", "/").replaceAll("^(?i:C:)", "/c");
                     binds.put(volume);
                 }
             }
@@ -42,8 +48,24 @@ public class ContainerHostConfig {
         return addAsArray("DnsSearch", dnsSearch);
     }
 
-    public ContainerHostConfig extraHosts(List<String> extraHosts) {
-        return addAsArray("ExtraHosts", extraHosts);
+    public ContainerHostConfig extraHosts(List<String> extraHosts) throws IllegalArgumentException {
+        if (extraHosts != null) {
+            List<String> mapped = new ArrayList<>();
+            for (int i = 0; i < extraHosts.size(); i++) {
+                String[] parts = extraHosts.get(i).split(":");
+                if (parts.length == 1) {
+                    throw new IllegalArgumentException("extraHosts must be in the form <host:host|ip>");
+                }
+
+                try {
+                    mapped.add(i, parts[0] + ":" + InetAddress.getByName(parts[1]).getHostAddress());
+                } catch (UnknownHostException e) {
+                    throw new IllegalArgumentException("unable to resolve ip address for " + parts[1], e);
+                }
+            }
+            return addAsArray("ExtraHosts", mapped);
+        }
+        return this;
     }
 
     public ContainerHostConfig volumesFrom(List<String> volumesFrom) {

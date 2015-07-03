@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven;/*
+package org.jolokia.docker.maven.service;/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -15,7 +15,6 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
@@ -33,10 +32,7 @@ class ShutdownAction {
     private String image;
 
     // Alias of the image
-    private final String alias;
-
-    // Data container create from image
-    private String container;
+    private final String containerId;
 
     // Description
     private String description;
@@ -44,11 +40,10 @@ class ShutdownAction {
     // How long to wait after shutdown (in milliseconds)
     private int shutdownGracePeriod;
 
-    ShutdownAction(ImageConfiguration imageConfig, String container) {
+    ShutdownAction(ImageConfiguration imageConfig, String containerId) {
         this.image = imageConfig.getName();
-        this.alias = imageConfig.getAlias();
+        this.containerId = containerId;
         this.description = imageConfig.getDescription();
-        this.container = container;
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
         this.shutdownGracePeriod = waitConfig != null ? waitConfig.getShutdown() : 0;
@@ -73,22 +68,18 @@ class ShutdownAction {
      * @param removeVolumes whether to remove associated volumes along with the container (ignored if keepContainer is true)
      */
     public void shutdown(DockerAccess access, Logger log, boolean keepContainer, boolean removeVolumes)
-            throws MojoExecutionException {
+            throws DockerAccessException {
         // Stop the container
-        try {
-            access.stopContainer(container);
-            if (!keepContainer) {
-                if (shutdownGracePeriod != 0) {
-                    log.debug("Shutdown: Waiting " + shutdownGracePeriod + " ms before removing container");
-                    sleep(shutdownGracePeriod);
-                }
-                // Remove the container
-                access.removeContainer(container, removeVolumes);
+        access.stopContainer(containerId);
+        if (!keepContainer) {
+            if (shutdownGracePeriod != 0) {
+                log.debug("Shutdown: Wait " + shutdownGracePeriod + " ms before removing container");
+                sleep(shutdownGracePeriod);
             }
-            log.info("Stopped" + (keepContainer ? "" : " and removed") + " container " +
-                     AbstractDockerMojo.toContainerAndImageDescription(container, description));
-        } catch (DockerAccessException e) {
-            throw new MojoExecutionException("Cannot shutdown",e);
+            // Remove the container
+            access.removeContainer(containerId, removeVolumes);
         }
+        log.info(description + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
+                 containerId.substring(0, 12));
     }
 }

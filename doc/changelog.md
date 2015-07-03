@@ -1,5 +1,22 @@
 # ChangeLog
 
+* **0.13.0**
+  - Add `docker:watch` (#187) 
+  - Allow `extraHosts` IPs to be resolved at runtime (#196)
+  - Add `workDir` as configuration option to `<build>` (#204) 
+  - Fix problem with log output and wait (#200) 
+  - Don't verify SSL server certificates if `DOCKER_TLS_VERIFY` is not set (#192)
+  - For bind path on Windows machines (#188)
+  - No 'from' required when using a Dockerfile (#201)
+  - Support for LABEL for build and run.
+
+Note that since version 0.13.0 this plugin requires Docker API version v1.17 or later in order to support labels.  
+ 
+The watch feature has changed: Instead of using paramters like `docker.watch` or `docker.watch.interval` for `docker:start`
+a dedicated `docker:watch` has been introduced. Also the `<run><watch>...</watch></run>` configuration has been moved 
+one level up so that `<watch>` and `<run>` are on the same level. Please refer to the [manual](manual.md#watching-for-image-changes) 
+for an in depth explanation of the much enhanced watch functionality.
+  
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
   - Unix Socket support (#179)

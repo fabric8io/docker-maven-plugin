@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.util;
 
 import java.util.*;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -17,7 +16,7 @@ public class StartOrderResolver {
     // Only return images which should be run
     // Images references via volumes but with no run configuration are started once to create
     // an appropriate container which can be linked into the image
-    public static List<Resolvable> resolve(List<Resolvable> images) throws MojoExecutionException {
+    public static List<Resolvable> resolve(List<Resolvable> images) {
         List<Resolvable> ret = new ArrayList<>();
         List<Resolvable> secondPass = new ArrayList<>();
         Set<String> processedImages = new HashSet<>();
@@ -39,7 +38,7 @@ public class StartOrderResolver {
         return secondPass.size() > 0 ? resolveRemaining(ret, secondPass, processedImages) : ret;
     }
 
-    private static List<Resolvable> resolveRemaining(List<Resolvable> ret, List<Resolvable> secondPass, Set<String> processedImages) throws MojoExecutionException {
+    private static List<Resolvable> resolveRemaining(List<Resolvable> ret, List<Resolvable> secondPass, Set<String> processedImages) {
         List<Resolvable> remaining = secondPass;
         int retries = MAX_RESOLVE_RETRIES;
         String error = null;
@@ -55,7 +54,7 @@ public class StartOrderResolver {
                     + remainingImagesDescription(remaining);
         }
         if (error != null) {
-            throw new MojoExecutionException(error);
+            throw new IllegalStateException(error);
         }
         return ret;
     }

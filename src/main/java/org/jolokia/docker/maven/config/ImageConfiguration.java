@@ -35,6 +35,11 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     /**
      * @parameter
      */
+    private WatchImageConfiguration watch;
+
+    /**
+     * @parameter
+     */
     private Map<String,String> external;
 
     /**
@@ -47,12 +52,13 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     // For builder
     private ImageConfiguration(String name, String alias,
-                               RunImageConfiguration run, BuildImageConfiguration build,
+                               RunImageConfiguration run, BuildImageConfiguration build,WatchImageConfiguration watch,
                                Map<String, String> external) {
         this.name = name;
         this.alias = alias;
         this.run = run;
         this.build = build;
+        this.watch = watch;
         this.external = external;
     }
 
@@ -72,6 +78,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     public BuildImageConfiguration getBuildConfiguration() {
         return build;
+    }
+
+    public WatchImageConfiguration getWatchConfiguration() {
+        return watch;
     }
 
     public Map<String, String> getExternalConfig() {
@@ -139,6 +149,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         String name,alias;
         RunImageConfiguration runConfig;
         BuildImageConfiguration buildConfig;
+        WatchImageConfiguration watchConfig;
+
         Map<String,String> externalConfig;
 
         public Builder name(String name) {
@@ -167,7 +179,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         }
 
         public ImageConfiguration build() {
-            return new ImageConfiguration(name,alias,runConfig,buildConfig, externalConfig);
+            return new ImageConfiguration(name,alias,runConfig,buildConfig,watchConfig, externalConfig);
+        }
+
+        public Builder watchConfig(WatchImageConfiguration watchConfig) {
+            this.watchConfig = watchConfig;
+            return this;
         }
     }
 }

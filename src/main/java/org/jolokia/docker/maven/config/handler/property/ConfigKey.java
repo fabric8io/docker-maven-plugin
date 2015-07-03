@@ -31,6 +31,7 @@ public enum ConfigKey {
     ASSEMBLY_IGNORE_PERMISSIONS("assembly.ignorePermissions"),
     ASSEMBLY_DOCKER_FILE_DIR("assembly.dockerFileDir"),
     ASSEMBLY_USER("assembly.user"),
+    ASSEMBLY_MODE("assembly.mode"),
     BIND,
     CAP_ADD,
     CAP_DROP,
@@ -40,6 +41,7 @@ public enum ConfigKey {
     DNS_SEARCH,
     ENTRYPOINT,
     ENV,
+    LABELS,
     ENV_PROPERTY_FILE,
     EXTRA_HOSTS,
     FROM,
@@ -59,12 +61,15 @@ public enum ConfigKey {
     VOLUMES,
     TAGS,
     MAINTAINER,
+    WORKDIR,
     VOLUMES_FROM,
     WAIT_LOG("wait.log"),
     WAIT_TIME("wait.time"),
     WAIT_URL("wait.url"),
     WAIT_SHUTDOWN("wait.shutdown"),
     WATCH_INTERVAL("watch.interval"),
+    WATCH_MODE("watch.mode"),
+    WATCH_POSTGOAL("watch.postGoal"),
     WORKING_DIR;
 
     ConfigKey() {

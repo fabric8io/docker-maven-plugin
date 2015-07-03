@@ -41,6 +41,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         
         RunImageConfiguration run = extractRunConfiguration(prefix,properties);
         BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
+        WatchImageConfiguration watch = extractWatchConfig(prefix,properties);
 
         String name = extractName(prefix, properties);
         String alias = withPrefix(prefix, ALIAS, properties);
@@ -51,6 +52,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .alias(alias != null ? alias : config.getAlias())
                         .runConfig(run)
                         .buildConfig(build)
+                        .watchConfig(watch)
                         .build());
     }
 
@@ -60,12 +62,14 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
+                .labels(mapWithPrefix(prefix,LABELS,properties))
                 .ports(extractPortValues(prefix, properties))
                 .from(withPrefix(prefix, FROM, properties))
                 .registry(withPrefix(prefix, REGISTRY, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES, properties))
                 .tags(listWithPrefix(prefix, TAGS, properties))
                 .maintainer(withPrefix(prefix, MAINTAINER, properties))
+                .workdir(withPrefix(prefix, WORKDIR, properties))
                 .build();
     }
 
@@ -80,7 +84,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
                 .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
-                .envPropertyFile(withPrefix(prefix,ENV_PROPERTY_FILE,properties))
+                .labels(mapWithPrefix(prefix,LABELS,properties))
+                .envPropertyFile(withPrefix(prefix, ENV_PROPERTY_FILE, properties))
                 .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
                 .hostname(withPrefix(prefix, HOSTNAME, properties))
                 .links(listWithPrefix(prefix, LINKS, properties))
@@ -94,7 +99,6 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .user(withPrefix(prefix, USER, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
                 .wait(extractWaitConfig(prefix, properties))
-                .watch(extractWatchConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .build();
     }
@@ -108,6 +112,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .exportBasedir(booleanWithPrefix(prefix, ASSEMBLY_EXPORT_BASEDIR, properties))
                 .ignorePermissions(booleanWithPrefix(prefix, ASSEMBLY_IGNORE_PERMISSIONS, properties))
                 .user(withPrefix(prefix, ASSEMBLY_USER, properties))
+                .mode(withPrefix(prefix, ASSEMBLY_MODE, properties))
                 .build();
     }
     
@@ -149,9 +154,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
     
-    private WatchConfiguration extractWatchConfig(String prefix, Properties properties) {
-        return new WatchConfiguration.Builder()
-                .time(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
+    private WatchImageConfiguration extractWatchConfig(String prefix, Properties properties) {
+        return new WatchImageConfiguration.Builder()
+                .interval(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
+                .postGoal(withPrefix(prefix, WATCH_POSTGOAL, properties))
+                .mode(withPrefix(prefix, WATCH_POSTGOAL, properties))
                 .build();
     }
 

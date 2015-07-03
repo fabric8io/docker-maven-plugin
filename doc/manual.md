@@ -5,6 +5,7 @@
   - [`docker:build`](#dockerbuild)
   - [`docker:start`](#dockerstart)
   - [`docker:stop`](#dockerstop)
+  - [`docker:watch`](#dockerwatch)
   - [`docker:push`](#dockerpush)
   - [`docker:remove`](#dockerremove)
   - [`docker:logs`](#dockerlogs)
@@ -152,7 +153,7 @@ Example:
 ### Image configuration
 
 The plugin's configuration is centered around *images*. These are
-lockspecified for each image within the `<images>` element of the
+specified for each image within the `<images>` element of the
 configuration with one `<image>` element per image to use. 
 
 The `<image>` element can contain the following sub elements:
@@ -236,8 +237,11 @@ of an image configuration. The available subelements are
   [Start-up Arguments](#start-up-arguments) for details.
 * **entrypoint** An entrypoint allows you to configure a container that will run as an executable. 
   See [Start-up Arguments](#start-up-arguments) for details. 
-* **env** hold environments as described in
-  [Setting Environment Variables](#setting-environment-variables). 
+* **workdir** the directory to change to when starting the container.  
+* **env** holds environments as described in
+  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
+* **labels** holds labels  as described in
+  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
@@ -354,16 +358,16 @@ Either shell or params should be specified.
 
 Example:
  
-````xml
+```xml
  <entryPoint>
     <!-- shell form  -->
     <shell>java -jar $HOME/server.jar</shell>
  </entryPoint>
-````
+```
 
 or 
 
-````xml
+```xml
  <entryPoint>
     <!-- exec form  -->
     <exec>
@@ -467,8 +471,6 @@ descriptor like above to achieve the desired naming.
 
 Currently the `jar` and `war` plugins properly honor the usage of `finalName`.
 
-
-
 #### `docker:start`
 
 Creates and starts docker containers. This goals evaluates
@@ -498,11 +500,14 @@ The `<run>` configuration knows the following sub elements:
 * **entrypoint** (*v1.15*) set the entry point for the container
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
-  typical maven property format as described [below](#setting-environment-variables).
+  typical maven property format as described [below](#setting-environment-variables-and-labels).
+* **labels** specifies one or more labels which should be attached to the container. They are specified in the
+  typical maven property format as described [below](#setting-environment-variables-and-labels).
 * **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
   specified in this property file overrides the environment variables specified in the configuration.
-* **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the
-  container's `/etc/hosts` file.
+* **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
+  Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved 
+  at container startup.
 * **hostname** (*v1.11*) desired hostname for the container
 * **links** declares how containers are linked together see
   description on [container linking](#container-linking). 
@@ -531,7 +536,7 @@ The `<run>` configuration knows the following sub elements:
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
-* **watch** enables the image watch See [below](#watching-for-image-changes) which subelements are
+* **watch** enables the image watch See [below](#watching-for-image-changes) which sub elements are
   available and how they can be specified.
 * **workingDir** (*v1.11*) working dir for commands to run in
 
@@ -543,6 +548,10 @@ Example:
     <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
     <JOLOKIA_OFF/>
   </env>
+  <labels>
+    <environment>development</environment>
+    <version>${project.version}</version>
+  </labels>
   <ports>
     <port>jolokia.port:8080</port>
   </ports>
@@ -562,7 +571,7 @@ Example:
 </run>
 ````
 
-##### Setting environment variables
+##### Setting environment variables and labels
 
 When creating a container one or more environment variables can be set
 via configuration with the `env` parameter 
@@ -582,6 +591,16 @@ It is also possible to set the environment variables from the outside of the plu
 configuration with the parameter `envPropertyFile`. If given, this property file
 is used to set the environment variables where the keys and values specify the environment variable. 
 Environment variables specified in this file override any environment variables specified in the configuration.
+
+Labels can be set inline the same way as environment variables:
+
+```xml
+<label>
+   <com.example.label-with-value>foo</com.example.label-with-value>
+   <version>${project.version}</version>
+   <artifactId>${project.artifactId}</artifactId>
+</label>
+```
 
 ##### Port Mapping
 
@@ -825,42 +844,6 @@ Example (values can be case insensitive, too) :
 </log>
 ````
 
-##### Watching for image changes
-
-When developing docker images, building the image and manually starting 
-stopping containers, can become a real burden. To slightly increase the user
-experience, you can enable image watching on `<docker:start>` in which case the image
-will polled for changes, and if any change is spotted, the 
-container will get recreated and restarted, using the given image.
-
-Image watch can be configured as part of the run configuration like:
-
-````xml
-<run>
-  <watch>
-    <interval>5000</interval>
-  </watch>
-</run>
-````
-
-In order to start watching for image updates, the property `docker.watch` must be 
-set to true:
-
-    mvn docker:start -Ddocker.watch=true -Ddocker.watch.interval=5000
-
-As you can see in this example, the watch interval can be provided on the command line, too.
-Please note that the Maven process will the run forever until it is killed. The containers will then be still running 
- and must be stopped with `docker:stop`, though.
-
-When a watched image is removed, error message will be print out periodically while watching.
-So don't do that ;-)
-
-If containers are linked together network or volume wise, and you update a container which other containers dependent on, 
-the dependant containers are not restarted. E.g. when you have a "service" container accessing a "db" container and the
-"db" container is updated, then you "service" container will faill until it is restarted, too. A future version of this 
-plugin will take care of restarting these containers, too (in the right order), but for now you would have to do this 
-manually.
-
 #### `docker:stop`
 
 Stops and removes a docker container. This goals starts every
@@ -892,6 +875,150 @@ parameters which are typically used as system properties:
 Example: 
 
     $ mvn -Ddocker.keepRunning clean install
+
+#### `docker:watch`
+
+When developing and testing applications you will often have to
+rebuild Docker images and restart containers. Typing `docker:build`
+and `docker:start` all the time is cumbersome. With `docker:watch` you
+can enable automatic rebuilding of images and restarting of containers
+in case of updates.
+
+`docker:watch` is the top-level goal which perform these tasks. There
+are two watch modes, which can be specified in multiple ways:
+
+* `build` : Automatically rebuild one or more Docker images when one
+  of the files selected by an assembly changes. This works for all files
+  included directly in `assembly.xml` but also for arbitrary dependencies. 
+  For example:
+
+        $ mvn package docker:build docker:watch -Ddocker.watch.mode=build
+
+  This mode works only when there is a `<build>` section
+  in an image configuration. Otherwise no automatically build will be triggered for an 
+  image with only a `<run>` section. Note that you need the `package` phase to be executed before
+  otherwise any artifact created by this build can not be included
+  into the assembly. As described in the section about `docker:start` this
+  is a Maven limitation. 
+  
+* `run` : Automatically restart container when their associated images
+  changes. This is useful if you pull a new version of an image
+  externally or especially in combination with the `build` mode to
+  restart containers when their image has been automatically
+  rebuilt. This mode works reliably only when used together with
+  `docker:start`.
+
+        $ mvn docker:start docker:watch -Ddocker.watch.mode=run
+
+The mode can also be `both` or `none` to select both or none of these
+variants, respectively. The default is `both`. 
+
+`docker:watch` will run forever until it is interrupted with `CTRL-C`
+after which it will stop all containers. Depending on the configuration
+parameters `keepContainer` and `removeVolumes` the stopped containers
+with their volumes will be removed, too.
+
+When an image is removed while watching it, error messages will be printed out
+periodically.  So don't do that ;-)
+
+Dynamically assigned ports stay stable in that they won't change after
+a container has been stopped and a new container is created and started. The new
+container will try to allocate the same ports as the previous container.
+
+If containers are linked together network or volume wise, and you
+update a container which other containers dependent on, the dependant
+containers are not restarted for now. E.g. when you have a "service"
+container accessing a "db" container and the "db" container is
+updated, then you "service" container will fail until it is restarted,
+too. A future version of this plugin will take care of restarting
+these containers, too (in the right order), but for now you would have
+to do this manually.
+
+This maven goal can be configured with the following top-level
+parameters:
+
+* **watchMode** `docker.watch.mode`: The watch mode specifies what should be watched
+  - `build` : Watch changes in the assembly and rebuild the image in
+  case
+  - `run` : Watch a container's image whether it changes and restart
+  the container in case
+  - `both` : `build` and `run` combined
+  - `none` : Neither watching for builds nor images. This is useful if
+  you use prefactored images which won't be changed and hence don't
+  need any watching. `none` is best used on an per image level, see below how this can 
+  be specified.
+* **watchInterval** `docker.watch.interval` specifies the interval in
+  milliseconds how  often to check for changes, which must be larger
+  than 100ms. The default are 5 seconds.
+* **watchPostGoal** A maven goal which should be called if a rebuild or a restart has 
+  been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and 
+  the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will 
+  trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the 
+  Kubernetes cluster. The value specified here is the the default post goal which can be overridden 
+  by `<postGoal>` in a `<watch>` configuration.
+* **keepRunning** `docker.keepRunning` if set to `true` all
+  container will be kept running after `docker:watch` has been
+  stopped. By default this is set to `false`. 
+* **keepContainer** `docker.keepContainer` similar to `docker:stop`, if this is set to `true`
+  (and `keepRunning` is disabled) then all container will be removed
+  after they have been stopped. The default is `true`.
+* **removeVolumes** `docker.removeVolumes` if given will remove any
+  volumes associated to the container as well. This option will be ignored
+  if either `keepContainer` or `keepRunning` are `true`.
+
+Image specific watch configuration goes into an extra image-level
+`<watch>` section (i.e. `<image><watch>...</watch></image>`). 
+The following parameters are recognized:
+
+* **mode** Each image can be configured for having individual watch mode. These
+  take precedence of the global watch mode. The mode specified in this
+  configuration takes precedence over the globally specified mode.  
+* **interval** The watch interval can be specified in milliseconds on
+  image level. If given this will override the global watch interval.
+* **postGoal** A post Maven plugin goal after a rebuild or restart. The value here must have the 
+  format `<pluginGroupId>:<pluginArtifactId>:<goal>` (e.g. `io.fabric8:fabric8:delete-pods`)
+  
+Here is an example how the watch mode can be tuned:
+
+````xml
+<configuration>
+   <!-- Check every 10 seconds by default -->
+   <watchInterval>10000</watchInterval>
+   <!-- Watch for doing rebuilds and restarts --> 
+   <watchMode>both</watch>
+   <images>
+      <image>
+         <!-- Service checks every 5 seconds -->
+         <alias>service</alias>
+         ....
+         <watch>
+            <interval>5000</interval>
+         </watch>
+      </image>
+      <image>
+         <!-- Database needs no watching -->
+         <alias>db<alias>
+         ....
+         <watch>
+            <mode>none</mode>
+         </watch>
+      </image>
+      ....   
+   </images>
+</configuration>
+````
+
+Given this configuration 
+
+````sh
+mvn package docker:build docker:start docker:watch
+````
+
+you can build the service image, start up all containers and go into a watch
+loop. Again, you need the `package` phase in order that the assembly
+can find the artifact build by this project. This is a Maven
+limitation. The `db` image will never be watch since it assumed to not change 
+while watching. 
 
 #### `docker:push`
 
@@ -1018,12 +1145,14 @@ values in the `<build>` and `<run>` sections.
 * **docker.dns.idx** List of dns servers to use
 * **docker.dnsSearch.idx** List of dns search domains
 * **docker.entrypoint** Container entry point
+* **docker.workdir** Container working directory
 * **docker.env.VARIABLE** Sets an environment
   variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>`
   sets the environment variable `JAVA_OPTS`. Multiple such entries can
   be provided. This environment is used both for building images and
   running containers. The value cannot be empty but can contain Maven property names which are
   resolved before the Dockerfile is created
+* **docker.labels.LABEL** Sets a label which works similarly like setting environment variables. 
 * **docker.envPropertyFile** specifies the path to a property file whose properties are 
   used as environment variables. The environment variables takes precedence over any other environment
   variables specified.
@@ -1085,6 +1214,7 @@ Example:
   <docker.from>consol/tomcat:7.0</docker.from>
   <docker.assembly.descriptor>src/main/docker-assembly.xml</docker.assembly.descriptor>
   <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
+  <docker.label.version>${project.version}</docker.label.version>
   <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
   <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
 </properties>
@@ -1215,7 +1345,7 @@ The system property provided credentials are a good compromise when
 using CI servers like Jenkins. You simply provide the credentials from
 the outside:
 
-	mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
+    mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
 
 The most secure and also the most *mavenish* way is to add a server to
 the Maven settings file `~/.m2/settings.xml`:

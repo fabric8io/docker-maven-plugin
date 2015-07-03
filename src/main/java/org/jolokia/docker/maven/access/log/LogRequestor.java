@@ -106,6 +106,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
             while (IOUtils.read(is, headBuf, 0, 8) > 0) {
                 int type = headBuf[0];
                 int declaredLength = extractLength(headBuf);
+                if(declaredLength == 0) {
+                    continue;
+                }
                 byte[] buf = new byte[declaredLength];
                 int len = IOUtils.read(is, buf, 0, declaredLength);
                 if (len < 1) {

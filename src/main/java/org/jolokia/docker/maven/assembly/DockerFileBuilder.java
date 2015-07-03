@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.util.*;
 
 import com.google.common.base.Joiner;
-import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.config.Arguments;
 
 /**
@@ -24,6 +24,9 @@ public class DockerFileBuilder {
 
     // Maintainer of this image
     private String maintainer = "docker-maven-plugin@jolokia.org";
+
+    // Workdir
+    private String workdir = null;
 
     // Basedir to be export
     private String basedir = "/maven";
@@ -43,8 +46,13 @@ public class DockerFileBuilder {
 
     // list of ports to expose and environments to use
     private List<Integer> ports = new ArrayList<>();
+
+    // environment
     private Map<String,String> envEntries = new HashMap<>();
-    
+
+    // image labels
+    private Map<String, String> labels = new HashMap<>();
+
     // exposed volumes
     private List<String> volumes = new ArrayList<>();
 
@@ -73,15 +81,22 @@ public class DockerFileBuilder {
         
         b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
         b.append("MAINTAINER ").append(maintainer).append("\n");
-
         addEnv(b);
+        addLabels(b);
         addPorts(b);
         addVolumes(b);
         addEntries(b);
+        addWorkdir(b);
         addCmd(b);
         addEntryPoint(b);
 
         return b.toString();
+    }
+
+    private void addWorkdir(StringBuilder b) {
+        if (workdir != null) {
+            b.append("WORKDIR ").append(workdir).append("\n");
+        }
     }
 
     private void addEntryPoint(StringBuilder b){
@@ -114,10 +129,10 @@ public class DockerFileBuilder {
             b.append("COPY ").append(entry.source).append(" ").append(dest).append("\n");
         }
         if (user != null) {
-            String[] userParts = StringUtils.split(user,':');
+            String[] userParts = StringUtils.split(user, ":");
             String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
             String cmd = "RUN [\"chown\", \"-R\", \"" + userArg + "\",\"" +
-                         StringUtils.join(destinations, "\",\"") + "\"]\n";
+                         StringUtils.join(destinations.iterator(), "\",\"") + "\"]\n";
             if (userParts.length > 2) {
                 b.append("USER root\n");
                 b.append(cmd);
@@ -129,10 +144,29 @@ public class DockerFileBuilder {
     }
 
     private void addEnv(StringBuilder b) {
-        for (Map.Entry<String,String> entry : envEntries.entrySet()) {
-            b.append("ENV ").append(entry.getKey()).append(" ")
-             .append(entry.getValue()).append("\n");
+        addMap(b,"ENV",envEntries);
+    }
+
+    private void addLabels(StringBuilder b) {
+        addMap(b,"LABEL",labels);
+    }
+
+    private void addMap(StringBuilder b,String keyword, Map<String,String> map) {
+        if (map != null && map.size() > 0) {
+            b.append(keyword).append(" ");
+            List<String> entries = new ArrayList<>(map.size());
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                entries.add(
+                        quote(entry.getKey()) + "=" + quote(entry.getValue())
+                );
+            }
+            b.append(StringUtils.join(entries.iterator()," "));
+            b.append("\n");
         }
+    }
+
+    private String quote(String value) {
+        return StringUtils.quoteAndEscape(value,'"');
     }
 
     private void addPorts(StringBuilder b) {
@@ -181,6 +215,11 @@ public class DockerFileBuilder {
         return this;
     }
 
+    public DockerFileBuilder workdir(String workdir) {
+        this.workdir = workdir;
+        return this;
+    }
+
     public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
             basedir = dir;
@@ -214,7 +253,11 @@ public class DockerFileBuilder {
         if (ports != null) {
             for (String port : ports) {
                 if (port != null) {
-                    this.ports.add(Integer.parseInt(port));
+                    try {
+                        this.ports.add(Integer.parseInt(port));
+                    } catch (NumberFormatException exp) {
+                        throw new IllegalArgumentException("Non numeric port " + port + " specified in port mapping",exp);
+                    }
                 }
             }
         }
@@ -229,12 +272,19 @@ public class DockerFileBuilder {
     public DockerFileBuilder env(Map<String, String> values) {
         if (values != null) {
             this.envEntries.putAll(values);
-            validateEnv(envEntries);
+            validateMap(envEntries);
         }
         return this;
     }
 
-    
+    public DockerFileBuilder labels(Map<String,String> values) {
+        if (values != null) {
+            this.labels.putAll(values);
+            validateMap(labels);
+        }
+        return this;
+    }
+
     public DockerFileBuilder volumes(List<String> volumes) {
         if (volumes != null) {
            this.volumes.addAll(volumes);
@@ -242,7 +292,7 @@ public class DockerFileBuilder {
         return this;
     }
     
-    private void validateEnv(Map<String,String> env) {
+    private void validateMap(Map<String, String> env) {
         for (Map.Entry<String,String> entry : env.entrySet()) {
             if (entry.getValue() == null || entry.getValue().length() == 0) {
                 throw new IllegalArgumentException("Environment variable '" +

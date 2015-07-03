@@ -19,6 +19,11 @@ public class RunImageConfiguration {
     private Map<String, String> env;
 
     /**
+     * @parameter
+     */
+    private Map<String,String> labels;
+
+    /**
      * Path to a property file holding environment variables
      *
      * @parameter
@@ -142,12 +147,6 @@ public class RunImageConfiguration {
      * @parameter
      */
     private WaitConfiguration wait;
-    
-    // Configuration how to watch for the image if watching is enabled
-    /**
-     * @parameter
-     */
-    private WatchConfiguration watch;
 
     /**
      * @parameter
@@ -163,6 +162,10 @@ public class RunImageConfiguration {
 
     public Map<String, String> getEnv() {
         return env;
+    }
+
+    public Map<String, String> getLabels() {
+        return labels;
     }
 
     public String getEnvPropertyFile() {
@@ -211,10 +214,6 @@ public class RunImageConfiguration {
 
     public WaitConfiguration getWaitConfiguration() {
         return wait;
-    }
-
-    public WatchConfiguration getWatchConfiguration() {
-        return watch;
     }
 
     public LogConfiguration getLog() {
@@ -266,16 +265,22 @@ public class RunImageConfiguration {
     public static class Builder {
 
         private RunImageConfiguration config = new RunImageConfiguration();
+
         public Builder env(Map<String, String> env) {
             config.env = env;
             return this;
         }
 
+        public Builder labels(Map<String, String> labels) {
+            config.labels = labels;
+            return this;
+        }
+
+
         public Builder envPropertyFile(String envPropertyFile) {
             config.envPropertyFile = envPropertyFile;
             return this;
         }
-
 
         public Builder cmd(String cmd) {
             config.cmd = cmd;
@@ -364,11 +369,6 @@ public class RunImageConfiguration {
 
         public Builder wait(WaitConfiguration wait) {
             config.wait = wait;
-            return this;
-        }
-
-        public Builder watch(WatchConfiguration watch) {
-            config.watch = watch;
             return this;
         }
 

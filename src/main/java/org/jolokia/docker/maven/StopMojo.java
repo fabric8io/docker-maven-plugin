@@ -1,13 +1,12 @@
 package org.jolokia.docker.maven;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.util.Logger;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -26,27 +25,23 @@ import org.jolokia.docker.maven.log.LogDispatcher;
  */
 public class StopMojo extends AbstractDockerMojo {
 
-    // Whether to keep the containers afters stopping
     /**
-     * @parameter property = "docker.keepContainer" default-value = "false"
-     */
-    private boolean keepContainer;
-
-    // Whether to *not* stop the container. Mostly useful as a command line param
-    /**
+     * Whether to *not* stop the container. Mostly useful as a command line param.
+     *
      * @parameter property = "docker.keepRunning" defaultValue = "false"
      */
     private boolean keepRunning;
 
-    // Whether to remove volumes when removing the container
-    /**
-     * @parameter property = "docker.removeVolumes" defaultValue = "false"
-     */
-    private boolean removeVolumes;
+    /** @component */
+    private RunService runService;
+
+    @Override
+    protected void initLog(Logger log) {
+        runService.initLog(log);
+    }
 
     @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
-
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
 
         if (!keepRunning) {
@@ -55,17 +50,11 @@ public class StopMojo extends AbstractDockerMojo {
                 for (ImageConfiguration image : getImages()) {
                     String imageName = image.getName();
                     for (String container : access.getContainersForImage(imageName)) {
-                        new ShutdownAction(image, container).shutdown(access, log, keepContainer, removeVolumes);
+                        runService.stopContainer(access, image, container, keepContainer, removeVolumes);
                     }
                 }
             } else {
-                // Called from a lifecycle phase ...
-                List<ShutdownAction> appliedShutdownActions = new ArrayList<>();
-                for (ShutdownAction action : getShutdownActionsInExecutionOrder()) {
-                    action.shutdown(access, log, keepContainer, removeVolumes);
-                    appliedShutdownActions.add(action);
-                }
-                removeShutdownActions(appliedShutdownActions);
+                runService.stopStartedContainers(access, keepContainer, removeVolumes);
             }
         }
 

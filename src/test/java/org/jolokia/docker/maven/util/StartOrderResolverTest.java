@@ -23,16 +23,12 @@ public class StartOrderResolverTest {
         });
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void circularDep() throws MojoExecutionException {
-        try {
-            checkData(new Object[][] {
-                    {new T[]{new T("1", "2"), new T("2", "1")}, new T[]{new T("1", "2"), new T("2", "1")}}
-            });
-            fail();
-        } catch (MojoExecutionException exp) {
-
-        }
+        checkData(new Object[][] {
+                {new T[]{new T("1", "2"), new T("2", "1")}, new T[]{new T("1", "2"), new T("2", "1")}}
+        });
+        fail();
     }
 
     private void checkData(Object[][] data) throws MojoExecutionException {
