@@ -11,6 +11,11 @@
   - Support for LABEL for build and run.
 
 Note that since version 0.13.0 this plugin requires Docker API version v1.17 or later in order to support labels.  
+ 
+The watch feature has changed: Instead of using paramters like `docker.watch` or `docker.watch.interval` for `docker:start`
+a dedicated `docker:watch` has been introduced. Also the `<run><watch>...</watch></run>` configuration has been moved 
+one level up so that `<watch>` and `<run>` are on the same level. Please refer to the [manual](manual.md#watching-for-image-changes) 
+for an in depth explanation of the much enhanced watch functionality.
   
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)

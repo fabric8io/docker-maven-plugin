@@ -536,7 +536,7 @@ The `<run>` configuration knows the following sub elements:
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
-* **watch** enables the image watch See [below](#watching-for-image-changes) which subelements are
+* **watch** enables the image watch See [below](#watching-for-image-changes) which sub elements are
   available and how they can be specified.
 * **workingDir** (*v1.11*) working dir for commands to run in
 
