@@ -21,6 +21,8 @@ public class ContainerHostConfig {
 
             for (String volume : bind) {
                 if (volume.contains(":")) {
+                    // Hack-fix for mounting on Windows where the ${projectDir} variable and other
+                    // contain backslashes and what not. Related to #188
                     volume = volume.replace("\\", "/").replaceAll("^(?i:C:)", "/c");
                     binds.put(volume);
                 }
