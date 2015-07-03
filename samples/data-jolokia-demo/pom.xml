@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.12.1-SNAPSHOT</version>
+  <version>0.12.0</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -215,6 +215,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-help-plugin</artifactId>
+        <version>2.2</version>
       </plugin>
     </plugins>
   </build>
@@ -329,6 +330,43 @@
       </build>
     </profile>
 
+
+    <profile>
+      <id>dockerfile</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration combine.self="override">
+              <autoPull>false</autoPull>
+              <images>
+                <image>
+                  <!-- Artifact Image-->
+                  <name>jolokia/${project.artifactId}-dockerfile:${project.version}</name>
+                  <build>
+                    <assembly>
+                      <dockerFileDir>demo</dockerFileDir>
+                    </assembly>
+                  </build>
+                  <run>
+                    <ports>
+                      <port>jolokia.port:8080</port>
+                    </ports>
+                    <wait>
+                      <!-- The plugin waits until this URL is reachable via HTTP ... -->
+                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <time>10000</time>
+                    </wait>
+                  </run>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>props</id>
       <properties>
@@ -418,38 +456,5 @@
       </properties>
     </profile>
 
-    <profile>
-      <id>test</id>
-      <build>
-        <plugins><plugin>
-        <groupId>org.jolokia</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-          <configuration>
-            <images>
-              <image>
-                <name>fabric8/elasticsearch-logstash-template:${project.version}</name>
-                <build>
-                  <from>centos:7</from>
-                  <assembly>
-                    <inline xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
-                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                            xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-                      <id>logstash-template</id>
-                      <fileSets>
-                        <fileSet>
-                          <directory>${project.basedir}/src/main/docker</directory>
-                          <outputDirectory>.</outputDirectory>
-                        </fileSet>
-                      </fileSets>
-                    </inline>
-                  </assembly>
-                </build>
-              </image>
-            </images>
-          </configuration>
-        </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 </project>

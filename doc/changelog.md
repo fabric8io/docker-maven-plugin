@@ -1,12 +1,13 @@
 # ChangeLog
 
-* **0.12.1**
+* **0.13.0**
   - Add `docker:watch` (#187) 
   - Allow `extraHosts` IPs to be resolved at runtime (#196)
   - Add `workDir` as configuration option to `<build>` (#204) 
   - Fix problem with log output and wait (#200) 
   - Don't verify SSL server certificates if `DOCKER_TLS_VERIFY` is not set (#192)
   - For bind path on Windows machines (#188)
+  - No 'from' required when using a Dockerfile (#201)
   
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
