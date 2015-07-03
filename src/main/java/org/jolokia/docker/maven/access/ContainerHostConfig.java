@@ -21,6 +21,7 @@ public class ContainerHostConfig {
 
             for (String volume : bind) {
                 if (volume.contains(":")) {
+                    volume = volume.replace("\\", "/").replaceAll("^(?i:C:)", "/c");
                     binds.put(volume);
                 }
             }
