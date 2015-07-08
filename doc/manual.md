@@ -1030,7 +1030,7 @@ This goals uploads images to the registry which have a `<build>`
 configuration section. The images to push can be restricted with with
 the global option `image` (see
 [Global Configuration](#global-configuration) for details). The
-registry to push is by default `registry.hub.docker.com` but can be
+registry to push is by default `docker.io` but can be
 specified as part of the images's `name` name the Docker
 way. E.g. `docker.test.org:5000/data:1.5` will push the image `data`
 with tag `1.5` to the registry `docker.test.org` at port
@@ -1266,7 +1266,7 @@ This plugin supports various ways of specifying a registry:
 * If the image name contains a registry part, this registry is used
   unconditionally and can not be overwritten from the outside.
 * If an image name doesn't contain a registry, then by default the
-  default Docker registry `registry.hub.docker.com` is used for push and pull
+  default Docker registry `docker.io` is used for push and pull
   operations. But this can be overwritten through various means:
   - If the `<image>` configuration contains a `<registry>` subelement
     this registry is used.
@@ -1357,7 +1357,7 @@ the Maven settings file `~/.m2/settings.xml`:
 ```xml
 <servers>
   <server>
-    <id>registry.hub.docker.com</id>
+    <id>docker.io</id>
     <username>jolokia</username>
     <password>s!cr!t</password>
   </server>
@@ -1366,8 +1366,12 @@ the Maven settings file `~/.m2/settings.xml`:
 ```
 
 The server id must specify the registry to push to/pull from, which by
-default is central index `registry.hub.docker.com`. Here you should add
-you docker.io account for your repositories.
+default is central index `docker.io` (or `index.docker.io` / `registry.hub.docker.com` as fallbacks). 
+Here you should add your docker.io account for your repositories. If you have multiple accounts 
+for the same registry, the second user can be specified as part of the ID. In the example above, if you 
+have a second accorunt 'rhuss' then use an `<id>docker.io/rhuss</id>` for this second entry. I.e. add the 
+username with a slash to the id name. The default without username is only taken if no server entry with 
+a username appended id is chosen.
 
 #### Password encryption
 

@@ -28,6 +28,9 @@ public class AuthConfigFactory {
     private static final String DOCKER_AUTH = "docker.authToken";
 
     private final PlexusContainer container;
+    public static final String[] DEFAULT_REGISTRIES = new String[]{
+            "docker.io", "index.docker.io", "registry.hub.docker.com"
+    };
 
     /**
      * Constructor which should be used during startup phase of a plugin
@@ -60,12 +63,13 @@ public class AuthConfigFactory {
      * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
      * @param settings the global Maven settings object
-     * @param registry
+     * @param user user to check for
+     * @param registry registry to use, might be null in which case a default registry is checked,
      * @return the authentication configuration or <code>null</code> if none could be found
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(Map authConfig, Settings settings, String registry) throws MojoExecutionException {
+    public AuthConfig createAuthConfig(Map authConfig, Settings settings, String user, String registry) throws MojoExecutionException {
         Properties props = System.getProperties();
         if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
             return getAuthConfigFromProperties(props);
@@ -73,7 +77,7 @@ public class AuthConfigFactory {
         if (authConfig != null) {
             return getAuthConfigFromPluginConfiguration(authConfig);
         }
-        return getAuthConfigFromSettings(settings,registry);
+        return getAuthConfigFromSettings(settings,user,registry);
     }
 
     // ===================================================================================================
@@ -102,15 +106,30 @@ public class AuthConfigFactory {
         return new AuthConfig(cloneConfig);
     }
 
-    private AuthConfig getAuthConfigFromSettings(Settings settings, String registry) throws MojoExecutionException {
-        Server server = settings.getServer(registry);
-        if (server != null) {
-            return new AuthConfig(
-                    server.getUsername(),
-                    decrypt(server.getPassword()),
-                    extractFromServerConfiguration(server.getConfiguration(), "email"),
-                    extractFromServerConfiguration(server.getConfiguration(), "auth")
-            );
+    private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) throws MojoExecutionException {
+        Server defaultServer = null;
+        Server found = null;
+        for (Server server : settings.getServers()) {
+            String id = server.getId();
+
+            if (defaultServer == null) {
+                defaultServer = checkForServer(server, id, registry, null);
+            }
+            found = checkForServer(server, id, registry, user);
+            if (found != null) {
+                return createAuthConfigFromServer(found);
+            }
+        }
+        return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
+    }
+
+    private Server checkForServer(Server server, String id, String registry, String user) {
+
+        String[] registries = registry != null ? new String[] { registry } : DEFAULT_REGISTRIES;
+        for (String reg : registries) {
+            if (id.equals(user == null ? reg : reg + "/" + user)) {
+                return server;
+            }
         }
         return null;
     }
@@ -126,6 +145,15 @@ public class AuthConfigFactory {
         } catch (ReflectiveOperationException e) {
             throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
         }
+    }
+
+    private AuthConfig createAuthConfigFromServer(Server server) throws MojoExecutionException {
+        return new AuthConfig(
+                server.getUsername(),
+                decrypt(server.getPassword()),
+                extractFromServerConfiguration(server.getConfiguration(), "email"),
+                extractFromServerConfiguration(server.getConfiguration(), "auth")
+        );
     }
 
     private String extractFromServerConfiguration(Object configuration, String prop) {

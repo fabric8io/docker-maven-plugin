@@ -1,7 +1,6 @@
 package org.jolokia.docker.maven.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import mockit.*;
 import mockit.integration.junit4.JMockit;
@@ -54,7 +53,7 @@ public class AuthConfigHandlerTest {
 
     @Test
     public void testEmpty() throws Exception {
-        assertNull(factory.createAuthConfig(null, settings, null));
+        assertNull(factory.createAuthConfig(null, settings, null, null));
     }
 
     @Test
@@ -63,7 +62,7 @@ public class AuthConfigHandlerTest {
         System.setProperty("docker.password", "secret");
         System.setProperty("docker.email", "roland@jolokia.org");
         try {
-            AuthConfig config = factory.createAuthConfig(null,settings, null);
+            AuthConfig config = factory.createAuthConfig(null,settings, null, null);
             verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
         } finally {
             System.clearProperty("docker.username");
@@ -85,7 +84,7 @@ public class AuthConfigHandlerTest {
     private void checkException(String key) throws MojoExecutionException {
         System.setProperty(key, "secret");
         try {
-            factory.createAuthConfig(null, settings, null);
+            factory.createAuthConfig(null, settings, null, null);
         } finally {
             System.clearProperty(key);
         }
@@ -98,8 +97,8 @@ public class AuthConfigHandlerTest {
         pluginConfig.put("password", "secret");
         pluginConfig.put("email", "roland@jolokia.org");
 
-        AuthConfig config = factory.createAuthConfig(pluginConfig,settings,null);
-        verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+        AuthConfig config = factory.createAuthConfig(pluginConfig,settings,null,null);
+        verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
     }
 
 
@@ -107,26 +106,64 @@ public class AuthConfigHandlerTest {
     public void testFromPluginConfigurationFailed() throws MojoExecutionException {
         Map pluginConfig = new HashMap();
         pluginConfig.put("password", "secret");
-        factory.createAuthConfig(pluginConfig, settings, null);
+        factory.createAuthConfig(pluginConfig, settings, null, null);
     }
 
     @Test
-    public void testFromSettings() throws MojoExecutionException {
-        new NonStrictExpectations() {{
-            settings.getServer("test.org");
-            Server server = new Server();
-            server.setPassword("secret");
-            server.setUsername("roland");
-            Xpp3Dom dom = new Xpp3Dom("configuration");
-            Xpp3Dom email = new Xpp3Dom("email");
-            email.setValue("roland@jolokia.org");
-            dom.addChild(email);
-            server.setConfiguration(dom);
-            result = server;
-        }};
+    public void testFromSettingsSimple() throws MojoExecutionException {
+        setupServers();
+        AuthConfig config = factory.createAuthConfig(null,settings, "roland", "test.org");
+        assertNotNull(config);
+        verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
+    }
 
-        AuthConfig config = factory.createAuthConfig(null,settings, "test.org");
-        verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+    @Test
+    public void testFromSettingsDefault() throws MojoExecutionException {
+        setupServers();
+        AuthConfig config = factory.createAuthConfig(null,settings, "rhuss", "test.org");
+        assertNotNull(config);
+        verifyAuthConfig(config, "rhuss", "secret2", "rhuss@redhat.com");
+    }
+
+    @Test
+    public void testFormSettingsDefault() throws MojoExecutionException {
+        setupServers();
+        AuthConfig config = factory.createAuthConfig(null,settings,"tanja",null);
+        assertNotNull(config);
+        verifyAuthConfig(config,"tanja","doublesecret","tanja@jolokia.org");
+    }
+
+    @Test
+    public void testWrongUserName() throws MojoExecutionException {
+        setupServers();
+        assertNull(factory.createAuthConfig(null, settings, "roland", "another.repo.org"));
+    }
+
+
+    private void setupServers() {
+        new NonStrictExpectations() {{
+            List<Server> servers = new ArrayList<>();
+            String data[] = {
+                    "test.org", "rhuss", "secret2", "rhuss@redhat.com",
+                    "test.org/roland", "roland", "secret", "roland@jolokia.org",
+                    "docker.io", "tanja", "doublesecret", "tanja@jolokia.org",
+                    "another.repo.org/joe", "joe", "3secret", "joe@foobar.com"
+            };
+            for (int i = 0; i < data.length; i += 4) {
+                Server server = new Server();
+                server.setId(data[i]);
+                server.setUsername(data[i+1]);
+                server.setPassword(data[i+2]);
+                Xpp3Dom dom = new Xpp3Dom("configuration");
+                Xpp3Dom email = new Xpp3Dom("email");
+                email.setValue(data[i+3]);
+                dom.addChild(email);
+                server.setConfiguration(dom);
+                servers.add(server);
+            }
+            settings.getServers();
+            result = servers;
+        }};
     }
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {

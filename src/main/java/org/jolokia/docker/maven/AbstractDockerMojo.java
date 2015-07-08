@@ -262,20 +262,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    protected AuthConfig prepareAuthConfig(String image, String registry) throws MojoExecutionException {
-        return authConfigFactory.createAuthConfig(authConfig, settings, extractRegistry(image,registry));
-    }
+    protected AuthConfig prepareAuthConfig(String image, String configuredRegistry) throws MojoExecutionException {
 
-    // Determine the 'real' registry, externally provided registries overwritting internal ones
-    private String extractRegistry(String image, String registry) {
         ImageName name = new ImageName(image);
-        if (name.getRegistry() != null) {
-            // Registry as name part takes precedence
-            return name.getRegistry();
-        } else {
-            // If name doesnt contain a registry, then the provided registry is used (or a default)
-            return registry != null ? registry : "registry.hub.docker.com";
-        }
+        String user = name.getUser();
+        String  registry = name.getRegistry() != null ? name.getRegistry() : configuredRegistry;
+
+        return authConfigFactory.createAuthConfig(authConfig, settings, user, registry);
     }
 
     protected LogDispatcher getLogDispatcher(DockerAccess docker) {

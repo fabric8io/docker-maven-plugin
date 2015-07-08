@@ -35,6 +35,9 @@ public class ImageName {
     // Tag name
     private String tag;
 
+    // User name
+    private String user;
+
     /**
      * Create an image name
      *
@@ -68,13 +71,16 @@ public class ImageName {
         String[] parts = rest.split("\\s*/\\s*");
         if (parts.length == 1) {
             registry = null;
+            user = null;
             repository = parts[0];
         } else if (parts.length >= 2) {
             if (isRegistry(parts[0])) {
                 registry = parts[0];
+                user = parts[1];
                 repository = joinTail(parts);
             } else {
                 registry = null;
+                user = parts[0];
                 repository = rest;
             }
         }
@@ -161,5 +167,15 @@ public class ImageName {
      */
     public String getFullName(String optionalRegistry) {
         return getNameWithoutTag(optionalRegistry) + ":" + (tag != null ? tag : "latest");
+    }
+
+    /**
+     * Get the user (or "project") part of the image name. This is the part after the registry and before
+     * the image name
+     *
+     * @return user part or <code>null</code> if no user is present in the name
+     */
+    public String getUser() {
+        return user;
     }
 }
