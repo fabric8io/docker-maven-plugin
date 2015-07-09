@@ -64,6 +64,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .env(mapWithPrefix(prefix, ENV, properties))
                 .labels(mapWithPrefix(prefix,LABELS,properties))
                 .ports(extractPortValues(prefix, properties))
+                .runCmds(extractRunCommands(prefix,properties))
                 .from(withPrefix(prefix, FROM, properties))
                 .registry(withPrefix(prefix, REGISTRY, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES, properties))
@@ -135,6 +136,19 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         for (String[] port : parsedPorts) {
             ret.add(port[1]);
         }
+        return ret;
+    }
+
+
+    private List<String> extractRunCommands(String prefix, Properties properties) {
+        List<String> ret = new ArrayList<>();
+        List<String> cmds = listWithPrefix(prefix, RUNCMDS, properties);
+        if (cmds == null) {
+            return null;
+        }
+//        for (String[] port : parsedPorts) {
+//            ret.add(port[1]);
+//        }
         return ret;
     }
 

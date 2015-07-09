@@ -32,6 +32,13 @@ public class BuildImageConfiguration {
     private List<String> ports;
 
     /**
+     * RUN Commands within Build/Image
+     * @parameter
+     */
+    private List<String> runCmds;
+
+
+    /**
      * @paramter
      */
     private List<String> volumes;
@@ -132,6 +139,13 @@ public class BuildImageConfiguration {
         return entryPoint;
     }
 
+    public List<String> getRunCmds() {
+        return runCmds;
+    }
+
+    public void setRunCmds(List<String> runCmds) {
+        this.runCmds = runCmds;
+    }
 
     public static class Builder {
         private final BuildImageConfiguration config = new BuildImageConfiguration();
@@ -163,6 +177,11 @@ public class BuildImageConfiguration {
         
         public Builder ports(List<String> ports) {
             config.ports = ports;
+            return this;
+        }
+
+        public Builder runCmds(List<String> theCmds) {
+            config.runCmds = theCmds;
             return this;
         }
         
