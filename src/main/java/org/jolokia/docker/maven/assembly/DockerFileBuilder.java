@@ -88,12 +88,12 @@ public class DockerFileBuilder {
         addEnv(b);
         addLabels(b);
         addPorts(b);
-        //RUN COMMANDS See https://docs.docker.com/reference/builder/#run
-        addRunCmds(b);
 
         addVolumes(b);
         addEntries(b);
         addWorkdir(b);
+        //RUN COMMANDS See https://docs.docker.com/reference/builder/#run
+        addRunCmds(b);
         addCmd(b);
         addEntryPoint(b);
 
