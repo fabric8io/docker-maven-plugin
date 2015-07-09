@@ -82,8 +82,8 @@ public class DockerFileBuilder {
 
         StringBuilder b = new StringBuilder();
         
-        b.append(DockerFileDictionaryEnum.FROM.name()).append(" ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
-        b.append(DockerFileDictionaryEnum.MAINTAINER.name()).append(" ").append(maintainer).append("\n");
+        b.append(DockerFileDictionary.FROM.name()).append(" ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
+        b.append(DockerFileDictionary.MAINTAINER.name()).append(" ").append(maintainer).append("\n");
 
         addEnv(b);
         addLabels(b);
@@ -178,7 +178,7 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            b.append(DockerFileDictionaryEnum.EXPOSE.name());
+            b.append(DockerFileDictionary.EXPOSE.name());
             for (Integer port : ports) {
                 b.append(" ").append(port);
             }
@@ -189,7 +189,7 @@ public class DockerFileBuilder {
     private void addRunCmds(StringBuilder b) {
         if (runcmds.size() > 0) {
             for (String runCmd : runcmds) {
-                b.append(DockerFileDictionaryEnum.RUN.name()).append(" ").append(runCmd).append("\n");
+                b.append(DockerFileDictionary.RUN.name()).append(" ").append(runCmd).append("\n");
             }
         }
     }

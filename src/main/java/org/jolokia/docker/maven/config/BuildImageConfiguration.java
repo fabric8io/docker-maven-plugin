@@ -143,10 +143,6 @@ public class BuildImageConfiguration {
         return runCmds;
     }
 
-    public void setRunCmds(List<String> runCmds) {
-        this.runCmds = runCmds;
-    }
-
     public static class Builder {
         private final BuildImageConfiguration config = new BuildImageConfiguration();
         

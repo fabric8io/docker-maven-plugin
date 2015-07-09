@@ -41,8 +41,6 @@ public class DockerAssemblyManager {
 
     public static final String DEFAULT_DATA_BASE_IMAGE = "busybox:latest";
 
-    ;
-
     @Requirement
     private AssemblyArchiver assemblyArchiver;
 
