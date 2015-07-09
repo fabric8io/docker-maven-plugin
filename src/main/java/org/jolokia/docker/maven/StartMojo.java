@@ -60,6 +60,8 @@ public class StartMojo extends AbstractDockerMojo {
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
+
+        boolean success = false;
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(getImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
@@ -91,8 +93,13 @@ public class StartMojo extends AbstractDockerMojo {
                 runService.addShutdownHookForStoppingContainers(dockerAccess,keepContainer,removeVolumes);
                 wait();
             }
+            success = true;
         } catch (InterruptedException e) {
             log.warn("Interrupted");
+        } finally {
+            if (!success) {
+                runService.stopStartedContainers(dockerAccess, keepContainer, removeVolumes);
+            }
         }
     }
 
