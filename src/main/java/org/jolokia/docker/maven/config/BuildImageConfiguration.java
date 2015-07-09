@@ -177,7 +177,11 @@ public class BuildImageConfiguration {
         }
 
         public Builder runCmds(List<String> theCmds) {
-            config.runCmds = theCmds;
+            if (config.runCmds == null) {
+                config.runCmds = new ArrayList<String>();
+            }
+            else
+            	config.runCmds = theCmds;
             return this;
         }
         

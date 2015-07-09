@@ -186,13 +186,11 @@ public class DockerFileBuilder {
         }
     }
 
-    private void addRunCmds(StringBuilder b) {
-        if (runcmds.size() > 0) {
-            for (String runCmd : runcmds) {
-                b.append(DockerFileDictionary.RUN.name()).append(" ").append(runCmd).append("\n");
-            }
-        }
-    }
+	private void addRunCmds(StringBuilder b) {
+		for (String runCmd : runcmds) {
+			b.append(DockerFileDictionary.RUN.name()).append(" ").append(runCmd).append("\n");
+		}
+	}
 
     private void addVolumes(StringBuilder b) {
         if (exportBasedir != null ? exportBasedir : baseImage == null) {
