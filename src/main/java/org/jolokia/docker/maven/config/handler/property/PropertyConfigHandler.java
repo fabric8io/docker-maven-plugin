@@ -146,9 +146,6 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         if (cmds == null) {
             return null;
         }
-//        for (String[] port : parsedPorts) {
-//            ret.add(port[1]);
-//        }
         return ret;
     }
 
