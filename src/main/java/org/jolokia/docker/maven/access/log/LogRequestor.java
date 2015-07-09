@@ -111,7 +111,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
                 }
                 byte[] buf = new byte[declaredLength];
                 int len = IOUtils.read(is, buf, 0, declaredLength);
-                if (len < 1) {
+                if (len == 0) {
+                    continue;
+                } else if (len < 0) {
                     callback.error("Invalid log format: Couldn't read " + declaredLength + " bytes from stream");
                     finish();
                     return;
