@@ -2,7 +2,8 @@
 
 * **0.13.1**
   - Allow autoPull to be forced on docker:build and docker:start (#96)
-  - Respect username when looking up credentials for a Docker registry (#174) 
+  - Respect username when looking up credentials for a Docker registry (#174)
+  - Add "force=1" to push for Fedora/CentOs images allowing to push to docker hub
   
 Note that the default registry has been changed to `docker.io` as docker hub doesn't use 
 `registry.hub.docker.com` as the default registry and refused to authenticate against this 

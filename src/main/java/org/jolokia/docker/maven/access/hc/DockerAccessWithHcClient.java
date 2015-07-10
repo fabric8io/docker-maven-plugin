@@ -227,7 +227,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
             processChunkedResponse(result, createPullOrPushResponseHandler());
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException("Unable to pull image [%s] from registry [%s]", image, registry);
+            throw new DockerAccessException("Unable to pull \"" + image + "\"" +
+                                              (registry != null ? " from registry \"" + registry + "\"" : "") +
+                                              " : " + e);
         }
     }
 
@@ -235,15 +237,15 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void pushImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
-
         String temporaryImage = tagTemporaryImage(name, registry);
-
         try {
             Result result = post(pushUrl, null, authConfig, HTTP_OK);
             processChunkedResponse(result, createPullOrPushResponseHandler());
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException(e,"Unable to push image [%s] to registry [%s] : %s", image, registry, e.getMessage());
+            throw new DockerAccessException(e,"Unable to push \"" + image + "\"" +
+                                              (registry != null ? " to registry \"" + registry + "\"" : "") +
+                                              " : " + e);
         } finally {
             if (temporaryImage != null) {
                 removeImage(temporaryImage);
@@ -366,7 +368,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
-
         if (!name.hasRegistry() && registry != null && !isDefaultRegistry(registry) && !hasImage(targetImage)) {
             tag(name.getFullName(null), targetImage,false);
             return targetImage;

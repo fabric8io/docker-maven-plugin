@@ -78,7 +78,8 @@ public final class UrlBuilder {
     public String pushImage(ImageName name, String registry) {
         String url = createUrl(String.format("/images/%s/push", encode(name.getNameWithoutTag(registry))));
         url = addTagParam(url, name.getTag());
-
+        // "force=1" helps Fedora/CentOs Docker variants to push to public registries
+        url = addForceParam(url,true);
         return url;
     }
 
@@ -129,6 +130,10 @@ public final class UrlBuilder {
 
     private String addTagParam(String url, String tag) {
         return addQueryParam(url, "tag", tag);
+    }
+
+    private String addForceParam(String url, boolean force) {
+        return addQueryParam(url, "force", force);
     }
 
     private String createUrl(String path) {
