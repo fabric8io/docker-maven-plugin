@@ -367,11 +367,17 @@ public class DockerAccessWithHcClient implements DockerAccess {
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
 
-        if (!name.hasRegistry() && registry != null && !registry.endsWith("index.docker.io") && !hasImage(targetImage)) {
+        if (!name.hasRegistry() && registry != null && !isDefaultRegistry(registry) && !hasImage(targetImage)) {
             tag(name.getFullName(null), targetImage,false);
             return targetImage;
         }
         return null;
+    }
+
+    private boolean isDefaultRegistry(String registry) {
+        return "index.docker.io".equalsIgnoreCase(registry) ||
+               "docker.io".equalsIgnoreCase(registry) ||
+               "registry.hub.docker.com".equalsIgnoreCase(registry);
     }
 
 
