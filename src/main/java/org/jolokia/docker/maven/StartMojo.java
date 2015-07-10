@@ -95,6 +95,8 @@ public class StartMojo extends AbstractDockerMojo {
             success = true;
         } catch (InterruptedException e) {
             log.warn("Interrupted");
+            Thread.currentThread().interrupt();
+            throw new MojoExecutionException("interrupted", e);
         } finally {
             if (!success) {
                 runService.stopStartedContainers(dockerAccess, keepContainer, removeVolumes);
