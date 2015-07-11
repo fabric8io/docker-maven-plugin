@@ -47,7 +47,10 @@ public class DockerFileBuilder {
     // list of ports to expose and environments to use
     private List<Integer> ports = new ArrayList<>();
 
-    // environment
+    // list of RUN Commands to run along with image build see issue #191 on github
+    private List<String> runcmds = new ArrayList<>();
+
+	// environment
     private Map<String,String> envEntries = new HashMap<>();
 
     // image labels
@@ -79,14 +82,18 @@ public class DockerFileBuilder {
 
         StringBuilder b = new StringBuilder();
         
-        b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
-        b.append("MAINTAINER ").append(maintainer).append("\n");
+        b.append(DockerFileDictionary.FROM.name()).append(" ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
+        b.append(DockerFileDictionary.MAINTAINER.name()).append(" ").append(maintainer).append("\n");
+
         addEnv(b);
         addLabels(b);
         addPorts(b);
+
         addVolumes(b);
         addEntries(b);
         addWorkdir(b);
+        //RUN COMMANDS See https://docs.docker.com/reference/builder/#run
+        addRunCmds(b);
         addCmd(b);
         addEntryPoint(b);
 
@@ -171,13 +178,19 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            b.append("EXPOSE");
+            b.append(DockerFileDictionary.EXPOSE.name());
             for (Integer port : ports) {
                 b.append(" ").append(port);
             }
             b.append("\n");
         }
     }
+
+	private void addRunCmds(StringBuilder b) {
+		for (String runCmd : runcmds) {
+			b.append(DockerFileDictionary.RUN.name()).append(" ").append(runCmd).append("\n");
+		}
+	}
 
     private void addVolumes(StringBuilder b) {
         if (exportBasedir != null ? exportBasedir : baseImage == null) {
@@ -258,6 +271,22 @@ public class DockerFileBuilder {
                     } catch (NumberFormatException exp) {
                         throw new IllegalArgumentException("Non numeric port " + port + " specified in port mapping",exp);
                     }
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Adds the RUN Commands within the build image section
+     * @param runCmds
+     * @return
+     */
+    public DockerFileBuilder runCommands(List<String> runCmds) {
+        if (runCmds != null) {
+            for (String cmd : runCmds) {
+                if (!StringUtils.isEmpty(cmd)) {
+                    this.runcmds.add(cmd);
                 }
             }
         }
