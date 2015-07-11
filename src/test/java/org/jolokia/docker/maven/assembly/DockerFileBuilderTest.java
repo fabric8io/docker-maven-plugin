@@ -26,8 +26,9 @@ public class DockerFileBuilderTest {
                 .maintainer("maintainer@example.com")
                 .workdir("/tmp")
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1")).content();
-
+                .volumes(Collections.singletonList("/vol1"))
+                .runCommands(Arrays.asList("echo something","echo second"))
+                .content();
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
