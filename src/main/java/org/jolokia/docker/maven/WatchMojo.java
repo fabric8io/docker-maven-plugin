@@ -29,8 +29,7 @@ import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.service.MojoExecutionService;
-import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.*;
 
 import static org.jolokia.docker.maven.config.WatchMode.both;
@@ -58,7 +57,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
 
     /** @component **/
     protected RunService runService;
-
+    
     /** @component **/
     protected MojoExecutionService mojoExecutionService;
 
@@ -81,24 +80,23 @@ public class WatchMojo extends AbstractBuildSupporMojo {
     private ScheduledExecutorService executor;
 
     @Override
-    protected void initLog(Logger log) {
-        runService.initLog(log);
+    protected void initializeServices(DockerAccess access, QueryService queryService, Logger log) {
+        super.initializeServices(access, queryService, log);
+        runService.initialize(access, queryService, log);
     }
 
     @Override
     protected synchronized void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
-
         // Important to be be a single threaded scheduler since watch jobs must run serialized
         executor = Executors.newSingleThreadScheduledExecutor();
         MojoParameters mojoParameters = createMojoParameters();
         try {
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(getImages())) {
+            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
-                ImageWatcher watcher = new ImageWatcher(imageConfig,dockerAccess.getImageId(imageConfig.getName()));
+                ImageWatcher watcher = new ImageWatcher(imageConfig, queryService.getImageId(imageConfig.getName()));
 
                 ArrayList<String> tasks = new ArrayList<>();
-
 
                 if (imageConfig.getBuildConfiguration() != null && watcher.isBuild()) {
                     scheduleBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both);
@@ -114,7 +112,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
             }
             log.info("Waiting ...");
             if (!keepRunning) {
-                runService.addShutdownHookForStoppingContainers(dockerAccess, keepContainer, removeVolumes);
+                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes);
             }
             wait();
         } catch (InterruptedException e) {
@@ -151,7 +149,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
                         // Rebuild whole image for now ...
                         buildImage(docker, name, imageConfig);
-                        watcher.setImageId(docker.getImageId(name));
+                        watcher.setImageId(queryService.getImageId(name));
                         if (doRestart) {
                             restartContainer(docker,watcher);
                         }
@@ -175,7 +173,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
             public void run() {
 
                 try {
-                    String currentImageId = docker.getImageId(imageName);
+                    String currentImageId = queryService.getImageId(imageName);
                     String oldValue = watcher.getAndSetImageId(currentImageId);
                     if (!currentImageId.equals(oldValue)) {
                         restartContainer(docker, watcher);
@@ -203,10 +201,10 @@ public class WatchMojo extends AbstractBuildSupporMojo {
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
         PortMapping mappedPorts = runService.getPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
         String id = watcher.getContainerId();
-        runService.stopContainer(docker, id, false, false);
+        runService.stopContainer(id, false, false);
 
         // Start new one
-        watcher.setContainerId(runService.createAndStartContainer(docker, imageConfig, mappedPorts, project.getProperties()));
+        watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, project.getProperties()));
     }
 
     private void callPostGoal(ImageWatcher watcher) throws MojoFailureException, MojoExecutionException {

@@ -5,6 +5,8 @@ import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.model.Container;
+
 
 /**
  * Mojo for printing logs of a container. By default the logs of all containers are shown interwoven
@@ -32,19 +34,19 @@ public class LogsMojo extends AbstractDockerMojo {
     /** @parameter property = "docker.logAll" default-value = "false" */
     private boolean logAll;
 
+    @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
-
         LogDispatcher logDispatcher = getLogDispatcher(access);
 
         for (ImageConfiguration image : getImages()) {
             String imageName = image.getName();
             if (logAll) {
-                for (String container : access.getContainersForImage(imageName)) {
-                    doLogging(logDispatcher, image, container);
+                for (Container container : queryService.getContainersForImage(imageName)) {
+                    doLogging(logDispatcher, image, container.getId());
                 }
             } else {
-                String container = access.getNewestImageForContainer(imageName);
-                doLogging(logDispatcher, image, container);
+                Container container = queryService.getLatestContainerForImage(imageName);
+                doLogging(logDispatcher, image, container.getId());
             }
         }
         if (follow) {

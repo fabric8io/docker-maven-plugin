@@ -702,6 +702,9 @@ DB_PORT_5432_TCP_PORT=5432
 DB_PORT_5432_TCP_ADDR=172.17.0.5
 ```
 
+If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name
+obtained via `docker ps` in the configuration.
+
 ##### Volume binding
 
 A container can bind (or "mount") volumes from various source when starting up: Either from a directory of
@@ -743,6 +746,9 @@ should even work for boot2docker:
   </bind>
 </volumes>
 ````
+
+If you wish to mount volumes from an existing container not managed by the plugin, you may do by specifying the container name
+obtained via `docker ps` in the configuration.
 
 ##### Container restart policy
 

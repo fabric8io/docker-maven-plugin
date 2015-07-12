@@ -19,8 +19,8 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
 import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.util.*;
-
 
 /**
  * Base class for this plugin.
@@ -42,7 +42,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // don't forget to change 'apiVersion' default-value as well
     public static final String API_VERSION = "v1.17";
-    
+
     // Current maven project
     /** @parameter default-value="${project}" */
     protected MavenProject project;
@@ -55,6 +55,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @component */
     protected ImageConfigResolver imageConfigResolver;
 
+    /** @component **/
+    protected QueryService queryService;
+    
     /** @parameter property = "docker.autoPull" default-value = "on" */
     protected String autoPull;
 
@@ -75,7 +78,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // don't forget to change 'API_VERSION'
     /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
     private String apiVersion;
-    
+
     // URL to docker daemon
     /** @parameter property = "docker.host" */
     private String dockerHost;
@@ -136,13 +139,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.log = new AnsiLogger(getLog(), useColor, verbose);
-        initLog(log);
         if (!skip) {
+            this.log = new AnsiLogger(getLog(), useColor, verbose);
 
             String dockerUrl = EnvUtil.extractUrl(dockerHost);
             DockerAccess access = createDockerAccess(dockerUrl);
+
             setDockerHostAddressProperty(dockerUrl);
+            initializeServices(access, queryService, log);
+
             try {
                 executeInternal(access);
             } catch (DockerAccessException exp) {
@@ -154,13 +159,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     /**
-     * Hook for giving a chance to init the logger, e.g. to pass it down
-     * to components.
-     *
-     * @param log the logger just initialized
+     * Hook to allow initialization of service components.
+     * <p>
+     * Subclasses must invoke <code>super.initializeServices(access, queryService, log)</code> when overriding this
+     * method.
+     * </p>
      */
-    protected void initLog(Logger log) {
-
+    protected void initializeServices(DockerAccess access, QueryService queryService, Logger log) {
+        queryService.initialize(access, log);
     }
 
     /**
@@ -169,10 +175,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @param dockerAccess access object for getting to the DockerServer
      */
     protected abstract void executeInternal(DockerAccess dockerAccess)
-            throws DockerAccessException, MojoExecutionException;
+        throws DockerAccessException, MojoExecutionException;
 
     // =============================================================================================
-
 
     /**
      * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images. The values
@@ -263,7 +268,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // =================================================================================
 
     protected AuthConfig prepareAuthConfig(String image, String configuredRegistry) throws MojoExecutionException {
-
         ImageName name = new ImageName(image);
         String user = name.getUser();
         String  registry = name.getRegistry() != null ? name.getRegistry() : configuredRegistry;
@@ -274,9 +278,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected LogDispatcher getLogDispatcher(DockerAccess docker) {
         LogDispatcher dispatcher = (LogDispatcher) getPluginContext().get(CONTEXT_KEY_LOG_DISPATCHER);
         if (dispatcher == null) {
-            dispatcher = new LogDispatcher(docker,useColor);
+            dispatcher = new LogDispatcher(docker, useColor);
             dispatcher.addLogOutputStream(System.out);
-            getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER,dispatcher);
+            getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
     }
@@ -300,7 +304,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             prefix = alias;
         }
         if (prefix == null) {
-            prefix = containerId.substring(0,6);
+            prefix = containerId.substring(0, 6);
         }
         builder.prefix(prefix);
     }
@@ -334,7 +338,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @return the registry found or null if none could be extracted
      */
     protected String getConfiguredRegistry(ImageConfiguration imageConfig) {
-        return EnvUtil.findRegistry(imageConfig.getRegistry(),registry);
+        return EnvUtil.findRegistry(imageConfig.getRegistry(), registry);
     }
 
     /**
@@ -349,44 +353,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry, boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
-        AutoPullMode mode = AutoPullMode.fromString(autoPull);
-        // The logic here is like this (see also #96):
-        // If the image is not available and mode is either ON or ALWAYS --> pull
-        // If mode == ALWAYS and no build config is available (so its a pulled-image anyway) --> pull
-        // otherwise: don't pull
-        Boolean hasImage = null;
-        if ((mode.doPullIfNotPresent() && !(hasImage = docker.hasImage(name))) ||
-            (autoPullAlwaysAllowed && mode == AutoPullMode.ALWAYS)) {
-            docker.pullImage(withLatestIfNoTag(name), prepareAuthConfig(name, registry), registry);
-            ImageName imageName = new ImageName(name);
-            if (registry != null && !imageName.hasRegistry()) {
-                // If coming from a registry which was not contained in the original name, add a tag from the
-                // short name with no-registry to the full name with the registry.
-                docker.tag(imageName.getFullName(registry), name, false);
-            }
-        } else {
-            if (hasImage == null) {
-                // Not already fetched, we fetch it now
-                hasImage = docker.hasImage(name);
-            }
-            if (!hasImage) {
-                throw new MojoExecutionException(this, "No image '" + name + "' found", "Please enable 'autoPull' or pull image '" + name
-                                                                                        + "' yourself (docker pull " + name + ")");
-            }
-        }
-    }
+    protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry,
+            boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
 
-    private boolean isAutoPullEnabled() {
-        // don't break current configurations by also accepting true|false as valid values
-        if ("off".equalsIgnoreCase(autoPull) || "false".equalsIgnoreCase(autoPull)) {
-            return false;
+        if (!queryService.imageRequiresAutoPull(autoPull, name, registry, autoPullAlwaysAllowed)) {
+            return;
         }
-        if ("on".equalsIgnoreCase(autoPull) || "true".equalsIgnoreCase(autoPull) || "always".equalsIgnoreCase(autoPull)) {
-            return true;
+
+        docker.pullImage(withLatestIfNoTag(name), prepareAuthConfig(name, registry), registry);
+        ImageName imageName = new ImageName(name);
+        if (registry != null && !imageName.hasRegistry()) {
+            // If coming from a registry which was not contained in the original name, add a tag from the
+            // short name with no-registry to the full name with the registry.
+            docker.tag(imageName.getFullName(registry), name, false);
         }
-        log.warn("Unknown value set for docker.autoPull (on|off|always) - treating as default = 'on'");
-        return true;
     }
 
     // Fetch only latest if no tag is given

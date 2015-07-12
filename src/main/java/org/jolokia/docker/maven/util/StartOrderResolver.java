@@ -3,6 +3,8 @@ package org.jolokia.docker.maven.util;
 import java.util.*;
 
 import org.codehaus.plexus.util.StringUtils;
+import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.service.QueryService;
 
 /**
  * @author roland
@@ -12,46 +14,59 @@ public class StartOrderResolver {
 
     public static final int MAX_RESOLVE_RETRIES = 10;
 
+    private final QueryService queryService;
+    
+    private final List<Resolvable> secondPass;
+    private final Set<String> processedImages;
+    
+    public static List<Resolvable> resolve(QueryService queryService, List<Resolvable> convertToResolvables) {
+        return new StartOrderResolver(queryService).resolve(convertToResolvables);
+    }
+
+    private StartOrderResolver(QueryService queryService) {
+        this.queryService = queryService;
+     
+        this.secondPass = new ArrayList<>();
+        this.processedImages = new HashSet<>();
+    }
+
+    
     // Check images for volume / link dependencies and return it in the right order.
     // Only return images which should be run
     // Images references via volumes but with no run configuration are started once to create
     // an appropriate container which can be linked into the image
-    public static List<Resolvable> resolve(List<Resolvable> images) {
-        List<Resolvable> ret = new ArrayList<>();
-        List<Resolvable> secondPass = new ArrayList<>();
-        Set<String> processedImages = new HashSet<>();
-
+    private List<Resolvable> resolve(List<Resolvable> images) {
+        List<Resolvable> resolved = new ArrayList<>();
         // First pass: Pick all data images and all without dependencies
         for (Resolvable config : images) {
             List<String> volumesOrLinks = extractDependentImagesFor(config);
             if (volumesOrLinks == null) {
                 // A data image only or no dependency. Add it to the list of data image which can be always
                 // created first.
-                updateProcessedImages(processedImages, config);
-                ret.add(config);
+                updateProcessedImages(config);
+                resolved.add(config);
             } else {
                 secondPass.add(config);
             }
         }
 
         // Next passes: Those with dependencies are checked whether they already have been visited.
-        return secondPass.size() > 0 ? resolveRemaining(ret, secondPass, processedImages) : ret;
+        return secondPass.size() > 0 ? resolveRemaining(resolved) : resolved;
     }
 
-    private static List<Resolvable> resolveRemaining(List<Resolvable> ret, List<Resolvable> secondPass, Set<String> processedImages) {
-        List<Resolvable> remaining = secondPass;
+    private List<Resolvable> resolveRemaining(List<Resolvable> ret) {
         int retries = MAX_RESOLVE_RETRIES;
         String error = null;
         try {
             do {
-                remaining = resolveImageDependencies(ret,remaining,processedImages);
-            } while (remaining.size() > 0  && retries-- > 0);
-        } catch (ResolveSteadyStateException e) {
-            error = "Cannot resolve image dependencies for start order\n" + remainingImagesDescription(remaining);
+                resolveImageDependencies(ret);
+            } while (secondPass.size() > 0  && retries-- > 0);
+        } catch (DockerAccessException | ResolveSteadyStateException e) {
+            error = "Cannot resolve image dependencies for start order\n" + remainingImagesDescription();
         }
-        if (retries == 0 && remaining.size() > 0) {
+        if (retries == 0 && secondPass.size() > 0) {
             error = "Cannot resolve image dependencies after " + MAX_RESOLVE_RETRIES + " passes\n"
-                    + remainingImagesDescription(remaining);
+                    + remainingImagesDescription();
         }
         if (error != null) {
             throw new IllegalStateException(error);
@@ -59,61 +74,66 @@ public class StartOrderResolver {
         return ret;
     }
 
-    private static void updateProcessedImages(Set<String> processedImageNames, Resolvable config) {
-        processedImageNames.add(config.getName());
+    private void updateProcessedImages(Resolvable config) {
+        processedImages.add(config.getName());
         if (config.getAlias() != null) {
-            processedImageNames.add(config.getAlias());
+            processedImages.add(config.getAlias());
         }
     }
 
-    private static String remainingImagesDescription(List<Resolvable> configs) {
+    private String remainingImagesDescription() {
         StringBuffer ret = new StringBuffer();
         ret.append("Unresolved images:\n");
-        for (Resolvable config : configs) {
-            ret.append("     " + config.getName() + " depends on ");
-            ret.append(StringUtils.join(new ArrayList(config.getDependencies()).toArray(),","));
+        for (Resolvable config : secondPass) {
+            ret.append(config.getName())
+               .append(" depends on ")
+               .append(StringUtils.join(config.getDependencies().toArray(), ","));
         }
         return ret.toString();
     }
 
-    private static List<Resolvable> resolveImageDependencies(
-            List<Resolvable> ret,
-            List<Resolvable> secondPass,
-            Set<String> processedImages) throws ResolveSteadyStateException {
-        boolean changed = false;
-        List<Resolvable> nextPass = new ArrayList<>();
-        for (Resolvable config : secondPass) {
-            List<String> dependentImagesFrom = extractDependentImagesFor(config);
-            if (containsAll(processedImages, dependentImagesFrom)) {
-                updateProcessedImages(processedImages,config);
-                ret.add(config);
+    private void resolveImageDependencies(List<Resolvable> resolved) throws DockerAccessException, ResolveSteadyStateException {
+        boolean changed = false;        
+        Iterator<Resolvable> iterator = secondPass.iterator();
+
+        while (iterator.hasNext()) {
+            Resolvable config = iterator.next();
+            if (hasRequiredDependencies(config)) {
+                updateProcessedImages(config);
+                resolved.add(config);
                 changed = true;
-            } else {
-                // Still unresolved dependencies
-                nextPass.add(config);
+                iterator.remove();
             }
         }
+
         if (!changed) {
             throw new ResolveSteadyStateException();
         }
-        return nextPass;
     }
 
-    private static List<String> extractDependentImagesFor(Resolvable config) {
+    private boolean hasRequiredDependencies(Resolvable config) throws DockerAccessException {
+        List<String> dependencies = extractDependentImagesFor(config);
+        if (dependencies == null) {
+            return false;
+        }
+
+        for (String dependency : dependencies) {
+            if (processedImages.contains(dependency) || queryService.hasRunningContainerNamed(dependency)) {
+                continue;
+            }
+
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private List<String> extractDependentImagesFor(Resolvable config) {
         LinkedHashSet<String> ret = new LinkedHashSet<>();
         for (String id : config.getDependencies()) {
             ret.add(id);
         }
         return ret.isEmpty() ? null : new ArrayList<>(ret);
-    }
-
-    private static boolean containsAll(Set<String> images, List<String> toCheck) {
-        for (String c : toCheck) {
-            if (!images.contains(c)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     // Exception indicating a steady state while resolving start order of images
@@ -124,4 +144,6 @@ public class StartOrderResolver {
         String getAlias();
         List<String> getDependencies();
     }
+
+
 }

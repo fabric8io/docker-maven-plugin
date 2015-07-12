@@ -19,6 +19,7 @@ import java.util.*;
 
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -42,59 +43,58 @@ public class RunService {
     // Action to be used when doing a shutdown
     private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
 
+    private DockerAccess docker;
+
+    private QueryService queryService;
+
     /**
      * Create and start a container with the given image configuration.
-     *
-     * @param docker the docker access object
      * @param imageConfig image configuration holding the run information and the image name
      * @param mappedPorts container port mapping
      * @param mavenProps properties to fill in with dynamically assigned ports
+     *
      * @return the container id
      *
      * @throws DockerAccessException if access to the docker backend fails
      */
-    public String createAndStartContainer(DockerAccess docker,
-                                          ImageConfiguration imageConfig,
+    public String createAndStartContainer(ImageConfiguration imageConfig,
                                           PortMapping mappedPorts,
                                           Properties mavenProps) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
         String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-        ContainerCreateConfig config = createContainerConfig(docker, imageName, runConfig, mappedPorts, mavenProps);
+        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, mappedPorts, mavenProps);
 
         String id = docker.createContainer(config, containerName);
-        startContainer(docker, imageConfig, id);
+        startContainer(imageConfig, id);
         return id;
     }
 
     /**
      * Stop a container immediately by id.
-     *
-     * @param access access object for contacting the docker daemon
      * @param image image configuration for this container
      * @param containerId the container to stop
      * @param keepContainer whether to keep container or to remove them after stoppings
      * @param removeVolumes whether to remove volumes after stopping
      */
-    public void stopContainer(DockerAccess access,
-                              ImageConfiguration image, String containerId,
-                              boolean keepContainer, boolean removeVolumes)
+    public void stopContainer(ImageConfiguration image,
+                              String containerId, boolean keepContainer,
+                              boolean removeVolumes)
             throws DockerAccessException {
-        new ShutdownAction(image,containerId).shutdown(access, log, keepContainer, removeVolumes);
+        new ShutdownAction(image,containerId).shutdown(docker, log, keepContainer, removeVolumes);
     }
 
     /**
      * Lookup up whether a certain has been already started and registered. If so, stop it
-     *
-     * @param docker docker access object
      * @param containerId the container to stop
      * @param keepContainer whether to keep container or to remove them after stoppings
      * @param removeVolumes whether to remove volumes after stopping
+     *
      * @throws DockerAccessException
      */
-    public void stopContainer(DockerAccess docker,
-                              String containerId,
-                              boolean keepContainer, boolean removeVolumes)
+    public void stopContainer(String containerId,
+                              boolean keepContainer,
+                              boolean removeVolumes)
             throws DockerAccessException {
         synchronized (shutdownActionMap) {
             ShutdownAction shutdownAction = shutdownActionMap.get(containerId);
@@ -107,14 +107,13 @@ public class RunService {
 
     /**
      * Stop all registered container
-     *
-     * @param docker docker access object
      * @param keepContainer whether to keep container or to remove them after stoppings
      * @param removeVolumes whether to remove volumes after stopping
+     *
      * @throws DockerAccessException if during stopping of a container sth fails
      */
-    public void stopStartedContainers(DockerAccess docker,
-                                      boolean keepContainer, boolean removeVolumes)
+    public void stopStartedContainers(boolean keepContainer,
+                                      boolean removeVolumes)
             throws DockerAccessException {
         synchronized (shutdownActionMap) {
             List<ShutdownAction> actions = new ArrayList<>(shutdownActionMap.values());
@@ -142,8 +141,8 @@ public class RunService {
      * @param images list of images for which the order should be created
      * @return list of images in the right startup order
      */
-    public List<StartOrderResolver.Resolvable> getImagesConfigsInOrder(List<ImageConfiguration> images) {
-        return StartOrderResolver.resolve(convertToResolvables(images));
+    public List<StartOrderResolver.Resolvable> getImagesConfigsInOrder(QueryService queryService, List<ImageConfiguration> images) {
+        return StartOrderResolver.resolve(queryService, convertToResolvables(images));
     }
 
     /**
@@ -166,21 +165,20 @@ public class RunService {
      *
      * @param log log to used diagnostic messages
      */
-    public void initLog(Logger log) {
-        this.log = log;
+    public void initialize(DockerAccess docker, QueryService queryService, Logger log) {
+        this.docker = docker;
+        this.queryService = queryService;
     }
 
     /**
      * Add a shutdown hook in order to stop all registered containers
-     *
-     * @param docker docker access object
      */
-    public void addShutdownHookForStoppingContainers(final DockerAccess docker, final boolean keepContainer, final boolean removeVolumes) {
+    public void addShutdownHookForStoppingContainers(final boolean keepContainer, final boolean removeVolumes) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    stopStartedContainers(docker, keepContainer, removeVolumes);
+                    stopStartedContainers(keepContainer, removeVolumes);
                 } catch (DockerAccessException e) {
                     log.error("Error while stopping containers: " + e);
                 }
@@ -199,8 +197,8 @@ public class RunService {
     }
 
     // visible for testing
-    ContainerCreateConfig createContainerConfig(DockerAccess docker, String imageName, RunImageConfiguration runConfig,
-                                                PortMapping mappedPorts, Properties mavenProps)
+    ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
+                                                Properties mavenProps)
             throws DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
@@ -215,7 +213,7 @@ public class RunService {
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
                     .labels(runConfig.getLabels())
                     .command(runConfig.getCmd())
-                    .hostConfig(createContainerHostConfig(docker, runConfig, mappedPorts));
+                    .hostConfig(createContainerHostConfig(runConfig, mappedPorts));
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {
                 config.binds(volumeConfig.getBind());
@@ -226,12 +224,11 @@ public class RunService {
         }
     }
 
-
-    ContainerHostConfig createContainerHostConfig(DockerAccess docker, RunImageConfiguration runConfig, PortMapping mappedPorts)
+    ContainerHostConfig createContainerHostConfig(RunImageConfiguration runConfig, PortMapping mappedPorts)
             throws DockerAccessException {
         RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
-        List<String> links = findLinksWithContainerNames(docker, runConfig.getLinks());
+        List<String> links = findLinksContainers(runConfig.getLinks());
 
         ContainerHostConfig config = new ContainerHostConfig()
                 .extraHosts(runConfig.getExtraHosts())
@@ -246,41 +243,39 @@ public class RunService {
         VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             config.binds(volConfig.getBind())
-                  .volumesFrom(findContainersForImages(volConfig.getFrom()));
+                  .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
         }
         return config;
     }
 
-
-    List<String> findLinksWithContainerNames(DockerAccess docker, List<String> links) throws DockerAccessException {
+    List<String> findLinksContainers(List<String> links) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitOnLastColon(links)) {
-            String container = lookupContainer(link[0]);
-            if (container == null) {
-                throw new DockerAccessException("Cannot find container for " + link[0] + " while preparing links");
+            String id = findContainerId(link[0]);
+            if (id == null) {
+                throw new DockerAccessException("No container for image '%s' foumd, unable to link", link[0]);
             }
-            ret.add(docker.getContainerName(container) + ":" + link[1]);
+            ret.add(queryService.getContainerName(id) + ":" + link[1]);
         }
         return ret.size() != 0 ? ret : null;
     }
 
     // visible for testing
-    List<String> findContainersForImages(List<String> images) {
+    List<String> findVolumesFromContainers(List<String> images) throws DockerAccessException {
+        List<String> list = new ArrayList<>();
         if (images != null) {
-            List<String> containers = new ArrayList<>();
             for (String image : images) {
-                String container = lookupContainer(image);
-                if (container == null) {
-                    throw new IllegalStateException("No container for image " + image + " started.");
+                String id = findContainerId(image);
+                if (id == null) {
+                    throw new DockerAccessException("No container for image '%s' found, unable to mount volumes", image);
                 }
-                containers.add(container);
+                
+                list.add(queryService.getContainerName(id));            
             }
-            return containers;
         }
-        return null;
+        return list;
     }
-
-
+    
     private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
         if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
             return null;
@@ -293,7 +288,21 @@ public class RunService {
         return alias;
     }
 
-    private void startContainer(DockerAccess docker, ImageConfiguration imageConfig, String id) throws DockerAccessException {
+    private String findContainerId(String lookup) throws DockerAccessException {
+        String id = lookupContainer(lookup);
+        
+        // check for external container
+        if (id == null) {
+            Container container = queryService.getContainerByName(lookup);
+            if (container != null) {
+                id = container.getId();
+            }
+        }
+
+        return id;
+    }
+    
+    private void startContainer(ImageConfiguration imageConfig, String id) throws DockerAccessException {
         log.info(imageConfig.getDescription() + ": Start container " + id.substring(0, 12));
         docker.startContainer(id);
         shutdownActionMap.put(id, new ShutdownAction(imageConfig, id));

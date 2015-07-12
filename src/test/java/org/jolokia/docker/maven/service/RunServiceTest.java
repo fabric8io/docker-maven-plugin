@@ -2,16 +2,30 @@ package org.jolokia.docker.maven.service;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.maven.project.MavenProject;
+import org.jolokia.docker.maven.access.ContainerCreateConfig;
+import org.jolokia.docker.maven.access.ContainerHostConfig;
+import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.PortMapping;
+import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.RestartPolicy;
+import org.jolokia.docker.maven.config.RunImageConfiguration;
+import org.jolokia.docker.maven.config.VolumeConfiguration;
+import org.jolokia.docker.maven.model.ContainerDetails;
+import org.jolokia.docker.maven.util.Logger;
+import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import mockit.Expectations;
 import mockit.Mocked;
-import org.apache.commons.io.IOUtils;
-import org.apache.maven.project.MavenProject;
-import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.config.*;
-import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 
 /**
@@ -23,6 +37,12 @@ public class RunServiceTest {
     @Mocked
     private DockerAccess docker;
 
+    @Mocked
+    private Logger log;
+    
+    @Mocked
+    private QueryService queryService;
+    
     @Mocked
     private MavenProject mavenProject;
 
@@ -63,15 +83,29 @@ public class RunServiceTest {
                         .restartPolicy(restartPolicy())
                         .build();
 
-        RunService runService = new RunService();
-        PortMapping portMapping = runService.getPortMapping(runConfig, new Properties());
-
         new Expectations() {{
-            docker.getContainerName((String) withNotNull());
-            result = "redis";
-            minTimes = 1;
+                queryService.getContainerName("redisContainer");
+                result = "redis";
 
+                queryService.getContainerName("parentContainer");
+                result = "parentContainer";
+
+                queryService.getContainerName("otherContainer");
+                result = "otherContainer";
+
+                queryService.getContainerName("redisContainer");
+                result = "redis";
+                queryService.getContainerName("parentContainer");
+                result = "parentContainer";
+
+                queryService.getContainerName("otherContainer");
+                result = "otherContainer";
         }};
+        
+        RunService runService = new RunService();
+        runService.initialize(docker, queryService, log);
+        
+        PortMapping portMapping = runService.getPortMapping(runConfig, new Properties());
 
         // Better than poking into the private vars would be to use createAndStart() with the mock to build up the map.
         ImageConfiguration imageConfig2 = new ImageConfiguration.Builder().alias("db").name("redis3").build();
@@ -89,12 +123,12 @@ public class RunServiceTest {
         if (imageConfig.getAlias() != null) {
             putToPrivateMap(runService,"imageAliasMap", imageConfig.getAlias(), imageConfig.getName());
         }
-        ContainerCreateConfig containerConfig = runService.createContainerConfig(docker, "base", runConfig, portMapping, new Properties());
+        ContainerCreateConfig containerConfig = runService.createContainerConfig("base", runConfig, portMapping, new Properties());
 
         String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
         JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
 
-        ContainerHostConfig startConfig = runService.createContainerHostConfig(docker, runConfig, portMapping);
+        ContainerHostConfig startConfig = runService.createContainerHostConfig(runConfig, portMapping);
         String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }

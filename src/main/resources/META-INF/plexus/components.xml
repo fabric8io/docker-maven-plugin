@@ -27,6 +27,12 @@
     </component>
 
     <component>
+      <role>org.jolokia.docker.maven.service.QueryService</role>
+      <implementation>org.jolokia.docker.maven.service.QueryService</implementation>
+      <instantiation-strategy>singleton</instantiation-strategy>
+    </component>
+
+    <component>
       <role>org.jolokia.docker.maven.service.MojoExecutionService</role>
       <implementation>org.jolokia.docker.maven.service.MojoExecutionService</implementation>
       <instantiation-strategy>singleton</instantiation-strategy>
