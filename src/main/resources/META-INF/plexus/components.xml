@@ -21,8 +21,8 @@
     </component>
 
     <component>
-      <role>org.jolokia.docker.maven.service.RunService</role>
-      <implementation>org.jolokia.docker.maven.service.RunService</implementation>
+      <role>org.jolokia.docker.maven.service.ServiceHub</role>
+      <implementation>org.jolokia.docker.maven.service.ServiceHub</implementation>
       <instantiation-strategy>singleton</instantiation-strategy>
     </component>
 

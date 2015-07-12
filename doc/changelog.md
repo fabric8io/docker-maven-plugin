@@ -4,6 +4,8 @@
   - "run" directives can be added to the Dockerfile (#191)
   - Support user information in wait URL (#211)
   - Stop started container in case of an error during startup (#217)
+  - Allow linking to external containers (#195)
+  - Allow volume mounting from external containers (#73)
   
 * **0.13.1**
   - Allow autoPull to be forced on docker:build and docker:start (#96)

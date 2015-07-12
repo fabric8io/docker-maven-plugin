@@ -20,6 +20,7 @@ import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
 import org.jolokia.docker.maven.util.*;
 
@@ -42,42 +43,35 @@ public class StartMojo extends AbstractDockerMojo {
      * @parameter property = "docker.follow" default-value = "false"
      */
     protected boolean follow;
-
-    /** @component **/
-    protected RunService runService;
-
-    @Override
-    protected void initLog(Logger log) {
-        runService.initLog(log);
-    }
-
+ 
     /**
      * {@inheritDoc}
      */
     @Override
     public synchronized void executeInternal(final DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
-
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
+        QueryService queryService = serviceHub.getQueryService();
+        RunService runService = serviceHub.getRunService();
+        
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
 
         boolean success = false;
         try {
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(getImages())) {
+            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
                 // Still to check: How to work with linking, volumes, etc ....
                 //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
 
                 String imageName = imageConfig.getName();
-
                 checkImageWithAutoPull(dockerAccess, imageName,
                                        getConfiguredRegistry(imageConfig),imageConfig.getBuildConfiguration() == null);
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, project.getProperties());
 
-                String containerId = runService.createAndStartContainer(dockerAccess, imageConfig, portMapping, project.getProperties());
+                String containerId = runService.createAndStartContainer(imageConfig, portMapping, project.getProperties());
 
                 if (showLogs(imageConfig)) {
                     dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
@@ -90,7 +84,7 @@ public class StartMojo extends AbstractDockerMojo {
                 waitIfRequested(dockerAccess,imageConfig, project.getProperties(), containerId);
             }
             if (follow) {
-                runService.addShutdownHookForStoppingContainers(dockerAccess,keepContainer,removeVolumes);
+                runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
                 wait();
             }
             success = true;
@@ -100,11 +94,11 @@ public class StartMojo extends AbstractDockerMojo {
             throw new MojoExecutionException("interrupted", e);
         } finally {
             if (!success) {
-                runService.stopStartedContainers(dockerAccess, keepContainer, removeVolumes);
+                runService.stopStartedContainers(keepContainer, removeVolumes);
             }
         }
     }
-
+    
     private void updateDynamicPortProperties(DockerAccess docker, String containerId, RunImageConfiguration runConfig, PortMapping mappedPorts, Properties properties) throws DockerAccessException, MojoExecutionException {
         if (mappedPorts.containsDynamicPorts()) {
             mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(containerId));
