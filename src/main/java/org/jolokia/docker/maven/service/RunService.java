@@ -251,9 +251,9 @@ public class RunService {
     List<String> findLinksContainers(List<String> links) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitOnLastColon(links)) {
-            String id = findContainerId(link[0]);
+            String id = findContainerId(link[0], true);
             if (id == null) {
-                throw new DockerAccessException("No container for image '%s' foumd, unable to link", link[0]);
+                throw new DockerAccessException("No container found for image/alias '%s', unable to link", link[0]);
             }
             ret.add(queryService.getContainerName(id) + ":" + link[1]);
         }
@@ -265,9 +265,9 @@ public class RunService {
         List<String> list = new ArrayList<>();
         if (images != null) {
             for (String image : images) {
-                String id = findContainerId(image);
+                String id = findContainerId(image, false);
                 if (id == null) {
-                    throw new DockerAccessException("No container for image '%s' found, unable to mount volumes", image);
+                    throw new DockerAccessException("No container found for image/alias '%s', unable to mount volumes", image);
                 }
                 
                 list.add(queryService.getContainerName(id));            
@@ -275,6 +275,7 @@ public class RunService {
         }
         return list;
     }
+
     
     private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
         if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
@@ -288,7 +289,7 @@ public class RunService {
         return alias;
     }
 
-    private String findContainerId(String lookup) throws DockerAccessException {
+    private String findContainerId(String lookup, boolean checkState) throws DockerAccessException {
         String id = lookupContainer(lookup);
         
         // check for external container
@@ -296,6 +297,10 @@ public class RunService {
             Container container = queryService.getContainerByName(lookup);
             if (container != null) {
                 id = container.getId();
+
+                if (checkState && !container.isRunning()) {
+                    id = null;
+                }
             }
         }
 

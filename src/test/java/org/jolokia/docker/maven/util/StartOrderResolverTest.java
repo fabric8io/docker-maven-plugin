@@ -28,7 +28,7 @@ public class StartOrderResolverTest {
     @SuppressWarnings("unused")
     public void setup() throws Exception {
         new Expectations() {{
-            queryService.hasRunningContainerNamed((String) withNotNull());
+            queryService.hasContainerNamed((String) withNotNull());
             result = false;
             minTimes = 1;
         }};

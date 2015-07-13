@@ -118,7 +118,8 @@ public class StartOrderResolver {
         }
 
         for (String dependency : dependencies) {
-            if (processedImages.contains(dependency) || queryService.hasRunningContainerNamed(dependency)) {
+            // make sure the container exists, it's state will be verified elsewhere
+            if (processedImages.contains(dependency) || queryService.hasContainerNamed(dependency)) {
                 continue;
             }
 
