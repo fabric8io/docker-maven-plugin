@@ -32,17 +32,27 @@ public class RunService {
 
     // Map holding associations between started containers and their images via name and aliases
     // Key: Image, Value: Container
-    private Map<String, String> containerImageNameMap = new HashMap<>();
+    //private Map<String, String> containerImageNameMap = new HashMap<>();
 
     // Key: Alias, Value: Image
-    private Map<String, String> imageAliasMap = new HashMap<>();
+    //private Map<String, String> imageAliasMap = new HashMap<>();
 
     // logger delegated from top
     private Logger log;
 
     // Action to be used when doing a shutdown
-    private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
+    //private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
 
+    private DependencyTracker tracker;
+    
+    public RunService(DockerAccess docker, QueryService queryService, DependencyTracker tracker, Logger log) {
+        this.docker = docker;
+        this.queryService = queryService;
+        this.tracker = tracker;
+        this.log = log;
+    }
+    
+    
     private DockerAccess docker;
 
     private QueryService queryService;
@@ -96,11 +106,11 @@ public class RunService {
                               boolean keepContainer,
                               boolean removeVolumes)
             throws DockerAccessException {
-        synchronized (shutdownActionMap) {
-            ShutdownAction shutdownAction = shutdownActionMap.get(containerId);
+        synchronized (tracker) {
+            ShutdownAction shutdownAction = tracker.getShutdownAction(containerId);
             if (shutdownAction != null) {
                 shutdownAction.shutdown(docker, log, keepContainer, removeVolumes);
-                shutdownActionMap.remove(containerId);
+                tracker.removeShutdownAction(containerId);
             }
         }
     }
@@ -115,13 +125,11 @@ public class RunService {
     public void stopStartedContainers(boolean keepContainer,
                                       boolean removeVolumes)
             throws DockerAccessException {
-        synchronized (shutdownActionMap) {
-            List<ShutdownAction> actions = new ArrayList<>(shutdownActionMap.values());
-            Collections.reverse(actions);
-            for (ShutdownAction action : actions) {
+        synchronized (tracker) {
+            for (ShutdownAction action : tracker.getAllShutdownActions()) {
                 action.shutdown(docker, log, keepContainer, removeVolumes);
             }
-            shutdownActionMap.clear();
+            tracker.resetShutdownActions();
         }
     }
 
@@ -132,8 +140,7 @@ public class RunService {
      * @return the container id if the container exists, <code>null</code> otherwise.
      */
     public String lookupContainer(String lookup) {
-        String image = imageAliasMap.containsKey(lookup) ? imageAliasMap.get(lookup) : lookup;
-        return containerImageNameMap.get(image);
+        return tracker.lookupContainer(lookup);
     }
 
     /**
@@ -310,16 +317,6 @@ public class RunService {
     private void startContainer(ImageConfiguration imageConfig, String id) throws DockerAccessException {
         log.info(imageConfig.getDescription() + ": Start container " + id.substring(0, 12));
         docker.startContainer(id);
-        shutdownActionMap.put(id, new ShutdownAction(imageConfig, id));
-        updateImageToContainerMapping(imageConfig, id);
+        tracker.registerShutdownAction(id, imageConfig);
     }
-
-    private void updateImageToContainerMapping(ImageConfiguration imageConfig, String id) {
-        // Register name -> containerId and alias -> name
-        containerImageNameMap.put(imageConfig.getName(), id);
-        if (imageConfig.getAlias() != null) {
-            imageAliasMap.put(imageConfig.getAlias(), imageConfig.getName());
-        }
-    }
-
 }

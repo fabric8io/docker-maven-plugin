@@ -44,15 +44,17 @@ import org.eclipse.aether.RepositorySystemSession;
  */
 public class MojoExecutionService {
 
-    /** @component */
-    protected MavenProject project;
+    private final MavenProject project;
 
-    /** @component */
-    protected MavenSession session;
+    private final MavenSession session;
 
-    /** @component **/
-    protected BuildPluginManager pluginManager;
+    private final BuildPluginManager pluginManager;
 
+    MojoExecutionService( MavenProject project, MavenSession session, BuildPluginManager pluginManager) {
+        this.project = project;
+        this.session = session;
+        this.pluginManager = pluginManager;
+    }
 
     // Call another goal after restart has finished
     public void callPluginGoal(String fullGoal) throws MojoFailureException, MojoExecutionException {

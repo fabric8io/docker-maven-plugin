@@ -102,26 +102,26 @@ public class RunServiceTest {
                 result = "otherContainer";
         }};
         
-        RunService runService = new RunService();
-        runService.initialize(docker, queryService, log);
+        DependencyTracker tracker = new DependencyTracker();
+        RunService runService = new RunService(docker, queryService, tracker, log);
         
         PortMapping portMapping = runService.getPortMapping(runConfig, new Properties());
 
         // Better than poking into the private vars would be to use createAndStart() with the mock to build up the map.
         ImageConfiguration imageConfig2 = new ImageConfiguration.Builder().alias("db").name("redis3").build();
-        putToPrivateMap(runService, "containerImageNameMap", imageConfig2.getName(), "redisContainer");
+        putToPrivateMap(tracker, "containerImageNameMap", imageConfig2.getName(), "redisContainer");
         if (imageConfig2.getAlias() != null) {
-            putToPrivateMap(runService,"imageAliasMap",imageConfig2.getAlias(), imageConfig2.getName());
+            putToPrivateMap(tracker,"imageAliasMap",imageConfig2.getAlias(), imageConfig2.getName());
         }
         ImageConfiguration imageConfig1 = new ImageConfiguration.Builder().alias("parent").name("parentName").build();
-        putToPrivateMap(runService,"containerImageNameMap",imageConfig1.getName(), "parentContainer");
+        putToPrivateMap(tracker,"containerImageNameMap",imageConfig1.getName(), "parentContainer");
         if (imageConfig1.getAlias() != null) {
-            putToPrivateMap(runService,"imageAliasMap",imageConfig1.getAlias(), imageConfig1.getName());
+            putToPrivateMap(tracker,"imageAliasMap",imageConfig1.getAlias(), imageConfig1.getName());
         }
         ImageConfiguration imageConfig = new ImageConfiguration.Builder().alias("other:ro").name("otherName").build();
-        putToPrivateMap(runService,"containerImageNameMap",imageConfig.getName(), "otherContainer");
+        putToPrivateMap(tracker,"containerImageNameMap",imageConfig.getName(), "otherContainer");
         if (imageConfig.getAlias() != null) {
-            putToPrivateMap(runService,"imageAliasMap", imageConfig.getAlias(), imageConfig.getName());
+            putToPrivateMap(tracker,"imageAliasMap", imageConfig.getAlias(), imageConfig.getName());
         }
         ContainerCreateConfig containerConfig = runService.createContainerConfig("base", runConfig, portMapping, new Properties());
 
@@ -133,10 +133,10 @@ public class RunServiceTest {
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }
 
-    private void putToPrivateMap(RunService runService, String varName, String key, String value) throws NoSuchFieldException, IllegalAccessException {
-        Field field = runService.getClass().getDeclaredField(varName);
+    private void putToPrivateMap(DependencyTracker tracker, String varName, String key, String value) throws NoSuchFieldException, IllegalAccessException {
+        Field field = tracker.getClass().getDeclaredField(varName);
         field.setAccessible(true);
-        Map<String,String> map = (Map<String, String>) field.get(runService);
+        Map<String,String> map = (Map<String, String>) field.get(tracker);
         map.put(key,value);
     }
 

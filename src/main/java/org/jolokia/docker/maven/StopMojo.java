@@ -8,7 +8,6 @@ import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
-import org.jolokia.docker.maven.util.Logger;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -34,19 +33,14 @@ public class StopMojo extends AbstractDockerMojo {
      */
     private boolean keepRunning;
 
-    /** @component */
-    private RunService runService;
-    
-    @Override
-    protected void initializeServices(DockerAccess access, QueryService queryService, Logger log) {
-        super.initializeServices(access, queryService, log);
-        runService.initialize(access, queryService, log);
-    }
-
     @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
 
+        QueryService queryService = serviceFactory.getQueryService(access, log);
+        RunService runService = serviceFactory.getRunService(access, log);
+
+        
         if (!keepRunning) {
             if (startCalled == null || !startCalled) {
                 // Called directly ....

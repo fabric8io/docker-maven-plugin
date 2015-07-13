@@ -3,9 +3,10 @@ package org.jolokia.docker.maven;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
+import org.jolokia.docker.maven.service.QueryService;
 
 
 /**
@@ -36,6 +37,7 @@ public class LogsMojo extends AbstractDockerMojo {
 
     @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
+        QueryService queryService = serviceFactory.getQueryService(access, log);
         LogDispatcher logDispatcher = getLogDispatcher(access);
 
         for (ImageConfiguration image : getImages()) {

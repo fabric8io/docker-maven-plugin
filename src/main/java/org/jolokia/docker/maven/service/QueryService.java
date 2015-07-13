@@ -22,6 +22,11 @@ public class QueryService {
     
     private Logger log;
 
+    public QueryService(DockerAccess docker, Logger log) {
+        this.docker = docker;
+        this.log = log;
+    }
+    
     public ContainerDetails getContainer(String containerId) throws DockerAccessException {
         return docker.inspectContainer(containerId);
     }

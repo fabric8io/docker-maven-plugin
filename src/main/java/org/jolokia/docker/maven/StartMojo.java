@@ -43,16 +43,7 @@ public class StartMojo extends AbstractDockerMojo {
      * @parameter property = "docker.follow" default-value = "false"
      */
     protected boolean follow;
-
-    /** @component **/
-    protected RunService runService;
-
-    @Override
-    protected void initializeServices(DockerAccess access, QueryService queryService, Logger log) {
-        super.initializeServices(access, queryService, log);
-        runService.initialize(access, queryService, log);
-    }
-
+ 
     /**
      * {@inheritDoc}
      */
@@ -60,6 +51,9 @@ public class StartMojo extends AbstractDockerMojo {
     public synchronized void executeInternal(final DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
+        QueryService queryService = serviceFactory.getQueryService(dockerAccess, log);
+        RunService runService = serviceFactory.getRunService(dockerAccess, log);
+        
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {

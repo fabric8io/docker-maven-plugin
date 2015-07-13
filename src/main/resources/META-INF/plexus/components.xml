@@ -21,14 +21,8 @@
     </component>
 
     <component>
-      <role>org.jolokia.docker.maven.service.RunService</role>
-      <implementation>org.jolokia.docker.maven.service.RunService</implementation>
-      <instantiation-strategy>singleton</instantiation-strategy>
-    </component>
-
-    <component>
-      <role>org.jolokia.docker.maven.service.QueryService</role>
-      <implementation>org.jolokia.docker.maven.service.QueryService</implementation>
+      <role>org.jolokia.docker.maven.service.ServiceFactory</role>
+      <implementation>org.jolokia.docker.maven.service.ServiceFactory</implementation>
       <instantiation-strategy>singleton</instantiation-strategy>
     </component>
 

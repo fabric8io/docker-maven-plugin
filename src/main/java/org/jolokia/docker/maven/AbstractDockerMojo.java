@@ -3,9 +3,17 @@ package org.jolokia.docker.maven;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusConstants;
@@ -13,14 +21,23 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
-import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.access.AuthConfig;
+import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.LogConfiguration;
+import org.jolokia.docker.maven.config.RunImageConfiguration;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
 import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.service.ServiceFactory;
+import org.jolokia.docker.maven.util.AnsiLogger;
+import org.jolokia.docker.maven.util.AuthConfigFactory;
+import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.util.ImageName;
+import org.jolokia.docker.maven.util.Logger;
 
 /**
  * Base class for this plugin.
@@ -56,7 +73,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected ImageConfigResolver imageConfigResolver;
 
     /** @component **/
-    protected QueryService queryService;
+    protected ServiceFactory serviceFactory;
     
     /** @parameter property = "docker.autoPull" default-value = "on" */
     protected String autoPull;
@@ -144,9 +161,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
             String dockerUrl = EnvUtil.extractUrl(dockerHost);
             DockerAccess access = createDockerAccess(dockerUrl);
-
             setDockerHostAddressProperty(dockerUrl);
-            initializeServices(access, queryService, log);
 
             try {
                 executeInternal(access);
@@ -156,17 +171,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 access.shutdown();
             }
         }
-    }
-
-    /**
-     * Hook to allow initialization of service components.
-     * <p>
-     * Subclasses must invoke <code>super.initializeServices(access, queryService, log)</code> when overriding this
-     * method.
-     * </p>
-     */
-    protected void initializeServices(DockerAccess access, QueryService queryService, Logger log) {
-        queryService.initialize(access, log);
     }
 
     /**
@@ -355,7 +359,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry,
             boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
-
+        // TODO: futher refactoring could be done to avoid referencing the QueryService here
+        QueryService queryService = serviceFactory.getQueryService(docker, log);
         if (!queryService.imageRequiresAutoPull(autoPull, name, registry, autoPullAlwaysAllowed)) {
             return;
         }
