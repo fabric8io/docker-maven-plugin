@@ -3,6 +3,7 @@
 * **0.13.2**
   - "run" directives can be added to the Dockerfile (#191)
   - Support user information in wait URL (#211)
+  - Stop started container in case of an error during startup (#217)
   
 * **0.13.1**
   - Allow autoPull to be forced on docker:build and docker:start (#96)
