@@ -5,8 +5,9 @@ import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.model.Container;
+import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
-import org.jolokia.docker.maven.util.Logger;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -32,29 +33,25 @@ public class StopMojo extends AbstractDockerMojo {
      */
     private boolean keepRunning;
 
-    /** @component */
-    private RunService runService;
-
-    @Override
-    protected void initLog(Logger log) {
-        runService.initLog(log);
-    }
-
     @Override
     protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
 
+        QueryService queryService = serviceFactory.getQueryService(access, log);
+        RunService runService = serviceFactory.getRunService(access, log);
+
+        
         if (!keepRunning) {
             if (startCalled == null || !startCalled) {
                 // Called directly ....
                 for (ImageConfiguration image : getImages()) {
                     String imageName = image.getName();
-                    for (String container : access.getContainersForImage(imageName)) {
-                        runService.stopContainer(access, image, container, keepContainer, removeVolumes);
+                    for (Container container : queryService.getContainersForImage(imageName)) {
+                        runService.stopContainer(image, container.getId(), keepContainer, removeVolumes);
                     }
                 }
             } else {
-                runService.stopStartedContainers(access, keepContainer, removeVolumes);
+                runService.stopStartedContainers(keepContainer, removeVolumes);
             }
         }
 

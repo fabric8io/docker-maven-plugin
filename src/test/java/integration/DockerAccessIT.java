@@ -9,6 +9,7 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.access.DockerAccess.ListArg;
 import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
 import org.jolokia.docker.maven.util.*;
 import org.junit.*;
@@ -47,7 +48,7 @@ public class DockerAccessIT {
     public void testBuildImage() throws DockerAccessException {
         File file = new File("src/test/resources/integration/busybox-test.tar");
         dockerClient.buildImage(IMAGE_TAG, file);        
-        assertTrue(dockerClient.hasImage(IMAGE_TAG));
+        assertTrue(hasImage(IMAGE_TAG));
         
         testRemoveImage(IMAGE_TAG);
     }
@@ -86,17 +87,17 @@ public class DockerAccessIT {
         containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
         assertNotNull(containerId);
 
-        String name = dockerClient.getContainerName(containerId);
+        String name = dockerClient.inspectContainer(containerId).getName();
         assertEquals(CONTAINER_NAME, name);    
     }
     
     private void testDoesNotHave() throws DockerAccessException {
-        assertFalse(dockerClient.hasImage(IMAGE));
+        assertFalse(hasImage(IMAGE));
     }
     
     private void testPullImage() throws DockerAccessException {
         dockerClient.pullImage(IMAGE, null, null);
-        assertTrue(dockerClient.hasImage(IMAGE));
+        assertTrue(hasImage(IMAGE));
     }
     
     private void testQueryPortMapping() throws DockerAccessException {
@@ -106,24 +107,28 @@ public class DockerAccessIT {
     
     private void testRemoveImage(String image) throws DockerAccessException {
         dockerClient.removeImage(image, false);
-        assertFalse(dockerClient.hasImage(image));
+        assertFalse(hasImage(image));
     }
      
     private void testStartContainer() throws DockerAccessException {
         dockerClient.startContainer(containerId);
-        assertTrue(dockerClient.isContainerRunning(containerId));
+        assertTrue(dockerClient.inspectContainer(containerId).getState().isRunning());
     }
     
     private void testStopContainer() throws DockerAccessException {
         dockerClient.stopContainer(containerId);
-        assertFalse(dockerClient.isContainerRunning(containerId));
+        assertFalse(dockerClient.inspectContainer(containerId).getState().isRunning());
     }
     
     private void testTagImage() throws DockerAccessException {
         dockerClient.tag(IMAGE, IMAGE_TAG,false);
-        assertTrue(dockerClient.hasImage(IMAGE_TAG));
+        assertTrue(hasImage(IMAGE_TAG));
         
         dockerClient.removeImage(IMAGE_TAG, false);
-        assertFalse(dockerClient.hasImage(IMAGE_TAG));
+        assertFalse(hasImage(IMAGE_TAG));
+    }
+    
+    private boolean hasImage(String image) throws DockerAccessException {
+        return !dockerClient.listImages(ListArg.filter(image)).isEmpty();
     }
 }

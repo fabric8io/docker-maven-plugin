@@ -1,10 +1,14 @@
 package org.jolokia.docker.maven.access;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
+import org.jolokia.docker.maven.model.Container;
+import org.jolokia.docker.maven.model.ContainerDetails;
+import org.jolokia.docker.maven.model.Image;
 
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
@@ -16,22 +20,32 @@ import org.jolokia.docker.maven.access.log.LogGetHandle;
 public interface DockerAccess {
 
     /**
-     * Check whether the given Image is locally available.
-     *
-     * @param image name of image to check, the image can contain a tag, otherwise 'latest' will be appended
-     * @return true if the image is locally available or false if it must be pulled.
-     * @throws DockerAccessException in case of an request error
+     * Inspect a container
+     * 
+     * @param containerId container id
+     * @return <code>ContainerDetails<code> representing the container
+     * @throws DockerAccessException if the container could not be inspected
      */
-    boolean hasImage(String image) throws DockerAccessException;
-
+    ContainerDetails inspectContainer(String containerId) throws DockerAccessException;
+    
     /**
-     * Finds the id of an image.
-     * @param image name of the image.
-     * @return  the id of the image
-     * @throws DockerAccessException in case of a request error
+     * List all images in repository
+     * 
+     * @param args optional list images args
+     * @return list of <code>Image<code>objects 
+     * @throws DockerAccessException if the images could not be listed
      */
-    String getImageId(String image) throws DockerAccessException;
-
+    List<Image> listImages(ListArg... args) throws DockerAccessException;
+    
+    /**
+     * List containers
+     * 
+     * @param args optional list containers args
+     * @return list of <code>Container<code>objects 
+     * @throws DockerAccessException if the containers could not be listed
+     */
+    List<Container> listContainers(ListArg... args) throws DockerAccessException;
+    
     /**
      * Create a container from the given image.
      * 
@@ -42,24 +56,6 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container could not be created.
      */
     String createContainer(ContainerCreateConfig configuration, String containerName) throws DockerAccessException;
-
-    /**
-     * Get the the name of a container for a given container id
-     *
-     * @param id container id to lookup
-     * @return name of the container
-     * @throws DockerAccessException if the id does not match a container
-     */
-    String getContainerName(String id) throws DockerAccessException;
-
-    /**
-     * Determine if the container is running
-     * 
-     * @param containerId id of container to query
-     * @return true if the container is running, false otherwise
-     * @throws DockerAccessException
-     */
-    boolean isContainerRunning(String containerId) throws DockerAccessException;
     
     /**
      * Start a container.
@@ -87,24 +83,6 @@ public interface DockerAccess {
      * @throws DockerAccessException if the query failed.
      */
     Map<String, Integer> queryContainerPortMapping(String containerId) throws DockerAccessException;
-
-    /**
-     * Get all containers which are build from an image. Only the last 100 containers are considered
-     *
-     * @param image for which its container are looked up
-     * @return list of container ids
-     * @throws DockerAccessException if the request fails
-     */
-    List<String> getContainersForImage(String image) throws DockerAccessException;
-
-    /**
-     * Get the id of the newest container started for an image
-     *
-     * @param image for which its container are looked up
-     * @return container id or <code>null</code> if no container has been started for this image.
-     * @throws DockerAccessException if the request fails
-     */
-    String getNewestImageForContainer(String image) throws DockerAccessException;
 
     /**
      * Get logs for a container up to now synchronously.
@@ -197,4 +175,30 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+    
+    public static class ListArg {
+        private final String key;
+        private final String value;
+
+        private ListArg(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getValue() {
+            return value;
+        }
+        
+        public static ListArg filter(String value) {
+            return new ListArg("filter", value);
+        }
+                
+        public static ListArg limit(int value) {
+            return new ListArg("limit", String.valueOf(value));
+        }
+    }
 }

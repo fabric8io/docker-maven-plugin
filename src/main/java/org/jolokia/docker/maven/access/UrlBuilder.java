@@ -2,6 +2,8 @@ package org.jolokia.docker.maven.access;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.jolokia.docker.maven.util.ImageName;
 
@@ -56,14 +58,18 @@ public final class UrlBuilder {
         return url;
     }
 
-    public String inspectContainer(String containerId) {
-        return createUrl(String.format("/containers/%s/json", encode(containerId)));
+    public DockerUrl inspectContainer(String containerId) {
+        return createDockerUrl(String.format("/containers/%s/json", encode(containerId)));
     }
     
-    public String listContainers(int limit) {
-        return createUrl(String.format("/containers/json?limit=%s", limit));
+    public DockerUrl listContainers() {
+        return createDockerUrl(String.format("/containers/json"));
     }
 
+    public DockerUrl listImages() {
+        return createDockerUrl("/images/json");
+    }
+    
     public String listImages(ImageName name) {
         return createUrl(String.format("/images/json?filter=%s", name.getNameWithoutTag()));
     }
@@ -136,16 +142,20 @@ public final class UrlBuilder {
         return addQueryParam(url, "force", force);
     }
 
+    private DockerUrl createDockerUrl(String path) {
+        return new DockerUrl(createUrl(path));
+    }
+
     private String createUrl(String path) {
         return String.format("%s/%s%s", baseUrl, apiVersion, path);
     }
 
     @SuppressWarnings("deprecation")
-    private String encode(String param) {
+    private static String encode(String param) {
         try {
             return URLEncoder.encode(param, "UTF-8");
         }
-        catch (UnsupportedEncodingException e) {
+        catch (@SuppressWarnings("unused") UnsupportedEncodingException e) {
             // wont happen
             return URLEncoder.encode(param);
         }
@@ -158,4 +168,34 @@ public final class UrlBuilder {
         }
         return ret;
     }
+    
+    public static class DockerUrl {
+        private final String url;
+        private final Map<String, String> queryParams;
+        
+        DockerUrl(String url) {            
+            this.url = url;
+            this.queryParams = new LinkedHashMap<>();
+        }
+        
+        public void addQueryParam(String key, String value) {
+            queryParams.put(key, value);
+        }
+        
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder(url);
+            builder.append("?");
+            
+            int count = queryParams.size();
+            for (Map.Entry<String, String> entry : queryParams.entrySet()) {
+                builder.append(entry.getKey()).append("=").append(encode(entry.getValue()));
+                if (--count > 0) {
+                    builder.append("&");
+                }
+            }
+            
+            return builder.toString();
+        }
+    }    
 }
