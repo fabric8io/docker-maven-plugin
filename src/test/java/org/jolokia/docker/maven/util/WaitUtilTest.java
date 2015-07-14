@@ -6,14 +6,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 import com.sun.net.httpserver.*;
-
-import mockit.Mocked;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author roland
@@ -25,11 +21,9 @@ public class WaitUtilTest {
     static int port;
     static String httpPingUrl;
 
-    @Mocked Logger log;
-
     @Test(expected = TimeoutException.class)
     public void httpFail() throws TimeoutException {
-        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, log);
+        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
         long waited = WaitUtil.wait(500,checker);
     }
 
@@ -39,9 +33,9 @@ public class WaitUtilTest {
         System.out.println("Check URL " + httpPingUrl);
 
         // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
-        WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl, log));
+        WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl));
 
-        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, log);
+        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
         long waited = WaitUtil.wait(700,checker);
         assertTrue("Waited longer than 500ms: " + waited,waited < 700);
         server.stop(10);
