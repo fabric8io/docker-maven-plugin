@@ -256,8 +256,10 @@ of an image configuration. The available subelements are
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
 * **maintainer** specifies the author (MAINTAINER) field for the generated image
-* **runCmds** specifies commands to be run during the building process. It contains **runCmd** Elements 
-  which are passed to bash. The **workdir**-Attribute applies before the command executions.
+* **run** specifies commands to be run during the build process. It contains **run** elements 
+  which are passed to bash. The run commands are inserted right after the assembly but before **workdir** in to the
+  Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
+  behaviour when starting containers. 
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
@@ -541,8 +543,6 @@ The `<run>` configuration knows the following sub elements:
  (#volume-binding)" for details.
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
-  available and how they can be specified.
-* **watch** enables the image watch See [below](#watching-for-image-changes) which sub elements are
   available and how they can be specified.
 * **workingDir** (*v1.11*) working dir for commands to run in
 

@@ -22,10 +22,7 @@ import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
-import org.jolokia.docker.maven.config.Arguments;
-import org.jolokia.docker.maven.config.AssemblyConfiguration;
-import org.jolokia.docker.maven.config.AssemblyMode;
-import org.jolokia.docker.maven.config.BuildImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
 
@@ -174,7 +171,7 @@ public class DockerAssemblyManager {
                         .env(buildConfig.getEnv())
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
-                        .runCommands(buildConfig.getRunCmds())
+                        .run(buildConfig.getRun())
                         .volumes(buildConfig.getVolumes());
         if (buildConfig.getMaintainer() != null) {
             builder.maintainer(buildConfig.getMaintainer());

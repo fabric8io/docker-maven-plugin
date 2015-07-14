@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.13.2**
+  - "run" directives can be added to the Dockerfile (#191)
+  
 * **0.13.1**
   - Allow autoPull to be forced on docker:build and docker:start (#96)
   - Respect username when looking up credentials for a Docker registry (#174)

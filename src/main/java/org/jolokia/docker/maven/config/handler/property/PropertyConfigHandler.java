@@ -142,7 +142,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private List<String> extractRunCommands(String prefix, Properties properties) {
         List<String> ret = new ArrayList<>();
-        List<String> cmds = listWithPrefix(prefix, RUNCMDS, properties);
+        List<String> cmds = listWithPrefix(prefix, RUN, properties);
         if (cmds == null) {
             return null;
         }

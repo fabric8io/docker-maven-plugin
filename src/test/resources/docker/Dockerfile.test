@@ -3,9 +3,9 @@ MAINTAINER maintainer@example.com
 ENV foo=bar
 LABEL com.acme.foobar="How are \"you\" ?"
 EXPOSE 8080
-RUN echo something
-RUN echo second
 VOLUME ["/vol1"]
 COPY /src /export/dest
+RUN echo something
+RUN echo second
 WORKDIR /tmp
 CMD ["c1","c2"]
