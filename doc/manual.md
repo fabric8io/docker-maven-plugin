@@ -29,7 +29,7 @@ available goals are described below.
 <plugin>
   <groupId>org.jolokia</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.13.1</version>
+  <version>0.13.2</version>
 
   <configuration>
      ....
