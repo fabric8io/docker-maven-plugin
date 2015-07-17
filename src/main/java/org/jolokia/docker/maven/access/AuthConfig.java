@@ -16,7 +16,7 @@ import org.json.JSONObject;
  */
 public class AuthConfig {
 
-    public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "");
+    public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "", "");
 
     private Map<String,String> params;
 
@@ -24,12 +24,13 @@ public class AuthConfig {
         this.params = params;
     }
 
-    public AuthConfig(String user, String password, String email,String auth) {
+    public AuthConfig(String user, String password, String email, String auth, String registry) {
         params = new HashMap<>();
         putNonNull(params, "username", user);
         putNonNull(params, "password", password);
         putNonNull(params, "email", email);
         putNonNull(params, "auth", auth);
+        putNonNull(params, "serveraddress", registry);
     }
 
     public String toHeaderValue() {
@@ -38,6 +39,7 @@ public class AuthConfig {
         add(ret,"password");
         add(ret,"email");
         add(ret,"auth");
+        add(ret,"serveraddress");
         try {
             return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
