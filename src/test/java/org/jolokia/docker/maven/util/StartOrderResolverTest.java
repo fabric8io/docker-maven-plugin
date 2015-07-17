@@ -2,10 +2,13 @@ package org.jolokia.docker.maven.util;
 
 import java.util.*;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import mockit.Expectations;
+import mockit.Mocked;
+import org.jolokia.docker.maven.service.QueryService;
+import org.jolokia.docker.maven.util.StartOrderResolver.Resolvable;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.jolokia.docker.maven.util.StartOrderResolver.Resolvable;
 import static org.junit.Assert.*;
 
 /**
@@ -14,8 +17,21 @@ import static org.junit.Assert.*;
  */
 public class StartOrderResolverTest {
 
+    @Mocked
+    private QueryService queryService;
+    
+    @Before
+    @SuppressWarnings("unused")
+    public void setup() throws Exception {
+        new Expectations() {{
+            queryService.hasContainer((String) withNotNull());
+            result = false;
+            minTimes = 1;
+        }};
+    }
+    
     @Test
-    public void simple() throws MojoExecutionException {
+    public void simple() {
         checkData(new Object[][]{
                 { new T[]{new T("1")}, new T[]{new T("1")}},
                 { new T[]{new T("1", "2"), new T("2")}, new T[]{new T("2"), new T("1", "2")} },
@@ -24,18 +40,18 @@ public class StartOrderResolverTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void circularDep() throws MojoExecutionException {
+    public void circularDep() {
         checkData(new Object[][] {
                 {new T[]{new T("1", "2"), new T("2", "1")}, new T[]{new T("1", "2"), new T("2", "1")}}
         });
         fail();
     }
 
-    private void checkData(Object[][] data) throws MojoExecutionException {
+    private void checkData(Object[][] data) {
         for (Object[] aData : data) {
             Resolvable[] input = (Resolvable[]) aData[0];
             Resolvable[] expected = (Resolvable[]) aData[1];
-            List<Resolvable> result = StartOrderResolver.resolve(Arrays.asList(input));
+            List<Resolvable> result = StartOrderResolver.resolve(queryService, Arrays.asList(input));
             assertArrayEquals(expected, new ArrayList(result).toArray());
         }
     }
