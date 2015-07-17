@@ -9,8 +9,7 @@ import com.sun.net.httpserver.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author roland
@@ -22,7 +21,6 @@ public class WaitUtilTest {
     static int port;
     static String httpPingUrl;
 
-
     @Test(expected = TimeoutException.class)
     public void httpFail() throws TimeoutException {
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
@@ -33,6 +31,10 @@ public class WaitUtilTest {
     public void httpSuccess() throws TimeoutException {
         server.start();
         System.out.println("Check URL " + httpPingUrl);
+
+        // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
+        WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl));
+
         WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
         long waited = WaitUtil.wait(700,checker);
         assertTrue("Waited longer than 500ms: " + waited,waited < 700);

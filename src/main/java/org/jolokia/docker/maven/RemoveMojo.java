@@ -18,6 +18,7 @@ package org.jolokia.docker.maven;/*
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.service.QueryService;
 
 /**
  * Mojo for removing images. By default only data images are removed. Data images are
@@ -38,18 +39,21 @@ import org.jolokia.docker.maven.config.*;
 
 public class RemoveMojo extends AbstractDockerMojo {
 
-    // Whether all configured images should be removed
     /**
+     * Should all configured images should be removed?
+     * 
      * @parameter property = "docker.removeAll" default-value = "false"
      */
     private boolean removeAll;
-
+    
     @Override
     protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException {
+        QueryService queryService = serviceHub.getQueryService();
+        
         for (ImageConfiguration image : getImages()) {
             String name = image.getName();
             if (removeAll || image.isDataImage()) {
-                if (dockerAccess.hasImage(name)) {
+                if (queryService.hasImage(name)) {
                     if (dockerAccess.removeImage(name,true)) {
                         log.info(image.getDescription() + ": Remove");
                     }

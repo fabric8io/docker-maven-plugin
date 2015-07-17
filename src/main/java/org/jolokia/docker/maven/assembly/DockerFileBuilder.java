@@ -8,6 +8,7 @@ import com.google.common.base.Joiner;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.config.Arguments;
+import static org.jolokia.docker.maven.assembly.DockerFileKeyword.*;
 
 /**
  * Create a dockerfile
@@ -47,7 +48,11 @@ public class DockerFileBuilder {
     // list of ports to expose and environments to use
     private List<Integer> ports = new ArrayList<>();
 
-    // environment
+    // list of RUN Commands to run along with image build see issue #191 on github
+    private List<String> runCmds = new ArrayList<>();
+
+// environment
+
     private Map<String,String> envEntries = new HashMap<>();
 
     // image labels
@@ -79,13 +84,16 @@ public class DockerFileBuilder {
 
         StringBuilder b = new StringBuilder();
         
-        b.append("FROM ").append(baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE).append("\n");
-        b.append("MAINTAINER ").append(maintainer).append("\n");
+        FROM.addTo(b,baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE);
+        MAINTAINER.addTo(b,maintainer);
+
         addEnv(b);
         addLabels(b);
         addPorts(b);
+
         addVolumes(b);
         addEntries(b);
+        addRun(b);
         addWorkdir(b);
         addCmd(b);
         addEntryPoint(b);
@@ -95,30 +103,30 @@ public class DockerFileBuilder {
 
     private void addWorkdir(StringBuilder b) {
         if (workdir != null) {
-            b.append("WORKDIR ").append(workdir).append("\n");
+            WORKDIR.addTo(b, workdir);
         }
     }
 
     private void addEntryPoint(StringBuilder b){
         if (entryPoint != null) {
-            buildArguments(b, "ENTRYPOINT", entryPoint);
+            buildArguments(b, ENTRYPOINT, entryPoint);
         }
     }
 
     private void addCmd(StringBuilder b){
         if (cmd != null) {
-            buildArguments(b, "CMD", cmd);
+            buildArguments(b, CMD, cmd);
         }
     }
 
-    private static void buildArguments(StringBuilder b, String name, Arguments arguments) {
-        b.append(name).append(" ");
+    private static void buildArguments(StringBuilder b, DockerFileKeyword key, Arguments arguments) {
+        String arg;
         if (arguments.getShell() != null) {
-            b.append(arguments.getShell());
+            arg = arguments.getShell();
         } else {
-            b.append("[\"").append(JOIN_ON_COMMA.join(arguments.getExec())).append("\"]");
+            arg = "[\""  + JOIN_ON_COMMA.join(arguments.getExec()) + "\"]";
         }
-        b.append("\n");
+        key.addTo(b, arg);
     }
     
     private void addEntries(StringBuilder b) {
@@ -126,42 +134,39 @@ public class DockerFileBuilder {
         for (AddEntry entry : addEntries) {
             String dest =  (basedir.equals("/") ? "" : basedir) +  "/" + entry.destination;
             destinations.add(dest);
-            b.append("COPY ").append(entry.source).append(" ").append(dest).append("\n");
+            COPY.addTo(b,entry.source,dest);
         }
         if (user != null) {
             String[] userParts = StringUtils.split(user, ":");
             String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
-            String cmd = "RUN [\"chown\", \"-R\", \"" + userArg + "\",\"" +
+            String chmod = "[\"chown\", \"-R\", \"" + userArg + "\",\"" +
                          StringUtils.join(destinations.iterator(), "\",\"") + "\"]\n";
             if (userParts.length > 2) {
-                b.append("USER root\n");
-                b.append(cmd);
-                b.append("USER ").append(userParts[2]).append("\n");
+                USER.addTo(b,"root");
+                RUN.addTo(b, chmod);
+                USER.addTo(b, userParts[2]);
             } else {
-                b.append(cmd);
+                RUN.addTo(b, chmod);
             }
         }
     }
 
     private void addEnv(StringBuilder b) {
-        addMap(b,"ENV",envEntries);
+        addMap(b,ENV,envEntries);
     }
 
     private void addLabels(StringBuilder b) {
-        addMap(b,"LABEL",labels);
+        addMap(b,LABEL,labels);
     }
 
-    private void addMap(StringBuilder b,String keyword, Map<String,String> map) {
+    private void addMap(StringBuilder b,DockerFileKeyword keyword, Map<String,String> map) {
         if (map != null && map.size() > 0) {
-            b.append(keyword).append(" ");
-            List<String> entries = new ArrayList<>(map.size());
+            String entries[] = new String[map.size()];
+            int i = 0;
             for (Map.Entry<String, String> entry : map.entrySet()) {
-                entries.add(
-                        quote(entry.getKey()) + "=" + quote(entry.getValue())
-                );
+                entries[i++] = quote(entry.getKey()) + "=" + quote(entry.getValue());
             }
-            b.append(StringUtils.join(entries.iterator()," "));
-            b.append("\n");
+            keyword.addTo(b, entries);
         }
     }
 
@@ -171,13 +176,20 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            b.append("EXPOSE");
+            String[] portsS = new String[ports.size()];
+            int i = 0;
             for (Integer port : ports) {
-                b.append(" ").append(port);
+                portsS[i++] = port.toString();
             }
-            b.append("\n");
+            EXPOSE.addTo(b, portsS);
         }
     }
+
+	private void addRun(StringBuilder b) {
+		for (String run : runCmds) {
+            RUN.addTo(b,run);
+		}
+	}
 
     private void addVolumes(StringBuilder b) {
         if (exportBasedir != null ? exportBasedir : baseImage == null) {
@@ -194,8 +206,8 @@ public class DockerFileBuilder {
             volume = volume.substring(0, volume.length() - 1);
         }
         // don't export '/'
-        if (volume.length() > 0) {        
-            buffer.append("VOLUME [\"").append(volume).append("\"]\n");
+        if (volume.length() > 0) {
+            VOLUME.addTo(buffer,"[\"" + volume + "\"]");
         }
     }
     
@@ -258,6 +270,22 @@ public class DockerFileBuilder {
                     } catch (NumberFormatException exp) {
                         throw new IllegalArgumentException("Non numeric port " + port + " specified in port mapping",exp);
                     }
+                }
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Adds the RUN Commands within the build image section
+     * @param runCmds
+     * @return
+     */
+    public DockerFileBuilder run(List<String> runCmds) {
+        if (runCmds != null) {
+            for (String cmd : runCmds) {
+                if (!StringUtils.isEmpty(cmd)) {
+                    this.runCmds.add(cmd);
                 }
             }
         }

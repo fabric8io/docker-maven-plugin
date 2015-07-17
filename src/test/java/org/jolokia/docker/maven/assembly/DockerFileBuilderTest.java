@@ -9,6 +9,7 @@ import org.jolokia.docker.maven.config.Arguments;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.hasEntry;
+import static org.jolokia.docker.maven.assembly.DockerFileKeyword.*;
 import static org.junit.Assert.*;
 
 
@@ -26,8 +27,9 @@ public class DockerFileBuilderTest {
                 .maintainer("maintainer@example.com")
                 .workdir("/tmp")
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1")).content();
-
+                .volumes(Collections.singletonList("/vol1"))
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
@@ -64,7 +66,22 @@ public class DockerFileBuilderTest {
         assertTrue(new DockerFileBuilder().baseImage("java").exportBasedir(true).basedir("/export").content().contains("/export"));
         assertFalse(new DockerFileBuilder().baseImage("java").exportBasedir(false).basedir("/export").content().contains("/export"));
     }
-    
+
+    @Test
+    public void testDockerFileKeywords() {
+        StringBuilder b = new StringBuilder();
+        RUN.addTo(b, "apt-get", "update");
+        assertEquals("RUN apt-get update\n", b.toString());
+
+        b = new StringBuilder();
+        EXPOSE.addTo(b, new String[]{"1010", "2020"});
+        assertEquals("EXPOSE 1010 2020\n",b.toString());
+
+        b = new StringBuilder();
+        USER.addTo(b,"roland");
+        assertEquals("USER roland\n",b.toString());
+    }
+
     private String stripCR(String input){
     	return input.replaceAll("\r", "");
     }
