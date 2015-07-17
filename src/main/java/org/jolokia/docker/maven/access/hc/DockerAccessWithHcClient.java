@@ -126,7 +126,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public void startContainer(String containerId) throws DockerAccessException {
         try {
-            post(urlBuilder.startContainer(containerId), null, HTTP_NO_CONTENT);
+            post(urlBuilder.startContainer(containerId), null, HTTP_NO_CONTENT, HTTP_OK);
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
             throw new DockerAccessException(String.format("Unable to start container id [%s]", containerId));
