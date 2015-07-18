@@ -136,6 +136,10 @@ parentheses.
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
   the [section](#log-configuration) below. 
+* **portPropertyFile** if given, specifies a global file into which the
+  mapped properties should be written to. The format of this file and
+  its purpose are also described [below](#port-mapping). Please note, this field takes precidence
+  over any `portPropertyFile` value specified in an `image` configuration.    
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.

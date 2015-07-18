@@ -78,7 +78,8 @@ public class StartMojo extends AbstractDockerMojo {
                 }
 
                 // Set maven properties for dynamically assigned ports.
-                updateDynamicPortProperties(dockerAccess, containerId, runConfig, portMapping, project.getProperties());
+                String portPropertyFile = getPortPropertyFile(imageConfig, runConfig);
+                updateDynamicPortProperties(dockerAccess, containerId, portPropertyFile, portMapping, project.getProperties());
 
                 // Wait if requested
                 waitIfRequested(dockerAccess,imageConfig, project.getProperties(), containerId);
@@ -99,10 +100,12 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
     
-    private void updateDynamicPortProperties(DockerAccess docker, String containerId, RunImageConfiguration runConfig, PortMapping mappedPorts, Properties properties) throws DockerAccessException, MojoExecutionException {
+    private void updateDynamicPortProperties(DockerAccess docker, String containerId, String portPropertyFile, PortMapping mappedPorts,
+            Properties properties) throws DockerAccessException, MojoExecutionException {
         if (mappedPorts.containsDynamicPorts()) {
             mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(containerId));
-            propagatePortVariables(mappedPorts, runConfig.getPortPropertyFile(),properties);
+            
+            propagatePortVariables(mappedPorts, portPropertyFile, properties);
         }
     }
 
@@ -218,5 +221,16 @@ public class StartMojo extends AbstractDockerMojo {
             }
         }
         return false;
+    }
+    
+    private String getPortPropertyFile(ImageConfiguration imageConfig, RunImageConfiguration runConfig) {
+        String propFile = portPropertyFile;
+        
+        // global file takes precident
+        if (propFile == null) {
+            propFile = runConfig.getPortPropertyFile();
+        }
+        
+        return propFile;
     }
 }
