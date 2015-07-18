@@ -93,8 +93,8 @@ public class DockerFileBuilder {
 
         addVolumes(b);
         addEntries(b);
-        addRun(b);
         addWorkdir(b);
+        addRun(b);
         addCmd(b);
         addEntryPoint(b);
 
