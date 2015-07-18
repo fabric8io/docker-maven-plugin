@@ -170,6 +170,8 @@ The `<image>` element can contain the following sub elements:
   identifying the image within this configuration. This is used when
   linking images together or for specifying it with the global
   **image** configuration.
+* **mode** allows the `build` and/or `run` bevhavior for an image to be skipped. 
+  See [Build / Run Mode](#build-run-mode) below.
 * **registry** is a registry to use for this image. If the `name`
   already contains a registry this takes precedence. See
   [Registry handling](#registry-handling) for more details.
@@ -1137,6 +1139,7 @@ up from the following properties, which correspond to corresponding
 values in the `<build>` and `<run>` sections.
 
 * **docker.alias** Alias name
+* **docker.mode** See [Build / Run Mode](#build-run-mode) below, default is `both`
 * **docker.assembly.baseDir** Directory name for the exported artifacts as
   described in an assembly (which is `/maven` by default).
 * **docker.assembly.descriptor** Path to the assembly descriptor when
@@ -1250,6 +1253,75 @@ Example:
   </plugins>
 </build>
 ```
+
+### Build / Run Mode 
+
+There may be instances where you may not wish to have a container for an image be built and/or started regardless of how
+it is requested (life-cycle or direct goal invocation). 
+
+The `mode` element may be set to one of the following values:
+
+* **both** (default): the `build` and `run` configurations for the image will be executed
+* **build**: only the `build` configuration is executed
+* **run**: only the `run` configuration is executed
+* **skip**: the `build` and `run` configurations for the image will be skipped
+
+One such example of this is running integration tests against a database container. If your application also runs in a container, 
+you may not want it to start as part of running the tests, but you still want it built.
+
+```xml
+  <properties>
+    <application.image.mode>both</application.image.mode>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>azul/zulu-openjdk:8</name>
+              <alias>application</alias>
+              <mode>${application.image.mode}</mode>
+              ...
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>integration-tests</id>
+      <properties>
+        <application.image.mode>build</application.image.mode>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images combine.children="append">
+                <image>
+                  <name>postgres:9.3</name>
+                  <alias>database</alias>
+                  ...
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+```
+
+
 
 ### Registry handling
 

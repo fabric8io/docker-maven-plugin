@@ -45,11 +45,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
         String name = extractName(prefix, properties);
         String alias = withPrefix(prefix, ALIAS, properties);
+        String mode = withPrefix(prefix, BUILD_RUN_MODE, properties);
         
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
                         .alias(alias != null ? alias : config.getAlias())
+                        .buildRunMode(mode)
                         .runConfig(run)
                         .buildConfig(build)
                         .watchConfig(watch)
