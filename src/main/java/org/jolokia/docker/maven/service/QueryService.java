@@ -99,18 +99,21 @@ public class QueryService {
      */
     public Image getImage(String image) throws DockerAccessException {
         String name = new ImageName(image).getNameWithoutTag();
-        return docker.listImages(ListArg.filter(name)).get(0);
+        List<Image> images = docker.listImages(ListArg.filter(name));
+        
+        return images.isEmpty() ? null : images.get(0);
     }
     
     /**
      * Finds the id of an image.
      * 
-     * @param image name of the image.
+     * @param imageName name of the image.
      * @return the id of the image
      * @throws DockerAccessException if the request fails
      */
-    public String getImageId(String image) throws DockerAccessException {
-        return getImage(image).getId();
+    public String getImageId(String imageName) throws DockerAccessException {
+        Image image = getImage(imageName);
+        return (image == null) ? null : image.getId();
     }
     
     /**

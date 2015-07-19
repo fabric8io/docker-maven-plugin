@@ -59,6 +59,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     private BuildImageConfiguration extractBuildConfiguration(String prefix, Properties properties) {
         return new BuildImageConfiguration.Builder()
                 .cmd(withPrefix(prefix, CMD, properties))
+                .cleanup(withPrefix(prefix, CLEANUP, properties))
                 .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))

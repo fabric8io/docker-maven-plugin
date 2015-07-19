@@ -24,12 +24,6 @@
       <role>org.jolokia.docker.maven.service.ServiceHub</role>
       <implementation>org.jolokia.docker.maven.service.ServiceHub</implementation>
       <instantiation-strategy>singleton</instantiation-strategy>
-    </component>
-
-    <component>
-      <role>org.jolokia.docker.maven.service.MojoExecutionService</role>
-      <implementation>org.jolokia.docker.maven.service.MojoExecutionService</implementation>
-      <instantiation-strategy>singleton</instantiation-strategy>
       <requirements>
         <requirement>
           <role>org.apache.maven.execution.MavenSession</role>
@@ -40,6 +34,9 @@
         <requirement>
           <role>org.apache.maven.project.MavenProject</role>
         </requirement>
+        <requirement>
+          <role>org.jolokia.docker.maven.assembly.DockerAssemblyManager</role>
+        </requirement>        
       </requirements>
     </component>
 

@@ -50,9 +50,7 @@ abstract public class AbstractBuildSupporMojo extends AbstractDockerMojo {
     /** @component */
     private MavenReaderFilter mavenFilterReader;
 
-    /** @component */
-    protected DockerAssemblyManager dockerAssemblyManager;
-
+   
     /**
      * @parameter default-value="src/main/docker" property="docker.source.dir"
      */
@@ -76,10 +74,7 @@ abstract public class AbstractBuildSupporMojo extends AbstractDockerMojo {
         autoPullBaseImage(dockerAccess, imageConfig);
 
         MojoParameters params = createMojoParameters();
-        File dockerArchive = dockerAssemblyManager.createDockerTarArchive(imageName, params, imageConfig.getBuildConfiguration());
-
-        dockerAccess.buildImage(imageName, dockerArchive);
-        log.info(imageConfig.getDescription() + ": Build image ");
+        serviceHub.getBuildService().buildImage(imageConfig, params);
     }
 
     private void autoPullBaseImage(DockerAccess dockerAccess, ImageConfiguration imageConfig)

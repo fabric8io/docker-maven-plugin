@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.13.3**
+  - allow dangling images to be cleaned up after build (#20)
+
 * **0.13.2**
   - "run" directives can be added to the Dockerfile (#191)
   - Support user information in wait URL (#211)

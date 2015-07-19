@@ -35,6 +35,7 @@ public enum ConfigKey {
     BIND,
     CAP_ADD,
     CAP_DROP,
+    CLEANUP,
     CMD,
     DOMAINNAME,
     DNS,

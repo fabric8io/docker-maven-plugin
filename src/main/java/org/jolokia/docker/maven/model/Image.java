@@ -29,7 +29,7 @@ public class Image {
      * @return the image id
      */
     public String getId() {
-        return json.getString("Id");
+        return json.getString("Id").substring(0, 12);
     }
 
     /**

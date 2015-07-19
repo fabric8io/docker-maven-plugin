@@ -37,6 +37,8 @@ public class BuildImageConfiguration {
      */
     private List<String> runCmds;
 
+    /** @parameter default-value="true" */
+    private Boolean cleanup;
 
     /**
      * @paramter
@@ -134,6 +136,10 @@ public class BuildImageConfiguration {
     public String getCommand() {
         return command;
     }
+    
+    public Boolean cleanup() {
+        return (cleanup == null) ? Boolean.TRUE : cleanup;
+    }
 
     public Arguments getEntryPoint() {
         return entryPoint;
@@ -178,7 +184,7 @@ public class BuildImageConfiguration {
 
         public Builder runCmds(List<String> theCmds) {
             if (config.runCmds == null) {
-                config.runCmds = new ArrayList<String>();
+                config.runCmds = new ArrayList<>();
             }
             else
             	config.runCmds = theCmds;
@@ -210,6 +216,13 @@ public class BuildImageConfiguration {
                 config.cmd = new Arguments();
             }
             config.cmd.setShell(cmd);
+            return this;
+        }
+        
+        public Builder cleanup(String cleanup) { 
+            if (cleanup != null) {
+                config.cleanup = Boolean.valueOf(cleanup);
+            }
             return this;
         }
 

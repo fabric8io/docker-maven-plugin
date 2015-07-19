@@ -4,6 +4,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.util.Logger;
 
 /**
@@ -19,15 +20,19 @@ public class ServiceHub {
     protected BuildPluginManager pluginManager;
     
     /** @component */
+    protected DockerAssemblyManager dockerAssemblyManager;
+    
+    /** @component */
     protected MavenProject project;
     
     /** @component */
     protected MavenSession session;
 
-    // Services managed by thus hub
+    // Services managed by this hub
     private MojoExecutionService mojoExecutionService;
     private QueryService queryService;
     private RunService runService;
+    private BuildService buildService;
 
     // initialization flag preventing multiple initializations
     private boolean initDone = false;
@@ -44,6 +49,7 @@ public class ServiceHub {
             mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
             queryService = new QueryService(dockerAccess, log);
             runService = new RunService(dockerAccess, queryService, containerTracker, log);
+            buildService = new BuildService(dockerAccess, queryService, dockerAssemblyManager, log);
             initDone = true;
         }
     }
@@ -58,6 +64,11 @@ public class ServiceHub {
         return mojoExecutionService;
     }
 
+    public BuildService getBuildService() {
+        checkInitialization();
+        return buildService;
+    }
+    
     /**
      * Get the query service for obtaining information about containers and images
      *

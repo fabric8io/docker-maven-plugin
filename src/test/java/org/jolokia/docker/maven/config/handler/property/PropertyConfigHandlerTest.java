@@ -122,6 +122,14 @@ public class PropertyConfigHandlerTest {
     }
     
     @Test
+    public void testNoCleanup() throws Exception {
+        String[] testData = new String[] { k(NAME), "image", k(CLEANUP), "false" };
+        
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(false, config.getBuildConfiguration().cleanup());
+    }
+    
+    @Test
     public void testNoAssembly() throws Exception {
         Properties props = props(k(NAME), "image");
         List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);
@@ -153,6 +161,7 @@ public class PropertyConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
+        assertEquals(true, buildConfig.cleanup());        
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());
