@@ -26,7 +26,6 @@ public interface DockerAccess {
      */
     Container inspectContainer(String containerId) throws DockerAccessException;
 
-
     /**
      * List images
      * 
@@ -139,9 +138,10 @@ public interface DockerAccess {
      *
      * @param image name of the image to build or <code>null</code> if none should be used
      * @param dockerArchive from which the docker image should be build
+     * @param args optional build image args
      * @throws DockerAccessException if docker host reports an error during building of an image
      */
-    void buildImage(String image, File dockerArchive) throws DockerAccessException;
+    void buildImage(String image, File dockerArchive, BuildArg... args) throws DockerAccessException;
 
     /**
      * Alias an image in the repository with a complete new name. (Note that this maps to a Docker Remote API 'tag'
@@ -174,6 +174,20 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+    
+    class BuildArg extends ListArg {
+        private BuildArg(String key, String value) {
+            super(key, value);
+        }
+        
+        public static BuildArg tag(String tag) {
+            return new BuildArg("t", tag);
+        }
+
+        public static BuildArg forcerm(boolean cleanup) {
+            return new BuildArg((cleanup) ? "forcerm" : "rm", "1");
+        }
+    }
     
     class ListArg {
         private final String key;

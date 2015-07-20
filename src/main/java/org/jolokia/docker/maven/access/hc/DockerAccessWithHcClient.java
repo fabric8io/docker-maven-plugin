@@ -87,7 +87,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             post(urlBuilder.startContainer(containerId), null, HTTP_NO_CONTENT, HTTP_OK);
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException(String.format("Unable to start container id [%s]", containerId));
+            throw new DockerAccessException("Unable to start container id [%s]", containerId);
         }
     }
 
@@ -97,21 +97,20 @@ public class DockerAccessWithHcClient implements DockerAccess {
             post(urlBuilder.stopContainer(containerId), null, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException(String.format("Unable to stop container id [%s]", containerId));
+            throw new DockerAccessException("Unable to stop container id [%s]", containerId);
         }
     }
 
     @Override
-    public void buildImage(String image, File dockerArchive) throws DockerAccessException {
-        // auto-pull not supported in v1.15, which is currently the default
-        String buildUrl = urlBuilder.buildImage(image, false, false);
+    public void buildImage(String image, File dockerArchive, BuildArg... args) throws DockerAccessException {
+        DockerUrl buildUrl = urlBuilder.buildImage(args);
 
         try {
             Result result = post(buildUrl, dockerArchive, HTTP_OK);
             processChunkedResponse(result, createBuildResponseHandler());
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException(String.format("Unable to build image [%s]", image));
+            throw new DockerAccessException("Unable to build image [%s]", image);
         }
     }
 
@@ -153,7 +152,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     
     @Override
     public List<Container> listContainers(ListArg... args) throws DockerAccessException {
-        DockerUrl url = buildDockerUrl(urlBuilder.listContainers(), args);
+        DockerUrl url = urlBuilder.listContainers(args);
 
         try {
             String response = get(url, HTTP_OK).getMessage();
@@ -173,7 +172,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     
     @Override
     public List<Image> listImages(ListArg... args) throws DockerAccessException {
-        DockerUrl url = buildDockerUrl(urlBuilder.listImages(), args);
+        DockerUrl url = urlBuilder.listImages(args); 
 
         try {
             String response = get(url, HTTP_OK).getMessage();
@@ -332,9 +331,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
        }
     }
 
-    private Result post(String url, Object body, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
+    private Result post(DockerUrl url, Object body, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
         try {
-            return delegate.post(url, body, statusCode, additional);
+            return delegate.post(url.toString(), body, statusCode, additional);
         } catch (IOException e) {
             throw new DockerAccessException(e, "communication error occurred with the docker daemon");
         }
@@ -342,15 +341,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     // ===========================================================================================================
     // Preparation for performing requests
-
-    private DockerUrl buildDockerUrl(DockerUrl url, ListArg... args) {
-        for (ListArg arg : args) {
-            url.addQueryParam(arg.getKey(), arg.getValue());
-        }
-
-        return url;
-    }
-    
+ 
     private Map<String, Integer> extractPorts(JSONObject info) {
         JSONObject networkSettings = info.getJSONObject("NetworkSettings");
         if (networkSettings != null) {

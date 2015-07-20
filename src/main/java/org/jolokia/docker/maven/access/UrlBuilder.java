@@ -5,6 +5,8 @@ import java.net.URLEncoder;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jolokia.docker.maven.access.DockerAccess.BuildArg;
+import org.jolokia.docker.maven.access.DockerAccess.ListArg;
 import org.jolokia.docker.maven.util.ImageName;
 
 public final class UrlBuilder {
@@ -18,18 +20,9 @@ public final class UrlBuilder {
         this.apiVersion = apiVersion;
         this.baseUrl = stripSlash(baseUrl);
     }
-
-    public String buildImage(String tag, boolean forcerm, boolean pull) {
-        String url = createUrl("/build");
-        
-        if (tag != null) {
-            url = addQueryParam(url, "t", tag);
-        }
-        
-        url = addQueryParam(url, "pull", pull);
-        url = addQueryParam(url, forcerm ? "forcerm" : "rm", true);
-        
-        return url;
+    
+    public DockerUrl buildImage(BuildArg... args) {
+        return createDockerUrl("/build", args);
     }
 
     public String inspectImage(String name) {
@@ -44,11 +37,8 @@ public final class UrlBuilder {
         return url;
     }
     
-    public String createContainer(String name) {
-        String url = createUrl("/containers/create");
-        url = addQueryParam(url, "name", name);
-        
-        return url;
+    public DockerUrl createContainer(String name) {
+        return createDockerUrl("/containers/create").addQueryParam("name", name);
     }
 
     public String deleteImage(String name, boolean force) {
@@ -62,12 +52,12 @@ public final class UrlBuilder {
         return createDockerUrl(String.format("/containers/%s/json", encode(containerId)));
     }
     
-    public DockerUrl listContainers() {
-        return createDockerUrl(String.format("/containers/json"));
+    public DockerUrl listContainers(ListArg... args) {
+        return addQueryArgs(createDockerUrl("/containers/json"), args);
     }
 
-    public DockerUrl listImages() {
-        return createDockerUrl("/images/json");
+    public DockerUrl listImages(ListArg... args) {
+        return addQueryArgs(createDockerUrl("/images/json"), args);
     }
     
     public String listImages(ImageName name) {
@@ -98,15 +88,15 @@ public final class UrlBuilder {
         return url;
     }
 
-    public String startContainer(String containerId) {
-        return createUrl(String.format("/containers/%s/start", encode(containerId)));
+    public DockerUrl startContainer(String containerId) {
+        return createDockerUrl(String.format("/containers/%s/start", encode(containerId)));
     }
 
-    public String stopContainer(String containerId) {
-        return createUrl(String.format("/containers/%s/stop", encode(containerId)));
+    public DockerUrl stopContainer(String containerId) {
+        return createDockerUrl(String.format("/containers/%s/stop", encode(containerId)));
     }
 
-    public String tagContainer(ImageName source, ImageName target, boolean force) {
+    public DockerUrl tagContainer(ImageName source, ImageName target, boolean force) {
         String url = createUrl(String.format("/images/%s/tag", encode(source.getFullName())));
         url = addRepositoryParam(url, target.getNameWithoutTag());
         url = addTagParam(url, target.getTag());
@@ -114,7 +104,7 @@ public final class UrlBuilder {
             url = addQueryParam(url, "force", "1");
         }
 
-        return url;
+        return new DockerUrl(url);
     }
 
     // ============================================================================
@@ -142,8 +132,16 @@ public final class UrlBuilder {
         return addQueryParam(url, "force", force);
     }
 
-    private DockerUrl createDockerUrl(String path) {
-        return new DockerUrl(createUrl(path));
+    private DockerUrl addQueryArgs(DockerUrl url, ListArg... args) {
+        for (ListArg arg : args) {
+            url.addQueryParam(arg.getKey(), arg.getValue());
+        }
+        
+        return url;
+    }
+    
+    private DockerUrl createDockerUrl(String path, ListArg... args) {
+        return addQueryArgs(new DockerUrl(createUrl(path)), args);
     }
 
     private String createUrl(String path) {
@@ -168,7 +166,7 @@ public final class UrlBuilder {
         }
         return ret;
     }
-    
+        
     public static class DockerUrl {
         private final String url;
         private final Map<String, String> queryParams;
@@ -178,8 +176,11 @@ public final class UrlBuilder {
             this.queryParams = new LinkedHashMap<>();
         }
         
-        public void addQueryParam(String key, String value) {
-            queryParams.put(key, value);
+        public DockerUrl addQueryParam(String key, String value) {
+            if (value != null) {
+                queryParams.put(key, value);
+            }
+            return this;
         }
         
         @Override
