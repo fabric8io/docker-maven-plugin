@@ -15,29 +15,23 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
-import static org.jolokia.docker.maven.config.WatchMode.both;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.access.PortMapping;
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
-import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.config.WatchImageConfiguration;
-import org.jolokia.docker.maven.config.WatchMode;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
 import org.jolokia.docker.maven.util.MojoParameters;
 import org.jolokia.docker.maven.util.StartOrderResolver;
+
+import static org.jolokia.docker.maven.config.WatchMode.both;
 
 /**
  * Mojo for watching source code changes.
@@ -55,7 +49,7 @@ import org.jolokia.docker.maven.util.StartOrderResolver;
  * @author roland
  * @since 16/06/15
  */
-public class WatchMojo extends AbstractBuildSupporMojo {
+public class WatchMojo extends AbstractBuildSupportMojo {
 
     /** @parameter property = "docker.watchMode" default-value="both" **/
     private WatchMode watchMode;

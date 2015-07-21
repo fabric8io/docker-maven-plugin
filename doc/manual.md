@@ -260,7 +260,7 @@ of an image configuration. The available subelements are
   which are passed to bash. The run commands are inserted right after the assembly but before **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
-* **cleanup** indicates if dangling (untagged) images should be cleaned up during each build. default is `true` 
+* **cleanup** indicates if dangling (untagged) images should be cleaned up during each build. Default is `true` 
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its

@@ -19,7 +19,7 @@ import org.jolokia.docker.maven.util.ImageName;
  * @goal build
  * @phase install
  */
-public class BuildMojo extends AbstractBuildSupporMojo {
+public class BuildMojo extends AbstractBuildSupportMojo {
 
     /**
      * @parameter default-value="false" property="docker.skipTags"
