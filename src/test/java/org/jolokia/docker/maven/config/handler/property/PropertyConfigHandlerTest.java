@@ -42,6 +42,24 @@ public class PropertyConfigHandlerTest {
     }
 
     @Test
+    public void testBuildRunMode() {
+        ImageConfiguration buildOnly = resolveExternalImageConfig(getTestData(BuildRunMode.build));
+        assertEquals(BuildRunMode.build, buildOnly.getBuildRunMode());
+        
+        ImageConfiguration runOnly = resolveExternalImageConfig(getTestData(BuildRunMode.run));
+        assertEquals(BuildRunMode.run, runOnly.getBuildRunMode());
+
+        ImageConfiguration both = resolveExternalImageConfig(getTestData(BuildRunMode.both));
+        assertEquals(BuildRunMode.both, both.getBuildRunMode());
+        
+        ImageConfiguration skip = resolveExternalImageConfig(getTestData(BuildRunMode.skip));
+        assertEquals(BuildRunMode.skip, skip.getBuildRunMode());
+
+        ImageConfiguration notSpecified = resolveExternalImageConfig(new String[] { k(NAME), "image"});
+        assertEquals(BuildRunMode.both, notSpecified.getBuildRunMode());
+    }
+    
+    @Test
     public void testType() throws Exception {
         assertNotNull(configHandler.getType());
     }
@@ -290,6 +308,10 @@ public class PropertyConfigHandlerTest {
                 k(WAIT_URL), "http://foo.com",
                 k(WORKING_DIR), "foo"
         };
+    }
+    
+    private String[] getTestData(BuildRunMode mode) {
+        return new String[] { k(NAME), "image", k(BUILD_RUN_MODE), mode.toString() };
     }
 
     private String k(ConfigKey from) {

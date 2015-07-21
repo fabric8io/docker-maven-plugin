@@ -33,6 +33,7 @@ public enum ConfigKey {
     ASSEMBLY_USER("assembly.user"),
     ASSEMBLY_MODE("assembly.mode"),
     BIND,
+    BUILD_RUN_MODE("mode"),
     CAP_ADD,
     CAP_DROP,
     CLEANUP,

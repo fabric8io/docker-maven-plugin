@@ -14,6 +14,7 @@ public class ContainerDetails implements Container {
         this.json = json;
     }
 
+    @Override
     public String getName() {
         String name = json.getString("Name");
 
@@ -32,7 +33,8 @@ public class ContainerDetails implements Container {
 
     @Override
     public String getId() {
-        return json.getString("Id");
+        // only need first 12 to id a container
+        return json.getString("Id").substring(0, 12);
     }
 
     @Override
@@ -41,6 +43,7 @@ public class ContainerDetails implements Container {
         return json.getJSONObject("Config").getString("Image");
     }
 
+    @Override
     public boolean isRunning() {
         JSONObject state = json.getJSONObject("State");
         return state.getBoolean("Running");
