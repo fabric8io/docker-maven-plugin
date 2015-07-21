@@ -5,7 +5,8 @@
   - Adapt order of WORKDIR and RUN when building images (#222)
   - Allow 'build' and/or 'run' configuration to be skipped (#207)
   - Refactored to use 'inspect' instead of 'list' for checking the existence of an image (#230)
-   
+  - Refactored AppacheHttpClientDelegate to avoid leaking connections (#232)
+  
 * **0.13.2**
   - "run" directives can be added to the Dockerfile (#191)
   - Support user information in wait URL (#211)

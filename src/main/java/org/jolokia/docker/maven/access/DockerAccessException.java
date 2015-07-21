@@ -1,12 +1,14 @@
 package org.jolokia.docker.maven.access;
 
+import java.io.IOException;
+
 /**
  * Exception thrown if access to the docker host fails
  *
  * @author roland
  * @since 20.10.14
  */
-public class DockerAccessException extends Exception {
+public class DockerAccessException extends IOException {
 
     /**
      * Constructor
