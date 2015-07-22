@@ -33,13 +33,13 @@ public class ContainerTest {
     public void details() throws Exception {
         JSONObject data = new JSONObject();
         data.put("Created", "2015-01-06T15:47:31.485331387Z");
-        data.put("Id", "1234AF");
+        data.put("Id", "1234AF1234AF");
         data.put("Name", "/milkman-kindness");
         data.put("Config", new JSONObject("{ 'Image': '9876CE'}"));
         data.put("State", new JSONObject("{'Running' : true }"));
         Container cont = new ContainerDetails(data);
         assertEquals(1420559251485L, cont.getCreated());
-        assertEquals("1234AF", cont.getId());
+        assertEquals("1234AF1234AF", cont.getId());
         assertEquals("milkman-kindness", cont.getName());
         assertEquals("9876CE",cont.getImage());
         assertTrue(cont.isRunning());
@@ -49,12 +49,12 @@ public class ContainerTest {
     public void listElement() throws Exception {
         JSONObject data = new JSONObject();
         data.put("Created",1420559251485L);
-        data.put("Id", "1234AF");
+        data.put("Id", "1234AF1234AF");
         data.put("Image", "9876CE");
         data.put("Status", "Up 16 seconds");
         Container cont = new ContainersListElement(data);
         assertEquals(1420559251485L, cont.getCreated());
-        assertEquals("1234AF", cont.getId());
+        assertEquals("1234AF1234AF", cont.getId());
         assertEquals("9876CE", cont.getImage());
         assertTrue(cont.isRunning());
 

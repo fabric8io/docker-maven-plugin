@@ -59,6 +59,8 @@ public enum ConfigKey {
     REGISTRY,
     RESTART_POLICY_NAME("restartPolicy.name"),
     RESTART_POLICY_RETRY("restartPolicy.retry"),
+    SKIP_BUILD("skip.build"),
+    SKIP_RUN("skip.run"),
     USER,
     VOLUMES,
     TAGS,
