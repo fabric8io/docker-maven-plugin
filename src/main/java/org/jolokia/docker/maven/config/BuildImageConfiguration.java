@@ -37,8 +37,10 @@ public class BuildImageConfiguration {
      */
     private List<String> runCmds;
 
-    /** @parameter default-value="true" */
-    private Boolean cleanup;
+    /**
+     * @parameter default-value="false"
+     */
+    private boolean cleanup = false;
 
     /**
      * @paramter
@@ -86,8 +88,10 @@ public class BuildImageConfiguration {
      */
     private AssemblyConfiguration assembly;
     
-    /** @paramter default-falue="false" */
-    private Boolean skip;
+    /**
+     * @parameter
+     */
+    private boolean skip = false;
     
     public BuildImageConfiguration() {}
 
@@ -140,12 +144,12 @@ public class BuildImageConfiguration {
         return command;
     }
     
-    public Boolean cleanup() {
-        return (cleanup == null) ? Boolean.FALSE : cleanup;
+    public boolean cleanup() {
+        return cleanup;
     }
     
-    public Boolean skip() { 
-        return (skip == null) ? Boolean.FALSE : skip;
+    public boolean skip() {
+        return skip;
     }
 
     public Arguments getEntryPoint() {

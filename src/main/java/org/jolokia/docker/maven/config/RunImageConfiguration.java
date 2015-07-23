@@ -3,8 +3,6 @@ package org.jolokia.docker.maven.config;
 import java.util.List;
 import java.util.Map;
 
-import org.jolokia.docker.maven.config.BuildImageConfiguration.Builder;
-
 
 /**
  * @author roland
@@ -160,8 +158,10 @@ public class RunImageConfiguration {
      */
     private RestartPolicy restartPolicy;
 
-    /** @paramter default-falue="false" */
-    private Boolean skip;
+    /**
+     * @parameter
+     */
+    private boolean skip = false;
     
     public RunImageConfiguration() { }
 
@@ -265,8 +265,8 @@ public class RunImageConfiguration {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
 
-    public Boolean skip() {
-        return (skip == null) ? Boolean.FALSE : skip;
+    public boolean skip() {
+        return skip;
     }
     
     // ======================================================================================

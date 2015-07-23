@@ -32,7 +32,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 if (buildConfig.skip()) {
-                    log.info(imageConfig.getDescription() + ": Skipped, 'build' not enabled");
+                    log.info(imageConfig.getDescription() + ": Skipped building");
                 } else {
                     buildImage(dockerAccess, imageConfig, buildConfig);
                 }

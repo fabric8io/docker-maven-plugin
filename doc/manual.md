@@ -256,8 +256,7 @@ of an image configuration. The available subelements are
   which are passed to bash. The run commands are inserted right after the assembly and after **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
-* **skip** disables building of the image when the `docker:build` goal is executed. See 
-  [Skipping Build / Run Configurations](#skiping-build-/-run-configurations) below.
+* **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
 * **volumes** contains a list of `volume` elements to create a container
@@ -542,8 +541,7 @@ The `<run>` configuration knows the following sub elements:
 * **restartPolicy** (*v1.15*) specifies the container restart policy, see 
   [below](#container-restart-policy)
 * **user** (*v1.11*) user used inside the container
-* **skip** disables building of the image when the `docker:build` goal is executed. See 
-  [Skipping Build / Run Configurations](#skiping-build-/-run-configurations) below.
+* **skip** disable creating and starting of the container. This option is best used together with a configuration option.
 * **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]
  (#volume-binding)" for details.
 * **wait** specifies condition which must be fulfilled for the startup
@@ -1142,7 +1140,6 @@ up from the following properties, which correspond to corresponding
 values in the `<build>` and `<run>` sections.
 
 * **docker.alias** Alias name
-* **docker.mode** See [Build / Run Mode](#build-run-mode) below, default is `both`
 * **docker.assembly.baseDir** Directory name for the exported artifacts as
   described in an assembly (which is `/maven` by default).
 * **docker.assembly.descriptor** Path to the assembly descriptor when
@@ -1256,75 +1253,6 @@ Example:
   </plugins>
 </build>
 ```
-
-### Skipping Build / Run Configurations 
-
-There may be instances where you may not wish to have a container for an image be built and/or started regardless of how
-it is requested (life-cycle or direct goal invocation). 
-
-The `mode` element may be set to one of the following values:
-
-* **both** (default): the `build` and `run` configurations for the image will be executed
-* **build**: only the `build` configuration is executed
-* **run**: only the `run` configuration is executed
-* **skip**: the `build` and `run` configurations for the image will be skipped
-
-One such example of this is running integration tests against a database container. If your application also runs in a container, 
-you may not want it to start as part of running the tests, but you still want it built.
-
-```xml
-  <properties>
-    <application.image.mode>both</application.image.mode>
-  </properties>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.jolokia</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <configuration>
-          <images>
-            <image>
-              <name>azul/zulu-openjdk:8</name>
-              <alias>application</alias>
-              <mode>${application.image.mode}</mode>
-              ...
-            </image>
-          </images>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
-  <profiles>
-    <profile>
-      <id>integration-tests</id>
-      <properties>
-        <application.image.mode>build</application.image.mode>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jolokia</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <configuration>
-              <images combine.children="append">
-                <image>
-                  <name>postgres:9.3</name>
-                  <alias>database</alias>
-                  ...
-                </image>
-              </images>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
-```
-
-
 
 ### Registry handling
 

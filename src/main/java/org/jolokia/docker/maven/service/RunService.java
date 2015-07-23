@@ -181,7 +181,7 @@ public class RunService {
         List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
         for (ImageConfiguration config : images) {
             if (config.getRunConfiguration().skip()) {
-                log.info(config.getDescription() + ": Skipped, 'run' not enabled");
+                log.info(config.getDescription() + ": Skipped running");
             } else {
                 ret.add(config);
             }
