@@ -161,7 +161,7 @@ public class PropertyConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
-        assertEquals(true, buildConfig.cleanup());        
+        assertEquals(false, buildConfig.cleanup());
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());

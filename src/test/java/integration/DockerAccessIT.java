@@ -9,7 +9,6 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.access.DockerAccess.ListArg;
 import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
 import org.jolokia.docker.maven.util.*;
 import org.junit.*;
@@ -47,7 +46,7 @@ public class DockerAccessIT {
     @Test
     public void testBuildImage() throws DockerAccessException {
         File file = new File("src/test/resources/integration/busybox-test.tar");
-        dockerClient.buildImage(IMAGE_TAG, file);        
+        dockerClient.buildImage(IMAGE_TAG, file, false);
         assertTrue(hasImage(IMAGE_TAG));
         
         testRemoveImage(IMAGE_TAG);
@@ -129,6 +128,6 @@ public class DockerAccessIT {
     }
     
     private boolean hasImage(String image) throws DockerAccessException {
-        return !dockerClient.listImages(ListArg.filter(image)).isEmpty();
+        return dockerClient.hasImage(image);
     }
 }

@@ -1,19 +1,9 @@
 package org.jolokia.docker.maven.service;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.anyVararg;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.io.File;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccess.BuildArg;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
@@ -24,6 +14,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.*;
 
 public class BuildServiceTest {
 
@@ -115,7 +111,7 @@ public class BuildServiceTest {
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
-        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), (BuildArg) anyVararg());
+        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), anyBoolean());
     }
 
     private void thenOldImageIsNotRemoved() throws DockerAccessException {
@@ -127,7 +123,7 @@ public class BuildServiceTest {
     }
 
     private void whenBuildImage(boolean cleanup) throws DockerAccessException, MojoExecutionException {
-        doNothing().when(docker).buildImage(imageConfig.getName(), null);
+        doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), anyBoolean());
 
         if (cleanup) {
             when(docker.removeImage(oldImageId)).thenReturn(true);

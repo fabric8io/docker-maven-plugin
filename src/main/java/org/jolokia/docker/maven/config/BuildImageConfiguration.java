@@ -138,7 +138,7 @@ public class BuildImageConfiguration {
     }
     
     public Boolean cleanup() {
-        return (cleanup == null) ? Boolean.TRUE : cleanup;
+        return (cleanup == null) ? Boolean.FALSE : cleanup;
     }
 
     public Arguments getEntryPoint() {

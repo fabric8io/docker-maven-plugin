@@ -2,13 +2,11 @@ package org.jolokia.docker.maven.service;
 
 import java.io.File;
 
-import org.apache.maven.BuildAbort;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
 import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccess.BuildArg;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
@@ -76,8 +74,7 @@ public class BuildService {
         throws DockerAccessException, MojoExecutionException {
 
         File dockerArchive = createArchive(imageName, buildConfig, mojoParameters);
-        docker.buildImage(imageName, dockerArchive, BuildArg.tag(imageName), BuildArg.forcerm(buildConfig.cleanup()));
-
+        docker.buildImage(imageName, dockerArchive, buildConfig.cleanup());
         return queryService.getImageId(imageName);
     }
 

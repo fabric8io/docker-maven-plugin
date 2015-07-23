@@ -2,11 +2,8 @@ package org.jolokia.docker.maven.access;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
-import org.jolokia.docker.maven.access.DockerAccess.BuildArg;
-import org.jolokia.docker.maven.access.DockerAccess.ListArg;
 import org.jolokia.docker.maven.util.ImageName;
 
 public final class UrlBuilder {
@@ -21,132 +18,77 @@ public final class UrlBuilder {
         this.baseUrl = stripSlash(baseUrl);
     }
     
-    public DockerUrl buildImage(BuildArg... args) {
-        return createDockerUrl("/build", args);
+    public String buildImage(String image, boolean forceRemove) {
+        return u("build")
+                .p("t",image)
+                .p(forceRemove ? "forcerm" : "rm", true)
+                .toString();
     }
 
     public String inspectImage(String name) {
-        return createUrl(String.format("/images/%s/json", encode(name)));
+        return u("images/%s/json", name).toString();
     }
 
     public String containerLogs(String containerId, boolean follow) {
-        String url = createUrl(String.format("/containers/%s/logs", containerId));
-        url += "?stdout=1&stderr=1&timestamps=1";
-        url = addQueryParam(url, "follow", follow);
-        
-        return url;
+        return u("containers/%s/logs", containerId)
+                .p("stdout",true)
+                .p("stderr",true)
+                .p("timestamps", true)
+                .p("follow", follow)
+                .toString();
     }
     
-    public DockerUrl createContainer(String name) {
-        return createDockerUrl("/containers/create").addQueryParam("name", name);
+    public String createContainer(String name) {
+        return u("containers/create").p("name", name).toString();
     }
 
     public String deleteImage(String name, boolean force) {
-        String url = createUrl(String.format("/images/%s", name));
-        url = addQueryParam(url, "force", force);
-
-        return url;
+        return u("images/%s", name).p("force", force).toString();
     }
 
-    public DockerUrl inspectContainer(String containerId) {
-        return createDockerUrl(String.format("/containers/%s/json", encode(containerId)));
+    public String inspectContainer(String containerId) {
+        return u("containers/%s/json", containerId).toString();
     }
     
-    public DockerUrl listContainers(ListArg... args) {
-        return addQueryArgs(createDockerUrl("/containers/json"), args);
-    }
-
-    public DockerUrl listImages(ListArg... args) {
-        return addQueryArgs(createDockerUrl("/images/json"), args);
-    }
-    
-    public String listImages(ImageName name) {
-        return createUrl(String.format("/images/json?filter=%s", name.getNameWithoutTag()));
+    public String listContainers(int limit) {
+        return u("containers/json").p("limit", limit).toString();
     }
 
     public String pullImage(ImageName name, String registry) {
-        String url = createUrl(String.format("/images/create?fromImage=%s", encode(name.getNameWithoutTag(registry))));
-        url = addTagParam(url, name.getTag());
-
-        return url;
+        return u("images/create")
+                .p("fromImage", name.getNameWithoutTag(registry))
+                .p("tag", name.getTag()).toString();
     }
 
     public String pushImage(ImageName name, String registry) {
-        String url = createUrl(String.format("/images/%s/push", encode(name.getNameWithoutTag(registry))));
-        url = addTagParam(url, name.getTag());
-        // "force=1" helps Fedora/CentOs Docker variants to push to public registries
-        url = addForceParam(url,true);
-        return url;
+        return u("images/%s/push", name.getNameWithoutTag(registry))
+                .p("tag", name.getTag())
+                // "force=1" helps Fedora/CentOs Docker variants to push to public registries
+                .p("force", true)
+                .toString();
     }
 
     public String removeContainer(String containerId, boolean removeVolumes) {
-        String url = createUrl(String.format("/containers/%s", encode(containerId)));
-        if (removeVolumes) {
-            url = addQueryParam(url, "v", "1");
-        }
-
-        return url;
+        return u("containers/%s", containerId).p("v", removeVolumes).toString();
     }
 
-    public DockerUrl startContainer(String containerId) {
-        return createDockerUrl(String.format("/containers/%s/start", encode(containerId)));
+    public String startContainer(String containerId) {
+        return u("containers/%s/start", containerId).toString();
     }
 
-    public DockerUrl stopContainer(String containerId) {
-        return createDockerUrl(String.format("/containers/%s/stop", encode(containerId)));
+    public String stopContainer(String containerId) {
+        return u("containers/%s/stop", containerId).toString();
     }
 
-    public DockerUrl tagContainer(ImageName source, ImageName target, boolean force) {
-        String url = createUrl(String.format("/images/%s/tag", encode(source.getFullName())));
-        url = addRepositoryParam(url, target.getNameWithoutTag());
-        url = addTagParam(url, target.getTag());
-        if (force) {
-            url = addQueryParam(url, "force", "1");
-        }
-
-        return new DockerUrl(url);
+    public String tagContainer(ImageName source, ImageName target, boolean force) {
+        return u("images/%s/tag", source.getFullName())
+                .p("repo",target.getNameWithoutTag())
+                .p("tag",target.getTag())
+                .p("force",force)
+                .toString();
     }
 
     // ============================================================================
-
-    private String addQueryParam(String url, String param, boolean value) {
-        return addQueryParam(url, param, (value) ? "1" : "0");
-    }
-
-    private String addQueryParam(String url, String param, String value) {
-        if (value != null) {
-            return url + (url.contains("?") ? "&" : "?") + param + "=" + encode(value);
-        }
-        return url;
-    }
-
-    private String addRepositoryParam(String url, String repository) {
-        return addQueryParam(url, "repo", repository);
-    }
-
-    private String addTagParam(String url, String tag) {
-        return addQueryParam(url, "tag", tag);
-    }
-
-    private String addForceParam(String url, boolean force) {
-        return addQueryParam(url, "force", force);
-    }
-
-    private DockerUrl addQueryArgs(DockerUrl url, ListArg... args) {
-        for (ListArg arg : args) {
-            url.addQueryParam(arg.getKey(), arg.getValue());
-        }
-        
-        return url;
-    }
-    
-    private DockerUrl createDockerUrl(String path, ListArg... args) {
-        return addQueryArgs(new DockerUrl(createUrl(path)), args);
-    }
-
-    private String createUrl(String path) {
-        return String.format("%s/%s%s", baseUrl, apiVersion, path);
-    }
 
     @SuppressWarnings("deprecation")
     private static String encode(String param) {
@@ -166,37 +108,61 @@ public final class UrlBuilder {
         }
         return ret;
     }
-        
-    public static class DockerUrl {
-        private final String url;
-        private final Map<String, String> queryParams;
-        
-        DockerUrl(String url) {            
-            this.url = url;
-            this.queryParams = new LinkedHashMap<>();
+
+    // Entry point for builder
+    private Builder u(String format, String ... args) {
+        return new Builder(createUrl(String.format(format,encodeArgs(args))));
+    }
+
+    private String[] encodeArgs(String[] args) {
+        String ret[] = new String[args.length];
+        int i=0;
+        for (String arg : args) {
+            ret[i++] = encode(arg);
         }
-        
-        public DockerUrl addQueryParam(String key, String value) {
-            if (value != null) {
+        return ret;
+    }
+
+    private String createUrl(String path) {
+        return String.format("%s/%s/%s", baseUrl, apiVersion, path);
+    }
+
+    private static class Builder {
+
+        Map<String,String> queryParams = new HashMap<>();
+        String url;
+
+        public Builder(String url) {
+            this.url = url;
+        }
+
+        private Builder p(String key, String value) {
+             if (value != null) {
                 queryParams.put(key, value);
             }
             return this;
         }
-        
-        @Override
+
+        private Builder p(String key, boolean value) {
+            return p(key,value ? "1" : "0");
+        }
+
+        private Builder p(String key, int value) {
+            return p(key,Integer.toString(value));
+        }
+
         public String toString() {
-            StringBuilder builder = new StringBuilder(url);
-            builder.append("?");
-            
+            StringBuilder ret = new StringBuilder(url);
+            ret.append("?");
+
             int count = queryParams.size();
             for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                builder.append(entry.getKey()).append("=").append(encode(entry.getValue()));
+                ret.append(entry.getKey()).append("=").append(encode(entry.getValue()));
                 if (--count > 0) {
-                    builder.append("&");
+                    ret.append("&");
                 }
             }
-            
-            return builder.toString();
+            return ret.toString();
         }
-    }    
+    }
 }

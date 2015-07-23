@@ -5,11 +5,11 @@ import java.net.URI;
 import java.util.*;
 
 import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.access.UrlBuilder.DockerUrl;
 import org.jolokia.docker.maven.access.chunked.*;
-import org.jolokia.docker.maven.access.hc.http.*;
-import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
 import org.jolokia.docker.maven.access.hc.ApacheHttpClientDelegate.Result;
+import org.jolokia.docker.maven.access.hc.http.HttpClientBuilder;
+import org.jolokia.docker.maven.access.hc.http.HttpRequestException;
+import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
 import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.model.*;
 import org.jolokia.docker.maven.util.ImageName;
@@ -102,11 +102,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void buildImage(String image, File dockerArchive, BuildArg... args) throws DockerAccessException {
-        DockerUrl buildUrl = urlBuilder.buildImage(args);
-
+    public void buildImage(String image, File dockerArchive, boolean forceRemove) throws DockerAccessException {
         try {
-            Result result = post(buildUrl, dockerArchive, HTTP_OK);
+            Result result = post(urlBuilder.buildImage(image,forceRemove), dockerArchive, HTTP_OK);
             processChunkedResponse(result, createBuildResponseHandler());
         } catch (HttpRequestException e) {
             log.error(e.getMessage());
@@ -151,8 +149,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
     } 
     
     @Override
-    public List<Container> listContainers(ListArg... args) throws DockerAccessException {
-        DockerUrl url = urlBuilder.listContainers(args);
+    public List<Container> listContainers(int limit) throws DockerAccessException {
+        String url = urlBuilder.listContainers(limit);
 
         try {
             String response = get(url, HTTP_OK).getMessage();
@@ -169,27 +167,31 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throw new DockerAccessException(e.getMessage());
         }
     }
-    
-    @Override
-    public List<Image> listImages(ListArg... args) throws DockerAccessException {
-        DockerUrl url = urlBuilder.listImages(args); 
 
+    public boolean hasImage(String name) throws DockerAccessException {
+        Result response = inspectImage(name);
+        return response.getCode() == HTTP_OK;
+    }
+
+    @Override
+    public String getImageId(String name) throws DockerAccessException {
+        Result response = inspectImage(name);
+        if (response.getCode() == HTTP_NOT_FOUND) {
+            return null;
+        }
+        JSONObject imageDetails = new JSONObject(response.getMessage());
+        return imageDetails.getString("Id");
+    }
+
+    private Result inspectImage(String name) throws DockerAccessException {
+        String url = urlBuilder.inspectImage(name);
         try {
-            String response = get(url, HTTP_OK).getMessage();
-            JSONArray array = new JSONArray(response);
-            List<Image> images = new ArrayList<>(array.length());
-        
-            for (int i = 0; i < array.length(); i++) {
-                images.add(new Image(array.getJSONObject(i)));
-            }
-            
-            return images;
-        }
-        catch (HttpRequestException e) {
+            return get(url, HTTP_OK, HTTP_NOT_FOUND);
+        } catch (HttpRequestException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException("Unable to list images");
+            throw new DockerAccessException("Unable to inspect image [%s]",name);
         }
-    }    
+    }
 
     @Override
     public void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException {
@@ -273,6 +275,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public void shutdown() {}
 
+
     // visible for testing?
     private BuildResponseHandler createBuildResponseHandler() {
         return new BuildResponseHandler(log);
@@ -315,9 +318,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
-    private Result get(DockerUrl url, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
+    private Result get(String url, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
         try {
-            return delegate.get(url.toString(), statusCode, additional);
+            return delegate.get(url, statusCode, additional);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Communication error with the docker daemon");
         }
@@ -331,7 +334,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
        }
     }
 
-    private Result post(DockerUrl url, Object body, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
+    private Result post(String url, Object body, int statusCode, int... additional) throws HttpRequestException, DockerAccessException {
         try {
             return delegate.post(url.toString(), body, statusCode, additional);
         } catch (IOException e) {
@@ -341,7 +344,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     // ===========================================================================================================
     // Preparation for performing requests
- 
+
     private Map<String, Integer> extractPorts(JSONObject info) {
         JSONObject networkSettings = info.getJSONObject("NetworkSettings");
         if (networkSettings != null) {
@@ -428,9 +431,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private boolean isSSL(String url) {
         return url != null && url.toLowerCase().startsWith("https");
-    } 
-    
-    private boolean hasImage(String image) throws DockerAccessException {
-        return !listImages(ListArg.filter(image)).isEmpty();
     }
+
 }

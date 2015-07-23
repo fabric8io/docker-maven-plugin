@@ -108,6 +108,7 @@ public class ApacheHttpClientDelegate {
     {
         private final int code;
         private final HttpEntity entity;
+        private String message;
 
         public Result(int code, HttpEntity entity)
         {
@@ -125,7 +126,11 @@ public class ApacheHttpClientDelegate {
 
         public String getMessage() {
             try {
-                return (entity == null) ? null : EntityUtils.toString(entity).trim();
+                if (message != null) {
+                    return message;
+                }
+                message = (entity == null) ? null : EntityUtils.toString(entity).trim();
+                return message;
             }
             catch (IOException e) {
                 return "Unknown error - failed to read response content";
