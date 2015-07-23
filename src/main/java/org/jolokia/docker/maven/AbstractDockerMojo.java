@@ -239,7 +239,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
             return client;
         }
-        catch (IOException | DockerAccessException e) {
+        catch (IOException e) {
             throw new MojoExecutionException("Cannot create docker access object ", e);
         }
     }

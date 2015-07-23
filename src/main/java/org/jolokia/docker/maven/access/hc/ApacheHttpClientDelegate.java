@@ -1,12 +1,19 @@
 package org.jolokia.docker.maven.access.hc;
 
-import java.io.*;
+import com.google.common.net.MediaType;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.http.*;
-import org.apache.http.client.methods.*;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -15,126 +22,167 @@ import org.jolokia.docker.maven.access.hc.http.HttpRequestException;
 
 public class ApacheHttpClientDelegate {
 
-    private static final String HEADER_ACCEPT = "Accept";
-    private static final String HEADER_ACCEPT_ALL = "*/*";
+  private final CloseableHttpClient httpClient;
 
-    private final CloseableHttpClient httpClient;
+  public ApacheHttpClientDelegate(CloseableHttpClient httpClient) {
+    this.httpClient = httpClient;
+  }
 
-    public ApacheHttpClientDelegate(CloseableHttpClient httpClient) {
-        this.httpClient = httpClient;
+  public int delete(String url, int... statusCodes) throws IOException {
+    return delete(url, new StatusCodeResponseHandler(), statusCodes);
+  }
+
+  public static class StatusCodeResponseHandler implements ResponseHandler<Integer> {
+
+    @Override
+    public Integer handleResponse(HttpResponse response)
+        throws IOException {
+      return response.getStatusLine().getStatusCode();
+    }
+  }
+
+  public <T> T delete(String url, ResponseHandler<T> responseHandler, int... statusCodes)
+      throws IOException {
+    return httpClient.execute(newDelete(url),
+                              new StatusCodeCheckerResponseHandler<>(responseHandler,
+                                                                     statusCodes));
+  }
+
+  public String get(String url, int... statusCodes) throws IOException {
+    return httpClient.execute(newGet(url), new StatusCodeCheckerResponseHandler<>(
+        new BodyResponseHandler(), statusCodes));
+  }
+
+  public <T> T get(String url, ResponseHandler<T> responseHandler, int... statusCodes)
+      throws IOException {
+    return httpClient
+        .execute(newGet(url), new StatusCodeCheckerResponseHandler<>(responseHandler, statusCodes));
+  }
+
+  public static class BodyResponseHandler implements ResponseHandler<String> {
+
+    @Override
+    public String handleResponse(HttpResponse response)
+        throws IOException {
+      return getResponseMessage(response);
+    }
+  }
+
+  private static String getResponseMessage(HttpResponse response) throws IOException {
+    return (response.getEntity() == null) ? null
+                                          : EntityUtils.toString(response.getEntity()).trim();
+  }
+
+  public <T> T post(String url, Object body, Map<String, String> headers,
+                    ResponseHandler<T> responseHandler, int... statusCodes) throws IOException {
+    HttpUriRequest request = newPost(url, body);
+    for (Entry<String, String> entry : headers.entrySet()) {
+      request.addHeader(entry.getKey(), entry.getValue());
     }
 
-    public Result delete(String url, int statusCode, int... additional) throws IOException, HttpRequestException {
-        return parseResponse(httpClient.execute(newDelete(url)), statusCode, additional);
+    return httpClient.execute(request, new StatusCodeCheckerResponseHandler<>(responseHandler,
+                                                                              statusCodes));
+  }
+
+  public <T> T post(String url, Object body, ResponseHandler<T> responseHandler,
+                    int... statusCodes) throws IOException {
+    return httpClient.execute(newPost(url, body),
+                              new StatusCodeCheckerResponseHandler<>(responseHandler,
+                                                                     statusCodes));
+  }
+
+  public int post(String url, Object body,
+                  int... statusCodes) throws IOException {
+    return post(url, body, new StatusCodeResponseHandler(), statusCodes);
+  }
+
+  public CloseableHttpClient getHttpClient() {
+    return httpClient;
+  }
+
+  // =========================================================================================
+
+  private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
+    req.addHeader(HttpHeaders.ACCEPT, "*/*");
+    req.addHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+    return req;
+  }
+
+
+  private HttpUriRequest newDelete(String url) {
+    return addDefaultHeaders(new HttpDelete(url));
+  }
+
+  private HttpUriRequest newGet(String url) {
+    return addDefaultHeaders(new HttpGet(url));
+  }
+
+  private HttpUriRequest newPost(String url, Object body) {
+    HttpPost post = new HttpPost(url);
+
+    if (body != null) {
+      if (body instanceof File) {
+        post.setEntity(new FileEntity((File) body));
+      } else {
+        post.setEntity(new StringEntity((String) body, Charset.defaultCharset()));
+      }
+    }
+    return addDefaultHeaders(post);
+  }
+
+  public static class StatusCodeCheckerResponseHandler<T> implements ResponseHandler<T> {
+
+    private int[] statusCodes;
+    private ResponseHandler<T> delegate;
+
+    public StatusCodeCheckerResponseHandler(ResponseHandler<T> delegate, int... statusCodes) {
+      this.statusCodes = statusCodes;
+      this.delegate = delegate;
     }
 
-    public Result get(String url, int statusCode, int... additional) throws IOException, HttpRequestException {
-        return parseResponse(httpClient.execute(newGet(url)), statusCode, additional);
-    }
-
-    public Result post(String url, Object body, Map<String, String> headers, int statusCode, int... additional) throws IOException,
-        HttpRequestException {
-
-        HttpUriRequest request = newPost(url, body);
-        for (Entry<String, String> entry : headers.entrySet()) {
-            request.addHeader(entry.getKey(), entry.getValue());
+    @Override
+    public T handleResponse(HttpResponse response) throws IOException {
+      StatusLine statusLine = response.getStatusLine();
+      int statusCode = statusLine.getStatusCode();
+      for (int code : statusCodes) {
+        if (statusCode == code) {
+          return delegate.handleResponse(response);
         }
+      }
 
-        return parseResponse(httpClient.execute(request), statusCode, additional);
+      String reason = statusLine.getReasonPhrase().trim();
+      throw new HttpRequestException(String.format("%s (%s: %d)", getResponseMessage(response),
+                                                   reason, statusCode));
     }
 
-    public Result post(String url, Object body, int statusCode, int... additional) throws IOException, HttpRequestException {
-        return parseResponse(httpClient.execute(newPost(url, body)), statusCode, additional);
+  }
+
+  public static class BodyAndStatusResponseHandler implements ResponseHandler<HttpBodyAndStatus> {
+
+    @Override
+    public HttpBodyAndStatus handleResponse(HttpResponse response)
+        throws IOException {
+      return new HttpBodyAndStatus(response.getStatusLine().getStatusCode(),
+                                   getResponseMessage(response));
     }
-    
-    public CloseableHttpClient getHttpClient() {
-        return httpClient;
-    }
+  }
 
-    // =========================================================================================
+  public static class HttpBodyAndStatus {
 
-    private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
-        req.addHeader(HEADER_ACCEPT, HEADER_ACCEPT_ALL);
-        req.addHeader("Content-Type", "application/json");
-        return req;
-    }
+    private final int statusCode;
+    private final String body;
 
-
-
-    private HttpUriRequest newDelete(String url) {
-        return addDefaultHeaders(new HttpDelete(url));
-    }
-
-    private HttpUriRequest newGet(String url) {
-        return addDefaultHeaders(new HttpGet(url));
+    public HttpBodyAndStatus(int statusCode, String body) {
+      this.statusCode = statusCode;
+      this.body = body;
     }
 
-    private HttpUriRequest newPost(String url, Object body) {
-        HttpPost post = new HttpPost(url);
-
-        if (body != null) {
-            if (body instanceof File) {
-                post.setEntity(new FileEntity((File) body));
-            }
-            else {
-                post.setEntity(new StringEntity((String) body, Charset.defaultCharset()));
-            }
-        }
-        return addDefaultHeaders(post);
+    public int getStatusCode() {
+      return statusCode;
     }
 
-    private Result parseResponse(HttpResponse response, int successCode, int... additional) throws HttpRequestException {
-        HttpEntity entity = response.getEntity();
-
-        StatusLine statusLine = response.getStatusLine();
-        int statusCode = statusLine.getStatusCode();
-        String reason = statusLine.getReasonPhrase().trim();
-
-        if (statusCode == successCode) {
-            return new Result(statusCode, entity);
-        }
-
-        for (int code : additional) {
-            if (statusCode == code) {
-                return new Result(code, entity);
-            }
-        }
-
-        Result result = new Result(statusCode, entity);
-        throw new HttpRequestException(String.format("%s (%s: %d)", result.getMessage(), reason, statusCode));
+    public String getBody() {
+      return body;
     }
-
-    public static class Result
-    {
-        private final int code;
-        private final HttpEntity entity;
-        private String message;
-
-        public Result(int code, HttpEntity entity)
-        {
-            this.code = code;
-            this.entity = entity;
-        }
-
-        public int getCode() {
-            return code;
-        }
-
-        public InputStream getInputStream() throws IOException {
-            return entity.getContent();
-        }
-
-        public String getMessage() {
-            try {
-                if (message != null) {
-                    return message;
-                }
-                message = (entity == null) ? null : EntityUtils.toString(entity).trim();
-                return message;
-            }
-            catch (IOException e) {
-                return "Unknown error - failed to read response content";
-            }
-        }
-    }
+  }
 }
