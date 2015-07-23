@@ -72,6 +72,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .tags(listWithPrefix(prefix, TAGS, properties))
                 .maintainer(withPrefix(prefix, MAINTAINER, properties))
                 .workdir(withPrefix(prefix, WORKDIR, properties))
+                .skip(withPrefix(prefix, ConfigKey.SKIP_BUILD, properties))
                 .build();
     }
 
@@ -102,6 +103,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
                 .wait(extractWaitConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
+                .skip(withPrefix(prefix, ConfigKey.SKIP_RUN, properties))
                 .build();
     }
 

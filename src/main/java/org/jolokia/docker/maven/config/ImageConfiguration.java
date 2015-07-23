@@ -46,22 +46,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
      * @parameter
      */
     private String registry;
-
+    
     // Used for injection
     public ImageConfiguration() {}
-
-    // For builder
-    private ImageConfiguration(String name, String alias,
-                               RunImageConfiguration run, BuildImageConfiguration build,WatchImageConfiguration watch,
-                               Map<String, String> external) {
-        this.name = name;
-        this.alias = alias;
-        this.run = run;
-        this.build = build;
-        this.watch = watch;
-        this.external = external;
-    }
-
+   
     @Override
     public String getName() {
         return name;
@@ -123,10 +111,9 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         // is a data image or not on its own.
         return getRunConfiguration() == null;
     }
-
+    
     public String getDescription() {
-        return "[" + name + "]" +
-               (alias != null ? " \"" + alias + "\"" : "");
+        return String.format("[%s] %s", name, (alias != null ? "\"" + alias + "\"" : ""));
     }
 
     public String getRegistry() {
@@ -135,55 +122,46 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     @Override
     public String toString() {
-        return "ImageConfiguration{" +
-               "name='" + name + '\'' +
-               ", alias='" + alias + '\'' +
-               '}';
+        return String.format("ImageConfiguration {name='%s', alias='%s'}", name, alias);
     }
 
     // =========================================================================
     // Builder for image configurations
 
     public static class Builder {
-
-        String name,alias;
-        RunImageConfiguration runConfig;
-        BuildImageConfiguration buildConfig;
-        WatchImageConfiguration watchConfig;
-
-        Map<String,String> externalConfig;
+        private ImageConfiguration config = new ImageConfiguration();
 
         public Builder name(String name) {
-            this.name = name;
+            config.name = name;
             return this;
         }
 
         public Builder alias(String alias) {
-            this.alias = alias;
+            config.alias = alias;
             return this;
         }
 
         public Builder runConfig(RunImageConfiguration runConfig) {
-            this.runConfig = runConfig;
+            config.run = runConfig;
             return this;
         }
 
         public Builder buildConfig(BuildImageConfiguration buildConfig) {
-            this.buildConfig = buildConfig;
+            config.build = buildConfig;
             return this;
         }
 
         public Builder externalConfig(Map<String, String> externalConfig) {
-            this.externalConfig = externalConfig;
+            config.external = externalConfig;
             return this;
         }
-
+        
         public ImageConfiguration build() {
-            return new ImageConfiguration(name,alias,runConfig,buildConfig,watchConfig, externalConfig);
+            return config;
         }
 
         public Builder watchConfig(WatchImageConfiguration watchConfig) {
-            this.watchConfig = watchConfig;
+            config.watch = watchConfig;
             return this;
         }
     }

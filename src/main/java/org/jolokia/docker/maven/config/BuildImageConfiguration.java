@@ -86,6 +86,9 @@ public class BuildImageConfiguration {
      */
     private AssemblyConfiguration assembly;
     
+    /** @paramter default-falue="false" */
+    private Boolean skip;
+    
     public BuildImageConfiguration() {}
 
     public String getFrom() {
@@ -139,6 +142,10 @@ public class BuildImageConfiguration {
     
     public Boolean cleanup() {
         return (cleanup == null) ? Boolean.FALSE : cleanup;
+    }
+    
+    public Boolean skip() { 
+        return (skip == null) ? Boolean.FALSE : skip;
     }
 
     public Arguments getEntryPoint() {
@@ -231,6 +238,13 @@ public class BuildImageConfiguration {
                 config.entryPoint = new Arguments();
             }
             config.entryPoint.setShell(entryPoint);
+            return this;
+        }
+        
+        public Builder skip(String skip) {
+            if (skip != null) {
+                config.skip = Boolean.valueOf(skip);
+            }
             return this;
         }
 

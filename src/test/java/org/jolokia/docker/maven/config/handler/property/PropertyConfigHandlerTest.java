@@ -40,7 +40,23 @@ public class PropertyConfigHandlerTest {
         configHandler = new PropertyConfigHandler();
         imageConfiguration = new ImageConfiguration.Builder().build();
     }
+    
+    @Test
+    public void testSkipBuild() {
+        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, false)).getBuildConfiguration().skip());
+        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, true)).getBuildConfiguration().skip());
+        
+        assertFalse(resolveExternalImageConfig(new String[] { k(NAME), "image"}).getBuildConfiguration().skip());
+    }
 
+    @Test
+    public void testSkipRun() {
+        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, false)).getRunConfiguration().skip());
+        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, true)).getRunConfiguration().skip());
+        
+        assertFalse(resolveExternalImageConfig(new String[] { k(NAME), "image"}).getRunConfiguration().skip());
+    }    
+    
     @Test
     public void testType() throws Exception {
         assertNotNull(configHandler.getType());
@@ -290,6 +306,10 @@ public class PropertyConfigHandlerTest {
                 k(WAIT_URL), "http://foo.com",
                 k(WORKING_DIR), "foo"
         };
+    }
+    
+    private String[] getSkipTestData(ConfigKey key, boolean value) {
+        return new String[] { k(NAME), "image", k(key), String.valueOf(value) };
     }
 
     private String k(ConfigKey from) {
