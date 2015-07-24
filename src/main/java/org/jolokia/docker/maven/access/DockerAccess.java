@@ -26,24 +26,30 @@ public interface DockerAccess {
      */
     Container inspectContainer(String containerId) throws DockerAccessException;
 
+    /**
+     * Check whether the given name exists as image at the docker daemon
+     *
+     * @param name image name to check
+     * @return true if the image exists
+     */
+    boolean hasImage(String name) throws DockerAccessException;
 
     /**
-     * List images
-     * 
-     * @param args optional list images args
-     * @return list of <code>Image<code>objects 
-     * @throws DockerAccessException if the images could not be listed
+     * Get the image id of a given name or <code>null</code> if no such image exists
+     *
+     * @param name name to lookup
+     * @return the image id or <code>null</code>
      */
-    List<Image> listImages(ListArg... args) throws DockerAccessException;
-    
+    String getImageId(String name) throws DockerAccessException;
+
     /**
      * List containers
      * 
-     * @param args optional list containers args
+     * @param limit limit of containers to list
      * @return list of <code>Container<code> objects
      * @throws DockerAccessException if the containers could not be listed
      */
-    List<Container> listContainers(ListArg... args) throws DockerAccessException;
+    List<Container> listContainers(int limit) throws DockerAccessException;
     
     /**
      * Create a container from the given image.
@@ -139,9 +145,10 @@ public interface DockerAccess {
      *
      * @param image name of the image to build or <code>null</code> if none should be used
      * @param dockerArchive from which the docker image should be build
+     * @param forceRemove whether to remove intermediate containers
      * @throws DockerAccessException if docker host reports an error during building of an image
      */
-    void buildImage(String image, File dockerArchive) throws DockerAccessException;
+    void buildImage(String image, File dockerArchive, boolean forceRemove) throws DockerAccessException;
 
     /**
      * Alias an image in the repository with a complete new name. (Note that this maps to a Docker Remote API 'tag'
@@ -174,30 +181,4 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
-    
-    class ListArg {
-        private final String key;
-        private final String value;
-
-        private ListArg(String key, String value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String getValue() {
-            return value;
-        }
-        
-        public static ListArg filter(String value) {
-            return new ListArg("filter", value);
-        }
-                
-        public static ListArg limit(int value) {
-            return new ListArg("limit", String.valueOf(value));
-        }
-    }
 }

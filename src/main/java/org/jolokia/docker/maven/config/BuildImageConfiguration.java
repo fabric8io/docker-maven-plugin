@@ -37,6 +37,10 @@ public class BuildImageConfiguration {
      */
     private List<String> runCmds;
 
+    /**
+     * @parameter default-value="false"
+     */
+    private boolean cleanup = false;
 
     /**
      * @paramter
@@ -83,6 +87,11 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private AssemblyConfiguration assembly;
+    
+    /**
+     * @parameter
+     */
+    private boolean skip = false;
     
     public BuildImageConfiguration() {}
 
@@ -134,6 +143,14 @@ public class BuildImageConfiguration {
     public String getCommand() {
         return command;
     }
+    
+    public boolean cleanup() {
+        return cleanup;
+    }
+    
+    public boolean skip() {
+        return skip;
+    }
 
     public Arguments getEntryPoint() {
         return entryPoint;
@@ -178,7 +195,7 @@ public class BuildImageConfiguration {
 
         public Builder runCmds(List<String> theCmds) {
             if (config.runCmds == null) {
-                config.runCmds = new ArrayList<String>();
+                config.runCmds = new ArrayList<>();
             }
             else
             	config.runCmds = theCmds;
@@ -212,12 +229,26 @@ public class BuildImageConfiguration {
             config.cmd.setShell(cmd);
             return this;
         }
+        
+        public Builder cleanup(String cleanup) { 
+            if (cleanup != null) {
+                config.cleanup = Boolean.valueOf(cleanup);
+            }
+            return this;
+        }
 
         public Builder entryPoint(String entryPoint) {
             if (config.entryPoint == null) {
                 config.entryPoint = new Arguments();
             }
             config.entryPoint.setShell(entryPoint);
+            return this;
+        }
+        
+        public Builder skip(String skip) {
+            if (skip != null) {
+                config.skip = Boolean.valueOf(skip);
+            }
             return this;
         }
 

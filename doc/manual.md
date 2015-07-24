@@ -236,30 +236,32 @@ of an image configuration. The available subelements are
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
+* **cleanup** indicates if dangling (untagged) images should be cleaned up during each build. Default is `true`   
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See 
   [Start-up Arguments](#start-up-arguments) for details.
 * **entrypoint** An entrypoint allows you to configure a container that will run as an executable. 
-  See [Start-up Arguments](#start-up-arguments) for details. 
-* **workdir** the directory to change to when starting the container.  
+  See [Start-up Arguments](#start-up-arguments) for details.
 * **env** holds environments as described in
-  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
-* **labels** holds labels  as described in
   [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
+* **labels** holds labels  as described in
+  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
+* **maintainer** specifies the author (MAINTAINER) field for the generated image
 * **ports** describes the exports ports. It contains a list of
   `<port>` elements, one for each port to expose.
-* **volumes** contains a list of `volume` elements to create a container
-  volume.
-* **tags** contains a list of additional `tag` elements with which an
-  image is to be tagged after the build.
-* **maintainer** specifies the author (MAINTAINER) field for the generated image
 * **run** specifies commands to be run during the build process. It contains **run** elements 
-  which are passed to bash. The run commands are inserted right after the assembly but before **workdir** in to the
+  which are passed to bash. The run commands are inserted right after the assembly and after **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
+* **skip** if set to true disables building of the image. This config option is best used together with a maven property
+* **tags** contains a list of additional `tag` elements with which an
+  image is to be tagged after the build.
+* **volumes** contains a list of `volume` elements to create a container
+  volume.
+* **workdir** the directory to change to when starting the container.
 
 From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
@@ -539,6 +541,7 @@ The `<run>` configuration knows the following sub elements:
 * **restartPolicy** (*v1.15*) specifies the container restart policy, see 
   [below](#container-restart-policy)
 * **user** (*v1.11*) user used inside the container
+* **skip** disable creating and starting of the container. This option is best used together with a configuration option.
 * **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]
  (#volume-binding)" for details.
 * **wait** specifies condition which must be fulfilled for the startup

@@ -40,7 +40,23 @@ public class PropertyConfigHandlerTest {
         configHandler = new PropertyConfigHandler();
         imageConfiguration = new ImageConfiguration.Builder().build();
     }
+    
+    @Test
+    public void testSkipBuild() {
+        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, false)).getBuildConfiguration().skip());
+        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, true)).getBuildConfiguration().skip());
+        
+        assertFalse(resolveExternalImageConfig(new String[] { k(NAME), "image"}).getBuildConfiguration().skip());
+    }
 
+    @Test
+    public void testSkipRun() {
+        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, false)).getRunConfiguration().skip());
+        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, true)).getRunConfiguration().skip());
+        
+        assertFalse(resolveExternalImageConfig(new String[] { k(NAME), "image"}).getRunConfiguration().skip());
+    }    
+    
     @Test
     public void testType() throws Exception {
         assertNotNull(configHandler.getType());
@@ -122,6 +138,14 @@ public class PropertyConfigHandlerTest {
     }
     
     @Test
+    public void testNoCleanup() throws Exception {
+        String[] testData = new String[] { k(NAME), "image", k(CLEANUP), "false" };
+        
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(false, config.getBuildConfiguration().cleanup());
+    }
+    
+    @Test
     public void testNoAssembly() throws Exception {
         Properties props = props(k(NAME), "image");
         List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);
@@ -153,6 +177,7 @@ public class PropertyConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
+        assertEquals(false, buildConfig.cleanup());
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());
@@ -281,6 +306,10 @@ public class PropertyConfigHandlerTest {
                 k(WAIT_URL), "http://foo.com",
                 k(WORKING_DIR), "foo"
         };
+    }
+    
+    private String[] getSkipTestData(ConfigKey key, boolean value) {
+        return new String[] { k(NAME), "image", k(key), String.valueOf(value) };
     }
 
     private String k(ConfigKey from) {

@@ -22,15 +22,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
-import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
-import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.service.*;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.service.QueryService;
+import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.util.MojoParameters;
+import org.jolokia.docker.maven.util.StartOrderResolver;
 
 import static org.jolokia.docker.maven.config.WatchMode.both;
 
@@ -50,7 +49,7 @@ import static org.jolokia.docker.maven.config.WatchMode.both;
  * @author roland
  * @since 16/06/15
  */
-public class WatchMojo extends AbstractBuildSupporMojo {
+public class WatchMojo extends AbstractBuildSupportMojo {
 
     /** @parameter property = "docker.watchMode" default-value="both" **/
     private WatchMode watchMode;
@@ -137,7 +136,7 @@ public class WatchMojo extends AbstractBuildSupporMojo {
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final String name = imageConfig.getName();
-        final AssemblyFiles files = getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters);
+        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(name, imageConfig, mojoParameters);
         return new Runnable() {
             @Override
             public void run() {
@@ -184,16 +183,6 @@ public class WatchMojo extends AbstractBuildSupporMojo {
             }
         };
     }
-
-    private AssemblyFiles getAssemblyFiles(String name, BuildImageConfiguration buildConfiguration, MojoParameters mojoParameters)
-            throws MojoExecutionException {
-        try {
-            return dockerAssemblyManager.getAssemblyFiles(name, buildConfiguration, mojoParameters);
-        } catch (InvalidAssemblerConfigurationException | ArchiveCreationException | AssemblyFormattingException  e) {
-            throw new MojoExecutionException("Cannot extract assembly files for image " + name + ": " + e,e);
-        }
-    }
-
 
     private void restartContainer(ImageWatcher watcher) throws DockerAccessException {
         // Stop old one

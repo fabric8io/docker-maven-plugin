@@ -11,6 +11,7 @@ public class ContainersListElement implements Container {
         this.json = json;
     }
 
+    @Override
     public String getName() {
         if (json.has("Names")) {
             JSONArray names = json.getJSONArray("Names");
@@ -30,12 +31,15 @@ public class ContainersListElement implements Container {
         }
     }
 
+    @Override
     public long getCreated() {
         return json.getLong("Created");
     }
 
+    @Override
     public String getId() {
-        return json.getString("Id");
+        // only need first 12 to id a container
+        return json.getString("Id").substring(0, 12);
     }
 
     @Override
@@ -43,6 +47,7 @@ public class ContainersListElement implements Container {
         return json.getString("Image");
     }
 
+    @Override
     public boolean isRunning() {
         String status = json.getString("Status");
         return status.toLowerCase().contains("up");

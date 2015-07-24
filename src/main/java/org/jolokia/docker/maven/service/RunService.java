@@ -180,7 +180,11 @@ public class RunService {
     private List<StartOrderResolver.Resolvable> convertToResolvables(List<ImageConfiguration> images) {
         List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
         for (ImageConfiguration config : images) {
-            ret.add(config);
+            if (config.getRunConfiguration().skip()) {
+                log.info(config.getDescription() + ": Skipped running");
+            } else {
+                ret.add(config);
+            }
         }
         return ret;
     }
@@ -291,7 +295,7 @@ public class RunService {
     }
     
     private void startContainer(ImageConfiguration imageConfig, String id) throws DockerAccessException {
-        log.info(imageConfig.getDescription() + ": Start container " + id.substring(0, 12));
+        log.info(imageConfig.getDescription() + ": Start container " + id);
         docker.startContainer(id);
         tracker.registerShutdownAction(id, imageConfig);
     }

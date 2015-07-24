@@ -152,12 +152,17 @@ public class RunImageConfiguration {
      * @parameter
      */
     private LogConfiguration log;
-
+    
     /**
      * @parameter
      */
     private RestartPolicy restartPolicy;
 
+    /**
+     * @parameter
+     */
+    private boolean skip = false;
+    
     public RunImageConfiguration() { }
 
     public Map<String, String> getEnv() {
@@ -258,6 +263,10 @@ public class RunImageConfiguration {
 
     public RestartPolicy getRestartPolicy() {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
+    }
+
+    public boolean skip() {
+        return skip;
     }
     
     // ======================================================================================
@@ -389,6 +398,13 @@ public class RunImageConfiguration {
 
         public Builder restartPolicy(RestartPolicy restartPolicy) {
             config.restartPolicy = restartPolicy;
+            return this;
+        }
+
+        public Builder skip(String skip) {
+            if (skip != null) {
+                config.skip = Boolean.valueOf(skip);
+            }
             return this;
         }
 

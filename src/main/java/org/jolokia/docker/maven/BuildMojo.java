@@ -19,7 +19,7 @@ import org.jolokia.docker.maven.util.ImageName;
  * @goal build
  * @phase install
  */
-public class BuildMojo extends AbstractBuildSupporMojo {
+public class BuildMojo extends AbstractBuildSupportMojo {
 
     /**
      * @parameter default-value="false" property="docker.skipTags"
@@ -31,16 +31,25 @@ public class BuildMojo extends AbstractBuildSupporMojo {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
-                buildConfig.validate();
-                String imageName = imageConfig.getName();
-                buildImage(dockerAccess, imageName, imageConfig);
-                if (!skipTags) {
-                    tagImage(imageName, imageConfig, dockerAccess);
+                if (buildConfig.skip()) {
+                    log.info(imageConfig.getDescription() + ": Skipped building");
+                } else {
+                    buildImage(dockerAccess, imageConfig, buildConfig);
                 }
             }
         }
     }
 
+    private void buildImage(DockerAccess dockerAccess, ImageConfiguration imageConfig, BuildImageConfiguration buildConfig)
+        throws MojoExecutionException, DockerAccessException {
+        buildConfig.validate();
+        String imageName = imageConfig.getName();
+        buildImage(dockerAccess, imageName, imageConfig);
+        if (!skipTags) {
+            tagImage(imageName, imageConfig, dockerAccess);
+        }
+    }
+    
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
             throws DockerAccessException, MojoExecutionException {
 

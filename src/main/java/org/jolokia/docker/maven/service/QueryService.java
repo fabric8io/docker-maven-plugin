@@ -5,11 +5,10 @@ import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccess.ListArg;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.model.Container;
-import org.jolokia.docker.maven.model.Image;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.util.AutoPullMode;
+import org.jolokia.docker.maven.util.Logger;
 
 /**
  * Query service for getting image and container information from the docker dameon
@@ -18,7 +17,7 @@ import org.jolokia.docker.maven.util.*;
 public class QueryService {
 
     // Default limit when listing containers
-    private static final ListArg CONTAINER_LIMIT = ListArg.limit(100);
+    private static final int CONTAINER_LIMIT = 100;
 
     // Access to docker daemon & logger
     private DockerAccess docker;
@@ -91,26 +90,14 @@ public class QueryService {
     }
 
     /**
-     * Get an image with the given name.
-     *
-     * @param image image name to lookup
-     * @return the image found
-     * @throws DockerAccessException
-     */
-    public Image getImage(String image) throws DockerAccessException {
-        String name = new ImageName(image).getNameWithoutTag();
-        return docker.listImages(ListArg.filter(name)).get(0);
-    }
-    
-    /**
      * Finds the id of an image.
      * 
-     * @param image name of the image.
+     * @param imageName name of the image.
      * @return the id of the image
      * @throws DockerAccessException if the request fails
      */
-    public String getImageId(String image) throws DockerAccessException {
-        return getImage(image).getId();
+    public String getImageId(String imageName) throws DockerAccessException {
+        return docker.getImageId(imageName);
     }
     
     /**
@@ -157,17 +144,7 @@ public class QueryService {
      * @throws DockerAccessException if the request fails
      */
     public boolean hasImage(String name) throws DockerAccessException {
-        ImageName imageName = new ImageName(name);
-
-        String fullName = imageName.getFullName();
-        String nameWithoutTag = imageName.getNameWithoutTag();
-
-        for (Image image : docker.listImages(ListArg.filter(nameWithoutTag))) {
-            if (image.getRepoTags().contains(fullName)) {
-                return true;
-            }
-        }
-        return false;
+        return docker.hasImage(name);
     }
 
     /**
@@ -194,7 +171,7 @@ public class QueryService {
         } else {
             if (!hasImage(imageName)) {
                 throw new MojoExecutionException(
-                        String.format("No image '%s' found, Please enable 'autoPull' or pull image '%s'yourself (docker pull %s)",
+                        String.format("No image '%s' found, Please enable 'autoPull' or pull image '%s' yourself (docker pull %s)",
                                 imageName, imageName, imageName));
             }
             return false;
@@ -208,6 +185,6 @@ public class QueryService {
 
     // Check if an image is not loaded but should be pulled
     private boolean pullIfNotPresent(AutoPullMode autoPull, String name) throws DockerAccessException {
-        return autoPull.doPullIfNotPresent() & !hasImage(name);
+        return autoPull.doPullIfNotPresent() && !hasImage(name);
     }
 }
