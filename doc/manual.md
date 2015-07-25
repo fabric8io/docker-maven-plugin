@@ -256,7 +256,7 @@ of an image configuration. The available subelements are
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
 * **maintainer** specifies the author (MAINTAINER) field for the generated image
-* **run** specifies commands to be run during the build process. It contains **run** elements 
+* **runCmds** specifies commands to be run during the build process. It contains **run** elements 
   which are passed to bash. The run commands are inserted right after the assembly but before **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
