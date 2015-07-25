@@ -44,6 +44,7 @@ public class DockerAccessIT {
     }
     
     @Test
+    @Ignore
     public void testBuildImage() throws DockerAccessException {
         File file = new File("src/test/resources/integration/busybox-test.tar");
         dockerClient.buildImage(IMAGE_TAG, file, false);
@@ -64,6 +65,7 @@ public class DockerAccessIT {
             testStartContainer();
             testQueryPortMapping();
             testStopContainer();
+            testRemoveContainer();
         } finally {
             testRemoveImage(IMAGE);
         }
@@ -72,7 +74,7 @@ public class DockerAccessIT {
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, null, logger);
-        } catch (IOException e) {
+        } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             throw new RuntimeException();
         }
@@ -102,6 +104,10 @@ public class DockerAccessIT {
     private void testQueryPortMapping() throws DockerAccessException {
         Map<String, Integer> portMap = dockerClient.queryContainerPortMapping(containerId);
         assertTrue(portMap.containsValue(5677));
+    }
+    
+    private void testRemoveContainer() throws DockerAccessException {
+        dockerClient.removeContainer(containerId, true);
     }
     
     private void testRemoveImage(String image) throws DockerAccessException {

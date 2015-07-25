@@ -107,7 +107,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void stopContainer(String containerId) throws DockerAccessException {
         try {
             String url = urlBuilder.stopContainer(containerId);
-            delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
+            delegate.post(url, null, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to stop container id [%s]", containerId);
