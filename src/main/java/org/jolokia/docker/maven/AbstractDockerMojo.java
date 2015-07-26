@@ -57,7 +57,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
 
-    // don't forget to change 'apiVersion' default-value as well
     public static final String API_VERSION = "v1.17";
 
     // Current maven project
@@ -92,8 +91,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     protected boolean removeVolumes;
 
-    // don't forget to change 'API_VERSION'
-    /** @parameter property = "docker.apiVersion" default-value = "v1.15" */
+    /** @parameter property = "docker.apiVersion" */
     private String apiVersion;
 
     // URL to docker daemon
@@ -230,10 +228,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return imagesAllowed.contains(imageConfig.getName()) || imagesAllowed.contains(imageConfig.getAlias());
     }
 
-    // visible for testing
     private DockerAccess createDockerAccess(String baseUrl) throws MojoExecutionException {
         try {
-            DockerAccess client = new DockerAccessWithHcClient(apiVersion, baseUrl,
+            String version = (apiVersion == null) ? API_VERSION : apiVersion;
+            DockerAccess client = new DockerAccessWithHcClient(version, baseUrl,
                     EnvUtil.getCertPath(certPath), log);
             client.start();
 
