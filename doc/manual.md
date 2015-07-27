@@ -252,7 +252,7 @@ of an image configuration. The available subelements are
 * **maintainer** specifies the author (MAINTAINER) field for the generated image
 * **ports** describes the exports ports. It contains a list of
   `<port>` elements, one for each port to expose.
-* **run** specifies commands to be run during the build process. It contains **run** elements 
+* **runCmds** specifies commands to be run during the build process. It contains **run** elements 
   which are passed to bash. The run commands are inserted right after the assembly and after **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 

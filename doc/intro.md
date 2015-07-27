@@ -81,7 +81,9 @@ Let's look at a plugin configuration example:
          <ports>
            <port>8080</port>
          </ports>
-         <command>java -jar /maven/service.jar</command>
+         <cmd>
+            <shell>java -jar /maven/service.jar</shell>
+         </cmd>
       </build>
 
       <run>

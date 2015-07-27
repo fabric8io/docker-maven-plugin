@@ -156,7 +156,7 @@ public class BuildImageConfiguration {
         return entryPoint;
     }
 
-    public List<String> getRun() {
+    public List<String> getRunCmds() {
         return runCmds;
     }
 

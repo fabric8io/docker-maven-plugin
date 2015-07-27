@@ -171,7 +171,7 @@ public class DockerAssemblyManager {
                         .env(buildConfig.getEnv())
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
-                        .run(buildConfig.getRun())
+                        .run(buildConfig.getRunCmds())
                         .volumes(buildConfig.getVolumes());
         if (buildConfig.getMaintainer() != null) {
             builder.maintainer(buildConfig.getMaintainer());
