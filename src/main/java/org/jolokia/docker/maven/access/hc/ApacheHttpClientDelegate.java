@@ -1,19 +1,15 @@
 package org.jolokia.docker.maven.access.hc;
 
-import com.google.common.net.MediaType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+
+import com.google.common.net.MediaType;
+import org.apache.http.*;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -91,9 +87,8 @@ public class ApacheHttpClientDelegate {
                                                                      statusCodes));
   }
 
-  public int post(String url, Object body,
-                  int... statusCodes) throws IOException {
-    return post(url, body, new StatusCodeResponseHandler(), statusCodes);
+  public int post(String url, int... statusCodes) throws IOException {
+    return post(url, null, new StatusCodeResponseHandler(), statusCodes);
   }
 
   public CloseableHttpClient getHttpClient() {

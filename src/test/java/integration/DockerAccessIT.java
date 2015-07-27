@@ -64,11 +64,12 @@ public class DockerAccessIT {
             testStartContainer();
             testQueryPortMapping();
             testStopContainer();
+            testRemoveContainer();
         } finally {
             testRemoveImage(IMAGE);
         }
     }
- 
+
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, null, logger);
@@ -82,43 +83,47 @@ public class DockerAccessIT {
         PortMapping portMapping = new PortMapping(Arrays.asList(new Object[] { PORT + ":" + PORT }), new Properties());
         ContainerHostConfig hostConfig = new ContainerHostConfig().portBindings(portMapping);
         ContainerCreateConfig createConfig = new ContainerCreateConfig(IMAGE).command("ping google.com").hostConfig(hostConfig);
-        
+
         containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
         assertNotNull(containerId);
 
         String name = dockerClient.inspectContainer(containerId).getName();
-        assertEquals(CONTAINER_NAME, name);    
+        assertEquals(CONTAINER_NAME, name);
     }
-    
+
     private void testDoesNotHave() throws DockerAccessException {
         assertFalse(hasImage(IMAGE));
     }
-    
+
     private void testPullImage() throws DockerAccessException {
         dockerClient.pullImage(IMAGE, null, null);
         assertTrue(hasImage(IMAGE));
     }
-    
+
     private void testQueryPortMapping() throws DockerAccessException {
         Map<String, Integer> portMap = dockerClient.queryContainerPortMapping(containerId);
         assertTrue(portMap.containsValue(5677));
     }
-    
+
     private void testRemoveImage(String image) throws DockerAccessException {
         dockerClient.removeImage(image, false);
         assertFalse(hasImage(image));
     }
-     
+
     private void testStartContainer() throws DockerAccessException {
         dockerClient.startContainer(containerId);
         assertTrue(dockerClient.inspectContainer(containerId).isRunning());
     }
-    
+
     private void testStopContainer() throws DockerAccessException {
         dockerClient.stopContainer(containerId);
         assertFalse(dockerClient.inspectContainer(containerId).isRunning());
     }
-    
+
+    private void testRemoveContainer() throws DockerAccessException {
+        dockerClient.removeContainer(containerId,true);
+    }
+
     private void testTagImage() throws DockerAccessException {
         dockerClient.tag(IMAGE, IMAGE_TAG,false);
         assertTrue(hasImage(IMAGE_TAG));

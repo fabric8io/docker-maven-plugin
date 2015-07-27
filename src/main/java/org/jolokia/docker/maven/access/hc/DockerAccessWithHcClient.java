@@ -96,7 +96,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void startContainer(String containerId) throws DockerAccessException {
         try {
             String url = urlBuilder.startContainer(containerId);
-            delegate.post(url, null, HTTP_NO_CONTENT, HTTP_OK);
+            delegate.post(url, HTTP_NO_CONTENT, HTTP_OK);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to start container id [%s]", containerId);
@@ -278,7 +278,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         ImageName target = new ImageName(targetImage);
         try {
             String url = urlBuilder.tagContainer(source, target, force);
-            delegate.post(url, null, HTTP_CREATED);
+            delegate.post(url, HTTP_CREATED);
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to add tag [%s] to image [%s]", targetImage,
