@@ -136,6 +136,10 @@ parentheses.
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
   the [section](#log-configuration) below. 
+* **portPropertyFile** if given, specifies a global file into which the
+  mapped properties should be written to. The format of this file and
+  its purpose are also described [below](#port-mapping). Please note, this field takes precidence
+  over any `portPropertyFile` value specified in an `image` configuration.    
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.
@@ -622,17 +626,17 @@ equivalent to the port mapping when using the Docker CLI with option
 <ports>
   <port>18080:8080</port> 
   <port>host.port:80</port> 
+  <port>host.ip@host.port:80</port> 
 <ports>
 ```
 
-A `port` stanza may take one of two forms:
+A `port` stanza may take one of four forms:
 
-* A tuple consisting of two numeric values separated by a `:`. This
-  form will result in an explicit mapping between the docker host and
-  the corresponding port inside the container. In the above example,
-  port 18080 would be exposed on the docker host and mapped to port
-  8080 in the running container. 
-* A tuple consisting of a string and a numeric value separated by a
+* **18080:8080** : A tuple consisting of two numeric values separated by a `:`. This 
+  form will result in an explicit mapping between the docker host and the corresponding 
+  port inside the container. In the above example, port 18080 would be exposed on the 
+  docker host and mapped to port 8080 in the running container. 
+* **host.port:80** A tuple consisting of a string and a numeric value separated by a
   `:`. In this form, the string portion of the tuple will correspond
   to a Maven property. If the property is undefined when the `start`
   task executes, a port will be dynamically selected by Docker in the
@@ -647,6 +651,9 @@ A `port` stanza may take one of two forms:
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
   similar to `mvn -Dhost.port=10080 docker:start`
+* **host.ip+18080:80** Similar to above except the `host.ip` is mapped and it cannot be set 
+   using a system property.
+* **host.ip+host.port:80** Bind `host.ip` and `host.port` to maven properties.
 
 Both forms of the `port` stanza also support binding to a specific ip 
 address on the docker host.
@@ -655,6 +662,7 @@ address on the docker host.
 <ports>
   <port>1.2.3.4:80:80</port>
   <port>1.2.3.4:host.port:80</port>
+  <port>1.2.3.4:host.ip+host.port:80</port>
 </ports>
 ```
 

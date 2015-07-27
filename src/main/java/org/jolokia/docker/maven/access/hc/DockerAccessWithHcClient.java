@@ -125,22 +125,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throw new DockerAccessException("Unable to build image [%s]", image);
         }
     }
-
-    @Override
-    public Map<String, Integer> queryContainerPortMapping(String containerId)
-            throws DockerAccessException {
-        try {
-            String url = urlBuilder.inspectContainer(containerId);
-            String response = delegate.get(url, HTTP_OK);
-            JSONObject json = new JSONObject(response);
-
-            return extractPorts(json);
-        } catch (IOException e) {
-            throw new DockerAccessException("Unable to query port mappings for container [%s]",
-                                            containerId);
-        }
-    }
-
+    
     @Override
     public void getLogSync(String containerId, LogCallback callback) {
         LogRequestor
@@ -189,6 +174,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
+    @Override
     public boolean hasImage(String name) throws DockerAccessException {
         String url = urlBuilder.inspectImage(name);
         try {
@@ -242,10 +228,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                           createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException("Unable to pull \"" + image + "\"" +
-                                            (registry != null ? " from registry \"" + registry + "\""
-                                                    : "") +
-                                            " : " + e);
+            throw new DockerAccessException("Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : ""); 
         }
     }
 
@@ -260,10 +243,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                           createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException(e, "Unable to push \"" + image + "\"" +
-                                               (registry != null ? " to registry \"" + registry + "\""
-                                                       : "") +
-                                               " : " + e);
+            throw new DockerAccessException("Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : ""); 
         } finally {
             if (temporaryImage != null) {
                 removeImage(temporaryImage);
@@ -369,63 +349,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     // ===========================================================================================================
     // Preparation for performing requests
-
-    private Map<String, Integer> extractPorts(JSONObject info) {
-        JSONObject networkSettings = info.getJSONObject("NetworkSettings");
-        if (networkSettings != null) {
-            JSONObject ports = networkSettings.getJSONObject("Ports");
-            if (ports != null) {
-                return createPortMapping(ports);
-            }
-        }
-        return Collections.emptyMap();
-    }
-
-    private Map<String, Integer> createPortMapping(JSONObject ports) {
-        Map<String, Integer> portMapping = new HashMap<>();
-        for (Object portSpecO : ports.keySet()) {
-            String portSpec = portSpecO.toString();
-            if (!ports.isNull(portSpec)) {
-                JSONArray hostSpecs = ports.getJSONArray(portSpec);
-                parseHostSpecsAndUpdateMapping(portMapping, hostSpecs, portSpec);
-            }
-        }
-        return portMapping;
-    }
-
-    private void parseHostSpecsAndUpdateMapping(Map<String, Integer> portMapping, JSONArray hostSpecs,
-                                                String portSpec) {
-        if (hostSpecs != null && hostSpecs.length() > 0) {
-            // We take only the first
-            JSONObject hostSpec = hostSpecs.getJSONObject(0);
-            Object hostPortO = hostSpec.get("HostPort");
-            if (hostPortO != null) {
-                parsePortSpecAndUpdateMapping(portMapping, hostPortO, portSpec);
-            }
-        }
-    }
-
-    private void parsePortSpecAndUpdateMapping(Map<String, Integer> portMapping, Object hostPort,
-                                               String portSpec) {
-        try {
-            Integer hostP = (Integer.parseInt(hostPort.toString()));
-            int idx = portSpec.indexOf('/');
-            if (idx > 0) {
-                int port = Integer.parseInt(portSpec.substring(0, idx));
-                String prot = portSpec.substring(idx + 1);
-                if (!prot.equals("tcp") && !prot.equals("udp")) {
-                    prot = "tcp";
-                    log.warn("Invalid protocol '" + prot + "' in port spec " + portSpec + ". Assuming tcp");
-                }
-                portMapping.put(port + "/" + prot, hostP);
-            } else {
-                portMapping.put(Integer.parseInt(portSpec) + "/tcp", hostP);
-            }
-        } catch (NumberFormatException exp) {
-            log.warn("Cannot parse " + hostPort + " or " + portSpec
-                     + " as a port number. Ignoring in mapping");
-        }
-    }
 
     private void logWarnings(JSONObject body) {
         Object warningsObj = body.get("Warnings");

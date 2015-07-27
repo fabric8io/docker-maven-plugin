@@ -129,6 +129,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.registry" */
     private String registry;
 
+    /**
+     * @parameter
+     */
+    protected String portPropertyFile;
+    
     // Authentication information
     /** @parameter */
     Map authConfig;

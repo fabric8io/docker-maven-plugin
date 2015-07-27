@@ -1,9 +1,7 @@
 package org.jolokia.docker.maven.util;
 
-import java.io.*;
 import java.util.*;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -47,25 +45,6 @@ public class EnvUtilTest {
                 assertEquals(expected[j],result[j]);
             }
         }
-    }
-
-    @Test
-    public void writePortProperties() throws IOException, MojoExecutionException {
-        File propFile = File.createTempFile("dmpl-",".properties");
-        propFile.deleteOnExit();
-
-        Properties origProps = new Properties();
-        origProps.setProperty("test1","bla");
-        origProps.setProperty("test2","blub");
-        EnvUtil.writePortProperties(origProps,propFile.getAbsolutePath());
-        assertTrue(propFile.exists());
-
-        Properties newProps = new Properties();
-        newProps.load(new FileInputStream(propFile));
-
-        assertEquals(2,newProps.size());
-        assertEquals(newProps.get("test1"),"bla");
-        assertEquals(newProps.get("test2"),"blub");
     }
 
     @Test
