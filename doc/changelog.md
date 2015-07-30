@@ -7,6 +7,7 @@
   - Refactored to use 'inspect' instead of 'list' for checking the existence of an image (#230)
   - Refactored ApacheHttpClientDelegate to avoid leaking connections (#232)
   - Allow empty `build` or `assembly` elements (#214/#236) 
+  - Allow multiple containers of the same image to be linked (#182)
   
 * **0.13.2**
   - "run" directives can be added to the Dockerfile (#191)

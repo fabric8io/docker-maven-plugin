@@ -1,5 +1,7 @@
 package org.jolokia.docker.maven.service;
 
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -14,39 +16,59 @@ import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.access.ContainerCreateConfig;
 import org.jolokia.docker.maven.access.ContainerHostConfig;
 import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.PortMapping;
-import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.RestartPolicy;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
 import org.jolokia.docker.maven.config.VolumeConfiguration;
 import org.jolokia.docker.maven.util.Logger;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import mockit.Expectations;
-import mockit.Mocked;
-
-
 /**
- * This test need to be refactored. In fact, testing Mojos must be setup correctly
- * at all. Blame on me that there are so few tests ...
+ * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
+ * few tests ...
  */
 public class RunServiceTest {
 
-    @Mocked
+    private ContainerCreateConfig containerConfig;
+
+    @Mock
     private DockerAccess docker;
 
-    @Mocked
+    @Mock
     private Logger log;
-    
-    @Mocked
-    private QueryService queryService;
-    
-    @Mocked
+
+    @Mock
     private MavenProject mavenProject;
 
+    private Properties properties;
+
+    @Mock
+    private QueryService queryService;
+
+    private RunImageConfiguration runConfig;
+
+    private RunService runService;
+
+    private ContainerHostConfig startConfig;
+
+    private ContainerTracker tracker;
+
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+
+        tracker = new ContainerTracker();
+        properties = new Properties();
+
+        runService = new RunService(docker, queryService, tracker, log);
+    }
+
     @Test
-    @SuppressWarnings("unused")
     public void testCreateContainerAllConfig() throws Exception {
         /*-
          * this is really two tests in one
@@ -56,12 +78,38 @@ public class RunServiceTest {
          * it didn't seem worth the effort to build a separate test to verify the json and then mock/verify all the calls here
          */
 
-        VolumeConfiguration volumeConfiguration =
-                new VolumeConfiguration.Builder()
-                        .bind(bind())
-                        .from(volumesFrom())
-                        .build();
-        final RunImageConfiguration runConfig =
+        givenARunConfiguration();
+        givenAnImageConfiguration("redis3", "db1", "redisContainer1");
+        givenAnImageConfiguration("redis3", "db2", "redisContainer2");
+        
+        givenAnImageConfiguration("parent", "parentName", "parentContainer");
+        givenAnImageConfiguration("otherName", "other:ro", "otherContainer");
+
+        whenQueryForContainerName("redisContainer1", "db1");
+        whenQueryForContainerName("redisContainer2", "db2");
+        whenQueryForContainerName("parentContainer", "parentContainer");
+        whenQueryForContainerName("otherContainer", "otherContainer");
+        whenCreateContainerConfig("base");
+
+        thenContainerConfigIsValid();
+        thenStartConfigIsValid();
+    }
+
+    private void addToTracker(String varName, String key, String value) throws NoSuchFieldException, IllegalAccessException {
+        Field field = tracker.getClass().getDeclaredField(varName);
+        field.setAccessible(true);
+        Map<String, String> map = (Map<String, String>) field.get(tracker);
+        map.put(key, value);
+    }
+    
+    // Better than poking into the private vars would be to use createAndStart() with the mock to build up the map.
+    private void givenAnImageConfiguration(String name, String alias, String containerId) throws Exception {
+        addToTracker("imageToContainerMap", name, containerId);
+        addToTracker("aliasToContainerMap", alias, containerId);
+    }
+
+    private void givenARunConfiguration() {
+        runConfig =
                 new RunImageConfiguration.Builder()
                         .hostname("hostname")
                         .domainname("domain.com")
@@ -75,68 +123,35 @@ public class RunServiceTest {
                         .workingDir("/foo")
                         .ports(ports())
                         .links(links())
-                        .volumes(volumeConfiguration)
-                        .dns(dns()).dnsSearch(dnsSearch())
-                        .privileged(true).capAdd(capAdd())
+                        .volumes(volumeConfiguration())
+                        .dns(dns())
+                        .dnsSearch(dnsSearch())
+                        .privileged(true)
+                        .capAdd(capAdd())
                         .capDrop(capDrop())
                         .restartPolicy(restartPolicy())
                         .build();
+    }
 
-        new Expectations() {{
-                queryService.getContainerName("redisContainer");
-                result = "redis";
-
-                queryService.getContainerName("parentContainer");
-                result = "parentContainer";
-
-                queryService.getContainerName("otherContainer");
-                result = "otherContainer";
-
-                queryService.getContainerName("redisContainer");
-                result = "redis";
-                queryService.getContainerName("parentContainer");
-                result = "parentContainer";
-
-                queryService.getContainerName("otherContainer");
-                result = "otherContainer";
-        }};
-        
-        ContainerTracker tracker = new ContainerTracker();
-        RunService runService = new RunService(docker, queryService, tracker, log);
-        
-        PortMapping portMapping = runService.getPortMapping(runConfig, new Properties());
-
-        // Better than poking into the private vars would be to use createAndStart() with the mock to build up the map.
-        ImageConfiguration imageConfig2 = new ImageConfiguration.Builder().alias("db").name("redis3").build();
-        putToPrivateMap(tracker, "containerImageNameMap", imageConfig2.getName(), "redisContainer");
-        if (imageConfig2.getAlias() != null) {
-            putToPrivateMap(tracker,"imageAliasMap",imageConfig2.getAlias(), imageConfig2.getName());
-        }
-        ImageConfiguration imageConfig1 = new ImageConfiguration.Builder().alias("parent").name("parentName").build();
-        putToPrivateMap(tracker,"containerImageNameMap",imageConfig1.getName(), "parentContainer");
-        if (imageConfig1.getAlias() != null) {
-            putToPrivateMap(tracker,"imageAliasMap",imageConfig1.getAlias(), imageConfig1.getName());
-        }
-        ImageConfiguration imageConfig = new ImageConfiguration.Builder().alias("other:ro").name("otherName").build();
-        putToPrivateMap(tracker,"containerImageNameMap",imageConfig.getName(), "otherContainer");
-        if (imageConfig.getAlias() != null) {
-            putToPrivateMap(tracker,"imageAliasMap", imageConfig.getAlias(), imageConfig.getName());
-        }
-        ContainerCreateConfig containerConfig = runService.createContainerConfig("base", runConfig, portMapping, new Properties());
-
+    private void thenContainerConfigIsValid() throws IOException {
         String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
         JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
+    }
 
-        ContainerHostConfig startConfig = runService.createContainerHostConfig(runConfig, portMapping);
+    private void thenStartConfigIsValid() throws IOException {
         String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }
 
-    private void putToPrivateMap(ContainerTracker tracker, String varName, String key, String value) throws NoSuchFieldException, IllegalAccessException {
-        Field field = tracker.getClass().getDeclaredField(varName);
-        field.setAccessible(true);
-        Map<String,String> map = (Map<String, String>) field.get(tracker);
-        map.put(key,value);
+    private void whenCreateContainerConfig(String imageName) throws DockerAccessException {
+        PortMapping portMapping = runService.getPortMapping(runConfig, properties);
+
+        containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, properties);
+        startConfig = runService.createContainerHostConfig(runConfig, portMapping);
+    }
+
+    private void whenQueryForContainerName(String containerId, String name) throws DockerAccessException {
+        when(queryService.getContainerName(containerId)).thenReturn(name);
     }
 
     private List<String> bind() {
@@ -171,7 +186,7 @@ public class RunServiceTest {
     }
 
     private List<String> links() {
-        return Collections.singletonList("redis3:redis");
+        return Collections.unmodifiableList(Arrays.asList("db1", "db2"));
     }
 
     private String loadFile(String fileName) throws IOException {
@@ -186,8 +201,14 @@ public class RunServiceTest {
         return new RestartPolicy.Builder().name("on-failure").retry(1).build();
     }
 
+    private VolumeConfiguration volumeConfiguration() {
+        return new VolumeConfiguration.Builder()
+                .bind(bind())
+                .from(volumesFrom())
+                .build();
+    }
+
     private List<String> volumesFrom() {
         return Arrays.asList("parent", "other:ro");
     }
 }
-
