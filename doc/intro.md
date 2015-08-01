@@ -74,14 +74,20 @@ Let's look at a plugin configuration example:
       <name>jolokia/docker-demo:${project.version}</name>
 
       <build>
-         <from>java:8</from>
-         <assembly>
-           <descriptor>docker-assembly.xml</descriptor>
-         </assembly>
-         <ports>
-           <port>8080</port>
-         </ports>
-         <command>java -jar /maven/service.jar</command>
+        <from>java:8</from>
+        <assembly>
+          <descriptor>docker-assembly.xml</descriptor>
+        </assembly>
+        <ports>
+          <port>8080</port>
+        </ports>
+        <cmd>
+          <exec>
+            <arg>java</arg>
+            <arg>-jar</arg>
+            <arg>/server.jar</arg>
+          </exec>         
+        </cmd>
       </build>
 
       <run>
