@@ -61,17 +61,16 @@ public class DockerAssemblyManager {
      * @throws MojoExecutionException
      */
     public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig) throws MojoExecutionException {
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         BuildDirs buildDirs = createBuildDirs(imageName, params);
+        
+        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        AssemblyMode assemblyMode = (assemblyConfig == null) ? AssemblyMode.dir : assemblyConfig.getMode();
 
+        if (hasAssemblyConfiguration(assemblyConfig)) {
+            createAssemblyArchive(assemblyConfig, params, buildDirs);
+        }
+        
         try {
-            if (assemblyConfig != null &&
-                (assemblyConfig.getInline() != null ||
-                 assemblyConfig.getDescriptor() != null ||
-                 assemblyConfig.getDescriptorRef() != null)) {
-                createAssemblyArchive(assemblyConfig, params, buildDirs);
-            }
-
             File extraDir = null;
             String dockerFileDir = assemblyConfig != null ? assemblyConfig.getDockerFileDir() : null;
             if (dockerFileDir != null) {
@@ -82,7 +81,8 @@ public class DockerAssemblyManager {
                 DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
                 builder.write(buildDirs.getOutputDirectory());
             }
-            return createTarball(buildDirs, extraDir, assemblyConfig.getMode());
+
+            return createTarball(buildDirs, extraDir, assemblyMode);
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
@@ -117,7 +117,14 @@ public class DockerAssemblyManager {
         buildDirs.createDirs();
         return buildDirs;
     }
-
+    
+    private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
+        return assemblyConfig != null &&
+                (assemblyConfig.getInline() != null ||
+                        assemblyConfig.getDescriptor() != null ||
+                        assemblyConfig.getDescriptorRef() != null);
+    }
+    
     private File validateDockerDir(MojoParameters params, String dockerFileDir) throws MojoExecutionException {
         File dockerDir = EnvUtil.prepareAbsoluteSourceDirPath(params, dockerFileDir);
         if (! new File(dockerDir,"Dockerfile").exists()) {

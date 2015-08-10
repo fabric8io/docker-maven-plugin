@@ -206,7 +206,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return null;
         }
         JSONObject imageDetails = new JSONObject(response.getBody());
-        return imageDetails.getString("Id");
+        return imageDetails.getString("Id").substring(0, 12);
     }
 
     private HttpBodyAndStatus inspectImage(String name) throws DockerAccessException {
