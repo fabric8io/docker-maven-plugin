@@ -160,6 +160,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new WaitConfiguration.Builder()
                 .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
                 .url(withPrefix(prefix, WAIT_URL, properties))
+                .method(withPrefix(prefix, WAIT_METHOD, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
                 .shutdown(asInt(withPrefix(prefix,WAIT_SHUTDOWN,properties)))
                 .build();
