@@ -77,7 +77,7 @@ public class ContainerHostConfig {
     }
 
     public ContainerHostConfig portBindings(PortMapping portMapping) {
-        Map<String, Integer> portMap = portMapping.getPortsMap();
+        Map<String, Integer> portMap = portMapping.getContainerPortToHostPortMap();
         if (!portMap.isEmpty()) {
             JSONObject portBindings = new JSONObject();
             Map<String, String> bindToMap = portMapping.getBindToHostMap();
