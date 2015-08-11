@@ -39,8 +39,9 @@ public class WaitUtil {
             sleep(WAIT_RETRY_WAIT);
         } while (delta(now) < max);
         if (checkers.length > 0) {
-            // There has been several checkes, but none has matched. So we ware throwing an exception and break
+            // There has been several checks, but none has matched. So we ware throwing an exception and break
             // the build
+            cleanup(checkers);
             throw new TimeoutException("No checker finished successfully");
         }
         return delta(now);

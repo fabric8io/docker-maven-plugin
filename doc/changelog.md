@@ -7,7 +7,9 @@
   - Refactored to use 'inspect' instead of 'list' for checking the existence of an image (#230)
   - Refactored ApacheHttpClientDelegate to avoid leaking connections (#232)
   - Allow empty `build` or `assembly` elements (#214/#236) 
-  
+  - Add new configuration parameter 'maxConnections' to allow to specify the number of parallel 
+    connections to the Docker Host. Default: 100 (#254)
+    
 * **0.13.2**
   - "run" directives can be added to the Dockerfile (#191)
   - Support user information in wait URL (#211)

@@ -72,7 +72,7 @@ public class DockerAccessIT {
 
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
-            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, null, logger);
+            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, null, 20, logger);
         } catch (IOException e) {
             // not using ssl, so not going to happen
             throw new RuntimeException();

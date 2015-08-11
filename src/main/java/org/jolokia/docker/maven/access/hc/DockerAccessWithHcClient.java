@@ -52,20 +52,21 @@ public class DockerAccessWithHcClient implements DockerAccess {
      * @param baseUrl  base URL for accessing the docker Daemon
      * @param certPath used to build up a keystore with the given keys and certificates found in this
      *                 directory
+     * @param maxConnections maximum parallel connections allowed to docker daemon
      * @param log      a log handler for printing out logging information
      */
-    public DockerAccessWithHcClient(String apiVersion, String baseUrl, String certPath, Logger log)
+    public DockerAccessWithHcClient(String apiVersion, String baseUrl, String certPath, int maxConnections, Logger log)
             throws IOException {
         this.log = log;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate =
-                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath()));
+                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(),maxConnections));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
         } else {
             this.delegate =
                     new ApacheHttpClientDelegate(
-                            new HttpClientBuilder(isSSL(baseUrl) ? certPath : null).build());
+                            new HttpClientBuilder(isSSL(baseUrl) ? certPath : null).build(maxConnections));
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
     }

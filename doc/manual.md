@@ -141,7 +141,9 @@ parentheses.
   option is only relevant for the `docker:build` goal.
 * **outputDirectory** (`docker.target.dir`) specifies the default output directory to be
   used by the plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
-
+* **maxConnections** (`docker.maxConnections`) specifies how many parallel connections are allowed to be opened
+  to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), 
+  so don't put that number to low. Default is 100 which should be suitable for most of the cases.
 
 Example:
 

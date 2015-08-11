@@ -42,11 +42,12 @@ public class HttpClientBuilder {
         this.certPath = certPath;
     }
 
-    public CloseableHttpClient build() throws IOException {
+    public CloseableHttpClient build(int maxConnections) throws IOException {
         org.apache.http.impl.client.HttpClientBuilder builder = HttpClients.custom();
         PoolingHttpClientConnectionManager manager = getPoolingConnectionFactory(certPath);
-        manager.setDefaultMaxPerRoute(10);
+        manager.setDefaultMaxPerRoute(maxConnections);
         builder.setConnectionManager(manager);
+
         // TODO: Tune client if needed (e.g. add pooling factoring .....
         // But I think, that's not really required.
 

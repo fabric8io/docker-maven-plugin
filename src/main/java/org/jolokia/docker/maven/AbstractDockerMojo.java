@@ -129,6 +129,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.registry" */
     private String registry;
 
+    // maximum connection to use in parallel for connecting the docker host
+    /** @parameter property = "docker.maxConnections" default-value = "100" */
+    private int maxConnections;
+
     // Authentication information
     /** @parameter */
     Map authConfig;
@@ -232,7 +236,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         try {
             String version = (apiVersion == null) ? API_VERSION : apiVersion;
             DockerAccess client = new DockerAccessWithHcClient(version, baseUrl,
-                    EnvUtil.getCertPath(certPath), log);
+                    EnvUtil.getCertPath(certPath), maxConnections, log);
             client.start();
 
             return client;

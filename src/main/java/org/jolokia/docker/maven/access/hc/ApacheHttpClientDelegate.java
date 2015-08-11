@@ -76,8 +76,7 @@ public class ApacheHttpClientDelegate {
       request.addHeader(entry.getKey(), entry.getValue());
     }
 
-    return httpClient.execute(request, new StatusCodeCheckerResponseHandler<>(responseHandler,
-                                                                              statusCodes));
+    return httpClient.execute(request, new StatusCodeCheckerResponseHandler<>(responseHandler,statusCodes));
   }
 
   public <T> T post(String url, Object body, ResponseHandler<T> responseHandler,
