@@ -15,22 +15,24 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.ByteStreams;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import io.fabric8.maven.docker.util.Timestamp;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
-
-import static java.lang.Math.min;
 
 /**
  * Extractor for parsing the response of a log request
@@ -100,29 +102,51 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
     }
 
-    private void parseResponse(HttpResponse response) {
-        try (InputStream is = response.getEntity().getContent()) {
-            byte[] headBuf = new byte[8];
-            while (IOUtils.read(is, headBuf, 0, 8) > 0) {
-                int type = headBuf[0];
-                int declaredLength = extractLength(headBuf);
-                if (declaredLength == 0) {
-                    continue;
-                }
-                byte[] buf = new byte[declaredLength];
-                int len = IOUtils.read(is, buf, 0, declaredLength);
-                if (len < 1) {
-                    callback.error("Invalid log format: Couldn't read " + declaredLength + " bytes from stream");
-                    finish();
-                    return;
-                }
-                String txt = new String(buf, 0, len, "UTF-8");
+    private boolean readStreamFrame(InputStream is) throws IOException, LogCallback.DoneException {
+        // Read the header, which is composed of eight bytes. The first byte is an integer
+        // indicating the stream type (0 = stdin, 1 = stdout, 2 = stderr), the next three are thrown
+        // out, and the final four are the size of the remaining stream as an integer.
+        ByteBuffer headerBuffer = ByteBuffer.allocate(8);
+        headerBuffer.order(ByteOrder.BIG_ENDIAN);
+        try {
+            ByteStreams.readFully(is, headerBuffer.array());
+        } catch (EOFException e) {
+            return false;
+        }
 
-                callLogCallback(type, txt);
-            }
-            StatusLine status = response.getStatusLine();
-            if (status.getStatusCode() != 200) {
-                exception = new DockerAccessException("Error while reading logs (" + status + ")");
+        // Grab the stream type (stdout, stderr, stdin) from first byte and throw away other 3 bytes.
+        int type = headerBuffer.get();
+
+        // Skip three bytes, then read size from remaining four bytes.
+        int size = headerBuffer.getInt(4);
+
+        // Ignore empty messages and keep reading.
+        if (size <= 0) {
+            return true;
+        }
+
+        // Read the actual message
+        ByteBuffer payload = ByteBuffer.allocate(size);
+        try {
+            ByteStreams.readFully(is, payload.array());
+        } catch (EOFException e) {
+            return false;
+        }
+
+        String message = Charsets.UTF_8.newDecoder().decode(payload).toString();
+        callLogCallback(type, message);
+        return true;
+    }
+
+    private void parseResponse(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        if (status.getStatusCode() != 200) {
+            exception = new DockerAccessException("Error while reading logs (" + status + ")");
+        }
+        try (InputStream is = response.getEntity().getContent()) {
+            boolean keepReading = readStreamFrame(is);
+            while (keepReading) {
+                keepReading = readStreamFrame(is);
             }
         } catch (IOException e) {
             callback.error("Cannot process chunk response: " + e);
@@ -144,14 +168,6 @@ public class LogRequestor extends Thread implements LogGetHandle {
         String logTxt = matcher.group(2);
         callback.log(type, ts, logTxt);
     }
-
-    private int extractLength(byte[] b) {
-        return b[7] & 0xFF |
-               (b[6] & 0xFF) << 8 |
-               (b[5] & 0xFF) << 16 |
-               (b[4] & 0xFF) << 24;
-    }
-
 
     private HttpUriRequest getLogRequest(boolean follow) {
         return RequestUtil.newGet(urlBuilder.containerLogs(containerId, follow));
