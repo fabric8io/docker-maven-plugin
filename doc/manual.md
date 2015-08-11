@@ -138,8 +138,7 @@ parentheses.
   the [section](#log-configuration) below. 
 * **portPropertyFile** if given, specifies a global file into which the
   mapped properties should be written to. The format of this file and
-  its purpose are also described [below](#port-mapping). Please note, this field takes precidence
-  over any `portPropertyFile` value specified in an `image` configuration.    
+  its purpose are also described [below](#port-mapping).
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.
@@ -626,7 +625,7 @@ equivalent to the port mapping when using the Docker CLI with option
 <ports>
   <port>18080:8080</port> 
   <port>host.port:80</port> 
-  <port>host.ip@host.port:80</port> 
+  <port>tomcat.ip@tomcat.port:8181</port> 
 <ports>
 ```
 
@@ -651,18 +650,17 @@ A `port` stanza may take one of four forms:
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
   similar to `mvn -Dhost.port=10080 docker:start`
-* **host.ip+18080:80** Similar to above except the `host.ip` is mapped and it cannot be set 
-   using a system property.
-* **host.ip+host.port:80** Bind `host.ip` and `host.port` to maven properties.
+* **host.ip@18080:80** Similar to above except the `host.ip` is mapped but it cannot be set 
+   by using presetting a property.
+* **host.ip@host.port:80** Bind `host.ip` and `host.port` to maven properties.
 
-Both forms of the `port` stanza also support binding to a specific ip 
-address on the docker host.
+All forms of the `port` specification also support binding to a specific ip 
+address on the docker host, too:
 
 ```xml
 <ports>
   <port>1.2.3.4:80:80</port>
   <port>1.2.3.4:host.port:80</port>
-  <port>1.2.3.4:host.ip+host.port:80</port>
 </ports>
 ```
 

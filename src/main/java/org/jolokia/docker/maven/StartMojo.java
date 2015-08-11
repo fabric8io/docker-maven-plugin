@@ -7,6 +7,7 @@ package org.jolokia.docker.maven;
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
@@ -64,7 +65,7 @@ public class StartMojo extends AbstractDockerMojo {
         RunService runService = serviceHub.getRunService();
 
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
-        PortMapping.Writer portMappingWriter = new PortMapping.Writer(portPropertyFile);
+        PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
         
         boolean success = false;
         try {
@@ -87,7 +88,7 @@ public class StartMojo extends AbstractDockerMojo {
                     dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
                 }
 
-                portMappingWriter.add(portMapping, runConfig.getPortPropertyFile());
+                portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
                 // Wait if requested
                 waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
@@ -97,12 +98,14 @@ public class StartMojo extends AbstractDockerMojo {
                 wait();
             }
             
-            portMappingWriter.write();
+            portMappingPropertyWriteHelper.write();
             success = true;
         } catch (InterruptedException e) {
             log.warn("Interrupted");
             Thread.currentThread().interrupt();
             throw new MojoExecutionException("interrupted", e);
+        } catch (IOException e) {
+            throw new MojoExecutionException("I/O Error",e);
         } finally {
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");

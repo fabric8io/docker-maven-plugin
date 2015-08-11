@@ -1,14 +1,11 @@
 package org.jolokia.docker.maven.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class ContainerDetailsTest {
 
@@ -69,7 +66,7 @@ public class ContainerDetailsTest {
         JSONObject ports = new JSONObject();
         JSONObject networkSettings = new JSONObject();
         
-        networkSettings.put(Container.PORTS, ports);
+        networkSettings.put(ContainerDetails.PORTS, ports);
         json.put(ContainerDetails.NETWORK_SETTINGS, networkSettings);
         
         return ports;
@@ -94,8 +91,8 @@ public class ContainerDetailsTest {
     }
 
     private void givenContainerData() {
-        json.put(Container.CREATED, "2015-01-06T15:47:31.485331387Z");
-        json.put(Container.ID, "1234AF1234AF");
+        json.put(ContainerDetails.CREATED, "2015-01-06T15:47:31.485331387Z");
+        json.put(ContainerDetails.ID, "1234AF1234AF");
         json.put(ContainerDetails.NAME, "/milkman-kindness");
         json.put(ContainerDetails.CONFIG, new JSONObject("{ 'Image': '9876CE'}"));
         json.put(ContainerDetails.STATE, new JSONObject("{'Running' : true }"));

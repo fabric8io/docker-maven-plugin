@@ -1,25 +1,18 @@
 package org.jolokia.docker.maven.access;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.io.*;
+import java.util.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.model.Container.PortBinding;
 import org.junit.Test;
 
-public class PortMappingWriterTest {
+import static org.junit.Assert.*;
+
+public class PortMappingPropertyWriteHelperTest {
 
     private Properties properties;
     
-    private PortMapping.Writer writer;
+    private PortMapping.PropertyWriteHelper propertyWriteHelper;
 
     @Test
     public void testWriteGlobalOnly() throws Exception {
@@ -102,7 +95,7 @@ public class PortMappingWriterTest {
     }
     
     private void givenAPortMappingWriter(String globalFile) {
-        writer = new PortMapping.Writer(globalFile);
+        propertyWriteHelper = new PortMapping.PropertyWriteHelper(globalFile);
     }
     
     private void thenPropsContains(String variable, Object port) {
@@ -129,8 +122,8 @@ public class PortMappingWriterTest {
         mapping.updateVariablesWithDynamicPorts(dynMapping);
     }
     
-    private void whenWritePortMappings(String imageFile, PortMapping portMapping) throws MojoExecutionException {
-        writer.add(portMapping, imageFile);
-        writer.write();
+    private void whenWritePortMappings(String imageFile, PortMapping portMapping) throws IOException {
+        propertyWriteHelper.add(portMapping, imageFile);
+        propertyWriteHelper.write();
     }
 }

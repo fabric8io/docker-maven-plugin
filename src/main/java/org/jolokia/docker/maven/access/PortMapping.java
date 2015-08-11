@@ -1,20 +1,12 @@
 package org.jolokia.docker.maven.access;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.model.Container.PortBinding;
 
 /**
@@ -206,7 +198,6 @@ public class PortMapping {
                 specToHostPortVariableMap.put(portSpec, hPort);
             }
         }
-
         containerPortToHostPort.put(portSpec, hostPort);
     }
 
@@ -262,14 +253,14 @@ public class PortMapping {
         }
     }
 
-    public static class Writer {
+    public static class PropertyWriteHelper {
 
         private final Properties globalExport;
 
         private final String globalFile;
         private final Map<String, Properties> toExport;
 
-        public Writer(String globalFile) {
+        public PropertyWriteHelper(String globalFile) {
             this.globalFile = globalFile;
 
             this.toExport = new HashMap<>();
@@ -284,7 +275,7 @@ public class PortMapping {
             }
         }
 
-        public void write() throws MojoExecutionException {
+        public void write() throws IOException {
             for (Map.Entry<String, Properties> entry : toExport.entrySet()) {
                 globalExport.putAll(writePortProperties(entry.getValue(), entry.getKey()));
             }
@@ -294,14 +285,13 @@ public class PortMapping {
             }
         }
 
-        private Properties writePortProperties(Properties props, String portPropertyFile) throws MojoExecutionException {
+        private Properties writePortProperties(Properties props, String portPropertyFile) throws IOException {
             File propFile = new File(portPropertyFile);
             try (OutputStream os = new FileOutputStream(propFile)) {
                 props.store(os, "Docker ports");
             } catch (IOException e) {
-                throw new MojoExecutionException("Cannot write properties to " + portPropertyFile + ": " + e, e);
+                throw new IOException("Cannot write properties to " + portPropertyFile + ": " + e, e);
             }
-
             return props;
         }
     }

@@ -18,6 +18,11 @@ public class ContainerDetails implements Container {
     static final String NAME = "Name";
     static final String NETWORK_SETTINGS = "NetworkSettings";
     static final String STATE = "State";
+    static String CREATED = "Created";
+    static String ID = "Id";
+    static String IMAGE = "Image";
+    static String PORTS = "Ports";
+    static String SLASH = "/";
 
     private static final String RUNNING = "Running";
     

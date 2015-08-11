@@ -1,16 +1,13 @@
 package org.jolokia.docker.maven.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Collections;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class ContainerListElementTest {
 
@@ -73,14 +70,14 @@ public class ContainerListElementTest {
     }
     
     private void givenAContaierWithPorts() {
-        json.append(Container.PORTS, createPortData(80, "tcp"));
-        json.append(Container.PORTS, createPortData(52, "udp"));
+        json.append(ContainersListElement.PORTS, createPortData(80, "tcp"));
+        json.append(ContainersListElement.PORTS, createPortData(52, "udp"));
     }
     
     private void givenAContainerWithMappedPorts() {
         givenAContaierWithPorts();
         
-        JSONArray array = json.getJSONArray(Container.PORTS);
+        JSONArray array = json.getJSONArray(ContainersListElement.PORTS);
 
         addToArray(array, 0, ContainersListElement.IP, "0.0.0.0");
         addToArray(array, 0, ContainersListElement.PUBLIC_PORT, 32771);
@@ -94,11 +91,11 @@ public class ContainerListElementTest {
     }
 
     private void givenContainerData() {
-        json.put(Container.CREATED,1420559251485L);
-        json.put(Container.ID, "1234AF1234AF");
-        json.put(Container.IMAGE, "9876CE");
+        json.put(ContainersListElement.CREATED,1420559251485L);
+        json.put(ContainersListElement.ID, "1234AF1234AF");
+        json.put(ContainersListElement.IMAGE, "9876CE");
         json.put(ContainersListElement.STATUS, "Up 16 seconds");
-        json.put(Container.PORTS, new JSONArray());
+        json.put(ContainersListElement.PORTS, new JSONArray());
     }
 
     private void thenMapContainsPortSpecOnly(String key) {

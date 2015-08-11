@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.access;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;

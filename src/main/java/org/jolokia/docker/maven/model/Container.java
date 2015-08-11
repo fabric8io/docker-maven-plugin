@@ -24,11 +24,6 @@ import java.util.Map;
  */
 public interface Container {
 
-    static final String CREATED = "Created";
-    static final String ID = "Id";
-    static final String IMAGE = "Image";
-    static final String PORTS = "Ports";
-    static final String SLASH = "/";
 
     long getCreated();
 
@@ -42,7 +37,7 @@ public interface Container {
 
     boolean isRunning();
 
-    public static class PortBinding {
+    class PortBinding {
         private final String hostIp;
         private final Integer hostPort;
 

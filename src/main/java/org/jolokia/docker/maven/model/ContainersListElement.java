@@ -17,7 +17,13 @@ public class ContainersListElement implements Container {
     private static final String NAMES = "Names";
     private static final String PRIVATE_PORT = "PrivatePort";
     private static final String UP = "up";
-    
+
+    static String CREATED = "Created";
+    static String ID = "Id";
+    static String IMAGE = "Image";
+    static String PORTS = "Ports";
+    private static String SLASH = "/";
+
     private final JSONObject json;
 
     public ContainersListElement(JSONObject json) {
