@@ -621,15 +621,8 @@ mapping has multiple parts, each separate by a colon. This is
 equivalent to the port mapping when using the Docker CLI with option
 `-p`. 
 
-```xml
-<ports>
-  <port>18080:8080</port> 
-  <port>host.port:80</port> 
-  <port>tomcat.ip@tomcat.port:8181</port> 
-<ports>
-```
 
-A `port` stanza may take one of four forms:
+A `port` stanza may take one of the following forms:
 
 * **18080:8080** : A tuple consisting of two numeric values separated by a `:`. This 
   form will result in an explicit mapping between the docker host and the corresponding 
@@ -650,38 +643,53 @@ A `port` stanza may take one of four forms:
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
   similar to `mvn -Dhost.port=10080 docker:start`
-* **host.ip@18080:80** Similar to above except the `host.ip` is mapped but it cannot be set 
-   by using presetting a property.
-* **host.ip@host.port:80** Bind `host.ip` and `host.port` to maven properties.
-
-All forms of the `port` specification also support binding to a specific ip 
-address on the docker host, too:
-
-```xml
-<ports>
-  <port>1.2.3.4:80:80</port>
-  <port>1.2.3.4:host.port:80</port>
-</ports>
-```
-
-As a convenience, a hostname pointing to the docker host may also
-be specified. The container will fail to start if the hostname can not be 
-resolved.
+* **&lt;bindTo&gt;:host.port:80** A tuple consisting of two strings and a numeric value separated
+  by a `:`. In this form, `<bindTo>` is an ip address on the host the container should bind to.
+  As a convenience, a hostname pointing to the docker host may also
+  be specified. The container will fail to start if the hostname can not be 
+  resolved.  
+* **+host.ip:host.port:80** A tuple consisting of two strings and a numeric value separated
+  by a `:`. In this form, the host ip of the container will be placed into a Maven property.
+  If docker reports that value to be `0.0.0.0`, the value of `docker.host.address` will
+  be substituted instead. In the event you want to use this form and have the container bind 
+  to a specific hostname/ip address, you can declare a Maven property of the same name and correct
+  value to use. `host:post` functions in the same manner as described above. 
+  
+The following are examples of valid configuratione entries:
 
 ```xml
+<properties>
+  <bind.host.ip>1.2.3.4</bind.host.ip>
+  <bind.host.name>some.host.pvt</bind.host.name>
+<properties>
+
+...
+
 <ports>
-  <port>docker.example.com:80:80</port>
-</ports>
+  <port>18080:8080</port> 
+  <port>host.port:80</port> 
+  <port>127.0.0.1:80:80</port>
+  <port>localhost:80:80</port>
+  <port>127.0.0.1:host.port:80</port>
+  <port>localhost:host.port:80</port>
+  <port>+container.ip.property:5678:5678</port>
+  <port>+container.ip.property:host.port:5678</port>
+  <port>+bind.host.ip:5678:5678</port>
+  <port>+bind.host.ip:host.port:5678</port>
+  <port>+bind.host.name:5678:5678</port>
+  <port>+bind.host.name:host.port:5678</port>  
+<ports>
 ```
 
-Another useful configuration option is `portPropertyFile` with which a
-file can be specified to which the real port mapping is written after
-all dynamic ports has been resolved. The keys of this property file
-are the variable names, the values are the dynamically assigned host
-ports. This property file might be useful together with other maven
-plugins which already resolved their maven variables earlier in the
-lifecycle than this plugin so that the port variables might not be
-available to them.
+Another useful configuration option is `portPropertyFile` which can be used to
+to write out the container's host ip and any dynamic ports that have been
+resolved. The keys of this property file are the property names defined in the 
+port mapping configuration and their values those of the corresponding 
+docker attributes. 
+
+This property file might be useful with tests or with other maven plugins that will be unable 
+to use the resolved properties because they can only be updated after the container has started
+and plugins resolve their properties in an earlier lifecycle phase.
 
 ##### Container linking
 

@@ -81,10 +81,6 @@ public class PortMapping {
         return !specToHostPortVariableMap.isEmpty();
     }
 
-    public Map<String, String> getBindToHostMap() {
-        return bindToHostMap;
-    }
-
     /**
      * @return Set of all mapped container ports
      */
@@ -109,7 +105,13 @@ public class PortMapping {
 
             if (portBinding != null) {
                 update(hostPortVariableMap, specToHostPortVariableMap.get(variable), portBinding.getHostPort());
-                update(hostIpVariableMap, specToHostIpVariableMap.get(variable), portBinding.getHostIp());
+                
+                String hostIp = portBinding.getHostIp();
+                if ("0.0.0.0".equals(hostIp)) {
+                    hostIp = projProperties.getProperty("docker.host.address");
+                }
+                
+                update(hostIpVariableMap, specToHostIpVariableMap.get(variable), hostIp);
             }
         }
 
@@ -117,6 +119,11 @@ public class PortMapping {
         updateDynamicProperties(hostIpVariableMap);
     }
 
+    // visible for testing
+    Map<String, String> getBindToHostMap() {
+        return bindToHostMap;
+    }
+    
     // visible for testing
     Map<String, String> getHostIpVariableMap() {
         return hostIpVariableMap;
@@ -134,7 +141,7 @@ public class PortMapping {
 
     private IllegalArgumentException createInvalidMappingError(String mapping, NumberFormatException exp) {
         return new IllegalArgumentException("\nInvalid port mapping '" + mapping + "'\n" +
-                "Required format: '<bindTo*>:<hostIp@*hostPort>:<mappedPort>(/tcp|udp)*>' (* indicates an optional value)\n" +
+                "Required format: '<+bindTo>:<hostPort>:<mappedPort>(/tcp|udp)'\n" +
                 "See: https://github.com/rhuss/docker-maven-plugin/blob/master/doc/manual.md#port-mapping");
     }
 
@@ -142,7 +149,7 @@ public class PortMapping {
         if (parts.length == 3) {
             mapBindToAndHostPortSpec(parts[0], parts[1], createPortSpec(parts[2], protocol));
         } else {
-            mapHostToPortSpec(parts[0], createPortSpec(parts[1], protocol));
+            mapHostPortToSpec(parts[0], createPortSpec(parts[1], protocol));
         }
     }
 
@@ -172,17 +179,24 @@ public class PortMapping {
     }
 
     private void mapBindToAndHostPortSpec(String bindTo, String hPort, String portSpec) {
-        mapHostToPortSpec(hPort, portSpec);
+        mapHostPortToSpec(hPort, portSpec);
 
-        // the container portSpec can never be null, so use that as the key
-        bindToHostMap.put(portSpec, resolveHostname(bindTo));
+        if (bindTo.startsWith("+")) {
+            bindTo = bindTo.substring(1);
+
+            String host = projProperties.getProperty(bindTo);
+            if (host != null) {
+                // the container portSpec can never be null, so use that as the key
+                bindToHostMap.put(portSpec, resolveHostname(host));
+            }
+
+            specToHostIpVariableMap.put(portSpec, bindTo);
+        } else {
+            // the container portSpec can never be null, so use that as the key
+            bindToHostMap.put(portSpec, resolveHostname(bindTo));
+        }
     }
-
-    private void mapHostIpPortToSpec(String ip, String port, String portSpec) {
-        mapHostPortToSpec(port, portSpec);
-        specToHostIpVariableMap.put(portSpec, ip);
-    }
-
+    
     private void mapHostPortToSpec(String hPort, String portSpec) {
         Integer hostPort;
         try {
@@ -199,15 +213,6 @@ public class PortMapping {
             }
         }
         containerPortToHostPort.put(portSpec, hostPort);
-    }
-
-    private void mapHostToPortSpec(String host, String portSpec) {
-        String[] parts = host.split("@", 2);
-        if (parts.length == 1) {
-            mapHostPortToSpec(parts[0], portSpec);
-        } else {
-            mapHostIpPortToSpec(parts[0], parts[1], portSpec);
-        }
     }
 
     private void parsePortMapping(String input) throws IllegalArgumentException {
