@@ -14,10 +14,10 @@ public class ContainerTracker {
 
     // Map holding associations between started containers and their images via name and aliases
     // Key: Image, Value: Container
-    private Map<String, String> containerImageNameMap = new HashMap<>();
+    private final Map<String, String> imageToContainerMap = new HashMap<>();
 
-    // Key: Alias, Value: Image
-    private Map<String, String> imageAliasMap = new HashMap<>();
+    // Key: Alias, Value: container
+    private final Map<String, String> aliasToContainerMap = new HashMap<>();
 
     // Action to be used when doing a shutdown
     private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
@@ -36,8 +36,11 @@ public class ContainerTracker {
     }
     
     public String lookupContainer(String lookup) {
-        String image = imageAliasMap.containsKey(lookup) ? imageAliasMap.get(lookup) : lookup;
-        return containerImageNameMap.get(image);
+        if (aliasToContainerMap.containsKey(lookup)) {
+            return aliasToContainerMap.get(lookup);
+        }
+
+        return imageToContainerMap.get(lookup);
     }
 
     public void resetShutdownActions() {
@@ -53,9 +56,9 @@ public class ContainerTracker {
     
     private void updateImageToContainerMapping(ImageConfiguration imageConfig, String id) {
         // Register name -> containerId and alias -> name
-        containerImageNameMap.put(imageConfig.getName(), id);
+        imageToContainerMap.put(imageConfig.getName(), id);
         if (imageConfig.getAlias() != null) {
-            imageAliasMap.put(imageConfig.getAlias(), imageConfig.getName());
+            aliasToContainerMap.put(imageConfig.getAlias(), id);
         }
     }
 }

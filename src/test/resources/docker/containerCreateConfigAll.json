@@ -15,7 +15,7 @@
     },
     "Dns": ["8.8.8.8"],
     "CapDrop": ["MKNOD"],
-    "Links": ["redis:redis"],
+    "Links": ["db1:db1", "db2:db2"],
     "DnsSearch": ["domain.com"],
     "Privileged": true,
     "CapAdd": ["NET_ADMIN"],
