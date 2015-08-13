@@ -103,13 +103,13 @@
                   <!-- Port mappings: Container internal port (which must be exposed) will be
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${jolokia.port}. Multiple port mappings can be specified here-->
-                  <port>jolokia.port:8080</port>
+                  <port>${jolokia.host}:${jolokia.port}:8080</port>
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <log>Server startup</log>
                   <http>
-                    <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                    <url>http://${jolokia.host}:${jolokia.port}/jolokia</url>
                     <method>GET</method>
                     <status>200</status>
                   </http>

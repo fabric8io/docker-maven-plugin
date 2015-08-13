@@ -1,19 +1,12 @@
 package org.jolokia.docker.maven.access;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.jolokia.docker.maven.model.Container.PortBinding;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author roland
@@ -35,7 +28,7 @@ public class PortMappingTest {
         
         givenAHostIpProperty("other.ip", "127.0.0.1");
         
-        givenAPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "+other.ip:other.port:5678");
+        givenAPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "+other.ip:${other.port}:5678");
         whenUpdateDynamicMapping(443);
         
         whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
@@ -71,7 +64,7 @@ public class PortMappingTest {
     @Test
     public void testHostIpAsPropertyOnly() {
         givenADockerHostAddress("1.2.3.4");
-        givenAPortMapping("+other.ip:5677:5677");
+        givenAPortMapping("${other.ip}:5677:5677");
         whenUpdateDynamicMapping(5677, 5677, "0.0.0.0");
 
         thenContainerPortToHostPortMapSizeIs(1);

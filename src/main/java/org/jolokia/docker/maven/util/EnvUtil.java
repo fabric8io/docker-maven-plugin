@@ -1,7 +1,8 @@
 package org.jolokia.docker.maven.util;
 
-import java.io.*;
+import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.plexus.util.StringUtils;
@@ -14,6 +15,8 @@ import org.jolokia.docker.maven.AbstractDockerMojo;
  * @since 04.04.14
  */
 public class EnvUtil {
+
+    public static final String MAVEN_PROPERTY_REGEXP = "\\s*\\$\\{\\s*([^}]+)\\s*}\\s*$";
 
     private EnvUtil() {}
 
@@ -155,6 +158,21 @@ public class EnvUtil {
         return ret.size() > 0 ? ret : null;
     }
 
+    /**
+     * Extract from a Maven property which is in the form ${name} the name.
+     *
+     * @param propName property name to extrat
+     * @return the pure name or null if this is not a property name
+     */
+    public static String extractMavenPropertyName(String propName) {
+        Matcher matcher = Pattern.compile(MAVEN_PROPERTY_REGEXP).matcher(propName);
+        if (matcher.matches()) {
+            return matcher.group(1);
+        } else {
+            return null;
+        }
+    }
+
     private static boolean propMatchesPrefix(String prefix, String key) {
         return key.startsWith(prefix) && key.length() >= prefix.length();
     }
@@ -184,4 +202,5 @@ public class EnvUtil {
         }
         return new File(new File(params.getProject().getBasedir(), directory), path);
     }
+
 }

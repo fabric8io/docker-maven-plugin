@@ -690,6 +690,10 @@ This property file might be useful with tests or with other maven plugins that w
 to use the resolved properties because they can only be updated after the container has started
 and plugins resolve their properties in an earlier lifecycle phase.
 
+If you don't need to write out such a property file and thus don't need to preserve the property names, 
+you can use normal maven properties as well. E.g. `${host.var}:${port.var}:8080` instead of 
+`+host.var:port.var:8080`.  
+
 ##### Container linking
 
 The `<links>` configuration contains a list of containers that should

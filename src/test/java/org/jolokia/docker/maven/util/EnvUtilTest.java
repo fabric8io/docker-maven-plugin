@@ -66,9 +66,24 @@ public class EnvUtilTest {
                 "bla.1","hello",
                 "bla.blub","last",
                 "blub.1","unknown");
-        List<String> result = EnvUtil.extractFromPropertiesAsList("bla",props);
+        List<String> result = EnvUtil.extractFromPropertiesAsList("bla", props);
         assertEquals(3,result.size());
-        assertArrayEquals(new String[] {"hello","world","last"}, new ArrayList(result).toArray());
+        assertArrayEquals(new String[]{"hello", "world", "last"}, new ArrayList(result).toArray());
+    }
+
+    @Test
+    public void mavenPropertyExtract() {
+        String[] data = {
+                "${var1}", "var1",
+                "${  var2}", "var2",
+                " ${ var3}  ", "var3",
+                "nonvar", null,
+                "${nonvar", null
+        };
+        for (int i = 0; i < data.length; i +=2) {
+            assertEquals(data[i+1],EnvUtil.extractMavenPropertyName(data[i]));
+        }
+
     }
 
     private Properties getTestProperties(String ... vals) {
@@ -78,5 +93,6 @@ public class EnvUtilTest {
         }
         return ret;
     }
+
 
 }

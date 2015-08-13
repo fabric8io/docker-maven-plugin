@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jolokia.docker.maven.model.Container.PortBinding;
+import org.jolokia.docker.maven.util.EnvUtil;
 
 /**
  * Entity holding port mappings which can be set through the configuration.
@@ -107,6 +108,8 @@ public class PortMapping {
                 update(hostPortVariableMap, specToHostPortVariableMap.get(variable), portBinding.getHostPort());
                 
                 String hostIp = portBinding.getHostIp();
+
+                // Use the docker host if binding is on all interfaces
                 if ("0.0.0.0".equals(hostIp)) {
                     hostIp = projProperties.getProperty("docker.host.address");
                 }
@@ -178,38 +181,52 @@ public class PortMapping {
         return null;
     }
 
+    private String extractPortPropertyName(String name) {
+        String mavenPropName = EnvUtil.extractMavenPropertyName(name);
+        return mavenPropName != null ? mavenPropName : name;
+    }
+
     private void mapBindToAndHostPortSpec(String bindTo, String hPort, String portSpec) {
         mapHostPortToSpec(hPort, portSpec);
 
-        if (bindTo.startsWith("+")) {
-            bindTo = bindTo.substring(1);
-
-            String host = projProperties.getProperty(bindTo);
+        String hostPropName = extractHostPropertyName(bindTo);
+        if (hostPropName != null) {
+            String host = projProperties.getProperty(hostPropName);
             if (host != null) {
                 // the container portSpec can never be null, so use that as the key
                 bindToHostMap.put(portSpec, resolveHostname(host));
             }
 
-            specToHostIpVariableMap.put(portSpec, bindTo);
+            specToHostIpVariableMap.put(portSpec, hostPropName);
         } else {
             // the container portSpec can never be null, so use that as the key
             bindToHostMap.put(portSpec, resolveHostname(bindTo));
         }
     }
-    
+
+    private String extractHostPropertyName(String name) {
+        if (name.startsWith("+")) {
+            return name.substring(1);
+        } else {
+            return EnvUtil.extractMavenPropertyName(name);
+        }
+    }
+
     private void mapHostPortToSpec(String hPort, String portSpec) {
         Integer hostPort;
         try {
             hostPort = Integer.parseInt(hPort);
         } catch (@SuppressWarnings("unused") NumberFormatException exp) {
             // Port should be dynamically assigned and set to the variable give in hPort
-            hostPort = getPortFromVariableOrSystemProperty(hPort);
+            String portPropertyName = extractPortPropertyName(hPort);
+
+            hostPort = getPortFromVariableOrSystemProperty(portPropertyName);
             if (hostPort != null) {
                 // hPort: Variable name, hostPort: Port coming from the variable
-                hostPortVariableMap.put(hPort, hostPort);
+                hostPortVariableMap.put(portPropertyName, hostPort);
             } else {
                 // containerPort: Port from container, hPort: Variable name to be filled later on
-                specToHostPortVariableMap.put(portSpec, hPort);
+                specToHostPortVariableMap.put(portSpec, portPropertyName);
             }
         }
         containerPortToHostPort.put(portSpec, hostPort);
@@ -282,22 +299,23 @@ public class PortMapping {
 
         public void write() throws IOException {
             for (Map.Entry<String, Properties> entry : toExport.entrySet()) {
-                globalExport.putAll(writePortProperties(entry.getValue(), entry.getKey()));
+                Properties props = entry.getValue();
+                writeProperties(props, entry.getKey());
+                globalExport.putAll(props);
             }
 
             if (globalFile != null && !globalExport.isEmpty()) {
-                writePortProperties(globalExport, globalFile);
+                writeProperties(globalExport, globalFile);
             }
         }
 
-        private Properties writePortProperties(Properties props, String portPropertyFile) throws IOException {
-            File propFile = new File(portPropertyFile);
+        private void writeProperties(Properties props, String file) throws IOException {
+            File propFile = new File(file);
             try (OutputStream os = new FileOutputStream(propFile)) {
                 props.store(os, "Docker ports");
             } catch (IOException e) {
-                throw new IOException("Cannot write properties to " + portPropertyFile + ": " + e, e);
+                throw new IOException("Cannot write properties to " + file + ": " + e, e);
             }
-            return props;
         }
     }
 }
