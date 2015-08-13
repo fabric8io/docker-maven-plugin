@@ -6,10 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 import com.sun.net.httpserver.*;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import static org.junit.Assert.*;
 
@@ -27,51 +24,54 @@ public class WaitUtilTest {
 
     @Test(expected = TimeoutException.class)
     public void httpFail() throws TimeoutException {
-        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/", null);
+        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
         long waited = WaitUtil.wait(500,checker);
     }
 
     @Test
     public void httpSuccess() throws TimeoutException {
-        System.out.println("Check URL " + httpPingUrl);
-
-        // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
-        WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl, null));
-
-        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, null);
+        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl);
         long waited = WaitUtil.wait(700,checker);
-        assertTrue("Waited longer than 500ms: " + waited, waited < 700);
+        assertTrue("Waited less than 700ms: " + waited, waited < 700);
+    }
+
+    @Test
+    public void httpSuccessWithStatus() throws TimeoutException {
+        for (String status : new String[] { "200", "200 ... 300", "200..250"}) {
+            long waited = WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl,null,status));
+            assertTrue("Waited less than  700ms: " + waited, waited < 700);
+        }
+    }
+
+    @Test(expected = TimeoutException.class)
+    public void httpFailWithStatus() throws TimeoutException {
+        WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, "500"));
     }
 
     @Test
     public void httpSuccessWithGetMethod() throws Exception {
         serverMethodToAssert = "GET";
-        System.out.println("Check URL " + httpPingUrl);
-
-        // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
-        WaitUtil.wait(700,new WaitUtil.HttpPingChecker(httpPingUrl, "GET"));
-
-        WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, "GET");
-        long waited = WaitUtil.wait(700,checker);
-        assertTrue("Waited longer than 500ms: " + waited,waited < 700);
-    }
-
-    @Before
-    public void setupDefaultServerAssertion() {
-        serverMethodToAssert = "HEAD";
+        try {
+            WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, "GET", null);
+            long waited = WaitUtil.wait(700, checker);
+            assertTrue("Waited less than 500ms: " + waited, waited < 700);
+        } finally {
+            serverMethodToAssert = "HEAD";
+        }
     }
 
     @BeforeClass
     public static void createServer() throws IOException {
         port = getRandomPort();
-        System.out.println("Created .... " + port);
+        serverMethodToAssert = "HEAD";
+        System.out.println("Created HTTP server at port " + port);
         InetAddress address = InetAddress.getLoopbackAddress();
         InetSocketAddress socketAddress = new InetSocketAddress(address,port);
         server = HttpServer.create(socketAddress, 10);
 
         // Prepare executor pool
         server.setExecutor(Executors.newSingleThreadExecutor());
-        server.createContext("/test/",new HttpHandler() {
+        server.createContext("/test/", new HttpHandler() {
             @Override
             public void handle(HttpExchange httpExchange) throws IOException {
                 String method = httpExchange.getRequestMethod();
@@ -81,6 +81,13 @@ public class WaitUtilTest {
         });
         httpPingUrl = "http://127.0.0.1:" + port + "/test/";
         server.start();
+
+        // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
+        try {
+            WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl));
+        } catch (TimeoutException exp) {
+
+        }
     }
 
     @AfterClass

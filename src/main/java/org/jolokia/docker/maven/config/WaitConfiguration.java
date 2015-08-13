@@ -13,10 +13,15 @@ public class WaitConfiguration {
 
     /**
      * @parameter
+     * @deprecated Use <http><url></url></http> instead
      */
     private String url;
 
-    private String method;
+    /**
+     * @parameter
+     */
+    private HttpConfiguration http;
+
     /**
      * @parameter
      */
@@ -29,24 +34,24 @@ public class WaitConfiguration {
 
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, String url, String method, String log, int shutdown) {
+    private WaitConfiguration(int time, HttpConfiguration http, String log, int shutdown) {
         this.time = time;
-        this.url = url;
-        this.method = method;
+        this.http = http;
         this.log = log;
         this.shutdown = shutdown;
     }
+
 
     public int getTime() {
         return time;
     }
 
     public String getUrl() {
-        return url;
+        return http != null ? http.getUrl() : url;
     }
 
-    public String getMethod() {
-        return method;
+    public HttpConfiguration getHttp() {
+        return http;
     }
 
     public String getLog() {
@@ -61,7 +66,7 @@ public class WaitConfiguration {
 
     public static class Builder {
         private int time = 0,shutdown = 0;
-        private String url,log;
+        private String url,log,status;
         private String method;
 
         public Builder time(int time) {
@@ -79,6 +84,11 @@ public class WaitConfiguration {
             return this;
         }
 
+        public Builder status(String status) {
+            this.status = status;
+            return this;
+        }
+
         public Builder log(String log) {
             this.log = log;
             return this;
@@ -90,7 +100,38 @@ public class WaitConfiguration {
         }
 
         public WaitConfiguration build() {
-            return new WaitConfiguration(time,url,method,log,shutdown);
+            return new WaitConfiguration(time,new HttpConfiguration(url,method,status), log,shutdown);
+        }
+    }
+
+    public static class HttpConfiguration {
+
+        /** @parameter */
+        private String url;
+
+        /** @parameter */
+        private String method;
+
+        /** @parameter */
+        private String status;
+
+        public HttpConfiguration() {}
+
+        private HttpConfiguration(String url, String method, String status) {
+            this.url = url;
+            this.method = method;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public String getStatus() {
+            return status;
         }
     }
 }

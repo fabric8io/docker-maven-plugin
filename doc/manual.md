@@ -503,7 +503,7 @@ The `<run>` configuration knows the following sub elements:
   the container.
 * **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
   from the container.
-* **cmd** is a command which should be executed at the end of the
+* **command** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
   used. 
 * **domainname** (*v1.12*) domain name for the container
@@ -570,7 +570,9 @@ Example:
     <link>db</db>
   </links>
   <wait>
-    <url>http://localhost:${jolokia.port}/jolokia</url>
+    <http>
+      <url>http://localhost:${jolokia.port}/jolokia</url>    
+    </http>
     <time>10000</time>
   </wait>
   <log>
@@ -578,7 +580,7 @@ Example:
     <date>ISO8601</date>
     <color>blue</color>
   </log>
-  <cmd>java -jar /maven/docker-demo.jar</cmd>
+  <command>java -jar /maven/docker-demo.jar</command>
 </run>
 ````
 
@@ -780,8 +782,11 @@ While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
 `<wait>` section which the following sub-elements:
 
-* **url** is an URL which is polled periodically until it returns a
-  HTTP status code between 200 and 399.
+* **http** specifies an HTTP ping check which periodically polls an URL. It knows the following sub-elements:
+  - **url** holds an URL and is mandatory
+  - **method** Optional HTTP method to use.
+  - **status** Status code which if returned is considered to be a successful ping. This code can be given either as 
+    a single number (200) or as a range (200..399). The default is `200..399`
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
@@ -798,7 +803,11 @@ Example:
 
 ````xml
 <wait>
-  <url>http://localhost:${host.port}</url>
+  <http>
+    <url>http://localhost:${host.port}</url>
+    <method>GET</method>
+    <status>200..399</status>
+  </http>
   <time>10000</time>
   <shutdown>500</shutdown>
 </wait>
@@ -1156,7 +1165,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.bind.idx** Sets a list of paths to bind/expose in the container
 * **docker.capAdd.idx** List of kernel capabilities to add to the container
 * **docker.capDrop.idx** List of kernel capabilities to remove from the container
-* **docker.cmd** Command to execute. This is used both when
+* **docker.command** Command to execute. This is used both when
   running a container and as default command when creating an image.
 * **docker.domainname** Container domain name
 * **docker.dns.idx** List of dns servers to use
@@ -1208,7 +1217,9 @@ values in the `<build>` and `<run>` sections.
   is the same as for links (see above). For examples
   `<docker.volumesFrom.1>data</docker.volumesFrom.1>` will mount all
   volumes exported by the `data` image.
-* **docker.wait.url** URL to wait for during startup of a container
+* **docker.wait.http.url** URL to wait for during startup of a container
+* **docker.wait.http.method** HTTP method to use for ping check
+* **docker.wait.http.status** Status code to wait for when doing HTTP ping check
 * **docker.wait.time** Amount of time to wait during startup of a
     container (in ms)
 * **docker.wait.log** Wait for a log output to appear.

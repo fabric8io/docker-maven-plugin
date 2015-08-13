@@ -118,8 +118,12 @@ public class StartMojo extends AbstractDockerMojo {
             ArrayList<String> logOut = new ArrayList<>();
             if (wait.getUrl() != null) {
                 String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
-                String waitMethod = StrSubstitutor.replace(wait.getMethod(), projectProperties);
-                checkers.add(new WaitUtil.HttpPingChecker(waitUrl, waitMethod));
+                WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
+                if (httpConfig != null) {
+                    checkers.add(new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus()));
+                } else {
+                    checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
+                }
                 logOut.add("on url " + waitUrl);
             }
             if (wait.getLog() != null) {

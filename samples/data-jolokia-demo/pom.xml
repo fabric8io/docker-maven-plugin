@@ -108,7 +108,11 @@
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <log>Server startup</log>
-                  <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                  <http>
+                    <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
                   <time>10000</time>
                   <shutdown>500</shutdown>
                 </wait>

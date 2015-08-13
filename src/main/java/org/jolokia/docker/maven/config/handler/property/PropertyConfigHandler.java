@@ -160,10 +160,16 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private WaitConfiguration extractWaitConfig(String prefix, Properties properties) {
+        String url = withPrefix(prefix,WAIT_HTTP_URL,properties);
+        if (url == null) {
+            // Fallback to deprecated old URL
+            url = withPrefix(prefix,WAIT_URL,properties);
+        }
         return new WaitConfiguration.Builder()
                 .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
-                .url(withPrefix(prefix, WAIT_URL, properties))
-                .method(withPrefix(prefix, WAIT_METHOD, properties))
+                .url(url)
+                .method(withPrefix(prefix, WAIT_HTTP_METHOD, properties))
+                .status(withPrefix(prefix, WAIT_HTTP_STATUS, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
                 .shutdown(asInt(withPrefix(prefix,WAIT_SHUTDOWN,properties)))
                 .build();
