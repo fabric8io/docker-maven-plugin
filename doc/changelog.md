@@ -6,7 +6,7 @@
   - Allow 'build' and/or 'run' configuration to be skipped ([#207](https://github.com/rhuss/docker-maven-plugin/issues/207))
   - Refactored to use 'inspect' instead of 'list' for checking the existence of an image ([#230](https://github.com/rhuss/docker-maven-plugin/issues/230))
   - Refactored ApacheHttpClientDelegate to avoid leaking connections ([#232](https://github.com/rhuss/docker-maven-plugin/issues/232))
-  - Allow empty `build` or `assembly` elements (#214/#236) 
+  - Allow empty `build` or `assembly` elements ([#214](https://github.com/rhuss/docker-maven-plugin/issues/214)) ([#236](https://github.com/rhuss/docker-maven-plugin/issues/236)) 
   - Add new configuration parameter 'maxConnections' to allow to specify the number of parallel 
     connections to the Docker Host. Default: 100 ([#254](https://github.com/rhuss/docker-maven-plugin/issues/254))
   - Allow multiple containers of the same image to be linked ([#182](https://github.com/rhuss/docker-maven-plugin/issues/182))
@@ -50,7 +50,7 @@ one level up so that `<watch>` and `<run>` are on the same level. Please refer t
 for an in depth explanation of the much enhanced watch functionality.
   
 * **0.12.0**
-  - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
+  - Allow CMD and ENTRYPOINT with shell and exec arguments ([#130](https://github.com/rhuss/docker-maven-plugin/issues/130)) ([#149](https://github.com/rhuss/docker-maven-plugin/issues/149))
   - Unix Socket support ([#179](https://github.com/rhuss/docker-maven-plugin/issues/179))
   - Add a new parameter 'skipTags' for avoiding configured tagging of images ([#145](https://github.com/rhuss/docker-maven-plugin/issues/145))
   - Break build if log check or URL check runs into a timeout ([#173](https://github.com/rhuss/docker-maven-plugin/issues/173))
