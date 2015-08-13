@@ -43,7 +43,7 @@ public class StartMojo extends AbstractDockerMojo {
      * @parameter property = "docker.follow" default-value = "false"
      */
     protected boolean follow;
- 
+
     /**
      * {@inheritDoc}
      */
@@ -53,7 +53,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         QueryService queryService = serviceHub.getQueryService();
         RunService runService = serviceHub.getRunService();
-        
+
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
 
         boolean success = false;
@@ -98,7 +98,7 @@ public class StartMojo extends AbstractDockerMojo {
             }
         }
     }
-    
+
     private void updateDynamicPortProperties(DockerAccess docker, String containerId, RunImageConfiguration runConfig, PortMapping mappedPorts, Properties properties) throws DockerAccessException, MojoExecutionException {
         if (mappedPorts.containsDynamicPorts()) {
             mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(containerId));
@@ -118,7 +118,8 @@ public class StartMojo extends AbstractDockerMojo {
             ArrayList<String> logOut = new ArrayList<>();
             if (wait.getUrl() != null) {
                 String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
-                checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
+                String waitMethod = StrSubstitutor.replace(wait.getMethod(), projectProperties);
+                checkers.add(new WaitUtil.HttpPingChecker(waitUrl, waitMethod));
                 logOut.add("on url " + waitUrl);
             }
             if (wait.getLog() != null) {

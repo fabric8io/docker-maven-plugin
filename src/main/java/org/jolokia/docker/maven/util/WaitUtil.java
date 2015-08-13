@@ -6,6 +6,8 @@ import java.util.concurrent.TimeoutException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -15,7 +17,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
  */
 public class WaitUtil {
 
-     // how long to wait at max when doing a http ping
+    // how long to wait at max when doing a http ping
     private static final long HARD_MAX_WAIT = 10 * 1000;
 
     // How long to wait between pings
@@ -23,6 +25,7 @@ public class WaitUtil {
 
     // Timeout for ping
     private static final int HTTP_PING_TIMEOUT = 500;
+    public static final String DEFAULT_HTTP_METHOD = "HEAD";
 
     private WaitUtil() {}
 
@@ -80,14 +83,17 @@ public class WaitUtil {
     public static class HttpPingChecker implements WaitChecker {
 
         private String url;
+        private String method;
 
         /**
          * Ping the given URL
          *
          * @param url URL to check
+         * @param method
          */
-        public HttpPingChecker(String url) {
+        public HttpPingChecker(String url, String method) {
             this.url = url;
+            this.method = method;
         }
 
         @Override
@@ -110,7 +116,10 @@ public class WaitUtil {
                     .setDefaultRequestConfig(requestConfig)
                     .build();
             try {
-                CloseableHttpResponse response = httpClient.execute(new HttpHead(url));
+                if (method == null) {
+                    method = DEFAULT_HTTP_METHOD;
+                }
+                CloseableHttpResponse response = httpClient.execute(RequestBuilder.create(method).setUri(url).build());
                 try {
                     int responseCode = response.getStatusLine().getStatusCode();
                     return (responseCode >= 200 && responseCode <= 399);
