@@ -133,6 +133,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.maxConnections" default-value = "100" */
     private int maxConnections;
 
+    // property file to write out with port mappings
+    /** @parameter */
+    protected String portPropertyFile;
+    
     // Authentication information
     /** @parameter */
     Map authConfig;

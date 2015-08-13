@@ -136,6 +136,9 @@ parentheses.
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
   the [section](#log-configuration) below. 
+* **portPropertyFile** if given, specifies a global file into which the
+  mapped properties should be written to. The format of this file and
+  its purpose are also described [below](#port-mapping).
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.
@@ -622,21 +625,14 @@ mapping has multiple parts, each separate by a colon. This is
 equivalent to the port mapping when using the Docker CLI with option
 `-p`. 
 
-```xml
-<ports>
-  <port>18080:8080</port> 
-  <port>host.port:80</port> 
-<ports>
-```
 
-A `port` stanza may take one of two forms:
+A `port` stanza may take one of the following forms:
 
-* A tuple consisting of two numeric values separated by a `:`. This
-  form will result in an explicit mapping between the docker host and
-  the corresponding port inside the container. In the above example,
-  port 18080 would be exposed on the docker host and mapped to port
-  8080 in the running container. 
-* A tuple consisting of a string and a numeric value separated by a
+* **18080:8080** : A tuple consisting of two numeric values separated by a `:`. This 
+  form will result in an explicit mapping between the docker host and the corresponding 
+  port inside the container. In the above example, port 18080 would be exposed on the 
+  docker host and mapped to port 8080 in the running container. 
+* **host.port:80** A tuple consisting of a string and a numeric value separated by a
   `:`. In this form, the string portion of the tuple will correspond
   to a Maven property. If the property is undefined when the `start`
   task executes, a port will be dynamically selected by Docker in the
@@ -651,35 +647,48 @@ A `port` stanza may take one of two forms:
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
   similar to `mvn -Dhost.port=10080 docker:start`
-
-Both forms of the `port` stanza also support binding to a specific ip 
-address on the docker host.
+* **&lt;bindTo&gt;:host.port:80** A tuple consisting of two strings and a numeric value separated
+  by a `:`. In this form, `<bindTo>` is an ip address on the host the container should bind to.
+  As a convenience, a hostname pointing to the docker host may also
+  be specified. The container will fail to start if the hostname can not be 
+  resolved.  
+* **+host.ip:host.port:80** A tuple consisting of two strings and a numeric value separated
+  by a `:`. In this form, the host ip of the container will be placed into a Maven property.
+  If docker reports that value to be `0.0.0.0`, the value of `docker.host.address` will
+  be substituted instead. In the event you want to use this form and have the container bind 
+  to a specific hostname/ip address, you can declare a Maven property of the same name and correct
+  value to use. `host:post` functions in the same manner as described above. 
+  
+The following are examples of valid configuration entries:
 
 ```xml
+<properties>
+  <bind.host.ip>1.2.3.4</bind.host.ip>
+  <bind.host.name>some.host.pvt</bind.host.name>
+<properties>
+
+...
+
 <ports>
-  <port>1.2.3.4:80:80</port>
-  <port>1.2.3.4:host.port:80</port>
-</ports>
+  <port>18080:8080</port> 
+  <port>host.port:80</port> 
+  <port>127.0.0.1:80:80</port>
+  <port>localhost:host.port:80</port>
+  <port>+container.ip.property:host.port:5678</port>
+  <port>+bind.host.ip:host.port:5678</port>
+  <port>+bind.host.name:5678:5678</port>
+<ports>
 ```
 
-As a convenience, a hostname pointing to the docker host may also
-be specified. The container will fail to start if the hostname can not be 
-resolved.
+Another useful configuration option is `portPropertyFile` which can be used to
+to write out the container's host ip and any dynamic ports that have been
+resolved. The keys of this property file are the property names defined in the 
+port mapping configuration and their values those of the corresponding 
+docker attributes. 
 
-```xml
-<ports>
-  <port>docker.example.com:80:80</port>
-</ports>
-```
-
-Another useful configuration option is `portPropertyFile` with which a
-file can be specified to which the real port mapping is written after
-all dynamic ports has been resolved. The keys of this property file
-are the variable names, the values are the dynamically assigned host
-ports. This property file might be useful together with other maven
-plugins which already resolved their maven variables earlier in the
-lifecycle than this plugin so that the port variables might not be
-available to them.
+This property file might be useful with tests or with other maven plugins that will be unable 
+to use the resolved properties because they can only be updated after the container has started
+and plugins resolve their properties in an earlier lifecycle phase.
 
 ##### Container linking
 

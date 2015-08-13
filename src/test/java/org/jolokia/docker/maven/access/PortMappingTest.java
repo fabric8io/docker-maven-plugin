@@ -1,151 +1,283 @@
 package org.jolokia.docker.maven.access;
 
-import java.util.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.jolokia.docker.maven.model.Container.PortBinding;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * @author roland
  * @since 04.04.14
  */
-
-
 public class PortMappingTest {
 
-    @Test
-    public void variableReplacement() throws MojoExecutionException {
+    private PortMapping mapping;
 
-        PortMapping mapping = createPortMapping("jolokia.port:8080","18181:8181","127.0.0.1:9090:9090", "127.0.0.1:other.port:5678");
+    private Properties properties;
 
-        updateDynamicMapping(mapping, 8080, 49900);
-        updateDynamicMapping(mapping, 5678, 49901);
-
-        mapAndVerifyReplacement(mapping,
-                                "http://localhost:49900/", "http://localhost:${jolokia.port}/",
-                                "http://pirx:49900/", "http://pirx:${jolokia.port}/");
-
-        mapAndVerifyReplacement(mapping,
-                                "http://localhost:49901/", "http://localhost:${other.port}/",
-                                "http://pirx:49901/", "http://pirx:${other.port}/",
-                                "http://49900/49901","http://${jolokia.port}/${other.port}");
-
-        assertEquals((int) mapping.getPortVariables().get("jolokia.port"), 49900);
-        assertEquals((int) mapping.getPortVariables().get("other.port"), 49901);
-
-        assertTrue(mapping.containsDynamicPorts());
-        assertEquals(4, mapping.getContainerPorts().size());
-
-        assertEquals(4, mapping.getPortsMap().size());
-        assertEquals(2, mapping.getBindToHostMap().size());
-
-        assertEquals(49900, (long) mapping.getPortVariables().get("jolokia.port"));
-        assertEquals(49901, (long) mapping.getPortVariables().get("other.port"));
-
-        Map<String,Integer> p = mapping.getPortsMap();
-        assertEquals(p.size(),4);
-
-        assertNull(p.get("8080/tcp"));
-        assertNull(p.get("5678/tcp"));
-
-        assertEquals(18181, (long) p.get("8181/tcp"));
-        assertEquals(9090, (long) p.get("9090/tcp"));
-
-        assertEquals("127.0.0.1", mapping.getBindToHostMap().get("9090/tcp"));
-        assertEquals("127.0.0.1", mapping.getBindToHostMap().get("5678/tcp"));
+    @Before
+    public void setup() {
+        properties = new Properties();
     }
 
     @Test
-    public void udpAsProtocol() {
-        PortMapping mapping = createPortMapping("49000:8080/udp","127.0.0.1:49001:8081/udp");
-        Map<String,Integer> p = mapping.getPortsMap();
-        assertEquals(2,p.size());
-        assertEquals(49000, (long) p.get("8080/udp"));
-        assertEquals(49001, (long) p.get("8081/udp"));
+    public void testComplexMapping() {
+        
+        givenAHostIpProperty("other.ip", "127.0.0.1");
+        
+        givenAPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "+other.ip:other.port:5678");
+        whenUpdateDynamicMapping(443);
+        
+        whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
+        whenUpdateDynamicMapping(5678, 49901, "127.0.0.1");
 
-        assertEquals("127.0.0.1",mapping.getBindToHostMap().get("8081/udp"));
-        assertNull(mapping.getBindToHostMap().get("8080/udp"));
+        thenMapAndVerifyReplacement("http://localhost:49900/", "http://localhost:${jolokia.port}/",
+                "http://pirx:49900/", "http://pirx:${jolokia.port}/");
+        thenMapAndVerifyReplacement("http://localhost:49901/", "http://localhost:${other.port}/",
+                "http://pirx:49901/", "http://pirx:${other.port}/",
+                "http://49900/49901", "http://${jolokia.port}/${other.port}");
+
+        thenHasDynamicHostPorts();
+        thenDynamicHostPortsSizeIs(2);
+        thenHostPortVariableEquals("jolokia.port", 49900);
+        thenHostPortVariableEquals("other.port", 49901);
+
+        thenHasDynamicHostIps();
+        thenDynamicHostIpsSizeIs(1);
+        thenHostIpVariableEquals("other.ip", "127.0.0.1");
+
+        thenContainerPortToHostPortMapSizeIs(4);
+        thenContainerPortToHostPortMapHasOnlyPortSpec("8080/tcp");
+        thenContainerPortToHostPortMapHasOnlyPortSpec("5678/tcp");
+        thenContainerPortToHostPortMapHasPortSpecAndPort("8181/tcp", 18181);
+        thenContainerPortToHostPortMapHasPortSpecAndPort("9090/tcp", 9090);
+
+        thenBindToHostMapSizeIs(2);
+        thenBindToHostMapContains("9090/tcp", "127.0.0.1");
+        thenBindToHostMapContains("5678/tcp", "127.0.0.1");
+    }
+    
+
+    @Test
+    public void testHostIpAsPropertyOnly() {
+        givenADockerHostAddress("1.2.3.4");
+        givenAPortMapping("+other.ip:5677:5677");
+        whenUpdateDynamicMapping(5677, 5677, "0.0.0.0");
+
+        thenContainerPortToHostPortMapSizeIs(1);
+
+        thenDynamicHostPortsSizeIs(0);
+        thenDynamicHostIpsSizeIs(1);
+        thenBindToHostMapSizeIs(0);
+        
+        thenHostIpVariableEquals("other.ip", "1.2.3.4");
+    }
+    
+    @Test
+    public void testHostIpPortAsProperties() {
+        givenADockerHostAddress("5.6.7.8");
+        givenAPortMapping("+other.ip:other.port:5677");
+        whenUpdateDynamicMapping(5677, 49900, "1.2.3.4");
+
+        thenContainerPortToHostPortMapHasOnlyPortSpec("5677/tcp");
+
+        thenDynamicHostPortsSizeIs(1);
+        thenDynamicHostIpsSizeIs(1);
+
+        thenHostPortVariableEquals("other.port", 49900);
+        thenHostIpVariableEquals("other.ip", "1.2.3.4");
+    }
+    
+    @Test
+    public void testHostIpVariableReplacement() {
+        givenAPortMapping("jolokia.port:8080");
+        whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
+
+        thenHasDynamicHostPorts();
+        thenDynamicHostPortsSizeIs(1);
+        thenHostPortVariableEquals("jolokia.port", 49900);
+    }
+
+    @Test
+    public void testHostnameAsBindHost() {
+        givenAPortMapping("localhost:80:80");
+        thenBindToHostMapContainsValue("127.0.0.1");
+    }
+
+    @Test
+    public void testHostPortAsPropertyOnly() {
+        givenAPortMapping("other.port:5677");
+        whenUpdateDynamicMapping(5677, 49900, "0.0.0.0");
+
+        thenContainerPortToHostPortMapSizeIs(1);
+
+        thenDynamicHostPortsSizeIs(1);
+        thenDynamicHostIpsSizeIs(0);
+
+        thenHostPortVariableEquals("other.port", 49900);
+    }
+
+    @Ignore
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidHostnameWithDynamicPort() {
+        givenAPortMapping("does-not-exist.pvt:web.port:80");
+    }
+    
+    @Ignore
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidHostnameWithFixedPort() {
+        givenAPortMapping("does-not-exist.pvt:80:80");
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidMapping() {
+        givenAPortMapping("bla");
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidMapping2() {
+        givenAPortMapping("jolokia.port:bla");
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void invalidProtocol() {
-        createPortMapping("49000:8080/abc");
+    public void testInvalidProtocol() {
+        givenAPortMapping("49000:8080/abc");
     }
 
     @Test
-    public void variableReplacementWithProps() throws MojoExecutionException {
-        PortMapping mapping = createPortMapping(p("jolokia.port","50000"),"jolokia.port:8080");
-        updateDynamicMapping(mapping, 8080, 49900);
-        mapAndVerifyReplacement(mapping,
-                                "http://localhost:50000/", "http://localhost:${jolokia.port}/");
+    public void testIpAsBindHost() {
+        givenAPortMapping("127.0.0.1:80:80");
+        thenBindToHostMapContainsValue("127.0.0.1");
     }
 
     @Test
-    public void variableReplacementWithSystemPropertyOverwrite() throws MojoExecutionException {
+    public void testUdpAsProtocol() {
+        givenAPortMapping("49000:8080/udp", "127.0.0.1:49001:8081/udp");
+        thenContainerPortToHostPortMapSizeIs(2);
+        thenContainerPortToHostPortMapHasPortSpecAndPort("8080/udp", 49000);
+        thenContainerPortToHostPortMapHasPortSpecAndPort("8081/udp", 49001);
+        thenBindToHostMapContains("8081/udp", "127.0.0.1");
+        thenBindToHostMapContainsOnlySpec("8080/udp");
+    }
+
+    @Test
+    public void testVariableReplacementWithProps() {
+        givenExistingProperty("jolokia.port", "50000");
+        givenAPortMapping("jolokia.port:8080");
+        whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
+        thenMapAndVerifyReplacement("http://localhost:50000/", "http://localhost:${jolokia.port}/");
+    }
+
+    @Test
+    public void testVariableReplacementWithSystemPropertyOverwrite() {
         try {
-            System.setProperty("jolokia.port","99999");
-            PortMapping mapping = createPortMapping(p("jolokia.port","50000"),"jolokia.port:8080");
-            mapAndVerifyReplacement(mapping,
-                                    "http://localhost:99999/", "http://localhost:${jolokia.port}/");
+            System.setProperty("jolokia.port", "99999");
+            givenExistingProperty("jolokia.port", "50000");
+            givenAPortMapping("jolokia.port:8080");
+            thenMapAndVerifyReplacement("http://localhost:99999/", "http://localhost:${jolokia.port}/");
         } finally {
             System.getProperties().remove("jolokia.port");
         }
     }
 
-    @Test
-    public void testValidHostname() {
-        for (String host : new String[] { "localhost", "127.0.0.1" }){
-            PortMapping mapping = createPortMapping(host + ":80:80");
-            assertTrue(mapping.getBindToHostMap().values().contains("127.0.0.1"));
-        }
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidHostname() {
-        createPortMapping("does-not-exist.pvt:80:80");
+    private void givenADockerHostAddress(String host) {
+        properties.setProperty("docker.host.address", host);
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void invalidMapping() throws MojoExecutionException {
-        createPortMapping("bla");
+    private void givenAHostIpProperty(String property, String hostIp) {
+        properties.put(property, hostIp);
+    }
+    
+    private void givenAPortMapping(String... mappings) {
+        mapping = new PortMapping(Arrays.asList(mappings), properties);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void invalidMapping2() throws MojoExecutionException {
-        createPortMapping("jolokia.port:bla");
-    }
-    // =======================================================================================================
-
-    private void mapAndVerifyReplacement(PortMapping mapping, String... args) {
-        for (int i = 0; i < args.length; i+=2) {
-            assertEquals(args[i], StrSubstitutor.replace(args[i + 1], mapping.getPortVariables()));
+    private void givenExistingProperty(String... p) {
+        for (int i = 0; i < p.length; i += 2) {
+            properties.setProperty(p[i], p[i + 1]);
         }
     }
 
-    private void updateDynamicMapping(PortMapping mapping, int ... ports) {
-        Map<String,Integer> dynMapping = new HashMap<>();
-        for (int i = 0; i < ports.length; i+=2) {
-            dynMapping.put(ports[i] + "/tcp",ports[i+1]);
+    private void thenBindToHostMapContains(String portSpec, String hostIp) {
+        assertEquals(hostIp, mapping.getBindToHostMap().get(portSpec));
+    }
+
+    private void thenBindToHostMapContainsOnlySpec(String portSpec) {
+        assertNull(mapping.getBindToHostMap().get(portSpec));
+    }
+
+    private void thenBindToHostMapContainsValue(String host) {
+        assertTrue(mapping.getBindToHostMap().values().contains(host));
+    }
+
+    private void thenBindToHostMapSizeIs(int size) {
+        assertEquals(size, mapping.getBindToHostMap().size());
+    }
+
+    private void thenContainerPortToHostPortMapHasOnlyPortSpec(String portSpec) {
+        assertNull(mapping.getContainerPortToHostPortMap().get(portSpec));
+    }
+
+    private void thenContainerPortToHostPortMapHasPortSpecAndPort(String portSpec, Integer port) {
+        assertTrue(mapping.getContainerPorts().contains(portSpec));
+        assertEquals(port, mapping.getPortsMap().get(portSpec));
+    }
+
+    private void thenContainerPortToHostPortMapSizeIs(int size) {
+        assertEquals(size, mapping.getContainerPortToHostPortMap().size());
+    }
+
+    private void thenDynamicHostIpsSizeIs(int size) {
+        assertEquals(size, mapping.getHostIpVariableMap().size());
+    }
+
+    private void thenDynamicHostPortsSizeIs(int size) {
+        assertEquals(size, mapping.getHostPortVariableMap().size());
+    }
+
+    private void thenHasDynamicHostIps() {
+        assertTrue(mapping.containsDynamicHostIps());
+    }
+
+    private void thenHasDynamicHostPorts() {
+        assertTrue(mapping.containsDynamicPorts());
+    }
+
+    private void thenHostIpVariableEquals(String key, String ip) {
+        assertEquals(ip, mapping.getHostIpVariableMap().get(key));
+    }
+
+    private void thenHostPortVariableEquals(String key, Integer port) {
+        assertEquals(port, mapping.getHostPortVariableMap().get(key));
+    }
+
+    private void thenMapAndVerifyReplacement(String... args) {
+        for (int i = 0; i < args.length; i += 2) {
+            assertEquals(args[i], StrSubstitutor.replace(args[i + 1], mapping.getHostPortVariableMap()));
         }
+    }
+    
+    private void whenUpdateDynamicMapping(int cPort) {
+        Map<String, PortBinding> dynMapping = new HashMap<>();
+        dynMapping.put(cPort + "/tcp", null);
+
         mapping.updateVariablesWithDynamicPorts(dynMapping);
     }
 
-    private PortMapping createPortMapping(String ... mappings) throws IllegalArgumentException {
-        return createPortMapping(new Properties(),mappings);
-    }
+    private void whenUpdateDynamicMapping(int cPort, int hPort, String hIp) {
+        Map<String, PortBinding> dynMapping = new HashMap<>();
+        dynMapping.put(cPort + "/tcp", new PortBinding(hPort, hIp));
 
-    private PortMapping createPortMapping(Properties properties, String ... mappings) throws IllegalArgumentException {
-        return new PortMapping(Arrays.asList(mappings),properties);
-    }
-
-    private Properties p(String ... p) {
-        Properties ret = new Properties();
-        for (int i = 0; i < p.length; i += 2) {
-            ret.setProperty(p[i],p[i+1]);
-        }
-        return ret;
+        mapping.updateVariablesWithDynamicPorts(dynMapping);
     }
 }

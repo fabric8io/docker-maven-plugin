@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -202,7 +203,7 @@ public class RunImageConfiguration {
     }
 
     public List<String> getPorts() {
-        return ports;
+        return (ports != null) ? ports : Collections.<String>emptyList();
     }
 
     public String getCmd() {

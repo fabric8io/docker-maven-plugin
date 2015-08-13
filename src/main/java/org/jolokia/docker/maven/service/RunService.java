@@ -69,6 +69,11 @@ public class RunService {
 
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id);
+        
+        if (mappedPorts.containsDynamicPorts()) {
+            updateMappedPorts(id, mappedPorts);
+        }
+        
         return id;
     }
 
@@ -298,5 +303,10 @@ public class RunService {
         log.info(imageConfig.getDescription() + ": Start container " + id);
         docker.startContainer(id);
         tracker.registerShutdownAction(id, imageConfig);
+    }
+    
+    private void updateMappedPorts(String containerId, PortMapping mappedPorts) throws DockerAccessException {
+        Container container = queryService.getContainer(containerId);
+        mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());
     }
 }

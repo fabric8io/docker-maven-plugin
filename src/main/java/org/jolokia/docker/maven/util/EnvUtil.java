@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 
@@ -42,22 +41,6 @@ public class EnvUtil {
             }
         }
         return path;
-    }
-
-    /**
-     * Write out a property file
-     *
-     * @param props properties to write
-     * @param portPropertyFile file name
-     * @throws MojoExecutionException
-     */
-    public static void writePortProperties(Properties props,String portPropertyFile) throws MojoExecutionException {
-        File propFile = new File(portPropertyFile);
-        try (OutputStream os = new FileOutputStream(propFile)) {
-            props.store(os,"Docker ports");
-        } catch (IOException e) {
-            throw new MojoExecutionException("Cannot write properties to " + portPropertyFile + ": " + e,e);
-        }
     }
 
     /**

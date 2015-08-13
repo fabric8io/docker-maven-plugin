@@ -11,7 +11,9 @@
     connections to the Docker Host. Default: 100 (#254)
   - Allow multiple containers of the same image to be linked (#182)
   - HTTP method and status code can be specified when waiting on an HTTP URL (#258)
-   
+  - Introduced global `portPropertyFile` setting (#90)
+  - Allow the container's host ip to be bound to a maven property and exported
+
 * **0.13.2**
   - "run" directives can be added to the Dockerfile (#191)
   - Support user information in wait URL (#211)

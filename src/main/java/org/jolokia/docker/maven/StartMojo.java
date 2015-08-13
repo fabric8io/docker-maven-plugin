@@ -7,22 +7,30 @@ package org.jolokia.docker.maven;
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
-import org.jolokia.docker.maven.access.*;
+import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.access.PortMapping;
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.LogConfiguration;
+import org.jolokia.docker.maven.config.RunImageConfiguration;
+import org.jolokia.docker.maven.config.WaitConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.util.StartOrderResolver;
+import org.jolokia.docker.maven.util.Timestamp;
+import org.jolokia.docker.maven.util.WaitUtil;
 
 
 /**
@@ -51,11 +59,15 @@ public class StartMojo extends AbstractDockerMojo {
     public synchronized void executeInternal(final DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
+        Properties projProperties = project.getProperties();
+        
         QueryService queryService = serviceHub.getQueryService();
         RunService runService = serviceHub.getRunService();
 
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
 
+        PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
+        
         boolean success = false;
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
@@ -69,46 +81,41 @@ public class StartMojo extends AbstractDockerMojo {
                                        getConfiguredRegistry(imageConfig),imageConfig.getBuildConfiguration() == null);
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-                PortMapping portMapping = runService.getPortMapping(runConfig, project.getProperties());
+                PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
 
-                String containerId = runService.createAndStartContainer(imageConfig, portMapping, project.getProperties());
+                String containerId = runService.createAndStartContainer(imageConfig, portMapping, projProperties);
 
                 if (showLogs(imageConfig)) {
                     dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
                 }
 
-                // Set maven properties for dynamically assigned ports.
-                updateDynamicPortProperties(dockerAccess, containerId, runConfig, portMapping, project.getProperties());
+                portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
                 // Wait if requested
-                waitIfRequested(dockerAccess,imageConfig, project.getProperties(), containerId);
+                waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
             }
             if (follow) {
                 runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
                 wait();
             }
+            
+            portMappingPropertyWriteHelper.write();
             success = true;
         } catch (InterruptedException e) {
             log.warn("Interrupted");
             Thread.currentThread().interrupt();
             throw new MojoExecutionException("interrupted", e);
+        } catch (IOException e) {
+            throw new MojoExecutionException("I/O Error",e);
         } finally {
             if (!success) {
+                log.error("Error occurred during container startup, shutting down...");
                 runService.stopStartedContainers(keepContainer, removeVolumes);
             }
         }
     }
 
-    private void updateDynamicPortProperties(DockerAccess docker, String containerId, RunImageConfiguration runConfig, PortMapping mappedPorts, Properties properties) throws DockerAccessException, MojoExecutionException {
-        if (mappedPorts.containsDynamicPorts()) {
-            mappedPorts.updateVariablesWithDynamicPorts(docker.queryContainerPortMapping(containerId));
-            propagatePortVariables(mappedPorts, runConfig.getPortPropertyFile(),properties);
-        }
-    }
-
-
     // ========================================================================================================
-
 
     private void waitIfRequested(DockerAccess docker, ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws MojoExecutionException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
@@ -181,26 +188,6 @@ public class StartMojo extends AbstractDockerMojo {
         };
     }
 
-    // Store dynamically mapped ports
-    private void propagatePortVariables(PortMapping mappedPorts, String portPropertyFile, Properties properties) throws MojoExecutionException {
-        Properties props = new Properties();
-        Map<String, Integer> dynamicPorts = mappedPorts.getPortVariables();
-        for (Map.Entry<String, Integer> entry : dynamicPorts.entrySet()) {
-            String var = entry.getKey();
-            String val = "" + entry.getValue();
-            properties.setProperty(var, val);
-            props.setProperty(var, val);
-        }
-
-        // However, this can be to late since properties in pom.xml are resolved during the "validate" phase
-        // (and we are running later probably in "pre-integration" phase. So, in order to bring the dynamically
-        // assigned ports to the integration tests a properties file is written. Not nice, but works. Blame it
-        // to maven to not allow late evaluation or any other easy way to inter-plugin communication
-        if (portPropertyFile != null) {
-            EnvUtil.writePortProperties(props, portPropertyFile);
-        }
-    }
-
     protected boolean showLogs(ImageConfiguration imageConfig) {
         if (showLogs != null) {
             if (showLogs.equalsIgnoreCase("true")) {
@@ -224,4 +211,5 @@ public class StartMojo extends AbstractDockerMojo {
         }
         return false;
     }
+
 }
