@@ -70,6 +70,7 @@ public enum ConfigKey {
     WAIT_LOG("wait.log"),
     WAIT_TIME("wait.time"),
     WAIT_URL("wait.url"),
+    WAIT_METHOD("wait.method"),
     WAIT_SHUTDOWN("wait.shutdown"),
     WATCH_INTERVAL("watch.interval"),
     WATCH_MODE("watch.mode"),

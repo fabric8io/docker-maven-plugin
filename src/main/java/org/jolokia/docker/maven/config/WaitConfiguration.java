@@ -16,6 +16,7 @@ public class WaitConfiguration {
      */
     private String url;
 
+    private String method;
     /**
      * @parameter
      */
@@ -28,9 +29,10 @@ public class WaitConfiguration {
 
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, String url, String log, int shutdown) {
+    private WaitConfiguration(int time, String url, String method, String log, int shutdown) {
         this.time = time;
         this.url = url;
+        this.method = method;
         this.log = log;
         this.shutdown = shutdown;
     }
@@ -41,6 +43,10 @@ public class WaitConfiguration {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getMethod() {
+        return method;
     }
 
     public String getLog() {
@@ -56,6 +62,7 @@ public class WaitConfiguration {
     public static class Builder {
         private int time = 0,shutdown = 0;
         private String url,log;
+        private String method;
 
         public Builder time(int time) {
             this.time = time;
@@ -64,6 +71,11 @@ public class WaitConfiguration {
 
         public Builder url(String url) {
             this.url = url;
+            return this;
+        }
+
+        public Builder method(String method) {
+            this.method = method;
             return this;
         }
 
@@ -78,7 +90,7 @@ public class WaitConfiguration {
         }
 
         public WaitConfiguration build() {
-            return new WaitConfiguration(time,url,log,shutdown);
+            return new WaitConfiguration(time,url,method,log,shutdown);
         }
     }
 }
