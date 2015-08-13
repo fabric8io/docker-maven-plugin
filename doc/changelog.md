@@ -1,29 +1,29 @@
 # ChangeLog
 
 * **0.13.3**
-  - Allow dangling images to be cleaned up after build (#20)
-  - Adapt order of WORKDIR and RUN when building images (#222)
-  - Allow 'build' and/or 'run' configuration to be skipped (#207)
-  - Refactored to use 'inspect' instead of 'list' for checking the existence of an image (#230)
-  - Refactored ApacheHttpClientDelegate to avoid leaking connections (#232)
+  - Allow dangling images to be cleaned up after build ([#20](https://github.com/rhuss/docker-maven-plugin/issues/20))
+  - Adapt order of WORKDIR and RUN when building images ([#222](https://github.com/rhuss/docker-maven-plugin/issues/222))
+  - Allow 'build' and/or 'run' configuration to be skipped ([#207](https://github.com/rhuss/docker-maven-plugin/issues/207))
+  - Refactored to use 'inspect' instead of 'list' for checking the existence of an image ([#230](https://github.com/rhuss/docker-maven-plugin/issues/230))
+  - Refactored ApacheHttpClientDelegate to avoid leaking connections ([#232](https://github.com/rhuss/docker-maven-plugin/issues/232))
   - Allow empty `build` or `assembly` elements (#214/#236) 
   - Add new configuration parameter 'maxConnections' to allow to specify the number of parallel 
-    connections to the Docker Host. Default: 100 (#254)
-  - Allow multiple containers of the same image to be linked (#182)
-  - HTTP method and status code can be specified when waiting on an HTTP URL (#258)
-  - Introduced global `portPropertyFile` setting (#90)
+    connections to the Docker Host. Default: 100 ([#254](https://github.com/rhuss/docker-maven-plugin/issues/254))
+  - Allow multiple containers of the same image to be linked ([#182](https://github.com/rhuss/docker-maven-plugin/issues/182))
+  - HTTP method and status code can be specified when waiting on an HTTP URL ([#258](https://github.com/rhuss/docker-maven-plugin/issues/258))
+  - Introduced global `portPropertyFile` setting ([#90](https://github.com/rhuss/docker-maven-plugin/issues/90))
   - Allow the container's host ip to be bound to a maven property and exported
 
 * **0.13.2**
-  - "run" directives can be added to the Dockerfile (#191)
-  - Support user information in wait URL (#211)
-  - Stop started container in case of an error during startup (#217)
-  - Allow linking to external containers (#195)
-  - Allow volume mounting from external containers (#73)
+  - "run" directives can be added to the Dockerfile ([#191](https://github.com/rhuss/docker-maven-plugin/issues/191))
+  - Support user information in wait URL ([#211](https://github.com/rhuss/docker-maven-plugin/issues/211))
+  - Stop started container in case of an error during startup ([#217](https://github.com/rhuss/docker-maven-plugin/issues/217))
+  - Allow linking to external containers ([#195](https://github.com/rhuss/docker-maven-plugin/issues/195))
+  - Allow volume mounting from external containers ([#73](https://github.com/rhuss/docker-maven-plugin/issues/73))
   
 * **0.13.1**
-  - Allow autoPull to be forced on docker:build and docker:start (#96)
-  - Respect username when looking up credentials for a Docker registry (#174)
+  - Allow autoPull to be forced on docker:build and docker:start ([#96](https://github.com/rhuss/docker-maven-plugin/issues/96))
+  - Respect username when looking up credentials for a Docker registry ([#174](https://github.com/rhuss/docker-maven-plugin/issues/174))
   - Add "force=1" to push for Fedora/CentOs images allowing to push to docker hub
   
 Note that the default registry has been changed to `docker.io` as docker hub doesn't use 
@@ -33,13 +33,13 @@ registry. For backward compatibility reasons `registry.hub.docker.com`, `index.d
 pushing without registry to Docker hub.
 
 * **0.13.0**
-  - Add `docker:watch` (#187) 
-  - Allow `extraHosts` IPs to be resolved at runtime (#196)
-  - Add `workDir` as configuration option to `<build>` (#204) 
-  - Fix problem with log output and wait (#200) 
-  - Don't verify SSL server certificates if `DOCKER_TLS_VERIFY` is not set (#192)
-  - For bind path on Windows machines (#188)
-  - No 'from' required when using a Dockerfile (#201)
+  - Add `docker:watch` ([#187](https://github.com/rhuss/docker-maven-plugin/issues/187)) 
+  - Allow `extraHosts` IPs to be resolved at runtime ([#196](https://github.com/rhuss/docker-maven-plugin/issues/196))
+  - Add `workDir` as configuration option to `<build>` ([#204](https://github.com/rhuss/docker-maven-plugin/issues/204)) 
+  - Fix problem with log output and wait ([#200](https://github.com/rhuss/docker-maven-plugin/issues/200)) 
+  - Don't verify SSL server certificates if `DOCKER_TLS_VERIFY` is not set ([#192](https://github.com/rhuss/docker-maven-plugin/issues/192))
+  - For bind path on Windows machines ([#188](https://github.com/rhuss/docker-maven-plugin/issues/188))
+  - No 'from' required when using a Dockerfile ([#201](https://github.com/rhuss/docker-maven-plugin/issues/201))
   - Support for LABEL for build and run.
 
 Note that since version 0.13.0 this plugin requires Docker API version v1.17 or later in order to support labels.  
@@ -51,9 +51,9 @@ for an in depth explanation of the much enhanced watch functionality.
   
 * **0.12.0**
   - Allow CMD and ENTRYPOINT with shell and exec arguments (#130, #149)
-  - Unix Socket support (#179)
-  - Add a new parameter 'skipTags' for avoiding configured tagging of images (#145)
-  - Break build if log check or URL check runs into a timeout (#173)
+  - Unix Socket support ([#179](https://github.com/rhuss/docker-maven-plugin/issues/179))
+  - Add a new parameter 'skipTags' for avoiding configured tagging of images ([#145](https://github.com/rhuss/docker-maven-plugin/issues/145))
+  - Break build if log check or URL check runs into a timeout ([#173](https://github.com/rhuss/docker-maven-plugin/issues/173))
   
 Please note that for consistencies sake `<command>` has been renamed to `<cmd>` which contains inner elements 
 to match better the equivalent Dockerfile argument. The update should be trivial and easy to spot since a build will croak immediately.
@@ -95,56 +95,56 @@ depending on whether you prefer the `exec` or `shell` form.
 * **0.11.5**
   - Fix problem with http:// URLs when a CERT path is set
   - Fix warnings when parsing a pull response
-  - Add a new parameter 'docker.follow' which makes a `docker:start` blocking until the CTRL-C is pressed (#176)
+  - Add a new parameter 'docker.follow' which makes a `docker:start` blocking until the CTRL-C is pressed ([#176](https://github.com/rhuss/docker-maven-plugin/issues/176))
   - Add a `user` parameter to the assembly configuration so that the added files are created for this user 
   - Fix problem when creating intermediate archive for collecting assembly files introduced with #139. The 
     container can be now set with "mode" in the assembly configuration with the possible values `dir`, `tar`, `tgz`
-    and `zip` (#171)
+    and `zip` ([#171](https://github.com/rhuss/docker-maven-plugin/issues/171))
   - Workaround Docker problem when using an implicit registry `index.docker.io` when no registry is explicitly given. 
-  - Fixed references to docker hub in documentation (#169)
-  - Fixed registry authentication lookup (#146)
+  - Fixed references to docker hub in documentation ([#169](https://github.com/rhuss/docker-maven-plugin/issues/169))
+  - Fixed registry authentication lookup ([#146](https://github.com/rhuss/docker-maven-plugin/issues/146))
     
 * **0.11.4**
   - Fixed documentation for available properties
-  - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` (#164)
+  - Changed property `docker.assembly.exportBase` to `docker.assembly.exportBaseDir` ([#164](https://github.com/rhuss/docker-maven-plugin/issues/164))
   - Changed default behaviour of `exportBaseDir` (true if no base image used with `from`, false otherwise)
-  - Fix log messages getting cut off in the build (#163)
-  - Allow system properties to overwrite dynamic port mapping (#161)
-  - Fix for empty authentication when pushing to registries (#102)
-  - Added watch mode for images with `-Ddocker.watch` (#141)
+  - Fix log messages getting cut off in the build ([#163](https://github.com/rhuss/docker-maven-plugin/issues/163))
+  - Allow system properties to overwrite dynamic port mapping ([#161](https://github.com/rhuss/docker-maven-plugin/issues/161))
+  - Fix for empty authentication when pushing to registries ([#102](https://github.com/rhuss/docker-maven-plugin/issues/102))
+  - Added watch mode for images with `-Ddocker.watch` ([#141](https://github.com/rhuss/docker-maven-plugin/issues/141))
   - Added support for inline assemblies (#157, #158)
-  - Add support for variable substitution is environment declarations (#137)
-  - Use Tar archive as intermediate container when creating image (#139)  
-  - Better error handling for Docker errors wrapped in JSON response only (#167) 
+  - Add support for variable substitution is environment declarations ([#137](https://github.com/rhuss/docker-maven-plugin/issues/137))
+  - Use Tar archive as intermediate container when creating image ([#139](https://github.com/rhuss/docker-maven-plugin/issues/139))  
+  - Better error handling for Docker errors wrapped in JSON response only ([#167](https://github.com/rhuss/docker-maven-plugin/issues/167)) 
   
 * **0.11.3**
-  - Add support for removeVolumes in `docker:stop` configuration (#120)
-  - Add support for setting a custom maintainer in images (#117)
-  - Allow containers to be named using `<namingStrategy>alias</namingStrategy>` when started (#48)
-  - Add new global property 'docker.verbose' for switching verbose image build output (#36)
-  - Add support for environment variables specified in a property file (#128)
+  - Add support for removeVolumes in `docker:stop` configuration ([#120](https://github.com/rhuss/docker-maven-plugin/issues/120))
+  - Add support for setting a custom maintainer in images ([#117](https://github.com/rhuss/docker-maven-plugin/issues/117))
+  - Allow containers to be named using `<namingStrategy>alias</namingStrategy>` when started ([#48](https://github.com/rhuss/docker-maven-plugin/issues/48))
+  - Add new global property 'docker.verbose' for switching verbose image build output ([#36](https://github.com/rhuss/docker-maven-plugin/issues/36))
+  - Add support for environment variables specified in a property file ([#128](https://github.com/rhuss/docker-maven-plugin/issues/128))
   - Documentation improvements (#107, #121)
   - Allow to use a dockerFileDir without any assembly
   
 * **0.11.2**
-  - Fix maven parse error when specifying restart policy (#99)
-  - Allow host names to be used in port bindings (#101)
-  - Add support for tagging at build and push time (#104)
-  - Use correct output dir during multi-project builds (#97)
-  - `descriptor` and `descriptorRef` in the assembly configuration are now optional (#66)
-  - Fix NPE when filtering enabled during assembly creation (#82)
+  - Fix maven parse error when specifying restart policy ([#99](https://github.com/rhuss/docker-maven-plugin/issues/99))
+  - Allow host names to be used in port bindings ([#101](https://github.com/rhuss/docker-maven-plugin/issues/101))
+  - Add support for tagging at build and push time ([#104](https://github.com/rhuss/docker-maven-plugin/issues/104))
+  - Use correct output dir during multi-project builds ([#97](https://github.com/rhuss/docker-maven-plugin/issues/97))
+  - `descriptor` and `descriptorRef` in the assembly configuration are now optional ([#66](https://github.com/rhuss/docker-maven-plugin/issues/66))
+  - Fix NPE when filtering enabled during assembly creation ([#82](https://github.com/rhuss/docker-maven-plugin/issues/82))
   - Allow `${project.build.finalName}` to be overridden when using a pre-packaged assembly descriptor
-    for artifacts (#111)
+    for artifacts ([#111](https://github.com/rhuss/docker-maven-plugin/issues/111))
 
 * **0.11.1**
-  - Add support for binding UDP ports (#83)
-  - "Entrypoint" supports now arguments (#84)
-  - Fix basedir for multi module projects (#89)
+  - Add support for binding UDP ports ([#83](https://github.com/rhuss/docker-maven-plugin/issues/83))
+  - "Entrypoint" supports now arguments ([#84](https://github.com/rhuss/docker-maven-plugin/issues/84))
+  - Fix basedir for multi module projects ([#89](https://github.com/rhuss/docker-maven-plugin/issues/89))
   - Pull base images before building when "autoPull" is switched on (#76, #77, #88)
-  - Fix for stopping containers without tag (#86)
+  - Fix for stopping containers without tag ([#86](https://github.com/rhuss/docker-maven-plugin/issues/86))
   
 * **0.11.0**
-  - Add support for binding/exporting containers during startup (#55)
+  - Add support for binding/exporting containers during startup ([#55](https://github.com/rhuss/docker-maven-plugin/issues/55))
   - Provide better control of the build assembly configuration. In addition, the plugin will now search
     for assembly descriptors in `src/main/docker`. This default can be overridden via the global
     configuration option `sourceDirectory`.
@@ -155,9 +155,9 @@ depending on whether you prefer the `exec` or `shell` form.
   - Allow selecting the API version with the configuration "apiVersion".
     Default and minimum API version is now "v1.15"
   - A registry can be specified as system property `docker.registry` or
-    environment variable `DOCKER_REGISTRY` (#26)
+    environment variable `DOCKER_REGISTRY` ([#26](https://github.com/rhuss/docker-maven-plugin/issues/26))
   - Add new wait parameter `shutdown` which allows to specify the amount of time to wait between stopping
-    a container and removing it (#54)
+    a container and removing it ([#54](https://github.com/rhuss/docker-maven-plugin/issues/54))
 
 Please note, that the syntax for binding volumes from another container has changed slightly in 0.10.6.
 See "[Volume binding](manual.md#volume-binding)" for details but in short:
@@ -211,16 +211,16 @@ becomes
 
 * **0.10.5**
   - Add hooks for external configurations
-  - Add property based configuration for images (#42)
-  - Add new goal `docker:logs` for showing logs of configured containers (#49)
-  - Support for showing logs during `docker:start` (#8)
-  - Use `COPY` instead of `ADD` when putting a Maven assembly into the container (#53)
+  - Add property based configuration for images ([#42](https://github.com/rhuss/docker-maven-plugin/issues/42))
+  - Add new goal `docker:logs` for showing logs of configured containers ([#49](https://github.com/rhuss/docker-maven-plugin/issues/49))
+  - Support for showing logs during `docker:start` ([#8](https://github.com/rhuss/docker-maven-plugin/issues/8))
+  - Use `COPY` instead of `ADD` when putting a Maven assembly into the container ([#53](https://github.com/rhuss/docker-maven-plugin/issues/53))
   - If `exportDir` is `/` then do not actually export (since it doesn't make much sense) (see #62)
 
 * **0.10.4**
   - Restructured and updated documentation
-  - Fixed push issue when using a private registry (#40)
-  - Add support for binding to an arbitrary host IP (#39)
+  - Fixed push issue when using a private registry ([#40](https://github.com/rhuss/docker-maven-plugin/issues/40))
+  - Add support for binding to an arbitrary host IP ([#39](https://github.com/rhuss/docker-maven-plugin/issues/39))
 
 * **0.10.3**
   - Added "remove" goal for cleaning up images
@@ -239,7 +239,7 @@ becomes
 Original configuration syntax (as described in the old [README](readme-0.9.x.md))
 
 * **0.9.12**
-  - Fixed push issue when using a private registry (#40)
+  - Fixed push issue when using a private registry ([#40](https://github.com/rhuss/docker-maven-plugin/issues/40))
 
 * **0.9.11**
   - Support for SSL Authentication with Docker 1.3. Plugin will respect `DOCKER_CERT_PATH` with fallback to `~/.docker/`. 
