@@ -655,7 +655,7 @@ A `port` stanza may take one of the following forms:
   to a specific hostname/ip address, you can declare a Maven property of the same name and correct
   value to use. `host:post` functions in the same manner as described above. 
   
-The following are examples of valid configuratione entries:
+The following are examples of valid configuration entries:
 
 ```xml
 <properties>
@@ -669,15 +669,10 @@ The following are examples of valid configuratione entries:
   <port>18080:8080</port> 
   <port>host.port:80</port> 
   <port>127.0.0.1:80:80</port>
-  <port>localhost:80:80</port>
-  <port>127.0.0.1:host.port:80</port>
   <port>localhost:host.port:80</port>
-  <port>+container.ip.property:5678:5678</port>
   <port>+container.ip.property:host.port:5678</port>
-  <port>+bind.host.ip:5678:5678</port>
   <port>+bind.host.ip:host.port:5678</port>
   <port>+bind.host.name:5678:5678</port>
-  <port>+bind.host.name:host.port:5678</port>  
 <ports>
 ```
 
