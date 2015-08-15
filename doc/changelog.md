@@ -1,8 +1,9 @@
 # ChangeLog
 
 * **0.13.4**
-  - Fix processing of splitted chunked JSON responses (#259)
+  - Fix processing of split chunked JSON responses (#259)
   - Fix for default registry handling. Again and again. (#261)
+  - Allow `runCmds` to be compressed into a single command with the build config option `optimise`. (#263)
   
 * **0.13.3**
   - Allow dangling images to be cleaned up after build ([#20](https://github.com/rhuss/docker-maven-plugin/issues/20))

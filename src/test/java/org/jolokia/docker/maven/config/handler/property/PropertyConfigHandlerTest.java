@@ -146,6 +146,14 @@ public class PropertyConfigHandlerTest {
     }
     
     @Test
+    public void testNoOptimise() throws Exception {
+        String[] testData = new String[] { k(NAME), "image", k(OPTIMISE), "false" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(false, config.getBuildConfiguration().optimise());
+    }
+
+    @Test
     public void testNoAssembly() throws Exception {
         Properties props = props(k(NAME), "image");
         List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);

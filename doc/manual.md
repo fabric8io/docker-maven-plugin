@@ -261,6 +261,7 @@ of an image configuration. The available subelements are
   which are passed to bash. The run commands are inserted right after the assembly and after **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
+* **optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
 * **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
