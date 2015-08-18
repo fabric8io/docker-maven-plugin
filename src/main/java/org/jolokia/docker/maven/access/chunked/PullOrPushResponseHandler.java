@@ -4,7 +4,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONObject;
 
-public class PullOrPushResponseHandler implements ChunkedResponseHandler<JSONObject> {
+public class PullOrPushResponseHandler implements ChunkedResponseReader.ChunkedResponseHandler {
 
     private boolean downloadInProgress = false;
 

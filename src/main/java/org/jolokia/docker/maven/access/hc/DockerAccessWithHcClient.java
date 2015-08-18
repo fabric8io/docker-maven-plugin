@@ -301,11 +301,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private static class HcChunckedResponseHandlerWrapper implements ResponseHandler<Object> {
 
-        private ChunkedResponseHandler<JSONObject> handler;
+        private ChunkedResponseReader.ChunkedResponseHandler handler;
         private Logger log;
 
         public HcChunckedResponseHandlerWrapper(Logger log,
-                                                ChunkedResponseHandler<JSONObject> handler) {
+                                                ChunkedResponseReader.ChunkedResponseHandler handler) {
             this.log = log;
             this.handler = handler;
         }
@@ -314,7 +314,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         public Object handleResponse(HttpResponse response) throws IOException {
             try (InputStream stream = response.getEntity().getContent()) {
                 // Parse text as json
-                new ChunkedResponseReader(stream, new TextToJsonBridgeCallback(log, handler)).process();
+                new ChunkedResponseReader(stream,handler).process();
             }
             return null;
         }
