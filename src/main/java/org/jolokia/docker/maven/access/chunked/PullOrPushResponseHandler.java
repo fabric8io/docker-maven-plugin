@@ -39,17 +39,23 @@ public class PullOrPushResponseHandler implements ChunkedResponseReader.ChunkedR
             throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
         } else {
             if (json.length() > 0) {
-                log.info("... " + extractInfo(json, "id", "status", "stream"));
+                log.info("... " + extractInfo(json));
             }
         }
     }
 
-    private String extractInfo(JSONObject json, String ... keys) {
-        for (String key : keys) {
-            if (json.has(key)) {
-                return json.getString(key);
+    private String extractInfo(JSONObject json) {
+        if (json.has("id")) {
+            StringBuffer ret = new StringBuffer();
+            ret.append(json.getString("id"));
+            if (json.has("status")) {
+                ret.append(" ").append(json.getString("status"));
             }
+            return ret.toString();
+        } else if (json.has("stream")) {
+            return json.getString("stream");
+        } else {
+            return "";
         }
-        return "";
     }
 }

@@ -74,5 +74,4 @@ public interface Logger {
      * used.
      */
     void progressFinished();
-
 }
