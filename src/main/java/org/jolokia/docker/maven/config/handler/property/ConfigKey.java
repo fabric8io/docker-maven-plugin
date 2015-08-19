@@ -36,6 +36,7 @@ public enum ConfigKey {
     CAP_ADD,
     CAP_DROP,
     CLEANUP,
+    OPTIMISE,
     CMD,
     DOMAINNAME,
     DNS,

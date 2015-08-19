@@ -43,6 +43,11 @@ public class BuildImageConfiguration {
     private boolean cleanup = false;
 
     /**
+     * @parameter default-value="false"
+     */
+    private boolean optimise = false;
+
+    /**
      * @paramter
      */
     private List<String> volumes;
@@ -139,6 +144,7 @@ public class BuildImageConfiguration {
         return cmd;
     }
 
+
     @Deprecated
     public String getCommand() {
         return command;
@@ -147,7 +153,11 @@ public class BuildImageConfiguration {
     public boolean cleanup() {
         return cleanup;
     }
-    
+
+    public boolean optimise() {
+        return optimise;
+    }
+
     public boolean skip() {
         return skip;
     }
@@ -233,6 +243,13 @@ public class BuildImageConfiguration {
         public Builder cleanup(String cleanup) { 
             if (cleanup != null) {
                 config.cleanup = Boolean.valueOf(cleanup);
+            }
+            return this;
+        }
+
+        public Builder optimise(String optimise) {
+            if (optimise != null) {
+                config.optimise = Boolean.valueOf(optimise);
             }
             return this;
         }
