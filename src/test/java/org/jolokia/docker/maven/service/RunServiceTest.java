@@ -1,24 +1,12 @@
 package org.jolokia.docker.maven.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import mockit.*;
 import org.apache.commons.io.IOUtils;
-import org.jolokia.docker.maven.access.ContainerCreateConfig;
-import org.jolokia.docker.maven.access.ContainerHostConfig;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessException;
-import org.jolokia.docker.maven.access.PortMapping;
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.log.LogOutputSpecFactory;
@@ -26,6 +14,8 @@ import org.jolokia.docker.maven.util.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
+
+import static org.junit.Assert.*;
 
 /**
  * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
@@ -300,7 +290,7 @@ public class RunServiceTest {
     private void whenCreateContainerConfig(String imageName) throws DockerAccessException {
         PortMapping portMapping = runService.getPortMapping(runConfig, properties);
 
-        containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, properties);
+        containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, null, properties);
         startConfig = runService.createContainerHostConfig(runConfig, portMapping);
     }
 

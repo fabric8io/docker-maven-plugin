@@ -1,4 +1,5 @@
 {
+  "Env": ["foo=bar"],
   "User": "user",
   "Entrypoint": [ "entrypoint" ],
   "Memory": 1,

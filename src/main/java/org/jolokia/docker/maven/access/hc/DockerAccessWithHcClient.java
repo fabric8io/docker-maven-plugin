@@ -1,15 +1,19 @@
 package org.jolokia.docker.maven.access.hc;
 
+import java.io.*;
+import java.net.URI;
+import java.util.*;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.chunked.*;
 import org.jolokia.docker.maven.access.hc.http.HttpClientBuilder;
 import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
-import org.jolokia.docker.maven.access.log.LogCallback;
-import org.jolokia.docker.maven.access.log.LogGetHandle;
-import org.jolokia.docker.maven.access.log.LogRequestor;
+import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.config.Arguments;
+import org.jolokia.docker.maven.model.*;
+import org.jolokia.docker.maven.util.*;
 import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.log.DefaultLogCallback;
 import org.jolokia.docker.maven.model.Container;
@@ -74,7 +78,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate =
-                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(),maxConnections));
+                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(), maxConnections));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
         } else {
             HttpClientBuilder builder = new HttpClientBuilder();
@@ -145,7 +149,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to exec [%s] on container [%s]", request.toString(),
-                    containerId);
+                                            containerId);
         }
 
     }
@@ -192,6 +196,12 @@ public class DockerAccessWithHcClient implements DockerAccess {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to stop container id [%s]", containerId);
         }
+    }
+
+    @Override
+    public List<String> getContainersWithLabel(PomLabel label) throws DockerAccessException {
+        // TODO: Implementation
+        return null;
     }
 
     @Override

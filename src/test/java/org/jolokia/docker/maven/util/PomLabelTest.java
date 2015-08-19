@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 31/03/15
  */
-public class ContainerLabelTest {
+public class PomLabelTest {
 
     String g = "org.jolokia";
     String a = "demo";
@@ -33,55 +33,55 @@ public class ContainerLabelTest {
 
     @Test
     public void simple() throws Exception {
-        ContainerLabel label = new ContainerLabel(g,a,v);
-        assertTrue(label.toString().startsWith(coord));
-        assertTrue(label.toString().length() > coord.length());
+        PomLabel label = new PomLabel(g,a,v);
+        assertTrue(label.getValue().startsWith(coord));
+        assertTrue(label.getValue().length() > coord.length());
     }
 
     @Test
     public void withNullRunId() {
-        ContainerLabel label = new ContainerLabel(g,a,v,null);
-        assertEquals(label.toString(), coord);
+        PomLabel label = new PomLabel(g,a,v,null);
+        assertEquals(label.getValue(), coord);
     }
 
     @Test
     public void withRunId() {
-        ContainerLabel label = new ContainerLabel(g,a,v,"blub");
-        assertEquals(label.toString(),coord + ":blub");
+        PomLabel label = new PomLabel(g,a,v,"blub");
+        assertEquals(label.getValue(),coord + ":blub");
     }
 
     @Test
     public void matchesAll() throws Exception {
-        ContainerLabel label = new ContainerLabel(g, a, v,null);
-        assertTrue(label.matches(new ContainerLabel(g, a, v)));
+        PomLabel label = new PomLabel(g, a, v,null);
+        assertTrue(label.matches(new PomLabel(g, a, v)));
     }
 
     @Test
     public void dontMatch() {
-        ContainerLabel label = new ContainerLabel(g, a, v);
-        assertFalse(label.matches(new ContainerLabel(g, a, v)));
+        PomLabel label = new PomLabel(g, a, v);
+        assertFalse(label.matches(new PomLabel(g, a, v)));
     }
 
     @Test
     public void match() {
-        ContainerLabel label = new ContainerLabel(g, a, v, "bla");
-        assertTrue(label.matches(new ContainerLabel(g, a, v, "bla")));
+        PomLabel label = new PomLabel(g, a, v, "bla");
+        assertTrue(label.matches(new PomLabel(g, a, v, "bla")));
     }
 
     @Test
     public void parse() {
-        ContainerLabel label = new ContainerLabel(coord);
-        assertEquals(coord, label.toString());
+        PomLabel label = new PomLabel(coord);
+        assertEquals(coord, label.getValue());
     }
 
     @Test
     public void parse2() {
-        ContainerLabel label = new ContainerLabel(coord + ":blub");
-        assertEquals(coord + ":blub",label.toString());
+        PomLabel label = new PomLabel(coord + ":blub");
+        assertEquals(coord + ":blub",label.getValue());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void invalid() {
-        new ContainerLabel("bla");
+        new PomLabel("bla");
     }
 }

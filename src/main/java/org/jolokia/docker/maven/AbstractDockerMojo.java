@@ -298,6 +298,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
+    protected PomLabel getPomLabel() {
+        // Label used for this run
+        return new PomLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
+    }
+
+
     protected AuthConfig prepareAuthConfig(String image, String configuredRegistry, boolean useUserFromImage) throws MojoExecutionException {
         ImageName name = new ImageName(image);
         String user = useUserFromImage ? name.getUser() : null;
