@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.access;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
@@ -10,7 +9,7 @@ import org.jolokia.docker.maven.config.Arguments;
 import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.model.*;
 import org.jolokia.docker.maven.model.Container;
-import org.jolokia.docker.maven.util.ContainerLabel;
+import org.jolokia.docker.maven.util.PomLabel;
 
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
@@ -101,6 +100,16 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container could not be stopped.
      */
     void stopContainer(String containerId, int killWait) throws DockerAccessException;
+
+    /**
+     * Get all containers matching a certain label. This might not be a cheap operation especially if many containers
+     * are running. Use with care.
+     *
+     * @param label label which the container must match
+     * @return list of container names matching the label.
+     * @see PomLabel#matches(PomLabel)
+     */
+    List<String> getContainersWithLabel(PomLabel label) throws DockerAccessException;
 
     /**
      * Get logs for a container up to now synchronously.

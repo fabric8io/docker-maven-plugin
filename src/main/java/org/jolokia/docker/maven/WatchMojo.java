@@ -240,7 +240,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         runService.stopContainer(id, false, false);
 
         // Start new one
-        watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, project.getProperties()));
+        watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, getPomLabel(), project.getProperties()));
     }
 
     private String getPreStopCommand(ImageConfiguration imageConfig) {

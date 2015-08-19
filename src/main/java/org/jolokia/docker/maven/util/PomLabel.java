@@ -23,7 +23,7 @@ import java.util.UUID;
  * @author roland
  * @since 31/03/15
  */
-public class ContainerLabel {
+public class PomLabel {
 
     private String mavenCoordinates;
     private String runId;
@@ -37,7 +37,7 @@ public class ContainerLabel {
      *
      * @param label label as stored with the container
      */
-    public ContainerLabel(String label) {
+    public PomLabel(String label) {
         String[] parts = label.split(":");
         if (parts.length != 4 && parts.length != 3) {
             throw new IllegalArgumentException("Label '" + label +
@@ -53,7 +53,7 @@ public class ContainerLabel {
      * @param artifactId Maven artifact
      * @param version version
      */
-    public ContainerLabel(String groupId, String artifactId, String version) {
+    public PomLabel(String groupId, String artifactId, String version) {
         this(groupId, artifactId, version, UUID.randomUUID().toString());
     }
 
@@ -66,16 +66,25 @@ public class ContainerLabel {
      * @param version version
      * @param runId a run id or <code>null</code>.
      */
-    public ContainerLabel(String groupId, String artifactId, String version, String runId) {
+    public PomLabel(String groupId, String artifactId, String version, String runId) {
         mavenCoordinates = groupId + ":" + artifactId + ":" + version;
         this.runId = runId;
+    }
+
+    /**
+     * Get the label name
+     *
+     * @return the label name to use to mark a container belonging to this build
+     */
+    public String getKey() {
+        return "docker.maven.plugin.container";
     }
 
     /**
      * Get this label in string representation
      * @return this label as string
      */
-    public String toString() {
+    public String getValue() {
         return mavenCoordinates + (runId != null ? ":" + runId : "");
     }
 
@@ -86,17 +95,8 @@ public class ContainerLabel {
      * @param other label to match
      * @return true for a match
      */
-    public boolean matches(ContainerLabel other) {
+    public boolean matches(PomLabel other) {
         return other.mavenCoordinates.equals(mavenCoordinates) &&
                (runId == null || runId.equals(other.runId));
-    }
-
-    /**
-     * Get the label name
-     *
-     * @return the label name to use to mark a container belonging to this build
-     */
-    public String getName() {
-        return "docker.maven.plugin.container";
     }
 }
