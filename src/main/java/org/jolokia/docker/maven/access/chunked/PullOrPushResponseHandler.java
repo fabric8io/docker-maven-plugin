@@ -35,7 +35,6 @@ public class PullOrPushResponseHandler implements ChunkedResponseReader.ChunkedR
         if (json.has("error")) {
             String msg = json.getString("error").trim();
             String details = json.getJSONObject("errorDetail").getString("message").trim();
-            log.error(msg + (msg.equals(details) ? "" : "(" + details + ")"));
             throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
         } else {
             if (json.length() > 0) {
@@ -45,17 +44,13 @@ public class PullOrPushResponseHandler implements ChunkedResponseReader.ChunkedR
     }
 
     private String extractInfo(JSONObject json) {
-        if (json.has("id")) {
-            StringBuffer ret = new StringBuffer();
-            ret.append(json.getString("id"));
-            if (json.has("status")) {
-                ret.append(" ").append(json.getString("status"));
+        StringBuilder ret = new StringBuilder();
+        for (String key : new String[] {"id", "status", "stream" }) {
+            if (json.has(key)) {
+                ret.append(json.getString(key));
+                ret.append(" ");
             }
-            return ret.toString();
-        } else if (json.has("stream")) {
-            return json.getString("stream");
-        } else {
-            return "";
         }
+        return ret.toString().trim();
     }
 }

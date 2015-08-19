@@ -2,7 +2,8 @@
 
 * **0.13.4**
   - Fix processing of splitted chunked JSON responses (#259)
-
+  - Fix for default registry handling. Again and again. (#261)
+  
 * **0.13.3**
   - Allow dangling images to be cleaned up after build ([#20](https://github.com/rhuss/docker-maven-plugin/issues/20))
   - Adapt order of WORKDIR and RUN when building images ([#222](https://github.com/rhuss/docker-maven-plugin/issues/222))
