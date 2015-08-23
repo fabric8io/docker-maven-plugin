@@ -10,6 +10,7 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
+import org.jolokia.docker.maven.config.Arguments;
 import org.jolokia.docker.maven.model.Container.PortBinding;
 import org.jolokia.docker.maven.util.*;
 import org.junit.*;
@@ -84,7 +85,7 @@ public class DockerAccessIT {
     private void testCreateContainer() throws DockerAccessException {
         PortMapping portMapping = new PortMapping(Arrays.asList(new Object[] { PORT + ":" + PORT }), new Properties());
         ContainerHostConfig hostConfig = new ContainerHostConfig().portBindings(portMapping);
-        ContainerCreateConfig createConfig = new ContainerCreateConfig(IMAGE).command("ping google.com").hostConfig(hostConfig);
+        ContainerCreateConfig createConfig = new ContainerCreateConfig(IMAGE).command(new Arguments("ping google.com")).hostConfig(hostConfig);
 
         containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
         assertNotNull(containerId);

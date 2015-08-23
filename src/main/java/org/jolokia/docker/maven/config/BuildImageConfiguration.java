@@ -2,7 +2,7 @@ package org.jolokia.docker.maven.config;
 
 import java.util.*;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import org.jolokia.docker.maven.util.Logger;
 
 /**
  * @author roland
@@ -274,12 +274,27 @@ public class BuildImageConfiguration {
         }
     }
 
-    public void validate() throws MojoExecutionException {
+    public void validate(Logger log) throws IllegalArgumentException {
         if (entryPoint != null) {
             entryPoint.validate();
         }
         if (cmd != null) {
             cmd.validate();
         }
+
+        if (command != null) {
+            log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
+            log.warn("Please use <cmd> with nested <shell> or <exec> sections instead.");
+            log.warn("");
+            log.warn("More on this is explained in the user manual: ");
+            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/manual.md#start-up-arguments");
+            log.warn("");
+            log.warn("Migration is trivial, see changelog to version 0.12.0 -->");
+            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/changelog.md");
+            log.warn("");
+            log.warn("For now, the command is automatically translated for you to the shell form:");
+            log.warn("   <cmd>" + command + "</cmd>");
+        }
+
     }
 }

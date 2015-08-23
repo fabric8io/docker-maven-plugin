@@ -145,7 +145,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                     try {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
                         // Rebuild whole image for now ...
-                        buildImage(docker, name, imageConfig);
+                        buildImage(docker, imageConfig);
 
                         watcher.setImageId(serviceHub.getQueryService().getImageId(name));
                         if (doRestart) {
