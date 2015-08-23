@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.13.4**
+  - Support explicit exec arguments for `start.cmd` and `start.entrypoint`. (#253) 
   - Fix processing of split chunked JSON responses (#259)
   - Fix for default registry handling. Again and again. (#261)
   - Allow `runCmds` to be compressed into a single command with the build config option `optimise`. (#263)
