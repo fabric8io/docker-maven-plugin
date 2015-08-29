@@ -18,7 +18,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 public class WaitUtil {
 
     // how long to wait at max when doing a http ping
-    private static final long HARD_MAX_WAIT = 10 * 1000;
+    private static final long DEFAULT_MAX_WAIT = 10 * 1000;
 
     // How long to wait between pings
     private static final long WAIT_RETRY_WAIT = 500;
@@ -36,8 +36,8 @@ public class WaitUtil {
 
     private WaitUtil() {}
 
-    public static long wait(int maxWait, WaitChecker ... checkers) throws TimeoutException {
-        long max = maxWait > 0 ? maxWait : HARD_MAX_WAIT;
+    public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
+        long max = maxWait > 0 ? maxWait : DEFAULT_MAX_WAIT;
         long now = System.currentTimeMillis();
         do {
             for (WaitChecker checker : checkers) {
@@ -52,7 +52,7 @@ public class WaitUtil {
             // There has been several checks, but none has matched. So we ware throwing an exception and break
             // the build
             cleanup(checkers);
-            throw new TimeoutException("No checker finished successfully");
+            throw new WaitTimeoutException("No checker finished successfully", delta(now));
         }
         return delta(now);
     }
@@ -170,5 +170,18 @@ public class WaitUtil {
     public interface WaitChecker {
         boolean check();
         void cleanUp();
+    }
+
+    public static class WaitTimeoutException extends TimeoutException {
+        private final long waited;
+
+        public WaitTimeoutException(String message, long waited) {
+            super(message);
+            this.waited = waited;
+        }
+
+        public long getWaited() {
+            return waited;
+        }
     }
 }
