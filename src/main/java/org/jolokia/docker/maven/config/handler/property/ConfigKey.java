@@ -68,6 +68,8 @@ public enum ConfigKey {
     WORKDIR,
     VOLUMES_FROM,
     WAIT_LOG("wait.log"),
+    POST_START("wait.exec.postStart"),
+    PRE_STOP("wait.exec.preStop"),
     WAIT_TIME("wait.time"),
     WAIT_URL("wait.url"),
     WAIT_HTTP_URL("wait.http.url"),

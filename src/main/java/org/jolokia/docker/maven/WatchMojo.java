@@ -72,7 +72,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     // Scheduler
     private ScheduledExecutorService executor;
 
-    
+
     @Override
     protected synchronized void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
         // Important to be be a single threaded scheduler since watch jobs must run serialized
@@ -82,14 +82,14 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         RunService runService = serviceHub.getRunService();
 
         MojoParameters mojoParameters = createMojoParameters();
-        
+
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
                 String imageId = queryService.getImageId(imageConfig.getName());
                 String containerId = runService.lookupContainer(imageConfig.getName());
-                
+
                 ImageWatcher watcher = new ImageWatcher(imageConfig, imageId, containerId);
 
                 ArrayList<String> tasks = new ArrayList<>();
@@ -118,7 +118,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         }
     }
 
-    private void scheduleBuildWatchTask(DockerAccess dockerAccess, ImageWatcher watcher, 
+    private void scheduleBuildWatchTask(DockerAccess dockerAccess, ImageWatcher watcher,
             MojoParameters mojoParameters, boolean doRestart) throws MojoExecutionException {
         executor.scheduleAtFixedRate(
                 createBuildWatchTask(dockerAccess, watcher, mojoParameters, doRestart),
@@ -190,10 +190,26 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
         PortMapping mappedPorts = runService.getPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
         String id = watcher.getContainerId();
+
+        String optionalPreStop = getPreStopCommand(imageConfig);
+        if (optionalPreStop != null) {
+            runService.createAndStartExecContainer(id, optionalPreStop);
+        }
         runService.stopContainer(id, false, false);
 
         // Start new one
         watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, project.getProperties()));
+    }
+
+    private String getPreStopCommand(ImageConfiguration imageConfig) {
+        if (imageConfig.getRunConfiguration() != null) {
+            if (imageConfig.getRunConfiguration().getWaitConfiguration() != null) {
+                if (imageConfig.getRunConfiguration().getWaitConfiguration().getExec() != null) {
+                    return imageConfig.getRunConfiguration().getWaitConfiguration().getExec().getPreStop();
+                }
+            }
+        }
+        return null;
     }
 
     private void callPostGoal(ImageWatcher watcher) throws MojoFailureException, MojoExecutionException {

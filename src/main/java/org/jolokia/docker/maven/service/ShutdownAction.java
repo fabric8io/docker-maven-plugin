@@ -15,11 +15,18 @@ package org.jolokia.docker.maven.service;/*
  * limitations under the License.
  */
 
+import edu.emory.mathcs.backport.java.util.Arrays;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.Arguments.Builder;
+import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.Logger;
 
+import java.util.List;
+
+import static edu.emory.mathcs.backport.java.util.Arrays.asList;
+import static org.jolokia.docker.maven.util.EnvUtil.splitOnSpaceWithEscape;
 import static org.jolokia.docker.maven.util.WaitUtil.sleep;
 
 /**
@@ -40,6 +47,8 @@ class ShutdownAction {
     // How long to wait after shutdown (in milliseconds)
     private int shutdownGracePeriod;
 
+    private String preStop;
+
     ShutdownAction(ImageConfiguration imageConfig, String containerId) {
         this.image = imageConfig.getName();
         this.containerId = containerId;
@@ -47,6 +56,10 @@ class ShutdownAction {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
         this.shutdownGracePeriod = waitConfig != null ? waitConfig.getShutdown() : 0;
+
+        if (waitConfig != null && waitConfig.getExec() != null) {
+            this.preStop = waitConfig.getExec().getPreStop();
+        }
     }
 
     /**
@@ -69,6 +82,17 @@ class ShutdownAction {
      */
     public void shutdown(DockerAccess access, Logger log, boolean keepContainer, boolean removeVolumes)
             throws DockerAccessException {
+
+        if (preStop != null) {
+            try {
+                Arguments arguments = new Arguments();
+                arguments.setExec(asList(splitOnSpaceWithEscape(preStop)));
+                String execContainerId = access.createExecContainer(arguments, containerId);
+                access.startExecContainer(execContainerId);
+            } catch (DockerAccessException e) {
+                log.error(e.getMessage());
+            }
+        }
         // Stop the container
         access.stopContainer(containerId);
         if (!keepContainer) {

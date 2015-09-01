@@ -76,6 +76,14 @@ public final class UrlBuilder {
         return u("containers/%s/start", containerId).toString();
     }
 
+    public String createExecContainer(String containerId) {
+        return u("containers/%s/exec", containerId).url;
+    }
+
+    public String startExecContainer(String containerId) {
+        return u("exec/%s/start", containerId).url;
+    }
+
     public String stopContainer(String containerId) {
         return u("containers/%s/stop", containerId).toString();
     }
