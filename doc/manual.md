@@ -506,7 +506,7 @@ The `<run>` configuration knows the following sub elements:
   the container.
 * **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
   from the container.
-* **command** is a command which should be executed at the end of the
+* **cmd** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
   used. 
 * **domainname** (*v1.12*) domain name for the container
@@ -583,7 +583,7 @@ Example:
     <date>ISO8601</date>
     <color>blue</color>
   </log>
-  <command>java -jar /maven/docker-demo.jar</command>
+  <cmd>java -jar /maven/docker-demo.jar</cmd>
 </run>
 ````
 
@@ -1178,7 +1178,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.bind.idx** Sets a list of paths to bind/expose in the container
 * **docker.capAdd.idx** List of kernel capabilities to add to the container
 * **docker.capDrop.idx** List of kernel capabilities to remove from the container
-* **docker.command** Command to execute. This is used both when
+* **docker.cmd** Command to execute. This is used both when
   running a container and as default command when creating an image.
 * **docker.domainname** Container domain name
 * **docker.dns.idx** List of dns servers to use
