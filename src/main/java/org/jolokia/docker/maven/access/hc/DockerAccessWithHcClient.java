@@ -59,6 +59,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws IOException {
         this.log = log;
         URI uri = URI.create(baseUrl);
+        if (uri.getScheme() == null) {
+            throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix://");
+        }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate =
                     new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(),maxConnections));
