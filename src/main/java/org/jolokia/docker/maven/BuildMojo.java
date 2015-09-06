@@ -34,19 +34,17 @@ public class BuildMojo extends AbstractBuildSupportMojo {
                 if (buildConfig.skip()) {
                     log.info(imageConfig.getDescription() + ": Skipped building");
                 } else {
-                    buildImage(dockerAccess, imageConfig, buildConfig);
+                    buildAndTag(dockerAccess, imageConfig);
                 }
             }
         }
     }
 
-    private void buildImage(DockerAccess dockerAccess, ImageConfiguration imageConfig, BuildImageConfiguration buildConfig)
+    private void buildAndTag(DockerAccess dockerAccess, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
-        buildConfig.validate();
-        String imageName = imageConfig.getName();
-        buildImage(dockerAccess, imageName, imageConfig);
+        buildImage(dockerAccess, imageConfig);
         if (!skipTags) {
-            tagImage(imageName, imageConfig, dockerAccess);
+            tagImage(imageConfig.getName(), imageConfig, dockerAccess);
         }
     }
     
