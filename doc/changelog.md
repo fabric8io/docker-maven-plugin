@@ -7,6 +7,7 @@
   - Allow `runCmds` to be compressed into a single command with the build config option `optimise`. (#263)
   - Proper error message when default timeout is hit while waiting (#274)
   - Add proper error message when docker host URL is malformed (#277)
+  - If no wait condition is given in wait continue immediately (#276)
   
 * **0.13.3**
   - Allow dangling images to be cleaned up after build ([#20](https://github.com/rhuss/docker-maven-plugin/issues/20))
