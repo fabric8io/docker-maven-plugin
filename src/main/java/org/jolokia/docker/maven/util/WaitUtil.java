@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven.util;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,28 +38,31 @@ public class WaitUtil {
     private WaitUtil() {}
 
     public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
+        return wait(maxWait, Arrays.asList(checkers));
+    }
+
+    public static long wait(int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException {
         long max = maxWait > 0 ? maxWait : DEFAULT_MAX_WAIT;
         long now = System.currentTimeMillis();
-        do {
-            for (WaitChecker checker : checkers) {
-                if (checker.check()) {
-                    cleanup(checkers);
-                    return delta(now);
+        try {
+            do {
+                for (WaitChecker checker : checkers) {
+                    if (checker.check()) {
+                        return delta(now);
+                    }
                 }
-            }
-            sleep(WAIT_RETRY_WAIT);
-        } while (delta(now) < max);
-        if (checkers.length > 0) {
-            // There has been several checks, but none has matched. So we ware throwing an exception and break
-            // the build
-            cleanup(checkers);
+                sleep(WAIT_RETRY_WAIT);
+            } while (delta(now) < max);
+
             throw new WaitTimeoutException("No checker finished successfully", delta(now));
+
+        } finally {
+            cleanup(checkers);
         }
-        return delta(now);
     }
 
     // Give checkers a possibility to clean up
-    private static void cleanup(WaitChecker[] checkers) {
+    private static void cleanup(Iterable<WaitChecker> checkers) {
         for (WaitChecker checker : checkers) {
             checker.cleanUp();
         }
