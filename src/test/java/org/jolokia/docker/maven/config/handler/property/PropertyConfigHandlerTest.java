@@ -221,11 +221,11 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
-        assertEquals("command.sh", runConfig.getCmd());
+        assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
         assertEquals(a("example.com"), runConfig.getDnsSearch());
         assertEquals("domain.com", runConfig.getDomainname());
-        assertEquals("entrypoint.sh", runConfig.getEntrypoint());
+        assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
         assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
         assertEquals("subdomain", runConfig.getHostname());
         assertEquals(a("redis"), runConfig.getLinks());

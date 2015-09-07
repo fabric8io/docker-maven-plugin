@@ -1,19 +1,62 @@
 package org.jolokia.docker.maven.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.jolokia.docker.maven.util.EnvUtil;
+
+import java.util.*;
 
 public class Arguments {
 
-    /**
-     * @parameter
-     */
     private String shell;
 
-    /**
-     * @parameter
-     */
     private List<String> exec;
+
+    /**
+     * Used to distinguish between shorter version
+     *
+     * <pre>
+     *   &lt;cmd&gt;
+     *     &lt;arg&gt;echo&lt;/arg&gt;
+     *     &lt;arg&gt;Hello, world!&lt;/arg&gt;
+     *   &lt;/cmd&gt;
+     * </pre>
+     *
+     * from the full one
+     *
+     * <pre>
+     *   &lt;cmd&gt;
+     *     &lt;exec&gt;
+     *       &lt;arg&gt;echo&lt;/arg&gt;
+     *       &lt;arg&gt;Hello, world!&lt;/arg&gt;
+     *     &lt;exec&gt;
+     *   &lt;/cmd&gt;
+     * </pre>
+     *
+     * and throw a validation error if both specified.
+     */
+    private List<String> execInlined = new ArrayList<>();
+
+    public Arguments() {
+        this(null);
+    }
+
+    public Arguments(String shell) {
+        this.shell = shell;
+    }
+
+    /**
+     * Used to support shell specified as a default parameter, e.g.
+     *
+     * <pre>
+     *   &lt;cmd&gt;java -jar $HOME/server.jar&lt;/cmd&gt;
+     * </pre>
+     *
+     * Read <a href="http://blog.sonatype.com/2011/03/configuring-plugin-goals-in-maven-3/#.VeR3JbQ56Rv">more</a> on
+     * this and other useful techniques.
+     *
+     */
+    public void set(String shell) {
+        setShell(shell);
+    }
 
     public void setShell(String shell) {
         this.shell = shell;
@@ -27,17 +70,43 @@ public class Arguments {
         this.exec = exec;
     }
 
+    /**
+     * @see Arguments#execInlined
+     */
+    @SuppressWarnings("unused")
+    public void setArg(String arg) {
+        this.execInlined.add(arg);
+    }
+
     public List<String> getExec() {
-        return exec;
+        return exec == null ? execInlined : exec;
     }
 
     public void validate() throws IllegalArgumentException {
-        if (shell == null && (exec == null || exec.isEmpty())){
-            throw new IllegalArgumentException("Argument conflict, either shell or params should be specified");
+        int valueSources = 0;
+        if (shell != null) {
+            valueSources ++;
         }
-        if (shell != null && exec != null) {
-            throw new IllegalArgumentException("Argument conflict, either shell or params should be specified");
+        if (exec != null && !exec.isEmpty()) {
+            valueSources ++;
         }
+        if (!execInlined.isEmpty()) {
+            valueSources ++;
+        }
+
+        if (valueSources != 1){
+            throw new IllegalArgumentException("Argument conflict: either shell or args should be specified and only in one form.");
+        }
+    }
+
+    public List<String> asStrings() {
+        if (shell != null) {
+            return Arrays.asList(EnvUtil.splitOnSpaceWithEscape(shell));
+        }
+        if (exec != null) {
+            return Collections.unmodifiableList(exec);
+        }
+        return Collections.unmodifiableList(execInlined);
     }
 
     public static class Builder {

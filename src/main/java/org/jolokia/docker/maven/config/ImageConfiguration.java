@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.config;
 import java.util.*;
 
 import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.util.Logger;
 import org.jolokia.docker.maven.util.StartOrderResolver;
 
 /**
@@ -123,6 +124,15 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     @Override
     public String toString() {
         return String.format("ImageConfiguration {name='%s', alias='%s'}", name, alias);
+    }
+
+    public void validate(Logger log) {
+        if (null != build) {
+            build.validate(log);
+        }
+        if (null != run) {
+            run.validate();
+        }
     }
 
     // =========================================================================

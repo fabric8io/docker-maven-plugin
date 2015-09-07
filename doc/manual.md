@@ -375,23 +375,41 @@ Either shell or params should be specified.
 Example:
  
 ```xml
- <entryPoint>
-    <!-- shell form  -->
-    <shell>java -jar $HOME/server.jar</shell>
- </entryPoint>
+<entryPoint>
+   <!-- shell form  -->
+   <shell>java -jar $HOME/server.jar</shell>
+</entryPoint>
 ```
 
 or 
 
 ```xml
- <entryPoint>
-    <!-- exec form  -->
-    <exec>
-      <args>java</args>
-      <args>-jar</args>
-      <args>/opt/demo/server.jar</args>
-    </exec>
- </entryPoint>
+<entryPoint>
+   <!-- exec form  -->
+   <exec>
+     <args>java</args>
+     <args>-jar</args>
+     <args>/opt/demo/server.jar</args>
+   </exec>
+</entryPoint>
+```
+
+This can be formulated also more dense with:
+
+```xml
+<!-- shell form  -->
+<entryPoint>java -jar $HOME/server.jar</entryPoint>
+```
+
+or 
+
+```xml
+<entryPoint>
+  <!-- exec form  -->
+  <arg>java</arg>
+  <arg>-jar</arg>
+  <arg>/opt/demo/server.jar</arg>
+</entryPoint>
 ```
 
 ##### Docker Assembly
@@ -509,11 +527,11 @@ The `<run>` configuration knows the following sub elements:
   from the container.
 * **command** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
-  used. 
+  used. See [Start-up Arguments](#start-up-arguments) for details.
 * **domainname** (*v1.12*) domain name for the container
 * **dns** (*v1.11*) list of `host` elements specifying dns servers for the container to use
 * **dnsSearch** (*v1.15*) list of `host` elements specying dns search domains 
-* **entrypoint** (*v1.15*) set the entry point for the container
+* **entrypoint** (*v1.15*) set the entry point for the container. See [Start-up Arguments](#start-up-arguments) for details.
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
   typical maven property format as described [below](#setting-environment-variables-and-labels).
