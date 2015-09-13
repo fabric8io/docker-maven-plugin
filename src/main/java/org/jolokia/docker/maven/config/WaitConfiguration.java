@@ -131,8 +131,7 @@ public class WaitConfiguration {
         /** @parameter */
         private String preStop;
 
-        public ExecConfiguration() {
-        }
+        public ExecConfiguration() {}
 
         public ExecConfiguration(String postStart, String preStop) {
             this.postStart = postStart;

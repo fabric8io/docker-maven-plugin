@@ -8,6 +8,7 @@
   - Proper error message when default timeout is hit while waiting (#274)
   - Add proper error message when docker host URL is malformed (#277)
   - If no wait condition is given in wait continue immediately (#276)
+  - Add logic to specify exec commands during postStart and preStop (#272)
   
 * **0.13.3**
   - Allow dangling images to be cleaned up after build ([#20](https://github.com/rhuss/docker-maven-plugin/issues/20))
@@ -22,7 +23,6 @@
   - HTTP method and status code can be specified when waiting on an HTTP URL ([#258](https://github.com/rhuss/docker-maven-plugin/issues/258))
   - Introduced global `portPropertyFile` setting ([#90](https://github.com/rhuss/docker-maven-plugin/issues/90))
   - Allow the container's host ip to be bound to a maven property and exported
-  - Add logic to specify exec commands during postStart and preStop (#272)
 
 * **0.13.2**
   - "run" directives can be added to the Dockerfile ([#191](https://github.com/rhuss/docker-maven-plugin/issues/191))

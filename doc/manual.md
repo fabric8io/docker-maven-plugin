@@ -1262,6 +1262,8 @@ values in the `<build>` and `<run>` sections.
 * **docker.wait.time** Amount of time to wait during startup of a
     container (in ms)
 * **docker.wait.log** Wait for a log output to appear.
+* **wait.exec.postStart** Command to execute after the container has start up. 
+* **wait.exec.preStop** Command to execute before command stops.
 * **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
 * **docker.workingDir** Working dir for commands to run in
 

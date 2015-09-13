@@ -15,18 +15,14 @@ package org.jolokia.docker.maven.service;/*
  * limitations under the License.
  */
 
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
+
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.config.Arguments.Builder;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.Logger;
 
-import java.util.List;
-
-import static edu.emory.mathcs.backport.java.util.Arrays.asList;
-import static org.jolokia.docker.maven.util.EnvUtil.splitOnSpaceWithEscape;
 import static org.jolokia.docker.maven.util.WaitUtil.sleep;
 
 /**
@@ -86,7 +82,7 @@ class ShutdownAction {
         if (preStop != null) {
             try {
                 Arguments arguments = new Arguments();
-                arguments.setExec(asList(splitOnSpaceWithEscape(preStop)));
+                arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(preStop)));
                 String execContainerId = access.createExecContainer(arguments, containerId);
                 access.startExecContainer(execContainerId);
             } catch (DockerAccessException e) {

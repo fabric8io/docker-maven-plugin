@@ -202,12 +202,10 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     }
 
     private String getPreStopCommand(ImageConfiguration imageConfig) {
-        if (imageConfig.getRunConfiguration() != null) {
-            if (imageConfig.getRunConfiguration().getWaitConfiguration() != null) {
-                if (imageConfig.getRunConfiguration().getWaitConfiguration().getExec() != null) {
-                    return imageConfig.getRunConfiguration().getWaitConfiguration().getExec().getPreStop();
-                }
-            }
+        if (imageConfig.getRunConfiguration() != null &&
+            imageConfig.getRunConfiguration().getWaitConfiguration() != null &&
+            imageConfig.getRunConfiguration().getWaitConfiguration().getExec() != null) {
+            return imageConfig.getRunConfiguration().getWaitConfiguration().getExec().getPreStop();
         }
         return null;
     }

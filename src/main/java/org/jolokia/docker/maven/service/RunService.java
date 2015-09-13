@@ -22,8 +22,6 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.util.*;
 
-import static edu.emory.mathcs.backport.java.util.Arrays.asList;
-import static org.jolokia.docker.maven.util.EnvUtil.splitOnSpaceWithEscape;
 
 /**
  * Service class for helping in running containers.
@@ -62,7 +60,7 @@ public class RunService {
      */
     public String createAndStartExecContainer(String containerId, String command) throws DockerAccessException {
         Arguments arguments = new Arguments();
-        arguments.setExec(asList(splitOnSpaceWithEscape(command)));
+        arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
         String execContainerId = docker.createExecContainer(arguments, containerId);
         docker.startExecContainer(execContainerId);
         return execContainerId;
