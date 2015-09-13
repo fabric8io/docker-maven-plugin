@@ -169,6 +169,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new WaitConfiguration.Builder()
                 .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
                 .url(url)
+                .preStop(withPrefix(prefix, PRE_STOP, properties))
+                .postStart(withPrefix(prefix, POST_START, properties))
                 .method(withPrefix(prefix, WAIT_HTTP_METHOD, properties))
                 .status(withPrefix(prefix, WAIT_HTTP_STATUS, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))

@@ -22,6 +22,9 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.util.*;
 
+import static edu.emory.mathcs.backport.java.util.Arrays.asList;
+import static org.jolokia.docker.maven.util.EnvUtil.splitOnSpaceWithEscape;
+
 /**
  * Service class for helping in running containers.
  *
@@ -36,7 +39,7 @@ public class RunService {
     // Action to be used when doing a shutdown
     //private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
     private ContainerTracker tracker;
-    
+
     // DAO for accessing the docker daemon
     private DockerAccess docker;
 
@@ -47,6 +50,22 @@ public class RunService {
         this.queryService = queryService;
         this.tracker = tracker;
         this.log = log;
+    }
+
+    /**
+     * Create and start a Exec container with the given image configuration.
+     * @param containerId container id to run exec command against
+     *
+     * @return the exec container id
+     *
+     * @throws DockerAccessException if access to the docker backend fails
+     */
+    public String createAndStartExecContainer(String containerId, String command) throws DockerAccessException {
+        Arguments arguments = new Arguments();
+        arguments.setExec(asList(splitOnSpaceWithEscape(command)));
+        String execContainerId = docker.createExecContainer(arguments, containerId);
+        docker.startExecContainer(execContainerId);
+        return execContainerId;
     }
 
     /**
@@ -69,11 +88,11 @@ public class RunService {
 
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id);
-        
+
         if (mappedPorts.containsDynamicPorts()) {
             updateMappedPorts(id, mappedPorts);
         }
-        
+
         return id;
     }
 
@@ -267,14 +286,14 @@ public class RunService {
                 if (id == null) {
                     throw new DockerAccessException("No container found for image/alias '%s', unable to mount volumes", image);
                 }
-                
-                list.add(queryService.getContainerName(id));            
+
+                list.add(queryService.getContainerName(id));
             }
         }
         return list;
     }
 
-    
+
     private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
         if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
             return null;
@@ -288,7 +307,7 @@ public class RunService {
     // checkAllContainers: false = only running containers are considered
     private String findContainerId(String imageNameOrAlias, boolean checkAllContainers) throws DockerAccessException {
         String id = lookupContainer(imageNameOrAlias);
-        
+
         // check for external container. The image name is interpreted as a *container name* for that case ...
         if (id == null) {
             Container container = queryService.getContainerByName(imageNameOrAlias);
@@ -298,13 +317,13 @@ public class RunService {
         }
         return id;
     }
-    
+
     private void startContainer(ImageConfiguration imageConfig, String id) throws DockerAccessException {
         log.info(imageConfig.getDescription() + ": Start container " + id);
         docker.startContainer(id);
         tracker.registerShutdownAction(id, imageConfig);
     }
-    
+
     private void updateMappedPorts(String containerId, PortMapping mappedPorts) throws DockerAccessException {
         Container container = queryService.getContainer(containerId);
         mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());

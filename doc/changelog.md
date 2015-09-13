@@ -22,6 +22,7 @@
   - HTTP method and status code can be specified when waiting on an HTTP URL ([#258](https://github.com/rhuss/docker-maven-plugin/issues/258))
   - Introduced global `portPropertyFile` setting ([#90](https://github.com/rhuss/docker-maven-plugin/issues/90))
   - Allow the container's host ip to be bound to a maven property and exported
+  - Add logic to specify exec commands during postStart and preStop (#272)
 
 * **0.13.2**
   - "run" directives can be added to the Dockerfile ([#191](https://github.com/rhuss/docker-maven-plugin/issues/191))

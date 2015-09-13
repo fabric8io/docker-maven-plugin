@@ -93,6 +93,10 @@ public class StartMojo extends AbstractDockerMojo {
 
                 // Wait if requested
                 waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
+                WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
+                if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
+                    runService.createAndStartExecContainer(containerId, waitConfig.getExec().getPostStart());
+                }
             }
             if (follow) {
                 runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);

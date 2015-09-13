@@ -825,7 +825,10 @@ some condition is met. These conditions can be specified within a
 * **shutdown** is the time to wait in milliseconds between stopping a container
   and removing it. This might be helpful in situation where a Docker croaks with an
   error when trying to remove a container to fast after it has been stopped.
-
+* **exec** Specifies commands to execute during specified lifecycle of the container. It knows the following sub-elements:
+  - **postStart** Command to run after the above wait criteria has been met
+  - **preStop** Command to run before the container is stopped.
+  
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
 conditions. The build will abort if you wait on an url or log output and reach the timeout. 
@@ -842,6 +845,10 @@ Example:
   </http>
   <time>10000</time>
   <shutdown>500</shutdown>
+  <exec>
+     <postStart>/opt/init_db.sh</postStart>
+     <preStop>/opt/notify_end.sh</preStop>
+  </exec>
 </wait>
 ```` 
 

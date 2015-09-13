@@ -25,6 +25,11 @@ public class WaitConfiguration {
     /**
      * @parameter
      */
+    private ExecConfiguration exec;
+
+    /**
+     * @parameter
+     */
     private String log;
 
     /**
@@ -34,13 +39,13 @@ public class WaitConfiguration {
 
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, HttpConfiguration http, String log, int shutdown) {
+    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, String log, int shutdown) {
         this.time = time;
+        this.exec = exec;
         this.http = http;
         this.log = log;
         this.shutdown = shutdown;
     }
-
 
     public int getTime() {
         return time;
@@ -48,6 +53,10 @@ public class WaitConfiguration {
 
     public String getUrl() {
         return http != null ? http.getUrl() : url;
+    }
+
+    public ExecConfiguration getExec() {
+        return exec;
     }
 
     public HttpConfiguration getHttp() {
@@ -68,6 +77,8 @@ public class WaitConfiguration {
         private int time = 0,shutdown = 0;
         private String url,log,status;
         private String method;
+        private String preStop;
+        private String postStart;
 
         public Builder time(int time) {
             this.time = time;
@@ -100,7 +111,40 @@ public class WaitConfiguration {
         }
 
         public WaitConfiguration build() {
-            return new WaitConfiguration(time,new HttpConfiguration(url,method,status), log,shutdown);
+            return new WaitConfiguration(time, new ExecConfiguration(postStart, preStop), new HttpConfiguration(url,method,status), log, shutdown);
+        }
+
+        public Builder preStop(String command) {
+            this.preStop = command;
+            return this;
+        }
+
+        public Builder postStart(String command) {
+            this.postStart = command;
+            return this;
+        }
+    }
+
+    public static class ExecConfiguration {
+        /** @parameter */
+        private String postStart;
+        /** @parameter */
+        private String preStop;
+
+        public ExecConfiguration() {
+        }
+
+        public ExecConfiguration(String postStart, String preStop) {
+            this.postStart = postStart;
+            this.preStop = preStop;
+        }
+
+        public String getPostStart() {
+            return postStart;
+        }
+
+        public String getPreStop() {
+            return preStop;
         }
     }
 

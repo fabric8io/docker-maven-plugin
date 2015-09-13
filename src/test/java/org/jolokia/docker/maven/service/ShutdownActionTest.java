@@ -41,9 +41,9 @@ public class ShutdownActionTest {
         }};
 
         long start = System.currentTimeMillis();
-        action.shutdown(docker,log,false,false);
+        action.shutdown(docker, log, false, false);
         assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
-                   System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+                System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
     }
 
     @Test
@@ -68,6 +68,23 @@ public class ShutdownActionTest {
         ShutdownAction action = new ShutdownAction(createImageConfig(SHUTDOWN_WAIT),container);
 
         new Expectations() {{
+            docker.stopContainer(container);
+            log.info(with(getLogArgCheck(container, false)));
+        }};
+        long start = System.currentTimeMillis();
+        action.shutdown(docker,log,true,false);
+        assertTrue("No wait",
+                   System.currentTimeMillis() - start < SHUTDOWN_WAIT);
+
+    }
+
+    @Test
+    public void shutdownWithPreStopExecConfig() throws Exception {
+        ShutdownAction action = new ShutdownAction(createImageConfigWithExecConfig(SHUTDOWN_WAIT),container);
+
+        new Expectations() {{
+            docker.createExecContainer((Arguments) withNotNull(), container); result = "execContainerId";
+            docker.startExecContainer("execContainerId");
             docker.stopContainer(container);
             log.info(with(getLogArgCheck(container, false)));
         }};
@@ -124,6 +141,20 @@ public class ShutdownActionTest {
                 .runConfig(new RunImageConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()
                                                  .shutdown(wait)
+                                                 .build())
+                                   .build())
+                .build();
+    }
+
+    private ImageConfiguration createImageConfigWithExecConfig(int wait) {
+        return new ImageConfiguration.Builder()
+                .name("testName")
+                .alias("testAlias")
+                .runConfig(new RunImageConfiguration.Builder()
+                                   .wait(new WaitConfiguration.Builder()
+                                                 .shutdown(wait)
+                                                 .preStop("pre-stop-command")
+                                                 .postStart("post-start-command")
                                                  .build())
                                    .build())
                 .build();

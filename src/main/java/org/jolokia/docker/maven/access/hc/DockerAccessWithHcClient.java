@@ -1,21 +1,31 @@
 package org.jolokia.docker.maven.access.hc;
 
-import java.io.*;
-import java.net.URI;
-import java.util.*;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.chunked.*;
 import org.jolokia.docker.maven.access.hc.http.HttpClientBuilder;
 import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
-import org.jolokia.docker.maven.access.log.*;
-import org.jolokia.docker.maven.model.*;
+import org.jolokia.docker.maven.access.log.LogCallback;
+import org.jolokia.docker.maven.access.log.LogGetHandle;
+import org.jolokia.docker.maven.access.log.LogRequestor;
+import org.jolokia.docker.maven.config.Arguments;
+import org.jolokia.docker.maven.model.Container;
+import org.jolokia.docker.maven.model.ContainerDetails;
+import org.jolokia.docker.maven.model.ContainersListElement;
 import org.jolokia.docker.maven.util.ImageName;
 import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static java.net.HttpURLConnection.*;
 import static org.jolokia.docker.maven.access.hc.ApacheHttpClientDelegate.*;
@@ -75,6 +85,48 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
+    public String startExecContainer(String containerId) throws DockerAccessException {
+        try {
+            String url = urlBuilder.startExecContainer(containerId);
+            JSONObject request = new JSONObject();
+            request.put("Detach", false);
+            request.put("Tty", false);
+
+            return delegate.post(url, request.toString(), new BodyResponseHandler(), HTTP_OK);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new DockerAccessException("Unable to start container id [%s]", containerId);
+        }
+    }
+
+    @Override
+    public String createExecContainer(Arguments arguments, String containerId) throws DockerAccessException {
+        String url = urlBuilder.createExecContainer(containerId);
+        JSONObject request = new JSONObject();
+        request.put("Tty", false);
+        request.put("AttachStdin", true);
+        request.put("AttachStdout", true);
+        request.put("AttachStderr", true);
+        request.put("Cmd", arguments.getExec());
+
+        String execJsonRequest = request.toString();
+        try {
+            String response = delegate.post(url, execJsonRequest, new BodyResponseHandler(), HTTP_CREATED);
+            JSONObject json = new JSONObject(response);
+            if (json.has("Warnings")) {
+                logWarnings(json);
+            }
+
+            return json.getString("Id");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            throw new DockerAccessException("Unable to exec [%s] on container [%s]", request.toString(),
+                    containerId);
+        }
+
+    }
+
+    @Override
     public String createContainer(ContainerCreateConfig containerConfig, String containerName)
             throws DockerAccessException {
         String createJson = containerConfig.toJson();
@@ -129,7 +181,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throw new DockerAccessException("Unable to build image [%s]", image);
         }
     }
-    
+
     @Override
     public void getLogSync(String containerId, LogCallback callback) {
         LogRequestor
@@ -232,7 +284,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                           createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException("Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : ""); 
+            throw new DockerAccessException("Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         }
     }
 
@@ -247,7 +299,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                           createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw new DockerAccessException("Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : ""); 
+            throw new DockerAccessException("Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         } finally {
             if (temporaryImage != null) {
                 removeImage(temporaryImage);
