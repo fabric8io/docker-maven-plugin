@@ -193,7 +193,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
         String optionalPreStop = getPreStopCommand(imageConfig);
         if (optionalPreStop != null) {
-            runService.createAndStartExecContainer(id, optionalPreStop);
+            runService.execInContainer(id, optionalPreStop);
         }
         runService.stopContainer(id, false, false);
 

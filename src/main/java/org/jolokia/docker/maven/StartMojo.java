@@ -10,7 +10,6 @@ package org.jolokia.docker.maven;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -95,7 +94,7 @@ public class StartMojo extends AbstractDockerMojo {
                 waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
                 WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
                 if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
-                    runService.createAndStartExecContainer(containerId, waitConfig.getExec().getPostStart());
+                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart());
                 }
             }
             if (follow) {

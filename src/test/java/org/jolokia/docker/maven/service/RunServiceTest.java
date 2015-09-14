@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven.service;
 
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -11,21 +12,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import mockit.*;
 import org.apache.commons.io.IOUtils;
-import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.access.ContainerCreateConfig;
 import org.jolokia.docker.maven.access.ContainerHostConfig;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.access.PortMapping;
-import org.jolokia.docker.maven.config.RestartPolicy;
-import org.jolokia.docker.maven.config.RunImageConfiguration;
-import org.jolokia.docker.maven.config.VolumeConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.util.Logger;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 /**
@@ -36,19 +33,16 @@ public class RunServiceTest {
 
     private ContainerCreateConfig containerConfig;
 
-    @Mock
+    @Mocked
     private DockerAccess docker;
 
-    @Mock
+    @Mocked
     private Logger log;
 
-    @Mock
-    private MavenProject mavenProject;
+    @Mocked
+    private QueryService queryService;
 
     private Properties properties;
-
-    @Mock
-    private QueryService queryService;
 
     private RunImageConfiguration runConfig;
 
@@ -60,8 +54,6 @@ public class RunServiceTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
         tracker = new ContainerTracker();
         properties = new Properties();
 
@@ -78,6 +70,13 @@ public class RunServiceTest {
          * it didn't seem worth the effort to build a separate test to verify the json and then mock/verify all the calls here
          */
 
+        new NonStrictExpectations() {{
+            queryService.getContainerName("redisContainer1"); result = "db1";
+            queryService.getContainerName("redisContainer2"); result = "db2";
+            queryService.getContainerName("parentContainer"); result = "parentContainer";
+            queryService.getContainerName("otherContainer"); result = "otherContainer";
+        }};
+
         givenARunConfiguration();
         givenAnImageConfiguration("redis3", "db1", "redisContainer1");
         givenAnImageConfiguration("redis3", "db2", "redisContainer2");
@@ -85,14 +84,136 @@ public class RunServiceTest {
         givenAnImageConfiguration("parent", "parentName", "parentContainer");
         givenAnImageConfiguration("otherName", "other:ro", "otherContainer");
 
-        whenQueryForContainerName("redisContainer1", "db1");
-        whenQueryForContainerName("redisContainer2", "db2");
-        whenQueryForContainerName("parentContainer", "parentContainer");
-        whenQueryForContainerName("otherContainer", "otherContainer");
+
         whenCreateContainerConfig("base");
 
         thenContainerConfigIsValid();
         thenStartConfigIsValid();
+    }
+
+    // ===========================================================
+
+    private String container = "testContainer";
+    private int SHUTDOWN_WAIT = 500;
+
+    @Test
+    public void shutdownWithoutKeepingContainers() throws Exception {
+        new Expectations() {{
+            docker.stopContainer(container);
+            log.debug(anyString); minTimes = 1;
+            docker.removeContainer(container, false);
+            log.info(with(getLogArgCheck(container, true)));
+        }};
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT), container, false, false);
+        assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
+                   System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+    }
+
+
+    @Test
+    public void shutdownWithoutKeepingContainersAndRemovingVolumes() throws Exception {
+        new Expectations() {{
+            docker.stopContainer(container);
+            log.debug(anyString); minTimes = 1;
+            docker.removeContainer(container, true);
+            log.info(with(getLogArgCheck(container, true)));
+        }};
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT),container,false,true);
+        assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
+                   System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+    }
+
+    @Test
+    public void shutdownWithKeepingContainer() throws Exception {
+        new Expectations() {{
+            docker.stopContainer(container);
+            log.info(with(getLogArgCheck(container, false)));
+        }};
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT),container,true,false);
+        assertTrue("No wait",
+                   System.currentTimeMillis() - start < SHUTDOWN_WAIT);
+
+    }
+
+    @Test
+    public void shutdownWithPreStopExecConfig() throws Exception {
+
+        new Expectations() {{
+            docker.createExecContainer((Arguments) withNotNull(), container); result = "execContainerId";
+            docker.startExecContainer("execContainerId");
+            docker.stopContainer(container);
+            log.info(with(getLogArgCheck(container, false)));
+        }};
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfigWithExecConfig(SHUTDOWN_WAIT),container,true,false);
+        assertTrue("No wait",
+                   System.currentTimeMillis() - start < SHUTDOWN_WAIT);
+    }
+
+    @Test
+    public void testWithoutWait() throws Exception {
+        new Expectations() {{
+            docker.stopContainer(container);
+            log.debug(anyString); times = 0;
+            docker.removeContainer(container, false);
+            log.info(with(getLogArgCheck(container, true)));
+        }};
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(0), container, false, false);
+        assertTrue("No wait", System.currentTimeMillis() - start < SHUTDOWN_WAIT);
+    }
+
+    @Test(expected = DockerAccessException.class)
+    public void testWithException() throws Exception {
+
+        new Expectations() {{
+            docker.stopContainer(container); result = new DockerAccessException("Test");
+        }};
+
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT),container,false,false);
+    }
+
+    private Delegate<String> getLogArgCheck(final String container, final boolean withRemove) {
+        return new Delegate<String>() {
+            boolean checkArg(String txt) {
+                assertTrue(txt.toLowerCase().contains("stop"));
+                assertEquals(withRemove, txt.toLowerCase().contains("remove"));
+                assertTrue("Log '" + txt + "' contains " + container,txt.contains(container.substring(0,12)));
+                return true;
+            }
+        };
+    }
+
+    private ImageConfiguration createImageConfig(int wait) {
+        return new ImageConfiguration.Builder()
+                .name("testName")
+                .alias("testAlias")
+                .runConfig(new RunImageConfiguration.Builder()
+                                   .wait(new WaitConfiguration.Builder()
+                                                 .shutdown(wait)
+                                                 .build())
+                                   .build())
+                .build();
+    }
+
+    private ImageConfiguration createImageConfigWithExecConfig(int wait) {
+        return new ImageConfiguration.Builder()
+                .name("testName")
+                .alias("testAlias")
+                .runConfig(new RunImageConfiguration.Builder()
+                                   .wait(new WaitConfiguration.Builder()
+                                                 .shutdown(wait)
+                                                 .preStop("pre-stop-command")
+                                                 .postStart("post-start-command")
+                                                 .build())
+                                   .build())
+                .build();
     }
 
     private void addToTracker(String varName, String key, String value) throws NoSuchFieldException, IllegalAccessException {
@@ -148,10 +269,6 @@ public class RunServiceTest {
 
         containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, properties);
         startConfig = runService.createContainerHostConfig(runConfig, portMapping);
-    }
-
-    private void whenQueryForContainerName(String containerId, String name) throws DockerAccessException {
-        when(queryService.getContainerName(containerId)).thenReturn(name);
     }
 
     private List<String> bind() {
