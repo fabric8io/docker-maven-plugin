@@ -29,7 +29,7 @@ import org.jolokia.docker.maven.util.*;
  * @author roland
  * @since 16/06/15
  */
-public class RunService {
+public class RunService implements DockerService {
 
     // logger delegated from top
     private Logger log;
@@ -351,7 +351,13 @@ public class RunService {
             // Remove the container
             access.removeContainer(containerId, removeVolumes);
         }
-        log.info(descriptor.getDescription() + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
-                 containerId.substring(0, 12));
+        log.info(
+                descriptor.getDescription() + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
+                        containerId.substring(0, 12));
+    }
+
+    @Override
+    public DockerAccess getDockerAccess() {
+        return docker;
     }
 }

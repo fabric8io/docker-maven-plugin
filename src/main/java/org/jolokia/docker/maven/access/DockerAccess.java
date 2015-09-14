@@ -189,4 +189,9 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+
+    /**
+     * Expose the base url of the docker service.
+     */
+    String getBaseUrl();
 }

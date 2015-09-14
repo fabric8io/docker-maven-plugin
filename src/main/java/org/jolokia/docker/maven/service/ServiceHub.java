@@ -3,6 +3,7 @@ package org.jolokia.docker.maven.service;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.util.Logger;
@@ -45,6 +46,11 @@ public class ServiceHub {
      * @param log logger to use
      */
     public synchronized void init(DockerAccess dockerAccess, Logger log) {
+        // re-initialize if baseUrl of docker service changed
+        if (initDone && baseUrlChanged(dockerAccess)) {
+            initDone = false;
+        }
+
         if (!initDone) {
             mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
             queryService = new QueryService(dockerAccess, log);
@@ -95,5 +101,13 @@ public class ServiceHub {
         if (!initDone) {
             throw new IllegalStateException("Service hub not yet initialized");
         }
+    }
+
+    private boolean baseUrlChanged(DockerAccess docker) {
+        if (docker == null || StringUtils.isEmpty(docker.getBaseUrl())) {
+            throw new IllegalStateException("Docker Access object is null or contains invalid base url.");
+        }
+
+        return(!getQueryService().getDockerAccess().getBaseUrl().equalsIgnoreCase(docker.getBaseUrl()));
     }
 }
