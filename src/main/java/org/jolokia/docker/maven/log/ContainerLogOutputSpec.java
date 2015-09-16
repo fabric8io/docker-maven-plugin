@@ -28,13 +28,13 @@ import static org.fusesource.jansi.Ansi.ansi;
  */
 public class ContainerLogOutputSpec {
 
-    public static final ContainerLogOutputSpec DEFAULT = new ContainerLogOutputSpec("", YELLOW, null,null);
+    public static final ContainerLogOutputSpec DEFAULT = new ContainerLogOutputSpec("", YELLOW, null,null,null);
 
     private final String containerId;
     private String prefix;
     private Ansi.Color color;
     private DateTimeFormatter timeFormatter;
-
+    private String file;
 
     // Palette used for prefixing the log output
     private final static Ansi.Color COLOR_PALETTE[] = {
@@ -45,11 +45,12 @@ public class ContainerLogOutputSpec {
     //Fill prefix up to this length
     private String FILLER = "                                                                           ";
 
-    private ContainerLogOutputSpec(String prefix, Ansi.Color color, DateTimeFormatter timeFormatter, String containerId) {
+    private ContainerLogOutputSpec(String prefix, Ansi.Color color, DateTimeFormatter timeFormatter, String containerId, String file) {
         this.prefix = prefix;
         this.color = color;
         this.containerId = containerId;
         this.timeFormatter = timeFormatter;
+        this.file = file;
     }
 
     public String getContainerId() {
@@ -59,6 +60,10 @@ public class ContainerLogOutputSpec {
 
     public String getPrompt(boolean withColor,Timestamp timestamp) {
         return formatTimestamp(timestamp,withColor) + formatPrefix(prefix, withColor) + "> ";
+    }
+
+    public String getFile(){
+        return file;
     }
 
     private String formatTimestamp(Timestamp timestamp,boolean withColor) {
@@ -82,6 +87,7 @@ public class ContainerLogOutputSpec {
         private Ansi.Color color;
         private String containerId;
         private DateTimeFormatter timeFormatter;
+        private String file;
 
         public Builder prefix(String prefix) {
             this.prefix = prefix;
@@ -100,6 +106,10 @@ public class ContainerLogOutputSpec {
                             "'. Color must be one YELLOW, CYAN, MAGENTA, GREEN, RED or BLUE");
                 }
             }
+            return this;
+        }
+        public Builder file(String file){
+            this.file = file;
             return this;
         }
 
@@ -137,7 +147,7 @@ public class ContainerLogOutputSpec {
         }
 
         public ContainerLogOutputSpec build() {
-            return new ContainerLogOutputSpec(prefix,color,timeFormatter,containerId);
+            return new ContainerLogOutputSpec(prefix,color,timeFormatter,containerId, file);
         }
 
     }
