@@ -207,6 +207,10 @@ public class DockerAssemblyManager {
         if (buildConfig.getEntryPoint() != null){
             builder.entryPoint(buildConfig.getEntryPoint());
         }
+
+        if (buildConfig.optimise()) {
+            builder.optimise();
+        }
         
         return builder;
     }

@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.config.Arguments;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -30,9 +30,9 @@ public class ContainerCreateConfig {
         return this;
     }
 
-    public ContainerCreateConfig command(String command) {
+    public ContainerCreateConfig command(Arguments command) {
         if (command != null) {
-            createConfig.put("Cmd", splitOnWhiteSpace(command));
+            createConfig.put("Cmd", new JSONArray(command.asStrings()));
         }
         return this;
     }
@@ -41,19 +41,11 @@ public class ContainerCreateConfig {
         return add("Domainname", domainname);
     }
 
-    public ContainerCreateConfig entrypoint(String entrypoint) {
+    public ContainerCreateConfig entrypoint(Arguments entrypoint) {
         if (entrypoint != null) {
-            createConfig.put("Entrypoint", splitOnWhiteSpace(entrypoint));
+            createConfig.put("Entrypoint", new JSONArray(entrypoint.asStrings()));
         }
         return this;
-    }
-
-    private JSONArray splitOnWhiteSpace(String entrypoint) {
-        JSONArray a = new JSONArray();
-        for (String s : EnvUtil.splitOnSpaceWithEscape(entrypoint)) {
-            a.put(s);
-        }
-        return a;
     }
 
     public ContainerCreateConfig environment(String envPropsFile, Map<String, String> env, Map mavenProps) throws IllegalArgumentException {

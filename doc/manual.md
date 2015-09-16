@@ -261,6 +261,7 @@ of an image configuration. The available subelements are
   which are passed to bash. The run commands are inserted right after the assembly and after **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
+* **optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
 * **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
@@ -374,23 +375,41 @@ Either shell or params should be specified.
 Example:
  
 ```xml
- <entryPoint>
-    <!-- shell form  -->
-    <shell>java -jar $HOME/server.jar</shell>
- </entryPoint>
+<entryPoint>
+   <!-- shell form  -->
+   <shell>java -jar $HOME/server.jar</shell>
+</entryPoint>
 ```
 
 or 
 
 ```xml
- <entryPoint>
-    <!-- exec form  -->
-    <exec>
-      <args>java</args>
-      <args>-jar</args>
-      <args>/opt/demo/server.jar</args>
-    </exec>
- </entryPoint>
+<entryPoint>
+   <!-- exec form  -->
+   <exec>
+     <args>java</args>
+     <args>-jar</args>
+     <args>/opt/demo/server.jar</args>
+   </exec>
+</entryPoint>
+```
+
+This can be formulated also more dense with:
+
+```xml
+<!-- shell form  -->
+<entryPoint>java -jar $HOME/server.jar</entryPoint>
+```
+
+or 
+
+```xml
+<entryPoint>
+  <!-- exec form  -->
+  <arg>java</arg>
+  <arg>-jar</arg>
+  <arg>/opt/demo/server.jar</arg>
+</entryPoint>
 ```
 
 ##### Docker Assembly
@@ -508,11 +527,11 @@ The `<run>` configuration knows the following sub elements:
   from the container.
 * **cmd** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
-  used. 
+  used. See [Start-up Arguments](#start-up-arguments) for details.
 * **domainname** (*v1.12*) domain name for the container
 * **dns** (*v1.11*) list of `host` elements specifying dns servers for the container to use
 * **dnsSearch** (*v1.15*) list of `host` elements specying dns search domains 
-* **entrypoint** (*v1.15*) set the entry point for the container
+* **entrypoint** (*v1.15*) set the entry point for the container. See [Start-up Arguments](#start-up-arguments) for details.
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
   typical maven property format as described [below](#setting-environment-variables-and-labels).
@@ -806,7 +825,10 @@ some condition is met. These conditions can be specified within a
 * **shutdown** is the time to wait in milliseconds between stopping a container
   and removing it. This might be helpful in situation where a Docker croaks with an
   error when trying to remove a container to fast after it has been stopped.
-
+* **exec** Specifies commands to execute during specified lifecycle of the container. It knows the following sub-elements:
+  - **postStart** Command to run after the above wait criteria has been met
+  - **preStop** Command to run before the container is stopped.
+  
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
 conditions. The build will abort if you wait on an url or log output and reach the timeout. 
@@ -823,6 +845,10 @@ Example:
   </http>
   <time>10000</time>
   <shutdown>500</shutdown>
+  <exec>
+     <postStart>/opt/init_db.sh</postStart>
+     <preStop>/opt/notify_end.sh</preStop>
+  </exec>
 </wait>
 ```` 
 
@@ -1236,6 +1262,8 @@ values in the `<build>` and `<run>` sections.
 * **docker.wait.time** Amount of time to wait during startup of a
     container (in ms)
 * **docker.wait.log** Wait for a log output to appear.
+* **wait.exec.postStart** Command to execute after the container has start up. 
+* **wait.exec.preStop** Command to execute before command stops.
 * **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
 * **docker.workingDir** Working dir for commands to run in
 

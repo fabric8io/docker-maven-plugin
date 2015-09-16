@@ -60,6 +60,48 @@ public class WaitUtilTest {
         }
     }
 
+    @Test
+    public void cleanupShouldBeCalledAfterMatchedExceptation() throws WaitUtil.WaitTimeoutException {
+        StubWaitChecker checker = new StubWaitChecker(true);
+        WaitUtil.wait(0, checker);
+        assertTrue(checker.isCleaned());
+    }
+
+    @Test
+    public void cleanupShouldBeCalledAfterFailedExceptation() {
+        StubWaitChecker checker = new StubWaitChecker(false);
+        try {
+            WaitUtil.wait(0, checker);
+            fail("Failed expectation expected");
+        } catch (WaitUtil.WaitTimeoutException e) {
+            assertTrue(checker.isCleaned());
+        }
+    }
+
+    private static class StubWaitChecker implements WaitUtil.WaitChecker {
+
+        private final boolean checkResult;
+        private boolean cleaned = false;
+
+        public StubWaitChecker(boolean checkResult) {
+            this.checkResult = checkResult;
+        }
+
+        @Override
+        public boolean check() {
+            return checkResult;
+        }
+
+        @Override
+        public void cleanUp() {
+            cleaned = true;
+        }
+
+        public boolean isCleaned() {
+            return cleaned;
+        }
+    }
+
     @BeforeClass
     public static void createServer() throws IOException {
         port = getRandomPort();

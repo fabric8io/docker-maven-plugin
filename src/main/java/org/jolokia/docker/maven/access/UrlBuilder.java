@@ -22,11 +22,12 @@ public final class UrlBuilder {
         return u("build")
                 .p("t",image)
                 .p(forceRemove ? "forcerm" : "rm", true)
-                .toString();
+                .build();
     }
 
     public String inspectImage(String name) {
-        return u("images/%s/json", name).toString();
+        return u("images/%s/json", name)
+                .build();
     }
 
     public String containerLogs(String containerId, boolean follow) {
@@ -35,29 +36,37 @@ public final class UrlBuilder {
                 .p("stderr",true)
                 .p("timestamps", true)
                 .p("follow", follow)
-                .toString();
+                .build();
     }
     
     public String createContainer(String name) {
-        return u("containers/create").p("name", name).toString();
+        return u("containers/create")
+                .p("name", name)
+                .build();
     }
 
     public String deleteImage(String name, boolean force) {
-        return u("images/%s", name).p("force", force).toString();
+        return u("images/%s", name)
+                .p("force", force)
+                .build();
     }
 
     public String inspectContainer(String containerId) {
-        return u("containers/%s/json", containerId).toString();
+        return u("containers/%s/json", containerId)
+                .build();
     }
     
     public String listContainers(int limit) {
-        return u("containers/json").p("limit", limit).toString();
+        return u("containers/json")
+                .p("limit", limit)
+                .build();
     }
 
     public String pullImage(ImageName name, String registry) {
         return u("images/create")
                 .p("fromImage", name.getNameWithoutTag(registry))
-                .p("tag", name.getTag()).toString();
+                .p("tag", name.getTag())
+                .build();
     }
 
     public String pushImage(ImageName name, String registry) {
@@ -65,19 +74,33 @@ public final class UrlBuilder {
                 .p("tag", name.getTag())
                 // "force=1" helps Fedora/CentOs Docker variants to push to public registries
                 .p("force", true)
-                .toString();
+                .build();
     }
 
     public String removeContainer(String containerId, boolean removeVolumes) {
-        return u("containers/%s", containerId).p("v", removeVolumes).toString();
+        return u("containers/%s", containerId)
+                .p("v", removeVolumes)
+                .build();
     }
 
     public String startContainer(String containerId) {
-        return u("containers/%s/start", containerId).toString();
+        return u("containers/%s/start", containerId)
+                .build();
+    }
+
+    public String createExecContainer(String containerId) {
+        return u("containers/%s/exec", containerId)
+                .build();
+    }
+
+    public String startExecContainer(String containerId) {
+        return u("exec/%s/start", containerId)
+                .build();
     }
 
     public String stopContainer(String containerId) {
-        return u("containers/%s/stop", containerId).toString();
+        return u("containers/%s/stop", containerId)
+                .build();
     }
 
     public String tagContainer(ImageName source, ImageName target, boolean force) {
@@ -85,7 +108,7 @@ public final class UrlBuilder {
                 .p("repo",target.getNameWithoutTag())
                 .p("tag",target.getTag())
                 .p("force",force)
-                .toString();
+                .build();
     }
 
     // ============================================================================
@@ -129,8 +152,8 @@ public final class UrlBuilder {
 
     private static class Builder {
 
-        Map<String,String> queryParams = new HashMap<>();
-        String url;
+        private Map<String,String> queryParams = new HashMap<>();
+        private String url;
 
         public Builder(String url) {
             this.url = url;
@@ -151,18 +174,20 @@ public final class UrlBuilder {
             return p(key,Integer.toString(value));
         }
 
-        public String toString() {
-            StringBuilder ret = new StringBuilder(url);
-            ret.append("?");
-
-            int count = queryParams.size();
-            for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                ret.append(entry.getKey()).append("=").append(encode(entry.getValue()));
-                if (--count > 0) {
-                    ret.append("&");
+        public String build() {
+            if (queryParams.size() > 0) {
+                StringBuilder ret = new StringBuilder(url);
+                ret.append("?");
+                for (Map.Entry<String, String> entry : queryParams.entrySet()) {
+                    ret.append(entry.getKey())
+                       .append("=")
+                       .append(encode(entry.getValue()))
+                       .append("&");
                 }
+                return ret.substring(0,ret.length() - 1);
+            } else {
+                return url;
             }
-            return ret.toString();
         }
     }
 }

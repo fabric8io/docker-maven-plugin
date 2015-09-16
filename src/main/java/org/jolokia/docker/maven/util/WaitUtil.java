@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven.util;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,7 +19,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 public class WaitUtil {
 
     // how long to wait at max when doing a http ping
-    private static final long HARD_MAX_WAIT = 10 * 1000;
+    private static final long DEFAULT_MAX_WAIT = 10 * 1000;
 
     // How long to wait between pings
     private static final long WAIT_RETRY_WAIT = 500;
@@ -36,29 +37,32 @@ public class WaitUtil {
 
     private WaitUtil() {}
 
-    public static long wait(int maxWait, WaitChecker ... checkers) throws TimeoutException {
-        long max = maxWait > 0 ? maxWait : HARD_MAX_WAIT;
+    public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
+        return wait(maxWait, Arrays.asList(checkers));
+    }
+
+    public static long wait(int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException {
+        long max = maxWait > 0 ? maxWait : DEFAULT_MAX_WAIT;
         long now = System.currentTimeMillis();
-        do {
-            for (WaitChecker checker : checkers) {
-                if (checker.check()) {
-                    cleanup(checkers);
-                    return delta(now);
+        try {
+            do {
+                for (WaitChecker checker : checkers) {
+                    if (checker.check()) {
+                        return delta(now);
+                    }
                 }
-            }
-            sleep(WAIT_RETRY_WAIT);
-        } while (delta(now) < max);
-        if (checkers.length > 0) {
-            // There has been several checks, but none has matched. So we ware throwing an exception and break
-            // the build
+                sleep(WAIT_RETRY_WAIT);
+            } while (delta(now) < max);
+
+            throw new WaitTimeoutException("No checker finished successfully", delta(now));
+
+        } finally {
             cleanup(checkers);
-            throw new TimeoutException("No checker finished successfully");
         }
-        return delta(now);
     }
 
     // Give checkers a possibility to clean up
-    private static void cleanup(WaitChecker[] checkers) {
+    private static void cleanup(Iterable<WaitChecker> checkers) {
         for (WaitChecker checker : checkers) {
             checker.cleanUp();
         }
@@ -170,5 +174,18 @@ public class WaitUtil {
     public interface WaitChecker {
         boolean check();
         void cleanUp();
+    }
+
+    public static class WaitTimeoutException extends TimeoutException {
+        private final long waited;
+
+        public WaitTimeoutException(String message, long waited) {
+            super(message);
+            this.waited = waited;
+        }
+
+        public long getWaited() {
+            return waited;
+        }
     }
 }

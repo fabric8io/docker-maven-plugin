@@ -3,24 +3,36 @@ package org.jolokia.docker.maven.access.chunked;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.jolokia.docker.maven.access.DockerAccessException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 public class ChunkedResponseReader {
 
     private final InputStream stream;
-    private final ChunkedResponseHandler<String> handler;
-    
-    public ChunkedResponseReader(InputStream stream, ChunkedResponseHandler<String> handler) {
+    private final ChunkedResponseHandler handler;
+    private final JSONTokener tokener;
+
+    public ChunkedResponseReader(InputStream stream, ChunkedResponseHandler handler) {
         this.stream = stream;
         this.handler = handler;
+        this.tokener = new JSONTokener(stream);
     }        
     
     public void process() throws IOException {
-        int len;
-        int size = 8129;
-        byte[] buf = new byte[size];
-        // Data comes in chunkwise
-        while ((len = stream.read(buf, 0, size)) != -1) {
-            String txt = new String(buf, 0, len, "UTF-8");
-            handler.process(txt);
+        while (true) {
+            char next = tokener.nextClean();
+            if (next == 0) {
+                return;
+            } else {
+                tokener.back();
+            }
+            JSONObject object = new JSONObject(tokener);
+            handler.process(object);
         }
+    }
+
+    public interface ChunkedResponseHandler {
+        void process(JSONObject toProcess) throws DockerAccessException;
     }
 }

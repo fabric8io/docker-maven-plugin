@@ -4,7 +4,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONObject;
 
-public class PullOrPushResponseHandler implements ChunkedResponseHandler<JSONObject> {
+public class PullOrPushResponseHandler implements ChunkedResponseReader.ChunkedResponseHandler {
 
     private boolean downloadInProgress = false;
 
@@ -35,21 +35,22 @@ public class PullOrPushResponseHandler implements ChunkedResponseHandler<JSONObj
         if (json.has("error")) {
             String msg = json.getString("error").trim();
             String details = json.getJSONObject("errorDetail").getString("message").trim();
-            log.error(msg + (msg.equals(details) ? "" : "(" + details + ")"));
             throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
         } else {
             if (json.length() > 0) {
-                log.info("... " + extractInfo(json, "id", "status", "stream"));
+                log.info("... " + extractInfo(json));
             }
         }
     }
 
-    private String extractInfo(JSONObject json, String ... keys) {
-        for (String key : keys) {
+    private String extractInfo(JSONObject json) {
+        StringBuilder ret = new StringBuilder();
+        for (String key : new String[] {"id", "status", "stream" }) {
             if (json.has(key)) {
-                return json.getString(key);
+                ret.append(json.getString(key));
+                ret.append(" ");
             }
         }
-        return "";
+        return ret.toString().trim();
     }
 }

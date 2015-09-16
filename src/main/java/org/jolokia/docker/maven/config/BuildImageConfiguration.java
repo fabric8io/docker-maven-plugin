@@ -2,7 +2,7 @@ package org.jolokia.docker.maven.config;
 
 import java.util.*;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import org.jolokia.docker.maven.util.Logger;
 
 /**
  * @author roland
@@ -41,6 +41,11 @@ public class BuildImageConfiguration {
      * @parameter default-value="false"
      */
     private boolean cleanup = false;
+
+    /**
+     * @parameter default-value="false"
+     */
+    private boolean optimise = false;
 
     /**
      * @paramter
@@ -139,6 +144,7 @@ public class BuildImageConfiguration {
         return cmd;
     }
 
+
     @Deprecated
     public String getCommand() {
         return command;
@@ -147,7 +153,11 @@ public class BuildImageConfiguration {
     public boolean cleanup() {
         return cleanup;
     }
-    
+
+    public boolean optimise() {
+        return optimise;
+    }
+
     public boolean skip() {
         return skip;
     }
@@ -237,6 +247,13 @@ public class BuildImageConfiguration {
             return this;
         }
 
+        public Builder optimise(String optimise) {
+            if (optimise != null) {
+                config.optimise = Boolean.valueOf(optimise);
+            }
+            return this;
+        }
+
         public Builder entryPoint(String entryPoint) {
             if (config.entryPoint == null) {
                 config.entryPoint = new Arguments();
@@ -257,12 +274,27 @@ public class BuildImageConfiguration {
         }
     }
 
-    public void validate() throws MojoExecutionException {
+    public void validate(Logger log) throws IllegalArgumentException {
         if (entryPoint != null) {
             entryPoint.validate();
         }
         if (cmd != null) {
             cmd.validate();
         }
+
+        if (command != null) {
+            log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
+            log.warn("Please use <cmd> with nested <shell> or <exec> sections instead.");
+            log.warn("");
+            log.warn("More on this is explained in the user manual: ");
+            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/manual.md#start-up-arguments");
+            log.warn("");
+            log.warn("Migration is trivial, see changelog to version 0.12.0 -->");
+            log.warn("https://github.com/rhuss/docker-maven-plugin/blob/master/doc/changelog.md");
+            log.warn("");
+            log.warn("For now, the command is automatically translated for you to the shell form:");
+            log.warn("   <cmd>" + command + "</cmd>");
+        }
+
     }
 }

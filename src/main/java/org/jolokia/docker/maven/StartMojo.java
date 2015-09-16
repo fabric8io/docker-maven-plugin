@@ -10,7 +10,6 @@ package org.jolokia.docker.maven;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -93,6 +92,10 @@ public class StartMojo extends AbstractDockerMojo {
 
                 // Wait if requested
                 waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
+                WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
+                if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
+                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart());
+                }
             }
             if (follow) {
                 runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
@@ -120,32 +123,45 @@ public class StartMojo extends AbstractDockerMojo {
     private void waitIfRequested(DockerAccess docker, ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws MojoExecutionException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         WaitConfiguration wait = runConfig.getWaitConfiguration();
-        if (wait != null) {
-            ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
-            ArrayList<String> logOut = new ArrayList<>();
-            if (wait.getUrl() != null) {
-                String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
-                WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
-                if (httpConfig != null) {
-                    checkers.add(new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus()));
-                } else {
-                    checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
-                }
-                logOut.add("on url " + waitUrl);
+
+        if (wait == null) {
+            return;
+        }
+
+        ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
+        ArrayList<String> logOut = new ArrayList<>();
+        if (wait.getUrl() != null) {
+            String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
+            WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
+            if (httpConfig != null) {
+                checkers.add(new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus()));
+            } else {
+                checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
             }
-            if (wait.getLog() != null) {
-                checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
-                logOut.add("on log out '" + wait.getLog() + "'");
+            logOut.add("on url " + waitUrl);
+        }
+        if (wait.getLog() != null) {
+            checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
+            logOut.add("on log out '" + wait.getLog() + "'");
+        }
+
+        if (checkers.isEmpty()) {
+            if (wait.getTime() > 0) {
+                log.info(imageConfig.getDescription() + ": Pausing for " + wait.getTime() + " ms");
+                WaitUtil.sleep(wait.getTime());
             }
-            try {
-                long waited = WaitUtil.wait(wait.getTime(), checkers.toArray(new WaitUtil.WaitChecker[0]));
-                log.info(imageConfig.getDescription() + ": Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
-            } catch (TimeoutException exp) {
-                String desc = imageConfig.getDescription() + ": Timeout after " + wait.getTime() + " ms while waiting " +
-                              StringUtils.join(logOut.toArray(), " and ");
-                log.error(desc);
-                throw new MojoExecutionException(desc);
-            }
+
+            return;
+        }
+
+        try {
+            long waited = WaitUtil.wait(wait.getTime(), checkers);
+            log.info(imageConfig.getDescription() + ": Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
+        } catch (WaitUtil.WaitTimeoutException exp) {
+            String desc = imageConfig.getDescription() + ": Timeout after " + exp.getWaited() + " ms while waiting " +
+                          StringUtils.join(logOut.toArray(), " and ");
+            log.error(desc);
+            throw new MojoExecutionException(desc);
         }
     }
 

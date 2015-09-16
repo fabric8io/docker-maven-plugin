@@ -8,6 +8,7 @@ import com.google.common.base.Joiner;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.config.Arguments;
+
 import static org.jolokia.docker.maven.assembly.DockerFileKeyword.*;
 
 /**
@@ -61,6 +62,9 @@ public class DockerFileBuilder {
     // exposed volumes
     private List<String> volumes = new ArrayList<>();
 
+    // whether the Dockerfile should be optimised. i.e. compressing run statements into a single statement
+    private boolean shouldOptimise = false;
+
     /**
      * Create a DockerFile in the given directory
      * @param  destDir directory where to store the dockerfile
@@ -83,10 +87,11 @@ public class DockerFileBuilder {
     public String content() throws IllegalArgumentException {
 
         StringBuilder b = new StringBuilder();
-        
+
         FROM.addTo(b,baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE);
         MAINTAINER.addTo(b,maintainer);
 
+        addOptimisation();
         addEnv(b);
         addLabels(b);
         addPorts(b);
@@ -128,7 +133,7 @@ public class DockerFileBuilder {
         }
         key.addTo(b, arg);
     }
-    
+
     private void addEntries(StringBuilder b) {
         List<String> destinations = new ArrayList<>();
         for (AddEntry entry : addEntries) {
@@ -185,6 +190,14 @@ public class DockerFileBuilder {
         }
     }
 
+    public void addOptimisation() {
+        if (runCmds != null && !runCmds.isEmpty() && shouldOptimise) {
+            String optimisedRunCmd = StringUtils.join(runCmds.iterator(), " && ");
+            runCmds.clear();
+            runCmds.add(optimisedRunCmd);
+        }
+    }
+
 	private void addRun(StringBuilder b) {
 		for (String run : runCmds) {
             RUN.addTo(b,run);
@@ -200,7 +213,7 @@ public class DockerFileBuilder {
             addVolume(b, volume);
         }
     }
-    
+
     private void addVolume(StringBuilder buffer, String volume) {
         while (volume.endsWith("/")) {
             volume = volume.substring(0, volume.length() - 1);
@@ -210,7 +223,7 @@ public class DockerFileBuilder {
             VOLUME.addTo(buffer,"[\"" + volume + "\"]");
         }
     }
-    
+
     // ==========================================================================
     // Builder stuff ....
     public DockerFileBuilder() {}
@@ -240,13 +253,11 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder cmd(Arguments cmd) {
-        cmd.validate();
         this.cmd = cmd;
         return this;
     }
 
     public DockerFileBuilder entryPoint(Arguments entryPoint) {
-        entryPoint.validate();
         this.entryPoint = entryPoint;
         return this;
     }
@@ -296,7 +307,7 @@ public class DockerFileBuilder {
         this.exportBasedir = exportBasedir;
         return this;
     }
-    
+
     public DockerFileBuilder env(Map<String, String> values) {
         if (values != null) {
             this.envEntries.putAll(values);
@@ -319,7 +330,12 @@ public class DockerFileBuilder {
         }
         return this;
     }
-    
+
+    public DockerFileBuilder optimise() {
+        this.shouldOptimise = true;
+        return this;
+    }
+
     private void validateMap(Map<String, String> env) {
         for (Map.Entry<String,String> entry : env.entrySet()) {
             if (entry.getValue() == null || entry.getValue().length() == 0) {

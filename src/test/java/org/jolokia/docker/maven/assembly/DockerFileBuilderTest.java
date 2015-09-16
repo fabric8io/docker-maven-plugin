@@ -35,9 +35,40 @@ public class DockerFileBuilderTest {
     }
 
     @Test
+    public void testDockerFileOptimisation() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                .volumes(Collections.singletonList("/vol1"))
+                .run(Arrays.asList("echo something", "echo second", "echo third", "echo fourth", "echo fifth"))
+                .optimise()
+                .content();
+        String expected = loadFile("docker/Dockerfile_optimised.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
     public void testMaintainer() {
         String dockerfileContent = new DockerFileBuilder().maintainer("maintainer@example.com").content();
         assertThat(dockerfileToMap(dockerfileContent), hasEntry("MAINTAINER", "maintainer@example.com"));
+    }
+
+    @Test
+    public void testOptimise() {
+        String dockerfileContent = new DockerFileBuilder().optimise().run(Arrays.asList("echo something", "echo two")).content();
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("RUN", "echo something && echo two"));
+    }
+
+    @Test
+    public void testOptimiseOnEmptyRunCommandListDoesNotThrowException() {
+        new DockerFileBuilder().optimise().content();
     }
 
     @Test

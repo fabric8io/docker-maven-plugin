@@ -146,6 +146,14 @@ public class PropertyConfigHandlerTest {
     }
     
     @Test
+    public void testNoOptimise() throws Exception {
+        String[] testData = new String[] { k(NAME), "image", k(OPTIMISE), "false" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(false, config.getBuildConfiguration().optimise());
+    }
+
+    @Test
     public void testNoAssembly() throws Exception {
         Properties props = props(k(NAME), "image");
         List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);
@@ -213,11 +221,11 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
-        assertEquals("command.sh", runConfig.getCmd());
+        assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
         assertEquals(a("example.com"), runConfig.getDnsSearch());
         assertEquals("domain.com", runConfig.getDomainname());
-        assertEquals("entrypoint.sh", runConfig.getEntrypoint());
+        assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
         assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
         assertEquals("subdomain", runConfig.getHostname());
         assertEquals(a("redis"), runConfig.getLinks());
@@ -242,6 +250,8 @@ public class PropertyConfigHandlerTest {
         WaitConfiguration wait = runConfig.getWaitConfiguration();
         assertEquals("http://foo.com", wait.getUrl());
         assertEquals("pattern", wait.getLog());
+        assertEquals("post_start_command", wait.getExec().getPostStart());
+        assertEquals("pre_stop_command", wait.getExec().getPreStop());
         assertEquals(5, wait.getTime());
     }
 
@@ -301,6 +311,8 @@ public class PropertyConfigHandlerTest {
                 k(USER), "tomcat",
                 k(VOLUMES) + ".1","/foo",
                 k(VOLUMES_FROM) + ".1", "from",
+                k(PRE_STOP), "pre_stop_command",
+                k(POST_START), "post_start_command",
                 k(WAIT_LOG), "pattern",
                 k(WAIT_TIME), "5",
                 k(WAIT_URL), "http://foo.com",

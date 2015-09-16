@@ -165,6 +165,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose);
 
+            validateConfiguration(log);
+
             String dockerUrl = EnvUtil.extractUrl(dockerHost);
             DockerAccess access = createDockerAccess(dockerUrl);
             setDockerHostAddressProperty(dockerUrl);
@@ -177,6 +179,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             } finally {
                 access.shutdown();
             }
+        }
+    }
+
+    private void validateConfiguration(Logger log) {
+        for (ImageConfiguration imageConfiguration : images) {
+            imageConfiguration.validate(log);
         }
     }
 

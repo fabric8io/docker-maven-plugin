@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
+import org.jolokia.docker.maven.config.Arguments;
 import org.jolokia.docker.maven.model.*;
 
 /**
@@ -49,10 +50,29 @@ public interface DockerAccess {
      * @throws DockerAccessException if the containers could not be listed
      */
     List<Container> listContainers(int limit) throws DockerAccessException;
-    
+
+    /**
+     * Starts a previously set up exec instance id.
+     * this API sets up an interactive session with the exec command
+     *
+     * @param containerId id of the exec container
+     * @return stdout/stderr of running the exec container
+     * @throws DockerAccessException if the container could not be created.
+     */
+    String startExecContainer(String containerId) throws DockerAccessException;
+
+    /**
+     * Sets up an exec instance for a running container id
+     *
+     * @param arguments container exec commands to run
+     * @param containerId id of the running container which the exec container will be created for
+     * @throws DockerAccessException if the container could not be created.
+     */
+    String createExecContainer(Arguments arguments, String containerId) throws DockerAccessException;
+
     /**
      * Create a container from the given image.
-     * 
+     *
      * <p>The <code>container id</code> will be set on the <code>container</code> upon successful creation.</p>
      *
      * @param configuration container configuration
@@ -60,7 +80,7 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container could not be created.
      */
     String createContainer(ContainerCreateConfig configuration, String containerName) throws DockerAccessException;
-    
+
     /**
      * Start a container.
      *

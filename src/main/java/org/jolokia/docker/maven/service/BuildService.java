@@ -54,7 +54,7 @@ public class BuildService {
         String newImageId = buildImage(imageName, buildConfig, params);
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
-        if (removeOldImage(oldImageId, newImageId)) {
+        if (oldImageShouldBeRemoved(oldImageId, newImageId)) {
             docker.removeImage(oldImageId);
             log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
         }
@@ -82,7 +82,7 @@ public class BuildService {
         return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig);
     }
 
-    private boolean removeOldImage(String oldImageId, String newImageId) {
+    private boolean oldImageShouldBeRemoved(String oldImageId, String newImageId) {
         return oldImageId != null && !oldImageId.equals(newImageId);
     }
 }

@@ -20,6 +20,7 @@ import java.io.File;
 import org.apache.maven.shared.utils.io.DirectoryScanner;
 import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.diags.TrackingArchiver;
+import org.codehaus.plexus.components.io.resources.PlexusIoFileResource;
 
 /**
  * An archiver which remembers all resolved files and directories and returns them
@@ -44,7 +45,9 @@ public class MappingTrackArchiver extends TrackingArchiver {
         for (Addition addition : added) {
             Object resource = addition.resource;
             if (resource instanceof File && addition.destination != null) {
-                ret.addEntry((File) resource,new File(addition.destination));
+                ret.addEntry((File) resource, new File(addition.destination));
+            } else if (resource instanceof PlexusIoFileResource) {
+                ret.addEntry(((PlexusIoFileResource) resource).getFile(),new File(addition.destination));
             } else if (resource instanceof FileSet) {
                 FileSet fs = (FileSet) resource;
                 DirectoryScanner ds = new DirectoryScanner();

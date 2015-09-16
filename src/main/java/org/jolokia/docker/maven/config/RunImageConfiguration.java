@@ -35,7 +35,7 @@ public class RunImageConfiguration {
     /**
      * @parameter
      */
-    private String cmd;
+    private Arguments cmd;
 
     // container domain name
     /**
@@ -47,7 +47,7 @@ public class RunImageConfiguration {
     /**
      * @parameter
      */
-    private String entrypoint;
+    private Arguments entrypoint;
 
     // container hostname
     /**
@@ -125,6 +125,15 @@ public class RunImageConfiguration {
     /** @parameter */
     private NamingStrategy namingStrategy;
 
+    public void validate() {
+        if (entrypoint != null) {
+            entrypoint.validate();
+        }
+        if (cmd != null) {
+            cmd.validate();
+        }
+    }
+
     // Naming scheme for how to name container
     public enum NamingStrategy {
         none,  // No extra naming
@@ -178,7 +187,7 @@ public class RunImageConfiguration {
         return envPropertyFile;
     }
 
-    public String getEntrypoint() {
+    public Arguments getEntrypoint() {
         return entrypoint;
     }
 
@@ -206,7 +215,7 @@ public class RunImageConfiguration {
         return (ports != null) ? ports : Collections.<String>emptyList();
     }
 
-    public String getCmd() {
+    public Arguments getCmd() {
         return cmd;
     }
 
@@ -293,7 +302,7 @@ public class RunImageConfiguration {
         }
 
         public Builder cmd(String cmd) {
-            config.cmd = cmd;
+            config.cmd = new Arguments(cmd);
             return this;
         }
 
@@ -303,7 +312,7 @@ public class RunImageConfiguration {
         }
 
         public Builder entrypoint(String entrypoint) {
-            config.entrypoint = entrypoint;
+            config.entrypoint = new Arguments(entrypoint);
             return this;
         }
 

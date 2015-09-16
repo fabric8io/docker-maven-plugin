@@ -22,6 +22,7 @@ import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.util.*;
 
+
 /**
  * Service class for helping in running containers.
  *
@@ -35,8 +36,8 @@ public class RunService {
 
     // Action to be used when doing a shutdown
     //private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
-    private ContainerTracker tracker;
-    
+    final private ContainerTracker tracker;
+
     // DAO for accessing the docker daemon
     private DockerAccess docker;
 
@@ -47,6 +48,22 @@ public class RunService {
         this.queryService = queryService;
         this.tracker = tracker;
         this.log = log;
+    }
+
+    /**
+     * Create and start a Exec container with the given image configuration.
+     * @param containerId container id to run exec command against
+     *
+     * @return the exec container id
+     *
+     * @throws DockerAccessException if access to the docker backend fails
+     */
+    public String execInContainer(String containerId, String command) throws DockerAccessException {
+        Arguments arguments = new Arguments();
+        arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
+        String execContainerId = docker.createExecContainer(arguments, containerId);
+        docker.startExecContainer(execContainerId);
+        return execContainerId;
     }
 
     /**
@@ -69,11 +86,11 @@ public class RunService {
 
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id);
-        
+
         if (mappedPorts.containsDynamicPorts()) {
             updateMappedPorts(id, mappedPorts);
         }
-        
+
         return id;
     }
 
@@ -88,7 +105,8 @@ public class RunService {
                               String containerId, boolean keepContainer,
                               boolean removeVolumes)
             throws DockerAccessException {
-        new ShutdownAction(image,containerId).shutdown(docker, log, keepContainer, removeVolumes);
+        ContainerTracker.ContainerShutdownDescriptor descriptor = new ContainerTracker.ContainerShutdownDescriptor(image,containerId);
+        shutdown(docker, descriptor, log, keepContainer, removeVolumes);
     }
 
     /**
@@ -104,10 +122,10 @@ public class RunService {
                               boolean removeVolumes)
             throws DockerAccessException {
         synchronized (tracker) {
-            ShutdownAction shutdownAction = tracker.getShutdownAction(containerId);
-            if (shutdownAction != null) {
-                shutdownAction.shutdown(docker, log, keepContainer, removeVolumes);
-                tracker.removeShutdownAction(containerId);
+            ContainerTracker.ContainerShutdownDescriptor descriptor = tracker.getContainerShutdownDescriptor(containerId);
+            if (descriptor != null) {
+                shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+                tracker.removeContainerShutdownDescriptor(containerId);
             }
         }
     }
@@ -123,10 +141,10 @@ public class RunService {
                                       boolean removeVolumes)
             throws DockerAccessException {
         synchronized (tracker) {
-            for (ShutdownAction action : tracker.getAllShutdownActions()) {
-                action.shutdown(docker, log, keepContainer, removeVolumes);
+            for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.getAllContainerShutdownDescriptors()) {
+                shutdown(docker, descriptor, log, keepContainer, removeVolumes);
             }
-            tracker.resetShutdownActions();
+            tracker.resetContainers();
         }
     }
 
@@ -267,14 +285,14 @@ public class RunService {
                 if (id == null) {
                     throw new DockerAccessException("No container found for image/alias '%s', unable to mount volumes", image);
                 }
-                
-                list.add(queryService.getContainerName(id));            
+
+                list.add(queryService.getContainerName(id));
             }
         }
         return list;
     }
 
-    
+
     private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
         if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
             return null;
@@ -288,7 +306,7 @@ public class RunService {
     // checkAllContainers: false = only running containers are considered
     private String findContainerId(String imageNameOrAlias, boolean checkAllContainers) throws DockerAccessException {
         String id = lookupContainer(imageNameOrAlias);
-        
+
         // check for external container. The image name is interpreted as a *container name* for that case ...
         if (id == null) {
             Container container = queryService.getContainerByName(imageNameOrAlias);
@@ -298,15 +316,42 @@ public class RunService {
         }
         return id;
     }
-    
+
     private void startContainer(ImageConfiguration imageConfig, String id) throws DockerAccessException {
         log.info(imageConfig.getDescription() + ": Start container " + id);
         docker.startContainer(id);
-        tracker.registerShutdownAction(id, imageConfig);
+        tracker.registerContainer(id, imageConfig);
     }
-    
+
     private void updateMappedPorts(String containerId, PortMapping mappedPorts) throws DockerAccessException {
         Container container = queryService.getContainer(containerId);
         mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());
+    }
+
+    private void shutdown(DockerAccess access, ContainerTracker.ContainerShutdownDescriptor descriptor,
+                          Logger log, boolean keepContainer, boolean removeVolumes)
+            throws DockerAccessException {
+
+        String containerId = descriptor.getContainerId();
+        if (descriptor.getPreStop() != null) {
+            try {
+                execInContainer(containerId, descriptor.getPreStop());
+            } catch (DockerAccessException e) {
+                log.error(e.getMessage());
+            }
+        }
+        // Stop the container
+        access.stopContainer(containerId);
+        if (!keepContainer) {
+            int shutdownGracePeriod = descriptor.getShutdownGracePeriod();
+            if (shutdownGracePeriod != 0) {
+                log.debug("Shutdown: Wait " + shutdownGracePeriod + " ms before removing container");
+                WaitUtil.sleep(shutdownGracePeriod);
+            }
+            // Remove the container
+            access.removeContainer(containerId, removeVolumes);
+        }
+        log.info(descriptor.getDescription() + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
+                 containerId.substring(0, 12));
     }
 }
