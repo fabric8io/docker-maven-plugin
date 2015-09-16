@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.assembly;
 
+import java.io.File;
 import java.util.Arrays;
 
 import mockit.*;
@@ -81,5 +82,5 @@ public class DockerAssemblyManagerTest {
                                           .build())
                         .build();
 
-        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams);}
+        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, null, new File("."));}
 }
