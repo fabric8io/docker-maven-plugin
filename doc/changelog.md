@@ -9,6 +9,7 @@
   - Add proper error message when docker host URL is malformed (#277)
   - If no wait condition is given in wait continue immediately (#276)
   - Add logic to specify exec commands during postStart and preStop (#272)
+  - Fixed docker:watch bug when watching on plain files 
   
 * **0.13.3**
   - Allow dangling images to be cleaned up after build ([#20](https://github.com/rhuss/docker-maven-plugin/issues/20))

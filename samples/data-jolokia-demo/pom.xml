@@ -321,6 +321,12 @@
                             <outputFileNameMapping>jolokia-it.war</outputFileNameMapping>
                           </dependencySet>
                         </dependencySets>
+                        <files>
+                          <file>
+                            <source>${project.build.directory}/maven-archiver/pom.properties</source>
+                            <outputDirectory>/</outputDirectory>
+                          </file>
+                        </files>
                       </inline>
                     </assembly>
                   </build>
