@@ -1,14 +1,14 @@
 # ChangeLog
 
 * **0.13.4**
-  - Support explicit exec arguments for `start.cmd` and `start.entrypoint`. (#253) 
-  - Fix processing of split chunked JSON responses (#259)
-  - Fix for default registry handling. Again and again. (#261)
-  - Allow `runCmds` to be compressed into a single command with the build config option `optimise`. (#263)
-  - Proper error message when default timeout is hit while waiting (#274)
-  - Add proper error message when docker host URL is malformed (#277)
-  - If no wait condition is given in wait continue immediately (#276)
-  - Add logic to specify exec commands during postStart and preStop (#272)
+  - Support explicit exec arguments for `start.cmd` and `start.entrypoint`. ([#253](https://github.com/rhuss/docker-maven-plugin/issues/253)) 
+  - Fix processing of split chunked JSON responses ([#259](https://github.com/rhuss/docker-maven-plugin/issues/259))
+  - Fix for default registry handling. Again and again. ([#261](https://github.com/rhuss/docker-maven-plugin/issues/261))
+  - Allow `runCmds` to be compressed into a single command with the build config option `optimise`. ([#263](https://github.com/rhuss/docker-maven-plugin/issues/263))
+  - Proper error message when default timeout is hit while waiting ([#274](https://github.com/rhuss/docker-maven-plugin/issues/274))
+  - Add proper error message when docker host URL is malformed ([#277](https://github.com/rhuss/docker-maven-plugin/issues/277))
+  - If no wait condition is given in wait continue immediately ([#276](https://github.com/rhuss/docker-maven-plugin/issues/276))
+  - Add logic to specify exec commands during postStart and preStop ([#272](https://github.com/rhuss/docker-maven-plugin/issues/272))
   - Fixed docker:watch bug when watching on plain files 
   
 * **0.13.3**
