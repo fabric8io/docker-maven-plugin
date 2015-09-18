@@ -1,19 +1,6 @@
 package org.jolokia.docker.maven;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusConstants;
@@ -21,23 +8,20 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
-import org.jolokia.docker.maven.access.AuthConfig;
-import org.jolokia.docker.maven.access.DockerAccess;
-import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
-import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.config.LogConfiguration;
-import org.jolokia.docker.maven.config.RunImageConfiguration;
+import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
 import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.ServiceHub;
-import org.jolokia.docker.maven.util.AnsiLogger;
-import org.jolokia.docker.maven.util.AuthConfigFactory;
-import org.jolokia.docker.maven.util.EnvUtil;
-import org.jolokia.docker.maven.util.ImageName;
-import org.jolokia.docker.maven.util.Logger;
+import org.jolokia.docker.maven.util.*;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
 
 /**
  * Base class for this plugin.
@@ -183,8 +167,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private void validateConfiguration(Logger log) {
-        for (ImageConfiguration imageConfiguration : images) {
-            imageConfiguration.validate(log);
+        if (images != null) {
+            for (ImageConfiguration imageConfiguration : images) {
+                imageConfiguration.validate(log);
+            }
         }
     }
 
