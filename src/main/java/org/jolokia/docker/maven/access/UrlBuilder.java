@@ -98,8 +98,9 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String stopContainer(String containerId) {
+    public String stopContainer(String containerId, int waitBeforeKillPeriod) {
         return u("containers/%s/stop", containerId)
+                .p("t", waitBeforeKillPeriod)
                 .build();
     }
 

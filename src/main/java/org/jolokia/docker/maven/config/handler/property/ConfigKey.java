@@ -48,6 +48,7 @@ public enum ConfigKey {
     EXTRA_HOSTS,
     FROM,
     HOSTNAME,
+    KILL_AFTER("wait.killafter"),
     LINKS,
     MEMORY,
     MEMORY_SWAP,

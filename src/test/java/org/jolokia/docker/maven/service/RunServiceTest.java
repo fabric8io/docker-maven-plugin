@@ -95,34 +95,64 @@ public class RunServiceTest {
 
     private String container = "testContainer";
     private int SHUTDOWN_WAIT = 500;
+    private int KILL_AFTER = 1;
 
     @Test
     public void shutdownWithoutKeepingContainers() throws Exception {
         new Expectations() {{
-            docker.stopContainer(container);
+            docker.stopContainer(container, 0);
             log.debug(anyString); minTimes = 1;
             docker.removeContainer(container, false);
             log.info(with(getLogArgCheck(container, true)));
         }};
 
         long start = System.currentTimeMillis();
-        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT), container, false, false);
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT, 0), container, false, false);
         assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
-                   System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
+                System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
     }
 
+    @Test
+    public void killafterAndShutdownWithoutKeepingContainers() throws Exception {
+        new Expectations() {{
+            docker.stopContainer(container, KILL_AFTER);
+            log.debug(anyString); minTimes = 1;
+            docker.removeContainer(container, false);
+            log.info(with(getLogArgCheck(container, true)));
+        }};
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT, KILL_AFTER), container, false, false);
+        assertTrue("Waited for at least " + (SHUTDOWN_WAIT + KILL_AFTER * 1000) + " ms",
+                System.currentTimeMillis() - start >= SHUTDOWN_WAIT + KILL_AFTER * 1000);
+    }
+
+    @Test
+    public void killafterWithoutKeepingContainers() throws Exception {
+        new Expectations() {{
+            docker.stopContainer(container, KILL_AFTER);
+            log.debug(anyString); minTimes = 1;
+            docker.removeContainer(container, false);
+            log.info(with(getLogArgCheck(container, true)));
+        }};
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(0, KILL_AFTER), container, false, false);
+        assertTrue("Waited for at least " + (KILL_AFTER * 1000) + " ms",
+                   System.currentTimeMillis() - start >= KILL_AFTER * 1000);
+    }
 
     @Test
     public void shutdownWithoutKeepingContainersAndRemovingVolumes() throws Exception {
         new Expectations() {{
-            docker.stopContainer(container);
+            docker.stopContainer(container, 0);
             log.debug(anyString); minTimes = 1;
             docker.removeContainer(container, true);
             log.info(with(getLogArgCheck(container, true)));
         }};
 
         long start = System.currentTimeMillis();
-        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT),container,false,true);
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT, 0),container,false,true);
         assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
                    System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
     }
@@ -130,11 +160,11 @@ public class RunServiceTest {
     @Test
     public void shutdownWithKeepingContainer() throws Exception {
         new Expectations() {{
-            docker.stopContainer(container);
+            docker.stopContainer(container, 0);
             log.info(with(getLogArgCheck(container, false)));
         }};
         long start = System.currentTimeMillis();
-        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT),container,true,false);
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT, 0),container,true,false);
         assertTrue("No wait",
                    System.currentTimeMillis() - start < SHUTDOWN_WAIT);
 
@@ -146,7 +176,7 @@ public class RunServiceTest {
         new Expectations() {{
             docker.createExecContainer((Arguments) withNotNull(), container); result = "execContainerId";
             docker.startExecContainer("execContainerId");
-            docker.stopContainer(container);
+            docker.stopContainer(container, 0);
             log.info(with(getLogArgCheck(container, false)));
         }};
         long start = System.currentTimeMillis();
@@ -158,14 +188,14 @@ public class RunServiceTest {
     @Test
     public void testWithoutWait() throws Exception {
         new Expectations() {{
-            docker.stopContainer(container);
+            docker.stopContainer(container, 0);
             log.debug(anyString); times = 0;
             docker.removeContainer(container, false);
             log.info(with(getLogArgCheck(container, true)));
         }};
 
         long start = System.currentTimeMillis();
-        runService.stopContainer(createImageConfig(0), container, false, false);
+        runService.stopContainer(createImageConfig(0, 0), container, false, false);
         assertTrue("No wait", System.currentTimeMillis() - start < SHUTDOWN_WAIT);
     }
 
@@ -173,10 +203,10 @@ public class RunServiceTest {
     public void testWithException() throws Exception {
 
         new Expectations() {{
-            docker.stopContainer(container); result = new DockerAccessException("Test");
+            docker.stopContainer(container, 0); result = new DockerAccessException("Test");
         }};
 
-        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT),container,false,false);
+        runService.stopContainer(createImageConfig(SHUTDOWN_WAIT, 0),container,false,false);
     }
 
     private Delegate<String> getLogArgCheck(final String container, final boolean withRemove) {
@@ -190,13 +220,14 @@ public class RunServiceTest {
         };
     }
 
-    private ImageConfiguration createImageConfig(int wait) {
+    private ImageConfiguration createImageConfig(int wait, int killafter) {
         return new ImageConfiguration.Builder()
                 .name("testName")
                 .alias("testAlias")
                 .runConfig(new RunImageConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()
                                                  .shutdown(wait)
+                                                 .killafter(killafter)
                                                  .build())
                                    .build())
                 .build();

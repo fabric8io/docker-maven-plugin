@@ -341,7 +341,12 @@ public class RunService {
             }
         }
         // Stop the container
-        access.stopContainer(containerId);
+        int killAfterStopPeriod = descriptor.getKillAfterStopPeriod();
+        access.stopContainer(containerId, killAfterStopPeriod);
+        if (killAfterStopPeriod > 0) {
+            log.debug("Shutdown: Wait " + killAfterStopPeriod + " s after stopping and before killing container");
+            WaitUtil.sleep(killAfterStopPeriod * 1000);
+        }
         if (!keepContainer) {
             int shutdownGracePeriod = descriptor.getShutdownGracePeriod();
             if (shutdownGracePeriod != 0) {

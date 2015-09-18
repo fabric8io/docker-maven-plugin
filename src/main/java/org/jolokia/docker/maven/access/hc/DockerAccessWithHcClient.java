@@ -160,9 +160,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void stopContainer(String containerId) throws DockerAccessException {
+    public void stopContainer(String containerId, int killAfterStopPeriod) throws DockerAccessException {
         try {
-            String url = urlBuilder.stopContainer(containerId);
+            String url = urlBuilder.stopContainer(containerId, killAfterStopPeriod);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException e) {
             log.error(e.getMessage());

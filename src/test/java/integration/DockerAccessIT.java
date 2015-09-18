@@ -132,7 +132,7 @@ public class DockerAccessIT {
     }
 
     private void testStopContainer() throws DockerAccessException {
-        dockerClient.stopContainer(containerId);
+        dockerClient.stopContainer(containerId, 0);
         assertFalse(dockerClient.inspectContainer(containerId).isRunning());
     }
 
