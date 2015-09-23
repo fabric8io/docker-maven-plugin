@@ -6,9 +6,9 @@ This is a Maven plugin for managing Docker images and containers for your builds
 
 | Goal                                          | Description                           |
 | --------------------------------------------- | ------------------------------------- |
+| [`docker:build`](docker-build.md)   | Build images                          |
 | [`docker:start`](docker-start.md)   | Create and start containers           |
 | [`docker:stop`](docker-stop.md)     | Stop and destroy containers           |
-| [`docker:build`](docker-build.md)   | Build images                          |
 | [`docker:watch`](docker-watch.md)   | Watch for doing rebuilds and restarts |
 | [`docker:push`](docker-push.md)     | Push images to a registry             |
 | [`docker:remove`](docker-remove.md) | Remove images from local docker host  |
