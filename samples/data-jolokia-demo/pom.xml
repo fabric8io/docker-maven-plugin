@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.13.4</version>
+  <version>0.13.5-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 

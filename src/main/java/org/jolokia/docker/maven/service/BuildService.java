@@ -2,7 +2,6 @@ package org.jolokia.docker.maven.service;
 
 import java.io.File;
 
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
@@ -10,7 +9,6 @@ import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
-import org.jolokia.docker.maven.assembly.BuildDirs;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -62,14 +60,12 @@ public class BuildService {
         }
     }
 
-    public AssemblyFiles getAssemblyFiles(String name, ImageConfiguration imageConfig, MojoParameters mojoParameters, ArtifactRepository localRepository)
+    public AssemblyFiles getAssemblyFiles(ImageConfiguration imageConfig, MojoParameters mojoParameters)
         throws MojoExecutionException {
 
+        String name = imageConfig.getName();
         try {
-            BuildDirs buildDirs = new BuildDirs(mojoParameters, imageConfig.getName());
-            File outputDirectory = new File(buildDirs.getOutputDirectory(), "maven");
-
-            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters, localRepository, outputDirectory);
+            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters, log);
         } catch (InvalidAssemblerConfigurationException | ArchiveCreationException | AssemblyFormattingException e) {
             throw new MojoExecutionException("Cannot extract assembly files for image " + name + ": " + e, e);
         }

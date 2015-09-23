@@ -15,21 +15,18 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
-import org.jolokia.docker.maven.assembly.BuildDirs;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
@@ -73,15 +70,6 @@ public class WatchMojo extends AbstractBuildSupportMojo {
      * @parameter property = "docker.watchPostGoal"
      */
     private String watchPostGoal;
-
-    /**
-     * The local repository
-     * @parameter expression="${localRepository}"
-     * @required
-     * @readonly
-     */
-    private ArtifactRepository localRepository;
-
 
     // Scheduler
     private ScheduledExecutorService executor;
@@ -149,9 +137,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                                           final MojoParameters mojoParameters, final boolean doRestart)
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final String name = imageConfig.getName();
 
-        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(name, imageConfig, mojoParameters, localRepository);
+        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(imageConfig, mojoParameters);
         return new Runnable() {
             @Override
             public void run() {
@@ -166,13 +153,11 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                     try {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
 
-                        for (AssemblyFiles.Entry entry : entries) {
-                            log.info("Copying from:"+entry.getSrcFile()+", to:"+entry.getDestFile());
-                            FileUtils.copyFile(entry.getSrcFile(), entry.getDestFile());
-                        }
-
+                        // TODO: Add an option to copy over single files into the container to known locations
+                        // with maybe a post command.
                         buildImage(docker, imageConfig);
 
+                        String name = imageConfig.getName();
                         watcher.setImageId(serviceHub.getQueryService().getImageId(name));
                         if (doRestart) {
                             restartContainer(watcher);

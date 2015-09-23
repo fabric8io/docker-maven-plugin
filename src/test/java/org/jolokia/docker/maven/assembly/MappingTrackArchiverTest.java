@@ -18,7 +18,13 @@ package org.jolokia.docker.maven.assembly;/*
 import java.io.File;
 import java.util.List;
 
+import mockit.Injectable;
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.codehaus.plexus.util.ReflectionUtils;
+import org.jolokia.docker.maven.util.AnsiLogger;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -29,10 +35,20 @@ import static org.junit.Assert.*;
  */
 public class MappingTrackArchiverTest {
 
+    @Injectable
+    private MavenSession session;
+
+    private MappingTrackArchiver archiver;
+
+    @Before
+    public void setup() throws IllegalAccessException {
+        archiver = new MappingTrackArchiver();
+        ReflectionUtils.setVariableValueInObject(archiver,"session",session);
+        archiver.init(new AnsiLogger(new SystemStreamLog(),false,false));
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void noDirectory() throws Exception {
-        MappingTrackArchiver archiver = new MappingTrackArchiver();
         archiver.setDestFile(new File("."));
         archiver.addDirectory(new File(System.getProperty("user.home")), "tmp");
         AssemblyFiles files = archiver.getAssemblyFiles();
@@ -40,7 +56,6 @@ public class MappingTrackArchiverTest {
 
     @Test
     public void simple() throws Exception {
-        MappingTrackArchiver archiver = new MappingTrackArchiver();
         archiver.setDestFile(new File("target/test-data/maven.tracker"));
         new File(archiver.getDestFile(), "maven").mkdirs();
 
@@ -56,9 +71,9 @@ public class MappingTrackArchiverTest {
         Thread.sleep(1000);
         FileUtils.touch(tempFile);
         entries = files.getUpdatedEntriesAndRefresh();
-        assertEquals(1,entries.size());
+        assertEquals(1, entries.size());
         AssemblyFiles.Entry entry = entries.get(0);
-        assertEquals(tempFile,entry.getSrcFile());
+        assertEquals(tempFile, entry.getSrcFile());
         assertEquals(destination, entry.getDestFile());
     }
 }

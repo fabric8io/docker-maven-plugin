@@ -18,37 +18,35 @@ package org.jolokia.docker.maven.assembly;/*
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.artifact.InvalidArtifactRTException;
-import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.*;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.model.Repository;
-import org.apache.maven.project.MavenProject;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.shared.utils.io.DirectoryScanner;
 import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.diags.TrackingArchiver;
 import org.codehaus.plexus.components.io.resources.PlexusIoFileResource;
+import org.jolokia.docker.maven.util.Logger;
 
 /**
  * An archiver which remembers all resolved files and directories and returns them
- * on request
+ * on request.
  *
  * @author roland
  * @since 15/06/15
  */
 public class MappingTrackArchiver extends TrackingArchiver {
 
-    private ArtifactRepository localRepository;
+    /** @component **/
+    protected MavenSession session;
 
-    public void clear() {
-        added.clear();
-    }
+    // Logger to use
+    protected Logger log;
 
     /**
      * Get all files depicted by this assembly.
@@ -57,19 +55,15 @@ public class MappingTrackArchiver extends TrackingArchiver {
      */
     public AssemblyFiles getAssemblyFiles() {
         AssemblyFiles ret = new AssemblyFiles();
-        File destFile = getDestFile();
-        destFile = new File(destFile.getParentFile(), "maven");
+        // Where the 'real' files are copied to
+        File assemblyDirectory = new File(getDestFile().getParentFile(), DockerAssemblyManager.ASSEMBLY_NAME);
         for (Addition addition : added) {
             Object resource = addition.resource;
-            File target = new File(destFile, addition.destination);
+            File target = new File(assemblyDirectory, addition.destination);
             if (resource instanceof File && addition.destination != null) {
-                File source = (File) resource;
-                ret.addEntry(source, target);
-                addLocalMavenRepoWatch(ret, source, target);
+                addFileEntry(ret, (File) resource, target);
             } else if (resource instanceof PlexusIoFileResource) {
-                File source = ((PlexusIoFileResource) resource).getFile();
-                ret.addEntry(source, target);
-                addLocalMavenRepoWatch(ret, source, target);
+                addFileEntry(ret, ((PlexusIoFileResource) resource).getFile(), target);
             } else if (resource instanceof FileSet) {
                 FileSet fs = (FileSet) resource;
                 DirectoryScanner ds = new DirectoryScanner();
@@ -77,14 +71,12 @@ public class MappingTrackArchiver extends TrackingArchiver {
                 ds.setBasedir(base);
                 ds.setIncludes(fs.getIncludes());
                 ds.setExcludes(fs.getExcludes());
-                ;
                 ds.setCaseSensitive(fs.isCaseSensitive());
                 ds.scan();
                 for (String f : ds.getIncludedFiles()) {
                     File source = new File(base, f);
                     File subTarget = new File(target, f);
-                    ret.addEntry(source, subTarget);
-                    addLocalMavenRepoWatch(ret, source, target);
+                    addFileEntry(ret, source, subTarget);
                 }
             } else {
                 throw new IllegalStateException("Unknown resource type " + resource.getClass() + ": " + resource);
@@ -93,95 +85,97 @@ public class MappingTrackArchiver extends TrackingArchiver {
         return ret;
     }
 
-    private void addLocalMavenRepoWatch(AssemblyFiles ret, File source, File target) {
+    private void addFileEntry(AssemblyFiles ret, File source, File target) {
+        ret.addEntry(source, target);
+        addLocalMavenRepoEntry(ret, source, target);
+    }
+
+    private void addLocalMavenRepoEntry(AssemblyFiles ret, File source, File target) {
+        File localMavenRepoFile = getLocalMavenRepoFile(source);
         try {
-            File localMavenRepoFile = getlocalMavenRepoFile(source);
-            if (localMavenRepoFile!=null && !source.getCanonicalFile().equals(localMavenRepoFile.getCanonicalFile())) {
+            if (localMavenRepoFile != null &&
+                ! source.getCanonicalFile().equals(localMavenRepoFile.getCanonicalFile())) {
                 ret.addEntry(localMavenRepoFile, target);
             }
         } catch (IOException e) {
-            // Looks like we could not figure out if that file had a local mvn repo version.
+            log.warn("Cannot add " + localMavenRepoFile + " for watching: " + e + ". Ignoring for watch ...");
         }
     }
 
-    private File getlocalMavenRepoFile(File source) {
-
-        if (localRepository == null) {
+    private File getLocalMavenRepoFile(File source) {
+        ArtifactRepository localRepo = session.getLocalRepository();
+        if (localRepo == null) {
+            log.warn("No local repo found so not adding any extra watches in the local repository");
             return null;
         }
 
+        Artifact artifact = getArtifactFromJar(source);
+        if (artifact != null) {
+            try {
+                return new File(localRepo.getBasedir(), localRepo.pathOf(artifact));
+            } catch (InvalidArtifactRTException e) {
+                log.warn("Cannot get the local repository path for " + artifact + " in base dir " + localRepo.getBasedir() + ": " + e);
+            }
+        }
+        return null;
+    }
+
+    // look into a jar file and check for pom.properties. The first pom.properties found are returned.
+    private Artifact getArtifactFromJar(File jar) {
         // Lets figure the real mvn source of file.
-        String type = null;
-        if (source.getName().endsWith(".jar")) {
-            type = "jar";
-        }
-        if (source.getName().endsWith(".war")) {
-            type = "war";
-        }
+        String type = extractFileType(jar);
         if (type != null) {
-            Properties pomPropertiesFromJar = getPomPropertiesFromJar(source);
-            if (pomPropertiesFromJar != null) {
-                try {
-                    DefaultArtifact a = new DefaultArtifact(
-                            pomPropertiesFromJar.getProperty("groupId"),
-                            pomPropertiesFromJar.getProperty("artifactId"),
-                            pomPropertiesFromJar.getProperty("version"),
-                            "runtime",
-                            type,
-                            pomPropertiesFromJar.getProperty("classifier", ""),
-                            new DefaultArtifactHandler(type)
-                    );
-                    File file = new File(localRepository.getBasedir(), localRepository.pathOf(a));
-                    if( file !=null ) {
-                        if( isSame(file, source) ) {
-                            return file;
+            try {
+                ArrayList<Properties> options = new ArrayList<Properties>();
+                try (ZipInputStream in = new ZipInputStream(new FileInputStream(jar))) {
+                    ZipEntry entry;
+                    while ((entry = in.getNextEntry()) != null) {
+                        if (entry.getName().startsWith("META-INF/maven/") && entry.getName().endsWith("pom.properties")) {
+                            byte[] buf = new byte[1024];
+                            int len;
+                            ByteArrayOutputStream out = new ByteArrayOutputStream(); //change ouptut stream as required
+                            while ((len = in.read(buf)) > 0) {
+                                out.write(buf, 0, len);
+                            }
+                            Properties properties = new Properties();
+                            properties.load(new ByteArrayInputStream(out.toByteArray()));
+                            options.add(properties);
                         }
                     }
-                } catch (InvalidArtifactRTException e) {
-                    return null;
                 }
+                if (options.size() == 1) {
+                    return getArtifactFromPomProperties(type,options.get(0));
+                } else {
+                    log.warn("Found " + options.size() + " pom.properties in " + jar);
+                }
+            } catch (IOException e) {
+                log.warn("IO Exception while examing " + jar + " for maven coordinates: " + e + ". Ignoring for watching ...");
             }
         }
         return null;
     }
 
-    private boolean isSame(File file, File source) {
-        return true;
+    // type when it is a Java archive, null otherwise
+    private final static Pattern JAVA_ARCHIVE_DETECTOR = Pattern.compile("^.*\\.(jar|war|ear)$");
+    private String extractFileType(File source) {
+        Matcher matcher = JAVA_ARCHIVE_DETECTOR.matcher(source.getName());
+        return matcher.matches() ? matcher.group(1) : null;
     }
 
-    private Properties getPomPropertiesFromJar(File jar) {
-        try {
-            ArrayList<Properties> options = new ArrayList<Properties>();
-            try (ZipInputStream in = new ZipInputStream(new FileInputStream(jar))) {
-                ZipEntry entry;
-                while ((entry = in.getNextEntry()) != null) {
-                    if (entry.getName().startsWith("META-INF/maven/") && entry.getName().endsWith("pom.properties")) {
-                        byte[] buf = new byte[1024];
-                        int len;
-                        ByteArrayOutputStream out = new ByteArrayOutputStream(); //change ouptut stream as required
-                        while ((len = in.read(buf)) > 0) {
-                            out.write(buf, 0, len);
-                        }
-                        Properties properties = new Properties();
-                        properties.load(new ByteArrayInputStream(out.toByteArray()));
-                        options.add(properties);
-                    }
-                }
-            }
-            if (options.size() == 1) {
-                return options.get(0);
-            }
-        } catch (IOException e) {
-        }
-        return null;
+    private Artifact getArtifactFromPomProperties(String type, Properties pomProps) {
+        return new DefaultArtifact(
+                pomProps.getProperty("groupId"),
+                pomProps.getProperty("artifactId"),
+                pomProps.getProperty("version"),
+                "runtime",
+                type,
+                pomProps.getProperty("classifier", ""),
+                new DefaultArtifactHandler(type)
+        );
     }
 
-    public ArtifactRepository getLocalRepository() {
-        return localRepository;
+    public void init(Logger log) {
+        this.log = log;
+        added.clear();
     }
-
-    public void setLocalRepository(ArtifactRepository localRepository) {
-        this.localRepository = localRepository;
-    }
-
 }
