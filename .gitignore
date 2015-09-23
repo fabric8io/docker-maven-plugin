@@ -1,4 +1,4 @@
 .idea
 doc/
-tmp/
+temp/
 *.iml
