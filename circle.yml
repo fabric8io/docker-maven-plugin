@@ -1,0 +1,22 @@
+machine:
+  node:
+    version: 0.12.0
+
+branches:
+  only:
+    - master
+
+general:
+  branches:
+    ignore:
+      - 'gh-pages'
+
+deployment:
+  website:
+    branch: master
+    owner: rhuss
+    commands:
+      - git config --global user.email "circleci@mail.com"
+      - git config --global user.name "CircleCI"
+      - ./doc/manual/ci-docs.sh
+
