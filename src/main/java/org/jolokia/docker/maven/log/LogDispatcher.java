@@ -32,89 +32,63 @@ import org.jolokia.docker.maven.util.Timestamp;
 public class LogDispatcher {
 
     private final boolean withColor;
+    private final boolean logStdout;
     private Map<String,ContainerLogOutputSpec> outputSpecs;
     private Map<String,LogGetHandle> logHandles;
 
-    private HashMap<String, PrintStream> printStreamsMap;
-
     private DockerAccess dockerAccess;
 
-    public LogDispatcher(DockerAccess dockerAccess,boolean withColor) {
+    public LogDispatcher(DockerAccess dockerAccess, boolean withColor, boolean logStdout) {
         this.dockerAccess = dockerAccess;
         this.withColor = withColor;
+        this.logStdout = logStdout;
         outputSpecs = new HashMap<>();
-        printStreamsMap = new HashMap<String, PrintStream>();
         logHandles = new HashMap<>();
     }
 
-    public void addLogOutputStreams(String id, ContainerLogOutputSpec spec){
-        String logFile = spec.getFile();
-        try {
-            if (logFile == null) {
-                printStreamsMap.put(id, System.out);
-            } else {
-                printStreamsMap.put(id, new PrintStream(new FileOutputStream(logFile), true));
-            }
-        }catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public synchronized void trackContainerLog(String id, ContainerLogOutputSpec spec) {
-        addLogOutputStreams(id, spec);
+    public synchronized void trackContainerLog(String id, ContainerLogOutputSpec spec) throws FileNotFoundException {
         outputSpecs.put(id, spec);
-
-        LogGetHandle handle = dockerAccess.getLogAsync(id, createLogCallBack(id));
+        LogGetHandle handle = dockerAccess.getLogAsync(id, createLogCallBack(id, spec.getFile()));
         logHandles.put(id, handle);
     }
 
-    public synchronized void fetchContainerLog(String id, ContainerLogOutputSpec spec) {
-        addLogOutputStreams(id, spec);
+    public synchronized void fetchContainerLog(String id, ContainerLogOutputSpec spec) throws FileNotFoundException {
         outputSpecs.put(id, spec);
-        dockerAccess.getLogSync(id,createLogCallBack(id));
+        dockerAccess.getLogSync(id,createLogCallBack(id,spec.getFile()));
     }
 
-    private LogCallback createLogCallBack(final String id) {
+    // =======================================================================================
+
+    private PrintStream getPrintStream(String file) throws FileNotFoundException {
+        return !logStdout && file != null ? new PrintStream(new FileOutputStream(file), true) : System.out;
+    }
+
+    private LogCallback createLogCallBack(final String id, final String file) throws FileNotFoundException {
+        final PrintStream ps = getPrintStream(file);
         return new LogCallback() {
             @Override
             public void log(int type, Timestamp timestamp, String txt) {
-                addLogEntry(new LogEntry(id, type, timestamp, txt));
+                addLogEntry(ps, new LogEntry(id, type, timestamp, txt, withColor && (file == null || logStdout)));
             }
 
             @Override
             public void error(String error) {
-                printError(id, error);
+                ps.println(error);
             }
         };
     }
 
-    private void addLogEntry(LogEntry logEntry) {
+    private void addLogEntry(PrintStream ps, LogEntry logEntry) {
         // TODO: Add the entry to a queue, and let the queue be picked up with a small delay from an extra
         // thread which then can sort the entries by time before printing it out in order to avoid race conditions.
 
-        ContainerLogOutputSpec spec = outputSpecs.get(logEntry.getContainerId());
+        String id = logEntry.getContainerId();
+        ContainerLogOutputSpec spec = outputSpecs.get(id);
         if (spec == null) {
             spec = ContainerLogOutputSpec.DEFAULT;
         }
 
-        // FIX me according to spec
-        print(spec.getContainerId(), spec.getPrompt(withColor,logEntry.getTimestamp()) + logEntry.getText());
-    }
-
-    private void printError(String id, String e) {
-        for (String containerId : printStreamsMap.keySet() ){
-            if (containerId == id){
-                printStreamsMap.get(id).println(e);
-            }
-        }
-    }
-
-    private void print(String id, String line) {
-        for (String containerId : printStreamsMap.keySet() ){
-            if (containerId == id) {
-                printStreamsMap.get(id).println(line);
-            }
-        }
+        ps.println(spec.getPrompt(logEntry.isWithColor(),logEntry.getTimestamp()) + logEntry.getText());
     }
 
     public synchronized void untrackAllContainerLogs() {
@@ -132,11 +106,14 @@ public class LogDispatcher {
         private final Timestamp timestamp;
         private final String text;
 
-        public LogEntry(String containerId, int type, Timestamp timestamp, String text) {
+        private final boolean withColor;
+
+        public LogEntry(String containerId, int type, Timestamp timestamp, String text, boolean withColor) {
             this.containerId = containerId;
             this.type = type;
             this.timestamp = timestamp;
             this.text = text;
+            this.withColor = withColor;
         }
 
         public String getContainerId() {
@@ -153,6 +130,10 @@ public class LogDispatcher {
 
         public String getText() {
             return text;
+        }
+
+        public boolean isWithColor() {
+            return withColor;
         }
 
         @Override

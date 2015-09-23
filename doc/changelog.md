@@ -3,6 +3,7 @@
 * **0.13.5**
   - Improvements for `docker:watch` (#288)
   - Add parameter `kill` to `<watch>` configuration for waiting before sending SIGKILL when stopping containers (#293)
+  - Add `file` for `<log>` to store the logout put in a file. Use `docker.logStdout` to show logs nevertheless to stdout (#287)
   
 * **0.13.4**
   - Support explicit exec arguments for `start.cmd` and `start.entrypoint`. ([#253](https://github.com/rhuss/docker-maven-plugin/issues/253)) 

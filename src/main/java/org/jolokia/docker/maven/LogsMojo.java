@@ -1,9 +1,12 @@
 package org.jolokia.docker.maven;
 
+import java.io.FileNotFoundException;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.service.QueryService;
@@ -57,11 +60,16 @@ public class LogsMojo extends AbstractDockerMojo {
         }
     }
 
-    private void doLogging(LogDispatcher logDispatcher, ImageConfiguration image, String container) {
-        if (follow) {
-            logDispatcher.trackContainerLog(container, getContainerLogSpec(container, image));
-        } else {
-            logDispatcher.fetchContainerLog(container, getContainerLogSpec(container, image));
+    private void doLogging(LogDispatcher logDispatcher, ImageConfiguration image, String container) throws MojoExecutionException {
+        ContainerLogOutputSpec spec = getContainerLogSpec(container, image);
+        try {
+            if (follow) {
+                logDispatcher.trackContainerLog(container, spec);
+            } else {
+                logDispatcher.fetchContainerLog(container, spec);
+            }
+        } catch (FileNotFoundException e) {
+            throw new MojoExecutionException("Can not log to file " + spec.getFile());
         }
     }
 

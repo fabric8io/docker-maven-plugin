@@ -115,6 +115,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.logDate" */
     private String logDate;
 
+    // Log to stdout regardless if log files are configured or not
+    /** @parameter property = "docker.logStdout" default-value = "false" */
+    private boolean logStdout;
+
     // Whether to skip docker altogether
     /** @parameter property = "docker.skip" default-value = "false" */
     private boolean skip;
@@ -297,7 +301,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected LogDispatcher getLogDispatcher(DockerAccess docker) {
         LogDispatcher dispatcher = (LogDispatcher) getPluginContext().get(CONTEXT_KEY_LOG_DISPATCHER);
         if (dispatcher == null) {
-            dispatcher = new LogDispatcher(docker, useColor);
+            dispatcher = new LogDispatcher(docker, useColor, logStdout);
             getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
@@ -309,10 +313,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
         addLogFormat(builder, logConfig);
         addPrefix(builder, logConfig.getPrefix(), imageConfiguration.getAlias(), containerId);
-        addLogFile(builder, logConfig.getFileLocation());
-
-        builder.containerId(containerId)
-                .color(logConfig.getColor());
+        builder.file(logConfig.getFileLocation())
+               .containerId(containerId)
+               .color(logConfig.getColor());
 
         return builder.build();
     }
@@ -336,11 +339,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         if (logFormat != null) {
             builder.timeFormatter(logFormat);
         }
-    }
-
-    private void addLogFile(ContainerLogOutputSpec.Builder builder, String logFile) {
-        String file = logFile;
-        builder.file(file);
     }
 
     private LogConfiguration extractLogConfiguration(ImageConfiguration imageConfiguration) {
