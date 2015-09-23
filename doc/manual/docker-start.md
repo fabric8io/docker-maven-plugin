@@ -68,7 +68,7 @@ The `<run>` configuration knows the following sub elements:
 
 Example:
 
-````xml
+```xml
 <run>
   <env>
     <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
@@ -97,7 +97,7 @@ Example:
   </log>
   <cmd>java -jar /maven/docker-demo.jar</cmd>
 </run>
-````
+```
 
 ##### Setting environment variables and labels
 
