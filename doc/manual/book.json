@@ -17,7 +17,7 @@
     }
   },
 
-    "plugins": ["edit-link", "anchors", "highlight" ],
+    "plugins": ["edit-link", "anchors" ],
     "pluginsConfig": {
         "edit-link": {
             "base": "https://github.com/rhuss/docker-maven-plugin/edit/master/docs",
