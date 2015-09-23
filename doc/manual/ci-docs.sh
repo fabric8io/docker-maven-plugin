@@ -14,5 +14,5 @@ git add * && \
 git commit -m "generated documentation" && \
 git push origin gh-pages && \
 cd .. && \
-rm -rf gh-pages
+rm -r gh-pages _book node-modules
        
