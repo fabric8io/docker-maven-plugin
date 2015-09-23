@@ -1,7 +1,8 @@
 # docker-maven-plugin
 
 [![endorse](http://api.coderwall.com/rhuss/endorsecount.png)](http://coderwall.com/rhuss)
-[![Build Status](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
+[![Travis](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
+[![Circle CI](https://circleci.com/gh/rhuss/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/rhuss/docker-maven-plugin/tree/integration)
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](http://flattr.com/thing/73919/Jolokia-JMX-on-Capsaicin)
 
 This is a Maven plugin for managing Docker images and containers for your builds.
