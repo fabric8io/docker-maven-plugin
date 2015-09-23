@@ -37,14 +37,20 @@ public class WaitConfiguration {
      */
     private int shutdown;
 
+    /**
+     * @parameter
+     */
+    private int killafter;
+
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, String log, int shutdown) {
+    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, String log, int shutdown, int killafter) {
         this.time = time;
         this.exec = exec;
         this.http = http;
         this.log = log;
         this.shutdown = shutdown;
+        this.killafter = killafter;
     }
 
     public int getTime() {
@@ -71,10 +77,14 @@ public class WaitConfiguration {
         return shutdown;
     }
 
+    public int getKillafter() {
+        return killafter;
+    }
+
     // =============================================================================
 
     public static class Builder {
-        private int time = 0,shutdown = 0;
+        private int time = 0,shutdown = 0,killafter = 0;
         private String url,log,status;
         private String method;
         private String preStop;
@@ -110,8 +120,13 @@ public class WaitConfiguration {
             return this;
         }
 
+        public Builder killafter(int killafter) {
+            this.killafter = killafter;
+            return this;
+        }
+
         public WaitConfiguration build() {
-            return new WaitConfiguration(time, new ExecConfiguration(postStart, preStop), new HttpConfiguration(url,method,status), log, shutdown);
+            return new WaitConfiguration(time, new ExecConfiguration(postStart, preStop), new HttpConfiguration(url,method,status), log, shutdown, killafter);
         }
 
         public Builder preStop(String command) {

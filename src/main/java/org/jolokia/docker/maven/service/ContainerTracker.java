@@ -83,6 +83,9 @@ public class ContainerTracker {
         // How long to wait after shutdown (in milliseconds)
         private int shutdownGracePeriod;
 
+        // How long to wait after stop to kill container (in seconds)
+        private int killAfterStopPeriod;
+
         private String preStop;
 
         ContainerShutdownDescriptor(ImageConfiguration imageConfig, String containerId) {
@@ -92,6 +95,7 @@ public class ContainerTracker {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
             this.shutdownGracePeriod = waitConfig != null ? waitConfig.getShutdown() : 0;
+            this.killAfterStopPeriod = waitConfig != null ? waitConfig.getKillafter() : 0;
 
             if (waitConfig != null && waitConfig.getExec() != null) {
                 this.preStop = waitConfig.getExec().getPreStop();
@@ -112,6 +116,10 @@ public class ContainerTracker {
 
         public int getShutdownGracePeriod() {
             return shutdownGracePeriod;
+        }
+
+        public int getKillAfterStopPeriod() {
+            return killAfterStopPeriod;
         }
 
         public String getPreStop() {
