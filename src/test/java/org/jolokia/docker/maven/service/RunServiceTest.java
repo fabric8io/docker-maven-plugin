@@ -95,7 +95,7 @@ public class RunServiceTest {
 
     private String container = "testContainer";
     private int SHUTDOWN_WAIT = 500;
-    private int KILL_AFTER = 1;
+    private int KILL_AFTER = 1000;
 
     @Test
     public void shutdownWithoutKeepingContainers() throws Exception {
@@ -114,32 +114,31 @@ public class RunServiceTest {
 
     @Test
     public void killafterAndShutdownWithoutKeepingContainers() throws Exception {
-        new Expectations() {{
-            docker.stopContainer(container, KILL_AFTER);
-            log.debug(anyString); minTimes = 1;
-            docker.removeContainer(container, false);
-            log.info(with(getLogArgCheck(container, true)));
-        }};
+        setupForKillWait();
 
         long start = System.currentTimeMillis();
         runService.stopContainer(createImageConfig(SHUTDOWN_WAIT, KILL_AFTER), container, false, false);
-        assertTrue("Waited for at least " + (SHUTDOWN_WAIT + KILL_AFTER * 1000) + " ms",
-                System.currentTimeMillis() - start >= SHUTDOWN_WAIT + KILL_AFTER * 1000);
+        assertTrue("Waited for at least " + (SHUTDOWN_WAIT + KILL_AFTER) + " ms",
+                System.currentTimeMillis() - start >= SHUTDOWN_WAIT + KILL_AFTER);
     }
 
     @Test
     public void killafterWithoutKeepingContainers() throws Exception {
+        setupForKillWait();
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(createImageConfig(0, KILL_AFTER), container, false, false);
+        assertTrue("Waited for at least " + (KILL_AFTER) + " ms",
+                   System.currentTimeMillis() - start >= KILL_AFTER);
+    }
+
+    private void setupForKillWait() throws DockerAccessException {
         new Expectations() {{
-            docker.stopContainer(container, KILL_AFTER);
+            docker.stopContainer(container, (KILL_AFTER + 500) / 1000);
             log.debug(anyString); minTimes = 1;
             docker.removeContainer(container, false);
             log.info(with(getLogArgCheck(container, true)));
         }};
-
-        long start = System.currentTimeMillis();
-        runService.stopContainer(createImageConfig(0, KILL_AFTER), container, false, false);
-        assertTrue("Waited for at least " + (KILL_AFTER * 1000) + " ms",
-                   System.currentTimeMillis() - start >= KILL_AFTER * 1000);
     }
 
     @Test
@@ -220,14 +219,14 @@ public class RunServiceTest {
         };
     }
 
-    private ImageConfiguration createImageConfig(int wait, int killafter) {
+    private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
                 .name("testName")
                 .alias("testAlias")
                 .runConfig(new RunImageConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()
                                                  .shutdown(wait)
-                                                 .killafter(killafter)
+                                                 .kill(kill)
                                                  .build())
                                    .build())
                 .build();

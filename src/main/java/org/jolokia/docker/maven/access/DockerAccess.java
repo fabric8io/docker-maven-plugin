@@ -93,10 +93,10 @@ public interface DockerAccess {
      * Stop a container.
      *
      * @param containerId the container id
-     * @param killAfterStopPeriod the time to wait between stop and kill (in seconds)
+     * @param killWait the time to wait between stop and kill (in seconds)
      * @throws DockerAccessException if the container could not be stopped.
      */
-    void stopContainer(String containerId, int killAfterStopPeriod) throws DockerAccessException;
+    void stopContainer(String containerId, int killWait) throws DockerAccessException;
 
     /**
      * Get logs for a container up to now synchronously.

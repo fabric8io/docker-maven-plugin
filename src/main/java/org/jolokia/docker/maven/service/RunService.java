@@ -35,7 +35,6 @@ public class RunService {
     private Logger log;
 
     // Action to be used when doing a shutdown
-    //private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
     final private ContainerTracker tracker;
 
     // DAO for accessing the docker daemon
@@ -96,16 +95,16 @@ public class RunService {
 
     /**
      * Stop a container immediately by id.
-     * @param image image configuration for this container
+     * @param imageConfig image configuration for this container
      * @param containerId the container to stop
      * @param keepContainer whether to keep container or to remove them after stoppings
      * @param removeVolumes whether to remove volumes after stopping
      */
-    public void stopContainer(ImageConfiguration image,
+    public void stopContainer(ImageConfiguration imageConfig,
                               String containerId, boolean keepContainer,
                               boolean removeVolumes)
             throws DockerAccessException {
-        ContainerTracker.ContainerShutdownDescriptor descriptor = new ContainerTracker.ContainerShutdownDescriptor(image,containerId);
+        ContainerTracker.ContainerShutdownDescriptor descriptor = new ContainerTracker.ContainerShutdownDescriptor(imageConfig,containerId);
         shutdown(docker, descriptor, log, keepContainer, removeVolumes);
     }
 
@@ -341,11 +340,11 @@ public class RunService {
             }
         }
         // Stop the container
-        int killAfterStopPeriod = descriptor.getKillAfterStopPeriod();
-        access.stopContainer(containerId, killAfterStopPeriod);
-        if (killAfterStopPeriod > 0) {
-            log.debug("Shutdown: Wait " + killAfterStopPeriod + " s after stopping and before killing container");
-            WaitUtil.sleep(killAfterStopPeriod * 1000);
+        int killGracePeriod = descriptor.getKillGracePeriod();
+        access.stopContainer(containerId, (killGracePeriod + 500) / 1000);
+        if (killGracePeriod > 0) {
+            log.debug("Shutdown: Wait " + killGracePeriod + " s after stopping and before killing container");
+            WaitUtil.sleep(killGracePeriod);
         }
         if (!keepContainer) {
             int shutdownGracePeriod = descriptor.getShutdownGracePeriod();

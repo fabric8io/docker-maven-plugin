@@ -98,10 +98,12 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String stopContainer(String containerId, int waitBeforeKillPeriod) {
-        return u("containers/%s/stop", containerId)
-                .p("t", waitBeforeKillPeriod)
-                .build();
+    public String stopContainer(String containerId, int killWait) {
+        Builder b = u("containers/%s/stop", containerId);
+        if (killWait > 0) {
+            b.p("t", killWait);
+        }
+        return b.build();
     }
 
     public String tagContainer(ImageName source, ImageName target, boolean force) {

@@ -2,7 +2,8 @@
 
 * **0.13.5**
   - Improvements for `docker:watch` (#288)
-
+  - Add parameter `kill` to `<watch>` configuration for waiting before sending SIGKILL when stopping containers (#293)
+  
 * **0.13.4**
   - Support explicit exec arguments for `start.cmd` and `start.entrypoint`. ([#253](https://github.com/rhuss/docker-maven-plugin/issues/253)) 
   - Fix processing of split chunked JSON responses ([#259](https://github.com/rhuss/docker-maven-plugin/issues/259))

@@ -822,7 +822,7 @@ some condition is met. These conditions can be specified within a
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
-* **killafter** is the time in seconds between sending SIGTERM and SIGKILL when stopping a container
+* **kill** is the time in milliseconds between sending SIGTERM and SIGKILL when stopping a container
 * **shutdown** is the time to wait in milliseconds between stopping a container
   and removing it. This might be helpful in situation where a Docker croaks with an
   error when trying to remove a container to fast after it has been stopped.
@@ -845,7 +845,7 @@ Example:
     <status>200..399</status>
   </http>
   <time>10000</time>
-  <killafter>1</killafter>
+  <kill>1000</kill>
   <shutdown>500</shutdown>
   <exec>
      <postStart>/opt/init_db.sh</postStart>
@@ -1266,7 +1266,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.wait.log** Wait for a log output to appear.
 * **wait.exec.postStart** Command to execute after the container has start up. 
 * **wait.exec.preStop** Command to execute before command stops.
-* **docker.wait.killafter** Time in seconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.
+* **docker.wait.kill** Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.
 * **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
 * **docker.workingDir** Working dir for commands to run in
 
