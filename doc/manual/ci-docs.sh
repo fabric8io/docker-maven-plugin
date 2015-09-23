@@ -14,5 +14,5 @@ git add --ignore-errors * && \
 git commit -m "generated documentation" && \
 git push origin gh-pages && \
 cd .. && \
-rm -r gh-pages _book node-modules
+rm -rf gh-pages _book node-modules
        
