@@ -17,7 +17,7 @@
     }
   },
 
-    "plugins": ["edit-link", "anchors" ],
+    "plugins": ["edit-link", "anchors", "code_tomorrow_scheme" ],
     "pluginsConfig": {
         "edit-link": {
             "base": "https://github.com/rhuss/docker-maven-plugin/edit/master/docs",
