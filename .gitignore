@@ -2,5 +2,3 @@
 doc/
 temp/
 *.iml
-ci-docs.sh
-gh-pages
