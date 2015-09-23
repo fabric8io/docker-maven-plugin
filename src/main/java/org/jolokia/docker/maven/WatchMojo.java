@@ -15,16 +15,21 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
+import org.jolokia.docker.maven.assembly.BuildDirs;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.RunService;
@@ -68,6 +73,15 @@ public class WatchMojo extends AbstractBuildSupportMojo {
      * @parameter property = "docker.watchPostGoal"
      */
     private String watchPostGoal;
+
+    /**
+     * The local repository
+     * @parameter expression="${localRepository}"
+     * @required
+     * @readonly
+     */
+    private ArtifactRepository localRepository;
+
 
     // Scheduler
     private ScheduledExecutorService executor;
@@ -136,15 +150,27 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final String name = imageConfig.getName();
-        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(name, imageConfig, mojoParameters);
+
+        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(name, imageConfig, mojoParameters, localRepository);
         return new Runnable() {
             @Override
             public void run() {
-                List<AssemblyFiles.Entry> entry = files.getUpdatedEntriesAndRefresh();
-                if (entry != null && entry.size() > 0) {
+
+                AssemblyConfiguration assemblyConfig = imageConfig.getBuildConfiguration().getAssemblyConfiguration();
+                if( assemblyConfig!=null ) {
+                    assemblyConfig.skip = true;
+                }
+
+                List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
+                if (entries != null && entries.size() > 0) {
                     try {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
-                        // Rebuild whole image for now ...
+
+                        for (AssemblyFiles.Entry entry : entries) {
+                            log.info("Copying from:"+entry.getSrcFile()+", to:"+entry.getDestFile());
+                            FileUtils.copyFile(entry.getSrcFile(), entry.getDestFile());
+                        }
+
                         buildImage(docker, imageConfig);
 
                         watcher.setImageId(serviceHub.getQueryService().getImageId(name));
@@ -152,7 +178,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                             restartContainer(watcher);
                         }
                         callPostGoal(watcher);
-                    } catch (DockerAccessException | MojoExecutionException | MojoFailureException e) {
+                    } catch (MojoExecutionException | MojoFailureException | IOException e) {
                         log.error(imageConfig.getDescription() + ": Error when rebuilding " + e);
                     }
                 }

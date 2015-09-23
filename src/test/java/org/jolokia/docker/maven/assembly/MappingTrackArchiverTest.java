@@ -33,6 +33,7 @@ public class MappingTrackArchiverTest {
     @Test(expected = IllegalArgumentException.class)
     public void noDirectory() throws Exception {
         MappingTrackArchiver archiver = new MappingTrackArchiver();
+        archiver.setDestFile(new File("."));
         archiver.addDirectory(new File(System.getProperty("user.home")), "tmp");
         AssemblyFiles files = archiver.getAssemblyFiles();
     }
@@ -40,7 +41,13 @@ public class MappingTrackArchiverTest {
     @Test
     public void simple() throws Exception {
         MappingTrackArchiver archiver = new MappingTrackArchiver();
+        archiver.setDestFile(new File("target/test-data/maven.tracker"));
+        new File(archiver.getDestFile(), "maven").mkdirs();
+
         File tempFile = File.createTempFile("tracker", "txt");
+        File destination = new File("target/test-data/maven/test.txt");
+        org.codehaus.plexus.util.FileUtils.copyFile(tempFile, destination);
+
         archiver.addFile(tempFile, "test.txt");
         AssemblyFiles files = archiver.getAssemblyFiles();
         assertNotNull(files);
@@ -52,6 +59,6 @@ public class MappingTrackArchiverTest {
         assertEquals(1,entries.size());
         AssemblyFiles.Entry entry = entries.get(0);
         assertEquals(tempFile,entry.getSrcFile());
-        assertEquals(new File("test.txt"),entry.getDestFile());
+        assertEquals(destination, entry.getDestFile());
     }
 }

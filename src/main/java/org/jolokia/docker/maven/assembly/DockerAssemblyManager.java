@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
@@ -93,7 +94,7 @@ public class DockerAssemblyManager {
      * Extract all files with a tracking archiver. These can be used to track changes in the filesystem and triggering
      * a rebuild of the image if needed
      */
-    public AssemblyFiles getAssemblyFiles(String imageName, BuildImageConfiguration buildConfig, MojoParameters params)
+    public AssemblyFiles getAssemblyFiles(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, ArtifactRepository localRepository, File outputDirectory)
             throws InvalidAssemblerConfigurationException, ArchiveCreationException, AssemblyFormattingException, MojoExecutionException {
 
         BuildDirs buildDirs = createBuildDirs(imageName,params);
@@ -106,6 +107,8 @@ public class DockerAssemblyManager {
         synchronized (trackArchiver) {
             MappingTrackArchiver ta = (MappingTrackArchiver) trackArchiver;
             ta.clear();
+            ta.setLocalRepository(localRepository);
+            ta.setDestFile(outputDirectory);
             assembly.setId("tracker");
             assemblyArchiver.createArchive(assembly, "maven", "track", source, false);
             return ta.getAssemblyFiles();
@@ -119,7 +122,7 @@ public class DockerAssemblyManager {
     }
     
     private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
-        return assemblyConfig != null &&
+        return assemblyConfig != null && !assemblyConfig.skip &&
                 (assemblyConfig.getInline() != null ||
                         assemblyConfig.getDescriptor() != null ||
                         assemblyConfig.getDescriptorRef() != null);
