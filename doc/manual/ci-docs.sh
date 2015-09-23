@@ -4,13 +4,13 @@ echo ===========================================
 
 cd doc/manual && \
 npm install -g gitbook-cli && \
-git clone -b gh-pages git@github.com:rhuss/docker-maven-plugin.git gh-pages && \
 mkdir -p _book && \
 gitbook install .  && \
 gitbook build . && \
 cp -rv _book/* gh-pages/ && \
 cd gh-pages && \
-git add * && \
+git clone -b gh-pages git@github.com:rhuss/docker-maven-plugin.git gh-pages && \
+git add --ignore-errors * && \
 git commit -m "generated documentation" && \
 git push origin gh-pages && \
 cd .. && \
