@@ -1,4 +1,4 @@
-#### `docker:push`
+### docker:push
 
 This goals uploads images to the registry which have a `<build>`
 configuration section. The images to push can be restricted with with

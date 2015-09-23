@@ -1,4 +1,4 @@
-#### `docker:start`
+### docker:start
 
 Creates and starts docker containers. This goals evaluates
 the configuration's `<run>` section of all given (and enabled images). In order to switch on 

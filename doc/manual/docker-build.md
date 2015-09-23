@@ -1,4 +1,4 @@
-#### `docker:build`
+### docker:build
 
 This goal will build all images which have a `<build>` configuration
 section, or, if the global configuration `image` is set, only those

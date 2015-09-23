@@ -1,4 +1,4 @@
-### External Configuration
+## External Configuration
 
 For special configuration needs there is the possibility to get the
 runtime and build configuration from places outside the plugin's

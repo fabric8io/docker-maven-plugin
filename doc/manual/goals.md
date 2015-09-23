@@ -1,4 +1,4 @@
-### Maven Goals
+## Maven Goals
 
 This plugin supports the following goals which are explained in detail
 in the following sections.

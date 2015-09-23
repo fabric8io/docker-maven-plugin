@@ -1,4 +1,4 @@
-#### Documentation
+### Further reading
 
 * The [Introduction](https://github.com/rhuss/docker-maven-plugin/blob/master/doc/intro.md) is a high level
 overview of this plugin's features and provides an usage example.

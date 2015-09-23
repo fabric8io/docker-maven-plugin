@@ -1,4 +1,4 @@
-#### `docker:remove`
+### docker:remove
 
 This goal can be used to clean up images and containers. By default
 all so called *data images* are removed with its containers. A data

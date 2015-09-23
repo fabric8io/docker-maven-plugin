@@ -1,4 +1,4 @@
-### Image configuration
+## Image configuration
 
 The plugin's configuration is centered around *images*. These are
 specified for each image within the `<images>` element of the

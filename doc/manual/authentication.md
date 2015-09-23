@@ -1,7 +1,4 @@
-
-
-
-### Authentication
+## Authentication
 
 When pulling (via the `autoPull` mode of `docker:start`) or pushing image, it
 might be necessary to authenticate against a Docker registry.

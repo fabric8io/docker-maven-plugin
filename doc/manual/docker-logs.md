@@ -1,4 +1,4 @@
-#### `docker:logs`
+### docker:logs
 
 With this goal it is possible to print out the logs of containers
 started from images configured in this plugin. By default only the

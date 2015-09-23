@@ -1,4 +1,4 @@
-### Registry handling
+## Registry handling
 
 Docker uses registries to store images. The registry is typically
 specified as part of the name. I.e. if the first part (everything

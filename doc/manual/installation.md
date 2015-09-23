@@ -1,4 +1,4 @@
-### Installation
+## Installation
 
 This plugin is available from Maven central and can be connected to
 pre- and post-integration phase as seen below. The configuration and

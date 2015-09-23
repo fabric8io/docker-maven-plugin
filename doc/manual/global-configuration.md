@@ -1,4 +1,4 @@
-### Global configuration
+## Global configuration
 
 Global configuration parameters specify overall behavior like the
 connection to the Docker host. The corresponding system properties

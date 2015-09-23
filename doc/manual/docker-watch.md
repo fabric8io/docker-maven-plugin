@@ -1,4 +1,4 @@
-#### `docker:watch`
+### docker:watch
 
 When developing and testing applications you will often have to
 rebuild Docker images and restart containers. Typing `docker:build`

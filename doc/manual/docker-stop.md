@@ -1,4 +1,4 @@
-#### `docker:stop`
+### docker:stop
 
 Stops and removes a docker container. This goals starts every
 container started with `<docker:stop>` either during the same build
