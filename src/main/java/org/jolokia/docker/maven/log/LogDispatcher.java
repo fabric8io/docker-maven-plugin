@@ -15,6 +15,8 @@ package org.jolokia.docker.maven.log;/*
  * limitations under the License.
  */
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -33,7 +35,7 @@ public class LogDispatcher {
     private Map<String,ContainerLogOutputSpec> outputSpecs;
     private Map<String,LogGetHandle> logHandles;
 
-    private List<PrintStream> printStreams;
+    private HashMap<String, PrintStream> printStreamsMap;
 
     private DockerAccess dockerAccess;
 
@@ -41,15 +43,25 @@ public class LogDispatcher {
         this.dockerAccess = dockerAccess;
         this.withColor = withColor;
         outputSpecs = new HashMap<>();
-        printStreams = new ArrayList<>();
+        printStreamsMap = new HashMap<String, PrintStream>();
         logHandles = new HashMap<>();
     }
 
-    public synchronized void addLogOutputStream(PrintStream out) {
-        printStreams.add(out);
+    public void addLogOutputStreams(String id, ContainerLogOutputSpec spec){
+        String logFile = spec.getFile();
+        try {
+            if (logFile == null) {
+                printStreamsMap.put(id, System.out);
+            } else {
+                printStreamsMap.put(id, new PrintStream(new FileOutputStream(logFile), true));
+            }
+        }catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public synchronized void trackContainerLog(String id, ContainerLogOutputSpec spec) {
+        addLogOutputStreams(id, spec);
         outputSpecs.put(id, spec);
 
         LogGetHandle handle = dockerAccess.getLogAsync(id, createLogCallBack(id));
@@ -57,8 +69,8 @@ public class LogDispatcher {
     }
 
     public synchronized void fetchContainerLog(String id, ContainerLogOutputSpec spec) {
+        addLogOutputStreams(id, spec);
         outputSpecs.put(id, spec);
-
         dockerAccess.getLogSync(id,createLogCallBack(id));
     }
 
@@ -71,7 +83,7 @@ public class LogDispatcher {
 
             @Override
             public void error(String error) {
-                printError(error);
+                printError(id, error);
             }
         };
     }
@@ -86,18 +98,22 @@ public class LogDispatcher {
         }
 
         // FIX me according to spec
-        print(spec.getPrompt(withColor,logEntry.getTimestamp()) + logEntry.getText());
+        print(spec.getContainerId(), spec.getPrompt(withColor,logEntry.getTimestamp()) + logEntry.getText());
     }
 
-    private void printError(String e) {
-        for (PrintStream ps : printStreams) {
-            ps.println(e);
+    private void printError(String id, String e) {
+        for (String containerId : printStreamsMap.keySet() ){
+            if (containerId == id){
+                printStreamsMap.get(id).println(e);
+            }
         }
     }
 
-    private void print(String line) {
-        for (PrintStream ps : printStreams) {
-            ps.println(line);
+    private void print(String id, String line) {
+        for (String containerId : printStreamsMap.keySet() ){
+            if (containerId == id) {
+                printStreamsMap.get(id).println(line);
+            }
         }
     }
 
