@@ -341,10 +341,15 @@ public class RunService {
         }
         // Stop the container
         int killGracePeriod = descriptor.getKillGracePeriod();
-        access.stopContainer(containerId, (killGracePeriod + 500) / 1000);
+        int killGracePeriodInSeconds = (killGracePeriod + 500) / 1000;
+        if (killGracePeriod != 0 && killGracePeriodInSeconds == 0) {
+            log.warn("A kill grace period of " + killGracePeriod + "ms leads to no wait at all since its rounded to seconds. " +
+                     "Please use at least 500 as value for wait.kill");
+        }
+        access.stopContainer(containerId, killGracePeriodInSeconds);
         if (killGracePeriod > 0) {
-            log.debug("Shutdown: Wait " + killGracePeriod + " s after stopping and before killing container");
-            WaitUtil.sleep(killGracePeriod);
+            log.debug("Shutdown: Wait " + killGracePeriodInSeconds + " s after stopping and before killing container");
+            WaitUtil.sleep(killGracePeriodInSeconds * 1000);
         }
         if (!keepContainer) {
             int shutdownGracePeriod = descriptor.getShutdownGracePeriod();

@@ -824,7 +824,8 @@ some condition is met. These conditions can be specified within a
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
-* **kill** is the time in milliseconds between sending SIGTERM and SIGKILL when stopping a container
+* **kill** is the time in milliseconds between sending SIGTERM and SIGKILL when stopping a container. Since docker itself
+  uses second granularity, you should use at least 1000 milliseconds.
 * **shutdown** is the time to wait in milliseconds between stopping a container
   and removing it. This might be helpful in situation where a Docker croaks with an
   error when trying to remove a container to fast after it has been stopped.
