@@ -10,6 +10,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
@@ -33,6 +34,9 @@ public class WaitUtil {
     // Default status codes
     public static final int DEFAULT_MIN_STATUS = 200;
     public static final int DEFAULT_MAX_STATUS = 399;
+
+    // Disable HTTP client retries by default.
+    public static final int HTTP_CLIENT_RETRIES = 0;
 
 
     private WaitUtil() {}
@@ -148,6 +152,7 @@ public class WaitUtil {
                                  .build();
             CloseableHttpClient httpClient = HttpClientBuilder.create()
                     .setDefaultRequestConfig(requestConfig)
+                    .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))
                     .build();
             try {
                 CloseableHttpResponse response = httpClient.execute(RequestBuilder.create(method.toUpperCase()).setUri(url).build());
