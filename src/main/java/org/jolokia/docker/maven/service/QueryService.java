@@ -14,7 +14,7 @@ import org.jolokia.docker.maven.util.Logger;
  * Query service for getting image and container information from the docker dameon
  *
  */
-public class QueryService {
+public class QueryService implements DockerService {
 
     // Default limit when listing containers
     private static final int CONTAINER_LIMIT = 100;
@@ -186,5 +186,10 @@ public class QueryService {
     // Check if an image is not loaded but should be pulled
     private boolean pullIfNotPresent(AutoPullMode autoPull, String name) throws DockerAccessException {
         return autoPull.doPullIfNotPresent() && !hasImage(name);
+    }
+
+    @Override
+    public DockerAccess getDockerAccess() {
+        return docker;
     }
 }

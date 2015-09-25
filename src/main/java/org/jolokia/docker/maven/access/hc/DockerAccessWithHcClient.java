@@ -55,6 +55,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private final ApacheHttpClientDelegate delegate;
     private final UrlBuilder urlBuilder;
+    private final String baseUrl;
 
     /**
      * Create a new access for the given URL
@@ -68,6 +69,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public DockerAccessWithHcClient(String apiVersion, String baseUrl, String certPath, int maxConnections, Logger log)
             throws IOException {
         this.log = log;
+        this.baseUrl = baseUrl;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
             throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix://");
@@ -347,6 +349,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void shutdown() {
+    }
+
+    @Override
+    public String getBaseUrl() {
+        return baseUrl;
     }
 
     // visible for testing?

@@ -15,7 +15,7 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.util.Logger;
 import org.jolokia.docker.maven.util.MojoParameters;
 
-public class BuildService {
+public class BuildService implements DockerService {
 
     private final DockerAccess docker;
     private final QueryService queryService;
@@ -85,5 +85,10 @@ public class BuildService {
 
     private boolean oldImageShouldBeRemoved(String oldImageId, String newImageId) {
         return oldImageId != null && !oldImageId.equals(newImageId);
+    }
+
+    @Override
+    public DockerAccess getDockerAccess() {
+        return docker;
     }
 }
