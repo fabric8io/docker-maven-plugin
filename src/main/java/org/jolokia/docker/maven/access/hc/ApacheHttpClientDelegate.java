@@ -56,7 +56,6 @@ public class ApacheHttpClientDelegate {
   }
 
   public static class BodyResponseHandler implements ResponseHandler<String> {
-
     @Override
     public String handleResponse(HttpResponse response)
         throws IOException {
@@ -90,6 +89,11 @@ public class ApacheHttpClientDelegate {
     return post(url, null, new StatusCodeResponseHandler(), statusCodes);
   }
 
+  public int put(String url, Object body, int... statusCodes) throws IOException {
+    return httpClient.execute(newPut(url, body),
+                              new StatusCodeCheckerResponseHandler<>(new StatusCodeResponseHandler(), statusCodes));
+  }
+
   public CloseableHttpClient getHttpClient() {
     return httpClient;
   }
@@ -111,17 +115,27 @@ public class ApacheHttpClientDelegate {
     return addDefaultHeaders(new HttpGet(url));
   }
 
+  private HttpUriRequest newPut(String url, Object body) {
+    HttpPut put = new HttpPut(url);
+    setEntityIfGiven(put, body);
+    return addDefaultHeaders(put);
+  }
+
   private HttpUriRequest newPost(String url, Object body) {
     HttpPost post = new HttpPost(url);
+    setEntityIfGiven(post, body);
+    return addDefaultHeaders(post);
+  }
 
-    if (body != null) {
-      if (body instanceof File) {
-        post.setEntity(new FileEntity((File) body));
+
+  private void setEntityIfGiven(HttpEntityEnclosingRequestBase request, Object entity) {
+    if (entity != null) {
+      if (entity instanceof File) {
+        request.setEntity(new FileEntity((File) entity));
       } else {
-        post.setEntity(new StringEntity((String) body, Charset.defaultCharset()));
+        request.setEntity(new StringEntity((String) entity, Charset.defaultCharset()));
       }
     }
-    return addDefaultHeaders(post);
   }
 
   public static class StatusCodeCheckerResponseHandler<T> implements ResponseHandler<T> {

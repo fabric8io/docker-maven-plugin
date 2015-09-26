@@ -54,12 +54,11 @@ public class MappingTrackArchiver extends TrackingArchiver {
      * @return assembled files
      */
     public AssemblyFiles getAssemblyFiles() {
-        AssemblyFiles ret = new AssemblyFiles();
+        AssemblyFiles ret = new AssemblyFiles(getDestFile());
         // Where the 'real' files are copied to
-        File assemblyDirectory = new File(getDestFile().getParentFile(), DockerAssemblyManager.ASSEMBLY_NAME);
         for (Addition addition : added) {
             Object resource = addition.resource;
-            File target = new File(assemblyDirectory, addition.destination);
+            File target = new File(ret.getAssemblyDirectory(), addition.destination);
             if (resource instanceof File && addition.destination != null) {
                 addFileEntry(ret, (File) resource, target);
             } else if (resource instanceof PlexusIoFileResource) {

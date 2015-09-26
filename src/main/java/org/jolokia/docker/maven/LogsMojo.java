@@ -6,7 +6,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
+import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.service.QueryService;
@@ -60,8 +60,8 @@ public class LogsMojo extends AbstractDockerMojo {
         }
     }
 
-    private void doLogging(LogDispatcher logDispatcher, ImageConfiguration image, String container) throws MojoExecutionException {
-        ContainerLogOutputSpec spec = getContainerLogSpec(container, image);
+    private void doLogging(LogDispatcher logDispatcher, ImageConfiguration imageConfig, String container) throws MojoExecutionException {
+        LogOutputSpec spec = serviceHub.getLogOutputSpecFactory().createSpec(container, imageConfig);
         try {
             if (follow) {
                 logDispatcher.trackContainerLog(container, spec);

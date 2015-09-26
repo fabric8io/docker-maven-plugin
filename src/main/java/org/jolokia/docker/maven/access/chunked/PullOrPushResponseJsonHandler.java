@@ -4,13 +4,13 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.util.Logger;
 import org.json.JSONObject;
 
-public class PullOrPushResponseHandler implements ChunkedResponseReader.ChunkedResponseHandler {
+public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.JsonEntityResponseHandler {
 
     private boolean downloadInProgress = false;
 
     private final Logger log;
     
-    public PullOrPushResponseHandler(Logger log) {
+    public PullOrPushResponseJsonHandler(Logger log) {
         this.log = log;
     }
     

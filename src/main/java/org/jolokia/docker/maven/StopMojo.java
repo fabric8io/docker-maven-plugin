@@ -47,7 +47,7 @@ public class StopMojo extends AbstractDockerMojo {
                 for (ImageConfiguration image : getImages()) {
                     String imageName = image.getName();
                     for (Container container : queryService.getContainersForImage(imageName)) {
-                        runService.stopContainer(image, container.getId(), keepContainer, removeVolumes);
+                        runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
                     }
                 }
             } else {

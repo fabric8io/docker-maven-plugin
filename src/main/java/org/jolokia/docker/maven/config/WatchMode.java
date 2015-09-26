@@ -23,31 +23,38 @@ package org.jolokia.docker.maven.config;/*
 public enum WatchMode {
 
     /**
+     * Copy watched artefacts into contaienr
+     */
+    copy(false,false,true),
+
+    /**
      * Build only images
      */
-    build(true,false),
+    build(true, false, false),
 
     /**
      * Run images
      */
-    run(false,true),
+    run(false, true, false),
 
     /**
      * Build and run images
      */
-    both(true,true),
+    both(true, true, false),
 
     /**
      * Neither build nor run
      */
-    none(false,false);
+    none(false, false, false);
 
     private final boolean doRun;
     private final boolean doBuild;
+    private final boolean doCopy;
 
-    WatchMode(boolean doBuild, boolean doRun) {
+    WatchMode(boolean doBuild, boolean doRun, boolean doCopy) {
         this.doBuild = doBuild;
         this.doRun = doRun;
+        this.doCopy = doCopy;
     }
 
     public boolean isRun() {
@@ -56,5 +63,9 @@ public enum WatchMode {
 
     public boolean isBuild() {
         return doBuild;
+    }
+
+    public boolean isCopy() {
+        return doCopy;
     }
 }

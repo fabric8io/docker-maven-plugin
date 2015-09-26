@@ -26,11 +26,13 @@ import static org.fusesource.jansi.Ansi.ansi;
  * @author roland
  * @since 25/11/14
  */
-public class ContainerLogOutputSpec {
+public class LogOutputSpec {
 
-    public static final ContainerLogOutputSpec DEFAULT = new ContainerLogOutputSpec("", YELLOW, null,null,null);
+    public static final LogOutputSpec DEFAULT = new LogOutputSpec("", YELLOW, null, null, null, true, true);
 
     private final String containerId;
+    private final boolean useColor;
+    private final boolean logStdout;
     private String prefix;
     private Ansi.Color color;
     private DateTimeFormatter timeFormatter;
@@ -42,21 +44,28 @@ public class ContainerLogOutputSpec {
     };
     private static int globalColorIdx = 0;
 
-    //Fill prefix up to this length
-    private String FILLER = "                                                                           ";
-
-    private ContainerLogOutputSpec(String prefix, Ansi.Color color, DateTimeFormatter timeFormatter, String containerId, String file) {
+    private LogOutputSpec(String prefix, Ansi.Color color, DateTimeFormatter timeFormatter,
+                          String containerId, String file, boolean useColor, boolean logStdout) {
         this.prefix = prefix;
         this.color = color;
         this.containerId = containerId;
         this.timeFormatter = timeFormatter;
         this.file = file;
+        this.useColor = useColor;
+        this.logStdout = logStdout;
+    }
+
+    public boolean isUseColor() {
+        return useColor && (file == null || logStdout);
+    }
+
+    public boolean isLogStdout() {
+        return logStdout;
     }
 
     public String getContainerId() {
         return containerId;
     }
-
 
     public String getPrompt(boolean withColor,Timestamp timestamp) {
         return formatTimestamp(timestamp,withColor) + formatPrefix(prefix, withColor) + "> ";
@@ -88,6 +97,8 @@ public class ContainerLogOutputSpec {
         private String containerId;
         private DateTimeFormatter timeFormatter;
         private String file;
+        private boolean useColor;
+        private boolean logStdout;
 
         public Builder prefix(String prefix) {
             this.prefix = prefix;
@@ -108,6 +119,7 @@ public class ContainerLogOutputSpec {
             }
             return this;
         }
+
         public Builder file(String file){
             this.file = file;
             return this;
@@ -146,9 +158,18 @@ public class ContainerLogOutputSpec {
             return this;
         }
 
-        public ContainerLogOutputSpec build() {
-            return new ContainerLogOutputSpec(prefix,color,timeFormatter,containerId, file);
+        public Builder useColor(boolean useColor) {
+            this.useColor = useColor;
+            return this;
         }
 
+        public Builder logStdout(boolean logStdout) {
+            this.logStdout = logStdout;
+            return this;
+        }
+
+        public LogOutputSpec build() {
+            return new LogOutputSpec(prefix, color, timeFormatter, containerId, file, useColor, logStdout);
+        }
     }
 }

@@ -2,14 +2,13 @@ package org.jolokia.docker.maven.config;
 
 /**
  * Configuration for watching on image changes
- *
  */
 public class WatchImageConfiguration {
 
     /**
      * @parameter
      */
-    private int interval;
+    private int interval = 5000; // default
 
     /**
      * @parameter
@@ -21,8 +20,12 @@ public class WatchImageConfiguration {
      */
     private String postGoal;
 
-    public WatchImageConfiguration() {
-    }
+    /**
+     * @parameter
+     */
+    private String postExec;
+
+    public WatchImageConfiguration() {};
 
     public int getInterval() {
         return interval;
@@ -36,9 +39,12 @@ public class WatchImageConfiguration {
         return postGoal;
     }
 
+    public String getPostExec() {
+        return postExec;
+    }
+
     public static class Builder {
 
-        private int time = 5000;
 
         private WatchImageConfiguration c = new WatchImageConfiguration();
 

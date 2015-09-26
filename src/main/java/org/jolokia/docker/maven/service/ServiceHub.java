@@ -5,6 +5,7 @@ import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
+import org.jolokia.docker.maven.log.LogOutputSpecFactory;
 import org.jolokia.docker.maven.util.Logger;
 
 /**
@@ -32,8 +33,9 @@ public class ServiceHub {
     private MojoExecutionService mojoExecutionService;
     private QueryService queryService;
     private RunService runService;
-    private BuildService buildService;
+    private LogOutputSpecFactory logOutputSpecFactory;
 
+    private BuildService buildService;
     // initialization flag preventing multiple initializations
     private boolean initDone = false;
 
@@ -44,11 +46,12 @@ public class ServiceHub {
      * @param dockerAccess the docker access object
      * @param log logger to use
      */
-    public synchronized void init(DockerAccess dockerAccess, Logger log) {
+    public synchronized void init(DockerAccess dockerAccess, Logger log, LogOutputSpecFactory logOutputSpecFactory) {
         if (!initDone) {
+            this.logOutputSpecFactory = logOutputSpecFactory;
             mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
             queryService = new QueryService(dockerAccess, log);
-            runService = new RunService(dockerAccess, queryService, containerTracker, log);
+            runService = new RunService(dockerAccess, queryService, containerTracker, logOutputSpecFactory, log);
             buildService = new BuildService(dockerAccess, queryService, dockerAssemblyManager, log);
             initDone = true;
         }
@@ -95,5 +98,9 @@ public class ServiceHub {
         if (!initDone) {
             throw new IllegalStateException("Service hub not yet initialized");
         }
+    }
+
+    public LogOutputSpecFactory getLogOutputSpecFactory() {
+        return logOutputSpecFactory;
     }
 }

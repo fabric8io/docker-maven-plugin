@@ -6,6 +6,7 @@ import java.util.List;
 import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.Arguments;
+import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.model.*;
 
 /**
@@ -53,22 +54,22 @@ public interface DockerAccess {
 
     /**
      * Starts a previously set up exec instance id.
-     * this API sets up an interactive session with the exec command
+     * this API sets up an interactive session with the exec command. Output is streamed to the log.
      *
      * @param containerId id of the exec container
-     * @return stdout/stderr of running the exec container
+     * @param outputSpec how to print out the output of the command
      * @throws DockerAccessException if the container could not be created.
      */
-    String startExecContainer(String containerId) throws DockerAccessException;
+    void startExecContainer(String containerId, LogOutputSpec outputSpec) throws DockerAccessException;
 
     /**
      * Sets up an exec instance for a running container id
      *
-     * @param arguments container exec commands to run
      * @param containerId id of the running container which the exec container will be created for
+     * @param arguments container exec commands to run
      * @throws DockerAccessException if the container could not be created.
      */
-    String createExecContainer(Arguments arguments, String containerId) throws DockerAccessException;
+    String createExecContainer(String containerId, Arguments arguments) throws DockerAccessException;
 
     /**
      * Create a container from the given image.
@@ -97,6 +98,17 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container could not be stopped.
      */
     void stopContainer(String containerId, int killWait) throws DockerAccessException;
+
+    /**
+     * Copy an archive (must be a tar) into a running container
+     *
+     * @param containerId container to copy into
+     * @param archive local archive to copy into
+     * @param targetPath target path to use
+     * @throws DockerAccessException
+     */
+    void copyArchive(String containerId, File archive, String targetPath)
+            throws DockerAccessException;
 
     /**
      * Get logs for a container up to now synchronously.

@@ -25,6 +25,12 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String copyArchive(String containerId, String targetPath) {
+        return u("containers/%s/archive",containerId)
+                .p("path",targetPath)
+                .build();
+    }
+
     public String inspectImage(String name) {
         return u("images/%s/json", name)
                 .build();
@@ -152,6 +158,7 @@ public final class UrlBuilder {
     private String createUrl(String path) {
         return String.format("%s/%s/%s", baseUrl, apiVersion, path);
     }
+
 
     private static class Builder {
 

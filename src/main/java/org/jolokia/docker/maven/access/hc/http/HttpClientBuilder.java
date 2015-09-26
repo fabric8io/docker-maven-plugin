@@ -23,10 +23,12 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.jolokia.docker.maven.access.KeyStoreUtil;
 
@@ -36,16 +38,22 @@ import org.jolokia.docker.maven.access.KeyStoreUtil;
  */
 public class HttpClientBuilder {
 
-    private final String certPath;
+    private String certPath = null;
+    private int maxConnections = 100;
 
-    public HttpClientBuilder(String certPath) {
+    public HttpClientBuilder certPath(String certPath) {
         this.certPath = certPath;
+        return this;
     }
 
-    public CloseableHttpClient build(int maxConnections) throws IOException {
+    public HttpClientBuilder maxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
+        return this;
+    }
+
+    public CloseableHttpClient build() throws IOException {
         org.apache.http.impl.client.HttpClientBuilder builder = HttpClients.custom();
-        PoolingHttpClientConnectionManager manager = getPoolingConnectionFactory(certPath);
-        manager.setDefaultMaxPerRoute(maxConnections);
+        HttpClientConnectionManager manager = getConnectionFactory(certPath, maxConnections);
         builder.setConnectionManager(manager);
 
         // TODO: Tune client if needed (e.g. add pooling factoring .....
@@ -54,10 +62,12 @@ public class HttpClientBuilder {
         return builder.build();
     }
 
-    private static PoolingHttpClientConnectionManager getPoolingConnectionFactory(String certPath) throws IOException {
-        return certPath != null ?
+    private static HttpClientConnectionManager getConnectionFactory(String certPath, int maxConnections) throws IOException {
+        PoolingHttpClientConnectionManager ret =  certPath != null ?
                 new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath)) :
                 new PoolingHttpClientConnectionManager();
+        ret.setDefaultMaxPerRoute(maxConnections);
+        return ret;
     }
 
     private static Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {

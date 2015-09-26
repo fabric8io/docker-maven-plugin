@@ -46,5 +46,5 @@ public interface LogCallback {
     /**
      * Exception indicating that logging is done and should be finished
      */
-    public class DoneException extends Exception {}
+    class DoneException extends Exception {}
 }

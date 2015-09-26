@@ -113,14 +113,20 @@
                     <method>GET</method>
                     <status>200</status>
                   </http>
+                  <exec>
+                    <postStart>ls -l /maven</postStart>
+                  </exec>
                   <time>10000</time>
                   <shutdown>500</shutdown>
                 </wait>
                 <log>
                   <enabled>true</enabled>
                   <color>red</color>
-              </log>
+                </log>
               </run>
+              <watch>
+                <mode>none</mode>
+              </watch>
             </image>
             <image>
               <alias>data</alias>
@@ -140,6 +146,10 @@
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
               </build>
+              <watch>
+                <interval>5000</interval>
+                <mode>copy</mode>
+              </watch>
             </image>
           </images>
         </configuration>
@@ -277,7 +287,16 @@
                       <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
                       <time>10000</time>
                     </wait>
+                    <log>
+                      <enabled>true</enabled>
+                      <prefix>TC</prefix>
+                      <color>yellow</color>
+                    </log>
                   </run>
+                  <watch>
+                    <mode>copy</mode>
+                    <postExec>ls -l /maven</postExec>
+                  </watch>
                 </image>
               </images>
             </configuration>

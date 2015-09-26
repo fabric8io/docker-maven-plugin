@@ -71,14 +71,11 @@ public class ContainerTracker {
 
     static class ContainerShutdownDescriptor {
 
-        // The image used
-        private String image;
+        // The image's configuration
+        private final ImageConfiguration imageConfig;
 
         // Alias of the image
         private final String containerId;
-
-        // Description
-        private String description;
 
         // How long to wait after shutdown (in milliseconds)
         private int shutdownGracePeriod;
@@ -86,24 +83,27 @@ public class ContainerTracker {
         // How long to wait after stop to kill container (in seconds)
         private int killGracePeriod;
 
+        // Command to call before stopping container
         private String preStop;
 
         ContainerShutdownDescriptor(ImageConfiguration imageConfig, String containerId) {
-            this.image = imageConfig.getName();
+            this.imageConfig = imageConfig;
             this.containerId = containerId;
-            this.description = imageConfig.getDescription();
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
             this.shutdownGracePeriod = waitConfig != null ? waitConfig.getShutdown() : 0;
             this.killGracePeriod = waitConfig != null ? waitConfig.getKill() : 0;
-
             if (waitConfig != null && waitConfig.getExec() != null) {
                 this.preStop = waitConfig.getExec().getPreStop();
             }
         }
 
+        public ImageConfiguration getImageConfiguration() {
+            return imageConfig;
+        }
+
         public String getImage() {
-            return image;
+            return imageConfig.getName();
         }
 
         public String getContainerId() {
@@ -111,7 +111,7 @@ public class ContainerTracker {
         }
 
         public String getDescription() {
-            return description;
+            return imageConfig.getDescription();
         }
 
         public int getShutdownGracePeriod() {
