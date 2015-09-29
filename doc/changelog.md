@@ -1,16 +1,16 @@
 # ChangeLog
 
 * **0.13.5**
-  - Improvements for `docker:watch` (#288)
+  - Improvements for `docker:watch` ([#288](https://github.com/rhuss/docker-maven-plugin/issues/288))
   - Add parameter `kill` to `<watch>` configuration for waiting before
-    sending SIGKILL when stopping containers (#293)
+    sending SIGKILL when stopping containers ([#293](https://github.com/rhuss/docker-maven-plugin/issues/293))
   - Add `file` for `<log>` to store the logout put in a file. Use
-    `docker.logStdout` to show logs nevertheless to stdout (#287)
+    `docker.logStdout` to show logs nevertheless to stdout ([#287](https://github.com/rhuss/docker-maven-plugin/issues/287))
   - Support `watchMode == copy` for copying changed assembly files
-    into a running container (#268)
+    into a running container ([#268](https://github.com/rhuss/docker-maven-plugin/issues/268))
   - Add a `target/classpath` file to the assembly as `classpath` for 
-    `artifact-with-dependencies` predefined assembly descriptor (#283)
-  - Disable Apache HTTP Client retry in WaitUtil (#297)
+    `artifact-with-dependencies` predefined assembly descriptor ([#283](https://github.com/rhuss/docker-maven-plugin/issues/283))
+  - Disable Apache HTTP Client retry in WaitUtil ([#297](https://github.com/rhuss/docker-maven-plugin/issues/297))
   
 * **0.13.4**
   - Support explicit exec arguments for `start.cmd` and

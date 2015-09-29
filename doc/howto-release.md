@@ -3,7 +3,7 @@
 
 ## Preparation
 
-* Increase version number in doc/manual.md example
+* Increase version number in doc/manual/installation.md example
 * Increase version number in README.md
 * Increase version numbers in the poms below samples/ (they are not automatically updated)
 * Run "update_issue_links.sh" in "doc/"
