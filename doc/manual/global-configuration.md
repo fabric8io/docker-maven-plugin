@@ -61,15 +61,17 @@ parentheses.
   to be always pulled. This is true for any base image during build and for any image 
   during run which has no `<build>` section. Valid values are `on|off|always`.
 * **authConfig** holds the authentication information when pulling from
-  or pushing to Docker registry. There is a dedicated
-  [section](#authentication) for how doing security.
+  or pushing to Docker registry. There is a dedicated section 
+  [Authentication](#authentication) for how doing security.
 * **logDate** (`docker.logDate`) specifies the date format which is used for printing out
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
-  the [section](#log-configuration) below. 
+  [Log configuration](#log-configuration) below. 
+* **logStdout** (`docker.logStdout`) if set, do all container logging to standard output, 
+  regardless whether a `file` for log output is specified. See also [Log configuration](#log-configuration)
 * **portPropertyFile** if given, specifies a global file into which the
   mapped properties should be written to. The format of this file and
-  its purpose are also described [below](#port-mapping).
+  its purpose are also described in [Port Mapping](#port-mapping).
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.

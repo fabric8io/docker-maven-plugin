@@ -207,7 +207,8 @@ predefined assembly descriptor. The following symbolic names can be
 used for `assemblyDescriptorRef`:
 
 * **artifact-with-dependencies** will copy your project's artifact and
-  all its dependencies 
+  all its dependencies. Also, when a `classpath` file exists in the target 
+  directory, this will be added to.
 * **artifact** will copy only the project's artifact but no
   dependencies. 
 * **project** will copy over the whole Maven project but with out

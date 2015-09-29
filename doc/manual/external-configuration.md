@@ -116,6 +116,7 @@ values in the `<build>` and `<run>` sections.
 * **wait.exec.postStart** Command to execute after the container has start up. 
 * **wait.exec.preStop** Command to execute before command stops.
 * **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
+* **docker.wait.kill** Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.
 * **docker.workingDir** Working dir for commands to run in
 
 Any other `<run>` or `<build>` sections are ignored when this handler
