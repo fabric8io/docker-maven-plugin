@@ -52,7 +52,7 @@
     <body>
         
         
-    <div class="book" data-level="4.2" data-basepath="." data-revision="Wed Sep 23 2015 13:14:45 GMT+0000 (UTC)">
+    <div class="book" data-level="4.2" data-basepath="." data-revision="Tue Sep 29 2015 09:23:38 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -697,6 +697,8 @@ a single number (200) or as a range (200..399). The default is <code>200..399</c
 <li><strong>log</strong> is a regular expression which is applied against the log
 output of an container and blocks until the pattern is matched.</li>
 <li><strong>time</strong> is the time in milliseconds to block.</li>
+<li><strong>kill</strong> is the time in milliseconds between sending SIGTERM and SIGKILL when stopping a container. Since docker itself
+uses second granularity, you should use at least 1000 milliseconds.</li>
 <li><strong>shutdown</strong> is the time to wait in milliseconds between stopping a container
 and removing it. This might be helpful in situation where a Docker croaks with an
 error when trying to remove a container to fast after it has been stopped.</li>
@@ -718,6 +720,7 @@ If only a <code>&lt;time&gt;</code> is specified, the build will wait that amoun
     <span class="hljs-tag">&lt;<span class="hljs-title">status</span>&gt;</span>200..399<span class="hljs-tag">&lt;/<span class="hljs-title">status</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">http</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">time</span>&gt;</span>10000<span class="hljs-tag">&lt;/<span class="hljs-title">time</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">kill</span>&gt;</span>1000<span class="hljs-tag">&lt;/<span class="hljs-title">kill</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">shutdown</span>&gt;</span>500<span class="hljs-tag">&lt;/<span class="hljs-title">shutdown</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">exec</span>&gt;</span>
      <span class="hljs-tag">&lt;<span class="hljs-title">postStart</span>&gt;</span>/opt/init_db.sh<span class="hljs-tag">&lt;/<span class="hljs-title">postStart</span>&gt;</span>
@@ -770,6 +773,8 @@ the global configuration parameter <code>logDate</code> can be used.</li>
 colors are <code>YELLOW</code>, <code>CYAN</code>, <code>MAGENTA</code>, <code>GREEN</code>, <code>RED</code>, <code>BLUE</code>. If
 coloring is enabled and now color is provided a color is picked for
 you. </li>
+<li><strong>file</strong> Path to a file to which the log output is written. This file is overwritten 
+for every run and colors are switched off. </li>
 </ul>
 <p>Example (values can be case insensitive, too) :</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">log</span>&gt;</span>

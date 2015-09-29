@@ -52,7 +52,7 @@
     <body>
         
         
-    <div class="book" data-level="4.4" data-basepath="." data-revision="Wed Sep 23 2015 13:14:45 GMT+0000 (UTC)">
+    <div class="book" data-level="4.4" data-basepath="." data-revision="Tue Sep 29 2015 09:23:38 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -433,7 +433,7 @@ are two watch modes, which can be specified in multiple ways:</p>
 of the files selected by an assembly changes. This works for all files
 included directly in <code>assembly.xml</code> but also for arbitrary dependencies. 
 For example:</p>
-<pre><code>  $ mvn package docker:build docker:watch -Ddocker.watch.mode=build
+<pre><code>  $ mvn package docker:build docker:watch -Ddocker.watchMode=build
 </code></pre><p>This mode works only when there is a <code>&lt;build&gt;</code> section
 in an image configuration. Otherwise no automatically build will be triggered for an 
 image with only a <code>&lt;run&gt;</code> section. Note that you need the <code>package</code> phase to be executed before
@@ -447,8 +447,17 @@ externally or especially in combination with the <code>build</code> mode to
 restart containers when their image has been automatically
 rebuilt. This mode works reliably only when used together with
 <code>docker:start</code>.</p>
-<pre><code>  $ mvn docker:start docker:watch -Ddocker.watch.mode=run
+<pre><code>  $ mvn docker:start docker:watch -Ddocker.watchMode=run
 </code></pre></li>
+<li><p><code>both</code> : Enables both <code>build</code> and <code>run</code>. This is the default <code>both</code>. </p>
+</li>
+<li><p><code>none</code> : Image is complete ignored for watching</p>
+</li>
+<li><p><code>copy</code> : Copy changed files into the running container. This is the
+fast way to update a container, however the target container must
+support hot deply, too so that it makes sense. Most application
+servers like Tomcat supports this. </p>
+</li>
 </ul>
 <p>The mode can also be <code>both</code> or <code>none</code> to select both or none of these
 variants, respectively. The default is <code>both</code>. </p>
@@ -472,33 +481,44 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level
 parameters:</p>
 <ul>
-<li><strong>watchMode</strong> <code>docker.watch.mode</code>: The watch mode specifies what should be watched<ul>
+<li><strong>watchMode</strong> <code>docker.watchMode</code>: The watch mode specifies what should be watched<ul>
 <li><code>build</code> : Watch changes in the assembly and rebuild the image in
 case</li>
 <li><code>run</code> : Watch a container&apos;s image whether it changes and restart
 the container in case</li>
+<li><code>copy</code> : Changed files are copied into the container. The
+container can be either running or might be already exited (when
+used as a <em>data container</em> linked into a <em>platform
+container</em>). Requires Docker &gt;= 1.8.</li>
 <li><code>both</code> : <code>build</code> and <code>run</code> combined</li>
 <li><code>none</code> : Neither watching for builds nor images. This is useful if
 you use prefactored images which won&apos;t be changed and hence don&apos;t
-need any watching. <code>none</code> is best used on an per image level, see below how this can 
-be specified.</li>
+need any watching. <code>none</code> is best used on an per image level, see
+below how this can be specified.</li>
 </ul>
 </li>
-<li><strong>watchInterval</strong> <code>docker.watch.interval</code> specifies the interval in
+<li><strong>watchInterval</strong> <code>docker.watchInterval</code> specifies the interval in
 milliseconds how  often to check for changes, which must be larger
-than 100ms. The default are 5 seconds.</li>
-<li><strong>watchPostGoal</strong> A maven goal which should be called if a rebuild or a restart has 
-been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and 
-the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will 
-trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the 
-Kubernetes cluster. The value specified here is the the default post goal which can be overridden 
-by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</li>
+than 100ms. The default is 5 seconds.</li>
+<li><strong>watchPostGoal</strong> A maven goal which should be called if a rebuild
+or a restart has been performed. This goal must have the format
+<code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be
+configured in the <code>pom.xml</code>. For example a post-goal
+<code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs
+in Kubernetes which in turn triggers are new start of a POD within
+the Kubernetes cluster. The value specified here is the the default
+post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code>
+configuration.</li>
+<li><strong>watchPostExec</strong> can be a command which is executed within the
+container after files are copied into this container for <code>watchMode
+== copy</code>. Note that this container must be running.</li>
 <li><strong>keepRunning</strong> <code>docker.keepRunning</code> if set to <code>true</code> all
 container will be kept running after <code>docker:watch</code> has been
 stopped. By default this is set to <code>false</code>. </li>
-<li><strong>keepContainer</strong> <code>docker.keepContainer</code> similar to <code>docker:stop</code>, if this is set to <code>true</code>
-(and <code>keepRunning</code> is disabled) then all container will be removed
-after they have been stopped. The default is <code>true</code>.</li>
+<li><strong>keepContainer</strong> <code>docker.keepContainer</code> similar to <code>docker:stop</code>,
+if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all
+container will be removed after they have been stopped. The default
+is <code>true</code>.</li>
 <li><strong>removeVolumes</strong> <code>docker.removeVolumes</code> if given will remove any
 volumes associated to the container as well. This option will be ignored
 if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</li>
@@ -507,13 +527,18 @@ if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true<
 <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). 
 The following parameters are recognized:</p>
 <ul>
-<li><strong>mode</strong> Each image can be configured for having individual watch mode. These
-take precedence of the global watch mode. The mode specified in this
-configuration takes precedence over the globally specified mode.  </li>
+<li><strong>mode</strong> Each image can be configured for having individual watch
+mode. These take precedence of the global watch mode. The mode
+specified in this configuration takes precedence over the globally
+specified mode.</li>
 <li><strong>interval</strong> The watch interval can be specified in milliseconds on
 image level. If given this will override the global watch interval.</li>
-<li><strong>postGoal</strong> A post Maven plugin goal after a rebuild or restart. The value here must have the 
-format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> (e.g. <code>io.fabric8:fabric8:delete-pods</code>)</li>
+<li><strong>postGoal</strong> A post Maven plugin goal after a rebuild or
+restart. The value here must have the format
+<code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code>
+(e.g. <code>io.fabric8:fabric8:delete-pods</code>)</li>
+<li><strong>postExec</strong> Command to execute after files are copied into a
+running container for <code>mode == copy</code>. </li>
 </ul>
 <p>Here is an example how the watch mode can be tuned:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>

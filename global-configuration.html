@@ -52,7 +52,7 @@
     <body>
         
         
-    <div class="book" data-level="2" data-basepath="." data-revision="Wed Sep 23 2015 13:14:45 GMT+0000 (UTC)">
+    <div class="book" data-level="2" data-basepath="." data-revision="Tue Sep 29 2015 09:23:38 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -482,15 +482,17 @@ exists can be forced by setting this value to <code>always</code>. This will for
 to be always pulled. This is true for any base image during build and for any image 
 during run which has no <code>&lt;build&gt;</code> section. Valid values are <code>on|off|always</code>.</li>
 <li><strong>authConfig</strong> holds the authentication information when pulling from
-or pushing to Docker registry. There is a dedicated
-<a href="#authentication">section</a> for how doing security.</li>
+or pushing to Docker registry. There is a dedicated section 
+<a href="#authentication">Authentication</a> for how doing security.</li>
 <li><strong>logDate</strong> (<code>docker.logDate</code>) specifies the date format which is used for printing out
 container logs. This configuration can be overwritten by individual
 run configurations and described below. The format is described in
-the <a href="#log-configuration">section</a> below. </li>
+<a href="#log-configuration">Log configuration</a> below. </li>
+<li><strong>logStdout</strong> (<code>docker.logStdout</code>) if set, do all container logging to standard output, 
+regardless whether a <code>file</code> for log output is specified. See also <a href="#log-configuration">Log configuration</a></li>
 <li><strong>portPropertyFile</strong> if given, specifies a global file into which the
 mapped properties should be written to. The format of this file and
-its purpose are also described <a href="#port-mapping">below</a>.</li>
+its purpose are also described in <a href="#port-mapping">Port Mapping</a>.</li>
 <li><strong>sourceDirectory</strong> (<code>docker.source.dir</code>) specifies the default directory that contains
 the assembly descriptor(s) used by the plugin. The default value is <code>src/main/docker</code>. This
 option is only relevant for the <code>docker:build</code> goal.</li>
