@@ -130,15 +130,17 @@ parentheses.
   to be always pulled. This is true for any base image during build and for any image 
   during run which has no `<build>` section. Valid values are `on|off|always`.
 * **authConfig** holds the authentication information when pulling from
-  or pushing to Docker registry. There is a dedicated
-  [section](#authentication) for how doing security.
+  or pushing to Docker registry. There is a dedicated section 
+  [Authentication](#authentication) for how doing security.
 * **logDate** (`docker.logDate`) specifies the date format which is used for printing out
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
-  the [section](#log-configuration) below. 
+  [Log configuration](#log-configuration) below. 
+* **logStdout** (`docker.logStdout`) if set, do all container logging to standard output, 
+  regardless whether a `file` for log output is specified. See also [Log configuration](#log-configuration)
 * **portPropertyFile** if given, specifies a global file into which the
   mapped properties should be written to. The format of this file and
-  its purpose are also described [below](#port-mapping).
+  its purpose are also described in [Port Mapping](#port-mapping).
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.
@@ -439,7 +441,8 @@ predefined assembly descriptor. The following symbolic names can be
 used for `assemblyDescriptorRef`:
 
 * **artifact-with-dependencies** will copy your project's artifact and
-  all its dependencies 
+  all its dependencies. Also, when a `classpath` file exists in the target 
+  directory, this will be added to.
 * **artifact** will copy only the project's artifact but no
   dependencies. 
 * **project** will copy over the whole Maven project but with out
@@ -822,6 +825,8 @@ some condition is met. These conditions can be specified within a
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
 * **time** is the time in milliseconds to block.
+* **kill** is the time in milliseconds between sending SIGTERM and SIGKILL when stopping a container. Since docker itself
+  uses second granularity, you should use at least 1000 milliseconds.
 * **shutdown** is the time to wait in milliseconds between stopping a container
   and removing it. This might be helpful in situation where a Docker croaks with an
   error when trying to remove a container to fast after it has been stopped.
@@ -844,6 +849,7 @@ Example:
     <status>200..399</status>
   </http>
   <time>10000</time>
+  <kill>1000</kill>
   <shutdown>500</shutdown>
   <exec>
      <postStart>/opt/init_db.sh</postStart>
@@ -898,6 +904,8 @@ configuring the log output:
   colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If
   coloring is enabled and now color is provided a color is picked for
   you. 
+* **file** Path to a file to which the log output is written. This file is overwritten 
+  for every run and colors are switched off. 
   
 Example (values can be case insensitive, too) :
 
@@ -957,7 +965,7 @@ are two watch modes, which can be specified in multiple ways:
   included directly in `assembly.xml` but also for arbitrary dependencies. 
   For example:
 
-        $ mvn package docker:build docker:watch -Ddocker.watch.mode=build
+        $ mvn package docker:build docker:watch -Ddocker.watchMode=build
 
   This mode works only when there is a `<build>` section
   in an image configuration. Otherwise no automatically build will be triggered for an 
@@ -973,10 +981,16 @@ are two watch modes, which can be specified in multiple ways:
   rebuilt. This mode works reliably only when used together with
   `docker:start`.
 
-        $ mvn docker:start docker:watch -Ddocker.watch.mode=run
+        $ mvn docker:start docker:watch -Ddocker.watchMode=run
 
-The mode can also be `both` or `none` to select both or none of these
-variants, respectively. The default is `both`. 
+* `both` : Enables both `build` and `run`. This is the default `both`. 
+
+* `none` : Image is complete ignored for watching
+
+* `copy` : Copy changed files into the running container. This is the
+  fast way to update a container, however the target container must
+  support hot deply, too so that it makes sense. Most application
+  servers like Tomcat supports this. 
 
 `docker:watch` will run forever until it is interrupted with `CTRL-C`
 after which it will stop all containers. Depending on the configuration
@@ -1002,31 +1016,42 @@ to do this manually.
 This maven goal can be configured with the following top-level
 parameters:
 
-* **watchMode** `docker.watch.mode`: The watch mode specifies what should be watched
+* **watchMode** `docker.watchMode`: The watch mode specifies what should be watched
   - `build` : Watch changes in the assembly and rebuild the image in
   case
   - `run` : Watch a container's image whether it changes and restart
   the container in case
+  - `copy` : Changed files are copied into the container. The
+    container can be either running or might be already exited (when
+    used as a *data container* linked into a *platform
+    container*). Requires Docker >= 1.8.
   - `both` : `build` and `run` combined
   - `none` : Neither watching for builds nor images. This is useful if
   you use prefactored images which won't be changed and hence don't
-  need any watching. `none` is best used on an per image level, see below how this can 
-  be specified.
-* **watchInterval** `docker.watch.interval` specifies the interval in
+  need any watching. `none` is best used on an per image level, see
+  below how this can be specified.
+* **watchInterval** `docker.watchInterval` specifies the interval in
   milliseconds how  often to check for changes, which must be larger
-  than 100ms. The default are 5 seconds.
-* **watchPostGoal** A maven goal which should be called if a rebuild or a restart has 
-  been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and 
-  the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will 
-  trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the 
-  Kubernetes cluster. The value specified here is the the default post goal which can be overridden 
-  by `<postGoal>` in a `<watch>` configuration.
+  than 100ms. The default is 5 seconds.
+* **watchPostGoal** A maven goal which should be called if a rebuild
+  or a restart has been performed. This goal must have the format
+  `<pluginGroupId>:<pluginArtifactId>:<goal>` and the plugin must be
+  configured in the `pom.xml`. For example a post-goal
+  `io.fabric8:fabric8:delete-pods` will trigger the deletion of PODs
+  in Kubernetes which in turn triggers are new start of a POD within
+  the Kubernetes cluster. The value specified here is the the default
+  post goal which can be overridden by `<postGoal>` in a `<watch>`
+  configuration.
+* **watchPostExec** can be a command which is executed within the
+  container after files are copied into this container for `watchMode
+  == copy`. Note that this container must be running.
 * **keepRunning** `docker.keepRunning` if set to `true` all
   container will be kept running after `docker:watch` has been
   stopped. By default this is set to `false`. 
-* **keepContainer** `docker.keepContainer` similar to `docker:stop`, if this is set to `true`
-  (and `keepRunning` is disabled) then all container will be removed
-  after they have been stopped. The default is `true`.
+* **keepContainer** `docker.keepContainer` similar to `docker:stop`,
+  if this is set to `true` (and `keepRunning` is disabled) then all
+  container will be removed after they have been stopped. The default
+  is `true`.
 * **removeVolumes** `docker.removeVolumes` if given will remove any
   volumes associated to the container as well. This option will be ignored
   if either `keepContainer` or `keepRunning` are `true`.
@@ -1035,13 +1060,18 @@ Image specific watch configuration goes into an extra image-level
 `<watch>` section (i.e. `<image><watch>...</watch></image>`). 
 The following parameters are recognized:
 
-* **mode** Each image can be configured for having individual watch mode. These
-  take precedence of the global watch mode. The mode specified in this
-  configuration takes precedence over the globally specified mode.  
+* **mode** Each image can be configured for having individual watch
+  mode. These take precedence of the global watch mode. The mode
+  specified in this configuration takes precedence over the globally
+  specified mode.
 * **interval** The watch interval can be specified in milliseconds on
   image level. If given this will override the global watch interval.
-* **postGoal** A post Maven plugin goal after a rebuild or restart. The value here must have the 
-  format `<pluginGroupId>:<pluginArtifactId>:<goal>` (e.g. `io.fabric8:fabric8:delete-pods`)
+* **postGoal** A post Maven plugin goal after a rebuild or
+  restart. The value here must have the format
+  `<pluginGroupId>:<pluginArtifactId>:<goal>`
+  (e.g. `io.fabric8:fabric8:delete-pods`)
+* **postExec** Command to execute after files are copied into a
+  running container for `mode == copy`. 
   
 Here is an example how the watch mode can be tuned:
 
@@ -1264,6 +1294,7 @@ values in the `<build>` and `<run>` sections.
 * **docker.wait.log** Wait for a log output to appear.
 * **wait.exec.postStart** Command to execute after the container has start up. 
 * **wait.exec.preStop** Command to execute before command stops.
+* **docker.wait.kill** Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.
 * **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
 * **docker.workingDir** Working dir for commands to run in
 

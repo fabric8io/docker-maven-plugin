@@ -174,6 +174,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .method(withPrefix(prefix, WAIT_HTTP_METHOD, properties))
                 .status(withPrefix(prefix, WAIT_HTTP_STATUS, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
+                .kill(asInt(withPrefix(prefix, WAIT_KILL, properties)))
                 .shutdown(asInt(withPrefix(prefix,WAIT_SHUTDOWN,properties)))
                 .build();
     }

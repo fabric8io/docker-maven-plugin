@@ -19,6 +19,7 @@ import java.util.*;
 
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.log.LogOutputSpecFactory;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.util.*;
 
@@ -35,7 +36,6 @@ public class RunService {
     private Logger log;
 
     // Action to be used when doing a shutdown
-    //private final Map<String,ShutdownAction> shutdownActionMap = new LinkedHashMap<>();
     final private ContainerTracker tracker;
 
     // DAO for accessing the docker daemon
@@ -43,26 +43,35 @@ public class RunService {
 
     private QueryService queryService;
 
-    public RunService(DockerAccess docker, QueryService queryService, ContainerTracker tracker, Logger log) {
+    private final LogOutputSpecFactory logConfig;
+
+    public RunService(DockerAccess docker,
+                      QueryService queryService,
+                      ContainerTracker tracker,
+                      LogOutputSpecFactory logConfig,
+                      Logger log) {
         this.docker = docker;
         this.queryService = queryService;
         this.tracker = tracker;
         this.log = log;
+        this.logConfig = logConfig;
     }
 
     /**
      * Create and start a Exec container with the given image configuration.
      * @param containerId container id to run exec command against
-     *
+     * @param command command to execute
+     * @param imageConfiguration configuration of the container's image
      * @return the exec container id
      *
      * @throws DockerAccessException if access to the docker backend fails
      */
-    public String execInContainer(String containerId, String command) throws DockerAccessException {
+    public String execInContainer(String containerId, String command, ImageConfiguration imageConfiguration)
+            throws DockerAccessException {
         Arguments arguments = new Arguments();
         arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
-        String execContainerId = docker.createExecContainer(arguments, containerId);
-        docker.startExecContainer(execContainerId);
+        String execContainerId = docker.createExecContainer(containerId, arguments);
+        docker.startExecContainer(execContainerId, logConfig.createSpec(containerId, imageConfiguration));
         return execContainerId;
     }
 
@@ -96,16 +105,18 @@ public class RunService {
 
     /**
      * Stop a container immediately by id.
-     * @param image image configuration for this container
      * @param containerId the container to stop
+     * @param imageConfig image configuration for this container
      * @param keepContainer whether to keep container or to remove them after stoppings
      * @param removeVolumes whether to remove volumes after stopping
      */
-    public void stopContainer(ImageConfiguration image,
-                              String containerId, boolean keepContainer,
+    public void stopContainer(String containerId,
+                              ImageConfiguration imageConfig,
+                              boolean keepContainer,
                               boolean removeVolumes)
             throws DockerAccessException {
-        ContainerTracker.ContainerShutdownDescriptor descriptor = new ContainerTracker.ContainerShutdownDescriptor(image,containerId);
+        ContainerTracker.ContainerShutdownDescriptor descriptor =
+                new ContainerTracker.ContainerShutdownDescriptor(imageConfig,containerId);
         shutdown(docker, descriptor, log, keepContainer, removeVolumes);
     }
 
@@ -197,8 +208,6 @@ public class RunService {
             }
         });
     }
-
-    // ================================================================================================
 
     private List<StartOrderResolver.Resolvable> convertToResolvables(List<ImageConfiguration> images) {
         List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
@@ -328,20 +337,31 @@ public class RunService {
         mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());
     }
 
-    private void shutdown(DockerAccess access, ContainerTracker.ContainerShutdownDescriptor descriptor,
+    private void shutdown(DockerAccess access,
+                          ContainerTracker.ContainerShutdownDescriptor descriptor,
                           Logger log, boolean keepContainer, boolean removeVolumes)
             throws DockerAccessException {
 
         String containerId = descriptor.getContainerId();
         if (descriptor.getPreStop() != null) {
             try {
-                execInContainer(containerId, descriptor.getPreStop());
+                execInContainer(containerId, descriptor.getPreStop(), descriptor.getImageConfiguration());
             } catch (DockerAccessException e) {
                 log.error(e.getMessage());
             }
         }
         // Stop the container
-        access.stopContainer(containerId);
+        int killGracePeriod = descriptor.getKillGracePeriod();
+        int killGracePeriodInSeconds = (killGracePeriod + 500) / 1000;
+        if (killGracePeriod != 0 && killGracePeriodInSeconds == 0) {
+            log.warn("A kill grace period of " + killGracePeriod + "ms leads to no wait at all since its rounded to seconds. " +
+                     "Please use at least 500 as value for wait.kill");
+        }
+        access.stopContainer(containerId, killGracePeriodInSeconds);
+        if (killGracePeriod > 0) {
+            log.debug("Shutdown: Wait " + killGracePeriodInSeconds + " s after stopping and before killing container");
+            WaitUtil.sleep(killGracePeriodInSeconds * 1000);
+        }
         if (!keepContainer) {
             int shutdownGracePeriod = descriptor.getShutdownGracePeriod();
             if (shutdownGracePeriod != 0) {

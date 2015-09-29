@@ -42,7 +42,7 @@ public class DockerAssemblyConfigurationSourceTest {
         String image = "image";
         MojoParameters params = buildParameters(".","src/docker", "output/docker");
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params,
-                                                                                         new BuildDirs(params,image),assemblyConfig);
+                                                                                         new BuildDirs(image, params),assemblyConfig);
         
         assertTrue(containsDir(image, source.getOutputDirectory()));
         assertTrue(containsDir(image, source.getWorkingDirectory()));
@@ -66,7 +66,7 @@ public class DockerAssemblyConfigurationSourceTest {
 
     private void testCreateSource(MojoParameters params) {
         DockerAssemblyConfigurationSource source =
-                new DockerAssemblyConfigurationSource(params, new BuildDirs(params,"image"),assemblyConfig);
+                new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params),assemblyConfig);
 
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();

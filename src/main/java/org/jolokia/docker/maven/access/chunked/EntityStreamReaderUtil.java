@@ -7,19 +7,12 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-public class ChunkedResponseReader {
+public class EntityStreamReaderUtil {
 
-    private final InputStream stream;
-    private final ChunkedResponseHandler handler;
-    private final JSONTokener tokener;
+    private EntityStreamReaderUtil() {}
 
-    public ChunkedResponseReader(InputStream stream, ChunkedResponseHandler handler) {
-        this.stream = stream;
-        this.handler = handler;
-        this.tokener = new JSONTokener(stream);
-    }        
-    
-    public void process() throws IOException {
+    public static void processJsonStream(JsonEntityResponseHandler handler, InputStream stream) throws IOException {
+        JSONTokener tokener = new JSONTokener(stream);
         while (true) {
             char next = tokener.nextClean();
             if (next == 0) {
@@ -32,7 +25,7 @@ public class ChunkedResponseReader {
         }
     }
 
-    public interface ChunkedResponseHandler {
+    public interface JsonEntityResponseHandler {
         void process(JSONObject toProcess) throws DockerAccessException;
     }
 }

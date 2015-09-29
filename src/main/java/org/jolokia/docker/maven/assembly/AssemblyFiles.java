@@ -28,13 +28,23 @@ import java.util.List;
  */
 public class AssemblyFiles {
 
+    private final File assemblyDirectory;
     private List<Entry> entries = new ArrayList<>();
+
+    /**
+     * Create a collection of assembly files
+     *
+     * @param assemblyDirectory directory into which the files are copied
+     */
+    public AssemblyFiles(File assemblyDirectory) {
+        this.assemblyDirectory = new File(assemblyDirectory.getParentFile(), DockerAssemblyManager.ASSEMBLY_NAME);
+    }
 
     /**
      * Add a entry to the list of assembly files which possible should be monitored
      *
      * @param srcFile source file to monitor. The source file must exist.
-     * @param destFile the destination to which it is eventually copied. The destination file must be relative
+     * @param destFile the destination to which it is eventually copied. The destination file must be relative.
      */
     public void addEntry(File srcFile, File destFile) {
         entries.add(new Entry(srcFile,destFile));
@@ -57,6 +67,15 @@ public class AssemblyFiles {
         return ret;
     }
 
+    /**
+     * Return destination directory where the files are copied into
+     *
+     * @return top-level directory holding the assembled files
+     */
+    public File getAssemblyDirectory() {
+        return assemblyDirectory;
+    }
+
     // ===============================================================================
     // Inner class remembering the modification date of a source file and its destination
 
@@ -72,11 +91,11 @@ public class AssemblyFiles {
             if (!srcFile.exists()) {
                 throw new IllegalArgumentException("Source " + srcFile + " does not exist");
             }
+            if (!destFile.exists()) {
+                throw new IllegalArgumentException("Destination " + destFile + " does not exist");
+            }
             if (srcFile.isDirectory()) {
                 throw new IllegalArgumentException("Can only watch files, not directories: " + srcFile);
-            }
-            if (destFile.isAbsolute()) {
-                throw new IllegalArgumentException("Destination " + destFile + " must not be absolute");
             }
             this.lastModified = this.srcFile.lastModified();
         }
@@ -85,6 +104,9 @@ public class AssemblyFiles {
             return srcFile;
         }
 
+        /**
+         * @return destination file which is absolute (and withing AssemblyFiles.assemblyDirectory)
+         */
         public File getDestFile() {
             return destFile;
         }

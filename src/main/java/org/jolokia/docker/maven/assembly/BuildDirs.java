@@ -27,7 +27,7 @@ import org.jolokia.docker.maven.util.MojoParameters;
  * @author roland
  * @since 27/02/15
  */
-public class BuildDirs {
+class BuildDirs {
 
     private final String buildTopDir;
     private final MojoParameters params;
@@ -35,29 +35,29 @@ public class BuildDirs {
     /**
      * Constructor building up the the output directories
      *
-     * @param params mojo params holding base and global outptput dir
      * @param imageName image name for the image to build
+     * @param params mojo params holding base and global outptput dir
      */
-    public BuildDirs(MojoParameters params, String imageName) {
+    BuildDirs(String imageName, MojoParameters params) {
         this.params = params;
         // Replace tag separator with a slash to avoid problems
         // with OSs which gets confused by colons.
         this.buildTopDir = imageName != null ? imageName.replace(':', '/') : null;
     }
 
-    public File getOutputDirectory() {
+    File getOutputDirectory() {
         return getDir("build");
     }
 
-    public File getWorkingDirectory() {
+    File getWorkingDirectory() {
         return getDir("work");
     }
 
-    public File getTemporaryRootDirectory() {
+    File getTemporaryRootDirectory() {
         return getDir("tmp");
     }
 
-    public void createDirs() {
+    void createDirs() {
         for (String workDir : new String[] { "build", "work", "tmp" }) {
             File dir = getDir(workDir);
             if (!dir.exists()) {
@@ -67,6 +67,7 @@ public class BuildDirs {
             }
         }
     }
+
     private File getDir(String dir) {
         return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, dir);
     }

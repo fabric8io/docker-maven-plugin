@@ -1,6 +1,7 @@
 package org.jolokia.docker.maven.service;
 
 import java.io.File;
+import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
@@ -60,15 +61,40 @@ public class BuildService {
         }
     }
 
-    public AssemblyFiles getAssemblyFiles(String name, ImageConfiguration imageConfig, MojoParameters mojoParameters)
+    /**
+     * Get a mapping of original to destination files which a covered by an assembly. This can be used
+     * to watch the source files for changes in order to update the target (either by recreating a docker image
+     * or by copying it into a running container)
+     *
+     * @param imageConfig image config for which to get files. The build- and assembly configuration in this image
+     *                    config must not be null.
+     * @param mojoParameters needed for tracking the assembly
+     * @return mapping of assembly files
+     * @throws MojoExecutionException
+     */
+    public AssemblyFiles getAssemblyFiles(ImageConfiguration imageConfig, MojoParameters mojoParameters)
         throws MojoExecutionException {
 
+        String name = imageConfig.getName();
         try {
-            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters);
+            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters, log);
         } catch (InvalidAssemblerConfigurationException | ArchiveCreationException | AssemblyFormattingException e) {
             throw new MojoExecutionException("Cannot extract assembly files for image " + name + ": " + e, e);
         }
     }
+
+    /**
+     * Create an tar archive from a set of assembly files. Only files which changed since the last call are included.
+     * @param entries changed files. List must not be empty or null
+     * @param imageName image's name
+     * @param mojoParameters
+     * @return created archive
+     */
+    public File createChangedFilesArchive(List<AssemblyFiles.Entry> entries, File assemblyDir, String imageName, MojoParameters mojoParameters) throws MojoExecutionException {
+        return dockerAssemblyManager.createChangedFilesArchive(entries, assemblyDir, imageName, mojoParameters);
+    }
+
+    // ===============================================================
 
     private String buildImage(String imageName, BuildImageConfiguration buildConfig, MojoParameters mojoParameters)
         throws DockerAccessException, MojoExecutionException {

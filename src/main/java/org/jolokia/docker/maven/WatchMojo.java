@@ -15,6 +15,8 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -26,8 +28,7 @@ import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
 import org.jolokia.docker.maven.config.*;
-import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.MojoParameters;
 import org.jolokia.docker.maven.util.StartOrderResolver;
 
@@ -69,6 +70,11 @@ public class WatchMojo extends AbstractBuildSupportMojo {
      */
     private String watchPostGoal;
 
+    /**
+     * @parameter property = "docker.watchPostExec"
+     */
+    private String watchPostExec;
+
     // Scheduler
     private ScheduledExecutorService executor;
 
@@ -91,17 +97,29 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 String containerId = runService.lookupContainer(imageConfig.getName());
 
                 ImageWatcher watcher = new ImageWatcher(imageConfig, imageId, containerId);
+                long interval = watcher.getInterval();
 
                 ArrayList<String> tasks = new ArrayList<>();
 
-                if (imageConfig.getBuildConfiguration() != null && watcher.isBuild()) {
-                    scheduleBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both);
-                    tasks.add("rebuilding");
+                if (imageConfig.getBuildConfiguration() != null &&
+                    imageConfig.getBuildConfiguration().getAssemblyConfiguration() != null) {
+                    if (watcher.isCopy()) {
+                        String containerBaseDir = imageConfig.getBuildConfiguration().getAssemblyConfiguration().getBasedir();
+                        schedule(createCopyWatchTask(dockerAccess, watcher, mojoParameters, containerBaseDir),interval);
+                        tasks.add("copying artifacts");
+                    }
+
+                    if (watcher.isBuild()) {
+                        schedule(createBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both), interval);
+                        tasks.add("rebuilding");
+                    }
                 }
+
                 if (watcher.isRun() && watcher.getContainerId() != null) {
-                    scheduleRestartWatchTask(dockerAccess, watcher);
+                    schedule(createRestartWatchTask(dockerAccess, watcher), interval);
                     tasks.add("restarting");
                 }
+
                 if (tasks.size() > 0) {
                     log.info(imageConfig.getDescription() + ": Watch for " + StringUtils.join(tasks.toArray()," and "));
                 }
@@ -118,41 +136,65 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         }
     }
 
-    private void scheduleBuildWatchTask(DockerAccess dockerAccess, ImageWatcher watcher,
-            MojoParameters mojoParameters, boolean doRestart) throws MojoExecutionException {
-        executor.scheduleAtFixedRate(
-                createBuildWatchTask(dockerAccess, watcher, mojoParameters, doRestart),
-                0, watcher.getInterval(), TimeUnit.MILLISECONDS);
+    private void schedule(Runnable runnable, long interval) {
+        executor.scheduleAtFixedRate(runnable, 0, interval, TimeUnit.MILLISECONDS);
     }
 
-    private void scheduleRestartWatchTask(DockerAccess dockerAccess, ImageWatcher watcher) throws DockerAccessException {
-        executor.scheduleAtFixedRate(
-                createRestartWatchTask(dockerAccess, watcher),
-                0, watcher.getInterval(), TimeUnit.MILLISECONDS);
+    private Runnable createCopyWatchTask(final DockerAccess docker, final ImageWatcher watcher,
+                                         final MojoParameters mojoParameters, final String containerBaseDir) throws MojoExecutionException {
+        final ImageConfiguration imageConfig = watcher.getImageConfiguration();
+        final BuildService buildService = serviceHub.getBuildService();
+        final AssemblyFiles files = buildService.getAssemblyFiles(imageConfig, mojoParameters);
+        return new Runnable() {
+            @Override
+            public void run() {
+                List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
+                if (entries != null && entries.size() > 0) {
+                    try {
+                        log.info(imageConfig.getDescription() + ": Assembly changed. Copying changed files to container ...");
+
+                        File changedFilesArchive = buildService.createChangedFilesArchive(entries,files.getAssemblyDirectory(),
+                                                                                          imageConfig.getName(),mojoParameters);
+                        docker.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
+                        callPostExec(serviceHub.getRunService(),watcher);
+                    } catch (MojoExecutionException | IOException e) {
+                        log.error(imageConfig.getDescription() + ": Error when copying files to container " + watcher.getContainerId() + ": " + e);
+                    }
+                }
+            }
+        };
+    }
+
+    private void callPostExec(RunService runService, ImageWatcher watcher) throws DockerAccessException {
+        if (watcher.getPostExec() != null) {
+            String containerId = watcher.getContainerId();
+            runService.execInContainer(containerId, watcher.getPostExec(), watcher.getImageConfiguration());
+        }
     }
 
     private Runnable createBuildWatchTask(final DockerAccess docker, final ImageWatcher watcher,
                                           final MojoParameters mojoParameters, final boolean doRestart)
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final String name = imageConfig.getName();
-        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(name, imageConfig, mojoParameters);
+        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(imageConfig, mojoParameters);
+
         return new Runnable() {
             @Override
             public void run() {
-                List<AssemblyFiles.Entry> entry = files.getUpdatedEntriesAndRefresh();
-                if (entry != null && entry.size() > 0) {
+                List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
+                if (entries != null && entries.size() > 0) {
                     try {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
-                        // Rebuild whole image for now ...
+
                         buildImage(docker, imageConfig);
 
+                        String name = imageConfig.getName();
                         watcher.setImageId(serviceHub.getQueryService().getImageId(name));
                         if (doRestart) {
                             restartContainer(watcher);
                         }
                         callPostGoal(watcher);
-                    } catch (DockerAccessException | MojoExecutionException | MojoFailureException e) {
+                    } catch (MojoExecutionException | MojoFailureException | IOException e) {
                         log.error(imageConfig.getDescription() + ": Error when rebuilding " + e);
                     }
                 }
@@ -193,7 +235,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
         String optionalPreStop = getPreStopCommand(imageConfig);
         if (optionalPreStop != null) {
-            runService.execInContainer(id, optionalPreStop);
+            runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
         }
         runService.stopContainer(id, false, false);
 
@@ -228,6 +270,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         private final long interval;
         private final ImageConfiguration imageConfig;
         private final String postGoal;
+        private String postExec;
 
         public ImageWatcher(ImageConfiguration imageConfig, String imageId, String containerIdRef) {
             this.imageConfig = imageConfig;
@@ -238,6 +281,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             this.interval = getWatchInterval(imageConfig);
             this.mode = getWatchMode(imageConfig);
             this.postGoal = getPostGoal(imageConfig);
+            this.postExec = getPostExec(imageConfig);
         }
 
         public String getContainerId() {
@@ -250,6 +294,10 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
         public String getPostGoal() {
             return postGoal;
+        }
+
+        public boolean isCopy() {
+            return mode.isCopy();
         }
 
         public boolean isBuild() {
@@ -280,17 +328,29 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             return imageIdRef.getAndSet(currentImageId);
         }
 
+        public String getPostExec() {
+            return postExec;
+        }
+
         // =========================================================
 
         private int getWatchInterval(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfiguration = imageConfig.getWatchConfiguration();
-            int interval = watchConfiguration != null ? watchConfiguration.getInterval() : watchInterval;
+            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            int interval = watchConfig != null ? watchConfig.getInterval() : WatchMojo.this.watchInterval;
             return interval < 100 ? 100 : interval;
         }
 
+        private String getPostExec(ImageConfiguration imageConfig) {
+            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            return watchConfig != null && watchConfig.getPostExec() != null ?
+                    watchConfig.getPostExec() : WatchMojo.this.watchPostExec;
+        }
+
         private String getPostGoal(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfiguration = imageConfig.getWatchConfiguration();
-            return watchConfiguration != null ? watchConfiguration.getPostGoal() : watchPostGoal;
+            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            return watchConfig != null && watchConfig.getPostGoal() != null ?
+                    watchConfig.getPostGoal() : WatchMojo.this.watchPostGoal;
+
         }
 
         private WatchMode getWatchMode(ImageConfiguration imageConfig) {
@@ -298,6 +358,5 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             WatchMode mode = watchConfig != null ? watchConfig.getMode() : null;
             return mode != null ? mode : WatchMojo.this.watchMode;
         }
-
     }
 }

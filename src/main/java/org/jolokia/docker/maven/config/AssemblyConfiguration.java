@@ -51,7 +51,9 @@ public class AssemblyConfiguration {
      * @parameter
      */
     private String user;
-    
+
+    public boolean skip;
+
     public AssemblyConfiguration() {
     }
 

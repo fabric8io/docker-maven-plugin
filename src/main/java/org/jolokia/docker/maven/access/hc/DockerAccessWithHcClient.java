@@ -10,17 +10,16 @@ import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.access.log.LogRequestor;
 import org.jolokia.docker.maven.config.Arguments;
+import org.jolokia.docker.maven.log.LogOutputSpec;
+import org.jolokia.docker.maven.log.DefaultLogCallback;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.model.ContainerDetails;
 import org.jolokia.docker.maven.model.ContainersListElement;
-import org.jolokia.docker.maven.util.ImageName;
-import org.jolokia.docker.maven.util.Logger;
+import org.jolokia.docker.maven.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,8 +61,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
      * @param baseUrl  base URL for accessing the docker Daemon
      * @param certPath used to build up a keystore with the given keys and certificates found in this
      *                 directory
-     * @param maxConnections maximum parallel connections allowed to docker daemon
+     * @param maxConnections maximum parallel connections allowed to docker daemon (if a pool is used)
      * @param log      a log handler for printing out logging information
+     * @paran usePool  whether to use a connection bool or not
      */
     public DockerAccessWithHcClient(String apiVersion, String baseUrl, String certPath, int maxConnections, Logger log)
             throws IOException {
@@ -77,34 +77,58 @@ public class DockerAccessWithHcClient implements DockerAccess {
                     new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(),maxConnections));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
         } else {
-            this.delegate =
-                    new ApacheHttpClientDelegate(
-                            new HttpClientBuilder(isSSL(baseUrl) ? certPath : null).build(maxConnections));
+            HttpClientBuilder builder = new HttpClientBuilder();
+            if (isSSL(baseUrl)) {
+                builder.certPath(certPath);
+            }
+            builder.maxConnections(maxConnections);
+            this.delegate = new ApacheHttpClientDelegate(builder.build());
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
     }
 
     @Override
-    public String startExecContainer(String containerId) throws DockerAccessException {
+    public void startExecContainer(String containerId, LogOutputSpec outputSpec) throws DockerAccessException {
         try {
             String url = urlBuilder.startExecContainer(containerId);
             JSONObject request = new JSONObject();
             request.put("Detach", false);
-            request.put("Tty", false);
+            request.put("Tty", true);
 
-            return delegate.post(url, request.toString(), new BodyResponseHandler(), HTTP_OK);
+            delegate.post(url, request.toString(), createExecResponseHandler(outputSpec), HTTP_OK);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to start container id [%s]", containerId);
         }
     }
 
+    private ResponseHandler<Object> createExecResponseHandler(LogOutputSpec outputSpec) throws FileNotFoundException {
+        final LogCallback callback = new DefaultLogCallback(outputSpec);
+        return new ResponseHandler<Object>() {
+            @Override
+            public Object handleResponse(HttpResponse response) throws IOException {
+                try (InputStream stream = response.getEntity().getContent()) {
+                    LineNumberReader reader = new LineNumberReader(new InputStreamReader(stream));
+                    String line;
+                    try {
+                        while ( (line = reader.readLine()) != null) {
+                            callback.log(1, new Timestamp(), line);
+                        }
+                    } catch (LogCallback.DoneException e) {
+                        // Ok, we stop here ...
+                    }
+                }
+                return null;
+            }
+        };
+    }
+
     @Override
-    public String createExecContainer(Arguments arguments, String containerId) throws DockerAccessException {
+    public String createExecContainer(String containerId, Arguments arguments) throws DockerAccessException {
         String url = urlBuilder.createExecContainer(containerId);
         JSONObject request = new JSONObject();
-        request.put("Tty", false);
-        request.put("AttachStdin", true);
+        request.put("Tty", true);
+        request.put("AttachStdin", false);
         request.put("AttachStdout", true);
         request.put("AttachStderr", true);
         request.put("Cmd", arguments.getExec());
@@ -160,9 +184,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void stopContainer(String containerId) throws DockerAccessException {
+    public void stopContainer(String containerId, int killWait) throws DockerAccessException {
         try {
-            String url = urlBuilder.stopContainer(containerId);
+            String url = urlBuilder.stopContainer(containerId, killWait);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -183,18 +207,27 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
+    public void copyArchive(String containerId,File archive, String targetPath)
+            throws DockerAccessException {
+        try {
+            String url = urlBuilder.copyArchive(containerId, targetPath);
+            delegate.put(url, archive, HTTP_OK);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            throw new DockerAccessException("Unable to copy archive %s to container [%s] with path %s",
+                                            archive.toPath(), containerId, targetPath);
+        }
+    }
+
+    @Override
     public void getLogSync(String containerId, LogCallback callback) {
-        LogRequestor
-                extractor =
-                new LogRequestor(delegate.getHttpClient(), urlBuilder, containerId, callback);
+        LogRequestor extractor = new LogRequestor(delegate.getHttpClient(), urlBuilder, containerId, callback);
         extractor.fetchLogs();
     }
 
     @Override
     public LogGetHandle getLogAsync(String containerId, LogCallback callback) {
-        LogRequestor
-                extractor =
-                new LogRequestor(delegate.getHttpClient(), urlBuilder, containerId, callback);
+        LogRequestor extractor = new LogRequestor(delegate.getHttpClient(), urlBuilder, containerId, callback);
         extractor.start();
         return extractor;
     }
@@ -351,33 +384,12 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     // visible for testing?
     private HcChunckedResponseHandlerWrapper createBuildResponseHandler() {
-        return new HcChunckedResponseHandlerWrapper(log, new BuildResponseHandler(log));
-    }
-
-    private static class HcChunckedResponseHandlerWrapper implements ResponseHandler<Object> {
-
-        private ChunkedResponseReader.ChunkedResponseHandler handler;
-        private Logger log;
-
-        public HcChunckedResponseHandlerWrapper(Logger log,
-                                                ChunkedResponseReader.ChunkedResponseHandler handler) {
-            this.log = log;
-            this.handler = handler;
-        }
-
-        @Override
-        public Object handleResponse(HttpResponse response) throws IOException {
-            try (InputStream stream = response.getEntity().getContent()) {
-                // Parse text as json
-                new ChunkedResponseReader(stream,handler).process();
-            }
-            return null;
-        }
+        return new HcChunckedResponseHandlerWrapper(log, new BuildJsonResponseHandler(log));
     }
 
     // visible for testing?
     private HcChunckedResponseHandlerWrapper createPullOrPushResponseHandler() {
-        return new HcChunckedResponseHandlerWrapper(log, new PullOrPushResponseHandler(log));
+        return new HcChunckedResponseHandlerWrapper(log, new PullOrPushResponseJsonHandler(log));
     }
 
     private Map<String, String> createAuthHeader(AuthConfig authConfig) {
@@ -401,9 +413,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                "docker.io".equalsIgnoreCase(registry) ||
                "registry.hub.docker.com".equalsIgnoreCase(registry);
     }
-
     // ===========================================================================================================
-    // Preparation for performing requests
 
     private void logWarnings(JSONObject body) {
         Object warningsObj = body.get("Warnings");
@@ -427,6 +437,28 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private boolean isSSL(String url) {
         return url != null && url.toLowerCase().startsWith("https");
+    }
+
+    // Preparation for performing requests
+    private static class HcChunckedResponseHandlerWrapper implements ResponseHandler<Object> {
+
+        private EntityStreamReaderUtil.JsonEntityResponseHandler handler;
+        private Logger log;
+
+        public HcChunckedResponseHandlerWrapper(Logger log,
+                                                EntityStreamReaderUtil.JsonEntityResponseHandler handler) {
+            this.log = log;
+            this.handler = handler;
+        }
+
+        @Override
+        public Object handleResponse(HttpResponse response) throws IOException {
+            try (InputStream stream = response.getEntity().getContent()) {
+                // Parse text as json
+                EntityStreamReaderUtil.processJsonStream(handler, stream);
+            }
+            return null;
+        }
     }
 
 }

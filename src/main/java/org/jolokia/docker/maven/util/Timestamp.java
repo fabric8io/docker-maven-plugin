@@ -35,6 +35,14 @@ public class Timestamp implements Comparable<Timestamp> {
     private static Pattern TS_PATTERN = Pattern.compile("^(.*?)(?:\\.(\\d{3})(\\d*))?([^\\d]*?)$");
 
     /**
+     * Create a timestamp for *now*
+     *
+     */
+    public Timestamp() {
+        date = new DateTime();
+    }
+
+    /**
      * Create a timestamp by parsing the given string representation which must be in an extended ISO 8601 Format
      * with Nanoseconds since this is the format used by Docker for logging (e.g. "2014-11-24T22:34:00.761764812Z")
      *

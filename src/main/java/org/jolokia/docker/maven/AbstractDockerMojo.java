@@ -1,5 +1,10 @@
 package org.jolokia.docker.maven;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+
 import org.apache.maven.plugin.*;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -10,18 +15,13 @@ import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
-import org.jolokia.docker.maven.log.ContainerLogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.log.LogOutputSpecFactory;
 import org.jolokia.docker.maven.service.QueryService;
 import org.jolokia.docker.maven.service.ServiceHub;
 import org.jolokia.docker.maven.util.*;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
 
 /**
  * Base class for this plugin.
@@ -99,6 +99,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter property = "docker.logDate" */
     private String logDate;
 
+    // Log to stdout regardless if log files are configured or not
+    /** @parameter property = "docker.logStdout" default-value = "false" */
+    private boolean logStdout;
+
     // Whether to skip docker altogether
     /** @parameter property = "docker.skip" default-value = "false" */
     private boolean skip;
@@ -154,7 +158,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             String dockerUrl = EnvUtil.extractUrl(dockerHost);
             DockerAccess access = createDockerAccess(dockerUrl);
             setDockerHostAddressProperty(dockerUrl);
-            serviceHub.init(access,log);
+            serviceHub.init(access,log, new LogOutputSpecFactory(useColor, logStdout, logDate));
 
             try {
                 executeInternal(access);
@@ -275,7 +279,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected AuthConfig prepareAuthConfig(String image, String configuredRegistry) throws MojoExecutionException {
         ImageName name = new ImageName(image);
         String user = name.getUser();
-        String  registry = name.getRegistry() != null ? name.getRegistry() : configuredRegistry;
+        String registry = name.getRegistry() != null ? name.getRegistry() : configuredRegistry;
 
         return authConfigFactory.createAuthConfig(authConfig, settings, user, registry);
     }
@@ -283,57 +287,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected LogDispatcher getLogDispatcher(DockerAccess docker) {
         LogDispatcher dispatcher = (LogDispatcher) getPluginContext().get(CONTEXT_KEY_LOG_DISPATCHER);
         if (dispatcher == null) {
-            dispatcher = new LogDispatcher(docker, useColor);
-            dispatcher.addLogOutputStream(System.out);
+            dispatcher = new LogDispatcher(docker);
             getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
-    }
-
-    protected ContainerLogOutputSpec getContainerLogSpec(String containerId, ImageConfiguration imageConfiguration) {
-        ContainerLogOutputSpec.Builder builder = new ContainerLogOutputSpec.Builder();
-        LogConfiguration logConfig = extractLogConfiguration(imageConfiguration);
-
-        addLogFormat(builder, logConfig);
-        addPrefix(builder, logConfig.getPrefix(), imageConfiguration.getAlias(), containerId);
-
-        builder.containerId(containerId)
-                .color(logConfig.getColor());
-
-        return builder.build();
-    }
-
-    private void addPrefix(ContainerLogOutputSpec.Builder builder, String logPrefix, String alias, String containerId) {
-        String prefix = logPrefix;
-        if (prefix == null) {
-            prefix = alias;
-        }
-        if (prefix == null) {
-            prefix = containerId.substring(0, 6);
-        }
-        builder.prefix(prefix);
-    }
-
-    private void addLogFormat(ContainerLogOutputSpec.Builder builder, LogConfiguration logConfig) {
-        String logFormat = logConfig.getDate() != null ? logConfig.getDate() : logDate;
-        if (logFormat != null && logFormat.equalsIgnoreCase("true")) {
-            logFormat = "DEFAULT";
-        }
-        if (logFormat != null) {
-            builder.timeFormatter(logFormat);
-        }
-    }
-
-    private LogConfiguration extractLogConfiguration(ImageConfiguration imageConfiguration) {
-        RunImageConfiguration runConfig = imageConfiguration.getRunConfiguration();
-        LogConfiguration logConfig = null;
-        if (runConfig != null) {
-            logConfig = runConfig.getLog();
-        }
-        if (logConfig == null) {
-            logConfig = LogConfiguration.DEFAULT;
-        }
-        return logConfig;
     }
 
     /**
@@ -351,27 +308,27 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * is not existent, throw an error
      *
      * @param docker access object to lookup an image (if autoPull is enabled)
-     * @param name image name
+     * @param image image name
      * @param registry optional registry which is used if the image itself doesn't have a registry.
      * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
      *
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    protected void checkImageWithAutoPull(DockerAccess docker, String name, String registry,
+    protected void checkImageWithAutoPull(DockerAccess docker, String image, String registry,
             boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = serviceHub.getQueryService();
-        if (!queryService.imageRequiresAutoPull(autoPull, name, autoPullAlwaysAllowed)) {
+        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
             return;
         }
 
-        docker.pullImage(withLatestIfNoTag(name), prepareAuthConfig(name, registry), registry);
-        ImageName imageName = new ImageName(name);
+        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(image, registry), registry);
+        ImageName imageName = new ImageName(image);
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
             // short name with no-registry to the full name with the registry.
-            docker.tag(imageName.getFullName(registry), name, false);
+            docker.tag(imageName.getFullName(registry), image, false);
         }
     }
 

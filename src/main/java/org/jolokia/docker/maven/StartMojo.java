@@ -85,7 +85,8 @@ public class StartMojo extends AbstractDockerMojo {
                 String containerId = runService.createAndStartContainer(imageConfig, portMapping, projProperties);
 
                 if (showLogs(imageConfig)) {
-                    dispatcher.trackContainerLog(containerId, getContainerLogSpec(containerId, imageConfig));
+                    dispatcher.trackContainerLog(containerId,
+                                                 serviceHub.getLogOutputSpecFactory().createSpec(containerId, imageConfig));
                 }
 
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
@@ -94,7 +95,7 @@ public class StartMojo extends AbstractDockerMojo {
                 waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
                 WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
                 if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
-                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart());
+                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), imageConfig);
                 }
             }
             if (follow) {

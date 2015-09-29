@@ -76,6 +76,7 @@ public enum ConfigKey {
     WAIT_HTTP_URL("wait.http.url"),
     WAIT_HTTP_METHOD("wait.http.method"),
     WAIT_HTTP_STATUS("wait.http.status"),
+    WAIT_KILL("wait.kill"),
     WAIT_SHUTDOWN("wait.shutdown"),
     WATCH_INTERVAL("watch.interval"),
     WATCH_MODE("watch.mode"),

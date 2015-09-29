@@ -50,6 +50,11 @@
       <role-hint>track</role-hint>
       <implementation>org.jolokia.docker.maven.assembly.MappingTrackArchiver</implementation>
       <instantiation-strategy>singleton</instantiation-strategy>
+      <requirements>
+        <requirement>
+          <role>org.apache.maven.execution.MavenSession</role>
+        </requirement>
+      </requirements>
     </component>
   </components>
 </component-set>
