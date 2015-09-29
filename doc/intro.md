@@ -125,8 +125,8 @@ descriptor). Additionally it specifies the startup command for the
 container, which in this example fires up a microservice from a jar
 file copied over via the assembly descriptor. It also exposes
 port 8080. In the `<run>` section this port is dynamically mapped to a
-port from the Docker range of 49000 ... 49900, and is then assigned to the
-Maven property `${jolokia.port}`. This property could be used, for example,
+dynmically chosen port, and then assigned to the
+Maven property `${tomcat.port}`. This property could be used, for example,
 by an integration test to access this microservice. An important part is
 the `<links>` section which indicates that the image with the alias of
 "*database*" is linked into the "*service*" container, which can access
