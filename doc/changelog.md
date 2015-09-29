@@ -8,6 +8,9 @@
     `docker.logStdout` to show logs nevertheless to stdout (#287)
   - Support `watchMode == copy` for copying changed assembly files
     into a running container (#268)
+  - Add a `target/classpath` file to the assembly as `classpath` for 
+    `artifact-with-dependencies` predefined assembly descriptor (#283)
+  - Disable Apache HTTP Client retry in WaitUtil (#297)
   
 * **0.13.4**
   - Support explicit exec arguments for `start.cmd` and
