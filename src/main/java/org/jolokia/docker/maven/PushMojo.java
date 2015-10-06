@@ -25,7 +25,7 @@ public class PushMojo extends AbstractDockerMojo {
             String name = imageConfig.getName();
             if (buildConfig != null) {
                 String configuredRegistry = getConfiguredRegistry(imageConfig);
-                AuthConfig authConfig = prepareAuthConfig(name,configuredRegistry);
+                AuthConfig authConfig = prepareAuthConfig(name, configuredRegistry, true);
 
                 docker.pushImage(name, authConfig, configuredRegistry);
 

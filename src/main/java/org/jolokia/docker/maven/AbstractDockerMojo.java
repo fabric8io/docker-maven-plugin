@@ -276,9 +276,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    protected AuthConfig prepareAuthConfig(String image, String configuredRegistry) throws MojoExecutionException {
+    protected AuthConfig prepareAuthConfig(String image, String configuredRegistry, boolean useUserFromImage) throws MojoExecutionException {
         ImageName name = new ImageName(image);
-        String user = name.getUser();
+        String user = useUserFromImage ? name.getUser() : null;
         String registry = name.getRegistry() != null ? name.getRegistry() : configuredRegistry;
 
         return authConfigFactory.createAuthConfig(authConfig, settings, user, registry);
@@ -323,7 +323,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             return;
         }
 
-        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(image, registry), registry);
+        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(image, registry, false), registry);
         ImageName imageName = new ImageName(image);
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
