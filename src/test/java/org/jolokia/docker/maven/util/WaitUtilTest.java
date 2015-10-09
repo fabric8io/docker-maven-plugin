@@ -2,6 +2,7 @@ package org.jolokia.docker.maven.util;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
@@ -58,6 +59,13 @@ public class WaitUtilTest {
         } finally {
             serverMethodToAssert = "HEAD";
         }
+    }
+
+    @Test
+    public void tcpSuccess() throws TimeoutException {
+        WaitUtil.TcpPortChecker checker = new WaitUtil.TcpPortChecker("localhost", Arrays.asList(port));
+        long waited = WaitUtil.wait(700,checker);
+        assertTrue("Waited less than 700ms: " + waited, waited < 700);
     }
 
     @Test

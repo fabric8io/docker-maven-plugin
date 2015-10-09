@@ -22,6 +22,7 @@ public class ContainerDetails implements Container {
     static String ID = "Id";
     static String IMAGE = "Image";
     static String PORTS = "Ports";
+    static String IP = "IPAddress";
     static String SLASH = "/";
 
     private static final String RUNNING = "Running";
@@ -59,6 +60,18 @@ public class ContainerDetails implements Container {
             name = name.substring(1);
         }
         return name;
+    }
+
+    @Override
+    public String getIPAddress() {
+        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
+            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
+            if (!networkSettings.isNull(PORTS)) {
+                return networkSettings.getString(IP);
+            }
+        }
+        return null;
+
     }
 
     @Override
