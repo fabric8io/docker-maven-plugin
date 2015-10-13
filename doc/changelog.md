@@ -1,7 +1,7 @@
 # ChangeLog
 
 * **0.13.6**
-  - Don't use user from image when pulling base images (#147)
+  - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
   - Add a new assembly descriptor reference  `hawt-app` for using asseblies created by 
     [hawt-app](https://github.com/fabric8io/fabric8/tree/master/hawt-app-maven-plugin)
   
