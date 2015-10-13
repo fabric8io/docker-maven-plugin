@@ -111,6 +111,19 @@ public interface DockerAccess {
      */
     List<String> getContainersWithLabel(PomLabel label) throws DockerAccessException;
 
+    /** Copy an archive (must be a tar) into a running container
+     * Get all containers matching a certain label. This might not be a cheap operation especially if many containers
+     * are running. Use with care.
+     *
+     * @param containerId container to copy into
+     * @param archive local archive to copy into
+     * @param targetPath target path to use
+     * @throws DockerAccessException
+     */
+    void copyArchive(String containerId, File archive, String targetPath)
+            throws DockerAccessException;
+
+     /**
     /**
      * Get logs for a container up to now synchronously.
      *
