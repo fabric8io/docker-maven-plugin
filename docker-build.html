@@ -52,7 +52,7 @@
     <body>
         
         
-    <div class="book" data-level="4.1" data-basepath="." data-revision="Tue Oct 13 2015 09:56:25 GMT+0000 (UTC)">
+    <div class="book" data-level="4.1" data-basepath="." data-revision="Fri Oct 16 2015 09:25:42 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -522,7 +522,8 @@ copied (<code>dir</code>), but can be set to be a Tar- (<code>tar</code>), compr
 The archive formats have the advantage that file permission can be preserved better (since the copying is 
 independent from the underlying files systems), but might triggers internal bugs from the Maven assembler (as 
 it has been in #171)</li>
-<li><strong>user</strong> can be used to specify the user and group under which the files should be added. It has the general format 
+<li><strong>user</strong> can be used to specify the user and group under which the files should be added. The user must be already exist in 
+the base image. It has the general format 
 <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group 
 id is optional. If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, 
 changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature
