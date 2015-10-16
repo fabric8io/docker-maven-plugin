@@ -52,8 +52,7 @@ public class DockerFileBuilder {
     // list of RUN Commands to run along with image build see issue #191 on github
     private List<String> runCmds = new ArrayList<>();
 
-// environment
-
+    // environment
     private Map<String,String> envEntries = new HashMap<>();
 
     // image labels
