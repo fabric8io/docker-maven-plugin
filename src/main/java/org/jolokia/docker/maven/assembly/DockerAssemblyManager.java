@@ -15,7 +15,6 @@ import org.apache.maven.plugin.assembly.io.AssemblyReader;
 import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
-import org.apache.maven.wagon.PathUtils;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -87,7 +86,7 @@ public class DockerAssemblyManager {
                 builder.write(buildDirs.getOutputDirectory());
             }
 
-            return createBuildTarBall(buildDirs, extraDir, assemblyMode);
+            return createBuildTarBall(buildDirs, extraDir, assemblyMode, buildConfig.getCompression());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
@@ -164,8 +163,8 @@ public class DockerAssemblyManager {
         return new File(archiveDir,relativePath);
     }
 
-    private File createBuildTarBall(BuildDirs buildDirs, File extraDir, AssemblyMode buildMode) throws MojoExecutionException {
-        File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
+    private File createBuildTarBall(BuildDirs buildDirs, File extraDir, AssemblyMode buildMode, BuildTarArchiveCompression compression) throws MojoExecutionException {
+        File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, buildMode);
             if (extraDir != null) {
@@ -176,6 +175,7 @@ public class DockerAssemblyManager {
                 archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
             }
             archiver.createArchive();
+            archiver.setCompression(compression.getTarCompressionMethod());
             return archive;
         } catch (NoSuchArchiverException e) {
             throw new MojoExecutionException("No archiver for type 'tar' found", e);
