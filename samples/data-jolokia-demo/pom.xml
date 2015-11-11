@@ -298,6 +298,7 @@
                     <postExec>ls -l /maven</postExec>
                   </watch>
                 </image>
+
               </images>
             </configuration>
           </plugin>
