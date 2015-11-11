@@ -45,11 +45,7 @@ public class StartMojo extends AbstractDockerMojo {
      * @parameter property = "docker.showLogs"
      */
     private String showLogs;
-
-    /**
-     * @parameter property = "docker.follow" default-value = "false"
-     */
-    protected boolean follow;
+    private boolean follow;
 
     /**
      * {@inheritDoc}
@@ -60,6 +56,7 @@ public class StartMojo extends AbstractDockerMojo {
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
         Properties projProperties = project.getProperties();
+        this.follow = Boolean.valueOf(System.getProperty("docker.follow", "false"));
         
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
