@@ -96,7 +96,7 @@ public class RunService {
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id);
 
-        if (mappedPorts.containsDynamicPorts()) {
+        if (mappedPorts.containsDynamicPorts() || mappedPorts.containsDynamicHostIps()) {
             updateMappedPorts(id, mappedPorts);
         }
 
