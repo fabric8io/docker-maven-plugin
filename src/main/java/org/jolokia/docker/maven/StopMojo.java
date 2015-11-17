@@ -1,12 +1,14 @@
 package org.jolokia.docker.maven;
 
+import java.util.Map;
+
 import org.apache.maven.plugin.MojoExecutionException;
-import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.service.*;
+import org.jolokia.docker.maven.util.PomLabel;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -34,28 +36,57 @@ public class StopMojo extends AbstractDockerMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
-        Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
-
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
 
-        
         if (!keepRunning) {
-            if (startCalled == null || !startCalled) {
-                // Called directly ....
-                for (ImageConfiguration image : getImages()) {
-                    String imageName = image.getName();
-                    for (Container container : queryService.getContainersForImage(imageName)) {
-                        runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
-                    }
-                }
-            } else {
+            if (invokedViaDockerStart()) {
                 runService.stopStartedContainers(keepContainer, removeVolumes);
+            } else {
+                stopAndRemoveContainers(queryService, runService);
             }
         }
 
         // Switch off all logging
         LogDispatcher dispatcher = getLogDispatcher(hub);
         dispatcher.untrackAllContainerLogs();
+    }
+    
+    private boolean invokedViaDockerStart() {
+        Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
+        return (startCalled != null && startCalled == true);
+    }
+    
+    private boolean isSledgeHammerEnabled() {
+        return Boolean.valueOf(System.getProperty("docker.sledgehammer", Boolean.FALSE.toString()));
+    }
+    
+    private boolean shouldStopContainer(Container container, PomLabel pomLabel) {
+        boolean stopContainer = true;
+
+        if (!isSledgeHammerEnabled()) {
+            String key = pomLabel.getKey();        
+            Map<String, String> labels = container.getLabels();
+
+            if (labels.containsKey(key)) {
+                stopContainer = pomLabel.matches(new PomLabel(labels.get(key)), false);
+            }
+        }
+
+        return stopContainer;
+    }
+    
+    private void stopAndRemoveContainers(QueryService queryService, RunService runService) throws DockerAccessException { 
+        PomLabel pomLabel = getPomLabel();
+
+        for (ImageConfiguration image : getImages()) {
+            String imageName = image.getName();
+        
+            for (Container container : queryService.getContainersForImage(imageName)) {
+                if (shouldStopContainer(container, pomLabel)) {
+                    runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
+                }
+            }
+        }
     }
 }

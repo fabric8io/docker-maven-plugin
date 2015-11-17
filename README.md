@@ -6,9 +6,9 @@
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](http://flattr.com/thing/73919/Jolokia-JMX-on-Capsaicin)
 
 This is a Maven plugin for managing Docker images and containers for your builds.
-The current version is **0.13.6** and works with Maven 3.2.1 and Docker 1.6.0 or later.
+The current version is **0.14.0** and works with Maven 3.2.1 and Docker 1.6.0 or later.
 
-The current Docker API version used is `v1.17` (which is the minimal required API version). If you want to use the 
+The current Docker API version used is `v1.18` (which is the minimal required API version). If you want to use the 
 copy mode for `docker:watch` you need `v1.20` or greater (Docker 1.8.1). See the **[User Manual](https://rhuss.github.io/docker-maven-plugin)** 
 for details on how to override this value for new
 versions of Docker. For older Docker version please use **0.12.0** with support for `v1.15` 

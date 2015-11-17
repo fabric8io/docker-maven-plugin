@@ -1,17 +1,26 @@
 ### docker:stop
 
-Stops and removes a docker container. This goals starts every
-container started with `<docker:stop>` either during the same build
+Stops and removes a docker container. This goals stops every
+container started with `<docker:start>` either during the same build
 (e.g. when bound to lifecycle phases when doing integration tests) or
 for containers created by a previous call to `<docker:start>`
 
-If called within the same build run it will exactly stop and destroy
-all containers started by this plugin. If called in a separate run it
-will stop (and destroy) all containers which were created from images
-which are configured for this goal. This might be dangerous, but of
-course you can always stop your containers with the Docker CLI, too.
+If called within the same build run, only the containers that were 
+explicitly started during the run will be stopped. Existing containers
+started using `docker:start` for the project will not be affected.
 
-For tuning what should happen when stopping there are two global
+If called as a separate invocation, the plugin will stop and remove any
+container it finds whose image is defined in the project's configuration.
+Any existing containers found running whose image name matches but was not 
+started by the plugin will not be affected.
+
+It should be noted that any containers created prior to version `0.14.0` of the
+plugin may not be stopped correctly by the plugin b/c the label needed to tie
+the container to the project may not exist. Should this happen, you will need to
+use the Docker CLI to clean up the containers and/or use the `docker.sledgehammer`
+option listed below. 
+
+For tuning what should happen when stopping there are three global
 parameters which are typically used as system properties:
 
 * **keepContainer** (`docker.keepContainer`) If given will not destroy
@@ -25,6 +34,10 @@ parameters which are typically used as system properties:
 * **removeVolumes** (`docker.removeVolumes`) If given will remove any
   volumes associated to the container as well. This option will be ignored
   if either `keepContainer` or `keepRunning` are true.
+* **sledgehammer** (`docker.sledgehammer`) Stops and removes any container that
+  matches an image defined in the current project's configuration. This was the
+  default behavior of the plugin prior to [issue #87](https://github.com/rhuss/docker-maven-plugin/issues/87)
+  being resolved.
 
 Example: 
 

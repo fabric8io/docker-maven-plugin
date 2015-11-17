@@ -1,4 +1,5 @@
-package org.jolokia.docker.maven.util;/*
+package org.jolokia.docker.maven.util;
+/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -25,12 +26,11 @@ import java.util.UUID;
  */
 public class PomLabel {
 
-    private String mavenCoordinates;
-    private String runId;
-
-
     // Environment variable used to label containers
     public static final String CONTAINER_LABEL_NAME = "docker.maven.plugin.container";
+    
+    private String mavenCoordinates;
+    private String runId;
 
     /**
      * Construct from a given label
@@ -88,15 +88,26 @@ public class PomLabel {
         return mavenCoordinates + (runId != null ? ":" + runId : "");
     }
 
+    public boolean matches(PomLabel other) {
+        return matches(other, true);
+    }
+    
     /**
-     * Check whether this label matches another. For a match the maven coordinates must fit and if this
-     * runId is set, the runId must match, too.
+     * Check whether this label matches another.
+     * <p>
+     * To match, the maven coordinates must be equal and if <code>incRunId</code> is <code>true</code>, the <code>runId</code> must also
+     * match.
+     * </p>
      *
      * @param other label to match
+     * @param incRunId <code>true<code> if the <code>runId</code> should be considered during the match, <code>false<code> otherwise.
      * @return true for a match
      */
-    public boolean matches(PomLabel other) {
-        return other.mavenCoordinates.equals(mavenCoordinates) &&
-               (runId == null || runId.equals(other.runId));
+    public boolean matches(PomLabel other, boolean incRunId) {
+        boolean matches = other.mavenCoordinates.equals(mavenCoordinates);
+        if (incRunId) {
+            matches = matches && (runId == null || runId.equals(other.runId));
+        }
+        return matches;
     }
 }

@@ -1,28 +1,26 @@
 package org.jolokia.docker.maven.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ContainersListElement implements Container {
         
+    static final String CREATED = "Created";
+    static final String ID = "Id";
+    static final String IMAGE = "Image";
     static final String IP = "IP";
+    static final String LABELS = "Labels";
+    static final String PORTS = "Ports";
     static final String PUBLIC_PORT = "PublicPort";
     static final String STATUS = "Status";
     static final String TYPE = "Type";
 
     private static final String NAMES = "Names";
     private static final String PRIVATE_PORT = "PrivatePort";
+    private static final String SLASH = "/";
     private static final String UP = "up";
-
-    static String CREATED = "Created";
-    static String ID = "Id";
-    static String IMAGE = "Image";
-    static String PORTS = "Ports";
-    private static String SLASH = "/";
 
     private final JSONObject json;
 
@@ -44,6 +42,15 @@ public class ContainersListElement implements Container {
     @Override
     public String getImage() {
         return json.getString(IMAGE);
+    }
+
+    @Override
+    public Map<String, String> getLabels() {
+       if (json.isNull(LABELS)) {
+           return Collections.emptyMap();
+       }
+        
+        return mapLabels(json.getJSONObject(LABELS));
     }
 
     @Override
@@ -95,6 +102,19 @@ public class ContainersListElement implements Container {
         return String.format("%s/%s", object.getInt(PRIVATE_PORT), object.getString(TYPE));
     }
 
+    private Map<String, String> mapLabels(JSONObject labels) {
+        int length = labels.length();
+        Map<String, String> mapped = new HashMap<>(length);
+        
+        Iterator<String> iterator = labels.keys();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            mapped.put(key, labels.get(key).toString());
+        }
+                
+        return mapped;
+    }
+    
     private Map<String, PortBinding> mapPortBindings(JSONArray ports) {
         int length = ports.length();
         Map<String, PortBinding> portBindings = new HashMap<>(length);

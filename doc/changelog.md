@@ -8,10 +8,11 @@
   - Move VOLUME to the end of the Dockerfile to allow initialization via RUN commands (#341)
   - Allow multiple configurations with different Docker hosts again (#320) 
   - docker:start blocks now only when system property docker.follow is given (#249) 
-  
+  - `docker:stop` no longer acts like a sledgehammer (#87)
+
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
-  - Add a new assembly descriptor reference  `hawt-app` for using asseblies created by 
+  - Add a new assembly descriptor reference  `hawt-app` for using assemblies created by 
     [hawt-app](https://github.com/fabric8io/fabric8/tree/master/hawt-app-maven-plugin)
   
 * **0.13.5**
