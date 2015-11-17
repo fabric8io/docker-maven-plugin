@@ -1,0 +1,58 @@
+#
+# supported run compose keys
+#
+# supported but not listed here:
+#
+# - container_name
+# - dns (list)
+# - dns_search (list)
+#
+service:
+  cap_add:
+    - ADD
+  cap_drop:
+    - DROP
+  command: command
+# cgroup_parent: cgroup_parent
+# cpu_shares: 73
+# cpu_set: 0,1
+# devices:
+# - "/dev/device:/dev/device"
+  dns: 8.8.8.8
+  dns_search: example.com
+  domainname: domainname
+  entrypoint: entrypoint.sh
+# env_file: 
+  environment:
+    NAME: name
+    BOOL: "true"
+#   SECRET:
+  external_links:
+    - link1
+  extra_hosts:
+    - "host:1.2.3.4"
+  hostname: hostname
+  image: image
+  labels:
+    - label1: label
+  links:
+    - link1
+# log_driver: json-file
+# log_opt:
+#   key: value
+  mem_limit: 1000
+  memswap_limit: 1001
+# net: "host"
+# pid: "host"
+  ports: 
+    - "3000"
+  privileged: true
+# security_opt:
+#   - label:user:USER
+# ulimits
+  user: user  
+  volumes:
+    - /volume
+  volumes_from:
+    - volumesFrom
+  working_dir: /workingDir   

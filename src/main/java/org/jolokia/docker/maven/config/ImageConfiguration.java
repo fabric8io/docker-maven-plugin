@@ -2,6 +2,7 @@ package org.jolokia.docker.maven.config;
 
 import java.util.*;
 
+import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.Logger;
 import org.jolokia.docker.maven.util.StartOrderResolver;
@@ -41,7 +42,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     /**
      * @parameter
      */
-    private Map<String,String> external;
+    private ExternalImageConfiguration external;
 
     /**
      * @parameter
@@ -73,10 +74,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return watch;
     }
 
-    public Map<String, String> getExternalConfig() {
+    public ExternalImageConfiguration getExternalConfiguration() {
         return external;
     }
-
+   
     @Override
     public List<String> getDependencies() {
         RunImageConfiguration runConfig = getRunConfiguration();
@@ -161,7 +162,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
             return this;
         }
 
-        public Builder externalConfig(Map<String, String> externalConfig) {
+        public Builder externalConfig(ExternalImageConfiguration externalConfig) {
             config.external = externalConfig;
             return this;
         }

@@ -1,4 +1,5 @@
-package org.jolokia.docker.maven.config.handler;/*
+package org.jolokia.docker.maven.config.handler;
+/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -15,11 +16,13 @@ package org.jolokia.docker.maven.config.handler;/*
  * limitations under the License.
  */
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
 
 /**
  * Manager holding all config handlers for external configuration
@@ -27,22 +30,9 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  * @author roland
  * @since 18/11/14
  */
-public class ImageConfigResolver implements Initializable {
+public class ImageConfigResolver {
 
-    // Map type to handler
-    private Map<String,ExternalConfigHandler> registry;
-
-    private List<ExternalConfigHandler> handlers;
-
-    @Override
-    public void initialize() throws InitializationException {
-        this.registry = new HashMap<>();
-        if (handlers != null) {
-            for (ExternalConfigHandler handler : handlers) {
-                registry.put(handler.getType(), handler);
-            }
-        }
-    }
+    private Map<String, ExternalConfigHandler> registry;
 
     /**
      * Resolve an image configuration. If it contains a reference to an external configuration
@@ -57,20 +47,29 @@ public class ImageConfigResolver implements Initializable {
      * or when the type is not known (i.e. no handler is registered for this type).
      */
     public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties) {
-        Map<String,String> referenceConfig = unresolvedConfig.getExternalConfig();
-        if (referenceConfig != null) {
-            String type = referenceConfig.get("type");
-            if (type == null) {
-                throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No config type given");
-            }
-            ExternalConfigHandler handler = registry.get(type);
-            if (handler == null) {
-                throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");
-            }
-            return handler.resolve(unresolvedConfig,properties);
-        } else {
+        ExternalImageConfiguration external = unresolvedConfig.getExternalConfiguration();
+
+        if (external == null) {
             return Collections.singletonList(unresolvedConfig);
         }
-    }
+        
+        String type = getHandlerType(external);
+        if (registry.containsKey(type)) {
+            return registry.get(type).resolve(unresolvedConfig, properties);
+        }
 
+        throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");
+    }
+    
+    private String getHandlerType(ExternalImageConfiguration external) {
+        if (external.hasDockerCompose()) {
+            return "compose";
+        }
+        
+        if (external.hasProperties()) {
+            return "properties";
+        }
+        
+        return external.getOther().getType();
+    }
 }

@@ -32,7 +32,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @Override
     public String getType() {
-        return "props";
+        return "properties";
     }
 
     @Override
@@ -221,8 +221,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private String getPrefix(ImageConfiguration config) {
-        Map<String, String> refConfig = config.getExternalConfig();
-        String prefix = refConfig != null ? refConfig.get("prefix") : null;
+        String prefix = config.getExternalConfiguration().getPropertiesConfiguration().getPrefix();
         if (prefix == null) {
             prefix = "docker";
         }
