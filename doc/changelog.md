@@ -1,5 +1,9 @@
 # ChangeLog
 
+* **0.14.0**
+  - `docker:stop` no longer acts like a sledgehammer
+    ([#87](https://github.com/rhuss/docker-maven-plugin/issues/87))
+
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
   - Add a new assembly descriptor reference  `hawt-app` for using asseblies created by 

@@ -24,13 +24,14 @@ import java.util.Map;
  */
 public interface Container {
 
-
     long getCreated();
 
     String getId();
 
     String getImage();
 
+    Map<String, String> getLabels();
+    
     String getName();
 
     Map<String, PortBinding> getPortBindings();

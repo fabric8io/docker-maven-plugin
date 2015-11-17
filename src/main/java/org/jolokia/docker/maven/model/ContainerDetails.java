@@ -1,28 +1,26 @@
 package org.jolokia.docker.maven.model;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.json.JSONObject;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 
 public class ContainerDetails implements Container {
 
     static final String CONFIG = "Config";
+    static final String CREATED = "Created";
     static final String HOST_IP = "HostIp";
     static final String HOST_PORT = "HostPort";
+    static final String ID = "Id";
+    static final String IMAGE = "Image";
+    static final String LABELS = "Labels";
     static final String NAME = "Name";
     static final String NETWORK_SETTINGS = "NetworkSettings";
+    static final String PORTS = "Ports";
+    static final String SLASH = "/";
     static final String STATE = "State";
-    static String CREATED = "Created";
-    static String ID = "Id";
-    static String IMAGE = "Image";
-    static String PORTS = "Ports";
-    static String SLASH = "/";
 
     private static final String RUNNING = "Running";
     
@@ -49,6 +47,15 @@ public class ContainerDetails implements Container {
     public String getImage() {
         // ID: json.getString("Image");
         return json.getJSONObject(CONFIG).getString(IMAGE);
+    }
+
+    @Override
+    public Map<String, String> getLabels() {
+        if (!json.getJSONObject(CONFIG).has(LABELS)) {
+            return Collections.emptyMap();
+        }
+         
+         return mapLabels(json.getJSONObject(CONFIG).getJSONObject(LABELS));
     }
 
     @Override
@@ -110,4 +117,17 @@ public class ContainerDetails implements Container {
 
         return portBindings;
     }
+    
+    private Map<String, String> mapLabels(JSONObject labels) {
+        int length = labels.length();
+        Map<String, String> mapped = new HashMap<>(length);
+        
+        Iterator<String> iterator = labels.keys();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            mapped.put(key, labels.get(key).toString());
+        }
+                
+        return mapped;
+    }    
 }

@@ -63,6 +63,12 @@ public class PomLabelTest {
     }
 
     @Test
+    public void dontIncludeRunId() {
+        PomLabel label = new PomLabel(g, a, v, "bla");
+        assertTrue(label.matches(new PomLabel(g, a, v, "foo"), false));
+    }
+    
+    @Test
     public void match() {
         PomLabel label = new PomLabel(g, a, v, "bla");
         assertTrue(label.matches(new PomLabel(g, a, v, "bla")));
