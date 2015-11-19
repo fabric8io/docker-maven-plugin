@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.AbstractDockerMojo;
 
@@ -188,19 +189,19 @@ public class EnvUtil {
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
+        return prepareDirectoryPath(params.getProject(), new File(params.getOutputDirectory(), dir).toString(), path);
     }
     
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
+        return prepareDirectoryPath(params.getProject(), params.getSourceDirectory(), path);
     }
         
-    private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
+    public static File prepareDirectoryPath(MavenProject project, String directory, String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+        return new File(new File(project.getBasedir(), directory), path);
     }
 
 }

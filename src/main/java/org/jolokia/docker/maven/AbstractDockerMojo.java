@@ -135,7 +135,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @parameter
      */
     private List<ImageConfiguration> images;
-
+    
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
 
@@ -209,7 +209,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         List<ImageConfiguration> ret = new ArrayList<>();
         if (images != null) {
             for (ImageConfiguration image : images) {
-                ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
+                ret.addAll(imageConfigResolver.resolve(image, project));
             }
             verifyImageNames(ret);
         }

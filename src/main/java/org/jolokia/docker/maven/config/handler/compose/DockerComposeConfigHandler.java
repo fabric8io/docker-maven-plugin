@@ -5,12 +5,13 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
+import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.external.DockerComposeConfiguration;
 import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.jolokia.docker.maven.config.handler.ExternalConfigHandlerException;
+import org.jolokia.docker.maven.util.EnvUtil;
 import org.yaml.snakeyaml.Yaml;
 
 public class DockerComposeConfigHandler implements ExternalConfigHandler {
@@ -21,13 +22,14 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
     }
 
     @Override
-    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties) {
-        List<ImageConfiguration> resolved = new ArrayList<>();
-
+    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) {
         DockerComposeConfiguration composeConfig = unresolvedConfig.getExternalConfiguration().getComposeConfiguration();
         Map<String, DockerComposeConfiguration.Service> serviceMap = composeConfig.getServiceMap();
 
-        for (Object configuration : configurations(composeConfig.getComposeFilePath())) {
+        String resolvedComposePath = resolveFilePath(composeConfig, project);
+        
+        List<ImageConfiguration> resolved = new ArrayList<>();
+        for (Object configuration : configurations(resolvedComposePath)) {
             @SuppressWarnings("unchecked")
             Map<String, Object> map = (Map<String, Object>) configuration;
 
@@ -43,7 +45,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
         return resolved;
     }
-
+    
     private ImageConfiguration buildImageConfiguration(DockerComposeValueProvider provider) {
         return new ImageConfiguration.Builder()
                 .name(provider.getImage())
@@ -120,5 +122,9 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private WatchImageConfiguration createWatchImageConfiguration(DockerComposeValueProvider provider) {
         return provider.getWatchImageConfiguration();
+    }
+
+    private String resolveFilePath(DockerComposeConfiguration composeConfig, MavenProject project) {
+        return EnvUtil.prepareDirectoryPath(project, composeConfig.getBasedir(), composeConfig.getYamlFile()).toString();
     }
 }

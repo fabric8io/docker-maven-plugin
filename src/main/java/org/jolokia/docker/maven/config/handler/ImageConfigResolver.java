@@ -19,8 +19,8 @@ package org.jolokia.docker.maven.config.handler;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
+import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
 
@@ -46,7 +46,7 @@ public class ImageConfigResolver {
      * @throws IllegalArgumentException if no type is given when an external reference configuration is provided
      * or when the type is not known (i.e. no handler is registered for this type).
      */
-    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties) {
+    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) {
         ExternalImageConfiguration external = unresolvedConfig.getExternalConfiguration();
 
         if (external == null) {
@@ -55,7 +55,7 @@ public class ImageConfigResolver {
         
         String type = getHandlerType(external);
         if (registry.containsKey(type)) {
-            return registry.get(type).resolve(unresolvedConfig, properties);
+            return registry.get(type).resolve(unresolvedConfig, project);
         }
 
         throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");

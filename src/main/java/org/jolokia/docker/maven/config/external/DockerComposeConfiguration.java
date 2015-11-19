@@ -1,10 +1,6 @@
 package org.jolokia.docker.maven.config.external;
 
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.jolokia.docker.maven.config.LogConfiguration;
 import org.jolokia.docker.maven.config.WaitConfiguration;
@@ -12,35 +8,56 @@ import org.jolokia.docker.maven.config.WatchImageConfiguration;
 
 public class DockerComposeConfiguration {
 
-    private static final String DEFAULT_FILE = "docker-compose.yml";
-
-    /**
-     * @parameter
-     * @required
-     */
-    private String dockerComposeDir;
+    /** @parameter */
+    private String basedir;
 
     /** @parameter */
-    private List<Service> extended;
+    private List<Service> services;
 
-    public String getComposeFilePath() {
-        return Paths.get(dockerComposeDir, DEFAULT_FILE).toString();
-    }
+    /** @parameter */
+    private String yamlFile;
 
-    public String getDockerComposeDir() {
-        return dockerComposeDir;
+    public String getBasedir() {
+        // the @parameter tags above don't actually do anything, so we need to handle the default here :( 
+        return (basedir == null) ? "src/main/docker" : basedir;
     }
 
     public Map<String, DockerComposeConfiguration.Service> getServiceMap() {
-        if (extended == null) {
+        if (services == null) {
             return Collections.emptyMap();
         }
 
-        Map<String, DockerComposeConfiguration.Service> map = new HashMap<>(extended.size());
-        for (Service service : extended) {
+        Map<String, DockerComposeConfiguration.Service> map = new HashMap<>(services.size());
+        for (Service service : services) {
             map.put(service.id, service);
         }
         return map;
+    }
+
+    public String getYamlFile() {
+        // see 'getBasedir'
+        return (yamlFile == null) ? "docker-compose.yml" : yamlFile;
+    }
+
+    public static class Builder {
+        private final DockerComposeConfiguration composeConfig = new DockerComposeConfiguration();
+        private final List<Service> services = new ArrayList<>();
+        
+        public DockerComposeConfiguration build() {
+            composeConfig.services = services;
+            
+            return composeConfig;
+        }
+
+        public Builder basedir(String basedir) {
+            composeConfig.basedir = basedir;
+            return this;
+        }
+        
+        public Builder yamlFile(String yamlFile) {
+            composeConfig.yamlFile = yamlFile;
+            return this;
+        }
     }
 
     public static class Service {
@@ -73,19 +90,6 @@ public class DockerComposeConfiguration {
 
         public WatchImageConfiguration getWatchImageConfiguration() {
             return watch;
-        }
-    }
-
-    public static class Builder {
-        private final DockerComposeConfiguration composeConfig = new DockerComposeConfiguration();
-
-        public Builder dockerComposeDir(String dockerComposeDir) {
-            composeConfig.dockerComposeDir = dockerComposeDir;
-            return this;
-        }
-
-        public DockerComposeConfiguration build() {
-            return composeConfig;
         }
     }
 
