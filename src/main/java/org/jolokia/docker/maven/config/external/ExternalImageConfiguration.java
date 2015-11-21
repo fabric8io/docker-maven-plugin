@@ -8,9 +8,6 @@ public class ExternalImageConfiguration {
     /** @parameter */
     private PropertiesConfiguration properties;
 
-    /** @parameter */
-    private OtherConfiguration other;
-
     public DockerComposeConfiguration getComposeConfiguration() {
         return compose;
     }
@@ -23,16 +20,8 @@ public class ExternalImageConfiguration {
         return properties != null;
     }
 
-    public boolean hasOther() {
-        return other != null;
-    }
-
     public PropertiesConfiguration getPropertiesConfiguration() {
         return properties;
-    }
-
-    public OtherConfiguration getOther() {
-        return other;
     }
 
     public static class Builder {
@@ -45,11 +34,6 @@ public class ExternalImageConfiguration {
 
         public Builder properties(PropertiesConfiguration properties) {
             externalConfig.properties = properties;
-            return this;
-        }
-
-        public Builder other(OtherConfiguration other) {
-            externalConfig.other = other;
             return this;
         }
 

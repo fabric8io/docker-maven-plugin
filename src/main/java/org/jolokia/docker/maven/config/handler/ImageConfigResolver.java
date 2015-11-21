@@ -32,7 +32,10 @@ import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
  */
 public class ImageConfigResolver {
 
-    private Map<String, ExternalConfigHandler> registry;
+    public static final String COMPOSE = "compose";
+    public static final String PROPERTIES = "properties";
+    
+    private Map<String, ExternalConfigHandler> resolvers;
 
     /**
      * Resolve an image configuration. If it contains a reference to an external configuration
@@ -41,7 +44,7 @@ public class ImageConfigResolver {
      * is returned directly.
      *
      * @param unresolvedConfig the configuration to resolve
-     * @param properties extra properties used for resolving
+     * @param project maven project
      * @return list of resolved image configurations
      * @throws IllegalArgumentException if no type is given when an external reference configuration is provided
      * or when the type is not known (i.e. no handler is registered for this type).
@@ -54,22 +57,22 @@ public class ImageConfigResolver {
         }
         
         String type = getHandlerType(external);
-        if (registry.containsKey(type)) {
-            return registry.get(type).resolve(unresolvedConfig, project);
+        if (resolvers.containsKey(type)) {
+            return resolvers.get(type).resolve(unresolvedConfig, project);
         }
 
-        throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");
+        throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " found");
+    }
+    
+    public void setResolvers(Map<String, ExternalConfigHandler> resolvers) {
+        this.resolvers = resolvers;
     }
     
     private String getHandlerType(ExternalImageConfiguration external) {
         if (external.hasDockerCompose()) {
-            return "compose";
+            return COMPOSE;
+        } else {
+            return PROPERTIES;
         }
-        
-        if (external.hasProperties()) {
-            return "properties";
-        }
-        
-        return external.getOther().getType();
     }
 }
