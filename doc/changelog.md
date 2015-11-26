@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.13.7-SNAPSHOT**
+  - Fixed default for "cleanup" in build configuration to `true` (as documented) (#338)
+  
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
   - Add a new assembly descriptor reference  `hawt-app` for using asseblies created by 

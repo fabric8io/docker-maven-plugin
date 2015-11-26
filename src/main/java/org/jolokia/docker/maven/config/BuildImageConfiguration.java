@@ -38,9 +38,9 @@ public class BuildImageConfiguration {
     private List<String> runCmds;
 
     /**
-     * @parameter default-value="false"
+     * @parameter default-value="true"
      */
-    private boolean cleanup = false;
+    private boolean cleanup = true;
 
     /**
      * @parameter default-value="false"
