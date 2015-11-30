@@ -122,7 +122,7 @@ public class BuildServiceTest {
     }
 
     private void thenOldImageIsRemoved() throws DockerAccessException {
-        verify(docker).removeImage(oldImageId);
+        verify(docker).removeImage(oldImageId,true);
     }
 
     private void whenBuildImage(boolean cleanup) throws DockerAccessException, MojoExecutionException {
