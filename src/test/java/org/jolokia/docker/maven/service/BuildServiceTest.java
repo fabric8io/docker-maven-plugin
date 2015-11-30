@@ -47,6 +47,9 @@ public class BuildServiceTest {
     @Mock
     private QueryService queryService;
 
+    @Mock
+    private ArchiveService archiveService;
+
     @Before
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -54,7 +57,7 @@ public class BuildServiceTest {
         when(dockerAssemblyManager.createDockerTarArchive(anyString(), any(MojoParameters.class), any(BuildImageConfiguration.class)))
                 .thenReturn(null);
 
-        buildService = new BuildService(docker, queryService, dockerAssemblyManager, log);
+        buildService = new BuildService(docker, queryService, archiveService, log);
     }
 
     @Test

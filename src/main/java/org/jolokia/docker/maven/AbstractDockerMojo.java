@@ -156,14 +156,17 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             validateConfiguration(log);
 
             DockerAccess access = null;
+
+            serviceHub.init(log, new LogOutputSpecFactory(useColor, logStdout, logDate));
+
             if (isDockerAccessRequired()) {
                 String dockerUrl = EnvUtil.extractUrl(dockerHost);
                 access = createDockerAccess(dockerUrl);
                 setDockerHostAddressProperty(dockerUrl);
+                serviceHub.initDockerAccess(access);
             }
 
             try {
-                serviceHub.init(access,log, new LogOutputSpecFactory(useColor, logStdout, logDate));
                 executeInternal(access);
             } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);

@@ -143,8 +143,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     private Runnable createCopyWatchTask(final DockerAccess docker, final ImageWatcher watcher,
                                          final MojoParameters mojoParameters, final String containerBaseDir) throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final BuildService buildService = serviceHub.getBuildService();
-        final AssemblyFiles files = buildService.getAssemblyFiles(imageConfig, mojoParameters);
+        final ArchiveService archiveService = serviceHub.getArchiveService();
+        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
         return new Runnable() {
             @Override
             public void run() {
@@ -153,7 +153,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                     try {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Copying changed files to container ...");
 
-                        File changedFilesArchive = buildService.createChangedFilesArchive(entries,files.getAssemblyDirectory(),
+                        File changedFilesArchive = archiveService.createChangedFilesArchive(entries,files.getAssemblyDirectory(),
                                                                                           imageConfig.getName(),mojoParameters);
                         docker.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(serviceHub.getRunService(),watcher);
@@ -176,7 +176,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                                           final MojoParameters mojoParameters, final boolean doRestart)
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final AssemblyFiles files = serviceHub.getBuildService().getAssemblyFiles(imageConfig, mojoParameters);
+        final AssemblyFiles files = serviceHub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
 
         return new Runnable() {
             @Override

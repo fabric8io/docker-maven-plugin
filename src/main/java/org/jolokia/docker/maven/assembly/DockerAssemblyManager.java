@@ -64,7 +64,8 @@ public class DockerAssemblyManager {
      * @return file holding the path to the created assembly tar file
      * @throws MojoExecutionException
      */
-    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig) throws MojoExecutionException {
+    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig)
+            throws MojoExecutionException {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
@@ -276,10 +277,9 @@ public class DockerAssemblyManager {
         return builder;
     }
 
-    private void createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs) throws MojoExecutionException {
-        DockerAssemblyConfigurationSource source =
-                        new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
-
+    private void createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs)
+            throws MojoExecutionException {
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
         Assembly assembly = getAssemblyConfig(assemblyConfig, source);
 
         AssemblyMode buildMode = assemblyConfig.getMode();
@@ -297,7 +297,8 @@ public class DockerAssemblyManager {
     }
 
 
-    private Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfig, DockerAssemblyConfigurationSource source) throws MojoExecutionException {
+    private Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfig, DockerAssemblyConfigurationSource source)
+            throws MojoExecutionException {
         Assembly assembly = assemblyConfig.getInline();
         if (assembly == null) {
             assembly = extractAssembly(source);

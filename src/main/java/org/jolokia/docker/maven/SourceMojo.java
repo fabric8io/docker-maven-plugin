@@ -50,7 +50,8 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
                 if (buildConfig.skip()) {
                     log.info(imageConfig.getDescription() + ": Skipped creating source");
                 } else {
-                    File dockerTar = serviceHub.getBuildService().createDockerBuildTar(imageConfig, params);
+                    File dockerTar =
+                            serviceHub.getArchiveService().createDockerBuildArchive(imageConfig, params);
                     String alias = imageConfig.getAlias();
                     if (alias == null) {
                         throw new IllegalArgumentException(
