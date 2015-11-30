@@ -32,3 +32,5 @@ to the artifacts to store in the repository:
 </plugin>
 ````
 
+If the plugin is not bound to an execute phase but called directly, it must be ensured that the package phase is 
+called, too. That is required to find the artifacts created with this build when referenced from an assembly. 

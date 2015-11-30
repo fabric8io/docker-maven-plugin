@@ -62,4 +62,10 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
             }
         }
     }
+
+    @Override
+    protected boolean isDockerAccessRequired() {
+        // dont need a running docker host for creating the docker tar
+        return false;
+    }
 }

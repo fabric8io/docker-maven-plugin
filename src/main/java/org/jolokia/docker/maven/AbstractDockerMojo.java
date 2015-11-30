@@ -155,19 +155,34 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
             validateConfiguration(log);
 
-            String dockerUrl = EnvUtil.extractUrl(dockerHost);
-            DockerAccess access = createDockerAccess(dockerUrl);
-            setDockerHostAddressProperty(dockerUrl);
-            serviceHub.init(access,log, new LogOutputSpecFactory(useColor, logStdout, logDate));
+            DockerAccess access = null;
+            if (isDockerAccessRequired()) {
+                String dockerUrl = EnvUtil.extractUrl(dockerHost);
+                access = createDockerAccess(dockerUrl);
+                setDockerHostAddressProperty(dockerUrl);
+            }
 
             try {
+                serviceHub.init(access,log, new LogOutputSpecFactory(useColor, logStdout, logDate));
                 executeInternal(access);
             } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } finally {
-                access.shutdown();
+                if (access != null) {
+                    access.shutdown();
+                }
             }
         }
+    }
+
+    /**
+     * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
+     * docker tar archives)
+     *
+     * @return <code >true</code> as the default value
+     */
+    protected boolean isDockerAccessRequired() {
+        return true;
     }
 
     private void validateConfiguration(Logger log) {
@@ -181,7 +196,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /**
      * Hook for subclass for doing the real job
      *
-     * @param dockerAccess access object for getting to the DockerServer
+     * @param dockerAccess access object for getting to the DockerServer. Can be null if
      */
     protected abstract void executeInternal(DockerAccess dockerAccess)
         throws DockerAccessException, MojoExecutionException;
