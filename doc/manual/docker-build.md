@@ -30,6 +30,9 @@ of an image configuration. The available subelements are
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
 * **optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
+* **compression** is the compression mode how the build archive is transmitted to the docker daemon (`docker:build`) and how 
+  docker build archives are attached to this build as sources (`docker:source`). The value can be `none` (default), 
+  `gzip` or `bzip2`. 
 * **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
@@ -106,7 +109,8 @@ Here's an example:
   The archive formats have the advantage that file permission can be preserved better (since the copying is 
   independent from the underlying files systems), but might triggers internal bugs from the Maven assembler (as 
   it has been in #171)
-* **user** can be used to specify the user and group under which the files should be added. It has the general format 
+* **user** can be used to specify the user and group under which the files should be added. The user must be already exist in 
+  the base image. It has the general format 
   `user[:group[:run-user]]`. The user and group can be given either as numeric user- and group-id or as names. The group 
   id is optional. If a third part is given, then the build changes to user `root` before changing the ownerships, 
   changes the ownerships and then change to user `run-user` which is then used for the final command to execute. This feature

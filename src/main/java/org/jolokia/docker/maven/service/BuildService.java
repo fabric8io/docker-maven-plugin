@@ -51,14 +51,30 @@ public class BuildService {
             oldImageId = queryService.getImageId(imageName);
         }
 
+        File dockerArchive = createArchive(imageName, buildConfig, params);
         // auto is now supported by docker, consider switching?
-        String newImageId = buildImage(imageName, buildConfig, params);
+        String newImageId = doBuildImage(imageName, dockerArchive, buildConfig.cleanup());
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageShouldBeRemoved(oldImageId, newImageId)) {
             docker.removeImage(oldImageId);
             log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
         }
+    }
+
+    /**
+     * Create the tar file container the source for building an image. This tar can be used directly for
+     * uploading to a Docker daemon for creating the image
+     *
+     * @param imageConfig the image configuration
+     * @param params mojo params for the project
+     * @return file for holding the sources
+     * @throws MojoExecutionException if during creation of the tar an error occurs.
+     */
+    public File createDockerBuildTar(ImageConfiguration imageConfig, MojoParameters params) throws MojoExecutionException {
+        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params);
+        log.info(imageConfig.getDescription() + ": Created docker source tar " + ret);
+        return ret;
     }
 
     /**
@@ -96,11 +112,9 @@ public class BuildService {
 
     // ===============================================================
 
-    private String buildImage(String imageName, BuildImageConfiguration buildConfig, MojoParameters mojoParameters)
+    private String doBuildImage(String imageName, File dockerArchive, boolean cleanUp)
         throws DockerAccessException, MojoExecutionException {
-
-        File dockerArchive = createArchive(imageName, buildConfig, mojoParameters);
-        docker.buildImage(imageName, dockerArchive, buildConfig.cleanup());
+        docker.buildImage(imageName, dockerArchive, cleanUp);
         return queryService.getImageId(imageName);
     }
 

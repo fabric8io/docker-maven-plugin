@@ -2,6 +2,7 @@ package org.jolokia.docker.maven.config;
 
 import java.util.*;
 
+import org.codehaus.plexus.archiver.tar.TarArchiver;
 import org.jolokia.docker.maven.util.Logger;
 
 /**
@@ -97,7 +98,12 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private boolean skip = false;
-    
+
+    /**
+     * @parameter
+     */
+    private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
+
     public BuildImageConfiguration() {}
 
     public String getFrom() {
@@ -144,7 +150,6 @@ public class BuildImageConfiguration {
         return cmd;
     }
 
-
     @Deprecated
     public String getCommand() {
         return command;
@@ -160,6 +165,10 @@ public class BuildImageConfiguration {
 
     public boolean skip() {
         return skip;
+    }
+
+    public BuildTarArchiveCompression getCompression() {
+        return compression;
     }
 
     public Arguments getEntryPoint() {
