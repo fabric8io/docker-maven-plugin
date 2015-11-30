@@ -2,6 +2,7 @@ package org.jolokia.docker.maven.assembly;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
@@ -88,6 +89,21 @@ public class DockerFileBuilderTest {
     @Test
     public void testNoRootExport() {
         assertFalse(new DockerFileBuilder().add("/src", "/dest").basedir("/").content().contains("VOLUME"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void illegalNonAbsoluteBaseDir() {
+        new DockerFileBuilder().basedir("blub").content();
+    }
+
+    @Test
+    public void testUserWithChown() {
+        String dockerFile = new DockerFileBuilder().user("jboss:jboss:jboss")
+                                                   .add("a","a/nested").add("b","b/deeper/nested").content();
+        String EXPECTED_REGEXP = "chown\\s+-R\\s+jboss:jboss\\s+([^\\s]+)"
+                                 + "\\s+&&\\s+cp\\s+-rp\\s+\\1/\\*\\s+/\\s+&&\\s+rm\\s+-rf\\s+\\1";
+        Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
+        assertTrue(pattern.matcher(dockerFile).find());
     }
 
     @Test

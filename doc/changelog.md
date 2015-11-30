@@ -4,6 +4,7 @@
   - Fix default for "cleanup" in build configuration to `true` (as documented) (#338)
   - Fix dynamic host property update in port mapping (#323)  
   - New goal 'docker:source' for attaching a Docker tar archive to the Maven project with an classifier "docker-<alias>" (#311) 
+  - Be more careful with chowing the user when <user> is used in an assembly (#336)
 
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
