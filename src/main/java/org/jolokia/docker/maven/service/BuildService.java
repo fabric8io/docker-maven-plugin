@@ -56,7 +56,7 @@ public class BuildService {
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageShouldBeRemoved(oldImageId, newImageId)) {
-            docker.removeImage(oldImageId);
+            docker.removeImage(oldImageId, true);
             log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
         }
     }
