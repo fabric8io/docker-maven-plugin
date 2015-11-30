@@ -5,7 +5,8 @@
   - Fix dynamic host property update in port mapping (#323)  
   - New goal 'docker:source' for attaching a Docker tar archive to the Maven project with an classifier "docker-<alias>" (#311) 
   - Be more careful with chowing the user when <user> is used in an assembly (#336)
-
+  - Move VOLUME to the end of the Dockerfile to allow initialization via RUN commands (#341)
+  
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
   - Add a new assembly descriptor reference  `hawt-app` for using asseblies created by 

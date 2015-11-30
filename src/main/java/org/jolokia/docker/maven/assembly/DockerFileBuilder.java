@@ -95,10 +95,11 @@ public class DockerFileBuilder {
         addLabels(b);
         addPorts(b);
 
-        addVolumes(b);
         addEntries(b);
         addWorkdir(b);
         addRun(b);
+        addVolumes(b);
+
         addCmd(b);
         addEntryPoint(b);
 
