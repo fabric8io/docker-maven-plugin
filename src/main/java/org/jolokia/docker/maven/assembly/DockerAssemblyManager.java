@@ -125,7 +125,7 @@ public class DockerAssemblyManager {
     }
     
     private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
-        return assemblyConfig != null && !assemblyConfig.skip &&
+        return assemblyConfig != null &&
                 (assemblyConfig.getInline() != null ||
                         assemblyConfig.getDescriptor() != null ||
                         assemblyConfig.getDescriptorRef() != null);

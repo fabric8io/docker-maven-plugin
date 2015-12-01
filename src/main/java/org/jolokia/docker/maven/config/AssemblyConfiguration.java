@@ -52,11 +52,6 @@ public class AssemblyConfiguration {
      */
     private String user;
 
-    public boolean skip;
-
-    public AssemblyConfiguration() {
-    }
-
     public Boolean exportBasedir() {
         return exportBasedir;
     }
