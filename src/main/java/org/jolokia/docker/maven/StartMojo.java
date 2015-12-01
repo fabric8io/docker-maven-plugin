@@ -45,6 +45,8 @@ public class StartMojo extends AbstractDockerMojo {
      * @parameter property = "docker.showLogs"
      */
     private String showLogs;
+
+    // whether to block during to start. Set it via Sysem property docker.follow
     private boolean follow;
 
     /**
