@@ -23,6 +23,7 @@ import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.service.ServiceHub;
 import org.jolokia.docker.maven.util.MojoParameters;
 
 /**
@@ -42,7 +43,7 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
     private MavenProjectHelper projectHelper;
 
     @Override
-    protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
+    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         MojoParameters params = createMojoParameters();
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
@@ -51,7 +52,7 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
                     log.info(imageConfig.getDescription() + ": Skipped creating source");
                 } else {
                     File dockerTar =
-                            serviceHub.getArchiveService().createDockerBuildArchive(imageConfig, params);
+                            hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
                     String alias = imageConfig.getAlias();
                     if (alias == null) {
                         throw new IllegalArgumentException(

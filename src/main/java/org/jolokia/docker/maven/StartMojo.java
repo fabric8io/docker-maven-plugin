@@ -13,6 +13,7 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.DockerAccess;
@@ -25,8 +26,7 @@ import org.jolokia.docker.maven.config.LogConfiguration;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
 import org.jolokia.docker.maven.config.WaitConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
-import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.StartOrderResolver;
 import org.jolokia.docker.maven.util.Timestamp;
 import org.jolokia.docker.maven.util.WaitUtil;
@@ -55,15 +55,16 @@ public class StartMojo extends AbstractDockerMojo {
      * {@inheritDoc}
      */
     @Override
-    public synchronized void executeInternal(final DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
+    public synchronized void executeInternal(final ServiceHub hub) throws DockerAccessException,
+                                                                          MojoExecutionException {
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
         Properties projProperties = project.getProperties();
         
-        QueryService queryService = serviceHub.getQueryService();
-        RunService runService = serviceHub.getRunService();
+        QueryService queryService = hub.getQueryService();
+        RunService runService = hub.getRunService();
 
-        LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
+        LogDispatcher dispatcher = getLogDispatcher(hub);
 
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
         
@@ -76,7 +77,7 @@ public class StartMojo extends AbstractDockerMojo {
                 //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
 
                 String imageName = imageConfig.getName();
-                checkImageWithAutoPull(dockerAccess, imageName,
+                checkImageWithAutoPull(hub, imageName,
                                        getConfiguredRegistry(imageConfig),imageConfig.getBuildConfiguration() == null);
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
@@ -86,13 +87,13 @@ public class StartMojo extends AbstractDockerMojo {
 
                 if (showLogs(imageConfig)) {
                     dispatcher.trackContainerLog(containerId,
-                                                 serviceHub.getLogOutputSpecFactory().createSpec(containerId, imageConfig));
+                                                 serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, imageConfig));
                 }
 
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
                 // Wait if requested
-                waitIfRequested(dockerAccess,imageConfig, projProperties, containerId);
+                waitIfRequested(hub,imageConfig, projProperties, containerId);
                 WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
                 if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
                     runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), imageConfig);
@@ -121,7 +122,8 @@ public class StartMojo extends AbstractDockerMojo {
 
     // ========================================================================================================
 
-    private void waitIfRequested(DockerAccess docker, ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws MojoExecutionException {
+    private void waitIfRequested(ServiceHub hub, ImageConfiguration imageConfig,
+                                 Properties projectProperties, String containerId) throws MojoExecutionException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         WaitConfiguration wait = runConfig.getWaitConfiguration();
 
@@ -142,7 +144,7 @@ public class StartMojo extends AbstractDockerMojo {
             logOut.add("on url " + waitUrl);
         }
         if (wait.getLog() != null) {
-            checkers.add(getLogWaitChecker(wait.getLog(), docker, containerId));
+            checkers.add(getLogWaitChecker(wait.getLog(), hub, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
 
@@ -166,7 +168,8 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final DockerAccess docker, final String containerId) {
+    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String
+            containerId) {
         return new WaitUtil.WaitChecker() {
 
             boolean first = true;
@@ -177,6 +180,7 @@ public class StartMojo extends AbstractDockerMojo {
             public boolean check() {
                 if (first) {
                     final Pattern pattern = Pattern.compile(logPattern);
+                    DockerAccess docker = hub.getDockerAccess();
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
                         @Override
                         public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {

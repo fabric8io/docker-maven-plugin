@@ -159,6 +159,9 @@
         <executions>
           <execution>
             <id>start</id>
+             <configuration>
+               <dockerHost>http://172.28.128.4:2375</dockerHost>
+             </configuration>
             <phase>pre-integration-test</phase>
             <goals>
               <goal>build</goal>
@@ -167,6 +170,9 @@
           </execution>
           <execution>
             <id>stop</id>
+            <configuration>
+              <dockerHost>http://172.28.128.4:2375</dockerHost>
+            </configuration>
             <phase>post-integration-test</phase>
             <goals>
               <goal>stop</goal>
@@ -265,6 +271,7 @@
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}:${project.version}</name>
+                  <alias>jolokia</alias>
                   <build>
                     <from>${image}</from>
                     <labels>
@@ -325,6 +332,7 @@
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}:${project.version}</name>
+                  <alias>jolokia</alias>
                   <build>
                     <from>${image}</from>
                     <assembly>
@@ -389,6 +397,7 @@
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}-dockerfile:${project.version}</name>
+                  <alias>jolokia</alias>
                   <build>
                     <assembly>
                       <dockerFileDir>demo</dockerFileDir>

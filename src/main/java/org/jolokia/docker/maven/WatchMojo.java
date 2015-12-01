@@ -80,12 +80,13 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
 
     @Override
-    protected synchronized void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
+    protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
+                                                                             MojoExecutionException {
         // Important to be be a single threaded scheduler since watch jobs must run serialized
         executor = Executors.newSingleThreadScheduledExecutor();
 
-        QueryService queryService = serviceHub.getQueryService();
-        RunService runService = serviceHub.getRunService();
+        QueryService queryService = hub.getQueryService();
+        RunService runService = hub.getRunService();
 
         MojoParameters mojoParameters = createMojoParameters();
 
@@ -105,18 +106,18 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                     imageConfig.getBuildConfiguration().getAssemblyConfiguration() != null) {
                     if (watcher.isCopy()) {
                         String containerBaseDir = imageConfig.getBuildConfiguration().getAssemblyConfiguration().getBasedir();
-                        schedule(createCopyWatchTask(dockerAccess, watcher, mojoParameters, containerBaseDir),interval);
+                        schedule(createCopyWatchTask(hub, watcher, mojoParameters, containerBaseDir),interval);
                         tasks.add("copying artifacts");
                     }
 
                     if (watcher.isBuild()) {
-                        schedule(createBuildWatchTask(dockerAccess, watcher, mojoParameters, watchMode == both), interval);
+                        schedule(createBuildWatchTask(hub, watcher, mojoParameters, watchMode == both), interval);
                         tasks.add("rebuilding");
                     }
                 }
 
                 if (watcher.isRun() && watcher.getContainerId() != null) {
-                    schedule(createRestartWatchTask(dockerAccess, watcher), interval);
+                    schedule(createRestartWatchTask(hub, watcher), interval);
                     tasks.add("restarting");
                 }
 
@@ -140,10 +141,10 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         executor.scheduleAtFixedRate(runnable, 0, interval, TimeUnit.MILLISECONDS);
     }
 
-    private Runnable createCopyWatchTask(final DockerAccess docker, final ImageWatcher watcher,
+    private Runnable createCopyWatchTask(final ServiceHub hub, final ImageWatcher watcher,
                                          final MojoParameters mojoParameters, final String containerBaseDir) throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final ArchiveService archiveService = serviceHub.getArchiveService();
+        final ArchiveService archiveService = hub.getArchiveService();
         final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
         return new Runnable() {
             @Override
@@ -155,8 +156,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
                         File changedFilesArchive = archiveService.createChangedFilesArchive(entries,files.getAssemblyDirectory(),
                                                                                           imageConfig.getName(),mojoParameters);
-                        docker.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
-                        callPostExec(serviceHub.getRunService(),watcher);
+                        hub.getDockerAccess().copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
+                        callPostExec(hub.getRunService(), watcher);
                     } catch (MojoExecutionException | IOException e) {
                         log.error(imageConfig.getDescription() + ": Error when copying files to container " + watcher.getContainerId() + ": " + e);
                     }
@@ -172,11 +173,11 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         }
     }
 
-    private Runnable createBuildWatchTask(final DockerAccess docker, final ImageWatcher watcher,
+    private Runnable createBuildWatchTask(final ServiceHub hub, final ImageWatcher watcher,
                                           final MojoParameters mojoParameters, final boolean doRestart)
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final AssemblyFiles files = serviceHub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
+        final AssemblyFiles files = hub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
 
         return new Runnable() {
             @Override
@@ -186,14 +187,14 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                     try {
                         log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
 
-                        buildImage(docker, imageConfig);
+                        buildImage(hub, imageConfig);
 
                         String name = imageConfig.getName();
-                        watcher.setImageId(serviceHub.getQueryService().getImageId(name));
+                        watcher.setImageId(hub.getQueryService().getImageId(name));
                         if (doRestart) {
-                            restartContainer(watcher);
+                            restartContainer(hub, watcher);
                         }
-                        callPostGoal(watcher);
+                        callPostGoal(hub, watcher);
                     } catch (MojoExecutionException | MojoFailureException | IOException e) {
                         log.error(imageConfig.getDescription() + ": Error when rebuilding " + e);
                     }
@@ -202,7 +203,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         };
     }
 
-    private Runnable createRestartWatchTask(final DockerAccess docker,
+    private Runnable createRestartWatchTask(final ServiceHub hub,
                                             final ImageWatcher watcher)
             throws DockerAccessException {
 
@@ -213,11 +214,11 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             public void run() {
 
                 try {
-                    String currentImageId = serviceHub.getQueryService().getImageId(imageName);
+                    String currentImageId = hub.getQueryService().getImageId(imageName);
                     String oldValue = watcher.getAndSetImageId(currentImageId);
                     if (!currentImageId.equals(oldValue)) {
-                        restartContainer(watcher);
-                        callPostGoal(watcher);
+                        restartContainer(hub, watcher);
+                        callPostGoal(hub, watcher);
                     }
                 } catch (DockerAccessException | MojoFailureException | MojoExecutionException e) {
                     log.warn(watcher.getImageConfiguration().getDescription() + ": Error when restarting image " + e);
@@ -226,9 +227,9 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         };
     }
 
-    private void restartContainer(ImageWatcher watcher) throws DockerAccessException {
+    private void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
         // Stop old one
-        RunService runService = serviceHub.getRunService();
+        RunService runService = hub.getRunService();
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
         PortMapping mappedPorts = runService.getPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
         String id = watcher.getContainerId();
@@ -252,10 +253,11 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         return null;
     }
 
-    private void callPostGoal(ImageWatcher watcher) throws MojoFailureException, MojoExecutionException {
+    private void callPostGoal(ServiceHub hub, ImageWatcher watcher) throws MojoFailureException,
+                                                                           MojoExecutionException {
         String postGoal = watcher.getPostGoal();
         if (postGoal != null) {
-            serviceHub.getMojoExecutionService().callPluginGoal(postGoal);
+            hub.getMojoExecutionService().callPluginGoal(postGoal);
         }
     }
 

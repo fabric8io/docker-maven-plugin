@@ -9,6 +9,7 @@ import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.service.ServiceHub;
 import org.jolokia.docker.maven.util.ImageName;
 import org.jolokia.docker.maven.util.MojoParameters;
 
@@ -33,7 +34,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     /** @component */
     private MavenReaderFilter mavenFilterReader;
 
-   
     /**
      * @parameter default-value="src/main/docker" property="docker.source.dir"
      */
@@ -50,16 +50,16 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
                                   sourceDirectory, outputDirectory);
     }
 
-    protected void buildImage(DockerAccess dockerAccess, ImageConfiguration imageConfig)
+    protected void buildImage(ServiceHub hub, ImageConfiguration imageConfig)
             throws DockerAccessException, MojoExecutionException {
 
-        autoPullBaseImage(dockerAccess, imageConfig);
+        autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
-        serviceHub.getBuildService().buildImage(imageConfig, params);
+        hub.getBuildService().buildImage(imageConfig, params);
     }
 
-    private void autoPullBaseImage(DockerAccess dockerAccess, ImageConfiguration imageConfig)
+    private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         String fromImage = buildConfig.getFrom();
@@ -70,7 +70,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
             }
         }
         if (fromImage != null) {
-            checkImageWithAutoPull(dockerAccess, fromImage, new ImageName(fromImage).getRegistry(),true);
+            checkImageWithAutoPull(hub, fromImage, new ImageName(fromImage).getRegistry(),true);
         }
     }
 }

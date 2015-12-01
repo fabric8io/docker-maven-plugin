@@ -1,4 +1,19 @@
-package org.jolokia.docker.maven.service;
+package org.jolokia.docker.maven.service;/*
+ * 
+ * Copyright 2015 Roland Huss
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
@@ -11,74 +26,51 @@ import org.jolokia.docker.maven.util.Logger;
 /**
  * A service hub responsible for creating and managing service which are used by
  * Mojos for calling to the docker backend. The docker backend (DAO) is injected from the outside.
+ &
+ * @author roland
+ * @since 01/12/15
  */
 public class ServiceHub {
 
-    // Track started containers
-    private final ContainerTracker containerTracker = new ContainerTracker();
-    
-    /** @component **/
-    protected BuildPluginManager pluginManager;
-    
-    /** @component */
-    protected DockerAssemblyManager dockerAssemblyManager;
-    
-    /** @component */
-    protected MavenProject project;
-    
-    /** @component */
-    protected MavenSession session;
+    private final DockerAccess dockerAccess;
 
-    // Services managed by this hub, requiring
-    private MojoExecutionService mojoExecutionService;
-    private QueryService queryService;
-    private RunService runService;
-    private LogOutputSpecFactory logOutputSpecFactory;
-    private BuildService buildService;
-    private ArchiveService archiveService;
+    private final LogOutputSpecFactory logSpecFactory;
 
-    // initialization flags preventing multiple initializations
-    private boolean initDockerAccess = false;
-    private boolean initBase = false;
+    private final QueryService queryService;
+    private final RunService runService;
+    private final BuildService buildService;
+    private final MojoExecutionService mojoExecutionService;
+    private final ArchiveService archiveService;
 
-    // logger to use
-    private Logger logger;
+    ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
+               DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
+               Logger logger, LogOutputSpecFactory logSpecFactory) {
 
-    /**
-     * Lifecycle method called early in order to build up the services. It can be called multiple
-     * times but will run only once.
-     *
-     * @param log logger to use
-     * @param logOutputSpecFactory factory for how to do logging
-     */
-    public synchronized void init(Logger log, LogOutputSpecFactory logOutputSpecFactory) {
-        if (!initBase) {
-            this.logOutputSpecFactory = logOutputSpecFactory;
-            this.logger = log;
-            mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
-            archiveService = new ArchiveService(dockerAssemblyManager, logger);
-            initBase = true;
-        }
-    }
+        this.dockerAccess = dockerAccess;
+        this.logSpecFactory = logSpecFactory;
 
-    public synchronized void initDockerAccess(DockerAccess dockerAccess) {
-        if (!initDockerAccess) {
-            checkBaseInitialization();
+        mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
+        archiveService = new ArchiveService(dockerAssemblyManager, logger);
+
+        if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess, logger);
-            runService = new RunService(dockerAccess, queryService, containerTracker, logOutputSpecFactory, logger);
+            runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
-            initDockerAccess = true;
+        } else {
+            queryService = null;
+            runService = null;
+            buildService = null;
         }
     }
 
     /**
-     * Get a service for executing goals on other Maven mojos
+     * Get access object for contacting the docker daemon
      *
-     * @return service for calling other mojos
+     * @return docker access object
      */
-    public MojoExecutionService getMojoExecutionService() {
-        checkBaseInitialization();
-        return mojoExecutionService;
+    public DockerAccess getDockerAccess() {
+        checkDockerAccessInitialization();
+        return dockerAccess;
     }
 
     /**
@@ -91,7 +83,6 @@ public class ServiceHub {
         return buildService;
     }
 
-
     /**
      * Get the query service for obtaining information about containers and images
      *
@@ -101,6 +92,7 @@ public class ServiceHub {
         checkDockerAccessInitialization();
         return queryService;
     }
+
 
     /**
      * The run service is responsible for creating and starting up containers
@@ -112,33 +104,24 @@ public class ServiceHub {
         return runService;
     }
 
-
     public ArchiveService getArchiveService() {
-        checkBaseInitialization();
         return archiveService;
     }
 
     /**
-     * Get the specification for how to do logging
+     * Get a service for executing goals on other Maven mojos
      *
-     * @return log specification
+     * @return service for calling other mojos
      */
-    public LogOutputSpecFactory getLogOutputSpecFactory() {
-        checkBaseInitialization();
-        return logOutputSpecFactory;
+    public MojoExecutionService getMojoExecutionService() {
+        return mojoExecutionService;
     }
-
-    // ===========================================================
 
     private synchronized void checkDockerAccessInitialization() {
-        if (!initDockerAccess) {
-            throw new IllegalStateException("Service hub not yet initialized with docker access");
+        if (dockerAccess == null) {
+            throw new IllegalStateException("Service hub created without a docker access to a docker daemon");
         }
     }
 
-    private void checkBaseInitialization() {
-        if (!initBase) {
-            throw new IllegalStateException("Service hub not yet initialized");
-        }
-    }
+
 }

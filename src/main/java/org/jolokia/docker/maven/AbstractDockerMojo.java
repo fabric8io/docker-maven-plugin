@@ -19,8 +19,7 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.log.LogOutputSpecFactory;
-import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.service.ServiceHub;
+import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -56,7 +55,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected ImageConfigResolver imageConfigResolver;
 
     /** @component **/
-    protected ServiceHub serviceHub;
+    protected ServiceHubFactory serviceHubFactory;
 
     /** @parameter property = "docker.autoPull" default-value = "on" */
     protected String autoPull;
@@ -142,7 +141,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected Logger log;
 
     /**
-     * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
+     * Entry point for this plugin. It will set up the helper class and then calls
+     * {@link #executeInternal(ServiceHub)}
      * which must be implemented by subclass.
      *
      * @throws MojoExecutionException
@@ -152,22 +152,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose);
+            LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             validateConfiguration(log);
 
             DockerAccess access = null;
 
-            serviceHub.init(log, new LogOutputSpecFactory(useColor, logStdout, logDate));
-
-            if (isDockerAccessRequired()) {
-                String dockerUrl = EnvUtil.extractUrl(dockerHost);
-                access = createDockerAccess(dockerUrl);
-                setDockerHostAddressProperty(dockerUrl);
-                serviceHub.initDockerAccess(access);
-            }
-
             try {
-                executeInternal(access);
+                access = createDockerAccess();
+                ServiceHub serviceHub = serviceHubFactory.createServiceHub(access, log, logSpecFactory);
+                executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } finally {
@@ -176,6 +170,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             }
         }
+    }
+
+    private DockerAccess createDockerAccess() throws MojoExecutionException, MojoFailureException {
+        DockerAccess access = null;
+        if (isDockerAccessRequired()) {
+            String dockerUrl = EnvUtil.extractUrl(dockerHost);
+            access = createDockerAccess(dockerUrl);
+            setDockerHostAddressProperty(dockerUrl);
+        }
+        return access;
     }
 
     /**
@@ -199,9 +203,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /**
      * Hook for subclass for doing the real job
      *
-     * @param dockerAccess access object for getting to the DockerServer. Can be null if
+     * @param serviceHub context for accessing backends
      */
-    protected abstract void executeInternal(DockerAccess dockerAccess)
+    protected abstract void executeInternal(ServiceHub serviceHub)
         throws DockerAccessException, MojoExecutionException;
 
     // =============================================================================================
@@ -302,10 +306,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return authConfigFactory.createAuthConfig(authConfig, settings, user, registry);
     }
 
-    protected LogDispatcher getLogDispatcher(DockerAccess docker) {
+    protected LogDispatcher getLogDispatcher(ServiceHub hub) {
         LogDispatcher dispatcher = (LogDispatcher) getPluginContext().get(CONTEXT_KEY_LOG_DISPATCHER);
         if (dispatcher == null) {
-            dispatcher = new LogDispatcher(docker);
+            dispatcher = new LogDispatcher(hub.getDockerAccess());
             getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
@@ -325,7 +329,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
      * is not existent, throw an error
      *
-     * @param docker access object to lookup an image (if autoPull is enabled)
+     * @param hub access object to lookup an image (if autoPull is enabled)
      * @param image image name
      * @param registry optional registry which is used if the image itself doesn't have a registry.
      * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
@@ -333,14 +337,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    protected void checkImageWithAutoPull(DockerAccess docker, String image, String registry,
+    protected void checkImageWithAutoPull(ServiceHub hub, String image, String registry,
             boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
-        QueryService queryService = serviceHub.getQueryService();
+        QueryService queryService = hub.getQueryService();
         if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
             return;
         }
 
+        DockerAccess docker = hub.getDockerAccess();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(image, registry, false), registry);
         ImageName imageName = new ImageName(image);
         if (registry != null && !imageName.hasRegistry()) {
