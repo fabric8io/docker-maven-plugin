@@ -16,7 +16,11 @@ a.plugin-anchor span {
     font-size: 15px;
 }
 
-h1:hover a.plugin-anchor, h2:hover a.plugin-anchor, h3:hover a.plugin-anchor, 
+h1, h2, h3, h4, h5, h6 {
+    position: relative;
+}
+
+h1:hover a.plugin-anchor, h2:hover a.plugin-anchor, h3:hover a.plugin-anchor,
 h4:hover a.plugin-anchor, h5:hover a.plugin-anchor, h6:hover a.plugin-anchor {
     display: inline-block;
 }
