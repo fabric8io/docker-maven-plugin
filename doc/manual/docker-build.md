@@ -264,7 +264,7 @@ possible to change the name of the final build artifact with the following:
 
 ```xml
 <build>
-  <finalName>your-desired-final-name</build>
+  <finalName>your-desired-final-name</finalName>
   ...
 </build>
 ```
