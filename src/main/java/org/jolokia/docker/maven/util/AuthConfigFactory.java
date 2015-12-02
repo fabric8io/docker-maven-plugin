@@ -72,17 +72,18 @@ public class AuthConfigFactory {
     public AuthConfig createAuthConfig(Map authConfig, Settings settings, String user, String registry) throws MojoExecutionException {
         Properties props = System.getProperties();
         if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
-            return getAuthConfigFromProperties(props);
+            return getAuthConfigFromProperties(props, registry);
         }
         if (authConfig != null) {
-            return getAuthConfigFromPluginConfiguration(authConfig);
+            return getAuthConfigFromPluginConfiguration(authConfig,registry);
         }
         return getAuthConfigFromSettings(settings,user,registry);
     }
 
     // ===================================================================================================
 
-    private AuthConfig getAuthConfigFromProperties(Properties props) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromProperties(Properties props, String registry) throws
+                                                                      MojoExecutionException {
         if (!props.containsKey(DOCKER_USERNAME)) {
             throw new MojoExecutionException("No " + DOCKER_USERNAME + " given when using authentication");
         }
@@ -92,10 +93,10 @@ public class AuthConfigFactory {
         return new AuthConfig(props.getProperty(DOCKER_USERNAME),
                               decrypt(props.getProperty(DOCKER_PASSWORD)),
                               props.getProperty(DOCKER_EMAIL),
-                              props.getProperty(DOCKER_AUTH));
+                              props.getProperty(DOCKER_AUTH), registry);
     }
 
-    private AuthConfig getAuthConfigFromPluginConfiguration(Map authConfig) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromPluginConfiguration(Map authConfig, String registry) throws MojoExecutionException {
         for (String key : new String[] { "username", "password"}) {
             if (!authConfig.containsKey(key)) {
                 throw new MojoExecutionException("No '" + key + "' given while using <authConfig> in configuration");
@@ -103,6 +104,7 @@ public class AuthConfigFactory {
         }
         Map<String,String> cloneConfig = new HashMap<String,String>(authConfig);
         cloneConfig.put("password",decrypt(cloneConfig.get("password")));
+        cloneConfig.put("serveraddress",registry);
         return new AuthConfig(cloneConfig);
     }
 
@@ -117,10 +119,10 @@ public class AuthConfigFactory {
             }
             found = checkForServer(server, id, registry, user);
             if (found != null) {
-                return createAuthConfigFromServer(found);
+                return createAuthConfigFromServer(found, registry);
             }
         }
-        return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
+        return defaultServer != null ? createAuthConfigFromServer(defaultServer, registry) : null;
     }
 
     private Server checkForServer(Server server, String id, String registry, String user) {
@@ -147,12 +149,13 @@ public class AuthConfigFactory {
         }
     }
 
-    private AuthConfig createAuthConfigFromServer(Server server) throws MojoExecutionException {
+    private AuthConfig createAuthConfigFromServer(Server server, String registry) throws MojoExecutionException {
         return new AuthConfig(
                 server.getUsername(),
                 decrypt(server.getPassword()),
                 extractFromServerConfiguration(server.getConfiguration(), "email"),
-                extractFromServerConfiguration(server.getConfiguration(), "auth")
+                extractFromServerConfiguration(server.getConfiguration(), "auth"),
+                registry
         );
     }
 
