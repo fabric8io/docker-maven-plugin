@@ -12,23 +12,12 @@ import org.jolokia.docker.maven.access.hc.http.HttpClientBuilder;
 import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
 import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.config.Arguments;
-import org.jolokia.docker.maven.model.*;
-import org.jolokia.docker.maven.util.*;
-import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.log.DefaultLogCallback;
-import org.jolokia.docker.maven.model.Container;
-import org.jolokia.docker.maven.model.ContainerDetails;
-import org.jolokia.docker.maven.model.ContainersListElement;
+import org.jolokia.docker.maven.log.LogOutputSpec;
+import org.jolokia.docker.maven.model.*;
 import org.jolokia.docker.maven.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import static java.net.HttpURLConnection.*;
 import static org.jolokia.docker.maven.access.hc.ApacheHttpClientDelegate.*;
@@ -196,12 +185,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to stop container id [%s]", containerId);
         }
-    }
-
-    @Override
-    public List<String> getContainersWithLabel(PomLabel label) throws DockerAccessException {
-        // TODO: Implementation
-        return null;
     }
 
     @Override

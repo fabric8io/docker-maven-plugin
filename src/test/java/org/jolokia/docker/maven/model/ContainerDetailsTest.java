@@ -43,6 +43,7 @@ public class ContainerDetailsTest {
         thenPortBindingSizeIs(0);
     }
 
+    @Test
     public void testContainerWithLabels() {
         givenAContainerWithLabels();
         whenCreateContainer();
@@ -60,8 +61,11 @@ public class ContainerDetailsTest {
         JSONObject labels = new JSONObject();
         labels.put("key1", "value1");
         labels.put("key2", "value2");
-        
-        json.put(ContainerDetails.LABELS, labels);
+
+        JSONObject config = new JSONObject();
+        config.put(ContainerDetails.LABELS, labels);
+
+        json.put("Config",config);
     }
     
     @Test

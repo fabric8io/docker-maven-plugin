@@ -51,11 +51,10 @@ public class ContainerDetails implements Container {
 
     @Override
     public Map<String, String> getLabels() {
-        if (!json.getJSONObject(CONFIG).has(LABELS)) {
-            return Collections.emptyMap();
-        }
-         
-         return mapLabels(json.getJSONObject(CONFIG).getJSONObject(LABELS));
+        JSONObject config = json.getJSONObject(CONFIG);
+        return config.has(LABELS) ?
+                mapLabels(config.getJSONObject(LABELS)) :
+                Collections.<String, String>emptyMap();
     }
 
     @Override

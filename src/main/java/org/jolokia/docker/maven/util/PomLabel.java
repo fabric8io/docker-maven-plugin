@@ -16,8 +16,6 @@ package org.jolokia.docker.maven.util;
  * limitations under the License.
  */
 
-import java.util.UUID;
-
 /**
  * Label used to mark a container belonging to a certain build.
  *
@@ -26,11 +24,7 @@ import java.util.UUID;
  */
 public class PomLabel {
 
-    // Environment variable used to label containers
-    public static final String CONTAINER_LABEL_NAME = "docker.maven.plugin.container";
-    
     private String mavenCoordinates;
-    private String runId;
 
     /**
      * Construct from a given label
@@ -39,22 +33,11 @@ public class PomLabel {
      */
     public PomLabel(String label) {
         String[] parts = label.split(":");
-        if (parts.length != 4 && parts.length != 3) {
+        if (parts.length != 3) {
             throw new IllegalArgumentException("Label '" + label +
-                                               "' has not the format <group>:<artifact>:<version>[:<runId>]");
+                                               "' has not the format <group>:<artifact>:<version>");
         }
         mavenCoordinates = parts[0] + ":" + parts[1] + ":" + parts[2];
-        runId = parts.length == 4 ? parts[3] : null;
-    }
-
-    /**
-     * Construct from maven coordinates. A random run-ID is created automatically.
-     * @param groupId Maven group
-     * @param artifactId Maven artifact
-     * @param version version
-     */
-    public PomLabel(String groupId, String artifactId, String version) {
-        this(groupId, artifactId, version, UUID.randomUUID().toString());
     }
 
     /**
@@ -64,11 +47,9 @@ public class PomLabel {
      * @param groupId Maven group
      * @param artifactId Maven artifact
      * @param version version
-     * @param runId a run id or <code>null</code>.
      */
-    public PomLabel(String groupId, String artifactId, String version, String runId) {
+    public PomLabel(String groupId, String artifactId, String version) {
         mavenCoordinates = groupId + ":" + artifactId + ":" + version;
-        this.runId = runId;
     }
 
     /**
@@ -77,7 +58,7 @@ public class PomLabel {
      * @return the label name to use to mark a container belonging to this build
      */
     public String getKey() {
-        return "docker.maven.plugin.container";
+        return "dmp.coordinates";
     }
 
     /**
@@ -85,13 +66,9 @@ public class PomLabel {
      * @return this label as string
      */
     public String getValue() {
-        return mavenCoordinates + (runId != null ? ":" + runId : "");
+        return mavenCoordinates;
     }
 
-    public boolean matches(PomLabel other) {
-        return matches(other, true);
-    }
-    
     /**
      * Check whether this label matches another.
      * <p>
@@ -100,14 +77,9 @@ public class PomLabel {
      * </p>
      *
      * @param other label to match
-     * @param incRunId <code>true<code> if the <code>runId</code> should be considered during the match, <code>false<code> otherwise.
      * @return true for a match
      */
-    public boolean matches(PomLabel other, boolean incRunId) {
-        boolean matches = other.mavenCoordinates.equals(mavenCoordinates);
-        if (incRunId) {
-            matches = matches && (runId == null || runId.equals(other.runId));
-        }
-        return matches;
+    public boolean matches(PomLabel other) {
+        return other.mavenCoordinates.equals(mavenCoordinates);
     }
 }

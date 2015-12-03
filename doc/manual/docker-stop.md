@@ -14,13 +14,13 @@ container it finds whose image is defined in the project's configuration.
 Any existing containers found running whose image name matches but was not 
 started by the plugin will not be affected.
 
-It should be noted that any containers created prior to version `0.14.0` of the
-plugin may not be stopped correctly by the plugin b/c the label needed to tie
+It should be noted that any containers created prior to version `0.13.7` of the
+plugin may not be stopped correctly by the plugin because the label needed to tie
 the container to the project may not exist. Should this happen, you will need to
 use the Docker CLI to clean up the containers and/or use the `docker.sledgehammer`
 option listed below. 
 
-For tuning what should happen when stopping there are three global
+For tuning what should happen when stopping there are four global
 parameters which are typically used as system properties:
 
 * **keepContainer** (`docker.keepContainer`) If given will not destroy
@@ -34,10 +34,9 @@ parameters which are typically used as system properties:
 * **removeVolumes** (`docker.removeVolumes`) If given will remove any
   volumes associated to the container as well. This option will be ignored
   if either `keepContainer` or `keepRunning` are true.
-* **sledgehammer** (`docker.sledgehammer`) Stops and removes any container that
+* **allContainers** (`docker.allContainers`) Stops and removes any container that
   matches an image defined in the current project's configuration. This was the
-  default behavior of the plugin prior to [issue #87](https://github.com/rhuss/docker-maven-plugin/issues/87)
-  being resolved.
+  default behavior of the plugin prior up to version 0.13.6
 
 Example: 
 

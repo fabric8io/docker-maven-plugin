@@ -34,56 +34,25 @@ public class PomLabelTest {
     @Test
     public void simple() throws Exception {
         PomLabel label = new PomLabel(g,a,v);
-        assertTrue(label.getValue().startsWith(coord));
-        assertTrue(label.getValue().length() > coord.length());
-    }
-
-    @Test
-    public void withNullRunId() {
-        PomLabel label = new PomLabel(g,a,v,null);
-        assertEquals(label.getValue(), coord);
-    }
-
-    @Test
-    public void withRunId() {
-        PomLabel label = new PomLabel(g,a,v,"blub");
-        assertEquals(label.getValue(),coord + ":blub");
-    }
-
-    @Test
-    public void matchesAll() throws Exception {
-        PomLabel label = new PomLabel(g, a, v,null);
-        assertTrue(label.matches(new PomLabel(g, a, v)));
+        assertTrue(label.getValue().equals(coord));
     }
 
     @Test
     public void dontMatch() {
         PomLabel label = new PomLabel(g, a, v);
-        assertFalse(label.matches(new PomLabel(g, a, v)));
+        assertFalse(label.matches(new PomLabel(g, a, "2.1.1")));
     }
 
     @Test
-    public void dontIncludeRunId() {
-        PomLabel label = new PomLabel(g, a, v, "bla");
-        assertTrue(label.matches(new PomLabel(g, a, v, "foo"), false));
-    }
-    
-    @Test
     public void match() {
-        PomLabel label = new PomLabel(g, a, v, "bla");
-        assertTrue(label.matches(new PomLabel(g, a, v, "bla")));
+        PomLabel label = new PomLabel(g, a, v);
+        assertTrue(label.matches(new PomLabel(g, a, v)));
     }
 
     @Test
     public void parse() {
         PomLabel label = new PomLabel(coord);
         assertEquals(coord, label.getValue());
-    }
-
-    @Test
-    public void parse2() {
-        PomLabel label = new PomLabel(coord + ":blub");
-        assertEquals(coord + ":blub",label.getValue());
     }
 
     @Test(expected = IllegalArgumentException.class)

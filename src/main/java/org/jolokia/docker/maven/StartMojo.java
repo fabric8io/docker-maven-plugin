@@ -14,7 +14,6 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
@@ -23,11 +22,6 @@ import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.service.*;
-import org.jolokia.docker.maven.util.StartOrderResolver;
-import org.jolokia.docker.maven.util.Timestamp;
-import org.jolokia.docker.maven.util.WaitUtil;
-import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.service.RunService;
 import org.jolokia.docker.maven.util.*;
 
 
