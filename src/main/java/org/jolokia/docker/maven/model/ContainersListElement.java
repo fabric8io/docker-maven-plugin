@@ -83,6 +83,12 @@ public class ContainersListElement implements Container {
     }
 
     @Override
+    public String getIPAddress() {
+        // IP address is not provided by container list action.
+        return null;
+    }
+
+    @Override
     public boolean isRunning() {
         String status = json.getString(STATUS);
         return status.toLowerCase().contains(UP);

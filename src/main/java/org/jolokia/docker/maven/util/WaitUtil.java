@@ -1,7 +1,12 @@
 package org.jolokia.docker.maven.util;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -173,6 +178,68 @@ public class WaitUtil {
         @Override
         public void cleanUp() { }
     }
+
+    // ====================================================================================================
+
+    /**
+     * Check whether a given TCP port is available
+     *
+     */
+    public static class TcpPortChecker implements WaitChecker {
+        private static final int TCP_TIMEOUT = 2000;
+
+        private final List<Integer> ports;
+
+        private final List<InetSocketAddress> pending;
+
+        public TcpPortChecker(String host, List<Integer> ports) {
+            this.ports = ports;
+
+            this.pending = new ArrayList<>();
+            for (int port : ports ) {
+                this.pending.add(new InetSocketAddress(host, port));
+            }
+
+        }
+
+        public List<Integer> getPorts() {
+            return ports;
+        }
+
+        public List<InetSocketAddress> getPending() {
+            return pending;
+        }
+
+        @Override
+        public boolean check() {
+            Iterator<InetSocketAddress> iter = pending.iterator();
+
+            while (iter.hasNext()) {
+                InetSocketAddress address = iter.next();
+
+                try {
+                    Socket s = new Socket();
+                    s.connect(address, TCP_TIMEOUT);
+                    s.close();
+
+                    iter.remove();
+
+                } catch (IOException e) {
+                    // Ports isn't opened, yet. So don't remove from queue.
+
+                }
+
+            }
+
+            return pending.isEmpty();
+
+        }
+
+        @Override
+        public void cleanUp() {
+
+        }
+    };
 
     // ====================================================================================================
 

@@ -38,6 +38,8 @@ public interface Container {
 
     boolean isRunning();
 
+    String getIPAddress();
+
     class PortBinding {
         private final String hostIp;
         private final Integer hostPort;

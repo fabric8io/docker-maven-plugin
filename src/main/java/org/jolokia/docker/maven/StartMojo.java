@@ -10,6 +10,7 @@ package org.jolokia.docker.maven;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,12 @@ import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
+import org.jolokia.docker.maven.model.Container;
+import org.jolokia.docker.maven.service.QueryService;
+import org.jolokia.docker.maven.service.RunService;
+import org.jolokia.docker.maven.util.StartOrderResolver;
+import org.jolokia.docker.maven.util.Timestamp;
+import org.jolokia.docker.maven.util.WaitUtil;
 import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.*;
 
@@ -52,7 +59,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         Properties projProperties = project.getProperties();
         this.follow = Boolean.valueOf(System.getProperty("docker.follow", "false"));
-        
+
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
 
@@ -137,6 +144,39 @@ public class StartMojo extends AbstractDockerMojo {
         if (wait.getLog() != null) {
             checkers.add(getLogWaitChecker(wait.getLog(), hub, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
+        }
+        if (wait.getTcp() != null) {
+            WaitConfiguration.TcpConfiguration tcpConfig = wait.getTcp();
+            try {
+                Container container = docker.inspectContainer(containerId);
+                String host = tcpConfig.getHost();
+                List<Integer> ports = new ArrayList<>();
+
+                if (host == null) {
+                    // Host defaults to ${docker.host.address}.
+                    host = projectProperties.getProperty("docker.host.address");
+                }
+
+                if ("localhost".equals(host)) {
+                    host = container.getIPAddress();
+                    ports = tcpConfig.getPorts();
+                    log.info(String.format("%s: Waiting for ports %s directly on container with IP (%s).", imageConfig.getDescription(), ports, host));
+                } else {
+                    for (int port : tcpConfig.getPorts()) {
+                        Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
+                        ports.add(binding.getHostPort());
+                    }
+                    log.info(String.format("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.", imageConfig.getDescription(), ports, host));
+                }
+
+                WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
+                checkers.add(tcpWaitChecker);
+                logOut.add("on tcp port '"+tcpWaitChecker.getPending()+"'");
+
+            } catch (DockerAccessException e) {
+                throw new MojoExecutionException("Unable to access container.", e);
+            }
+
         }
 
         if (checkers.isEmpty()) {

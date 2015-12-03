@@ -17,6 +17,7 @@ public class ContainerDetails implements Container {
     static final String IMAGE = "Image";
     static final String LABELS = "Labels";
     static final String NAME = "Name";
+    static final String IP = "IPAddress";
     static final String NETWORK_SETTINGS = "NetworkSettings";
     static final String PORTS = "Ports";
     static final String SLASH = "/";
@@ -68,6 +69,18 @@ public class ContainerDetails implements Container {
     }
 
     @Override
+    public String getIPAddress() {
+        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
+            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
+            if (!networkSettings.isNull(PORTS)) {
+                return networkSettings.getString(IP);
+            }
+        }
+        return null;
+
+    }
+
+    @Override
     public Map<String, PortBinding> getPortBindings() {
         if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
             JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
@@ -116,17 +129,17 @@ public class ContainerDetails implements Container {
 
         return portBindings;
     }
-    
+
     private Map<String, String> mapLabels(JSONObject labels) {
         int length = labels.length();
         Map<String, String> mapped = new HashMap<>(length);
-        
+
         Iterator<String> iterator = labels.keys();
         while (iterator.hasNext()) {
             String key = iterator.next();
             mapped.put(key, labels.get(key).toString());
         }
-                
+
         return mapped;
-    }    
+    }
 }
