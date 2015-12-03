@@ -148,7 +148,7 @@ public class StartMojo extends AbstractDockerMojo {
         if (wait.getTcp() != null) {
             WaitConfiguration.TcpConfiguration tcpConfig = wait.getTcp();
             try {
-                Container container = docker.inspectContainer(containerId);
+                Container container = hub.getDockerAccess().inspectContainer(containerId);
                 String host = tcpConfig.getHost();
                 List<Integer> ports = new ArrayList<>();
 
