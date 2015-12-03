@@ -18,6 +18,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 
+
 /**
  * @author roland
  * @since 18.10.14
@@ -102,7 +103,7 @@ public class WaitUtil {
      */
     public static class HttpPingChecker implements WaitChecker {
 
-        private int statusMin,statusMax;
+        private int statusMin, statusMax;
         private String url;
         private String method;
 
@@ -136,7 +137,7 @@ public class WaitUtil {
         }
 
         public HttpPingChecker(String waitUrl) {
-            this(waitUrl,null,null);
+            this(waitUrl, null, null);
         }
 
         @Override
@@ -151,10 +152,10 @@ public class WaitUtil {
         private boolean ping() throws IOException {
             RequestConfig requestConfig =
                     RequestConfig.custom()
-                                 .setSocketTimeout(HTTP_PING_TIMEOUT)
-                                 .setConnectTimeout(HTTP_PING_TIMEOUT)
-                                 .setConnectionRequestTimeout(HTTP_PING_TIMEOUT)
-                                 .build();
+                            .setSocketTimeout(HTTP_PING_TIMEOUT)
+                            .setConnectTimeout(HTTP_PING_TIMEOUT)
+                            .setConnectionRequestTimeout(HTTP_PING_TIMEOUT)
+                            .build();
             CloseableHttpClient httpClient = HttpClientBuilder.create()
                     .setDefaultRequestConfig(requestConfig)
                     .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))
@@ -183,7 +184,6 @@ public class WaitUtil {
 
     /**
      * Check whether a given TCP port is available
-     *
      */
     public static class TcpPortChecker implements WaitChecker {
         private static final int TCP_TIMEOUT = 2000;
@@ -196,7 +196,7 @@ public class WaitUtil {
             this.ports = ports;
 
             this.pending = new ArrayList<>();
-            for (int port : ports ) {
+            for (int port : ports) {
                 this.pending.add(new InetSocketAddress(host, port));
             }
 
@@ -230,21 +230,20 @@ public class WaitUtil {
                 }
 
             }
-
             return pending.isEmpty();
-
         }
 
         @Override
         public void cleanUp() {
 
         }
-    };
+    }
 
     // ====================================================================================================
 
     public interface WaitChecker {
         boolean check();
+
         void cleanUp();
     }
 

@@ -61,14 +61,14 @@ public class StartMojo extends AbstractDockerMojo {
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
         Properties projProperties = project.getProperties();
-        
+
         QueryService queryService = serviceHub.getQueryService();
         RunService runService = serviceHub.getRunService();
 
         LogDispatcher dispatcher = getLogDispatcher(dockerAccess);
 
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
-        
+
         boolean success = false;
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
@@ -104,7 +104,7 @@ public class StartMojo extends AbstractDockerMojo {
                 runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
                 wait();
             }
-            
+
             portMappingPropertyWriteHelper.write();
             success = true;
         } catch (InterruptedException e) {
@@ -159,13 +159,18 @@ public class StartMojo extends AbstractDockerMojo {
                     host = projectProperties.getProperty("docker.host.address");
                 }
 
-                if ("localhost".equals(host)) {
+                if ("localhost".equals(host) && container.getIPAddress() != null) {
                     host = container.getIPAddress();
                     ports = tcpConfig.getPorts();
                     log.info(String.format("%s: Waiting for ports %s directly on container with IP (%s).", imageConfig.getDescription(), ports, host));
                 } else {
                     for (int port : tcpConfig.getPorts()) {
                         Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
+                        if (binding == null) {
+                            throw new MojoExecutionException(String.format(
+                                    "Cannot watch on port %d, since it was not bind by Docker.", port
+                            ));
+                        }
                         ports.add(binding.getHostPort());
                     }
                     log.info(String.format("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.", imageConfig.getDescription(), ports, host));
