@@ -19,6 +19,8 @@ package org.jolokia.docker.maven.model;
 import java.util.Map;
 
 /**
+ * Interface representing a container
+ *
  * @author roland
  * @since 16/07/15
  */
@@ -38,6 +40,11 @@ public interface Container {
 
     boolean isRunning();
 
+    /**
+     * IP Adress of the container if provided
+     *
+     * @return the IP address of the container or <code>null</code> if not provided.
+     */
     String getIPAddress();
 
     class PortBinding {

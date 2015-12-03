@@ -221,24 +221,18 @@ public class WaitUtil {
                     Socket s = new Socket();
                     s.connect(address, TCP_TIMEOUT);
                     s.close();
-
                     iter.remove();
-
                 } catch (IOException e) {
                     // Ports isn't opened, yet. So don't remove from queue.
 
                 }
 
             }
-
             return pending.isEmpty();
-
         }
 
         @Override
-        public void cleanUp() {
-
-        }
+        public void cleanUp() { }
     };
 
     // ====================================================================================================

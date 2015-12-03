@@ -160,23 +160,25 @@ public class StartMojo extends AbstractDockerMojo {
                 if ("localhost".equals(host)) {
                     host = container.getIPAddress();
                     ports = tcpConfig.getPorts();
-                    log.info(String.format("%s: Waiting for ports %s directly on container with IP (%s).", imageConfig.getDescription(), ports, host));
+                    log.info(String.format("%s: Waiting for ports %s directly on container with IP (%s).",
+                                           imageConfig.getDescription(), ports, host));
                 } else {
                     for (int port : tcpConfig.getPorts()) {
                         Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
                         ports.add(binding.getHostPort());
                     }
-                    log.info(String.format("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.", imageConfig.getDescription(), ports, host));
+                    log.info(String.format("%s: Waiting for exposed ports %s on remote host (%s), " +
+                                           "since they are not directly accessible.",
+                                           imageConfig.getDescription(), ports, host));
                 }
 
                 WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
                 checkers.add(tcpWaitChecker);
-                logOut.add("on tcp port '"+tcpWaitChecker.getPending()+"'");
+                logOut.add("on tcp port '" + tcpWaitChecker.getPending() + "'");
 
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Unable to access container.", e);
             }
-
         }
 
         if (checkers.isEmpty()) {
@@ -184,7 +186,6 @@ public class StartMojo extends AbstractDockerMojo {
                 log.info(imageConfig.getDescription() + ": Pausing for " + wait.getTime() + " ms");
                 WaitUtil.sleep(wait.getTime());
             }
-
             return;
         }
 
