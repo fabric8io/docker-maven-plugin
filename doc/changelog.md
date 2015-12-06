@@ -4,10 +4,10 @@
   - Fix default for "cleanup" in build configuration to `true` (as documented) (#338)
   - Fix dynamic host property update in port mapping (#323)  
   - New goal 'docker:source' for attaching a Docker tar archive to the Maven project with an classifier "docker-<alias>" (#311) 
-  - Be more careful with chowing the user when <user> is used in an assembly (#336)
+  - Be more careful with chowning the user when <user> is used in an assembly (#336)
   - Move VOLUME to the end of the Dockerfile to allow initialization via RUN commands (#341)
   - Allow multiple configurations with different Docker hosts again (#320) 
-  - docker:start blocks now only when system property docker.follow is given (#249) 
+  - `docker:start` blocks now only when system property docker.follow is given (#249) 
   - `docker:stop` only stops containers started by this plugin by default (#87)
 
 * **0.13.6**
@@ -151,19 +151,35 @@ to spot since a build will croak immediately.
 
 The old format
 
-````xml <build> <command>java -jar /server.jar</command> </build> ````
+````xml 
+<build> 
+  <command>java -jar /server.jar</command>
+</build>
+````
 
 becomes now
 
-````xml <build> <cmd> <exec> <arg>java</arg> <arg>-jar</arg>
-  <arg>/server.jar</arg>
-      </exec>         
-    </cmd> </build> ````
+````xml 
+<build> 
+  <cmd> 
+    <exec> 
+      <arg>java</arg> 
+      <arg>-jar</arg>
+      <arg>/server.jar</arg>
+    </exec>         
+  </cmd> 
+</build> 
+````
  
 or
 
-````xml <build> <cmd> <shell>java -jar /server.jar</shell> </cmd>
-  </build> ````
+````xml 
+<build>
+  <cmd>
+    <shell>java -jar /server.jar</shell>
+  </cmd>
+</build>
+````
 
 depending on whether you prefer the `exec` or `shell` form.
 
@@ -281,27 +297,51 @@ Please note, that the syntax for binding volumes from another
 container has changed slightly in 0.10.6.  See
 "[Volume binding](manual.md#volume-binding)" for details but in short:
 
-````xml <run> <volumes> <from>data</from> <from>jolokia/demo</from>
-</volumes> ....  </run> ````
+````xml 
+<run>
+  <volumes>
+    <from>data</from>
+    <from>jolokia/demo</from>
+  </volumes>
+....
+</run>
+````
 
 becomes
 
-````xml <run> <volumes> <from> <image>data</image>
-<image>jolokia/demo</image> </from> </volumes> ....  </run> ````
+````xml
+<run>
+  <volumes>
+    <from>
+      <image>data</image>
+      <image>jolokia/demo</image>
+    </from>
+  </volumes>
+....
+</run>
+````
 
 The syntax for specifying the build assembly configuration has also
 changed. See "[Build Assembly] (manual.md#build-assembly)" for details
 but in short:
 
-`````xml <build> ...  <exportDir>/export</exportDir>
+````xml
+<build>
+  ...
+  <exportDir>/export</exportDir>
   <assemblyDescriptor>src/main/docker/assembly.xml</assemblyDescriptor>  
 </build>  
 ````
 
 becomes
 
-`````xml <build> ...  <assembly> <basedir>/export</basedir>
-<descriptor>assembly.xml</descriptor> </assembly>
+````xml
+<build>
+  ...  
+  <assembly>
+    <basedir>/export</basedir>
+    <descriptor>assembly.xml</descriptor> 
+  </assembly>
 </build>           
 ````
 
