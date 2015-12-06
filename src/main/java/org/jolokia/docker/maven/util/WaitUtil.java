@@ -31,8 +31,9 @@ public class WaitUtil {
     // How long to wait between pings
     private static final long WAIT_RETRY_WAIT = 500;
 
-    // Timeout for ping
+    // Timeout for pings
     private static final int HTTP_PING_TIMEOUT = 500;
+    private static final int TCP_PING_TIMEOUT = 500;
 
     // Default HTTP Method to use
     public static final String DEFAULT_HTTP_METHOD = "HEAD";
@@ -186,8 +187,6 @@ public class WaitUtil {
      * Check whether a given TCP port is available
      */
     public static class TcpPortChecker implements WaitChecker {
-        private static final int TCP_TIMEOUT = 2000;
-
         private final List<Integer> ports;
 
         private final List<InetSocketAddress> pending;
@@ -219,7 +218,7 @@ public class WaitUtil {
 
                 try {
                     Socket s = new Socket();
-                    s.connect(address, TCP_TIMEOUT);
+                    s.connect(address, TCP_PING_TIMEOUT);
                     s.close();
                     iter.remove();
                 } catch (IOException e) {

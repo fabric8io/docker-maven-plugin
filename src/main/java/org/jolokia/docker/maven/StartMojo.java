@@ -9,9 +9,7 @@ package org.jolokia.docker.maven;
  */
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -23,11 +21,6 @@ import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
-import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.service.RunService;
-import org.jolokia.docker.maven.util.StartOrderResolver;
-import org.jolokia.docker.maven.util.Timestamp;
-import org.jolokia.docker.maven.util.WaitUtil;
 import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.*;
 
@@ -167,7 +160,7 @@ public class StartMojo extends AbstractDockerMojo {
                         Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
                         if (binding == null) {
                             throw new MojoExecutionException(String.format(
-                                    "Cannot watch on port %d, since it was not bind by Docker.", port
+                                    "Cannot watch on port %d, since there is no network binding", port
                             ));
                         }
                         ports.add(binding.getHostPort());
