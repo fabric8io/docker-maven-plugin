@@ -87,7 +87,7 @@ Example:
 <configuration>
    <dockerHost>https://localhost:2376</dockerHost>
    <certPath>src/main/dockerCerts</certPath>
-   <useColor>true</userColor>
+   <useColor>true</useColor>
    .....
 </configuration>
 ````
