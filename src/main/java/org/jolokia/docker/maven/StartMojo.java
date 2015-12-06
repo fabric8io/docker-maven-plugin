@@ -65,7 +65,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         LogDispatcher dispatcher = getLogDispatcher(hub);
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
-        
+
         boolean success = false;
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
@@ -101,7 +101,7 @@ public class StartMojo extends AbstractDockerMojo {
                 runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
                 wait();
             }
-            
+
             portMappingPropertyWriteHelper.write();
             success = true;
         } catch (InterruptedException e) {
@@ -157,7 +157,7 @@ public class StartMojo extends AbstractDockerMojo {
                     host = projectProperties.getProperty("docker.host.address");
                 }
 
-                if ("localhost".equals(host)) {
+                if ("localhost".equals(host) && container.getIPAddress() != null) {
                     host = container.getIPAddress();
                     ports = tcpConfig.getPorts();
                     log.info(String.format("%s: Waiting for ports %s directly on container with IP (%s).",
@@ -165,6 +165,11 @@ public class StartMojo extends AbstractDockerMojo {
                 } else {
                     for (int port : tcpConfig.getPorts()) {
                         Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
+                        if (binding == null) {
+                            throw new MojoExecutionException(String.format(
+                                    "Cannot watch on port %d, since it was not bind by Docker.", port
+                            ));
+                        }
                         ports.add(binding.getHostPort());
                     }
                     log.info(String.format("%s: Waiting for exposed ports %s on remote host (%s), " +

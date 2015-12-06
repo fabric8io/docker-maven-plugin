@@ -72,7 +72,7 @@ public class ContainerDetails implements Container {
     public String getIPAddress() {
         if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
             JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
-            if (!networkSettings.isNull(PORTS)) {
+            if (!networkSettings.isNull(IP)) {
                 return networkSettings.getString(IP);
             }
         }
@@ -88,7 +88,7 @@ public class ContainerDetails implements Container {
             }
         }
 
-        return Collections.emptyMap();
+        return new HashMap<>();
     }
 
     @Override
