@@ -18,26 +18,38 @@ public class AuthConfig {
 
     public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "");
 
-    private Map<String,String> params;
+    private String authEncoded;
 
     public AuthConfig(Map<String,String> params) {
-        this.params = params;
+        this.authEncoded = createAuthEncoded(params);
     }
 
-    public AuthConfig(String user, String password, String email,String auth) {
-        params = new HashMap<>();
+    public AuthConfig(String user, String password, String email, String auth) {
+        Map<String,String>  params = new HashMap<>();
         putNonNull(params, "username", user);
         putNonNull(params, "password", password);
         putNonNull(params, "email", email);
         putNonNull(params, "auth", auth);
+
+        this.authEncoded = createAuthEncoded(params);
+    }
+
+    public AuthConfig(String authEncoded) {
+        this.authEncoded = authEncoded;
     }
 
     public String toHeaderValue() {
+        return authEncoded;
+    }
+
+    // ======================================================================================================
+
+    private String createAuthEncoded(Map<String,String> params) {
         JSONObject ret = new JSONObject();
-        add(ret,"username");
-        add(ret,"password");
-        add(ret,"email");
-        add(ret,"auth");
+        add(params,ret,"username");
+        add(params,ret,"password");
+        add(params,ret,"email");
+        add(params,ret,"auth");
         try {
             return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -45,10 +57,7 @@ public class AuthConfig {
         }
     }
 
-
-    // ======================================================================================================
-
-    private void add(JSONObject ret, String key) {
+    private void add(Map<String,String> params, JSONObject ret, String key) {
         if (params.containsKey(key)) {
             ret.put(key,params.get(key));
         }

@@ -77,7 +77,10 @@ public class AuthConfigFactory {
         if (authConfig != null) {
             return getAuthConfigFromPluginConfiguration(authConfig);
         }
-        return getAuthConfigFromSettings(settings,user,registry);
+        AuthConfig ret = getAuthConfigFromSettings(settings,user,registry);
+        if (ret == null) {
+            return getAuthConfigFromDockerLogin()
+        }
     }
 
     // ===================================================================================================
@@ -106,9 +109,13 @@ public class AuthConfigFactory {
         return new AuthConfig(cloneConfig);
     }
 
+    private AuthConfig getAuthConfigFromDockerLogin() throws MojoExecutionException {
+
+    }
+
     private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) throws MojoExecutionException {
         Server defaultServer = null;
-        Server found = null;
+        Server found;
         for (Server server : settings.getServers()) {
             String id = server.getId();
 

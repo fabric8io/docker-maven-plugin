@@ -401,11 +401,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
         return null;
     }
 
-    private boolean isDefaultRegistry(String registry) {
-        return "index.docker.io".equalsIgnoreCase(registry) ||
-               "docker.io".equalsIgnoreCase(registry) ||
-               "registry.hub.docker.com".equalsIgnoreCase(registry);
-    }
     // ===========================================================================================================
 
     private void logWarnings(JSONObject body) {
