@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Sun Dec 06 2015 18:09:28 GMT+0000 (UTC)"
+        data-revision="Mon Dec 07 2015 10:09:06 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -256,6 +256,21 @@
             
         </li>
     
+        <li class="chapter " data-level="4.8" data-path="docker-source.html">
+            
+                
+                    <a href="./docker-source.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.8.</b>
+                        
+                        docker:source
+                    </a>
+            
+            
+        </li>
+    
 
             </ul>
             
@@ -363,7 +378,8 @@ of an image configuration. The available subelements are</p>
 <ul>
 <li><strong>assembly</strong> specifies the assembly configuration as described in
 <a href="#build-assembly">Build Assembly</a></li>
-<li><strong>cleanup</strong> indicates if dangling (untagged) images should be cleaned up during each build. Default is <code>true</code>   </li>
+<li><strong>cleanup</strong> indicates if dangling (untagged) images should be cleaned up after each build (including any containers
+created from them). Default is <code>true</code>   </li>
 <li><strong>cmd</strong> A command to execute by default (i.e. if no command
 is provided when a container for this image is started). See 
 <a href="#start-up-arguments">Start-up Arguments</a> for details.</li>
@@ -384,6 +400,9 @@ which are passed to bash. The run commands are inserted right after the assembly
 Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime
 behaviour when starting containers. </li>
 <li><strong>optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only one image layer is created.</li>
+<li><strong>compression</strong> is the compression mode how the build archive is transmitted to the docker daemon (<code>docker:build</code>) and how 
+docker build archives are attached to this build as sources (<code>docker:source</code>). The value can be <code>none</code> (default), 
+<code>gzip</code> or <code>bzip2</code>. </li>
 <li><strong>skip</strong> if set to true disables building of the image. This config option is best used together with a maven property</li>
 <li><strong>tags</strong> contains a list of additional <code>tag</code> elements with which an
 image is to be tagged after the build.</li>

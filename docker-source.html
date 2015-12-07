@@ -5,7 +5,7 @@
         
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Authentication | docker-maven-plugin</title>
+        <title>docker:source | docker-maven-plugin</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="generator" content="GitBook 2.6.4">
@@ -45,10 +45,10 @@
         
     
     
-    <link rel="next" href="./links.html" />
+    <link rel="next" href="./external-configuration.html" />
     
     
-    <link rel="prev" href="./registry-handling.html" />
+    <link rel="prev" href="./docker-logs.html" />
     
 
         
@@ -57,9 +57,9 @@
         
         
     <div class="book"
-        data-level="7"
-        data-chapter-title="Authentication"
-        data-filepath="authentication.md"
+        data-level="4.8"
+        data-chapter-title="docker:source"
+        data-filepath="docker-source.md"
         data-basepath="."
         data-revision="Mon Dec 07 2015 10:09:06 GMT+0000 (UTC)"
         data-innerlanguage="">
@@ -256,7 +256,7 @@
             
         </li>
     
-        <li class="chapter " data-level="4.8" data-path="docker-source.html">
+        <li class="chapter active" data-level="4.8" data-path="docker-source.html">
             
                 
                     <a href="./docker-source.html">
@@ -306,7 +306,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="7" data-path="authentication.html">
+        <li class="chapter " data-level="7" data-path="authentication.html">
             
                 
                     <a href="./authentication.html">
@@ -369,73 +369,35 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h2 id="authentication"><a name="authentication" class="plugin-anchor" href="#authentication"><span class="fa fa-link"></span></a>Authentication</h2>
-<p>When pulling (via the <code>autoPull</code> mode of <code>docker:start</code>) or pushing image, it
-might be necessary to authenticate against a Docker registry.</p>
-<p>There are three different ways for providing credentials:</p>
-<ul>
-<li>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with
-<code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements. </li>
-<li>Providing system properties <code>docker.username</code> and <code>docker.password</code>
-from the outside </li>
-<li>Using a <code>&lt;server&gt;</code> configuration in the the <code>~/.m2/settings.xml</code>
-settings </li>
-<li>Login into a registry with <code>docker login</code></li>
-</ul>
-<p>Using the username and password directly in the <code>pom.xml</code> is not
-recommended since this is widely visible. This is most easiest and
-transparent way, though. Using an <code>&lt;authConfig&gt;</code> is straight forward:</p>
+                        <h3 id="dockersource"><a name="dockersource" class="plugin-anchor" href="#dockersource"><span class="fa fa-link"></span></a>docker:source</h3>
+<p>The <code>docker:source</code> target can be used to attach a docker build
+archive containing the Dockerfile and all added files to the Maven
+project with a certain classifier. It reuses the configuration from
+<a href="docker-build.html">docker:build</a>.</p>
+<p><code>docker:source</code> uses the image&apos;s <a href="image-configuration.html">alias</a> as
+part of the classifier, so it is mandatory that the alias is set for
+this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</code> so
+when the alias is set to <code>service</code>, then the classifier is
+<code>docker-service</code>. </p>
+<p><code>docker:source</code> can be attached to a Maven execution phase, which is
+<code>generate-sources</code> by default.</p>
+<p>For example, this configuration will attach the docker build archive
+to the artifacts to store in the repository:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">plugin</span>&gt;</span>
-  <span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
-     <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>consol/tomcat-7.0<span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>
-     ...
-     <span class="hljs-tag">&lt;<span class="hljs-title">authConfig</span>&gt;</span>
-         <span class="hljs-tag">&lt;<span class="hljs-title">username</span>&gt;</span>jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">username</span>&gt;</span>
-         <span class="hljs-tag">&lt;<span class="hljs-title">password</span>&gt;</span>s!cr!t<span class="hljs-tag">&lt;/<span class="hljs-title">password</span>&gt;</span>
-     <span class="hljs-tag">&lt;/<span class="hljs-title">authConfig</span>&gt;</span>
-  <span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">artifactId</span>&gt;</span>docker-maven-plugin<span class="hljs-tag">&lt;/<span class="hljs-title">artifactId</span>&gt;</span>
+  <span class="hljs-comment">&lt;!-- ..... --&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">executions</span>&gt;</span>
+     <span class="hljs-tag">&lt;<span class="hljs-title">execution</span>&gt;</span>
+       <span class="hljs-tag">&lt;<span class="hljs-title">id</span>&gt;</span>sources<span class="hljs-tag">&lt;/<span class="hljs-title">id</span>&gt;</span>
+       <span class="hljs-tag">&lt;<span class="hljs-title">goals</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-title">goal</span>&gt;</span>source<span class="hljs-tag">&lt;/<span class="hljs-title">goal</span>&gt;</span>
+       <span class="hljs-tag">&lt;/<span class="hljs-title">goals</span>&gt;</span>
+     <span class="hljs-tag">&lt;/<span class="hljs-title">execution</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">executions</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">plugin</span>&gt;</span>
 </code></pre>
-<p>The system property provided credentials are a good compromise when
-using CI servers like Jenkins. You simply provide the credentials from
-the outside:</p>
-<pre><code>mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
-</code></pre><p>The most secure and also the most <em>mavenish</em> way is to add a server to
-the Maven settings file <code>~/.m2/settings.xml</code>:</p>
-<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">servers</span>&gt;</span>
-  <span class="hljs-tag">&lt;<span class="hljs-title">server</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-title">id</span>&gt;</span>docker.io<span class="hljs-tag">&lt;/<span class="hljs-title">id</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-title">username</span>&gt;</span>jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">username</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-title">password</span>&gt;</span>s!cr!t<span class="hljs-tag">&lt;/<span class="hljs-title">password</span>&gt;</span>
-  <span class="hljs-tag">&lt;/<span class="hljs-title">server</span>&gt;</span>
-  ....
-<span class="hljs-tag">&lt;/<span class="hljs-title">servers</span>&gt;</span>
-</code></pre>
-<p>The server id must specify the registry to push to/pull from, which by
-default is central index <code>docker.io</code> (or <code>index.docker.io</code> / <code>registry.hub.docker.com</code> as fallbacks). 
-Here you should add your docker.io account for your repositories. If you have multiple accounts 
-for the same registry, the second user can be specified as part of the ID. In the example above, if you 
-have a second accorunt &apos;rhuss&apos; then use an <code>&lt;id&gt;docker.io/rhuss&lt;/id&gt;</code> for this second entry. I.e. add the 
-username with a slash to the id name. The default without username is only taken if no server entry with 
-a username appended id is chosen.</p>
-<p>As a final fallback, this plugin consults <code>~/.docker/config.json</code> for getting to the credentials. Within this 
-file credentials are stored when connecting to a registry with the command <code>docker login</code> from the command line. </p>
-<h4 id="password-encryption"><a name="password-encryption" class="plugin-anchor" href="#password-encryption"><span class="fa fa-link"></span></a>Password encryption</h4>
-<p>Regardless which mode you choose you can encrypt password as described
-in the
-<a href="http://maven.apache.org/guides/mini/guide-encryption.html" target="_blank">Maven documentation</a>. Assuming
-that you have setup a <em>master password</em> in
-<code>~/.m2/security-settings.xml</code> you can create easily encrypted
-passwords:</p>
-<pre><code class="lang-bash">$ mvn --encrypt-password
-Password:
-{QJ6wvuEfacMHklqsmrtrn1/ClOLqLm8hB7yUL23KOKo=}
-</code></pre>
-<p>This password then can be used in <code>authConfig</code>, <code>docker.password</code>
-and/or the <code>&lt;server&gt;</code> setting configuration. However, putting an
-encrypted password into <code>authConfig</code> in the <code>pom.xml</code> doesn&apos;t make
-much sense, since this password is encrypted with an individual master
-password.</p>
+<p>If the plugin is not bound to an execute phase but called directly, it must be ensured that the package phase is 
+called, too. That is required to find the artifacts created with this build when referenced from an assembly. </p>
 
                     
                     </section>
@@ -446,10 +408,10 @@ password.</p>
         </div>
 
         
-        <a href="./registry-handling.html" class="navigation navigation-prev " aria-label="Previous page: Registry Handling"><i class="fa fa-angle-left"></i></a>
+        <a href="./docker-logs.html" class="navigation navigation-prev " aria-label="Previous page: docker:logs"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="./links.html" class="navigation navigation-next " aria-label="Next page: Further Reading"><i class="fa fa-angle-right"></i></a>
+        <a href="./external-configuration.html" class="navigation navigation-next " aria-label="Next page: External Configuration"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

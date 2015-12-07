@@ -61,7 +61,7 @@
         data-chapter-title="docker:start"
         data-filepath="docker-start.md"
         data-basepath="."
-        data-revision="Sun Dec 06 2015 18:09:28 GMT+0000 (UTC)"
+        data-revision="Mon Dec 07 2015 10:09:06 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -251,6 +251,21 @@
                             <b>4.7.</b>
                         
                         docker:logs
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="4.8" data-path="docker-source.html">
+            
+                
+                    <a href="./docker-source.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.8.</b>
+                        
+                        docker:source
                     </a>
             
             
@@ -641,6 +656,11 @@ error when trying to remove a container to fast after it has been stopped.</li>
 <li><strong>preStop</strong> Command to run before the container is stopped.</li>
 </ul>
 </li>
+<li><strong>tcp</strong> specifies TCP port check which periodically polls given tcp ports. It knows the following sub-elements:<ul>
+<li><strong>host</strong> is the hostname or the IP address. It defaults to <code>${docker.host.address}</code>.</li>
+<li><strong>ports</strong> is a list of TCP ports to check.</li>
+</ul>
+</li>
 </ul>
 <p>As soon as one condition is met the build continues. If you add a
 <code>&lt;time&gt;</code> constraint this works more or less as a timeout for other
@@ -660,10 +680,18 @@ If only a <code>&lt;time&gt;</code> is specified, the build will wait that amoun
      <span class="hljs-tag">&lt;<span class="hljs-title">postStart</span>&gt;</span>/opt/init_db.sh<span class="hljs-tag">&lt;/<span class="hljs-title">postStart</span>&gt;</span>
      <span class="hljs-tag">&lt;<span class="hljs-title">preStop</span>&gt;</span>/opt/notify_end.sh<span class="hljs-tag">&lt;/<span class="hljs-title">preStop</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">exec</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">tcp</span>&gt;</span>
+     <span class="hljs-tag">&lt;<span class="hljs-title">host</span>&gt;</span>192.168.99.100<span class="hljs-tag">&lt;/<span class="hljs-title">host</span>&gt;</span>
+     <span class="hljs-tag">&lt;<span class="hljs-title">ports</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>3306<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>9999<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
+     <span class="hljs-tag">&lt;/<span class="hljs-title">ports</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">tcp</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">wait</span>&gt;</span>
 </code></pre>
 <p>This setup will wait for the given URL to be reachable but ten seconds
-at most. Also, when stopping the container after an integration tests, the
+at most. Additionally, it will be waited for the TCP ports 3306 and 9999.
+Also, when stopping the container after an integration tests, the
 build wait for 500 ms before it tries to remove the container (if not <code>keepContainer</code>
 or <code>keepRunning</code> is used). You can use maven properties in each
 condition, too. In the example, the <code>${host.port}</code> property is
