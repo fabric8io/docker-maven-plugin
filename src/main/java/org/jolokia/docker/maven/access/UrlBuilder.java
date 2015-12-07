@@ -22,6 +22,7 @@ public final class UrlBuilder {
         return u("build")
                 .p("t",image)
                 .p(forceRemove ? "forcerm" : "rm", true)
+                .p("nocache", Boolean.valueOf(System.getProperty("docker.nocache", "false")))
                 .build();
     }
 
