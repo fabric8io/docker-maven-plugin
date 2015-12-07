@@ -21,7 +21,7 @@
 
   <groupId>org.jolokia</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.13.6</version>
+  <version>0.13.7-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -143,6 +143,7 @@
                    does this. -->
                 <assembly>
                   <mode>dir</mode>
+                  <user>www-data:www-data:www-data</user>
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
               </build>
@@ -158,6 +159,9 @@
         <executions>
           <execution>
             <id>start</id>
+             <configuration>
+               <dockerHost>http://172.28.128.4:2375</dockerHost>
+             </configuration>
             <phase>pre-integration-test</phase>
             <goals>
               <goal>build</goal>
@@ -166,9 +170,18 @@
           </execution>
           <execution>
             <id>stop</id>
+            <configuration>
+              <dockerHost>http://172.28.128.4:2375</dockerHost>
+            </configuration>
             <phase>post-integration-test</phase>
             <goals>
               <goal>stop</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>sources</id>
+            <goals>
+              <goal>source</goal>
             </goals>
           </execution>
         </executions>
@@ -258,6 +271,7 @@
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}:${project.version}</name>
+                  <alias>jolokia</alias>
                   <build>
                     <from>${image}</from>
                     <labels>
@@ -318,6 +332,7 @@
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}:${project.version}</name>
+                  <alias>jolokia</alias>
                   <build>
                     <from>${image}</from>
                     <assembly>
@@ -382,6 +397,7 @@
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}-dockerfile:${project.version}</name>
+                  <alias>jolokia</alias>
                   <build>
                     <assembly>
                       <dockerFileDir>demo</dockerFileDir>

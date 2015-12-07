@@ -1,7 +1,12 @@
 package org.jolokia.docker.maven.util;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,6 +17,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+
 
 /**
  * @author roland
@@ -25,8 +31,9 @@ public class WaitUtil {
     // How long to wait between pings
     private static final long WAIT_RETRY_WAIT = 500;
 
-    // Timeout for ping
+    // Timeout for pings
     private static final int HTTP_PING_TIMEOUT = 500;
+    private static final int TCP_PING_TIMEOUT = 500;
 
     // Default HTTP Method to use
     public static final String DEFAULT_HTTP_METHOD = "HEAD";
@@ -97,7 +104,7 @@ public class WaitUtil {
      */
     public static class HttpPingChecker implements WaitChecker {
 
-        private int statusMin,statusMax;
+        private int statusMin, statusMax;
         private String url;
         private String method;
 
@@ -131,7 +138,7 @@ public class WaitUtil {
         }
 
         public HttpPingChecker(String waitUrl) {
-            this(waitUrl,null,null);
+            this(waitUrl, null, null);
         }
 
         @Override
@@ -146,10 +153,10 @@ public class WaitUtil {
         private boolean ping() throws IOException {
             RequestConfig requestConfig =
                     RequestConfig.custom()
-                                 .setSocketTimeout(HTTP_PING_TIMEOUT)
-                                 .setConnectTimeout(HTTP_PING_TIMEOUT)
-                                 .setConnectionRequestTimeout(HTTP_PING_TIMEOUT)
-                                 .build();
+                            .setSocketTimeout(HTTP_PING_TIMEOUT)
+                            .setConnectTimeout(HTTP_PING_TIMEOUT)
+                            .setConnectionRequestTimeout(HTTP_PING_TIMEOUT)
+                            .build();
             CloseableHttpClient httpClient = HttpClientBuilder.create()
                     .setDefaultRequestConfig(requestConfig)
                     .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))
@@ -176,8 +183,62 @@ public class WaitUtil {
 
     // ====================================================================================================
 
+    /**
+     * Check whether a given TCP port is available
+     */
+    public static class TcpPortChecker implements WaitChecker {
+        private final List<Integer> ports;
+
+        private final List<InetSocketAddress> pending;
+
+        public TcpPortChecker(String host, List<Integer> ports) {
+            this.ports = ports;
+
+            this.pending = new ArrayList<>();
+            for (int port : ports) {
+                this.pending.add(new InetSocketAddress(host, port));
+            }
+
+        }
+
+        public List<Integer> getPorts() {
+            return ports;
+        }
+
+        public List<InetSocketAddress> getPending() {
+            return pending;
+        }
+
+        @Override
+        public boolean check() {
+            Iterator<InetSocketAddress> iter = pending.iterator();
+
+            while (iter.hasNext()) {
+                InetSocketAddress address = iter.next();
+
+                try {
+                    Socket s = new Socket();
+                    s.connect(address, TCP_PING_TIMEOUT);
+                    s.close();
+                    iter.remove();
+                } catch (IOException e) {
+                    // Ports isn't opened, yet. So don't remove from queue.
+
+                }
+
+            }
+            return pending.isEmpty();
+        }
+
+        @Override
+        public void cleanUp() { }
+    };
+
+    // ====================================================================================================
+
     public interface WaitChecker {
         boolean check();
+
         void cleanUp();
     }
 

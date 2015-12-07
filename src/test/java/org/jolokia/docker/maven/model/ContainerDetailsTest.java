@@ -22,7 +22,7 @@ public class ContainerDetailsTest {
     public void testContaierWithMappedPorts() {
         givenAContainerWithMappedPorts();
         whenCreateContainer();
-        thenMapSizeIs(2);
+        thenPortBindingSizeIs(2);
         thenMapContainsSpecAndBinding("80/tcp", 32771, "0.0.0.0");
         thenMapContainsSpecAndBinding("52/udp", 32772, "1.2.3.4");
     }
@@ -31,7 +31,7 @@ public class ContainerDetailsTest {
     public void testContaierWithPorts() {
         givenAContaierWithPorts();
         whenCreateContainer();
-        thenMapSizeIs(2);
+        thenPortBindingSizeIs(2);
         thenMapContainsPortSpecOnly("80/tcp");
         thenMapContainsPortSpecOnly("52/udp");
     }
@@ -40,16 +40,41 @@ public class ContainerDetailsTest {
     public void testContainerWithoutPorts() {
         givenAContainerWithoutPorts();
         whenCreateContainer();
-        thenMapSizeIs(0);
+        thenPortBindingSizeIs(0);
     }
 
+    @Test
+    public void testContainerWithLabels() {
+        givenAContainerWithLabels();
+        whenCreateContainer();
+        thenLabelsSizeIs(2);
+        thenLabelsContains("key1", "value1");
+        thenLabelsContains("key2", "value2");
+    }
+    
+    private void thenLabelsContains(String key, String value) {
+        assertTrue(container.getLabels().containsKey(key));
+        assertEquals(value, container.getLabels().get(key));
+    }
+    
+    private void givenAContainerWithLabels() {
+        JSONObject labels = new JSONObject();
+        labels.put("key1", "value1");
+        labels.put("key2", "value2");
+
+        JSONObject config = new JSONObject();
+        config.put(ContainerDetails.LABELS, labels);
+
+        json.put("Config",config);
+    }
+    
     @Test
     public void testCreateContainer() throws Exception {
         givenContainerData();
         whenCreateContainer();
         thenValidateContainer();
     }
-
+    
     private JSONArray createHostIpAndPort(int port, String ip) {
         JSONObject object = new JSONObject();
         
@@ -112,7 +137,11 @@ public class ContainerDetailsTest {
         assertEquals(port, container.getPortBindings().get(key).getHostPort().intValue());
     }
 
-    private void thenMapSizeIs(int size) {
+    private void thenLabelsSizeIs(int size) {
+        assertEquals(size, container.getLabels().size());   
+    }
+    
+    private void thenPortBindingSizeIs(int size) {
         assertEquals(size, container.getPortBindings().size());
     }
 

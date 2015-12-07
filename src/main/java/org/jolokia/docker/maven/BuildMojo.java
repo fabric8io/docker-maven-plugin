@@ -7,6 +7,7 @@ import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.service.ServiceHub;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.ImageName;
 
@@ -27,24 +28,24 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     private boolean skipTags;
 
     @Override
-    protected void executeInternal(DockerAccess dockerAccess) throws DockerAccessException, MojoExecutionException {
+    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 if (buildConfig.skip()) {
                     log.info(imageConfig.getDescription() + ": Skipped building");
                 } else {
-                    buildAndTag(dockerAccess, imageConfig);
+                    buildAndTag(hub, imageConfig);
                 }
             }
         }
     }
 
-    private void buildAndTag(DockerAccess dockerAccess, ImageConfiguration imageConfig)
+    private void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
-        buildImage(dockerAccess, imageConfig);
+        buildImage(hub, imageConfig);
         if (!skipTags) {
-            tagImage(imageConfig.getName(), imageConfig, dockerAccess);
+            tagImage(imageConfig.getName(), imageConfig, hub.getDockerAccess());
         }
     }
     

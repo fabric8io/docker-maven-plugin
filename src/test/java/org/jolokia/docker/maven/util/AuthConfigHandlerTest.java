@@ -1,5 +1,7 @@
 package org.jolokia.docker.maven.util;
 
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 
 import mockit.*;
@@ -11,12 +13,12 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jolokia.docker.maven.access.AuthConfig;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
-import static mockit.Deencapsulation.getField;
 import static org.junit.Assert.*;
 
 /**
@@ -53,7 +55,7 @@ public class AuthConfigHandlerTest {
 
     @Test
     public void testEmpty() throws Exception {
-        assertNull(factory.createAuthConfig(null, settings, null, null));
+        assertNull(factory.createAuthConfig(null, settings, null, "blubberbla:1611"));
     }
 
     @Test
@@ -69,6 +71,60 @@ public class AuthConfigHandlerTest {
             System.clearProperty("docker.password");
             System.clearProperty("docker.email");
         }
+    }
+
+
+    @Test
+    public void testDockerLogin() throws Exception {
+        String userHome = System.getProperty("user.home");
+        try {
+            File tempDir = Files.createTempDirectory("d-m-p").toFile();
+            System.setProperty("user.home", tempDir.getAbsolutePath());
+            checkDockerLogin(tempDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
+            checkDockerLogin(tempDir,"localhost:5000","localhost:5000");
+        } finally {
+            System.setProperty("user.home",userHome);
+        }
+    }
+
+    @Test
+    public void testDockerLoginNoConfig() throws MojoExecutionException {
+        String userHome = System.getProperty("user.home");
+        try {
+            System.setProperty("user.home","never/have/this/home");
+            AuthConfig config = factory.createAuthConfig(null, settings, "roland", null);
+            assertNull(config);
+        } finally {
+            System.setProperty("user.home",userHome);
+        }
+    }
+    private void checkDockerLogin(File homeDir,String configRegistry, String lookupRegistry) throws IOException,
+                                                                                    MojoExecutionException {
+        createDockerConfig(homeDir, "roland", "secret", "roland@jolokia.org", configRegistry);
+        AuthConfig config = factory.createAuthConfig(null, settings, "roland", lookupRegistry);
+        verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+    }
+
+    private void createDockerConfig(File homeDir, String user, String password, String email, String registry)
+            throws IOException {
+        File dockerDir = new File(homeDir,".docker");
+        dockerDir.mkdirs();
+        writeDockerConfigJson(dockerDir, user, password, email, registry);
+    }
+
+    private void writeDockerConfigJson(File dockerDir, String user, String password,
+                                       String email, String registry) throws IOException {
+        File configFile = new File(dockerDir,"config.json");
+        JSONObject config = new JSONObject();
+        JSONObject auths = new JSONObject();
+        JSONObject value = new JSONObject();
+        value.put("auth", Base64.getEncoder().encodeToString(new String(user + ":" + password).getBytes()));
+        value.put("email",email);
+        auths.put(registry,value);
+        config.put("auths",auths);
+        Writer writer = new FileWriter(configFile);
+        config.write(writer);
+        writer.close();
     }
 
     @Test(expected = MojoExecutionException.class)
@@ -126,7 +182,7 @@ public class AuthConfigHandlerTest {
     }
 
     @Test
-    public void testFormSettingsDefault() throws MojoExecutionException {
+    public void testFromSettingsDefault2() throws MojoExecutionException {
         setupServers();
         AuthConfig config = factory.createAuthConfig(null,settings,"tanja",null);
         assertNotNull(config);
@@ -167,7 +223,7 @@ public class AuthConfigHandlerTest {
     }
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
-        Map params = getField(config,"params");
+        JSONObject params = new JSONObject(new String(Base64.getDecoder().decode(config.toHeaderValue())));
         assertEquals(username,params.get("username"));
         assertEquals(password,params.get("password"));
         assertEquals(email, params.get("email"));

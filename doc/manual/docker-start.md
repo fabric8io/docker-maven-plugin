@@ -323,6 +323,9 @@ some condition is met. These conditions can be specified within a
 * **exec** Specifies commands to execute during specified lifecycle of the container. It knows the following sub-elements:
   - **postStart** Command to run after the above wait criteria has been met
   - **preStop** Command to run before the container is stopped.
+* **tcp** specifies TCP port check which periodically polls given tcp ports. It knows the following sub-elements:
+  - **host** is the hostname or the IP address. It defaults to `${docker.host.address}`.
+  - **ports** is a list of TCP ports to check.
   
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
@@ -345,11 +348,19 @@ Example:
      <postStart>/opt/init_db.sh</postStart>
      <preStop>/opt/notify_end.sh</preStop>
   </exec>
+  <tcp>
+     <host>192.168.99.100</host>
+     <ports>
+        <port>3306</port>
+        <port>9999</port>
+     </ports>
+  </tcp>
 </wait>
 ```` 
 
 This setup will wait for the given URL to be reachable but ten seconds
-at most. Also, when stopping the container after an integration tests, the
+at most. Additionally, it will be waited for the TCP ports 3306 and 9999.
+Also, when stopping the container after an integration tests, the
 build wait for 500 ms before it tries to remove the container (if not `keepContainer`
 or `keepRunning` is used). You can use maven properties in each
 condition, too. In the example, the `${host.port}` property is

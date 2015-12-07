@@ -1,30 +1,23 @@
 package org.jolokia.docker.maven.access.hc;
 
+import java.io.*;
+import java.net.URI;
+import java.util.*;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.chunked.*;
 import org.jolokia.docker.maven.access.hc.http.HttpClientBuilder;
 import org.jolokia.docker.maven.access.hc.unix.UnixSocketClientBuilder;
-import org.jolokia.docker.maven.access.log.LogCallback;
-import org.jolokia.docker.maven.access.log.LogGetHandle;
-import org.jolokia.docker.maven.access.log.LogRequestor;
+import org.jolokia.docker.maven.access.log.*;
 import org.jolokia.docker.maven.config.Arguments;
-import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.log.DefaultLogCallback;
-import org.jolokia.docker.maven.model.Container;
-import org.jolokia.docker.maven.model.ContainerDetails;
-import org.jolokia.docker.maven.model.ContainersListElement;
+import org.jolokia.docker.maven.log.LogOutputSpec;
+import org.jolokia.docker.maven.model.*;
 import org.jolokia.docker.maven.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.*;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import static java.net.HttpURLConnection.*;
 import static org.jolokia.docker.maven.access.hc.ApacheHttpClientDelegate.*;
@@ -74,7 +67,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate =
-                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(),maxConnections));
+                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(), maxConnections));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
         } else {
             HttpClientBuilder builder = new HttpClientBuilder();
@@ -145,7 +138,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         } catch (IOException e) {
             log.error(e.getMessage());
             throw new DockerAccessException("Unable to exec [%s] on container [%s]", request.toString(),
-                    containerId);
+                                            containerId);
         }
 
     }
@@ -408,11 +401,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
         return null;
     }
 
-    private boolean isDefaultRegistry(String registry) {
-        return "index.docker.io".equalsIgnoreCase(registry) ||
-               "docker.io".equalsIgnoreCase(registry) ||
-               "registry.hub.docker.com".equalsIgnoreCase(registry);
-    }
     // ===========================================================================================================
 
     private void logWarnings(JSONObject body) {

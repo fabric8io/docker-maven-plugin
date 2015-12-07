@@ -20,14 +20,13 @@ public class BuildService {
 
     private final DockerAccess docker;
     private final QueryService queryService;
+    public final ArchiveService archiveService;
     private final Logger log;
 
-    private DockerAssemblyManager dockerAssemblyManager;
-
-    BuildService(DockerAccess docker, QueryService queryService, DockerAssemblyManager dockerAssemblyManager, Logger log) {
+    BuildService(DockerAccess docker, QueryService queryService, ArchiveService archiveService, Logger log) {
         this.docker = docker;
         this.queryService = queryService;
-        this.dockerAssemblyManager = dockerAssemblyManager;
+        this.archiveService = archiveService;
         this.log = log;
     }
 
@@ -51,61 +50,23 @@ public class BuildService {
             oldImageId = queryService.getImageId(imageName);
         }
 
+        File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
         // auto is now supported by docker, consider switching?
-        String newImageId = buildImage(imageName, buildConfig, params);
+        String newImageId = doBuildImage(imageName, dockerArchive, buildConfig.cleanup());
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageShouldBeRemoved(oldImageId, newImageId)) {
-            docker.removeImage(oldImageId);
+            docker.removeImage(oldImageId, true);
             log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
         }
     }
 
-    /**
-     * Get a mapping of original to destination files which a covered by an assembly. This can be used
-     * to watch the source files for changes in order to update the target (either by recreating a docker image
-     * or by copying it into a running container)
-     *
-     * @param imageConfig image config for which to get files. The build- and assembly configuration in this image
-     *                    config must not be null.
-     * @param mojoParameters needed for tracking the assembly
-     * @return mapping of assembly files
-     * @throws MojoExecutionException
-     */
-    public AssemblyFiles getAssemblyFiles(ImageConfiguration imageConfig, MojoParameters mojoParameters)
-        throws MojoExecutionException {
-
-        String name = imageConfig.getName();
-        try {
-            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters, log);
-        } catch (InvalidAssemblerConfigurationException | ArchiveCreationException | AssemblyFormattingException e) {
-            throw new MojoExecutionException("Cannot extract assembly files for image " + name + ": " + e, e);
-        }
-    }
-
-    /**
-     * Create an tar archive from a set of assembly files. Only files which changed since the last call are included.
-     * @param entries changed files. List must not be empty or null
-     * @param imageName image's name
-     * @param mojoParameters
-     * @return created archive
-     */
-    public File createChangedFilesArchive(List<AssemblyFiles.Entry> entries, File assemblyDir, String imageName, MojoParameters mojoParameters) throws MojoExecutionException {
-        return dockerAssemblyManager.createChangedFilesArchive(entries, assemblyDir, imageName, mojoParameters);
-    }
-
     // ===============================================================
 
-    private String buildImage(String imageName, BuildImageConfiguration buildConfig, MojoParameters mojoParameters)
+    private String doBuildImage(String imageName, File dockerArchive, boolean cleanUp)
         throws DockerAccessException, MojoExecutionException {
-
-        File dockerArchive = createArchive(imageName, buildConfig, mojoParameters);
-        docker.buildImage(imageName, dockerArchive, buildConfig.cleanup());
+        docker.buildImage(imageName, dockerArchive, cleanUp);
         return queryService.getImageId(imageName);
-    }
-
-    private File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params) throws MojoExecutionException {
-        return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig);
     }
 
     private boolean oldImageShouldBeRemoved(String oldImageId, String newImageId) {

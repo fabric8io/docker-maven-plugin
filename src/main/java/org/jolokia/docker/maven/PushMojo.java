@@ -5,6 +5,7 @@ import org.jolokia.docker.maven.access.AuthConfig;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.service.ServiceHub;
 import org.jolokia.docker.maven.util.ImageName;
 
 /**
@@ -19,7 +20,7 @@ public class PushMojo extends AbstractDockerMojo {
 
     /** {@inheritDoc} */
     @Override
-    public void executeInternal(DockerAccess docker) throws DockerAccessException, MojoExecutionException {
+    public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
@@ -27,6 +28,7 @@ public class PushMojo extends AbstractDockerMojo {
                 String configuredRegistry = getConfiguredRegistry(imageConfig);
                 AuthConfig authConfig = prepareAuthConfig(name, configuredRegistry, true);
 
+                DockerAccess docker = hub.getDockerAccess();
                 docker.pushImage(name, authConfig, configuredRegistry);
 
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {

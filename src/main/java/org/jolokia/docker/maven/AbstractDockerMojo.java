@@ -19,8 +19,7 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.handler.ImageConfigResolver;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.log.LogOutputSpecFactory;
-import org.jolokia.docker.maven.service.QueryService;
-import org.jolokia.docker.maven.service.ServiceHub;
+import org.jolokia.docker.maven.service.*;
 import org.jolokia.docker.maven.util.*;
 
 /**
@@ -35,13 +34,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
 
     // Key holding the log dispatcher
-    public static final Object CONTEXT_KEY_LOG_DISPATCHER = "CONTEXT_KEY_DOCKER_LOG_DISPATCHER";
+    public static final String CONTEXT_KEY_LOG_DISPATCHER = "CONTEXT_KEY_DOCKER_LOG_DISPATCHER";
 
     // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
 
-    public static final String API_VERSION = "v1.17";
+    public static final String API_VERSION = "v1.18";
 
     // Current maven project
     /** @parameter default-value="${project}" */
@@ -56,7 +55,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected ImageConfigResolver imageConfigResolver;
 
     /** @component **/
-    protected ServiceHub serviceHub;
+    protected ServiceHubFactory serviceHubFactory;
 
     /** @parameter property = "docker.autoPull" default-value = "on" */
     protected String autoPull;
@@ -142,7 +141,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected Logger log;
 
     /**
-     * Entry point for this plugin. It will set up the helper class and then calls {@link #executeInternal(DockerAccess)}
+     * Entry point for this plugin. It will set up the helper class and then calls
+     * {@link #executeInternal(ServiceHub)}
      * which must be implemented by subclass.
      *
      * @throws MojoExecutionException
@@ -152,22 +152,44 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose);
+            LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             validateConfiguration(log);
 
-            String dockerUrl = EnvUtil.extractUrl(dockerHost);
-            DockerAccess access = createDockerAccess(dockerUrl);
-            setDockerHostAddressProperty(dockerUrl);
-            serviceHub.init(access,log, new LogOutputSpecFactory(useColor, logStdout, logDate));
+            DockerAccess access = null;
 
             try {
-                executeInternal(access);
+                access = createDockerAccess();
+                ServiceHub serviceHub = serviceHubFactory.createServiceHub(access, log, logSpecFactory);
+                executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } finally {
-                access.shutdown();
+                if (access != null) {
+                    access.shutdown();
+                }
             }
         }
+    }
+
+    private DockerAccess createDockerAccess() throws MojoExecutionException, MojoFailureException {
+        DockerAccess access = null;
+        if (isDockerAccessRequired()) {
+            String dockerUrl = EnvUtil.extractUrl(dockerHost);
+            access = createDockerAccess(dockerUrl);
+            setDockerHostAddressProperty(dockerUrl);
+        }
+        return access;
+    }
+
+    /**
+     * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
+     * docker tar archives)
+     *
+     * @return <code >true</code> as the default value
+     */
+    protected boolean isDockerAccessRequired() {
+        return true;
     }
 
     private void validateConfiguration(Logger log) {
@@ -181,9 +203,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /**
      * Hook for subclass for doing the real job
      *
-     * @param dockerAccess access object for getting to the DockerServer
+     * @param serviceHub context for accessing backends
      */
-    protected abstract void executeInternal(DockerAccess dockerAccess)
+    protected abstract void executeInternal(ServiceHub serviceHub)
         throws DockerAccessException, MojoExecutionException;
 
     // =============================================================================================
@@ -276,6 +298,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
+    protected PomLabel getPomLabel() {
+        // Label used for this run
+        return new PomLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
+    }
+
+
     protected AuthConfig prepareAuthConfig(String image, String configuredRegistry, boolean useUserFromImage) throws MojoExecutionException {
         ImageName name = new ImageName(image);
         String user = useUserFromImage ? name.getUser() : null;
@@ -284,10 +312,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return authConfigFactory.createAuthConfig(authConfig, settings, user, registry);
     }
 
-    protected LogDispatcher getLogDispatcher(DockerAccess docker) {
+    protected LogDispatcher getLogDispatcher(ServiceHub hub) {
         LogDispatcher dispatcher = (LogDispatcher) getPluginContext().get(CONTEXT_KEY_LOG_DISPATCHER);
         if (dispatcher == null) {
-            dispatcher = new LogDispatcher(docker);
+            dispatcher = new LogDispatcher(hub.getDockerAccess());
             getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
@@ -307,7 +335,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
      * is not existent, throw an error
      *
-     * @param docker access object to lookup an image (if autoPull is enabled)
+     * @param hub access object to lookup an image (if autoPull is enabled)
      * @param image image name
      * @param registry optional registry which is used if the image itself doesn't have a registry.
      * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
@@ -315,14 +343,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    protected void checkImageWithAutoPull(DockerAccess docker, String image, String registry,
+    protected void checkImageWithAutoPull(ServiceHub hub, String image, String registry,
             boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
-        QueryService queryService = serviceHub.getQueryService();
+        QueryService queryService = hub.getQueryService();
         if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
             return;
         }
 
+        DockerAccess docker = hub.getDockerAccess();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(image, registry, false), registry);
         ImageName imageName = new ImageName(image);
         if (registry != null && !imageName.hasRegistry()) {

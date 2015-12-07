@@ -87,16 +87,17 @@ public class RunService {
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
                                           PortMapping mappedPorts,
+                                          PomLabel pomLabel,
                                           Properties mavenProps) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
         String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, mappedPorts, mavenProps);
+        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, mappedPorts, pomLabel, mavenProps);
 
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id);
 
-        if (mappedPorts.containsDynamicPorts()) {
+        if (mappedPorts.containsDynamicPorts() || mappedPorts.containsDynamicHostIps()) {
             updateMappedPorts(id, mappedPorts);
         }
 
@@ -223,7 +224,7 @@ public class RunService {
 
     // visible for testing
     ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
-                                                Properties mavenProps)
+                                                PomLabel pomLabel, Properties mavenProps)
             throws DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
@@ -236,7 +237,7 @@ public class RunService {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
-                    .labels(runConfig.getLabels())
+                    .labels(mergeLabels(runConfig.getLabels(), pomLabel))
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(runConfig, mappedPorts));
             VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
@@ -247,6 +248,17 @@ public class RunService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(String.format("Failed to create contained configuration for [%s]", imageName), e);
         }
+    }
+
+    private Map<String, String> mergeLabels(Map<String, String> labels, PomLabel runIdLabel) {
+        Map<String,String> ret = new HashMap<>();
+        if (labels != null) {
+            ret.putAll(labels);
+        }
+        if (runIdLabel != null) {
+            ret.put(runIdLabel.getKey(), runIdLabel.getValue());
+        }
+        return ret;
     }
 
     ContainerHostConfig createContainerHostConfig(RunImageConfiguration runConfig, PortMapping mappedPorts)

@@ -11,6 +11,7 @@ There are three different ways for providing credentials:
   from the outside 
 * Using a `<server>` configuration in the the `~/.m2/settings.xml`
   settings 
+* Login into a registry with `docker login`
 
 Using the username and password directly in the `pom.xml` is not
 recommended since this is widely visible. This is most easiest and
@@ -56,6 +57,9 @@ for the same registry, the second user can be specified as part of the ID. In th
 have a second accorunt 'rhuss' then use an `<id>docker.io/rhuss</id>` for this second entry. I.e. add the 
 username with a slash to the id name. The default without username is only taken if no server entry with 
 a username appended id is chosen.
+
+As a final fallback, this plugin consults `~/.docker/config.json` for getting to the credentials. Within this 
+file credentials are stored when connecting to a registry with the command `docker login` from the command line. 
 
 #### Password encryption
 

@@ -21,8 +21,8 @@
     </component>
 
     <component>
-      <role>org.jolokia.docker.maven.service.ServiceHub</role>
-      <implementation>org.jolokia.docker.maven.service.ServiceHub</implementation>
+      <role>org.jolokia.docker.maven.service.ServiceHubFactory</role>
+      <implementation>org.jolokia.docker.maven.service.ServiceHubFactory</implementation>
       <instantiation-strategy>singleton</instantiation-strategy>
       <requirements>
         <requirement>

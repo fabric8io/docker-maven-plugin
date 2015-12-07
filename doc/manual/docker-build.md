@@ -9,7 +9,8 @@ of an image configuration. The available subelements are
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
-* **cleanup** indicates if dangling (untagged) images should be cleaned up during each build. Default is `true`   
+* **cleanup** indicates if dangling (untagged) images should be cleaned up after each build (including any containers
+  created from them). Default is `true`   
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See 
   [Start-up Arguments](#start-up-arguments) for details.
@@ -30,6 +31,9 @@ of an image configuration. The available subelements are
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
 * **optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
+* **compression** is the compression mode how the build archive is transmitted to the docker daemon (`docker:build`) and how 
+  docker build archives are attached to this build as sources (`docker:source`). The value can be `none` (default), 
+  `gzip` or `bzip2`. 
 * **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
