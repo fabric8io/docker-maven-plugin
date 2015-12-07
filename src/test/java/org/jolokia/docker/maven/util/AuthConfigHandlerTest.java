@@ -11,6 +11,7 @@ import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.codehaus.plexus.util.Base64;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jolokia.docker.maven.access.AuthConfig;
 import org.json.JSONObject;
@@ -118,7 +119,7 @@ public class AuthConfigHandlerTest {
         JSONObject config = new JSONObject();
         JSONObject auths = new JSONObject();
         JSONObject value = new JSONObject();
-        value.put("auth", Base64.getEncoder().encodeToString(new String(user + ":" + password).getBytes()));
+        value.put("auth", new String(Base64.encodeBase64(new String(user + ":" + password).getBytes())));
         value.put("email",email);
         auths.put(registry,value);
         config.put("auths",auths);
@@ -223,7 +224,7 @@ public class AuthConfigHandlerTest {
     }
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
-        JSONObject params = new JSONObject(new String(Base64.getDecoder().decode(config.toHeaderValue())));
+        JSONObject params = new JSONObject(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())));
         assertEquals(username,params.get("username"));
         assertEquals(password,params.get("password"));
         assertEquals(email, params.get("email"));

@@ -1,15 +1,15 @@
 # ChangeLog
 
-* **0.13.7-SNAPSHOT**
-  - Fix default for "cleanup" in build configuration to `true` (as documented) (#338)
-  - Fix dynamic host property update in port mapping (#323)  
-  - New goal 'docker:source' for attaching a Docker tar archive to the Maven project with an classifier "docker-<alias>" (#311) 
-  - Be more careful with chowning the user when <user> is used in an assembly (#336)
-  - Move VOLUME to the end of the Dockerfile to allow initialization via RUN commands (#341)
-  - Allow multiple configurations with different Docker hosts again (#320) 
-  - `docker:start` blocks now only when system property docker.follow is given (#249) 
-  - `docker:stop` only stops containers started by this plugin by default (#87)
-  - Lookup `~/.docker/config.json` for registry credentials as fallback (#147)
+* **0.13.7**
+  - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))
+  - Fix dynamic host property update in port mapping ([#323](https://github.com/rhuss/docker-maven-plugin/issues/323))  
+  - New goal 'docker:source' for attaching a Docker tar archive to the Maven project with an classifier "docker-<alias>" ([#311](https://github.com/rhuss/docker-maven-plugin/issues/311)) 
+  - Be more careful with chowning the user when <user> is used in an assembly ([#336](https://github.com/rhuss/docker-maven-plugin/issues/336))
+  - Move VOLUME to the end of the Dockerfile to allow initialization via RUN commands ([#341](https://github.com/rhuss/docker-maven-plugin/issues/341))
+  - Allow multiple configurations with different Docker hosts again ([#320](https://github.com/rhuss/docker-maven-plugin/issues/320)) 
+  - `docker:start` blocks now only when system property docker.follow is given ([#249](https://github.com/rhuss/docker-maven-plugin/issues/249)) 
+  - `docker:stop` only stops containers started by this plugin by default ([#87](https://github.com/rhuss/docker-maven-plugin/issues/87))
+  - Lookup `~/.docker/config.json` for registry credentials as fallback ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
 
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
