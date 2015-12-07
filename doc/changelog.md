@@ -9,6 +9,7 @@
   - Allow multiple configurations with different Docker hosts again (#320) 
   - `docker:start` blocks now only when system property docker.follow is given (#249) 
   - `docker:stop` only stops containers started by this plugin by default (#87)
+  - Lookup `~/.docker/config.json` for registry credentials as fallback (#147)
 
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))

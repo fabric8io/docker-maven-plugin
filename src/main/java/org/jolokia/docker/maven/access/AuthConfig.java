@@ -34,8 +34,20 @@ public class AuthConfig {
         this.authEncoded = createAuthEncoded(params);
     }
 
-    public AuthConfig(String authEncoded) {
-        this.authEncoded = authEncoded;
+    /**
+     * Constructor which takes an base64 encoded credentials in the form 'user:password'
+     *
+     * @param credentialsDockerEncoded the docker encoded user and password
+     * @param email the email to use for authentication
+     */
+    public AuthConfig(String credentialsDockerEncoded, String email) {
+        String credentials = new String(Base64.decodeBase64(credentialsDockerEncoded));
+        String[] parsedCreds = credentials.split(":",2);
+        Map<String,String> params = new HashMap<>();
+        putNonNull(params,"username",parsedCreds[0]);
+        putNonNull(params,"password",parsedCreds[1]);
+        putNonNull(params,"email",email);
+        this.authEncoded = createAuthEncoded(params);
     }
 
     public String toHeaderValue() {
@@ -46,10 +58,10 @@ public class AuthConfig {
 
     private String createAuthEncoded(Map<String,String> params) {
         JSONObject ret = new JSONObject();
-        add(params,ret,"username");
-        add(params,ret,"password");
-        add(params,ret,"email");
-        add(params,ret,"auth");
+        add(params, ret, "username");
+        add(params, ret, "password");
+        add(params, ret, "email");
+        add(params, ret, "auth");
         try {
             return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {

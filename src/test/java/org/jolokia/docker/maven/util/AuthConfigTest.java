@@ -33,6 +33,12 @@ public class AuthConfigTest {
         check(config);
     }
 
+    @Test
+    public void dockerLoginConstructor() {
+        AuthConfig config = new AuthConfig(Base64.encodeBase64String("roland:secret".getBytes()),"roland@jolokia.org");
+        check(config);
+    }
+
     private void check(AuthConfig config) {
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
         JSONObject data = new JSONObject(header);

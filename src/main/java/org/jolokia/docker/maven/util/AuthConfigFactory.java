@@ -1,5 +1,6 @@
 package org.jolokia.docker.maven.util;
 
+import java.io.*;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -11,6 +12,8 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jolokia.docker.maven.access.AuthConfig;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 /**
@@ -26,6 +29,8 @@ public class AuthConfigFactory {
     private static final String DOCKER_PASSWORD = "docker.password";
     private static final String DOCKER_EMAIL = "docker.email";
     private static final String DOCKER_AUTH = "docker.authToken";
+
+    static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final PlexusContainer container;
     public static final String[] DEFAULT_REGISTRIES = new String[]{
@@ -79,7 +84,9 @@ public class AuthConfigFactory {
         }
         AuthConfig ret = getAuthConfigFromSettings(settings,user,registry);
         if (ret == null) {
-            return getAuthConfigFromDockerLogin()
+            return getAuthConfigFromDockerConfig(registry);
+        } else {
+            return ret;
         }
     }
 
@@ -109,9 +116,43 @@ public class AuthConfigFactory {
         return new AuthConfig(cloneConfig);
     }
 
-    private AuthConfig getAuthConfigFromDockerLogin() throws MojoExecutionException {
-
+    private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
+        JSONObject dockerConfig = readDockerConfig();
+        if (dockerConfig != null && dockerConfig.has("auths")) {
+            JSONObject auths = dockerConfig.getJSONObject("auths");
+            String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
+            if (auths.has(registryToLookup)) {
+                JSONObject entry = auths.getJSONObject(registryToLookup);
+                if (entry.has("auth")) {
+                    String auth = entry.getString("auth");
+                    String email = entry.has("email") ? entry.getString("email") : null;
+                    return new AuthConfig(auth,email);
+                }
+            }
+        }
+        return null;
     }
+
+    private JSONObject readDockerConfig() {
+        String homeDir = System.getProperty("user.home");
+        if (homeDir == null) {
+            homeDir = System.getenv("HOME");
+        }
+        if (homeDir != null) {
+            File config = new File(homeDir + "/.docker/config.json");
+            if (config.exists()) {
+                try {
+                    JSONTokener tokener =new JSONTokener(new FileReader(config));
+                    return new JSONObject(tokener);
+                } catch (FileNotFoundException e) {
+                    // Shouldnt happen. Nevertheless ...
+                    throw new IllegalStateException("Cannot find " + config,e);
+                }
+            }
+        }
+        return null;
+    }
+
 
     private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) throws MojoExecutionException {
         Server defaultServer = null;
