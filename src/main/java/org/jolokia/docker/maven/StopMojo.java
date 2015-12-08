@@ -83,7 +83,13 @@ public class StopMojo extends AbstractDockerMojo {
     }
 
     private boolean isStopAllContainers() {
-        return Boolean.valueOf(System.getProperty("docker.allContainers", Boolean.FALSE.toString()));
+        for (String prop : new String[] { "docker.allContainers", "docker.sledgeHammer" }) {
+            String val = System.getProperty(prop);
+            if (val != null && Boolean.valueOf(val)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean invokedViaDockerStart() {
