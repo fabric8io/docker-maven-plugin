@@ -60,6 +60,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new BuildImageConfiguration.Builder()
                 .cmd(withPrefix(prefix, CMD, properties))
                 .cleanup(withPrefix(prefix, CLEANUP, properties))
+                .nocache(withPrefix(prefix, NOCACHE, properties))
                 .optimise(withPrefix(prefix, OPTIMISE, properties))
                 .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
