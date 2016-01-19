@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.13.8**
+  - Add option `nocache` for building images (#348)
+
 * **0.13.7**
   - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))
   - Fix dynamic host property update in port mapping ([#323](https://github.com/rhuss/docker-maven-plugin/issues/323))  

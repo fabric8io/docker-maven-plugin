@@ -9,8 +9,9 @@ of an image configuration. The available subelements are
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
-* **cleanup** indicates if dangling (untagged) images should be cleaned up after each build (including any containers
-  created from them). Default is `true`   
+* **cleanup** Cleanup dangling (untagged) images after each build (including any containers
+  created from them). Default is `true`
+* **nocache** Don't use Docker's build cache
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See 
   [Start-up Arguments](#start-up-arguments) for details.
