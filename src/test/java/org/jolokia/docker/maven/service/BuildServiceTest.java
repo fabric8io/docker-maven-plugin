@@ -114,7 +114,7 @@ public class BuildServiceTest {
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
-        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), anyBoolean());
+        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), anyBoolean(), anyBoolean());
     }
 
     private void thenOldImageIsNotRemoved() throws DockerAccessException {
@@ -126,7 +126,7 @@ public class BuildServiceTest {
     }
 
     private void whenBuildImage(boolean cleanup) throws DockerAccessException, MojoExecutionException {
-        doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), anyBoolean());
+        doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), anyBoolean(), anyBoolean());
 
         if (cleanup) {
             when(docker.removeImage(oldImageId)).thenReturn(true);

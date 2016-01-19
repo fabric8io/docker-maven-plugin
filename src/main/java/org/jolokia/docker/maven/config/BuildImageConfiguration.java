@@ -46,6 +46,11 @@ public class BuildImageConfiguration {
     /**
      * @parameter default-value="false"
      */
+    private boolean nocache = false;
+
+    /**
+     * @parameter default-value="false"
+     */
     private boolean optimise = false;
 
     /**
@@ -159,6 +164,10 @@ public class BuildImageConfiguration {
         return cleanup;
     }
 
+    public boolean nocache() {
+        return nocache;
+    }
+
     public boolean optimise() {
         return optimise;
     }
@@ -252,6 +261,13 @@ public class BuildImageConfiguration {
         public Builder cleanup(String cleanup) { 
             if (cleanup != null) {
                 config.cleanup = Boolean.valueOf(cleanup);
+            }
+            return this;
+        }
+
+        public Builder nocache(String nocache) {
+            if (nocache != null) {
+                config.nocache = Boolean.valueOf(nocache);
             }
             return this;
         }

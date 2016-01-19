@@ -18,10 +18,11 @@ public final class UrlBuilder {
         this.baseUrl = stripSlash(baseUrl);
     }
     
-    public String buildImage(String image, boolean forceRemove) {
+    public String buildImage(String image, boolean forceRemove, boolean noCache) {
         return u("build")
                 .p("t",image)
                 .p(forceRemove ? "forcerm" : "rm", true)
+                .p("nocache", noCache)
                 .build();
     }
 

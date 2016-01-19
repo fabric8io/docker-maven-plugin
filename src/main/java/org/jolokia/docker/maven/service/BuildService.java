@@ -52,7 +52,7 @@ public class BuildService {
 
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
         // auto is now supported by docker, consider switching?
-        String newImageId = doBuildImage(imageName, dockerArchive, buildConfig.cleanup());
+        String newImageId = doBuildImage(imageName, dockerArchive, buildConfig.cleanup(), buildConfig.nocache());
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageShouldBeRemoved(oldImageId, newImageId)) {
@@ -63,9 +63,9 @@ public class BuildService {
 
     // ===============================================================
 
-    private String doBuildImage(String imageName, File dockerArchive, boolean cleanUp)
+    private String doBuildImage(String imageName, File dockerArchive, boolean cleanUp, boolean noCache)
         throws DockerAccessException, MojoExecutionException {
-        docker.buildImage(imageName, dockerArchive, cleanUp);
+        docker.buildImage(imageName, dockerArchive, cleanUp, noCache);
         return queryService.getImageId(imageName);
     }
 
