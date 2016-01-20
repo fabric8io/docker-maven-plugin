@@ -4,7 +4,9 @@
   - Add option `nocache` to build configuration (#348)
   - Add system property `docker.nocache` to disable build caching globally (#349)
   - Add support for '.maven-dockerignore' for excluding certain files in plain Dockerfile build (#362)
-
+  - If naming strategy is "alias" stop only the container with the given alias with `docker:stop` (#359)
+  - Fix that containers without d-m-p label where still stopped 
+  
 * **0.13.7**
   - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))
   - Fix dynamic host property update in port mapping ([#323](https://github.com/rhuss/docker-maven-plugin/issues/323))  

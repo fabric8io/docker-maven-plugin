@@ -14,6 +14,10 @@ container it finds whose image is defined in the project's configuration.
 Any existing containers found running whose image name matches but was not 
 started by the plugin will not be affected.
 
+In case the naming strategy for an image is `alias` (i.e. the container name is 
+set to the given alias), then only the container with this alias is stopped. Other 
+containers originating from the same image are not touched.
+
 It should be noted that any containers created prior to version `0.13.7` of the
 plugin may not be stopped correctly by the plugin because the label needed to tie
 the container to the project may not exist. Should this happen, you will need to

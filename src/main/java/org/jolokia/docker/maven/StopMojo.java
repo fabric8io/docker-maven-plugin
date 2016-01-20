@@ -1,10 +1,13 @@
 package org.jolokia.docker.maven;
 
+import java.util.List;
 import java.util.Map;
 
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.RunImageConfiguration;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.service.*;
@@ -40,7 +43,7 @@ public class StopMojo extends AbstractDockerMojo {
         RunService runService = hub.getRunService();
 
         if (!keepRunning) {
-            if (invokedViaDockerStart()) {
+            if (invokedTogetherWithDockerStart()) {
                 runService.stopStartedContainers(keepContainer, removeVolumes);
             } else {
                 stopContainers(queryService, runService);
@@ -52,14 +55,11 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
-    private void stopContainers(QueryService queryService, RunService runService) throws
-                                                                                  DockerAccessException {
+    private void stopContainers(QueryService queryService, RunService runService) throws DockerAccessException {
         PomLabel pomLabel = getPomLabel();
 
         for (ImageConfiguration image : getImages()) {
-            String imageName = image.getName();
-
-            for (Container container : queryService.getContainersForImage(imageName)) {
+            for (Container container : getContainersToStop(queryService, image)) {
                 if (shouldStopContainer(container, pomLabel)) {
                     runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
                 }
@@ -67,19 +67,28 @@ public class StopMojo extends AbstractDockerMojo {
         }
     }
 
+    // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
+    private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
+        List<Container> containers;
+        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
+        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
+            Container container = queryService.getContainerByName(image.getAlias());
+            containers = container != null ? Collections.singletonList(container) : Collections.emptyList();
+        } else {
+            containers = queryService.getContainersForImage(image.getName());
+        }
+        return containers;
+    }
+
     private boolean shouldStopContainer(Container container, PomLabel pomLabel) {
-        boolean stopContainer = true;
-
-        if (!isStopAllContainers()) {
-            String key = pomLabel.getKey();
-            Map<String, String> labels = container.getLabels();
-
-            if (labels.containsKey(key)) {
-                stopContainer = pomLabel.matches(new PomLabel(labels.get(key)));
-            }
+        if (isStopAllContainers()) {
+            return true;
         }
 
-        return stopContainer;
+        String key = pomLabel.getKey();
+        Map<String, String> labels = container.getLabels();
+
+        return labels.containsKey(key) && pomLabel.matches(new PomLabel(labels.get(key)));
     }
 
     private boolean isStopAllContainers() {
@@ -92,7 +101,7 @@ public class StopMojo extends AbstractDockerMojo {
         return false;
     }
 
-    private boolean invokedViaDockerStart() {
+    private boolean invokedTogetherWithDockerStart() {
         Boolean startCalled = (Boolean) getPluginContext().get(CONTEXT_KEY_START_CALLED);
         return startCalled != null && startCalled;
     }
