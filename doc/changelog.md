@@ -3,6 +3,7 @@
 * **0.13.8**
   - Add option `nocache` to build configuration (#348)
   - Add system property `docker.nocache` to disable build caching globally (#349)
+  - Add support for '.maven-dockerignore' for excluding certain files in plain Dockerfile build (#362)
 
 * **0.13.7**
   - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))

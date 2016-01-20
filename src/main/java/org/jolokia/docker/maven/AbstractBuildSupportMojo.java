@@ -58,16 +58,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig));
     }
 
-    private boolean checkForNocache(ImageConfiguration imageConfig) {
-        String nocache = System.getProperty("docker.nocache");
-        if (nocache != null) {
-            return Boolean.valueOf(nocache);
-        } else {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            return buildConfig.nocache();
-        }
-    }
-
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
@@ -80,6 +70,16 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         }
         if (fromImage != null) {
             checkImageWithAutoPull(hub, fromImage, new ImageName(fromImage).getRegistry(),true);
+        }
+    }
+
+    private boolean checkForNocache(ImageConfiguration imageConfig) {
+        String nocache = System.getProperty("docker.nocache");
+        if (nocache != null) {
+            return Boolean.valueOf(nocache);
+        } else {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            return buildConfig.nocache();
         }
     }
 }

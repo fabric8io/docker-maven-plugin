@@ -84,5 +84,6 @@ public class DockerAssemblyManagerTest {
                                           .build())
                         .build();
 
-        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, new AnsiLogger(new SystemStreamLog(),true,true));}
+        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, new AnsiLogger(new SystemStreamLog(),true,true));
+    }
 }

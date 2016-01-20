@@ -2,7 +2,7 @@ package org.jolokia.docker.maven.assembly;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
@@ -41,6 +41,7 @@ public class DockerAssemblyManager {
 
     // Assembly name used also as build directory within outputBuildDir
     public static final String ASSEMBLY_NAME = "maven";
+    public static final String DOCKER_IGNORE = ".maven-dockerignore";
 
     @Requirement
     private AssemblyArchiver assemblyArchiver;
@@ -170,7 +171,9 @@ public class DockerAssemblyManager {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, buildMode);
             if (extraDir != null) {
                 // User Dockerfile from extra dir
-                archiver.addFileSet(DefaultFileSet.fileSet(extraDir));
+                DefaultFileSet fileSet = DefaultFileSet.fileSet(extraDir);
+                addDockerIgnoreIfPresent(fileSet);
+                archiver.addFileSet(fileSet);
             } else {
                 // Add own Dockerfile
                 archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
@@ -182,6 +185,16 @@ public class DockerAssemblyManager {
             throw new MojoExecutionException("No archiver for type 'tar' found", e);
         } catch (IOException e) {
             throw new MojoExecutionException("Cannot create archive " + archive, e);
+        }
+    }
+
+    private void addDockerIgnoreIfPresent(DefaultFileSet fileSet) throws IOException {
+        File directory = fileSet.getDirectory();
+        File dockerIgnore = new File(directory, DOCKER_IGNORE);
+        if (dockerIgnore.exists()) {
+            ArrayList<String> excludes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
+            excludes.add(DOCKER_IGNORE);
+            fileSet.setExcludes(excludes.toArray(new String[excludes.size()]));
         }
     }
 

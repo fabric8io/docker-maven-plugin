@@ -100,7 +100,9 @@ Here's an example:
   the files specified within the assembly also all files contained in this directory
   are added to the docker build directory. If this path is not an absolute path it 
   is resolved relatively to `src/main/docker`. You can make easily an absolute path by 
-  using `${project.baseDir}` as prefix for your path
+  using `${project.baseDir}` as prefix for your path. If this directory contains a `.maven-dockerignore` file, 
+  this file is used for excluding files in the build. Each line is treated as an [FileSet exclude pattern](http://ant.apache.org/manual/Types/fileset.html) as used by the [maven-assembly-plugin](http://maven.apache
+  .org/plugins/maven-assembly-plugin/). 
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
   the container root (`/`). It is also `false` by default when a base image is used with `from` 
