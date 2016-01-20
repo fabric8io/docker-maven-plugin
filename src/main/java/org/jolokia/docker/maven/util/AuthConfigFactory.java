@@ -3,6 +3,8 @@ package org.jolokia.docker.maven.util;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -15,6 +17,7 @@ import org.jolokia.docker.maven.access.AuthConfig;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -29,6 +32,7 @@ public class AuthConfigFactory {
     private static final String DOCKER_PASSWORD = "docker.password";
     private static final String DOCKER_EMAIL = "docker.email";
     private static final String DOCKER_AUTH = "docker.authToken";
+    private static final String DOCKER_USE_OPENSHIFT_AUTH = "docker.useOpenShiftAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
@@ -65,7 +69,7 @@ public class AuthConfigFactory {
      *     <li>email: Optional EMail address which is send to the registry, too</li>
      * </ul>
      *
-     * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
+     * @param authConfigMap String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
      * @param settings the global Maven settings object
      * @param user user to check for
@@ -74,46 +78,109 @@ public class AuthConfigFactory {
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(Map authConfig, Settings settings, String user, String registry) throws MojoExecutionException {
-        Properties props = System.getProperties();
-        if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
-            return getAuthConfigFromProperties(props);
-        }
-        if (authConfig != null) {
-            return getAuthConfigFromPluginConfiguration(authConfig);
-        }
-        AuthConfig ret = getAuthConfigFromSettings(settings,user,registry);
-        if (ret == null) {
-            return getAuthConfigFromDockerConfig(registry);
-        } else {
+    public AuthConfig createAuthConfig(Map authConfigMap, Settings settings, String user, String registry) throws
+                                                                                                         MojoExecutionException {
+        AuthConfig ret;
+
+        // System properties docker.username and docker.password always take precedence
+        ret = getAuthConfigFromSystemProperties();
+        if (ret != null) {
             return ret;
         }
+
+        // Check for openshift authentication either from the plugin config or from system props
+        ret = getAuthConfigFromOpenShiftConfig(authConfigMap);
+        if (ret != null) {
+            return ret;
+        }
+
+        // Get configuration from global plugin config
+        ret = getAuthConfigFromPluginConfiguration(authConfigMap);
+        if (ret != null) {
+            return ret;
+        }
+
+        // Now lets lookup the registry & user from ~/.m2/setting.xml
+        ret = getAuthConfigFromSettings(settings, user, registry);
+        if (ret != null) {
+            return ret;
+        }
+
+        // Finally check ~/.docker/config.json
+        ret = getAuthConfigFromDockerConfig(registry);
+        if (ret != null) {
+            return ret;
+        }
+
+        // No authentication found
+        return null;
     }
 
     // ===================================================================================================
 
-    private AuthConfig getAuthConfigFromProperties(Properties props) throws MojoExecutionException {
-        if (!props.containsKey(DOCKER_USERNAME)) {
-            throw new MojoExecutionException("No " + DOCKER_USERNAME + " given when using authentication");
+    private AuthConfig getAuthConfigFromOpenShiftConfig(Map authConfigMap) throws MojoExecutionException {
+        Properties props = System.getProperties();
+
+        // Check for system property
+        if (props.containsKey(DOCKER_USE_OPENSHIFT_AUTH)) {
+            boolean useOpenShift = Boolean.valueOf(props.getProperty(DOCKER_USE_OPENSHIFT_AUTH));
+            if (useOpenShift) {
+                AuthConfig ret = getAuthFromOpenShiftConfig();
+                if (ret == null) {
+                    throw new MojoExecutionException("System property " + DOCKER_USE_OPENSHIFT_AUTH + " " +
+                                                     "set, but not active user and/or token found in ~/.config/kube. " +
+                                                     "Please use 'oc login' for connecting to OpenShift.");
+                }
+                return ret;
+            } else {
+                return null;
+            }
         }
-        if (!props.containsKey(DOCKER_PASSWORD)) {
-            throw new MojoExecutionException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
+
+        // Check plugin config
+        if (authConfigMap != null && authConfigMap.containsKey("useOpenShiftAuth") &&
+            Boolean.valueOf((String) authConfigMap.get("useOpenShiftAuth"))) {
+            AuthConfig ret = getAuthFromOpenShiftConfig();
+            if (ret == null) {
+                throw new MojoExecutionException("Authentication configured for OpenShift, but no active user and/or " +
+                                                 "token found in ~/.config/kube. Please use 'oc login' for " +
+                                                 "connecting to OpenShift.");
+            }
+            return ret;
+        } else {
+            return null;
         }
-        return new AuthConfig(props.getProperty(DOCKER_USERNAME),
-                              decrypt(props.getProperty(DOCKER_PASSWORD)),
-                              props.getProperty(DOCKER_EMAIL),
-                              props.getProperty(DOCKER_AUTH));
+    }
+
+    private AuthConfig getAuthConfigFromSystemProperties() throws MojoExecutionException {
+        Properties props = System.getProperties();
+        if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
+            if (!props.containsKey(DOCKER_USERNAME)) {
+                throw new MojoExecutionException("No " + DOCKER_USERNAME + " given when using authentication");
+            }
+            if (!props.containsKey(DOCKER_PASSWORD)) {
+                throw new MojoExecutionException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
+            }
+            return new AuthConfig(props.getProperty(DOCKER_USERNAME),
+                                  decrypt(props.getProperty(DOCKER_PASSWORD)),
+                                  props.getProperty(DOCKER_EMAIL),
+                                  props.getProperty(DOCKER_AUTH));
+        } else {
+            return null;
+        }
     }
 
     private AuthConfig getAuthConfigFromPluginConfiguration(Map authConfig) throws MojoExecutionException {
-        for (String key : new String[] { "username", "password"}) {
-            if (!authConfig.containsKey(key)) {
-                throw new MojoExecutionException("No '" + key + "' given while using <authConfig> in configuration");
+        if (authConfig != null && authConfig.containsKey("username")) {
+            if (!authConfig.containsKey("password")) {
+                throw new MojoExecutionException("No 'password' given while using <authConfig> in configuration");
             }
+            Map<String, String> cloneConfig = new HashMap<String, String>(authConfig);
+            cloneConfig.put("password", decrypt(cloneConfig.get("password")));
+            return new AuthConfig(cloneConfig);
+        } else {
+            return null;
         }
-        Map<String,String> cloneConfig = new HashMap<String,String>(authConfig);
-        cloneConfig.put("password",decrypt(cloneConfig.get("password")));
-        return new AuthConfig(cloneConfig);
     }
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
@@ -133,24 +200,79 @@ public class AuthConfigFactory {
         return null;
     }
 
+    // Parse OpenShift config to get credentials, but return null if not found
+    private AuthConfig getAuthFromOpenShiftConfig() {
+        Map kubeConfig = readKubeConfig();
+        if (kubeConfig != null) {
+            String currentContextName = (String) kubeConfig.get("current-context");
+            if (currentContextName != null) {
+                for (Map contextMap : (List<Map>) kubeConfig.get("contexts")) {
+                    if (currentContextName.equals(contextMap.get("name"))) {
+                        Map context = (Map) contextMap.get("context");
+                        if (context != null) {
+                            String userName = (String) context.get("user");
+                            if (userName != null) {
+                                List<Map> users = (List<Map>) kubeConfig.get("users");
+                                if (users != null) {
+                                    for (Map userMap : users) {
+                                        if (userName.equals(userMap.get("name"))) {
+                                            Map user = (Map) userMap.get("user");
+                                            if (user != null) {
+                                                String token = (String) user.get("token");
+                                                if (token != null) {
+                                                    // Strip off stuff after username
+                                                    Matcher matcher = Pattern.compile("^([^/]+).*$").matcher(userName);
+                                                    return new AuthConfig(matcher.matches() ? matcher.group(1) : userName,
+                                                                          token, null, null);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // No user found
+        return null;
+    }
+
     private JSONObject readDockerConfig() {
+        Reader reader = getFileReaderFromHomeDir(".docker/config.json");
+        return reader != null ? new JSONObject(new JSONTokener(reader)) : null;
+    }
+
+    private Map<String,?> readKubeConfig() {
+        Reader reader = getFileReaderFromHomeDir(".kube/config");
+        if (reader != null) {
+            Yaml ret = new Yaml();
+            return (Map<String, ?>) ret.load(reader);
+        }
+        return null;
+    }
+
+    private Reader getFileReaderFromHomeDir(String path) {
+        File file = new File(getHomeDir(),path);
+        if (file.exists()) {
+            try {
+                return new FileReader(file);
+            } catch (FileNotFoundException e) {
+                // Shouldnt happen. Nevertheless ...
+                throw new IllegalStateException("Cannot find " + file,e);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private File getHomeDir() {
         String homeDir = System.getProperty("user.home");
         if (homeDir == null) {
             homeDir = System.getenv("HOME");
         }
-        if (homeDir != null) {
-            File config = new File(homeDir + "/.docker/config.json");
-            if (config.exists()) {
-                try {
-                    JSONTokener tokener =new JSONTokener(new FileReader(config));
-                    return new JSONObject(tokener);
-                } catch (FileNotFoundException e) {
-                    // Shouldnt happen. Nevertheless ...
-                    throw new IllegalStateException("Cannot find " + config,e);
-                }
-            }
-        }
-        return null;
+        return new File(homeDir);
     }
 
 

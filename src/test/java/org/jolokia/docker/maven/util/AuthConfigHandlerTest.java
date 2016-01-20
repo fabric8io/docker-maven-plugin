@@ -12,6 +12,7 @@ import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.Base64;
+import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.jolokia.docker.maven.access.AuthConfig;
 import org.json.JSONObject;
@@ -77,28 +78,42 @@ public class AuthConfigHandlerTest {
 
     @Test
     public void testDockerLogin() throws Exception {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                checkDockerLogin(homeDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
+                checkDockerLogin(homeDir,"localhost:5000","localhost:5000");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginNoConfig() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File dir) throws IOException, MojoExecutionException {
+                AuthConfig config = factory.createAuthConfig(null, settings, "roland", null);
+                assertNull(config);
+            }
+        });
+    }
+
+    private void executeWithTempHomeDir(HomeDirExecutor executor) throws IOException, MojoExecutionException {
         String userHome = System.getProperty("user.home");
         try {
             File tempDir = Files.createTempDirectory("d-m-p").toFile();
             System.setProperty("user.home", tempDir.getAbsolutePath());
-            checkDockerLogin(tempDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
-            checkDockerLogin(tempDir,"localhost:5000","localhost:5000");
+            executor.exec(tempDir);
         } finally {
             System.setProperty("user.home",userHome);
         }
+
     }
 
-    @Test
-    public void testDockerLoginNoConfig() throws MojoExecutionException {
-        String userHome = System.getProperty("user.home");
-        try {
-            System.setProperty("user.home","never/have/this/home");
-            AuthConfig config = factory.createAuthConfig(null, settings, "roland", null);
-            assertNull(config);
-        } finally {
-            System.setProperty("user.home",userHome);
-        }
+    interface HomeDirExecutor {
+        void exec(File dir) throws IOException, MojoExecutionException;
     }
+
     private void checkDockerLogin(File homeDir,String configRegistry, String lookupRegistry) throws IOException,
                                                                                     MojoExecutionException {
         createDockerConfig(homeDir, "roland", "secret", "roland@jolokia.org", configRegistry);
@@ -127,6 +142,78 @@ public class AuthConfigHandlerTest {
         config.write(writer);
         writer.close();
     }
+
+    @Test
+    public void testOpenShiftConfigFromPluginConfig() throws Exception {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                createOpenShiftConfig(homeDir,"openshift_simple_config.yaml");
+                Map<String,String> authConfigMap = new HashMap<>();
+                authConfigMap.put("useOpenShiftAuth","true");
+                AuthConfig config = factory.createAuthConfig(authConfigMap, settings, "roland", null);
+                verifyAuthConfig(config,"admin","token123",null);
+            }
+        });
+    }
+
+    @Test
+    public void testOpenShiftConfigFromSystemProps() throws Exception {
+        try {
+            System.setProperty("docker.useOpenShiftAuth","true");
+            executeWithTempHomeDir(new HomeDirExecutor() {
+                @Override
+                public void exec(File homeDir) throws IOException, MojoExecutionException {
+                    createOpenShiftConfig(homeDir, "openshift_simple_config.yaml");
+                    AuthConfig config = factory.createAuthConfig(null, settings, "roland", null);
+                    verifyAuthConfig(config, "admin", "token123", null);
+                }
+            });
+        } finally {
+            System.getProperties().remove("docker.useOpenShiftAuth");
+        }
+    }
+
+    @Test
+    public void testOpenShiftConfigFromSystemPropsNegative() throws Exception {
+        try {
+            System.setProperty("docker.useOpenShiftAuth","false");
+            executeWithTempHomeDir(new HomeDirExecutor() {
+                @Override
+                public void exec(File homeDir) throws IOException, MojoExecutionException {
+                    createOpenShiftConfig(homeDir, "openshift_simple_config.yaml");
+                    Map<String,String> authConfigMap = new HashMap<>();
+                    authConfigMap.put("useOpenShiftAuth","true");
+                    AuthConfig config = factory.createAuthConfig(authConfigMap, settings, "roland", null);
+                    assertNull(config);
+                }
+            });
+        } finally {
+            System.getProperties().remove("docker.useOpenShiftAuth");
+        }
+    }
+
+    @Test(expected = MojoExecutionException.class)
+    public void testOpenShiftConfigNotLoggedIn() throws Exception {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                createOpenShiftConfig(homeDir,"openshift_nologin_config.yaml");
+                Map<String,String> authConfigMap = new HashMap<>();
+                authConfigMap.put("useOpenShiftAuth","true");
+                AuthConfig config = factory.createAuthConfig(authConfigMap, settings, "roland", null);
+            }
+        });
+
+    }
+
+    private void createOpenShiftConfig(File homeDir,String testConfig) throws IOException {
+        File kubeDir = new File(homeDir,".kube");
+        kubeDir.mkdirs();
+        File config = new File(kubeDir,"config");
+        IOUtil.copy(getClass().getResourceAsStream(testConfig),new FileWriter(config));
+    }
+
 
     @Test(expected = MojoExecutionException.class)
     public void testSystemPropertyNoUser() throws Exception {
@@ -162,7 +249,7 @@ public class AuthConfigHandlerTest {
     @Test(expected = MojoExecutionException.class)
     public void testFromPluginConfigurationFailed() throws MojoExecutionException {
         Map pluginConfig = new HashMap();
-        pluginConfig.put("password", "secret");
+        pluginConfig.put("username", "admin");
         factory.createAuthConfig(pluginConfig, settings, null, null);
     }
 
@@ -227,7 +314,9 @@ public class AuthConfigHandlerTest {
         JSONObject params = new JSONObject(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())));
         assertEquals(username,params.get("username"));
         assertEquals(password,params.get("password"));
-        assertEquals(email, params.get("email"));
+        if (email != null) {
+            assertEquals(email, params.get("email"));
+        }
     }
 
 }
