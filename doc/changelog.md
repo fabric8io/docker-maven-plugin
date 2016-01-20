@@ -1,7 +1,8 @@
 # ChangeLog
 
 * **0.13.8**
-  - Add option `nocache` for building images (#348)
+  - Add option `nocache` to build configuration (#348)
+  - Add system property `docker.nocache` to disable build caching globally (#349)
 
 * **0.13.7**
   - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))

@@ -35,10 +35,11 @@ public class BuildService {
      * 
      * @param imageConfig the image configuration
      * @param params mojo params for the project
+     * @param noCache if not null, dictate the caching behaviour. Otherwise its taken from the build configuration
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, MojoParameters params)
+    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache)
         throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
@@ -52,7 +53,10 @@ public class BuildService {
 
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
         // auto is now supported by docker, consider switching?
-        String newImageId = doBuildImage(imageName, dockerArchive, buildConfig.cleanup(), buildConfig.nocache());
+        String newImageId =
+                doBuildImage(imageName, dockerArchive,
+                             buildConfig.cleanup(),
+                             noCache);
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageShouldBeRemoved(oldImageId, newImageId)) {

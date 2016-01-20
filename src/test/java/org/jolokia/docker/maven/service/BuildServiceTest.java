@@ -64,7 +64,7 @@ public class BuildServiceTest {
     public void testBuildImageWithCleanup() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
-        whenBuildImage(true);
+        whenBuildImage(true,false);
         thenImageIsBuilt();
         thenOldImageIsRemoved();
     }
@@ -73,7 +73,7 @@ public class BuildServiceTest {
     public void testBuildImageWithNoCleanup() throws Exception {
         givenAnImageConfiguration(false);
         givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
-        whenBuildImage(false);
+        whenBuildImage(false,false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -82,7 +82,7 @@ public class BuildServiceTest {
     public void testCleanupCachedImage() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(OLD_IMAGE_ID, OLD_IMAGE_ID);
-        whenBuildImage(true);
+        whenBuildImage(true,false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -91,7 +91,7 @@ public class BuildServiceTest {
     public void testCleanupNoExistingImage() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(null, NEW_IMAGE_ID);
-        whenBuildImage(true);
+        whenBuildImage(true,false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -125,13 +125,13 @@ public class BuildServiceTest {
         verify(docker).removeImage(oldImageId,true);
     }
 
-    private void whenBuildImage(boolean cleanup) throws DockerAccessException, MojoExecutionException {
+    private void whenBuildImage(boolean cleanup, boolean nocache) throws DockerAccessException, MojoExecutionException {
         doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), anyBoolean(), anyBoolean());
 
         if (cleanup) {
             when(docker.removeImage(oldImageId)).thenReturn(true);
         }
 
-        buildService.buildImage(imageConfig, params);
+        buildService.buildImage(imageConfig, params, nocache);
     }
 }

@@ -5,7 +5,6 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
-import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.*;
@@ -56,7 +55,17 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
-        hub.getBuildService().buildImage(imageConfig, params);
+        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig));
+    }
+
+    private boolean checkForNocache(ImageConfiguration imageConfig) {
+        String nocache = System.getProperty("docker.nocache");
+        if (nocache != null) {
+            return Boolean.valueOf(nocache);
+        } else {
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            return buildConfig.nocache();
+        }
     }
 
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)

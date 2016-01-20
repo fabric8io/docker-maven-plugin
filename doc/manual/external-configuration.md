@@ -55,10 +55,10 @@ values in the `<build>` and `<run>` sections.
 * **docker.cleanup** Cleanup dangling (untagged) images after each build (including 
 any containers
   created from them). Default is `true`
-* **docker.nocache** Don't use Docker's build cache
+* **docker.nocache** Don't use Docker's build cache.This can be overwritten by setting a 
+  system property `docker.nocache` when running Maven.
 * **docker.optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only 
 one image layer is created.
-
 * **docker.bind.idx** Sets a list of paths to bind/expose in the container
 * **docker.capAdd.idx** List of kernel capabilities to add to the container
 * **docker.capDrop.idx** List of kernel capabilities to remove from the container
