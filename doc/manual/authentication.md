@@ -20,12 +20,12 @@ transparent way, though. Using an `<authConfig>` is straight forward:
 ````xml
 <plugin>
   <configuration>
-     <image>consol/tomcat-7.0</image>
-     ...
-     <authConfig>
-         <username>jolokia</username>
-         <password>s!cr!t</password>
-     </authConfig>
+    <image>consol/tomcat-7.0</image>
+    ...
+    <authConfig>
+      <username>jolokia</username>
+      <password>s!cr!t</password>      
+    </authConfig>
   </configuration>
 </plugin>
 ````
@@ -60,6 +60,76 @@ a username appended id is chosen.
 
 As a final fallback, this plugin consults `~/.docker/config.json` for getting to the credentials. Within this 
 file credentials are stored when connecting to a registry with the command `docker login` from the command line. 
+
+#### Pull vs. Push Authentication
+
+The credentials lookup described above is valid for both push and
+pull operations. In order to narrow things down, credentials can be be
+provided for pull or push operations alone:
+
+In an `<authConfig>` section a sub-section `<pull>` and/or `<push>`
+can be added. In the example below the credentials provider are only
+used for image push operations:
+
+```xml
+<plugin>
+  <configuration>
+    <image>consol/tomcat-7.0</image>
+    ...
+    <authConfig>
+      <push>
+         <username>jolokia</username>
+         <password>s!cr!t</password>
+      </push>
+    </authConfig>
+  </configuration>
+</plugin>
+```
+
+When the credentials are given on the command line as system
+properties, then the properties `docker.pull.username` / 
+`docker.pull.password` and `docker.push.username` /
+`docker.push.password` are used for pull and push operations,
+respectively (when given). Either way, the standard lookup algorithm
+as described in the previous section is used as fallback. 
+
+#### OpenShift Authentication
+
+When working with the default registry in OpenShift, the credentials
+to authtenticate are the OpenShift username and access token. So, a
+typical interaction with the OpenShift registry from the outside is:
+
+```
+oc login
+...
+mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
+    -Ddocker.username=$(oc whoami) \
+    -Ddocker.password=$(oc whoami -t)
+```
+
+(note, that the image's user name part ("default" here") must
+correspond to an OpenShift project with the same name to which you
+currently connected account has access).
+
+This can be simplified by using the system property
+`docker.useOpenShiftAuth` in which case the plugin does the
+lookup. The equivalent to the example above is
+
+```
+oc login
+...
+mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
+    -Ddocker.useOpenShiftAuth
+```
+
+Alternatively the configuration option `<useOpenShiftAuth>` can be
+added to the `<authConfig>` section. 
+
+For dedicted *pull* and *push* configuration the system properties
+`docker.pull.useOpenShiftAuth` and `docker.push.useOpenShiftAuth` are
+available as well as the configuration option `<useOpenShiftAuth>` in
+an `<pull>` or `<push>` section within the `<authConfig>`
+configuration. 
 
 #### Password encryption
 
