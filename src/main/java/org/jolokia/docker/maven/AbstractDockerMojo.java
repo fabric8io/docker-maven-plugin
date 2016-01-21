@@ -114,7 +114,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Default registry to use if no registry is specified
     /** @parameter property = "docker.registry" */
-    private String registry;
+    protected String registry;
 
     // maximum connection to use in parallel for connecting the docker host
     /** @parameter property = "docker.maxConnections" default-value = "100" */
@@ -304,12 +304,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
 
-    protected AuthConfig prepareAuthConfig(String image, String configuredRegistry, boolean useUserFromImage) throws MojoExecutionException {
-        ImageName name = new ImageName(image);
-        String user = useUserFromImage ? name.getUser() : null;
-        String registry = name.getRegistry() != null ? name.getRegistry() : configuredRegistry;
+    protected AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush)
+            throws MojoExecutionException {
+        String user = isPush ? image.getUser() : null;
+        String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
 
-        return authConfigFactory.createAuthConfig(authConfig, settings, user, registry);
+        return authConfigFactory.createAuthConfig(isPush, authConfig, settings, user, registry);
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {
@@ -325,10 +325,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Try to get the registry from various configuration parameters
      *
      * @param imageConfig image config which might contain the registry
+     * @param specificRegistry
      * @return the registry found or null if none could be extracted
      */
-    protected String getConfiguredRegistry(ImageConfiguration imageConfig) {
-        return EnvUtil.findRegistry(imageConfig.getRegistry(), registry);
+    protected String getConfiguredRegistry(ImageConfiguration imageConfig, String specificRegistry) {
+        return EnvUtil.findRegistry(imageConfig.getRegistry(), specificRegistry, registry);
     }
 
     /**
@@ -352,11 +353,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
 
         DockerAccess docker = hub.getDockerAccess();
-        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(image, registry, false), registry);
         ImageName imageName = new ImageName(image);
+        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
-            // short name with no-registry to the full name with the registry.
+            // full name with the registry to the short name with no-registry.
             docker.tag(imageName.getFullName(registry), image, false);
         }
     }

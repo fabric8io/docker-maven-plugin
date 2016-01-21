@@ -27,12 +27,13 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class AuthConfigFactory {
 
-    // System properties for specifying username, password (can be encrypted), email and authtoken (not used yet)
-    private static final String DOCKER_USERNAME = "docker.username";
-    private static final String DOCKER_PASSWORD = "docker.password";
-    private static final String DOCKER_EMAIL = "docker.email";
-    private static final String DOCKER_AUTH = "docker.authToken";
-    private static final String DOCKER_USE_OPENSHIFT_AUTH = "docker.useOpenShiftAuth";
+    // Properties for specifying username, password (can be encrypted), email and authtoken (not used yet)
+    // + whether to check for OpenShift authentication
+    private static final String AUTH_USERNAME = "username";
+    private static final String AUTH_PASSWORD = "password";
+    private static final String AUTH_EMAIL = "email";
+    private static final String AUTH_AUTHTOKEN = "authToken";
+    private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
@@ -69,6 +70,8 @@ public class AuthConfigFactory {
      *     <li>email: Optional EMail address which is send to the registry, too</li>
      * </ul>
      *
+     *
+     * @param isPush if true this authconfig is created for a push, if false its for a pull
      * @param authConfigMap String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
      * @param settings the global Maven settings object
@@ -78,27 +81,33 @@ public class AuthConfigFactory {
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(Map authConfigMap, Settings settings, String user, String registry) throws
-                                                                                                         MojoExecutionException {
+    public AuthConfig createAuthConfig(boolean isPush, Map authConfigMap, Settings settings, String user, String registry)
+            throws MojoExecutionException {
         AuthConfig ret;
 
-        // System properties docker.username and docker.password always take precedence
-        ret = getAuthConfigFromSystemProperties();
-        if (ret != null) {
-            return ret;
+        // Check first for specific configuration based on direction (pull or push), then for a default value
+        for (LookupMode lookupMode : new LookupMode[] { getLookupMode(isPush), LookupMode.DEFAULT }) {
+            // System properties docker.username and docker.password always take precedence
+            ret = getAuthConfigFromSystemProperties(lookupMode);
+            if (ret != null) {
+                return ret;
+            }
+
+            // Check for openshift authentication either from the plugin config or from system props
+            ret = getAuthConfigFromOpenShiftConfig(lookupMode,authConfigMap);
+            if (ret != null) {
+                return ret;
+            }
+
+            // Get configuration from global plugin config
+            ret = getAuthConfigFromPluginConfiguration(lookupMode,authConfigMap);
+            if (ret != null) {
+                return ret;
+            }
         }
 
-        // Check for openshift authentication either from the plugin config or from system props
-        ret = getAuthConfigFromOpenShiftConfig(authConfigMap);
-        if (ret != null) {
-            return ret;
-        }
-
-        // Get configuration from global plugin config
-        ret = getAuthConfigFromPluginConfiguration(authConfigMap);
-        if (ret != null) {
-            return ret;
-        }
+        // ===================================================================
+        // These are lookups based on registry only, so the direction (push or pull) doesnt matter:
 
         // Now lets lookup the registry & user from ~/.m2/setting.xml
         ret = getAuthConfigFromSettings(settings, user, registry);
@@ -118,16 +127,33 @@ public class AuthConfigFactory {
 
     // ===================================================================================================
 
-    private AuthConfig getAuthConfigFromOpenShiftConfig(Map authConfigMap) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
         Properties props = System.getProperties();
+        String userKey = lookupMode.asSysProperty(AUTH_USERNAME);
+        String passwordKey = lookupMode.asSysProperty(AUTH_PASSWORD);
+        if (props.containsKey(userKey)) {
+            if (!props.containsKey(passwordKey)) {
+                throw new MojoExecutionException("No " + passwordKey + " provided for username " + props.getProperty(userKey));
+            }
+            return new AuthConfig(props.getProperty(userKey),
+                                  decrypt(props.getProperty(passwordKey)),
+                                  props.getProperty(lookupMode.asSysProperty(AUTH_EMAIL)),
+                                  props.getProperty(lookupMode.asSysProperty(AUTH_AUTHTOKEN)));
+        } else {
+            return null;
+        }
+    }
 
+    private AuthConfig getAuthConfigFromOpenShiftConfig(LookupMode lookupMode, Map authConfigMap) throws MojoExecutionException {
+        Properties props = System.getProperties();
+        String useOpenAuthModeProp = lookupMode.asSysProperty(AUTH_USE_OPENSHIFT_AUTH);
         // Check for system property
-        if (props.containsKey(DOCKER_USE_OPENSHIFT_AUTH)) {
-            boolean useOpenShift = Boolean.valueOf(props.getProperty(DOCKER_USE_OPENSHIFT_AUTH));
+        if (props.containsKey(useOpenAuthModeProp)) {
+            boolean useOpenShift = Boolean.valueOf(props.getProperty(useOpenAuthModeProp));
             if (useOpenShift) {
-                AuthConfig ret = getAuthFromOpenShiftConfig();
+                AuthConfig ret = parseOpenShiftConfig();
                 if (ret == null) {
-                    throw new MojoExecutionException("System property " + DOCKER_USE_OPENSHIFT_AUTH + " " +
+                    throw new MojoExecutionException("System property " + useOpenAuthModeProp + " " +
                                                      "set, but not active user and/or token found in ~/.config/kube. " +
                                                      "Please use 'oc login' for connecting to OpenShift.");
                 }
@@ -138,9 +164,10 @@ public class AuthConfigFactory {
         }
 
         // Check plugin config
-        if (authConfigMap != null && authConfigMap.containsKey("useOpenShiftAuth") &&
-            Boolean.valueOf((String) authConfigMap.get("useOpenShiftAuth"))) {
-            AuthConfig ret = getAuthFromOpenShiftConfig();
+        Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfigMap);
+        if (mapToCheck != null && mapToCheck.containsKey(AUTH_USE_OPENSHIFT_AUTH) &&
+            Boolean.valueOf((String) mapToCheck.get(AUTH_USE_OPENSHIFT_AUTH))) {
+            AuthConfig ret = parseOpenShiftConfig();
             if (ret == null) {
                 throw new MojoExecutionException("Authentication configured for OpenShift, but no active user and/or " +
                                                  "token found in ~/.config/kube. Please use 'oc login' for " +
@@ -152,35 +179,38 @@ public class AuthConfigFactory {
         }
     }
 
-    private AuthConfig getAuthConfigFromSystemProperties() throws MojoExecutionException {
-        Properties props = System.getProperties();
-        if (props.containsKey(DOCKER_USERNAME) || props.containsKey(DOCKER_PASSWORD)) {
-            if (!props.containsKey(DOCKER_USERNAME)) {
-                throw new MojoExecutionException("No " + DOCKER_USERNAME + " given when using authentication");
+    private AuthConfig getAuthConfigFromPluginConfiguration(LookupMode lookupMode, Map authConfig) throws MojoExecutionException {
+        Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfig);
+
+        if (mapToCheck != null && mapToCheck.containsKey(AUTH_USERNAME)) {
+            if (!mapToCheck.containsKey(AUTH_PASSWORD)) {
+                throw new MojoExecutionException("No 'password' given while using <authConfig> in configuration for mode " + lookupMode);
             }
-            if (!props.containsKey(DOCKER_PASSWORD)) {
-                throw new MojoExecutionException("No " + DOCKER_PASSWORD + " provided for username " + props.getProperty(DOCKER_USERNAME));
-            }
-            return new AuthConfig(props.getProperty(DOCKER_USERNAME),
-                                  decrypt(props.getProperty(DOCKER_PASSWORD)),
-                                  props.getProperty(DOCKER_EMAIL),
-                                  props.getProperty(DOCKER_AUTH));
+            Map<String, String> cloneConfig = new HashMap<>(mapToCheck);
+            cloneConfig.put(AUTH_PASSWORD, decrypt(cloneConfig.get(AUTH_PASSWORD)));
+            return new AuthConfig(cloneConfig);
         } else {
             return null;
         }
     }
 
-    private AuthConfig getAuthConfigFromPluginConfiguration(Map authConfig) throws MojoExecutionException {
-        if (authConfig != null && authConfig.containsKey("username")) {
-            if (!authConfig.containsKey("password")) {
-                throw new MojoExecutionException("No 'password' given while using <authConfig> in configuration");
+    private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) throws MojoExecutionException {
+        Server defaultServer = null;
+        Server found;
+        for (Server server : settings.getServers()) {
+            String id = server.getId();
+
+            // Remember a default server without user as fallback for later
+            if (defaultServer == null) {
+                defaultServer = checkForServer(server, id, registry, null);
             }
-            Map<String, String> cloneConfig = new HashMap<String, String>(authConfig);
-            cloneConfig.put("password", decrypt(cloneConfig.get("password")));
-            return new AuthConfig(cloneConfig);
-        } else {
-            return null;
+            // Check for specific server with user part
+            found = checkForServer(server, id, registry, user);
+            if (found != null) {
+                return createAuthConfigFromServer(found);
+            }
         }
+        return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
     }
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
@@ -200,8 +230,21 @@ public class AuthConfigFactory {
         return null;
     }
 
+    // =======================================================================================================
+
+    private Map getAuthConfigMapToCheck(LookupMode lookupMode, Map authConfigMap) {
+        String configMapKey = lookupMode.getConfigMapKey();
+        if (configMapKey == null) {
+            return authConfigMap;
+        }
+        if (authConfigMap != null) {
+            return (Map) authConfigMap.get(configMapKey);
+        }
+        return null;
+    }
+
     // Parse OpenShift config to get credentials, but return null if not found
-    private AuthConfig getAuthFromOpenShiftConfig() {
+    private AuthConfig parseOpenShiftConfig() {
         Map kubeConfig = readKubeConfig();
         if (kubeConfig != null) {
             String currentContextName = (String) kubeConfig.get("current-context");
@@ -276,23 +319,6 @@ public class AuthConfigFactory {
     }
 
 
-    private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) throws MojoExecutionException {
-        Server defaultServer = null;
-        Server found;
-        for (Server server : settings.getServers()) {
-            String id = server.getId();
-
-            if (defaultServer == null) {
-                defaultServer = checkForServer(server, id, registry, null);
-            }
-            found = checkForServer(server, id, registry, user);
-            if (found != null) {
-                return createAuthConfigFromServer(found);
-            }
-        }
-        return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
-    }
-
     private Server checkForServer(Server server, String id, String registry, String user) {
 
         String[] registries = registry != null ? new String[] { registry } : DEFAULT_REGISTRIES;
@@ -336,5 +362,34 @@ public class AuthConfigFactory {
         }
         return null;
     }
+
+    // ========================================================================================
+    // Mode which direction to lookup (pull, push or default value for both, pull and push)
+
+    private LookupMode getLookupMode(boolean isPush) {
+        return isPush ? LookupMode.PUSH : LookupMode.PULL;
+    }
+
+    private enum LookupMode {
+        PUSH("docker.push.","push"),
+        PULL("docker.pull.","pull"),
+        DEFAULT("docker.",null);
+
+        private final String sysPropPrefix;
+        private String configMapKey;
+
+        LookupMode(String sysPropPrefix,String configMapKey) {
+            this.sysPropPrefix = sysPropPrefix;
+            this.configMapKey = configMapKey;
+        }
+
+        public String asSysProperty(String prop) {
+            return sysPropPrefix + prop;
+        }
+
+        public String getConfigMapKey() {
+            return configMapKey;
+        }
+    };
 
 }

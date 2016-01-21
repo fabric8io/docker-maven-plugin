@@ -39,6 +39,9 @@ public class StartMojo extends AbstractDockerMojo {
      */
     private String showLogs;
 
+    /** @parameter property = "docker.pull.registry" */
+    private String pullRegistry;
+
     // whether to block during to start. Set it via Sysem property docker.follow
     private boolean follow;
 
@@ -69,7 +72,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                 String imageName = imageConfig.getName();
                 checkImageWithAutoPull(hub, imageName,
-                                       getConfiguredRegistry(imageConfig),imageConfig.getBuildConfiguration() == null);
+                                       getConfiguredRegistry(imageConfig,pullRegistry),imageConfig.getBuildConfiguration() == null);
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);

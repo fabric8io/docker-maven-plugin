@@ -1,5 +1,8 @@
 package org.jolokia.docker.maven;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -9,8 +12,7 @@ import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.assembly.DockerAssemblyManager;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.service.ServiceHub;
-import org.jolokia.docker.maven.util.ImageName;
-import org.jolokia.docker.maven.util.MojoParameters;
+import org.jolokia.docker.maven.util.*;
 
 /**
  * @author roland
@@ -32,6 +34,9 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
 
     /** @component */
     private MavenReaderFilter mavenFilterReader;
+
+    /** @parameter property = "docker.pull.registry" */
+    private String pullRegistry;
 
     /**
      * @parameter default-value="src/main/docker" property="docker.source.dir"
@@ -64,12 +69,21 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         String fromImage = buildConfig.getFrom();
         if (fromImage == null) {
             AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
-            if (assemblyConfig == null || assemblyConfig.getDockerFileDir() == null) {
+            if (assemblyConfig == null) {
                 fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
+            } else if (assemblyConfig.getDockerFileDir() != null) {
+                try {
+                    fromImage = DockerFileUtil.extractBaseImage(new File(assemblyConfig.getDockerFileDir(), "Dockerfile"));
+                } catch (IOException e) {
+                    // Cant extract base image, so we wont try an autopull. An error will occur later anyway when
+                    // building the image, so we are passive here.
+                    fromImage = null;
+                }
             }
         }
         if (fromImage != null) {
-            checkImageWithAutoPull(hub, fromImage, new ImageName(fromImage).getRegistry(),true);
+            String pullRegistry = EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), this.pullRegistry, registry);
+            checkImageWithAutoPull(hub, fromImage, pullRegistry, true);
         }
     }
 

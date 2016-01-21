@@ -18,6 +18,10 @@ import org.jolokia.docker.maven.util.ImageName;
  */
 public class PushMojo extends AbstractDockerMojo {
 
+    // Registry to use for push operations if no registry is specified
+    /** @parameter property = "docker.push.registry" */
+    private String pushRegistry;
+
     /** {@inheritDoc} */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
@@ -25,8 +29,8 @@ public class PushMojo extends AbstractDockerMojo {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
             if (buildConfig != null) {
-                String configuredRegistry = getConfiguredRegistry(imageConfig);
-                AuthConfig authConfig = prepareAuthConfig(name, configuredRegistry, true);
+                String configuredRegistry = getConfiguredRegistry(imageConfig, pushRegistry);
+                AuthConfig authConfig = prepareAuthConfig(new ImageName(name), configuredRegistry, true);
 
                 DockerAccess docker = hub.getDockerAccess();
                 docker.pushImage(name, authConfig, configuredRegistry);

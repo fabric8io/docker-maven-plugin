@@ -6,6 +6,8 @@
   - Add support for '.maven-dockerignore' for excluding certain files in plain Dockerfile build (#362)
   - If naming strategy is "alias" stop only the container with the given alias with `docker:stop` (#359)
   - Fix that containers without d-m-p label where still stopped 
+  - Add support for OpenShift login (use `-DuseOpenShiftAuth` for enabling this) (#350)
+  - Add support for dedicated pull and push registry configuration respectively (#351)
   
 * **0.13.7**
   - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))
