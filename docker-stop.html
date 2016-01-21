@@ -8,7 +8,7 @@
         <title>docker:stop | docker-maven-plugin</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
-        <meta name="generator" content="GitBook 2.6.4">
+        <meta name="generator" content="GitBook 2.6.7">
         
         
         <meta name="HandheldFriendly" content="true"/>
@@ -61,7 +61,7 @@
         data-chapter-title="docker:stop"
         data-filepath="docker-stop.md"
         data-basepath="."
-        data-revision="Mon Dec 07 2015 10:16:53 GMT+0000 (UTC)"
+        data-revision="Thu Jan 21 2016 15:10:30 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -381,6 +381,9 @@ started using <code>docker:start</code> for the project will not be affected.</p
 container it finds whose image is defined in the project&apos;s configuration.
 Any existing containers found running whose image name matches but was not 
 started by the plugin will not be affected.</p>
+<p>In case the naming strategy for an image is <code>alias</code> (i.e. the container name is 
+set to the given alias), then only the container with this alias is stopped. Other 
+containers originating from the same image are not touched.</p>
 <p>It should be noted that any containers created prior to version <code>0.13.7</code> of the
 plugin may not be stopped correctly by the plugin because the label needed to tie
 the container to the project may not exist. Should this happen, you will need to

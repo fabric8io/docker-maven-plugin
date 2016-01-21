@@ -3,6 +3,13 @@ require(["gitbook", "jQuery"], function(gitbook, $) {
         var conf = config['edit-link'];
         var label = conf.label;
         var base = conf.base;
+        var lang = gitbook.state.innerLanguage;
+        if (lang) {
+            // label can be a unique string for multi-languages site
+            if (typeof label === 'object') label = label[lang];
+
+            lang = lang + '/';
+        }
 
         // Add slash at the end if not present
         if (base.slice(-1) != "/") {
@@ -14,8 +21,6 @@ require(["gitbook", "jQuery"], function(gitbook, $) {
             text: label,
             onClick: function() {
                 var filepath = gitbook.state.filepath;
-                var lang = gitbook.state.innerLanguage;
-                if (lang) lang = lang + '/';
 
                 window.open(base + lang + filepath);
             }

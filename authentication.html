@@ -8,7 +8,7 @@
         <title>Authentication | docker-maven-plugin</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
-        <meta name="generator" content="GitBook 2.6.4">
+        <meta name="generator" content="GitBook 2.6.7">
         
         
         <meta name="HandheldFriendly" content="true"/>
@@ -61,7 +61,7 @@
         data-chapter-title="Authentication"
         data-filepath="authentication.md"
         data-basepath="."
-        data-revision="Mon Dec 07 2015 10:16:53 GMT+0000 (UTC)"
+        data-revision="Thu Jan 21 2016 15:10:30 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -387,12 +387,12 @@ recommended since this is widely visible. This is most easiest and
 transparent way, though. Using an <code>&lt;authConfig&gt;</code> is straight forward:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">plugin</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
-     <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>consol/tomcat-7.0<span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>
-     ...
-     <span class="hljs-tag">&lt;<span class="hljs-title">authConfig</span>&gt;</span>
-         <span class="hljs-tag">&lt;<span class="hljs-title">username</span>&gt;</span>jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">username</span>&gt;</span>
-         <span class="hljs-tag">&lt;<span class="hljs-title">password</span>&gt;</span>s!cr!t<span class="hljs-tag">&lt;/<span class="hljs-title">password</span>&gt;</span>
-     <span class="hljs-tag">&lt;/<span class="hljs-title">authConfig</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>consol/tomcat-7.0<span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>
+    ...
+    <span class="hljs-tag">&lt;<span class="hljs-title">authConfig</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">username</span>&gt;</span>jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">username</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">password</span>&gt;</span>s!cr!t<span class="hljs-tag">&lt;/<span class="hljs-title">password</span>&gt;</span>      
+    <span class="hljs-tag">&lt;/<span class="hljs-title">authConfig</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">plugin</span>&gt;</span>
 </code></pre>
@@ -420,6 +420,58 @@ username with a slash to the id name. The default without username is only taken
 a username appended id is chosen.</p>
 <p>As a final fallback, this plugin consults <code>~/.docker/config.json</code> for getting to the credentials. Within this 
 file credentials are stored when connecting to a registry with the command <code>docker login</code> from the command line. </p>
+<h4 id="pull-vs-push-authentication"><a name="pull-vs-push-authentication" class="plugin-anchor" href="#pull-vs-push-authentication"><span class="fa fa-link"></span></a>Pull vs. Push Authentication</h4>
+<p>The credentials lookup described above is valid for both push and
+pull operations. In order to narrow things down, credentials can be be
+provided for pull or push operations alone:</p>
+<p>In an <code>&lt;authConfig&gt;</code> section a sub-section <code>&lt;pull&gt;</code> and/or <code>&lt;push&gt;</code>
+can be added. In the example below the credentials provider are only
+used for image push operations:</p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">plugin</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>consol/tomcat-7.0<span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>
+    ...
+    <span class="hljs-tag">&lt;<span class="hljs-title">authConfig</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">push</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-title">username</span>&gt;</span>jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">username</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-title">password</span>&gt;</span>s!cr!t<span class="hljs-tag">&lt;/<span class="hljs-title">password</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-title">push</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-title">authConfig</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-title">plugin</span>&gt;</span>
+</code></pre>
+<p>When the credentials are given on the command line as system
+properties, then the properties <code>docker.pull.username</code> / 
+<code>docker.pull.password</code> and <code>docker.push.username</code> /
+<code>docker.push.password</code> are used for pull and push operations,
+respectively (when given). Either way, the standard lookup algorithm
+as described in the previous section is used as fallback. </p>
+<h4 id="openshift-authentication"><a name="openshift-authentication" class="plugin-anchor" href="#openshift-authentication"><span class="fa fa-link"></span></a>OpenShift Authentication</h4>
+<p>When working with the default registry in OpenShift, the credentials
+to authtenticate are the OpenShift username and access token. So, a
+typical interaction with the OpenShift registry from the outside is:</p>
+<pre><code>oc login
+...
+mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
+    -Ddocker.username=$(oc whoami) \
+    -Ddocker.password=$(oc whoami -t)
+</code></pre><p>(note, that the image&apos;s user name part (&quot;default&quot; here&quot;) must
+correspond to an OpenShift project with the same name to which you
+currently connected account has access).</p>
+<p>This can be simplified by using the system property
+<code>docker.useOpenShiftAuth</code> in which case the plugin does the
+lookup. The equivalent to the example above is</p>
+<pre><code>oc login
+...
+mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
+    -Ddocker.useOpenShiftAuth
+</code></pre><p>Alternatively the configuration option <code>&lt;useOpenShiftAuth&gt;</code> can be
+added to the <code>&lt;authConfig&gt;</code> section. </p>
+<p>For dedicted <em>pull</em> and <em>push</em> configuration the system properties
+<code>docker.pull.useOpenShiftAuth</code> and <code>docker.push.useOpenShiftAuth</code> are
+available as well as the configuration option <code>&lt;useOpenShiftAuth&gt;</code> in
+an <code>&lt;pull&gt;</code> or <code>&lt;push&gt;</code> section within the <code>&lt;authConfig&gt;</code>
+configuration. </p>
 <h4 id="password-encryption"><a name="password-encryption" class="plugin-anchor" href="#password-encryption"><span class="fa fa-link"></span></a>Password encryption</h4>
 <p>Regardless which mode you choose you can encrypt password as described
 in the

@@ -8,7 +8,7 @@
         <title>External Configuration | docker-maven-plugin</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
-        <meta name="generator" content="GitBook 2.6.4">
+        <meta name="generator" content="GitBook 2.6.7">
         
         
         <meta name="HandheldFriendly" content="true"/>
@@ -61,7 +61,7 @@
         data-chapter-title="External Configuration"
         data-filepath="external-configuration.md"
         data-basepath="."
-        data-revision="Mon Dec 07 2015 10:16:53 GMT+0000 (UTC)"
+        data-revision="Thu Jan 21 2016 15:10:30 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -414,6 +414,13 @@ use. </li>
 when creating the assembly archive</li>
 <li><strong>docker.assembly.dockerFileDir</strong> specifies a directory containing an external Dockerfile
 that will be used to create the image</li>
+<li><strong>docker.cleanup</strong> Cleanup dangling (untagged) images after each build (including 
+any containers
+created from them). Default is <code>true</code></li>
+<li><strong>docker.nocache</strong> Don&apos;t use Docker&apos;s build cache.This can be overwritten by setting a 
+system property <code>docker.nocache</code> when running Maven.</li>
+<li><strong>docker.optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only 
+one image layer is created.</li>
 <li><strong>docker.bind.idx</strong> Sets a list of paths to bind/expose in the container</li>
 <li><strong>docker.capAdd.idx</strong> List of kernel capabilities to add to the container</li>
 <li><strong>docker.capDrop.idx</strong> List of kernel capabilities to remove from the container</li>

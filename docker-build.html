@@ -8,7 +8,7 @@
         <title>docker:build | docker-maven-plugin</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
-        <meta name="generator" content="GitBook 2.6.4">
+        <meta name="generator" content="GitBook 2.6.7">
         
         
         <meta name="HandheldFriendly" content="true"/>
@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Mon Dec 07 2015 10:16:53 GMT+0000 (UTC)"
+        data-revision="Thu Jan 21 2016 15:10:30 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -378,8 +378,10 @@ of an image configuration. The available subelements are</p>
 <ul>
 <li><strong>assembly</strong> specifies the assembly configuration as described in
 <a href="#build-assembly">Build Assembly</a></li>
-<li><strong>cleanup</strong> indicates if dangling (untagged) images should be cleaned up after each build (including any containers
-created from them). Default is <code>true</code>   </li>
+<li><strong>cleanup</strong> Cleanup dangling (untagged) images after each build (including any containers
+created from them). Default is <code>true</code></li>
+<li><strong>nocache</strong> Don&apos;t use Docker&apos;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code>
+when running Maven.</li>
 <li><strong>cmd</strong> A command to execute by default (i.e. if no command
 is provided when a container for this image is started). See 
 <a href="#start-up-arguments">Start-up Arguments</a> for details.</li>
@@ -463,7 +465,9 @@ precedence over any configuration specified in the <code>build</code> element. I
 the files specified within the assembly also all files contained in this directory
 are added to the docker build directory. If this path is not an absolute path it 
 is resolved relatively to <code>src/main/docker</code>. You can make easily an absolute path by 
-using <code>${project.baseDir}</code> as prefix for your path</li>
+using <code>${project.baseDir}</code> as prefix for your path. If this directory contains a <code>.maven-dockerignore</code> file, 
+this file is used for excluding files in the build. Each line is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html" target="_blank">FileSet exclude pattern</a> as used by the <a href="http://maven.apache
+.org/plugins/maven-assembly-plugin/" target="_blank">maven-assembly-plugin</a>. </li>
 <li><strong>exportBasedir</strong> indicates if the <code>basedir</code> should be exported as a volume.
 This value is <code>true</code> by default except in the case the <code>basedir</code> is set to 
 the container root (<code>/</code>). It is also <code>false</code> by default when a base image is used with <code>from</code> 
