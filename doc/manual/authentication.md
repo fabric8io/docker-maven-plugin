@@ -9,8 +9,7 @@ There are three different ways for providing credentials:
   `<username>` and `<password>` elements. 
 * Providing system properties `docker.username` and `docker.password`
   from the outside 
-* Using a `<server>` configuration in the the `~/.m2/settings.xml`
-  settings 
+* Using a `<server>` configuration in `~/.m2/settings.xml`
 * Login into a registry with `docker login`
 
 Using the username and password directly in the `pom.xml` is not
