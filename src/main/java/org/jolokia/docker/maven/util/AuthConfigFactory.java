@@ -1,11 +1,5 @@
 package org.jolokia.docker.maven.util;
 
-import java.io.*;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -18,6 +12,18 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.Reader;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -215,17 +221,27 @@ public class AuthConfigFactory {
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
         JSONObject dockerConfig = readDockerConfig();
-        if (dockerConfig != null && dockerConfig.has("auths")) {
-            JSONObject auths = dockerConfig.getJSONObject("auths");
-            String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
-            if (auths.has(registryToLookup)) {
-                JSONObject entry = auths.getJSONObject(registryToLookup);
-                if (entry.has("auth")) {
-                    String auth = entry.getString("auth");
-                    String email = entry.has("email") ? entry.getString("email") : null;
-                    return new AuthConfig(auth,email);
-                }
-            }
+        if (dockerConfig == null || !dockerConfig.has("auths")) {
+            return null;
+        }
+        JSONObject auths = dockerConfig.getJSONObject("auths");
+        String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
+        JSONObject credentials = getCredentialsNode(auths, registryToLookup);
+        if (credentials == null) {
+            return null;
+        }
+        String auth = credentials.getString("auth");
+        String email = credentials.has("email") ? credentials.getString("email") : null;
+        return new AuthConfig(auth,email);
+    }
+
+    private JSONObject getCredentialsNode(JSONObject auths, String registryToLookup) {
+        if (auths.has(registryToLookup)) {
+            return auths.getJSONObject(registryToLookup);
+        }
+        String registryWithScheme = "https://" + registryToLookup;
+        if (auths.has(registryWithScheme)) {
+            return auths.getJSONObject(registryWithScheme);
         }
         return null;
     }

@@ -1,10 +1,9 @@
 package org.jolokia.docker.maven.util;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.*;
-
-import mockit.*;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
@@ -20,6 +19,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -85,6 +94,7 @@ public class AuthConfigHandlerTest {
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 checkDockerLogin(homeDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
                 checkDockerLogin(homeDir,"localhost:5000","localhost:5000");
+                checkDockerLogin(homeDir,"https://localhost:5000","localhost:5000");
             }
         });
     }
