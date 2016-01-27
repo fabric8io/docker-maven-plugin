@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.13.9-SNAPSHOT**
+  - Check also registry stored with an `https` prefix (#367)
+
 * **0.13.8**
   - Add option `nocache` to build configuration ([#348](https://github.com/rhuss/docker-maven-plugin/issues/348))
   - Add system property `docker.nocache` to disable build caching globally ([#349](https://github.com/rhuss/docker-maven-plugin/issues/349))
