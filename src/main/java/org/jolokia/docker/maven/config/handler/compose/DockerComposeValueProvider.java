@@ -1,23 +1,22 @@
 package org.jolokia.docker.maven.config.handler.compose;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.RestartPolicy;
+import org.jolokia.docker.maven.config.RestartPolicy.Builder;
 import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.jolokia.docker.maven.config.WaitConfiguration;
 import org.jolokia.docker.maven.config.WatchImageConfiguration;
-import org.jolokia.docker.maven.config.external.DockerComposeConfiguration.Service;
 
 class DockerComposeValueProvider {
 
     private final Map<String, Object> configuration;
-    private final Service extended;
+    private final ImageConfiguration extended;
 
     private final String service;
 
-    public DockerComposeValueProvider(String service, Map<String, Object> configuration, Service extended) {
+    public DockerComposeValueProvider(String service, Map<String, Object> configuration, ImageConfiguration extended) {
         this.service = service;
         this.configuration = configuration;
         this.extended = extended;
@@ -30,7 +29,7 @@ class DockerComposeValueProvider {
     }
 
     public List<String> getBindVolumes() {
-        return Collections.emptyList();
+        return getList("volumes");
     }
 
     public String getBuildDir() {
@@ -40,7 +39,7 @@ class DockerComposeValueProvider {
     public List<String> getCapAdd() {
         return getList("cap_add");
     }
-
+    
     public List<String> getCapDrop() {
         return getList("cap_drop");
     }
@@ -48,13 +47,21 @@ class DockerComposeValueProvider {
     public String getCGroupParent() {
         return getString("cgroup_parent");
     }
-
+    
     public String getCommand() {
         return getString("command");
     }
 
+    public String getCpuSet() {
+        return getString("cpu_set");
+    }
+
+    public String getCpuShares() {
+        return getString("cpu_shares");
+    }
+
     public List<String> getDevices() {
-        return Collections.emptyList();
+        return getList("devices");
     }
 
     public List<String> getDns() {
@@ -74,13 +81,8 @@ class DockerComposeValueProvider {
     }
 
     public Map<String, String> getEnvironment() {
-        // environment
-        return Collections.emptyMap();
-    }
-
-    public String getEnvPropertyFile() {
-        // TODO: can be one or multiple...
-        return null;
+        // TODO: load the env files from compose and add them all to the map
+        return getMap("environment");
     }
 
     public List<String> getExtraHosts() {
@@ -93,12 +95,11 @@ class DockerComposeValueProvider {
 
     public String getImage() {
         // use the image name defined in the service when building
-        return (getBuildDir() != null) ? extended.getImage() : getString("image");
+        return (getBuildDir() != null) ? extended.getName() : getString("image");
     }
 
     public Map<String, String> getLabels() {
-        // TODO: list or dictionary
-        return Collections.emptyMap();
+        return getMap("labels");
     }
 
     public List<String> getLinks() {
@@ -118,35 +119,37 @@ class DockerComposeValueProvider {
     }
 
     public String getPortPropertyFile() {
-        return null;
+        return (extended != null) ? extended.getRunConfiguration().getPortPropertyFile() : null;
     }
 
     public Boolean getPrivileged() {
         return getBoolean("privileged");
     }
-    
-    public String getRestartPolicyName() {
-        return null;
-    }
 
-    public int getRestartPolicyRetry() {
-        return 0;
-    }
-
-    public List<String> getRunCommands() {
-        return Collections.emptyList();
+    public RestartPolicy getRestartPolicy()
+    {
+        String restart = getString("restart");
+        if (restart == null) {
+            return null;
+        }
+        
+        Builder builder = new RestartPolicy.Builder();
+        if (restart.contains(":")) {
+            String[] parts = restart.split("\\:", 2);
+            builder.name(parts[0]).retry(Integer.valueOf(parts[1]));
+        } else {
+            builder.name(restart);
+        }
+        
+        return builder.build();
     }
 
     public List<String> getRunPorts() {
-        return Collections.emptyList();
-    }
-
-    public Service getServiceConfiguration() {
-        return extended;
+        return getList("ports");
     }
 
     public String getSkipRun() {
-        return null;
+        return (extended == null) ? null : String.valueOf(extended.getRunConfiguration().skip());
     }
 
     public String getString(String key) {
@@ -162,23 +165,32 @@ class DockerComposeValueProvider {
     }
 
     public List<String> getVolumes() {
-        return Collections.emptyList();
+        return getList("volumes");
     }
 
     public List<String> getVolumesFrom() {
-        return Collections.emptyList();
+        return getList("volumes_from");
     }
 
     public WaitConfiguration getWaitConfiguration() {
-        return (extended == null) ? null : extended.getWaitConfiguration();
+        return (extended == null) ? null : extended.getRunConfiguration().getWaitConfiguration();
     }
 
     public WatchImageConfiguration getWatchImageConfiguration() {
-        return (extended == null) ? null : extended.getWatchImageConfiguration();
+        return (extended == null) ? null : extended.getWatchConfiguration();
     }
 
     public String getWorkingDir() {
         return getString("working_dir");
+    }
+
+    private Map<String, String> convertToMap(List<String> list) {
+        Map<String, String> map = new HashMap<>(list.size());
+        for (String entry : list) {
+            String[] parts = entry.split("=", 2);
+            map.put(parts[0], parts[1]);
+        }
+        return map;
     }
 
     private Boolean getBoolean(String key) {
@@ -208,5 +220,18 @@ class DockerComposeValueProvider {
             value = Long.valueOf(configuration.get(key).toString());
         }
         return value;
+    }
+
+    private Map<String, String> getMap(String key) {
+        if (configuration.containsKey(key)) {
+            Object value = configuration.get(key);
+            if (value instanceof List) {
+                value = convertToMap(List.class.cast(value));
+            }
+
+            return Map.class.cast(value);
+        }
+
+        return Collections.emptyMap();
     }
 }

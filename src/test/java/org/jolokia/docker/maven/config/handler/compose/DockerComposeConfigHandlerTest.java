@@ -1,18 +1,22 @@
 package org.jolokia.docker.maven.config.handler.compose;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 
+import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
-import org.jolokia.docker.maven.config.VolumeConfiguration;
+import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.jolokia.docker.maven.config.external.DockerComposeConfiguration;
 import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
+import org.jolokia.docker.maven.config.handler.AbstractConfigHandlerTest;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DockerComposeConfigHandlerTest {
+public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private DockerComposeConfigHandler handler;
 
@@ -33,9 +37,37 @@ public class DockerComposeConfigHandlerTest {
         thenResolvedImageIsCorrect();
     }
 
+    @Override
+    protected String getEnvPropertyFile() {
+        // this predates compose support and doesn't work the same way
+        return null;
+    }
+    
+    @Override
+    protected NamingStrategy getRunNamingStrategy() {
+        return NamingStrategy.alias;
+    }
+
+    @Override
+    protected void validateEnv(Map<String, String> env) {
+        assertEquals(2, env.size());
+        assertEquals("name", env.get("NAME"));
+        assertEquals("true", env.get("BOOL"));
+    }
+    
     private void givenAnUnresolvedImage() {
+        
+        
+        
+        
+//        DockerComposeConfiguration.Service service = new DockerComposeConfiguration.Service.Builder("service")
+//                .portPropertyFile("/tmp/props.txt")
+//                .skipRun(true)
+//                .build();
+//        
         DockerComposeConfiguration composeConfig = new DockerComposeConfiguration.Builder()
-                .dockerComposeDir(getClass().getResource("/compose").getFile())
+                .yamlFile(getClass().getResource("/compose/docker-compose.yml").getFile())
+               // .addService(service)
                 .build();
 
         ExternalImageConfiguration externalConfig = new ExternalImageConfiguration.Builder()
@@ -46,39 +78,6 @@ public class DockerComposeConfigHandlerTest {
                 .externalConfig(externalConfig)
                 .build();
     }
-
-    private void thenListContains(List<String> list, String value) {
-        assertNotNull(list);
-        assertFalse(list.isEmpty());
-        assertTrue(list.contains(value));
-    }
-    
-    private void thenFullyResolvedRunImageIsCorrect(RunImageConfiguration config) {
-        assertEquals("command", config.getCmd().getShell());
-        assertEquals("domainname", config.getDomainname());
-        assertEquals("entrypoint.sh", config.getEntrypoint().getShell());
-        assertEquals("hostname", config.getHostname());
-        assertEquals(1000L, config.getMemory().longValue());
-        assertEquals(1001L, config.getMemorySwap().longValue());
-        assertEquals(true, config.getPrivileged().booleanValue());
-        assertEquals("user", config.getUser());
-        assertEquals("/workingDir", config.getWorkingDir());
-        
-        // TODO: implement this
-        assertNull(config.getEnvPropertyFile());
-        
-        thenListContains(config.getCapAdd(), "ADD");
-        thenListContains(config.getCapDrop(), "DROP");
-        thenListContains(config.getDns(), "8.8.8.8");
-        thenListContains(config.getDnsSearch(), "example.com");
-        thenListContains(config.getExtraHosts(), "host:1.2.3.4");
-        
-        assertEquals(3, config.getEnv().size());
-        
-        VolumeConfiguration volumesConfig = config.getVolumeConfiguration();
-        assertNotNull(volumesConfig);
-        assertEquals(1, volumesConfig.getFrom().size());
-    }
     
     private void thenResolvedImageIsCorrect() {
         ImageConfiguration config = resolved.get(0);
@@ -86,7 +85,8 @@ public class DockerComposeConfigHandlerTest {
         assertEquals("image", config.getName());
         assertEquals("service", config.getAlias());
 
-        thenFullyResolvedRunImageIsCorrect(config.getRunConfiguration());
+        validateRunConfiguration(config.getRunConfiguration());
+        assertTrue(config.getRunConfiguration().skip());
     }
 
     private void thenResolveImageSizeIs(int size) {
@@ -95,5 +95,38 @@ public class DockerComposeConfigHandlerTest {
 
     private void whenResolveImages() {
         resolved = handler.resolve(unresolved, null);
+    }
+    
+    public static class ServiceImageBuilder {
+        private final RunImageConfiguration.Builder runBuilder = new RunImageConfiguration.Builder();
+
+        private final BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder();
+
+        private final ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
+
+        public ServiceImageBuilder image(String image) {
+            imageBuilder.name(image);
+            return this;
+        }
+
+        public ServiceImageBuilder alias(String alias) {
+            imageBuilder.alias(alias);
+            return this;
+        }
+
+        public ServiceImageBuilder cleanup(boolean cleanup) {
+            buildBuilder.cleanup(String.valueOf(cleanup));
+            return this;
+        }
+        
+//        public ServiceImageBuilder noCache(boolean noCache) {
+//
+//        }
+        
+        public ImageConfiguration build() {
+            return imageBuilder.buildConfig(buildBuilder.build())
+                    .runConfig(runBuilder.build())
+                    .build();
+        }
     }
 }

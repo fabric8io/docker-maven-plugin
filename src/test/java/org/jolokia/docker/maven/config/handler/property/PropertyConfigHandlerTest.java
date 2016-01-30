@@ -16,26 +16,30 @@ package org.jolokia.docker.maven.config.handler.property;
  * limitations under the License.
  */
 
-import java.util.*;
+import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
 import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
 import org.jolokia.docker.maven.config.external.PropertiesConfiguration;
+import org.jolokia.docker.maven.config.handler.AbstractConfigHandlerTest;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.jolokia.docker.maven.config.handler.property.ConfigKey.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * @author roland
  * @since 05/12/14
  */
-public class PropertyConfigHandlerTest {
+public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private PropertyConfigHandler configHandler;
     private ImageConfiguration imageConfiguration;
@@ -174,7 +178,24 @@ public class PropertyConfigHandlerTest {
 
         validateBuildConfiguration(resolved.getBuildConfiguration());
         validateRunConfiguration(resolved.getRunConfiguration());
+        validateWaitConfiguraion(resolved.getRunConfiguration().getWaitConfiguration());
     }
+        
+    @Override
+    protected String getEnvPropertyFile() {
+        return "/tmp/envProps.txt";
+    }
+    
+    @Override
+    protected NamingStrategy getRunNamingStrategy() {
+        return NamingStrategy.none;
+    }
+    
+    @Override
+    protected void validateEnv(Map<String, String> env) {
+        assertTrue(env.containsKey("HOME"));
+        assertEquals("/Users/roland", env.get("HOME"));
+    }    
     
     private ImageConfiguration buildAnUnresolvedImage() {
         PropertiesConfiguration propsConfig = new PropertiesConfiguration.Builder()
@@ -226,47 +247,8 @@ public class PropertyConfigHandlerTest {
         assertNull(assemblyConfig.exportBasedir());
         assertFalse(assemblyConfig.isIgnorePermissions());
     }
-
-    private void validateLabels(Map<String, String> labels) {
-        assertEquals("Hello\"World",labels.get("com.acme.label"));
-    }
-
-    private void validateEnv(Map<String, String> env) {
-        assertTrue(env.containsKey("HOME"));
-        assertEquals("/Users/roland", env.get("HOME"));
-    }
-
-    private void validateRunConfiguration(RunImageConfiguration runConfig) {
-        assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
-        assertEquals(a("CAP"), runConfig.getCapAdd());
-        assertEquals(a("CAP"), runConfig.getCapDrop());
-        assertEquals("command.sh", runConfig.getCmd().getShell());
-        assertEquals(a("8.8.8.8"), runConfig.getDns());
-        assertEquals(a("example.com"), runConfig.getDnsSearch());
-        assertEquals("domain.com", runConfig.getDomainname());
-        assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
-        assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
-        assertEquals("subdomain", runConfig.getHostname());
-        assertEquals(a("redis"), runConfig.getLinks());
-        assertEquals((Long) 1L, runConfig.getMemory());
-        assertEquals((Long) 1L, runConfig.getMemorySwap());
-        assertEquals(NamingStrategy.none, runConfig.getNamingStrategy());
-        assertEquals("/tmp/envProps.txt",runConfig.getEnvPropertyFile());
-        assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
-        assertEquals(a("8081:8080"), runConfig.getPorts());
-        assertEquals(true, runConfig.getPrivileged());
-        assertEquals("tomcat", runConfig.getUser());
-        assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
-        assertEquals("foo", runConfig.getWorkingDir());
-
-        validateEnv(runConfig.getEnv());
-
-        // not sure it's worth it to implement 'equals/hashcode' for these
-        RestartPolicy policy = runConfig.getRestartPolicy();
-        assertEquals("on-failure", policy.getName());
-        assertEquals(1, policy.getRetry());
-
-        WaitConfiguration wait = runConfig.getWaitConfiguration();
+    
+    private void validateWaitConfiguraion(WaitConfiguration wait) {
         assertEquals("http://foo.com", wait.getUrl());
         assertEquals("pattern", wait.getLog());
         assertEquals("post_start_command", wait.getExec().getPostStart());
@@ -274,8 +256,8 @@ public class PropertyConfigHandlerTest {
         assertEquals(5, wait.getTime());
     }
 
-    private List<String> a(String ... args) {
-        return Arrays.asList(args);
+    private void validateLabels(Map<String, String> labels) {
+        assertEquals("Hello\"World",labels.get("com.acme.label"));
     }
 
     private Properties props(String ... args) {

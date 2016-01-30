@@ -9,18 +9,18 @@
 #
 service:
   cap_add:
-    - ADD
+    - CAP
   cap_drop:
-    - DROP
-  command: command
-# cgroup_parent: cgroup_parent
-# cpu_shares: 73
-# cpu_set: 0,1
-# devices:
-# - "/dev/device:/dev/device"
+    - CAP
+  command: command.sh
+  cgroup_parent: cgroup_parent
+  cpu_shares: 73
+  cpu_set: 0,1
+  devices:
+  - "/dev/device:/dev/device"
   dns: 8.8.8.8
   dns_search: example.com
-  domainname: domainname
+  domainname: domain.com
   entrypoint: entrypoint.sh
 # env_file: 
   environment:
@@ -30,29 +30,31 @@ service:
   external_links:
     - link1
   extra_hosts:
-    - "host:1.2.3.4"
-  hostname: hostname
+    - "localhost:127.0.0.1"
+  hostname: subdomain
   image: image
   labels:
-    - label1: label
+    - "label1=label"
   links:
-    - link1
+    - redis
 # log_driver: json-file
 # log_opt:
 #   key: value
-  mem_limit: 1000
-  memswap_limit: 1001
+  mem_limit: 1
+  memswap_limit: 1
 # net: "host"
 # pid: "host"
   ports: 
-    - "3000"
+    - "8081:8080"
   privileged: true
 # security_opt:
 #   - label:user:USER
 # ulimits
-  user: user  
+  restart: on-failure:1
+  user: tomcat  
   volumes:
-    - /volume
+    - /foo
+    - /tmp:/tmp
   volumes_from:
-    - volumesFrom
-  working_dir: /workingDir   
+    - from
+  working_dir: foo  

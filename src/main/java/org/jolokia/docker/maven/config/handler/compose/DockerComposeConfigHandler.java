@@ -24,7 +24,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
     @Override
     public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) {
         DockerComposeConfiguration composeConfig = unresolvedConfig.getExternalConfiguration().getComposeConfiguration();
-        Map<String, DockerComposeConfiguration.Service> serviceMap = composeConfig.getServiceMap();
+        Map<String, ImageConfiguration> serviceMap = composeConfig.getServiceMap();
 
         String resolvedComposePath = resolveFilePath(composeConfig, project);
         
@@ -69,14 +69,14 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
     }
 
     private BuildImageConfiguration createBuildImageConfiguration(DockerComposeValueProvider provider) {
+//        return new BuildImageConfiguration.Builder()
+//                .
+//        
+//        
+//        
+//        
+        
         return null;
-    }
-
-    private RestartPolicy createRestartPolicy(DockerComposeValueProvider provider) {
-        return new RestartPolicy.Builder()
-                .name(provider.getRestartPolicyName())
-                .retry(provider.getRestartPolicyRetry())
-                .build();
     }
 
     private RunImageConfiguration createRunConfiguration(DockerComposeValueProvider provider) {
@@ -89,7 +89,6 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .domainname(provider.getDomainName())
                 .entrypoint(provider.getEntrypoint())
                 .env(provider.getEnvironment())
-                .envPropertyFile(provider.getEnvPropertyFile())
                 .extraHosts(provider.getExtraHosts())
                 .hostname(provider.getHostname())
                 .labels(provider.getLabels())
@@ -100,7 +99,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .portPropertyFile(provider.getPortPropertyFile())
                 .ports(provider.getRunPorts())
                 .privileged(provider.getPrivileged())
-                .restartPolicy(createRestartPolicy(provider))
+                .restartPolicy(provider.getRestartPolicy())
                 .user(provider.getUser())
                 .workingDir(provider.getWorkingDir())
                 .wait(createWaitConfig(provider))
