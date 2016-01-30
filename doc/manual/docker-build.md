@@ -9,7 +9,10 @@ of an image configuration. The available subelements are
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
-* **cleanup** indicates if dangling (untagged) images should be cleaned up during each build. Default is `true`   
+* **cleanup** Cleanup dangling (untagged) images after each build (including any containers
+  created from them). Default is `true`
+* **nocache** Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache`
+  when running Maven.
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See 
   [Start-up Arguments](#start-up-arguments) for details.
@@ -30,6 +33,9 @@ of an image configuration. The available subelements are
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
   behaviour when starting containers. 
 * **optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
+* **compression** is the compression mode how the build archive is transmitted to the docker daemon (`docker:build`) and how 
+  docker build archives are attached to this build as sources (`docker:source`). The value can be `none` (default), 
+  `gzip` or `bzip2`. 
 * **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
@@ -94,7 +100,9 @@ Here's an example:
   the files specified within the assembly also all files contained in this directory
   are added to the docker build directory. If this path is not an absolute path it 
   is resolved relatively to `src/main/docker`. You can make easily an absolute path by 
-  using `${project.baseDir}` as prefix for your path
+  using `${project.baseDir}` as prefix for your path. If this directory contains a `.maven-dockerignore` file, 
+  this file is used for excluding files in the build. Each line is treated as an [FileSet exclude pattern](http://ant.apache.org/manual/Types/fileset.html) as used by the [maven-assembly-plugin](http://maven.apache
+  .org/plugins/maven-assembly-plugin/). 
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
   the container root (`/`). It is also `false` by default when a base image is used with `from` 
@@ -264,7 +272,7 @@ possible to change the name of the final build artifact with the following:
 
 ```xml
 <build>
-  <finalName>your-desired-final-name</build>
+  <finalName>your-desired-final-name</finalName>
   ...
 </build>
 ```

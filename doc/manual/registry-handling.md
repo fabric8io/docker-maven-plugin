@@ -4,7 +4,7 @@ Docker uses registries to store images. The registry is typically
 specified as part of the name. I.e. if the first part (everything
 before the first `/`) contains a dot (`.`) or colon (`:`) this part is
 interpreted as an address (with an optionally port) of a remote
-registry. This registry (or the default `registry.hub.docker.com` if no
+registry. This registry (or the default `docker.io` if no
 registry is given) is used during push and pull operations. This
 plugin follows the same semantics, so if an image name is specified
 with a registry part, this registry is contacted. Authentication is
@@ -12,7 +12,7 @@ explained in the next [section](#authentication).
 
 There are some situations however where you want to have more
 flexibility for specifying a remote registry. This might be, because
-you do not want to hard code a registry within the `pom.xml` but
+you do not want to hard code a registry into `pom.xml` but
 provide it from the outside with an environment variable or a system
 property. 
 
@@ -31,6 +31,18 @@ This plugin supports various ways of specifying a registry:
   - Finally an environment variable `DOCKER_REGISTRY` is looked up for
     detecting a registry.
     
+This registry is used for pulling (i.e. for autopull the base image
+when doing a `docker:build`) and pushing with `docker.push`. However,
+when these two goals a are combined on the command line like in `mvn
+-Ddocker.registry=myregistry:5000 package docker:build docker:push`
+the same registry is used for both operation. For a more fine grained
+control, separate registries for *pull* and *push* can be specified.
+
+* In the plugin's configuration with the parameters `<pullRegistry>` and
+  `<pushRegistry>`, respectively.
+* With the system properties `docker.pull.registry` and
+  `docker.push.registry`, respectively.
+
 Example:
 
 ```xml

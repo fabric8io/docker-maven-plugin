@@ -1,5 +1,7 @@
 package org.jolokia.docker.maven.config;
 
+import java.util.List;
+
 /**
  * @author roland
  * @since 12.10.14
@@ -30,6 +32,11 @@ public class WaitConfiguration {
     /**
      * @parameter
      */
+    private TcpConfiguration tcp;
+
+    /**
+     * @parameter
+     */
     private String log;
 
     /**
@@ -44,10 +51,11 @@ public class WaitConfiguration {
 
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, String log, int shutdown, int kill) {
+    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, TcpConfiguration tcp, String log, int shutdown, int kill) {
         this.time = time;
         this.exec = exec;
         this.http = http;
+        this.tcp = tcp;
         this.log = log;
         this.shutdown = shutdown;
         this.kill = kill;
@@ -67,6 +75,10 @@ public class WaitConfiguration {
 
     public HttpConfiguration getHttp() {
         return http;
+    }
+
+    public TcpConfiguration getTcp() {
+        return tcp;
     }
 
     public String getLog() {
@@ -89,6 +101,8 @@ public class WaitConfiguration {
         private String method;
         private String preStop;
         private String postStart;
+        private List<Integer> tcpPorts;
+        private String tcpHost;
 
         public Builder time(int time) {
             this.time = time;
@@ -125,8 +139,20 @@ public class WaitConfiguration {
             return this;
         }
 
+        public Builder tcpPorts(List<Integer> tcpPorts)
+        {
+            this.tcpPorts = tcpPorts;
+            return this;
+        }
+
+        public Builder tcpHost(String tcpHost)
+        {
+            this.tcpHost = tcpHost;
+            return this;
+        }
+
         public WaitConfiguration build() {
-            return new WaitConfiguration(time, new ExecConfiguration(postStart, preStop), new HttpConfiguration(url,method,status), log, shutdown, kill);
+            return new WaitConfiguration(time, new ExecConfiguration(postStart, preStop), new HttpConfiguration(url,method,status), new TcpConfiguration(tcpHost, tcpPorts), log, shutdown, kill);
         }
 
         public Builder preStop(String command) {
@@ -192,4 +218,29 @@ public class WaitConfiguration {
             return status;
         }
     }
+
+    public static class TcpConfiguration
+    {
+        private String host;
+
+        private List<Integer> ports;
+
+        public TcpConfiguration() {};
+
+        private TcpConfiguration(String host, List<Integer> ports) {
+            this.host = host;
+            this.ports = ports;
+        }
+
+        public String getHost()
+        {
+            return host;
+        }
+
+        public List<Integer> getPorts()
+        {
+            return ports;
+        }
+    }
+
 }

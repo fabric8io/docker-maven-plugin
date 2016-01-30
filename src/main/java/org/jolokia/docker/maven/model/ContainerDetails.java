@@ -1,28 +1,27 @@
 package org.jolokia.docker.maven.model;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.json.JSONObject;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 
 public class ContainerDetails implements Container {
 
     static final String CONFIG = "Config";
+    static final String CREATED = "Created";
     static final String HOST_IP = "HostIp";
     static final String HOST_PORT = "HostPort";
+    static final String ID = "Id";
+    static final String IMAGE = "Image";
+    static final String LABELS = "Labels";
     static final String NAME = "Name";
+    static final String IP = "IPAddress";
     static final String NETWORK_SETTINGS = "NetworkSettings";
+    static final String PORTS = "Ports";
+    static final String SLASH = "/";
     static final String STATE = "State";
-    static String CREATED = "Created";
-    static String ID = "Id";
-    static String IMAGE = "Image";
-    static String PORTS = "Ports";
-    static String SLASH = "/";
 
     private static final String RUNNING = "Running";
     
@@ -52,6 +51,14 @@ public class ContainerDetails implements Container {
     }
 
     @Override
+    public Map<String, String> getLabels() {
+        JSONObject config = json.getJSONObject(CONFIG);
+        return config.has(LABELS) ?
+                mapLabels(config.getJSONObject(LABELS)) :
+                Collections.<String, String>emptyMap();
+    }
+
+    @Override
     public String getName() {
         String name = json.getString(NAME);
 
@@ -59,6 +66,17 @@ public class ContainerDetails implements Container {
             name = name.substring(1);
         }
         return name;
+    }
+
+    @Override
+    public String getIPAddress() {
+        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
+            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
+            if (!networkSettings.isNull(IP)) {
+                return networkSettings.getString(IP);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -70,7 +88,7 @@ public class ContainerDetails implements Container {
             }
         }
 
-        return Collections.emptyMap();
+        return new HashMap<>();
     }
 
     @Override
@@ -109,5 +127,18 @@ public class ContainerDetails implements Container {
         }
 
         return portBindings;
+    }
+
+    private Map<String, String> mapLabels(JSONObject labels) {
+        int length = labels.length();
+        Map<String, String> mapped = new HashMap<>(length);
+
+        Iterator<String> iterator = labels.keys();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            mapped.put(key, labels.get(key).toString());
+        }
+
+        return mapped;
     }
 }

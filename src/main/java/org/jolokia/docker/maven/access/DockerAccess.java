@@ -7,7 +7,8 @@ import org.jolokia.docker.maven.access.log.LogCallback;
 import org.jolokia.docker.maven.access.log.LogGetHandle;
 import org.jolokia.docker.maven.config.Arguments;
 import org.jolokia.docker.maven.log.LogOutputSpec;
-import org.jolokia.docker.maven.model.*;
+import org.jolokia.docker.maven.model.Container;
+import org.jolokia.docker.maven.util.PomLabel;
 
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
@@ -99,8 +100,9 @@ public interface DockerAccess {
      */
     void stopContainer(String containerId, int killWait) throws DockerAccessException;
 
-    /**
-     * Copy an archive (must be a tar) into a running container
+    /** Copy an archive (must be a tar) into a running container
+     * Get all containers matching a certain label. This might not be a cheap operation especially if many containers
+     * are running. Use with care.
      *
      * @param containerId container to copy into
      * @param archive local archive to copy into
@@ -167,9 +169,10 @@ public interface DockerAccess {
      * @param image name of the image to build or <code>null</code> if none should be used
      * @param dockerArchive from which the docker image should be build
      * @param forceRemove whether to remove intermediate containers
+     * @param noCache whether to use cache when building the image
      * @throws DockerAccessException if docker host reports an error during building of an image
      */
-    void buildImage(String image, File dockerArchive, boolean forceRemove) throws DockerAccessException;
+    void buildImage(String image, File dockerArchive, boolean forceRemove, boolean noCache) throws DockerAccessException;
 
     /**
      * Alias an image in the repository with a complete new name. (Note that this maps to a Docker Remote API 'tag'

@@ -1,8 +1,31 @@
 # ChangeLog
 
+* **0.13.9-SNAPSHOT**
+  - Check also registry stored with an `https` prefix (#367)
+
+* **0.13.8**
+  - Add option `nocache` to build configuration ([#348](https://github.com/rhuss/docker-maven-plugin/issues/348))
+  - Add system property `docker.nocache` to disable build caching globally ([#349](https://github.com/rhuss/docker-maven-plugin/issues/349))
+  - Add support for '.maven-dockerignore' for excluding certain files in plain Dockerfile build ([#362](https://github.com/rhuss/docker-maven-plugin/issues/362))
+  - If naming strategy is "alias" stop only the container with the given alias with `docker:stop` ([#359](https://github.com/rhuss/docker-maven-plugin/issues/359))
+  - Fix that containers without d-m-p label where still stopped 
+  - Add support for OpenShift login (use `-DuseOpenShiftAuth` for enabling this) ([#350](https://github.com/rhuss/docker-maven-plugin/issues/350))
+  - Add support for dedicated pull and push registry configuration respectively ([#351](https://github.com/rhuss/docker-maven-plugin/issues/351))
+  
+* **0.13.7**
+  - Fix default for "cleanup" in build configuration to `true` (as documented) ([#338](https://github.com/rhuss/docker-maven-plugin/issues/338))
+  - Fix dynamic host property update in port mapping ([#323](https://github.com/rhuss/docker-maven-plugin/issues/323))  
+  - New goal 'docker:source' for attaching a Docker tar archive to the Maven project with an classifier "docker-<alias>" ([#311](https://github.com/rhuss/docker-maven-plugin/issues/311)) 
+  - Be more careful with chowning the user when <user> is used in an assembly ([#336](https://github.com/rhuss/docker-maven-plugin/issues/336))
+  - Move VOLUME to the end of the Dockerfile to allow initialization via RUN commands ([#341](https://github.com/rhuss/docker-maven-plugin/issues/341))
+  - Allow multiple configurations with different Docker hosts again ([#320](https://github.com/rhuss/docker-maven-plugin/issues/320)) 
+  - `docker:start` blocks now only when system property docker.follow is given ([#249](https://github.com/rhuss/docker-maven-plugin/issues/249)) 
+  - `docker:stop` only stops containers started by this plugin by default ([#87](https://github.com/rhuss/docker-maven-plugin/issues/87))
+  - Lookup `~/.docker/config.json` for registry credentials as fallback ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
+
 * **0.13.6**
   - Don't use user from image when pulling base images ([#147](https://github.com/rhuss/docker-maven-plugin/issues/147))
-  - Add a new assembly descriptor reference  `hawt-app` for using asseblies created by 
+  - Add a new assembly descriptor reference  `hawt-app` for using assemblies created by 
     [hawt-app](https://github.com/fabric8io/fabric8/tree/master/hawt-app-maven-plugin)
   
 * **0.13.5**
@@ -141,19 +164,35 @@ to spot since a build will croak immediately.
 
 The old format
 
-````xml <build> <command>java -jar /server.jar</command> </build> ````
+````xml 
+<build> 
+  <command>java -jar /server.jar</command>
+</build>
+````
 
 becomes now
 
-````xml <build> <cmd> <exec> <arg>java</arg> <arg>-jar</arg>
-  <arg>/server.jar</arg>
-      </exec>         
-    </cmd> </build> ````
+````xml 
+<build> 
+  <cmd> 
+    <exec> 
+      <arg>java</arg> 
+      <arg>-jar</arg>
+      <arg>/server.jar</arg>
+    </exec>         
+  </cmd> 
+</build> 
+````
  
 or
 
-````xml <build> <cmd> <shell>java -jar /server.jar</shell> </cmd>
-  </build> ````
+````xml 
+<build>
+  <cmd>
+    <shell>java -jar /server.jar</shell>
+  </cmd>
+</build>
+````
 
 depending on whether you prefer the `exec` or `shell` form.
 
@@ -271,27 +310,51 @@ Please note, that the syntax for binding volumes from another
 container has changed slightly in 0.10.6.  See
 "[Volume binding](manual.md#volume-binding)" for details but in short:
 
-````xml <run> <volumes> <from>data</from> <from>jolokia/demo</from>
-</volumes> ....  </run> ````
+````xml 
+<run>
+  <volumes>
+    <from>data</from>
+    <from>jolokia/demo</from>
+  </volumes>
+....
+</run>
+````
 
 becomes
 
-````xml <run> <volumes> <from> <image>data</image>
-<image>jolokia/demo</image> </from> </volumes> ....  </run> ````
+````xml
+<run>
+  <volumes>
+    <from>
+      <image>data</image>
+      <image>jolokia/demo</image>
+    </from>
+  </volumes>
+....
+</run>
+````
 
 The syntax for specifying the build assembly configuration has also
 changed. See "[Build Assembly] (manual.md#build-assembly)" for details
 but in short:
 
-`````xml <build> ...  <exportDir>/export</exportDir>
+````xml
+<build>
+  ...
+  <exportDir>/export</exportDir>
   <assemblyDescriptor>src/main/docker/assembly.xml</assemblyDescriptor>  
 </build>  
 ````
 
 becomes
 
-`````xml <build> ...  <assembly> <basedir>/export</basedir>
-<descriptor>assembly.xml</descriptor> </assembly>
+````xml
+<build>
+  ...  
+  <assembly>
+    <basedir>/export</basedir>
+    <descriptor>assembly.xml</descriptor> 
+  </assembly>
 </build>           
 ````
 

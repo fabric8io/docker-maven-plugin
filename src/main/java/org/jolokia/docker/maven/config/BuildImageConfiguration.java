@@ -2,6 +2,7 @@ package org.jolokia.docker.maven.config;
 
 import java.util.*;
 
+import org.codehaus.plexus.archiver.tar.TarArchiver;
 import org.jolokia.docker.maven.util.Logger;
 
 /**
@@ -38,9 +39,14 @@ public class BuildImageConfiguration {
     private List<String> runCmds;
 
     /**
+     * @parameter default-value="true"
+     */
+    private boolean cleanup = true;
+
+    /**
      * @parameter default-value="false"
      */
-    private boolean cleanup = false;
+    private boolean nocache = false;
 
     /**
      * @parameter default-value="false"
@@ -97,7 +103,12 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private boolean skip = false;
-    
+
+    /**
+     * @parameter
+     */
+    private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
+
     public BuildImageConfiguration() {}
 
     public String getFrom() {
@@ -144,7 +155,6 @@ public class BuildImageConfiguration {
         return cmd;
     }
 
-
     @Deprecated
     public String getCommand() {
         return command;
@@ -154,12 +164,20 @@ public class BuildImageConfiguration {
         return cleanup;
     }
 
+    public boolean nocache() {
+        return nocache;
+    }
+
     public boolean optimise() {
         return optimise;
     }
 
     public boolean skip() {
         return skip;
+    }
+
+    public BuildTarArchiveCompression getCompression() {
+        return compression;
     }
 
     public Arguments getEntryPoint() {
@@ -243,6 +261,13 @@ public class BuildImageConfiguration {
         public Builder cleanup(String cleanup) { 
             if (cleanup != null) {
                 config.cleanup = Boolean.valueOf(cleanup);
+            }
+            return this;
+        }
+
+        public Builder nocache(String nocache) {
+            if (nocache != null) {
+                config.nocache = Boolean.valueOf(nocache);
             }
             return this;
         }

@@ -153,7 +153,23 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(false, config.getBuildConfiguration().cleanup());
     }
-    
+
+    @Test
+    public void testNoCacheDisabled() throws Exception {
+        String[] testData = new String[] { k(NAME), "image", k(NOCACHE), "false" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(false, config.getBuildConfiguration().nocache());
+    }
+
+    @Test
+    public void testNoCacheEnabled() throws Exception {
+        String[] testData = new String[] { k(NAME), "image", k(NOCACHE), "true" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(true, config.getBuildConfiguration().nocache());
+    }
+
     @Test
     public void testNoOptimise() throws Exception {
         String[] testData = new String[] { k(NAME), "image", k(OPTIMISE), "false" };
@@ -225,13 +241,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
-        assertEquals(false, buildConfig.cleanup());
+        assertEquals(true, buildConfig.cleanup());
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
         assertEquals("rhuss@redhat.com",buildConfig.getMaintainer());
+        assertEquals(false, buildConfig.nocache());
 
         validateEnv(buildConfig.getEnv());
         validateLabels(buildConfig.getLabels());

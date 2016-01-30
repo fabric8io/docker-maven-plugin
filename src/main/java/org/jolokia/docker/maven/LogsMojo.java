@@ -10,6 +10,7 @@ import org.jolokia.docker.maven.log.LogOutputSpec;
 import org.jolokia.docker.maven.log.LogDispatcher;
 import org.jolokia.docker.maven.model.Container;
 import org.jolokia.docker.maven.service.QueryService;
+import org.jolokia.docker.maven.service.ServiceHub;
 
 
 /**
@@ -39,9 +40,9 @@ public class LogsMojo extends AbstractDockerMojo {
     private boolean logAll;
 
     @Override
-    protected void executeInternal(DockerAccess access) throws MojoExecutionException, DockerAccessException {
-        QueryService queryService = serviceHub.getQueryService();
-        LogDispatcher logDispatcher = getLogDispatcher(access);
+    protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
+        QueryService queryService = hub.getQueryService();
+        LogDispatcher logDispatcher = getLogDispatcher(hub);
 
         for (ImageConfiguration image : getImages()) {
             String imageName = image.getName();
@@ -61,7 +62,7 @@ public class LogsMojo extends AbstractDockerMojo {
     }
 
     private void doLogging(LogDispatcher logDispatcher, ImageConfiguration imageConfig, String container) throws MojoExecutionException {
-        LogOutputSpec spec = serviceHub.getLogOutputSpecFactory().createSpec(container, imageConfig);
+        LogOutputSpec spec = serviceHubFactory.getLogOutputSpecFactory().createSpec(container, imageConfig);
         try {
             if (follow) {
                 logDispatcher.trackContainerLog(container, spec);

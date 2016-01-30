@@ -63,6 +63,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new BuildImageConfiguration.Builder()
                 .cmd(withPrefix(prefix, CMD, properties))
                 .cleanup(withPrefix(prefix, CLEANUP, properties))
+                .nocache(withPrefix(prefix, NOCACHE, properties))
                 .optimise(withPrefix(prefix, OPTIMISE, properties))
                 .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
@@ -178,7 +179,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .status(withPrefix(prefix, WAIT_HTTP_STATUS, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
                 .kill(asInt(withPrefix(prefix, WAIT_KILL, properties)))
-                .shutdown(asInt(withPrefix(prefix,WAIT_SHUTDOWN,properties)))
+                .shutdown(asInt(withPrefix(prefix, WAIT_SHUTDOWN, properties)))
+                .tcpHost(withPrefix(prefix, WAIT_TCP_HOST, properties))
+                .tcpPorts(asIntList(listWithPrefix(prefix, WAIT_TCP_PORT, properties)))
                 .build();
     }
     
@@ -199,6 +202,20 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
   
     private int asInt(String s) {
         return s != null ? Integer.parseInt(s) : 0;
+    }
+
+    private List<Integer> asIntList(List<String> strings) {
+        if (strings == null) {
+            return null;
+        }
+
+        List<Integer> ints = new ArrayList<>();
+        for (String s : strings) {
+            ints.add(asInt(s));
+        }
+
+        return ints;
+
     }
 
     private List<String> listWithPrefix(String prefix, ConfigKey key, Properties properties) {

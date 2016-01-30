@@ -9,6 +9,7 @@
   - [docker:push](docker-push.md)
   - [docker:remove](docker-remove.md)
   - [docker:logs](docker-logs.md)
+  - [docker:source](docker-source.md)
 * [External Configuration](external-configuration.md)
 * [Registry Handling](registry-handling.md)
 * [Authentication](authentication.md)

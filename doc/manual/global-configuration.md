@@ -51,7 +51,7 @@ parentheses.
   If set to `true` the plugin won't add any tags to images that have been built.
 * **registry** (`docker.registry`)
   Specify globally a registry to use for pulling and pushing
-  images. See [Registry handling](#registry-handling) for details. 
+  images. See [Registry handling](registry-handling.md) for details. 
 * **autoPull** (`docker.autoPull`)
   By default external images (base image for building or images to
   start) are downloaded automatically if they don't exist locally.
@@ -87,7 +87,7 @@ Example:
 <configuration>
    <dockerHost>https://localhost:2376</dockerHost>
    <certPath>src/main/dockerCerts</certPath>
-   <useColor>true</userColor>
+   <useColor>true</useColor>
    .....
 </configuration>
 ````

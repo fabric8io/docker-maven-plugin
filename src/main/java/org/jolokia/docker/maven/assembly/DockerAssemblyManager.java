@@ -2,7 +2,7 @@ package org.jolokia.docker.maven.assembly;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
@@ -15,7 +15,6 @@ import org.apache.maven.plugin.assembly.io.AssemblyReader;
 import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
-import org.apache.maven.wagon.PathUtils;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -42,6 +41,7 @@ public class DockerAssemblyManager {
 
     // Assembly name used also as build directory within outputBuildDir
     public static final String ASSEMBLY_NAME = "maven";
+    public static final String DOCKER_IGNORE = ".maven-dockerignore";
 
     @Requirement
     private AssemblyArchiver assemblyArchiver;
@@ -65,7 +65,8 @@ public class DockerAssemblyManager {
      * @return file holding the path to the created assembly tar file
      * @throws MojoExecutionException
      */
-    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig) throws MojoExecutionException {
+    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig)
+            throws MojoExecutionException {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
@@ -87,7 +88,7 @@ public class DockerAssemblyManager {
                 builder.write(buildDirs.getOutputDirectory());
             }
 
-            return createBuildTarBall(buildDirs, extraDir, assemblyMode);
+            return createBuildTarBall(buildDirs, extraDir, assemblyMode, buildConfig.getCompression());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
@@ -125,7 +126,7 @@ public class DockerAssemblyManager {
     }
     
     private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
-        return assemblyConfig != null && !assemblyConfig.skip &&
+        return assemblyConfig != null &&
                 (assemblyConfig.getInline() != null ||
                         assemblyConfig.getDescriptor() != null ||
                         assemblyConfig.getDescriptorRef() != null);
@@ -164,23 +165,36 @@ public class DockerAssemblyManager {
         return new File(archiveDir,relativePath);
     }
 
-    private File createBuildTarBall(BuildDirs buildDirs, File extraDir, AssemblyMode buildMode) throws MojoExecutionException {
-        File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build.tar");
+    private File createBuildTarBall(BuildDirs buildDirs, File extraDir, AssemblyMode buildMode, BuildTarArchiveCompression compression) throws MojoExecutionException {
+        File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, buildMode);
             if (extraDir != null) {
                 // User Dockerfile from extra dir
-                archiver.addFileSet(DefaultFileSet.fileSet(extraDir));
+                DefaultFileSet fileSet = DefaultFileSet.fileSet(extraDir);
+                addDockerIgnoreIfPresent(fileSet);
+                archiver.addFileSet(fileSet);
             } else {
                 // Add own Dockerfile
                 archiver.addFile(new File(buildDirs.getOutputDirectory(),"Dockerfile"), "Dockerfile");
             }
             archiver.createArchive();
+            archiver.setCompression(compression.getTarCompressionMethod());
             return archive;
         } catch (NoSuchArchiverException e) {
             throw new MojoExecutionException("No archiver for type 'tar' found", e);
         } catch (IOException e) {
             throw new MojoExecutionException("Cannot create archive " + archive, e);
+        }
+    }
+
+    private void addDockerIgnoreIfPresent(DefaultFileSet fileSet) throws IOException {
+        File directory = fileSet.getDirectory();
+        File dockerIgnore = new File(directory, DOCKER_IGNORE);
+        if (dockerIgnore.exists()) {
+            ArrayList<String> excludes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
+            excludes.add(DOCKER_IGNORE);
+            fileSet.setExcludes(excludes.toArray(new String[excludes.size()]));
         }
     }
 
@@ -276,10 +290,9 @@ public class DockerAssemblyManager {
         return builder;
     }
 
-    private void createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs) throws MojoExecutionException {
-        DockerAssemblyConfigurationSource source =
-                        new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
-
+    private void createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs)
+            throws MojoExecutionException {
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
         Assembly assembly = getAssemblyConfig(assemblyConfig, source);
 
         AssemblyMode buildMode = assemblyConfig.getMode();
@@ -297,7 +310,8 @@ public class DockerAssemblyManager {
     }
 
 
-    private Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfig, DockerAssemblyConfigurationSource source) throws MojoExecutionException {
+    private Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfig, DockerAssemblyConfigurationSource source)
+            throws MojoExecutionException {
         Assembly assembly = assemblyConfig.getInline();
         if (assembly == null) {
             assembly = extractAssembly(source);

@@ -95,10 +95,11 @@ public class DockerFileBuilder {
         addLabels(b);
         addPorts(b);
 
-        addVolumes(b);
         addEntries(b);
         addWorkdir(b);
         addRun(b);
+        addVolumes(b);
+
         addCmd(b);
         addEntryPoint(b);
 
@@ -134,17 +135,13 @@ public class DockerFileBuilder {
     }
 
     private void addEntries(StringBuilder b) {
-        List<String> destinations = new ArrayList<>();
-        for (AddEntry entry : addEntries) {
-            String dest =  (basedir.equals("/") ? "" : basedir) +  "/" + entry.destination;
-            destinations.add(dest);
-            COPY.addTo(b,entry.source,dest);
-        }
         if (user != null) {
+            String tmpDir = createTempDir();
+            copyAddEntries(b,tmpDir);
+
             String[] userParts = StringUtils.split(user, ":");
             String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
-            String chmod = "[\"chown\", \"-R\", \"" + userArg + "\",\"" +
-                         StringUtils.join(destinations.iterator(), "\",\"") + "\"]\n";
+            String chmod = "chown -R " + userArg + " " + tmpDir + " && cp -rp " + tmpDir + "/* / && rm -rf " + tmpDir;
             if (userParts.length > 2) {
                 USER.addTo(b,"root");
                 RUN.addTo(b, chmod);
@@ -152,6 +149,19 @@ public class DockerFileBuilder {
             } else {
                 RUN.addTo(b, chmod);
             }
+        } else {
+            copyAddEntries(b, "");
+        }
+    }
+
+    private String createTempDir() {
+         return "/tmp/" + UUID.randomUUID().toString();
+    }
+
+    private void copyAddEntries(StringBuilder b, String topLevelDir) {
+        for (AddEntry entry : addEntries) {
+            String dest = topLevelDir + (basedir.equals("/") ? "" : basedir) + "/" + entry.destination;
+            COPY.addTo(b, entry.source, dest);
         }
     }
 
@@ -246,6 +256,10 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
+            if (!dir.startsWith("/")) {
+                throw new IllegalArgumentException("'basedir' must be an absolute path starting with / (and not " +
+                                                   "'" + basedir + "')");
+            }
             basedir = dir;
         }
         return this;
