@@ -15,7 +15,7 @@
       <requirements>
         <requirement>
           <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
-          <field-name>handlers</field-name>
+          <field-name>resolvers</field-name>
         </requirement>
       </requirements>
     </component>
@@ -36,12 +36,19 @@
         </requirement>
         <requirement>
           <role>org.jolokia.docker.maven.assembly.DockerAssemblyManager</role>
-        </requirement>        
+        </requirement>
       </requirements>
     </component>
 
     <component>
       <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
+      <role-hint>compose</role-hint>
+      <implementation>org.jolokia.docker.maven.config.handler.compose.DockerComposeConfigHandler</implementation>
+    </component>
+
+    <component>
+      <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
+      <role-hint>properties</role-hint>
       <implementation>org.jolokia.docker.maven.config.handler.property.PropertyConfigHandler</implementation>
     </component>
 

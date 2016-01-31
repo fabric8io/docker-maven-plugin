@@ -16,8 +16,8 @@ package org.jolokia.docker.maven.config.handler;/*
  */
 
 import java.util.List;
-import java.util.Properties;
 
+import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 
 /**
@@ -42,8 +42,9 @@ public interface ExternalConfigHandler {
      * {@link ImageConfiguration} objects describing the image to manage
      *
      * @param unresolvedConfig the original, unresolved config
-     * @param properties extra properties used for resolving
+     * @param project maven project
      * @return list of image configuration. Must not be null but can be empty.
+     * @throws ExternalConfigHandlerException if there is a problem resolving the image configuration
      */
-    List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties);
+    List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) throws ExternalConfigHandlerException;
 }
