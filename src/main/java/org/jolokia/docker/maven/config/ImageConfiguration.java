@@ -67,7 +67,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     }
 
     public BuildImageConfiguration getBuildConfiguration() {
-        return build;
+        // return an empty image
+        return (build == null) ? new BuildImageConfiguration() : build;
     }
 
     public WatchImageConfiguration getWatchConfiguration() {

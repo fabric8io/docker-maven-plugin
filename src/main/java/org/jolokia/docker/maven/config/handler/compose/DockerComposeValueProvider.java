@@ -39,7 +39,7 @@ class DockerComposeValueProvider {
     public List<String> getCapAdd() {
         return getList("cap_add");
     }
-    
+
     public List<String> getCapDrop() {
         return getList("cap_drop");
     }
@@ -47,9 +47,17 @@ class DockerComposeValueProvider {
     public String getCGroupParent() {
         return getString("cgroup_parent");
     }
-    
+
+    public String getCleanup() {
+        return toString(extended.getBuildConfiguration().cleanup());
+    }
+
     public String getCommand() {
         return getString("command");
+    }
+
+    public String getCompression() {
+        return extended.getBuildConfiguration().getCompression().name();
     }
 
     public String getCpuSet() {
@@ -119,39 +127,66 @@ class DockerComposeValueProvider {
     }
 
     public String getPortPropertyFile() {
-        return (extended != null) ? extended.getRunConfiguration().getPortPropertyFile() : null;
+        return extended.getRunConfiguration().getPortPropertyFile();
     }
 
     public Boolean getPrivileged() {
         return getBoolean("privileged");
     }
 
-    public RestartPolicy getRestartPolicy()
-    {
+    public RestartPolicy getRestartPolicy() {
         String restart = getString("restart");
         if (restart == null) {
             return null;
         }
-        
+
         Builder builder = new RestartPolicy.Builder();
         if (restart.contains(":")) {
             String[] parts = restart.split("\\:", 2);
             builder.name(parts[0]).retry(Integer.valueOf(parts[1]));
-        } else {
+        }
+        else {
             builder.name(restart);
         }
-        
+
         return builder.build();
     }
 
     public List<String> getRunPorts() {
-        return getList("ports");
+        List<String> fromYml = getList("ports");
+        int size = fromYml.size();
+
+        List<String> ports = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            String port = fromYml.get(i);
+            if (port.contains(":")) {
+                ports.add(port);
+            }
+            else {
+                /*
+                 * docker-compose allows just the port number which triggers a random port and the plugin does not, so construct a property
+                 * name to mimic the required behavior. names will always based on position, and not the number of times we create the
+                 * string.
+                 */
+                ports.add(String.format("%s_port_%s:%s", getAlias(), i + 1, port));
+            }
+        }
+
+        return ports;
+    }
+
+    public String getSkipBuild() {
+        return toString(extended.getBuildConfiguration().skip());
     }
 
     public String getSkipRun() {
-        return (extended == null) ? null : String.valueOf(extended.getRunConfiguration().skip());
+        return toString(extended.getRunConfiguration().skip());
     }
 
+    private String toString(boolean bool) {
+        return String.valueOf(bool);
+    }
+    
     public String getString(String key) {
         return String.class.cast(configuration.get(key));
     }
@@ -173,15 +208,19 @@ class DockerComposeValueProvider {
     }
 
     public WaitConfiguration getWaitConfiguration() {
-        return (extended == null) ? null : extended.getRunConfiguration().getWaitConfiguration();
+        return extended.getRunConfiguration().getWaitConfiguration();
     }
 
     public WatchImageConfiguration getWatchImageConfiguration() {
-        return (extended == null) ? null : extended.getWatchConfiguration();
+        return extended.getWatchConfiguration();
     }
 
     public String getWorkingDir() {
         return getString("working_dir");
+    }
+
+    public boolean requiresBuild() {
+        return (getBuildDir() != null) ? true : false;
     }
 
     private Map<String, String> convertToMap(List<String> list) {

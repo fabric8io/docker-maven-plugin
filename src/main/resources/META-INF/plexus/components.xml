@@ -15,7 +15,7 @@
       <requirements>
         <requirement>
           <role>org.jolokia.docker.maven.config.handler.ExternalConfigHandler</role>
-          <field-name>registry</field-name>
+          <field-name>resolvers</field-name>
         </requirement>
       </requirements>
     </component>
