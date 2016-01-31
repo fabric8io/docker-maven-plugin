@@ -41,7 +41,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 Map<String, Object> values = (Map<String, Object>) entry.getValue();
 
                 DockerComposeValueProvider provider =
-                        new DockerComposeValueProvider(service, values, serviceMap.getOrDefault(service, EMPTY));
+                        new DockerComposeValueProvider(service, values, getServiceConfig(service, serviceMap));
                 resolved.add(buildImageConfiguration(provider, resolvedComposeParent));
             }
         }
@@ -147,6 +147,14 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private WatchImageConfiguration createWatchImageConfiguration(DockerComposeValueProvider provider) {
         return provider.getWatchImageConfiguration();
+    }
+
+    private ImageConfiguration getServiceConfig(String service, Map<String, ImageConfiguration> serviceMap) {
+        if (!serviceMap.containsKey(service)) {
+            return EMPTY;
+        }
+        
+        return serviceMap.get(service);
     }
 
     private String resolveFilePath(DockerComposeConfiguration composeConfig, MavenProject project) {
