@@ -42,7 +42,7 @@ public class StartMojo extends AbstractDockerMojo {
     /** @parameter property = "docker.pull.registry" */
     private String pullRegistry;
 
-    // whether to block during to start. Set it via Sysem property docker.follow
+    // whether to block during to start. Set it via System property docker.follow
     private boolean follow;
 
     /**
@@ -63,6 +63,8 @@ public class StartMojo extends AbstractDockerMojo {
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
 
         boolean success = false;
+        PomLabel pomLabel = getPomLabel(); 
+                
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
@@ -109,7 +111,7 @@ public class StartMojo extends AbstractDockerMojo {
         } finally {
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes);
+                runService.stopStartedContainers(keepContainer, removeVolumes, pomLabel);
             }
         }
     }

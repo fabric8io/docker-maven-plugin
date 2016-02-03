@@ -95,7 +95,7 @@ public class RunService {
         ContainerCreateConfig config = createContainerConfig(imageName, runConfig, mappedPorts, pomLabel, mavenProps);
 
         String id = docker.createContainer(config, containerName);
-        startContainer(imageConfig, id);
+        startContainer(imageConfig, id, pomLabel);
 
         if (mappedPorts.containsDynamicPorts() || mappedPorts.containsDynamicHostIps()) {
             updateMappedPorts(id, mappedPorts);
@@ -117,7 +117,7 @@ public class RunService {
                               boolean removeVolumes)
             throws DockerAccessException {
         ContainerTracker.ContainerShutdownDescriptor descriptor =
-                new ContainerTracker.ContainerShutdownDescriptor(imageConfig,containerId);
+                new ContainerTracker.ContainerShutdownDescriptor(imageConfig,containerId, null);
         shutdown(docker, descriptor, log, keepContainer, removeVolumes);
     }
 
@@ -150,11 +150,18 @@ public class RunService {
      * @throws DockerAccessException if during stopping of a container sth fails
      */
     public void stopStartedContainers(boolean keepContainer,
-                                      boolean removeVolumes)
+                                      boolean removeVolumes,
+                                      PomLabel pomLabel)
             throws DockerAccessException {
         synchronized (tracker) {
             for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.getAllContainerShutdownDescriptors()) {
-                shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+                if (descriptor.matches(pomLabel)) {
+                    log.debug("stopping [" + pomLabel.getValue() + "], matches");
+                    shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+                } else {
+                    log.debug("skipping [" + pomLabel.getValue() + "], doesn't match");
+                }
+                
             }
             tracker.resetContainers();
         }
@@ -202,7 +209,7 @@ public class RunService {
             @Override
             public void run() {
                 try {
-                    stopStartedContainers(keepContainer, removeVolumes);
+                    stopStartedContainers(keepContainer, removeVolumes, null);
                 } catch (DockerAccessException e) {
                     log.error("Error while stopping containers: " + e);
                 }
@@ -338,10 +345,10 @@ public class RunService {
         return id;
     }
 
-    private void startContainer(ImageConfiguration imageConfig, String id) throws DockerAccessException {
+    private void startContainer(ImageConfiguration imageConfig, String id, PomLabel pomLabel) throws DockerAccessException {
         log.info(imageConfig.getDescription() + ": Start container " + id);
         docker.startContainer(id);
-        tracker.registerContainer(id, imageConfig);
+        tracker.registerContainer(id, imageConfig, pomLabel);
     }
 
     private void updateMappedPorts(String containerId, PortMapping mappedPorts) throws DockerAccessException {
@@ -383,6 +390,7 @@ public class RunService {
             // Remove the container
             access.removeContainer(containerId, removeVolumes);
         }
+        
         log.info(descriptor.getDescription() + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
                  containerId.substring(0, 12));
     }
