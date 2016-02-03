@@ -2,6 +2,7 @@
 
 * **0.13.9-SNAPSHOT**
   - Check also registry stored with an `https` prefix (#367)
+  - Don't stop containers not started by the project during parallel reactor builds (#372)
 
 * **0.13.8**
   - Add option `nocache` to build configuration ([#348](https://github.com/rhuss/docker-maven-plugin/issues/348))
