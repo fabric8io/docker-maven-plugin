@@ -346,7 +346,11 @@ public class RunService {
 
     private void updateMappedPorts(String containerId, PortMapping mappedPorts) throws DockerAccessException {
         Container container = queryService.getContainer(containerId);
-        mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());
+        if (container.isRunning()) {
+            mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());
+        } else {
+            log.warn("Container " + containerId + " is not running anymore, can not extract dynamic ports");
+        }
     }
 
     private void shutdown(DockerAccess access,
