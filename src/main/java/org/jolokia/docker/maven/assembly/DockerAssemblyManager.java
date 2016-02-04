@@ -71,9 +71,10 @@ public class DockerAssemblyManager {
 
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         AssemblyMode assemblyMode = (assemblyConfig == null) ? AssemblyMode.dir : assemblyConfig.getMode();
+        Assembly assembly = null;
 
         if (hasAssemblyConfiguration(assemblyConfig)) {
-            createAssemblyArchive(assemblyConfig, params, buildDirs);
+            assembly = createAssemblyArchive(assemblyConfig, params, buildDirs);
         }
         
         try {
@@ -84,7 +85,7 @@ public class DockerAssemblyManager {
                 extraDir = validateDockerDir(params, dockerFileDir);
             } else {
                 // Create custom docker file in output dir
-                DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
+                DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig, assembly);
                 builder.write(buildDirs.getOutputDirectory());
             }
 
@@ -247,7 +248,7 @@ public class DockerAssemblyManager {
     }
 
     // visible for testing
-    DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig) {
+    DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig, Assembly assembly) {
         DockerFileBuilder builder =
                 new DockerFileBuilder()
                         .env(buildConfig.getEnv())
@@ -262,8 +263,13 @@ public class DockerAssemblyManager {
             builder.workdir(buildConfig.getWorkdir());
         }
         if (assemblyConfig != null) {
+            String baseDir = assemblyConfig.getBasedir();
+            if (assembly != null && assembly.getBaseDirectory() != null) {
+                baseDir = assembly.getBaseDirectory();
+            }
+
             builder.add(ASSEMBLY_NAME, "")
-                   .basedir(assemblyConfig.getBasedir())
+                   .basedir(baseDir)
                    .user(assemblyConfig.getUser())
                    .exportBasedir(assemblyConfig.exportBasedir());
         } else {
@@ -290,7 +296,7 @@ public class DockerAssemblyManager {
         return builder;
     }
 
-    private void createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs)
+    private Assembly createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs)
             throws MojoExecutionException {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params, buildDirs, assemblyConfig);
         Assembly assembly = getAssemblyConfig(assemblyConfig, source);
@@ -299,6 +305,7 @@ public class DockerAssemblyManager {
         try {
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, ASSEMBLY_NAME, buildMode.getExtension(), source, false);
+            return assembly;
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
             throw new MojoExecutionException( "Failed to create assembly for docker image: " + e.getMessage() +
                                               " with mode " + buildMode, e );
