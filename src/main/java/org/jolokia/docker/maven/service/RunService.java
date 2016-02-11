@@ -15,13 +15,30 @@ package org.jolokia.docker.maven.service;/*
  * limitations under the License.
  */
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.config.*;
+import org.jolokia.docker.maven.access.ContainerCreateConfig;
+import org.jolokia.docker.maven.access.ContainerHostConfig;
+import org.jolokia.docker.maven.access.DockerAccess;
+import org.jolokia.docker.maven.access.DockerAccessException;
+import org.jolokia.docker.maven.access.PortMapping;
+import org.jolokia.docker.maven.config.Arguments;
+import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.RestartPolicy;
+import org.jolokia.docker.maven.config.RunImageConfiguration;
+import org.jolokia.docker.maven.config.VolumeConfiguration;
 import org.jolokia.docker.maven.log.LogOutputSpecFactory;
 import org.jolokia.docker.maven.model.Container;
-import org.jolokia.docker.maven.util.*;
+import org.jolokia.docker.maven.util.EnvUtil;
+import org.jolokia.docker.maven.util.Logger;
+import org.jolokia.docker.maven.util.PomLabel;
+import org.jolokia.docker.maven.util.StartOrderResolver;
+import org.jolokia.docker.maven.util.WaitUtil;
 
 
 /**
@@ -276,7 +293,8 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
-                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
+                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
+                .logConfig(runConfig.getLogConfig());
         VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             config.binds(volConfig.getBind())
