@@ -299,7 +299,7 @@ public class BuildImageConfiguration {
         }
     }
 
-    public void validate(Logger log) throws IllegalArgumentException {
+    public String validate(Logger log) throws IllegalArgumentException {
         if (entryPoint != null) {
             entryPoint.validate();
         }
@@ -321,5 +321,6 @@ public class BuildImageConfiguration {
             log.warn("   <cmd>" + command + "</cmd>");
         }
 
+        return null;
     }
 }

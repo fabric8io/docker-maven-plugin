@@ -86,6 +86,19 @@ public class EnvUtilTest {
 
     }
 
+    @Test
+    public void minimalVersion() {
+        String[] data = {
+            null, null, null,
+            "1.10", null, "1.10",
+            null, "1.10", "1.10",
+            "1.22", "1.10", "1.22",
+            "1.10", "1.25", "1.25"
+        };
+        for (int i = 0; i < data.length; i+=3) {
+            assertEquals(data[i+2],EnvUtil.extractLargerVersion(data[i],data[i+1]));
+        }
+    }
     private Properties getTestProperties(String ... vals) {
         Properties ret = new Properties();
         for (int i = 0; i < vals.length; i+=2) {

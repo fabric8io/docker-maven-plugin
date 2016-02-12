@@ -40,7 +40,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
 
-    public static final String API_VERSION = "v1.18";
+    // Minimal API version, independent of any feature used
+    public static final String API_VERSION = "1.18";
 
     // Current maven project
     /** @parameter default-value="${project}" */
@@ -128,11 +129,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /** @parameter */
     Map authConfig;
 
-    // Relevant configuration to use. This includes also references to external
+    // Relevant images configuration to use. This includes also references to external
     // images
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private List<ImageConfiguration> images;
 
     // Handler dealing with authentication credentials
@@ -154,12 +153,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             log = new AnsiLogger(getLog(), useColor, verbose);
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
-            validateConfiguration(log);
-
+            String minimalApiVersion = validateConfiguration(log);
             DockerAccess access = null;
-
             try {
-                access = createDockerAccess();
+                access = createDockerAccess(minimalApiVersion);
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(access, log, logSpecFactory);
                 executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
@@ -172,15 +169,24 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
-    private DockerAccess createDockerAccess() throws MojoExecutionException, MojoFailureException {
+    private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
         DockerAccess access = null;
         if (isDockerAccessRequired()) {
             String dockerUrl = EnvUtil.extractUrl(dockerHost);
-            access = createDockerAccess(dockerUrl);
-            setDockerHostAddressProperty(dockerUrl);
+            try {
+                String version =  minimalVersion != null ? minimalVersion : API_VERSION;
+                access = new DockerAccessWithHcClient("v" + version, dockerUrl,
+                                                      EnvUtil.getCertPath(certPath), maxConnections, log);
+                access.start();
+                setDockerHostAddressProperty(dockerUrl);
+            }
+            catch (IOException e) {
+                throw new MojoExecutionException("Cannot create docker access object ", e);
+            }
         }
         return access;
     }
+
 
     /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
@@ -192,12 +198,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return true;
     }
 
-    private void validateConfiguration(Logger log) {
+    // Return minimal required version
+    private String validateConfiguration(Logger log) {
+        String apiVersion = this.apiVersion;
         if (images != null) {
             for (ImageConfiguration imageConfiguration : images) {
-                imageConfiguration.validate(log);
+                apiVersion = EnvUtil.extractLargerVersion(apiVersion,imageConfiguration.validate(log));
             }
         }
+        return apiVersion;
     }
 
     /**
@@ -254,20 +263,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
         Set<String> imagesAllowed = new HashSet<>(Arrays.asList(imageList.split("\\s*,\\s*")));
         return imagesAllowed.contains(imageConfig.getName()) || imagesAllowed.contains(imageConfig.getAlias());
-    }
-
-    private DockerAccess createDockerAccess(String baseUrl) throws MojoExecutionException {
-        try {
-            String version = (apiVersion == null) ? API_VERSION : apiVersion;
-            DockerAccess client = new DockerAccessWithHcClient(version, baseUrl,
-                    EnvUtil.getCertPath(certPath), maxConnections, log);
-            client.start();
-
-            return client;
-        }
-        catch (IOException e) {
-            throw new MojoExecutionException("Cannot create docker access object ", e);
-        }
     }
 
     // Registry for managed containers

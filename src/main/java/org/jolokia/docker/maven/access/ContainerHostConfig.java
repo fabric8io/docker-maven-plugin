@@ -44,6 +44,10 @@ public class ContainerHostConfig {
         return addAsArray("Dns", dns);
     }
 
+    public ContainerHostConfig networkConfig(String net) {
+        return add("NetworkMode",net);
+    }
+
     public ContainerHostConfig dnsSearch(List<String> dnsSearch) {
         return addAsArray("DnsSearch", dnsSearch);
     }
@@ -146,4 +150,5 @@ public class ContainerHostConfig {
         }
         return this;
     }
+
 }

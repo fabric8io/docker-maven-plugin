@@ -84,6 +84,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         if (runConfig != null) {
             addVolumes(runConfig, ret);
             addLinks(runConfig, ret);
+            addContainerNetwork(runConfig, ret);
         }
         return ret;
     }
@@ -99,10 +100,19 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     }
 
     private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
-        if (runConfig.getLinks() != null) {
+        // Custom networks can have circular links, no need to be considered for the starting order.
+        if (runConfig.getLinks() != null && !runConfig.getNetworkingMode().isCustomNetwork()) {
             for (String[] link : EnvUtil.splitOnLastColon(runConfig.getLinks())) {
                 ret.add(link[0]);
             }
+        }
+    }
+
+    private void addContainerNetwork(RunImageConfiguration runConfig, List<String> ret) {
+        NetworkingMode mode = runConfig.getNetworkingMode();
+        String alias = mode.getContainerAlias();
+        if (alias != null) {
+            ret.add(alias);
         }
     }
 
@@ -126,13 +136,15 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return String.format("ImageConfiguration {name='%s', alias='%s'}", name, alias);
     }
 
-    public void validate(Logger log) {
+    public String validate(Logger log) {
+        String minimalApiVersion = null;
         if (null != build) {
-            build.validate(log);
+            minimalApiVersion = build.validate(log);
         }
         if (null != run) {
-            run.validate();
+            minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion,run.validate());
         }
+        return minimalApiVersion;
     }
 
     // =========================================================================

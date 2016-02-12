@@ -85,9 +85,11 @@ public class StartOrderResolver {
         StringBuffer ret = new StringBuffer();
         ret.append("Unresolved images:\n");
         for (Resolvable config : secondPass) {
-            ret.append(config.getName())
+            ret.append("* ")
+               .append(config.getAlias())
                .append(" depends on ")
-               .append(StringUtils.join(config.getDependencies().toArray(), ","));
+               .append(StringUtils.join(config.getDependencies().toArray(), ","))
+               .append("\n");
         }
         return ret.toString();
     }

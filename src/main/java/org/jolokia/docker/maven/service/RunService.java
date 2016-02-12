@@ -262,7 +262,8 @@ public class RunService {
             throws DockerAccessException {
         RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
-        List<String> links = findLinksContainers(runConfig.getLinks());
+
+        List<String> links = findContainerIdsForLinks(runConfig.getLinks(),runConfig.getNetworkingMode().isCustomNetwork());
 
         ContainerHostConfig config = new ContainerHostConfig()
                 .extraHosts(runConfig.getExtraHosts())
@@ -274,22 +275,43 @@ public class RunService {
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
+
+        addVolumeConfig(config, runConfig);
+        addNetworkingConfig(config, runConfig);
+
+        return config;
+    }
+
+    private void addNetworkingConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
+        NetworkingMode netMode = runConfig.getNetworkingMode();
+        if (netMode.isStandardMode()) {
+            String alias = netMode.getContainerAlias();
+            String containerId = alias != null ? findContainerId(alias, false) : null;
+            config.networkConfig(netMode.getStandardMode(containerId));
+        } else if (netMode.isCustomNetwork()) {
+            config.networkConfig(netMode.getCustomNetwork());
+        }
+    }
+
+    private void addVolumeConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
         VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             config.binds(volConfig.getBind())
                   .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
         }
-        return config;
     }
 
-    List<String> findLinksContainers(List<String> links) throws DockerAccessException {
+    List<String> findContainerIdsForLinks(List<String> links, boolean leaveUnresolvedIfNotFound) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitOnLastColon(links)) {
             String id = findContainerId(link[0], false);
-            if (id == null) {
+            if (id != null) {
+                ret.add(queryService.getContainerName(id) + ":" + link[1]);
+            } else if (leaveUnresolvedIfNotFound) {
+                ret.add(link[0] + ":" + link[1]);
+            } else {
                 throw new DockerAccessException("No container found for image/alias '%s', unable to link", link[0]);
             }
-            ret.add(queryService.getContainerName(id) + ":" + link[1]);
         }
         return ret.size() != 0 ? ret : null;
     }

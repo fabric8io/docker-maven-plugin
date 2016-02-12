@@ -47,6 +47,28 @@ public class EnvUtil {
     }
 
     /**
+     * Compare to version strings and return the larger version strings. This is used in calculating
+     * the minimal required API version for this plugin. Version strings must be comparable as floating numbers.
+     * (and parse via {@link Float#parseFloat(String)}.
+     *
+     * If either version is <code>null</code>, the other version is returned (which can be null as well)
+     *
+     * @param versionA first version number
+     * @param versionB second version number
+     * @return the larger version number
+     */
+    public static String extractLargerVersion(String versionA, String versionB) {
+        if (versionB == null || versionA == null) {
+            return versionA == null ? versionB : versionA;
+        } else {
+            return
+                Float.parseFloat(versionA) > Float.parseFloat(versionB) ?
+                    versionA : versionB;
+        }
+    }
+
+
+    /**
      * Splits every element in the given list on the last colon in the name and returns a list with
      * two elements: The left part before the colon and the right part after the colon. If the string doesnt contain
      * a colon, the value is used for both elements in the returned arrays.

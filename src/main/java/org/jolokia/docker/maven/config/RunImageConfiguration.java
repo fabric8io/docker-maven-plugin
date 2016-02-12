@@ -14,166 +14,120 @@ public class RunImageConfiguration {
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
     
     // Environment variables to set when starting the container. key: variable name, value: env value
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Map<String, String> env;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Map<String,String> labels;
 
-    /**
-     * Path to a property file holding environment variables
-     *
-     * @parameter
-     */
+    // Path to a property file holding environment variables
+    /** @parameter */
     private String envPropertyFile;
 
     // Command to execute in container
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Arguments cmd;
 
     // container domain name
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String domainname;
 
     // container entry point
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Arguments entrypoint;
 
     // container hostname
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String hostname;
 
     // container user
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String user;
 
     // working directory
-    /**
-     * @paramter
-     */
+    /** @parameter */
     private String workingDir;
 
     // memory in bytes
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Long memory;
 
     // total memory (swap + ram) in bytes, -1 to disable
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Long memorySwap;
 
     // Path to a file where the dynamically mapped properties are written to
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String portPropertyFile;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
+    private String net;
+
+    /** @parameter */
     private List<String> dns;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private List<String> dnsSearch;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private List<String> capAdd;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private List<String> capDrop;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Boolean privileged;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private List<String> extraHosts;
 
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private List<String> ports;
 
     /** @parameter */
     private NamingStrategy namingStrategy;
 
-    public void validate() {
+    // Mount volumes from the given image's started containers
+    /** @parameter */
+    private VolumeConfiguration volumes;
+
+    // Links to other container started
+    /** @parameter */
+    private List<String> links;
+
+    // Configuration for how to wait during startup of the container
+    /** @parameter */
+    private WaitConfiguration wait;
+
+    /** @parameter */
+    private LogConfiguration log;
+    
+    /** @parameter */
+    private RestartPolicy restartPolicy;
+
+    /** @parameter */
+    private boolean skip = false;
+    
+    public RunImageConfiguration() { }
+
+    public String validate() {
         if (entrypoint != null) {
             entrypoint.validate();
         }
         if (cmd != null) {
             cmd.validate();
         }
+
+        // Custom networks are available since API 1.21 (Docker 1.9)
+        NetworkingMode mode = getNetworkingMode();
+        if (mode.isCustomNetwork()) {
+            return "1.21";
+        }
+
+        return null;
     }
-
-    // Naming scheme for how to name container
-    public enum NamingStrategy {
-        none,  // No extra naming
-        alias; // Use the alias as defined in the configuration
-    }
-
-    // Mount volumes from the given image's started containers
-    /**
-     * @parameter
-     */
-    private VolumeConfiguration volumes;
-
-    // Links to other container started
-    /**
-     * @parameter
-     */
-    private List<String> links;
-
-    // Configuration for how to wait during startup of the container
-    /**
-     * @parameter
-     */
-    private WaitConfiguration wait;
-
-    /**
-     * @parameter
-     */
-    private LogConfiguration log;
-    
-    /**
-     * @parameter
-     */
-    private RestartPolicy restartPolicy;
-
-    /**
-     * @parameter
-     */
-    private boolean skip = false;
-    
-    public RunImageConfiguration() { }
 
     public Map<String, String> getEnv() {
         return env;
@@ -247,6 +201,10 @@ public class RunImageConfiguration {
         return dns;
     }
 
+    public NetworkingMode getNetworkingMode() {
+        return new NetworkingMode(net);
+    }
+
     public List<String> getDnsSearch() {
         return dnsSearch;
     }
@@ -261,6 +219,12 @@ public class RunImageConfiguration {
 
     public List<String> getLinks() {
         return links;
+    }
+
+    // Naming scheme for how to name container
+    public enum NamingStrategy {
+        none,  // No extra naming
+        alias  // Use the alias as defined in the configuration
     }
 
     public NamingStrategy getNamingStrategy() {
@@ -356,6 +320,11 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder net(String net) {
+            config.net = net;
+            return this;
+        }
+
         public Builder dns(List<String> dns) {
             config.dns = dns;
             return this;
@@ -395,6 +364,7 @@ public class RunImageConfiguration {
             config.log = log;
             return this;
         }
+
 
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?

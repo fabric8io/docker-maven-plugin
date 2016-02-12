@@ -14,17 +14,17 @@ CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will a
 
 The `<run>` configuration knows the following sub elements:
 
-* **capAdd** (*v1.14*) a list of `add` elements to specify kernel parameters to add to
+* **capAdd** a list of `add` elements to specify kernel parameters to add to
   the container.
-* **capDrop** (*v1.14*) a list of `drop` elements to specify kernel parameters to remove
+* **capDrop**  a list of `drop` elements to specify kernel parameters to remove
   from the container.
 * **cmd** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
-  used. See [Start-up Arguments](#start-up-arguments) for details.
-* **domainname** (*v1.12*) domain name for the container
-* **dns** (*v1.11*) list of `host` elements specifying dns servers for the container to use
-* **dnsSearch** (*v1.15*) list of `host` elements specying dns search domains 
-* **entrypoint** (*v1.15*) set the entry point for the container. See [Start-up Arguments](#start-up-arguments) for details.
+  used. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
+* **domainname**  domain name for the container
+* **dns** list of `host` elements specifying dns servers for the container to use
+* **dnsSearch** list of `host` elements specying dns search domains 
+* **entrypoint** set the entry point for the container. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
   typical maven property format as described [below](#setting-environment-variables-and-labels).
@@ -32,39 +32,45 @@ The `<run>` configuration knows the following sub elements:
   typical maven property format as described [below](#setting-environment-variables-and-labels).
 * **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
   specified in this property file overrides the environment variables specified in the configuration.
-* **extraHosts** (*v1.15*) list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
+* **extraHosts** list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
   Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved 
   at container startup.
-* **hostname** (*v1.11*) desired hostname for the container
+* **hostname** desired hostname for the container
 * **links** declares how containers are linked together see
   description on [container linking](#container-linking). 
 * **log** specifies the log configuration for whether and how log
   messages from the running containers should be printed. See
   [below](#log-configuration) for a detailed description of this configuration
   section. 
-* **memory** (*v1.11*) memory limit in bytes
-* **memorySwap** (*v1.11*) total memory usage (memory + swap); use -1 to disable swap.
+* **memory** memory limit in bytes
+* **memorySwap** total memory usage (memory + swap); use -1 to disable swap.
 * **namingStrategy** sets the name of the container
   - `none` : uses randomly assigned names from docker (default)
   - `alias` : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists
     with this name.
+* **net** set the network mode for the container:
+  - `bridge` : Bridged mode with the default Docker bridge (default)
+  - `host` : Share the Docker host network interfaces
+  - `container:<alias or name>` : Connect to the network of the specified container
+  - `<custom network>` : Use the specified custom network which must be created before with `docker network create`. 
+    Available for Docker 1.9 and newer. For more about the networking options please refer to the [Docker documentation](https://docs.docker.com/engine/userguide/networking/work-with-networks/).
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
   its purpose are also described [below](#port-mapping)
 * **ports** declares how container exposed ports should be
   mapped. This is described below in an extra
   [section](#port-mapping).  
-* **privileged** (*v1.11*) give container full access to host (`true|false`)   
-* **restartPolicy** (*v1.15*) specifies the container restart policy, see 
+* **privileged** give container full access to host (`true|false`)   
+* **restartPolicy** specifies the container restart policy, see 
   [below](#container-restart-policy)
-* **user** (*v1.11*) user used inside the container
+* **user** user used inside the container
 * **skip** disable creating and starting of the container. This option is best used together with a configuration option.
-* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding]
- (#volume-binding)" for details.
+* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding](#volume-binding)" 
+  for details.
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
-* **workingDir** (*v1.11*) working dir for commands to run in
+* **workingDir** working dir for commands to run in
 
 Example:
 
@@ -238,6 +244,12 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5
 
 If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name
 obtained via `docker ps` in the configuration.
+
+Please note that the link behaviour also depends on the network mode selected. Links as described
+are referred to by Docker as *legacy links* and might vanish in the future. For custom networks no 
+environments variables are set and links create merely network aliases for the linked container. 
+
+For a more detailed documentation for the new link handling please refer to the [Docker network documentation](https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks) 
 
 ##### Volume binding
 
