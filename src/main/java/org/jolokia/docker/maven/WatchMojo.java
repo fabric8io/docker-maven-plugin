@@ -238,7 +238,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         if (optionalPreStop != null) {
             runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
         }
-        runService.stopContainer(id, false, false);
+        runService.stopPreviouslyStartedContainer(id, false, false);
 
         // Start new one
         watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, getPomLabel(), project.getProperties()));

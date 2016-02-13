@@ -40,13 +40,13 @@ public class PomLabelTest {
     @Test
     public void dontMatch() {
         PomLabel label = new PomLabel(g, a, v);
-        assertFalse(label.matches(new PomLabel(g, a, "2.1.1")));
+        assertFalse(label.equals(new PomLabel(g, a, "2.1.1")));
     }
 
     @Test
     public void match() {
         PomLabel label = new PomLabel(g, a, v);
-        assertTrue(label.matches(new PomLabel(g, a, v)));
+        assertTrue(label.equals(new PomLabel(g, a, v)));
     }
 
     @Test

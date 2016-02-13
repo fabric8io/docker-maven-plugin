@@ -63,6 +63,7 @@ public class StartMojo extends AbstractDockerMojo {
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
 
         boolean success = false;
+        PomLabel pomLabel = getPomLabel();
         try {
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
@@ -77,7 +78,7 @@ public class StartMojo extends AbstractDockerMojo {
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
 
-                String containerId = runService.createAndStartContainer(imageConfig, portMapping, getPomLabel(), projProperties);
+                String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties);
 
                 if (showLogs(imageConfig)) {
                     dispatcher.trackContainerLog(containerId,
@@ -109,7 +110,7 @@ public class StartMojo extends AbstractDockerMojo {
         } finally {
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes);
+                runService.stopStartedContainers(keepContainer, removeVolumes, pomLabel);
             }
         }
     }

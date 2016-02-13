@@ -69,17 +69,20 @@ public class PomLabel {
         return mavenCoordinates;
     }
 
-    /**
-     * Check whether this label matches another.
-     * <p>
-     * To match, the maven coordinates must be equal and if <code>incRunId</code> is <code>true</code>, the <code>runId</code> must also
-     * match.
-     * </p>
-     *
-     * @param other label to match
-     * @return true for a match
-     */
-    public boolean matches(PomLabel other) {
-        return other.mavenCoordinates.equals(mavenCoordinates);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        return mavenCoordinates.equals(((PomLabel) o).mavenCoordinates);
+    }
+
+    @Override
+    public int hashCode() {
+        return mavenCoordinates.hashCode();
     }
 }
