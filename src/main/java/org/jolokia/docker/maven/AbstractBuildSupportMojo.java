@@ -6,6 +6,8 @@ import java.io.IOException;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.jolokia.docker.maven.access.DockerAccessException;
@@ -23,31 +25,27 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     // Parameters required from Maven when building an assembly. They cannot be injected directly
     // into DockerAssemblyCreator.
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
-    /** @parameter */
+
+    @Parameter
     private MavenArchiveConfiguration archive;
 
-    /** @component */
+    @Parameter(defaultValue = "${session}", readonly = true)
     protected MavenSession session;
 
-    /** @component */
+    @Component
     private MavenFileFilter mavenFileFilter;
 
-    /** @component */
+    @Component
     private MavenReaderFilter mavenFilterReader;
 
-    /** @parameter property = "docker.pull.registry" */
+    @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
-    /**
-     * @parameter default-value="src/main/docker" property="docker.source.dir"
-     */
+    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
     private String sourceDirectory;
 
-    /**
-     * @parameter default-value="target/docker" property="docker.target.dir"
-     */
+    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
-
 
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,

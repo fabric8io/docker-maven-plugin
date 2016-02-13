@@ -3,6 +3,8 @@ package org.jolokia.docker.maven;
 import java.io.FileNotFoundException;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -24,19 +26,16 @@ import org.jolokia.docker.maven.service.ServiceHub;
  * @author roland
  * @since 26.03.14
  *
- * @goal logs
  */
+@Mojo(name = "logs")
 public class LogsMojo extends AbstractDockerMojo {
 
-    /**
-     * Whether to log infinitely or to show only the logs happened until now.
-     *
-     * @parameter property = "docker.follow" default-value = "false"
-     */
+    // Whether to log infinitely or to show only the logs happened until now.
+    @Parameter(property = "docker.follow", defaultValue = "false")
     private boolean follow;
 
     // Whether to log all containers or only the newest ones
-    /** @parameter property = "docker.logAll" default-value = "false" */
+    @Parameter(property = "docker.logAll", defaultValue = "false")
     private boolean logAll;
 
     @Override

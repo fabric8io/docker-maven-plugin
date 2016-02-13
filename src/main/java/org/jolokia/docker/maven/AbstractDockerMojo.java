@@ -5,7 +5,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.*;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusConstants;
@@ -44,94 +47,90 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public static final String API_VERSION = "1.18";
 
     // Current maven project
-    /** @parameter default-value="${project}" */
+    @Parameter(defaultValue= "${project}", readonly = true)
     protected MavenProject project;
 
     // Settings holding authentication info
-    /** @component */
+    @Parameter(defaultValue = "${settings}", readonly = true)
     protected Settings settings;
 
+    // Current maven project
+    @Parameter(defaultValue= "${session}", readonly = true)
+    protected MavenSession session;
+
     // Handler for external configurations
-    /** @component */
+    @Component
     protected ImageConfigResolver imageConfigResolver;
 
-    /** @component **/
+    @Component
     protected ServiceHubFactory serviceHubFactory;
 
-    /** @parameter property = "docker.autoPull" default-value = "on" */
+    @Parameter(property = "docker.autoPull", defaultValue = "on")
     protected String autoPull;
 
-    /**
-     * Whether to keep the containers afters stopping (start/watch/stop)
-     *
-     * @parameter property = "docker.keepContainer" default-value = "false"
-     */
+    // Whether to keep the containers afters stopping (start/watch/stop)
+    @Parameter(property = "docker.keepContainer", defaultValue = "false")
     protected boolean keepContainer;
 
-    /**
-     * Whether to remove volumes when removing the container (start/watch/stop)
-     *
-     * @parameter property = "docker.removeVolumes" defaultValue = "false"
-     */
+    // Whether to remove volumes when removing the container (start/watch/stop)
+    @Parameter(property = "docker.removeVolumes", defaultValue = "false")
     protected boolean removeVolumes;
 
-    /** @parameter property = "docker.apiVersion" */
+    @Parameter(property = "docker.apiVersion")
     private String apiVersion;
 
     // URL to docker daemon
-    /** @parameter property = "docker.host" */
+    @Parameter(property = "docker.host")
     private String dockerHost;
 
-    /** @parameter property = "docker.certPath" */
+    @Parameter(property = "docker.certPath")
     private String certPath;
 
-    // If logging is enabled globally
-
     // Whether to use color
-    /** @parameter property = "docker.useColor" default-value = "true" */
+    @Parameter(property = "docker.useColor", defaultValue = "true")
     protected boolean useColor;
 
     // For verbose output
-    /** @parameter property = "docker.verbose" default-value = "false" */
+    @Parameter(property = "docker.verbose", defaultValue = "false")
     protected boolean verbose;
 
     // The date format to use when putting out logs
-    /** @parameter property = "docker.logDate" */
+    @Parameter(property = "docker.logDate")
     private String logDate;
 
     // Log to stdout regardless if log files are configured or not
-    /** @parameter property = "docker.logStdout" default-value = "false" */
+    @Parameter(property = "docker.logStdout", defaultValue = "false")
     private boolean logStdout;
 
     // Whether to skip docker altogether
-    /** @parameter property = "docker.skip" default-value = "false" */
+    @Parameter(property = "docker.skip", defaultValue = "false")
     private boolean skip;
 
     // Whether to restrict operation to a single image. This can be either
     // the image or an alias name. It can also be comma separated list.
     // This parameter is typically set via the command line.
-    /** @parameter property = "docker.image" */
+    @Parameter(property = "docker.image")
     private String image;
 
     // Default registry to use if no registry is specified
-    /** @parameter property = "docker.registry" */
+    @Parameter(property = "docker.registry")
     protected String registry;
 
     // maximum connection to use in parallel for connecting the docker host
-    /** @parameter property = "docker.maxConnections" default-value = "100" */
+    @Parameter(property = "docker.maxConnections", defaultValue = "100")
     private int maxConnections;
 
     // property file to write out with port mappings
-    /** @parameter */
+    @Parameter
     protected String portPropertyFile;
     
     // Authentication information
-    /** @parameter */
+    @Parameter
     Map authConfig;
 
     // Relevant images configuration to use. This includes also references to external
     // images
-    /** @parameter */
+    @Parameter
     private List<ImageConfiguration> images;
 
     // Handler dealing with authentication credentials
@@ -157,7 +156,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             DockerAccess access = null;
             try {
                 access = createDockerAccess(minimalApiVersion);
-                ServiceHub serviceHub = serviceHubFactory.createServiceHub(access, log, logSpecFactory);
+                ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
@@ -320,7 +319,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Try to get the registry from various configuration parameters
      *
      * @param imageConfig image config which might contain the registry
-     * @param specificRegistry
+     * @param specificRegistry specific registry
      * @return the registry found or null if none could be extracted
      */
     protected String getConfiguredRegistry(ImageConfiguration imageConfig, String specificRegistry) {

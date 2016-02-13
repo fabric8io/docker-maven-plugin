@@ -34,7 +34,7 @@ import org.jolokia.docker.maven.util.*;
  * @author roland
  * @since 08.05.14
  */
-@Component(role = DockerAssemblyManager.class)
+@Component(role = DockerAssemblyManager.class, instantiationStrategy = "per-lookup")
 public class DockerAssemblyManager {
 
     public static final String DEFAULT_DATA_BASE_IMAGE = "busybox:latest";
@@ -115,7 +115,7 @@ public class DockerAssemblyManager {
             ta.init(log);
             assembly.setId("tracker");
             assemblyArchiver.createArchive(assembly, ASSEMBLY_NAME, "track", source, false);
-            return ta.getAssemblyFiles();
+            return ta.getAssemblyFiles(mojoParams.getSession());
         }
     }
 
@@ -247,6 +247,7 @@ public class DockerAssemblyManager {
     }
 
     // visible for testing
+    @SuppressWarnings("deprecation")
     DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig) {
         DockerFileBuilder builder =
                 new DockerFileBuilder()

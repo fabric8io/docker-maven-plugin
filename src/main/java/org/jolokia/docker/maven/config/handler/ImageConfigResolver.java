@@ -17,6 +17,8 @@ package org.jolokia.docker.maven.config.handler;/*
 
 import java.util.*;
 
+import org.codehaus.plexus.component.annotations.Component;
+import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
@@ -27,11 +29,14 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  * @author roland
  * @since 18/11/14
  */
+
+@Component(role = ImageConfigResolver.class, instantiationStrategy = "per-lookup")
 public class ImageConfigResolver implements Initializable {
 
     // Map type to handler
     private Map<String,ExternalConfigHandler> registry;
 
+    @Requirement(role = ExternalConfigHandler.class)
     private List<ExternalConfigHandler> handlers;
 
     @Override

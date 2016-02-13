@@ -43,7 +43,6 @@ public class MappingTrackArchiverTest {
     @Before
     public void setup() throws IllegalAccessException {
         archiver = new MappingTrackArchiver();
-        ReflectionUtils.setVariableValueInObject(archiver,"session",session);
         archiver.init(new AnsiLogger(new SystemStreamLog(),false,false));
     }
 
@@ -51,7 +50,7 @@ public class MappingTrackArchiverTest {
     public void noDirectory() throws Exception {
         archiver.setDestFile(new File("."));
         archiver.addDirectory(new File(System.getProperty("user.home")), "tmp");
-        AssemblyFiles files = archiver.getAssemblyFiles();
+        AssemblyFiles files = archiver.getAssemblyFiles(session);
     }
 
     @Test
@@ -64,7 +63,7 @@ public class MappingTrackArchiverTest {
         org.codehaus.plexus.util.FileUtils.copyFile(tempFile, destination);
 
         archiver.addFile(tempFile, "test.txt");
-        AssemblyFiles files = archiver.getAssemblyFiles();
+        AssemblyFiles files = archiver.getAssemblyFiles(session);
         assertNotNull(files);
         List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
         assertEquals(0, entries.size());

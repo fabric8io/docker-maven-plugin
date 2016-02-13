@@ -80,6 +80,7 @@
           <logDate>default</logDate>
           <verbose>true</verbose>
           <autoPull>always</autoPull>
+          <watchPostGoal>org.apache.maven.plugins:maven-help-plugin:help</watchPostGoal>
           <images>
             <!-- Docker Image to use -->
             <image>
@@ -87,7 +88,6 @@
               <alias>server</alias>
               <name>${image}</name>
               <run>
-                <net>container:data</net>
                 <namingStrategy>none</namingStrategy>
                 <volumes>
                   <from>
@@ -100,6 +100,12 @@
                   <JOLOKIA_OFF>1</JOLOKIA_OFF>
                 </env>
                 <envPropertyFile>${project.basedir}/src/main/docker/environment.properties</envPropertyFile>
+                <ports>
+                  <!-- Port mappings: Container internal port (which must be exposed) will be
+                 dynamically mapped and this (random) port will be assigned to the maven variable
+                 ${jolokia.port}. Multiple port mappings can be specified here-->
+                  <port>${jolokia.host}:${jolokia.port}:8080</port>
+                </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <log>Server startup</log>
@@ -144,7 +150,7 @@
               </build>
               <watch>
                 <interval>5000</interval>
-                <mode>copy</mode>
+                <mode>both</mode>
               </watch>
             </image>
           </images>
@@ -351,12 +357,6 @@
                             <outputFileNameMapping>jolokia-it.war</outputFileNameMapping>
                           </dependencySet>
                         </dependencySets>
-                        <files>
-                          <file>
-                            <source>${project.build.directory}/maven-archiver/pom.properties</source>
-                            <outputDirectory>/</outputDirectory>
-                          </file>
-                        </files>
                       </inline>
                     </assembly>
                   </build>

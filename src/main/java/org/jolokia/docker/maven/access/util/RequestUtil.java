@@ -55,6 +55,7 @@ public class RequestUtil {
         return req;
     }
 
+    @SuppressWarnings("deprecation")
     public static String encode(String param) {
         try {
             return URLEncoder.encode(param, "UTF-8");

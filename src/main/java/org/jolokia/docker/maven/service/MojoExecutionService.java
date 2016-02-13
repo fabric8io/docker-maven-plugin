@@ -17,6 +17,9 @@ package org.jolokia.docker.maven.service;
  * limitations under the License.
  */
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.*;
@@ -26,7 +29,6 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A service for executing goals on configured plugins.
@@ -50,7 +52,7 @@ public class MojoExecutionService {
 
     private final BuildPluginManager pluginManager;
 
-    MojoExecutionService( MavenProject project, MavenSession session, BuildPluginManager pluginManager) {
+    MojoExecutionService(MavenProject project, MavenSession session, BuildPluginManager pluginManager) {
         this.project = project;
         this.session = session;
         this.pluginManager = pluginManager;
@@ -78,9 +80,9 @@ public class MojoExecutionService {
             MojoDescriptor mojoDescriptor = pluginDescriptor.getMojo(goal);
             if (mojoDescriptor == null) {
                 throw new MojoExecutionException("Could not find goal '" + goal + "' in plugin "
-                        + plugin.getGroupId() + ":"
-                        + plugin.getArtifactId() + ":"
-                        + plugin.getVersion());
+                                                 + plugin.getGroupId() + ":"
+                                                 + plugin.getArtifactId() + ":"
+                                                 + plugin.getVersion());
             }
             MojoExecution exec = getMojoExecution(executionId, mojoDescriptor);
             pluginManager.executeMojo(session, exec);
@@ -97,14 +99,17 @@ public class MojoExecutionService {
         }
     }
 
-    private PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
-            throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException {
+    PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
+        throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
-        RepositorySystemSession repositorySession = session.getRepositorySession();
 
-        return pluginManager.loadPlugin(plugin, project.getRemotePluginRepositories(),
-                                        repositorySession);
+        Object repositorySession = session.getRepositorySession();
 
+        Method loadPlugin = pluginManager.getClass().getMethod("loadPlugin",
+                                                               plugin.getClass(),
+                                                               project.getRemotePluginRepositories().getClass(),
+                                                               repositorySession.getClass());
+        return (PluginDescriptor) loadPlugin.invoke(pluginManager, plugin, project.getRemotePluginRepositories(), repositorySession);
     }
 
     private String[] splitGoalSpec(String fullGoal) throws MojoFailureException {
@@ -113,7 +118,7 @@ public class MojoExecutionService {
             throw new MojoFailureException("Cannot parse " + fullGoal + " as a maven plugin goal. " +
                                            "It must be fully qualified as in <groupId>:<artifactId>:<goal>");
         }
-        return new String[] { parts[0] + ":" + parts[1], parts[2]};
+        return new String[]{parts[0] + ":" + parts[1], parts[2]};
     }
 
     private Xpp3Dom toXpp3Dom(PlexusConfiguration config) {
@@ -127,5 +132,10 @@ public class MojoExecutionService {
         }
         return result;
     }
+
+    private interface PluginDescriptorLoader {
+        PluginDescriptor load(MavenProject project, Plugin plugin);
+    }
+
 
 }

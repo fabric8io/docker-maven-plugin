@@ -1,6 +1,9 @@
 package org.jolokia.docker.maven;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.jolokia.docker.maven.access.AuthConfig;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
@@ -13,13 +16,12 @@ import org.jolokia.docker.maven.util.ImageName;
  *
  * @author roland
  *
- * @goal push
- * @phase deploy
  */
+@Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
 public class PushMojo extends AbstractDockerMojo {
 
     // Registry to use for push operations if no registry is specified
-    /** @parameter property = "docker.push.registry" */
+    @Parameter(property = "docker.push.registry")
     private String pushRegistry;
 
     /** {@inheritDoc} */

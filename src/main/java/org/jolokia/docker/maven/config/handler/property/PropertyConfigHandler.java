@@ -17,6 +17,7 @@ package org.jolokia.docker.maven.config.handler.property;/*
 
 import java.util.*;
 
+import org.codehaus.plexus.component.annotations.Component;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.jolokia.docker.maven.util.EnvUtil;
@@ -28,6 +29,7 @@ import static org.jolokia.docker.maven.util.EnvUtil.*;
  * @author roland
  * @since 18/11/14
  */
+@Component(role = ExternalConfigHandler.class)
 public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @Override

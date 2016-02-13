@@ -3,6 +3,9 @@ package org.jolokia.docker.maven;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
@@ -17,14 +20,11 @@ import org.jolokia.docker.maven.util.ImageName;
  * @author roland
  * @since 28.07.14
  *
- * @goal build
- * @phase install
  */
+@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
 public class BuildMojo extends AbstractBuildSupportMojo {
 
-    /**
-     * @parameter default-value="false" property="docker.skipTags"
-     */
+    @Parameter(property="docker.skipTags", defaultValue="false")
     private boolean skipTags;
 
     @Override

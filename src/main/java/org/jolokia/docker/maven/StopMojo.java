@@ -5,6 +5,9 @@ import java.util.Map;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.ImageConfiguration;
 import org.jolokia.docker.maven.config.RunImageConfiguration;
@@ -25,16 +28,11 @@ import org.jolokia.docker.maven.util.PomLabel;
  * @author roland
  * @since 26.03.14
  *
- * @goal stop
- * @phase post-integration-test
  */
+@Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractDockerMojo {
 
-    /**
-     * Whether to *not* stop the container. Mostly useful as a command line param.
-     *
-     * @parameter property = "docker.keepRunning" defaultValue = "false"
-     */
+    @Parameter(property = "docker.keepRunning", defaultValue = "false")
     private boolean keepRunning;
 
     @Override

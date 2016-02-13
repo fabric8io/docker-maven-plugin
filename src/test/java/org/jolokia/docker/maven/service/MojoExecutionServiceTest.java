@@ -17,6 +17,7 @@ package org.jolokia.docker.maven.service;/*
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
 
 import mockit.*;
 import mockit.integration.junit4.JMockit;
@@ -30,7 +31,6 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.eclipse.aether.RepositorySystemSession;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -54,7 +54,7 @@ public class MojoExecutionServiceTest {
     BuildPluginManager pluginManager;
 
     @Mocked
-    RepositorySystemSession repository;
+    Object repository;
 
     @Mocked
     PluginDescriptor pluginDescriptor;
@@ -77,17 +77,7 @@ public class MojoExecutionServiceTest {
     private void call(final String plugin, final String goal, final String executionId, final boolean withDescriptor) throws MojoFailureException, MojoExecutionException, InvalidPluginDescriptorException, PluginResolutionException, PluginDescriptorParsingException, PluginNotFoundException, PluginConfigurationException, PluginManagerException, IOException, XmlPullParserException {
         new Expectations() {{
             project.getPlugin(plugin);
-            Plugin plugin = new Plugin();
             result = new Plugin();
-
-            session.getRepositorySession();
-            result = repository;
-
-            project.getRemotePluginRepositories();
-            result = null;
-
-            pluginManager.loadPlugin(plugin,null,repository);
-            result = pluginDescriptor;
 
             pluginDescriptor.getMojo(goal);
             if (withDescriptor) {
@@ -102,10 +92,26 @@ public class MojoExecutionServiceTest {
             }
         }};
 
+        PluginDescriptorLoaderMock loaderMock = new PluginDescriptorLoaderMock(pluginDescriptor);
         executionService.callPluginGoal(plugin + ":" + goal + (executionId != null ? "#" + executionId : "") );
 
         new Verifications() {{
         }};
+    }
+
+    static final class PluginDescriptorLoaderMock extends MockUp<MojoExecutionService> {
+
+        private PluginDescriptor pluginDescriptor;
+
+        public PluginDescriptorLoaderMock(PluginDescriptor pluginDescriptor) {
+            this.pluginDescriptor = pluginDescriptor;
+        }
+
+        @Mock
+        PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
+            throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+            return pluginDescriptor;
+        }
     }
 
     @Test(expected = MojoFailureException.class)

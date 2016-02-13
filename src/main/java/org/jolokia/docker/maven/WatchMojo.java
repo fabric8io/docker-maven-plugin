@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.assembly.AssemblyFiles;
@@ -45,39 +47,29 @@ import static org.jolokia.docker.maven.config.WatchMode.both;
  *     <li>Restarting restarting one or more containers </li>
  * </ul>
  *
- * @goal watch
- *
  * @author roland
  * @since 16/06/15
  */
+@Mojo(name = "watch")
 public class WatchMojo extends AbstractBuildSupportMojo {
 
-    /** @parameter property = "docker.watchMode" default-value="both" **/
+    @Parameter(property = "docker.watchMode", defaultValue = "both")
     private WatchMode watchMode;
 
-    /**
-     * @parameter property = "docker.watchInterval" default-value = "5000"
-     */
+    @Parameter(property = "docker.watchInterval", defaultValue = "5000")
     private int watchInterval;
 
-    /**
-     * @parameter property = "docker.keepRunning" default-value = "false"
-     */
+    @Parameter(property = "docker.keepRunning", defaultValue = "false")
     private boolean keepRunning;
 
-    /**
-     * @parameter property = "docker.watchPostGoal"
-     */
+    @Parameter(property = "docker.watchPostGoal")
     private String watchPostGoal;
 
-    /**
-     * @parameter property = "docker.watchPostExec"
-     */
+    @Parameter(property = "docker.watchPostExec")
     private String watchPostExec;
 
     // Scheduler
     private ScheduledExecutorService executor;
-
 
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,

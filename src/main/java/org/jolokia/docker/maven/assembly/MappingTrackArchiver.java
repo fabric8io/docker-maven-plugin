@@ -23,13 +23,16 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.maven.Maven;
 import org.apache.maven.artifact.*;
 import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.shared.utils.io.DirectoryScanner;
+import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.FileSet;
 import org.codehaus.plexus.archiver.diags.TrackingArchiver;
+import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.components.io.resources.PlexusIoFileResource;
 import org.jolokia.docker.maven.util.Logger;
 
@@ -40,10 +43,8 @@ import org.jolokia.docker.maven.util.Logger;
  * @author roland
  * @since 15/06/15
  */
+@Component(role = Archiver.class, hint = "track", instantiationStrategy = "singleton")
 public class MappingTrackArchiver extends TrackingArchiver {
-
-    /** @component **/
-    protected MavenSession session;
 
     // Logger to use
     protected Logger log;
@@ -53,16 +54,16 @@ public class MappingTrackArchiver extends TrackingArchiver {
      *
      * @return assembled files
      */
-    public AssemblyFiles getAssemblyFiles() {
+    public AssemblyFiles getAssemblyFiles(MavenSession session) {
         AssemblyFiles ret = new AssemblyFiles(getDestFile());
         // Where the 'real' files are copied to
         for (Addition addition : added) {
             Object resource = addition.resource;
             File target = new File(ret.getAssemblyDirectory(), addition.destination);
             if (resource instanceof File && addition.destination != null) {
-                addFileEntry(ret, (File) resource, target);
+                addFileEntry(ret, session, (File) resource, target);
             } else if (resource instanceof PlexusIoFileResource) {
-                addFileEntry(ret, ((PlexusIoFileResource) resource).getFile(), target);
+                addFileEntry(ret, session, ((PlexusIoFileResource) resource).getFile(), target);
             } else if (resource instanceof FileSet) {
                 FileSet fs = (FileSet) resource;
                 DirectoryScanner ds = new DirectoryScanner();
@@ -75,7 +76,7 @@ public class MappingTrackArchiver extends TrackingArchiver {
                 for (String f : ds.getIncludedFiles()) {
                     File source = new File(base, f);
                     File subTarget = new File(target, f);
-                    addFileEntry(ret, source, subTarget);
+                    addFileEntry(ret, session, source, subTarget);
                 }
             } else {
                 throw new IllegalStateException("Unknown resource type " + resource.getClass() + ": " + resource);
@@ -84,13 +85,13 @@ public class MappingTrackArchiver extends TrackingArchiver {
         return ret;
     }
 
-    private void addFileEntry(AssemblyFiles ret, File source, File target) {
+    private void addFileEntry(AssemblyFiles ret, MavenSession session, File source, File target) {
         ret.addEntry(source, target);
-        addLocalMavenRepoEntry(ret, source, target);
+        addLocalMavenRepoEntry(ret, session, source, target);
     }
 
-    private void addLocalMavenRepoEntry(AssemblyFiles ret, File source, File target) {
-        File localMavenRepoFile = getLocalMavenRepoFile(source);
+    private void addLocalMavenRepoEntry(AssemblyFiles ret, MavenSession session, File source, File target) {
+        File localMavenRepoFile = getLocalMavenRepoFile(session, source);
         try {
             if (localMavenRepoFile != null &&
                 ! source.getCanonicalFile().equals(localMavenRepoFile.getCanonicalFile())) {
@@ -101,7 +102,7 @@ public class MappingTrackArchiver extends TrackingArchiver {
         }
     }
 
-    private File getLocalMavenRepoFile(File source) {
+    private File getLocalMavenRepoFile(MavenSession session, File source) {
         ArtifactRepository localRepo = session.getLocalRepository();
         if (localRepo == null) {
             log.warn("No local repo found so not adding any extra watches in the local repository");

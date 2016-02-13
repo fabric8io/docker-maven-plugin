@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 import org.jolokia.docker.maven.access.*;
 import org.jolokia.docker.maven.access.log.LogCallback;
@@ -29,17 +32,14 @@ import org.jolokia.docker.maven.util.*;
  * Goal for creating and starting a docker container. This goal evaluates the image configuration
  *
  * @author roland
- * @goal start
- * @phase pre-integration-test
  */
+@Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartMojo extends AbstractDockerMojo {
 
-    /**
-     * @parameter property = "docker.showLogs"
-     */
+    @Parameter(property = "docker.showLogs")
     private String showLogs;
 
-    /** @parameter property = "docker.pull.registry" */
+    @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
     // whether to block during to start. Set it via Sysem property docker.follow

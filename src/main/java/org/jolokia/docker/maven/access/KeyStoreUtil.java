@@ -47,9 +47,9 @@ public class KeyStoreUtil {
         return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
     }
 
-    private static <T> T loadPEM(String keyPath) throws IOException {
+    private static PEMKeyPair loadPEM(String keyPath) throws IOException {
         PEMParser parser = new PEMParser(new BufferedReader(new FileReader(keyPath)));
-        return (T) parser.readObject();
+        return (PEMKeyPair) parser.readObject();
     }
 
     private static void addCA(KeyStore keyStore, String caPath) throws KeyStoreException, FileNotFoundException, CertificateException {

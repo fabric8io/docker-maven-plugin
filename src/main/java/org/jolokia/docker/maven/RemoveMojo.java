@@ -15,6 +15,9 @@ package org.jolokia.docker.maven;/*
  * limitations under the License.
  */
 
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.*;
@@ -34,17 +37,12 @@ import org.jolokia.docker.maven.service.ServiceHub;
  * @author roland
  * @since 23.10.14
  *
- * @goal remove
- * @phase post-integration-test
  */
-
+@Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class RemoveMojo extends AbstractDockerMojo {
 
-    /**
-     * Should all configured images should be removed?
-     * 
-     * @parameter property = "docker.removeAll" default-value = "false"
-     */
+    // Should all configured images should be removed?
+    @Parameter(property = "docker.removeAll", defaultValue = "false")
     private boolean removeAll;
     
     @Override

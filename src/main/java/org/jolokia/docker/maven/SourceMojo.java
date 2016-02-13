@@ -18,6 +18,7 @@ package org.jolokia.docker.maven;/*
 import java.io.File;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProjectHelper;
 import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
@@ -29,17 +30,14 @@ import org.jolokia.docker.maven.util.MojoParameters;
 /**
  * Mojo for attaching one more source docker tar file to an artifact.
  *
- * @goal source
- * @phase package
- * @execute phase="generate-sources"
- * @executionStrategy once-per-session
- *
  * @author roland
  * @since 25/10/15
  */
+@Mojo(name = "source", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@Execute(phase = LifecyclePhase.GENERATE_SOURCES)
 public class SourceMojo extends  AbstractBuildSupportMojo {
 
-    /** @component */
+    @Component
     private MavenProjectHelper projectHelper;
 
     @Override
