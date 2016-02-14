@@ -41,12 +41,14 @@ public class StopMojo extends AbstractDockerMojo {
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
+        
+        PomLabel pomLabel = getPomLabel();
 
         if (!keepRunning) {
             if (invokedTogetherWithDockerStart()) {
-                runService.stopStartedContainers(keepContainer, removeVolumes);
+                runService.stopStartedContainers(keepContainer, removeVolumes, pomLabel);
             } else {
-                stopContainers(queryService, runService);
+                stopContainers(queryService, runService, pomLabel);
             }
         }
 
@@ -55,9 +57,7 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
-    private void stopContainers(QueryService queryService, RunService runService) throws DockerAccessException {
-        PomLabel pomLabel = getPomLabel();
-
+    private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException {
         for (ImageConfiguration image : getImages()) {
             for (Container container : getContainersToStop(queryService, image)) {
                 if (shouldStopContainer(container, pomLabel)) {
