@@ -1,4 +1,5 @@
-package org.jolokia.docker.maven.config.handler;/*
+package org.jolokia.docker.maven.config.handler;
+/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -15,11 +16,13 @@ package org.jolokia.docker.maven.config.handler;/*
  * limitations under the License.
  */
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
-import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
+import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.config.ImageConfiguration;
+import org.jolokia.docker.maven.config.external.ExternalImageConfiguration;
 
 /**
  * Manager holding all config handlers for external configuration
@@ -27,22 +30,12 @@ import org.jolokia.docker.maven.config.ImageConfiguration;
  * @author roland
  * @since 18/11/14
  */
-public class ImageConfigResolver implements Initializable {
+public class ImageConfigResolver {
 
-    // Map type to handler
-    private Map<String,ExternalConfigHandler> registry;
-
-    private List<ExternalConfigHandler> handlers;
-
-    @Override
-    public void initialize() throws InitializationException {
-        this.registry = new HashMap<>();
-        if (handlers != null) {
-            for (ExternalConfigHandler handler : handlers) {
-                registry.put(handler.getType(), handler);
-            }
-        }
-    }
+    public static final String COMPOSE = "compose";
+    public static final String PROPERTIES = "properties";
+    
+    private Map<String, ExternalConfigHandler> resolvers;
 
     /**
      * Resolve an image configuration. If it contains a reference to an external configuration
@@ -51,26 +44,35 @@ public class ImageConfigResolver implements Initializable {
      * is returned directly.
      *
      * @param unresolvedConfig the configuration to resolve
-     * @param properties extra properties used for resolving
+     * @param project maven project
      * @return list of resolved image configurations
      * @throws IllegalArgumentException if no type is given when an external reference configuration is provided
      * or when the type is not known (i.e. no handler is registered for this type).
      */
-    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties) {
-        Map<String,String> referenceConfig = unresolvedConfig.getExternalConfig();
-        if (referenceConfig != null) {
-            String type = referenceConfig.get("type");
-            if (type == null) {
-                throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No config type given");
-            }
-            ExternalConfigHandler handler = registry.get(type);
-            if (handler == null) {
-                throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");
-            }
-            return handler.resolve(unresolvedConfig,properties);
-        } else {
+    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) {
+        ExternalImageConfiguration external = unresolvedConfig.getExternalConfiguration();
+
+        if (external == null) {
             return Collections.singletonList(unresolvedConfig);
         }
-    }
+        
+        String type = getHandlerType(external);
+        if (resolvers.containsKey(type)) {
+            return resolvers.get(type).resolve(unresolvedConfig, project);
+        }
 
+        throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " found");
+    }
+    
+    public void setResolvers(Map<String, ExternalConfigHandler> resolvers) {
+        this.resolvers = resolvers;
+    }
+    
+    private String getHandlerType(ExternalImageConfiguration external) {
+        if (external.hasDockerCompose()) {
+            return COMPOSE;
+        } else {
+            return PROPERTIES;
+        }
+    }
 }

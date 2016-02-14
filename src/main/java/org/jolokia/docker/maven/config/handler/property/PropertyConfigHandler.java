@@ -1,4 +1,5 @@
-package org.jolokia.docker.maven.config.handler.property;/*
+package org.jolokia.docker.maven.config.handler.property;
+/*
  * 
  * Copyright 2014 Roland Huss
  *
@@ -17,6 +18,7 @@ package org.jolokia.docker.maven.config.handler.property;/*
 
 import java.util.*;
 
+import org.apache.maven.project.MavenProject;
 import org.jolokia.docker.maven.config.*;
 import org.jolokia.docker.maven.config.handler.ExternalConfigHandler;
 import org.jolokia.docker.maven.util.EnvUtil;
@@ -32,12 +34,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @Override
     public String getType() {
-        return "props";
+        return "properties";
     }
 
     @Override
-    public List<ImageConfiguration> resolve(ImageConfiguration config, Properties properties) throws IllegalArgumentException {
+    public List<ImageConfiguration> resolve(ImageConfiguration config, MavenProject project) throws IllegalArgumentException {
         String prefix = getPrefix(config);
+        Properties properties = project.getProperties();
         
         RunImageConfiguration run = extractRunConfiguration(prefix,properties);
         BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
@@ -238,8 +241,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private String getPrefix(ImageConfiguration config) {
-        Map<String, String> refConfig = config.getExternalConfig();
-        String prefix = refConfig != null ? refConfig.get("prefix") : null;
+        String prefix = config.getExternalConfiguration().getPropertiesConfiguration().getPrefix();
         if (prefix == null) {
             prefix = "docker";
         }
