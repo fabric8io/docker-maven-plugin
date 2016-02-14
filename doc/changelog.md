@@ -5,10 +5,6 @@
   - Add support for older Maven versions, minimum required version is now 3.0.5 (#290)
 
 * **0.13.9**
-  - Check also registry stored with an `https` prefix (#367)
-  - Don't stop containers not started by the project during parallel reactor builds (#372)
-
-* **0.13.9**
   - Check also registry stored with an `https` prefix ([#367](https://github.com/rhuss/docker-maven-plugin/issues/367))
   - Don't stop containers not started by the project during parallel reactor builds ([#372](https://github.com/rhuss/docker-maven-plugin/issues/372))
 
