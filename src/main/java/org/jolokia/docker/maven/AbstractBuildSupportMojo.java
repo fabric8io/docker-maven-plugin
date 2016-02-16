@@ -91,7 +91,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     private boolean checkForNocache(ImageConfiguration imageConfig) {
         String nocache = System.getProperty("docker.nocache");
         if (nocache != null) {
-            return Boolean.valueOf(nocache);
+            return nocache.length() == 0 || Boolean.valueOf(nocache);
         } else {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             return buildConfig.nocache();
