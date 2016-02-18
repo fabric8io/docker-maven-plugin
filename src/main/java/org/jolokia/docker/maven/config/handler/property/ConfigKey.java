@@ -50,6 +50,8 @@ public enum ConfigKey {
     FROM,
     HOSTNAME,
     LINKS,
+    LOG_DRIVER,
+    LOG_OPTS,
     MEMORY,
     MEMORY_SWAP,
     NAME,

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.jolokia.docker.maven.config.LogConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -120,6 +121,20 @@ public class ContainerHostConfig {
         return this;
     }
 
+    public ContainerHostConfig logConfig(LogConfig logConfig) {
+        if (logConfig != null) {
+            JSONObject logConfigJson = new JSONObject();
+            logConfigJson.put("Type", logConfig.getLogDriver());
+            JSONObject config = new JSONObject();
+            for(Map.Entry<String, String> logOpt : logConfig.getLogOpts().entrySet()) {
+                config.put(logOpt.getKey(), logOpt.getValue());
+            }
+            logConfigJson.put("Config", config);
+            startConfig.put("LogConfig", logConfigJson);
+        }
+        return this;
+    }
+    
     /**
      * Get JSON which is used for <em>starting</em> a container
      *

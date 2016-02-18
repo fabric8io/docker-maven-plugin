@@ -41,7 +41,8 @@ The `<run>` configuration knows the following sub elements:
 * **log** specifies the log configuration for whether and how log
   messages from the running containers should be printed. See
   [below](#log-configuration) for a detailed description of this configuration
-  section. 
+  section.
+* **logConfig** specify log-driver and log-opts see [below](#log-options) 
 * **memory** (*v1.11*) memory limit in bytes
 * **memorySwap** (*v1.11*) total memory usage (memory + swap); use -1 to disable swap.
 * **namingStrategy** sets the name of the container
@@ -418,3 +419,13 @@ Example (values can be case insensitive, too) :
 </log>
 ````
 
+##### Log options
+Specify --log-driver and --log-opts in docker run command. Not tested / working along with [Log configuration](#log-configuration)
+````xml
+<logConfig>
+	<logDriver>gelf</logDriver>
+	<logOpts>
+		<gelf-address>udp://localhost:12201</gelf-address>
+	</logOpts>
+</logConfig>
+````

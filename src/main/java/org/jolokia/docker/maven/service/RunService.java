@@ -273,7 +273,8 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
-                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
+                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
+                .logConfig(runConfig.getLogConfig());
         VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             config.binds(volConfig.getBind())
