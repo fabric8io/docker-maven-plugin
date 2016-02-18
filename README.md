@@ -1,9 +1,8 @@
 # docker-maven-plugin
 
-[![endorse](http://api.coderwall.com/rhuss/endorsecount.png)](http://coderwall.com/rhuss)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jolokia/docker-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/org.jolokia/docker-maven-plugin/)
 [![Travis](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
 [![Circle CI](https://circleci.com/gh/rhuss/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/rhuss/docker-maven-plugin/tree/integration)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jolokia/docker-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/org.jolokia/docker-maven-plugin/)
  
 This is a Maven plugin for managing Docker images and containers for your builds.
 It works with Maven 3.2.1 and Docker 1.6.0 or later.
