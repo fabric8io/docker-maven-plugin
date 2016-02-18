@@ -3,10 +3,10 @@
 [![endorse](http://api.coderwall.com/rhuss/endorsecount.png)](http://coderwall.com/rhuss)
 [![Travis](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
 [![Circle CI](https://circleci.com/gh/rhuss/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/rhuss/docker-maven-plugin/tree/integration)
-[![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](http://flattr.com/thing/73919/Jolokia-JMX-on-Capsaicin)
-
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jolokia/docker-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/org.jolokia/docker-maven-plugin/)
+ 
 This is a Maven plugin for managing Docker images and containers for your builds.
-The current version is **0.13.9** and works with Maven 3.2.1 and Docker 1.6.0 or later.
+It works with Maven 3.2.1 and Docker 1.6.0 or later.
 
 The current Docker API version used is `v1.18` (which is the minimal required API version). If you want to use the 
 copy mode for `docker:watch` you need `v1.20` or greater (Docker 1.8.1). See the **[User Manual](https://rhuss.github.io/docker-maven-plugin)** 
