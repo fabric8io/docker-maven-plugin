@@ -20,7 +20,6 @@ import java.io.File;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProjectHelper;
-import org.jolokia.docker.maven.access.DockerAccess;
 import org.jolokia.docker.maven.access.DockerAccessException;
 import org.jolokia.docker.maven.config.BuildImageConfiguration;
 import org.jolokia.docker.maven.config.ImageConfiguration;

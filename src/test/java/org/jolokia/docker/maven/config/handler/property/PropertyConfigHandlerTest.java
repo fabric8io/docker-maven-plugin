@@ -240,6 +240,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("CAP"), runConfig.getCapDrop());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
+        assertEquals("host",runConfig.getNetworkingMode().getStandardMode(null));
         assertEquals(a("example.com"), runConfig.getDnsSearch());
         assertEquals("domain.com", runConfig.getDomainname());
         assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
@@ -305,6 +306,7 @@ public class PropertyConfigHandlerTest {
                 k(CAP_DROP) + ".1", "CAP",
                 k(CMD), "command.sh",
                 k(DNS) + ".1", "8.8.8.8",
+                k(NET),"host",
                 k(DNS_SEARCH) + ".1", "example.com",
                 k(DOMAINNAME), "domain.com",
                 k(ENTRYPOINT), "entrypoint.sh",

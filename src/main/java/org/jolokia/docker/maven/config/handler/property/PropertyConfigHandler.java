@@ -87,6 +87,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .capDrop(listWithPrefix(prefix, CAP_DROP, properties))
                 .cmd(withPrefix(prefix, CMD, properties))
                 .dns(listWithPrefix(prefix, DNS, properties))
+                .net(withPrefix(prefix, NET, properties))
                 .dnsSearch(listWithPrefix(prefix, DNS_SEARCH, properties))
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
                 .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
