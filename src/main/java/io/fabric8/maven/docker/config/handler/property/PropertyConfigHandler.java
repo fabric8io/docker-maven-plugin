@@ -104,6 +104,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .ports(listWithPrefix(prefix, PORTS, properties))
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
                 .restartPolicy(extractRestartPolicy(prefix, properties))
+                .logConfig(extractLogConfig(prefix, properties))
                 .user(withPrefix(prefix, USER, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
                 .wait(extractWaitConfig(prefix, properties))
@@ -161,6 +162,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new RestartPolicy.Builder()
                 .name(withPrefix(prefix, RESTART_POLICY_NAME, properties))
                 .retry(asInt(withPrefix(prefix, RESTART_POLICY_RETRY, properties)))
+                .build();
+    }
+
+    private LogConfig extractLogConfig(String prefix, Properties properties) {
+        return new LogConfig.Builder()
+                .logDriver(withPrefix(prefix, ConfigKey.LOG_DRIVER, properties))
+                .logOpts(mapWithPrefix(prefix, ConfigKey.LOG_OPTS, properties))
                 .build();
     }
 
