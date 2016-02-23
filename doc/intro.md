@@ -91,7 +91,9 @@ Let's look at a plugin configuration example:
            <port>tomcat.port:8080</port>
          </ports>
          <wait>
-           <url>http://localhost:${tomcat.port}/access</url>
+           <http>
+              <url>http://localhost:${tomcat.port}/access</url>
+           </http>
            <time>10000</time>
          </wait>
          <links>

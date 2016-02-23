@@ -80,7 +80,9 @@
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                  <url>http://localhost:${jolokia.port}/jolokia</url>
+                  <http>
+                    <url>http://localhost:${jolokia.port}/jolokia</url>
+                  </http>
                   <!-- ... but at max 2 seconds -->
                   <time>2000</time>
                 </wait>

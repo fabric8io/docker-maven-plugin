@@ -50,7 +50,9 @@ becomes
 
 ```
 <wait>
-  <url>http://localhost:${port}/jolokia</url>
+  <http>
+    <url>http://localhost:${port}/jolokia</url>
+  </http>
   <time>10000</time>
 </wait>
 ```
@@ -126,7 +128,9 @@ becomes in the new syntax a configuration for two images
           <port>jolokia.port:8080</port>
         </ports>
         <wait>
-          <url>http://localhost:${jolokia.port}/jolokia</url>
+          <http>
+            <url>http://localhost:${jolokia.port}/jolokia</url>
+          </http>
           <time>10000</time>
         </wait>
       </run>
@@ -188,7 +192,9 @@ can be directly translated to a single image configuration
           <port>jolokia.port:8080</port>
         </ports>
         <wait>
-          <url>http://localhost:${jolokia.port}/jolokia</url>
+          <http>
+            <url>http://localhost:${jolokia.port}/jolokia</url>
+          </http>
           <time>10000</time>
         </wait>
       </run>

@@ -299,7 +299,9 @@
                     </labels>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <http>
+                        <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      </http>
                       <time>10000</time>
                     </wait>
                     <log>
@@ -366,7 +368,9 @@
                     </ports>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <http>
+                        <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      </http>
                       <time>10000</time>
                     </wait>
                   </run>
@@ -404,7 +408,9 @@
                     </ports>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <wait>
+                        <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      </wait>
                       <time>10000</time>
                     </wait>
                   </run>
@@ -476,7 +482,9 @@
                     </ports>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      <wait>
+                        <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
+                      </wait>
                       <time>10000</time>
                     </wait>
                   </run>

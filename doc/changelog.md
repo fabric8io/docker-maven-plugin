@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.14.0**
+* **0.14.0-SNAPSHOT**
   - Add support for Docker network and `host`, `bridge` and `container` network modes (#335)
   - Add support for older Maven versions, minimum required version is now 3.0.5 (#290)
   - Update to maven-assembly-plugin 2.6 which fixes issue with line endings on windows (#127)
@@ -8,8 +8,9 @@
     caches system out/err
   - Moved to to [fabric8io](https://github.com/orgs/fabric8io/dashboard) as GitHub organization which implies
     also changes in the maven coordinates (Maven group-id is now **io.fabric8**)
-
-With version `0.15.0` this plugin moved to the [fabric8](http://fabric8.io) community in order to provide
+  - Fix wait section in samples (#385)
+  
+With version `0.14.0` this plugin moved to the [fabric8](http://fabric8.io) community in order to provide
 even better services. This include a change in the Maven coordinates. I.e. the Maven group id is now **io.fabric8** 
 (formerly: "org.jolokia"). Please adapt your pom files accordingly.
 
