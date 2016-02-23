@@ -19,7 +19,7 @@
 
   -->
 
-  <groupId>org.jolokia</groupId>
+  <groupId>io.fabric8</groupId>
   <artifactId>cargo-jolokia-demo</artifactId>
   <version>0.13.9</version>
 
@@ -64,7 +64,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.jolokia</groupId>
+        <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
         <configuration>

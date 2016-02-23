@@ -14,7 +14,7 @@ general:
 deployment:
   website:
     branch: master
-    owner: rhuss
+    owner: fabri8io
     commands:
       - git config --global user.email "circleci@mail.com"
       - git config --global user.name "CircleCI"

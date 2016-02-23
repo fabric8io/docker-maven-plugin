@@ -53,7 +53,7 @@ The server id must specify the registry to push to/pull from, which by
 default is central index `docker.io` (or `index.docker.io` / `registry.hub.docker.com` as fallbacks). 
 Here you should add your docker.io account for your repositories. If you have multiple accounts 
 for the same registry, the second user can be specified as part of the ID. In the example above, if you 
-have a second accorunt 'rhuss' then use an `<id>docker.io/rhuss</id>` for this second entry. I.e. add the 
+have a second accorunt 'fabric8io' then use an `<id>docker.io/fabric8io</id>` for this second entry. I.e. add the 
 username with a slash to the id name. The default without username is only taken if no server entry with 
 a username appended id is chosen.
 

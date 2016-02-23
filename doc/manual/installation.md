@@ -6,7 +6,7 @@ available goals are described below.
 
 ````xml
 <plugin>
-  <groupId>org.jolokia</groupId>
+  <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
   <version>0.13.9</version>
 

@@ -5,7 +5,7 @@ This recipes gives you some hint and help for migrating from the old
 
 If there are any issue when doing the migration or you do need some
 help, please raise an
-[issue](https://github.com/rhuss/docker-maven-plugin/issues) with your
+[issue](https://github.com/fabric8io/docker-maven-plugin/issues) with your
 original configuration and you will get some help for the migration.
 
 The biggest change was support for multiple images. The whole story

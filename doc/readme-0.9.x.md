@@ -1,7 +1,7 @@
 # docker-maven-plugin 0.9.x
 
-[![endorse](http://api.coderwall.com/rhuss/endorsecount.png)](http://coderwall.com/rhuss)
-[![Build Status](https://secure.travis-ci.org/rhuss/docker-maven-plugin.png)](http://travis-ci.org/rhuss/docker-maven-plugin)
+[![endorse](http://api.coderwall.com/fabric8io/endorsecount.png)](http://coderwall.com/fabric8io)
+[![Build Status](https://secure.travis-ci.org/fabric8io/docker-maven-plugin.png)](http://travis-ci.org/fabric8io/docker-maven-plugin)
 [![Flattr](http://api.flattr.com/button/flattr-badge-large.png)](http://flattr.com/thing/73919/Jolokia-JMX-on-Capsaicin)
 
 This is a Maven plugin for managing Docker images and containers from within Maven builds. 
@@ -242,7 +242,7 @@ The plugin configuration could look like
 </plugin>
 ````
 
-The image `jolokia/tomcat-7.0` is a [trusted build](https://github.com/rhuss/jolokia-it/tree/master/docker/tomcat/7.0) available from the central docker registry which uses a command `deploy-and-run.sh` that looks like this:
+The image `jolokia/tomcat-7.0` is a [trusted build](https://github.com/fabric8io/jolokia-it/tree/master/docker/tomcat/7.0) available from the central docker registry which uses a command `deploy-and-run.sh` that looks like this:
 
 ````bash
 #!/bin/sh
@@ -357,8 +357,8 @@ configuration parameter `certPath`. Alternatively, the environment variable `DOC
 
 This plugin comes with some commented examples in the `samples/` directory:
 
-* [data-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/data-jolokia-demo) is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX bridge in a tomcat. It uses a Docker data container which is linked into the Tomcat container and contains the WAR files to deply
-* [cargo-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo) is the same as above except that Jolokia gets deployed via [Cargo](http://cargo.codehaus.org/Maven2+plugin)
+* [data-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/data-jolokia-demo) is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX bridge in a tomcat. It uses a Docker data container which is linked into the Tomcat container and contains the WAR files to deply
+* [cargo-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo) is the same as above except that Jolokia gets deployed via [Cargo](http://cargo.codehaus.org/Maven2+plugin)
 
 For a complete example please refer to `samples/data-jolokia-demo/pom.xml`.
 
@@ -371,7 +371,7 @@ mv repository repository.bak
 
 # Fetch docker-maven-plugin
 cd /tmp/
-git clone https://github.com/rhuss/docker-maven-plugin.git
+git clone https://github.com/fabric8io/docker-maven-plugin.git
 cd docker-maven-plugin/
 
 # Install plugin
@@ -466,6 +466,6 @@ and what I want to achieve:
   in case somebody wants to write yet another plugin ;-)
 
 In the meantime, enjoy this plugin, and please use the
-[issue tracker](https://github.com/rhuss/docker-maven-plugin/issues) 
+[issue tracker](https://github.com/fabric8io/docker-maven-plugin/issues) 
 for anything what hurts.
 

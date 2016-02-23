@@ -7,13 +7,15 @@ import java.util.Properties;
 
 import com.google.common.collect.Lists;
 import edu.emory.mathcs.backport.java.util.Arrays;
+import io.fabric8.maven.docker.access.*;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.jolokia.docker.maven.AbstractDockerMojo;
-import org.jolokia.docker.maven.access.*;
-import org.jolokia.docker.maven.access.hc.DockerAccessWithHcClient;
-import org.jolokia.docker.maven.config.Arguments;
-import org.jolokia.docker.maven.model.Container.PortBinding;
-import org.jolokia.docker.maven.util.*;
+import io.fabric8.maven.docker.AbstractDockerMojo;
+import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.model.Container.PortBinding;
 import org.junit.*;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -85,7 +87,7 @@ public class DockerAccessIT {
     }
 
     private void testCreateContainer() throws DockerAccessException {
-        PortMapping portMapping = new PortMapping(Arrays.asList(new Object[] { PORT + ":" + PORT }), new Properties());
+        PortMapping portMapping = new PortMapping(Arrays.asList(new Object[] {PORT + ":" + PORT }), new Properties());
         ContainerHostConfig hostConfig = new ContainerHostConfig().portBindings(portMapping);
         ContainerCreateConfig createConfig = new ContainerCreateConfig(IMAGE).command(new Arguments("ping google.com")).hostConfig(hostConfig);
 

@@ -19,7 +19,7 @@
 
   -->
 
-  <groupId>org.jolokia</groupId>
+  <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
   <version>0.14.0-SNAPSHOT</version>
 
@@ -72,7 +72,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.jolokia</groupId>
+        <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
         <configuration>
@@ -264,7 +264,7 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.jolokia</groupId>
+            <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
               <watchPostGoal>org.apache.maven.plugins:maven-help-plugin:help</watchPostGoal>
@@ -326,7 +326,7 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.jolokia</groupId>
+            <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
               <images>
@@ -384,7 +384,7 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.jolokia</groupId>
+            <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
               <autoPull>false</autoPull>
@@ -432,7 +432,7 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.jolokia</groupId>
+            <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
               <images>
@@ -455,7 +455,7 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.jolokia</groupId>
+            <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
               <images>

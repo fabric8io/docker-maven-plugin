@@ -150,7 +150,7 @@ Example:
 <build>
   <plugins>
     <plugin>
-      <groupId>org.jolokia</groupId>
+      <groupId>io.fabric8</groupId>
       <artifactId>docker-maven-plugin</artifactId>
       <configuration>
         <images>

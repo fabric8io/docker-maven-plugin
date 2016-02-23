@@ -1,4 +1,4 @@
-package org.jolokia.docker.maven.sample.jolokia;
+package io.fabric8.docker.maven.sample.jolokia;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.parsing.Parser;

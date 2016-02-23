@@ -2,15 +2,15 @@
   "title": "docker-maven-plugin",
   "description": "docker-maven-plugin Reference Documentation",
   "extension": "pdf",
-  "github": "rhuss/docker-maven-plugin",
+  "github": "fabric8io/docker-maven-plugin",
   "githubHost": "https://github.com/",
   "gitbook": ">=2.0.0",
 
   "links": {
-    "home": "https://github.com/rhuss/docker-maven-plugin",
+    "home": "https://github.com/fabric8io/docker-maven-plugin",
     "about": "http://fish-pepper.org/index.html",
-    "issues": "https://github.com/rhuss/docker-maven-plugin/issues",
-    "contribute": "https://github.com/rhuss/docker-maven-plugin/blob/master/doc/contributing.md",
+    "issues": "https://github.com/fabric8io/docker-maven-plugin/issues",
+    "contribute": "https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/contributing.md",
 
     "sharing": {
       "twitter": "https://twitter.com/fabric8io"
@@ -20,7 +20,7 @@
     "plugins": ["edit-link", "anchors", "code_tomorrow_scheme" ],
     "pluginsConfig": {
         "edit-link": {
-            "base": "https://github.com/rhuss/docker-maven-plugin/edit/master/doc/manual",
+            "base": "https://github.com/fabric8io/docker-maven-plugin/edit/master/doc/manual",
             "label": "Edit This Page"
         }
     },

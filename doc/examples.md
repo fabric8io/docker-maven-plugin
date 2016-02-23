@@ -4,7 +4,7 @@ This plugin comes with some commented examples in the `samples/` directory:
 
 ### Jolokia Demo
 
-[data-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/data-jolokia-demo)
+[data-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/data-jolokia-demo)
 is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX
 bridge in a tomcat. It uses a Docker data container which is linked
 into the Tomcat container and contains the WAR files to deply. There
@@ -63,7 +63,7 @@ mvn docker:stop
 
 ### Cargo Demo
 
-[cargo-jolokia-demo](https://github.com/rhuss/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
+[cargo-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
 will use Docker to start a Tomcat 7 server with dynamic port mapping,
 which is used for remote deployment via
 [Cargo](http://cargo.codehaus.org/Maven2+plugin) and running the
@@ -73,7 +73,7 @@ integration tests.
 
 In order to help in the decision, which plugin to use, there is a
 sample project
-[rhuss/shootout-docker-maven](https://github.com/rhuss/shootout-docker-maven),
+[fabric8io/shootout-docker-maven](https://github.com/fabric8io/shootout-docker-maven),
 which has more complex sample project involving two images:
 
 * Vanilla PostgreSQL 9 Image
@@ -84,7 +84,7 @@ which has more complex sample project involving two images:
 * Simple integration test which excercises the service
 
 The different plugins can be enabled with different Maven profiles,
-the one for this plugin is called `rhuss` (and the others `wouterd`,
+the one for this plugin is called `fabric8io` (and the others `wouterd`,
 `alexec` and `spotify`).
 
 For more information please look over there.

@@ -14,7 +14,7 @@
   -->
 
   <parent>
-    <groupId>org.jolokia</groupId>
+    <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
     <version>0.14.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
@@ -74,7 +74,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.jolokia</groupId>
+        <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <configuration>
           <watchInterval>500</watchInterval>

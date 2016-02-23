@@ -71,7 +71,7 @@ Let's look at a plugin configuration example:
   <images>
     <image>
       <alias>service</alias>
-      <name>jolokia/docker-demo:${project.version}</name>
+      <name>fabric8/docker-demo:${project.version}</name>
 
       <build>
          <from>java:8</from>
@@ -157,7 +157,7 @@ On the one hand, variety is a good thing, but on the other hand for
 users it is hard to decide which one to choose. So, you might wonder
 why you should choose this one.
 
-I setup a dedicated [shootout project](https://github.com/rhuss/shootout-docker-maven)
+I setup a dedicated [shootout project](https://github.com/fabric8io/shootout-docker-maven)
 which compares the four most active plugins. It contains a simple demo
 project with a database and a microservice image, along with an integration
 test. Each plugin is configured to create images and run the
@@ -215,6 +215,6 @@ this plugin:
   Can you see the pattern ;-) ?
   
 So, final words: Enjoy this plugin, and please use the
-[issue tracker](https://github.com/rhuss/docker-maven-plugin/issues)
+[issue tracker](https://github.com/fabric8io/docker-maven-plugin/issues)
 for anything what hurts, or when you have a wish list. I'm quite
 committed to this plugin and have quite some plans. Please stay tuned...
