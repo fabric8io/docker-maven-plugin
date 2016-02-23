@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jolokia.docker.maven.config.LogConfig;
+import io.fabric8.maven.docker.config.LogConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
