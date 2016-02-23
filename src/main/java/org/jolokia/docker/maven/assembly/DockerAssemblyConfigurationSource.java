@@ -3,14 +3,22 @@ package org.jolokia.docker.maven.assembly;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+
+import javax.annotation.Nonnull;
 
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
+import org.apache.maven.plugin.assembly.utils.InterpolationConstants;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
+import org.apache.maven.shared.utils.cli.CommandLineUtils;
+import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
+import org.codehaus.plexus.interpolation.fixed.PrefixedPropertiesValueSource;
+import org.codehaus.plexus.interpolation.fixed.PropertiesBasedValueSource;
 import org.jolokia.docker.maven.config.AssemblyConfiguration;
 import org.jolokia.docker.maven.util.EnvUtil;
 import org.jolokia.docker.maven.util.MojoParameters;
@@ -24,6 +32,13 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     private final AssemblyConfiguration assemblyConfig;
     private final MojoParameters params;
     private final BuildDirs buildDirs;
+
+    // Required by configuration source and duplicated from AbstractAssemblyMojo (which is unfortunately
+    // not extracted to be usab;e
+    private FixedStringSearchInterpolator commandLinePropertiesInterpolator;
+    private FixedStringSearchInterpolator envInterpolator;
+    private FixedStringSearchInterpolator rootInterpolator;
+    private FixedStringSearchInterpolator mainProjectInterpolator;
 
     public DockerAssemblyConfigurationSource(MojoParameters params, BuildDirs buildDirs, AssemblyConfiguration assemblyConfig) {
         this.params = params;
@@ -124,6 +139,42 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     @Override
     public List<String> getDelimiters() {
         return null;
+    }
+
+
+    @Nonnull public FixedStringSearchInterpolator getCommandLinePropsInterpolator()
+    {
+        if (commandLinePropertiesInterpolator == null) {
+            this.commandLinePropertiesInterpolator = createCommandLinePropertiesInterpolator();
+        }
+        return commandLinePropertiesInterpolator;
+    }
+
+    @Nonnull
+    public FixedStringSearchInterpolator getEnvInterpolator()
+    {
+        if (envInterpolator == null) {
+            this.envInterpolator = createEnvInterpolator();
+        }
+        return envInterpolator;
+    }
+
+    @Nonnull public FixedStringSearchInterpolator getRepositoryInterpolator()
+    {
+        if (rootInterpolator == null) {
+            this.rootInterpolator = createRepositoryInterpolator();
+        }
+        return rootInterpolator;
+    }
+
+
+    @Nonnull
+    public FixedStringSearchInterpolator getMainProjectInterpolator()
+    {
+        if (mainProjectInterpolator == null) {
+            this.mainProjectInterpolator = mainProjectInterpolator(getProject());
+        }
+        return mainProjectInterpolator;
     }
 
     // X
@@ -247,4 +298,63 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
         return assemblyConfig != null ? assemblyConfig.isIgnorePermissions() : false;
     }
 
+    // =======================================================================
+    // Taken from AbstractAssemblyMojo
+
+    private FixedStringSearchInterpolator mainProjectInterpolator(MavenProject mainProject)
+    {
+        if (mainProject != null) {
+            // 5
+            return FixedStringSearchInterpolator.create(
+                new org.codehaus.plexus.interpolation.fixed.PrefixedObjectValueSource(
+                    InterpolationConstants.PROJECT_PREFIXES, mainProject, true ),
+
+                // 6
+                new org.codehaus.plexus.interpolation.fixed.PrefixedPropertiesValueSource(
+                    InterpolationConstants.PROJECT_PROPERTIES_PREFIXES, mainProject.getProperties(), true ) );
+        }
+        else {
+            return FixedStringSearchInterpolator.empty();
+        }
+    }
+
+    private FixedStringSearchInterpolator createRepositoryInterpolator()
+    {
+        final Properties settingsProperties = new Properties();
+        final MavenSession session = getMavenSession();
+
+        if (getLocalRepository() != null) {
+            settingsProperties.setProperty("localRepository", getLocalRepository().getBasedir());
+            settingsProperties.setProperty("settings.localRepository", getLocalRepository().getBasedir());
+        }
+        else if (session != null && session.getSettings() != null) {
+            settingsProperties.setProperty("localRepository", session.getSettings().getLocalRepository() );
+            settingsProperties.setProperty("settings.localRepository", getLocalRepository().getBasedir() );
+        }
+        return FixedStringSearchInterpolator.create(new PropertiesBasedValueSource(settingsProperties));
+    }
+
+    private FixedStringSearchInterpolator createCommandLinePropertiesInterpolator()
+    {
+        Properties commandLineProperties = System.getProperties();
+        final MavenSession session = getMavenSession();
+
+        if (session != null) {
+            commandLineProperties = new Properties();
+            if (session.getSystemProperties() != null) {
+                commandLineProperties.putAll(session.getSystemProperties());
+            }
+            if (session.getUserProperties() != null) {
+                commandLineProperties.putAll(session.getUserProperties());
+            }
+        }
+        PropertiesBasedValueSource cliProps = new PropertiesBasedValueSource( commandLineProperties );
+        return FixedStringSearchInterpolator.create( cliProps );
+    }
+
+    private FixedStringSearchInterpolator createEnvInterpolator() {
+        PrefixedPropertiesValueSource envProps = new PrefixedPropertiesValueSource(Collections.singletonList("env."),
+                                                                                   CommandLineUtils.getSystemEnvVars(false), true );
+        return FixedStringSearchInterpolator.create( envProps );
+    }
 }
