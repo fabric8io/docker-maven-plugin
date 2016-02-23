@@ -132,7 +132,7 @@
             <image>
               <alias>data</alias>
               <!-- Artifact Image-->
-              <name>jolokia/${project.artifactId}:${project.version}</name>
+              <name>fabric8/${project.artifactId}:${project.version}</name>
               <build>
                 <tags>
                   <tag>latest</tag>
