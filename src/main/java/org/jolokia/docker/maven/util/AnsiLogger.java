@@ -38,7 +38,6 @@ public class AnsiLogger implements Logger {
         initializeColor(useColor);
     }
 
-
     /**
      * Debug message if debugging is enabled.
      *
@@ -145,7 +144,8 @@ public class AnsiLogger implements Logger {
     }
     
     private void initializeColor(boolean useColor) {
-        if (System.console() == null || log.isDebugEnabled()) {
+        // sl4j simple logger used by Maven seems to escape ANSI escapes
+        if (System.console() == null || log.isDebugEnabled() || isWindows()) {
             useColor = false;
         }
         
@@ -157,7 +157,12 @@ public class AnsiLogger implements Logger {
             Ansi.setEnabled(false);
         }
     }
-    
+
+    private boolean isWindows() {
+        String os = System.getProperty("os.name");
+        return os != null && os.toLowerCase().startsWith("windows");
+    }
+
     private void println(String txt) {
         System.out.println(txt);
     }
