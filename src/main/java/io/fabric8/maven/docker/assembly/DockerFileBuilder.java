@@ -23,7 +23,7 @@ public class DockerFileBuilder {
     private String baseImage;
 
     // Maintainer of this image
-    private String maintainer = "docker-maven-plugin@jolokia.org";
+    private String maintainer;
 
     // Workdir
     private String workdir = null;
@@ -86,7 +86,9 @@ public class DockerFileBuilder {
         StringBuilder b = new StringBuilder();
 
         DockerFileKeyword.FROM.addTo(b, baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE);
-        DockerFileKeyword.MAINTAINER.addTo(b, maintainer);
+        if (maintainer != null) {
+            DockerFileKeyword.MAINTAINER.addTo(b, maintainer);
+        }
 
         addOptimisation();
         addEnv(b);
