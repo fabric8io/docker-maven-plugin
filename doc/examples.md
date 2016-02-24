@@ -73,7 +73,7 @@ integration tests.
 
 In order to help in the decision, which plugin to use, there is a
 sample project
-[fabric8io/shootout-docker-maven](https://github.com/fabric8io/shootout-docker-maven),
+[rhuss/shootout-docker-maven](https://github.com/rhuss/shootout-docker-maven),
 which has more complex sample project involving two images:
 
 * Vanilla PostgreSQL 9 Image
