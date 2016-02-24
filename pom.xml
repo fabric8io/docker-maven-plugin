@@ -377,6 +377,36 @@
       </build>
     </profile>
 
+    <!-- "release" profiles used for deploying with fabric8 -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <useAgent>true</useAgent>
+              <keyname>roland@jolokia.org</keyname>
+               <gpgArguments>
+                <arg>--allow-weak-digest-algos</arg>
+              </gpgArguments>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <!-- Enable JaCoCo Test -->
     <profile>
       <id>jacoco</id>
