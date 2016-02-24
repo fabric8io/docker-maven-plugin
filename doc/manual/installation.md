@@ -30,7 +30,7 @@ available goals are described below.
        <phase>pre-integration-test</phase>
        <goals>
          <!-- "build" should be used to create the images with the
-              artefacts --> 
+              artifact --> 
          <goal>build</goal>
          <goal>start</goal>
        </goals>
