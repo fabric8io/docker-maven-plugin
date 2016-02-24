@@ -3,7 +3,11 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/docker-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/docker-maven-plugin/)
 [![Travis](https://secure.travis-ci.org/fabric8io/docker-maven-plugin.png)](http://travis-ci.org/fabric8io/docker-maven-plugin)
 [![Circle CI](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration)
- 
+
+> The Maven group id changed from version 0.13.9 to 0.14.0. Please update the Maven group id in your
+> `pom.xml` to **io.fabric8** (formerly: org.jolokia). This is because of moving this personal 
+> project to a [fabric8](http://fabric8.io) community project.
+
 This is a Maven plugin for managing Docker images and containers for your builds.
 It works with Maven 3.0.5 and Docker 1.6.0 or later.
 
