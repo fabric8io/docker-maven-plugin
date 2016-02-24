@@ -395,13 +395,6 @@
                 </goals>
               </execution>
             </executions>
-            <configuration>
-              <useAgent>true</useAgent>
-              <keyname>roland@jolokia.org</keyname>
-               <gpgArguments>
-                <arg>--allow-weak-digest-algos</arg>
-              </gpgArguments>
-            </configuration>
           </plugin>
         </plugins>
       </build>
