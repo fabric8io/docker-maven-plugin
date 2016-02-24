@@ -159,7 +159,7 @@ On the one hand, variety is a good thing, but on the other hand for
 users it is hard to decide which one to choose. So, you might wonder
 why you should choose this one.
 
-I setup a dedicated [shootout project](https://github.com/fabric8io/shootout-docker-maven)
+I setup a dedicated [shootout project](https://github.com/rhuss/shootout-docker-maven)
 which compares the four most active plugins. It contains a simple demo
 project with a database and a microservice image, along with an integration
 test. Each plugin is configured to create images and run the
