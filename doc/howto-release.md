@@ -12,8 +12,8 @@
 
 The release process uses the maven release plugin:
 
-     mvn -Dmaven.repo.local=/tmp/clean-repo -DdevelopmentVersion=1.0.1-SNAPSHOT -DreleaseVersion=1.0.0 -Dtag=v1.0.0 -Pdist release:prepare
-     mvn -Dmaven.repo.local=/tmp/clean-repo -Pdist release:perform
+     mvn -Dmaven.repo.local=/tmp/clean-repo -DdevelopmentVersion=1.0.1-SNAPSHOT -DreleaseVersion=1.0.0 -Dtag=v1.0.0 -Pdist,fabric8-oss release:prepare
+     mvn -Dmaven.repo.local=/tmp/clean-repo -Pdist,fabric8-oss release:perform
  
 This will deploy to Maven central. The profile "dist" enables signing
 of artifacts and uses a running GPG agent.
