@@ -61,7 +61,7 @@
         data-chapter-title="docker:start"
         data-filepath="docker-start.md"
         data-basepath="."
-        data-revision="Thu Feb 18 2016 13:30:05 GMT+0000 (UTC)"
+        data-revision="Wed Feb 24 2016 09:50:27 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -382,17 +382,17 @@ CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker r
  not removed so that you can make postmortem analysis).</p>
 <p>The <code>&lt;run&gt;</code> configuration knows the following sub elements:</p>
 <ul>
-<li><strong>capAdd</strong> (<em>v1.14</em>) a list of <code>add</code> elements to specify kernel parameters to add to
+<li><strong>capAdd</strong> a list of <code>add</code> elements to specify kernel parameters to add to
 the container.</li>
-<li><strong>capDrop</strong> (<em>v1.14</em>) a list of <code>drop</code> elements to specify kernel parameters to remove
+<li><strong>capDrop</strong>  a list of <code>drop</code> elements to specify kernel parameters to remove
 from the container.</li>
 <li><strong>cmd</strong> is a command which should be executed at the end of the
 container&apos;s startup. If not given, the image&apos;s default command is
-used. See <a href="#start-up-arguments">Start-up Arguments</a> for details.</li>
-<li><strong>domainname</strong> (<em>v1.12</em>) domain name for the container</li>
-<li><strong>dns</strong> (<em>v1.11</em>) list of <code>host</code> elements specifying dns servers for the container to use</li>
-<li><strong>dnsSearch</strong> (<em>v1.15</em>) list of <code>host</code> elements specying dns search domains </li>
-<li><strong>entrypoint</strong> (<em>v1.15</em>) set the entry point for the container. See <a href="#start-up-arguments">Start-up Arguments</a> for details.</li>
+used. See <a href="docker-build.html#start-up-arguments">Start-up Arguments</a> for details.</li>
+<li><strong>domainname</strong>  domain name for the container</li>
+<li><strong>dns</strong> list of <code>host</code> elements specifying dns servers for the container to use</li>
+<li><strong>dnsSearch</strong> list of <code>host</code> elements specying dns search domains </li>
+<li><strong>entrypoint</strong> set the entry point for the container. See <a href="docker-build.html#start-up-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>env</strong> can contain environment variables as subelements which are
 set during startup of the container. They are specified in the
 typical maven property format as described <a href="#setting-environment-variables-and-labels">below</a>.</li>
@@ -400,22 +400,31 @@ typical maven property format as described <a href="#setting-environment-variabl
 typical maven property format as described <a href="#setting-environment-variables-and-labels">below</a>.</li>
 <li><strong>envPropertyFile</strong> can be a path to a property file holding environment variables. If given, the variables
 specified in this property file overrides the environment variables specified in the configuration.</li>
-<li><strong>extraHosts</strong> (<em>v1.15</em>) list of <code>host</code> elements in the form <code>host:ip</code> to add to the container&apos;s <code>/etc/hosts</code> file. 
+<li><strong>extraHosts</strong> list of <code>host</code> elements in the form <code>host:ip</code> to add to the container&apos;s <code>/etc/hosts</code> file. 
 Additionally, you may specify a <code>host</code> element in the form <code>host:host</code> to have the right side host ip address resolved 
 at container startup.</li>
-<li><strong>hostname</strong> (<em>v1.11</em>) desired hostname for the container</li>
+<li><strong>hostname</strong> desired hostname for the container</li>
 <li><strong>links</strong> declares how containers are linked together see
 description on <a href="#container-linking">container linking</a>. </li>
 <li><strong>log</strong> specifies the log configuration for whether and how log
-messages from the running containers should be printed. See
+messages from the running containers should be printed. This also can configure the 
+<a href="https://docs.docker.com/engine/admin/logging/overview/" target="_blank">log driver</a> to use. See
 <a href="#log-configuration">below</a> for a detailed description of this configuration
 section. </li>
-<li><strong>memory</strong> (<em>v1.11</em>) memory limit in bytes</li>
-<li><strong>memorySwap</strong> (<em>v1.11</em>) total memory usage (memory + swap); use -1 to disable swap.</li>
+<li><strong>memory</strong> memory limit in bytes</li>
+<li><strong>memorySwap</strong> total memory usage (memory + swap); use -1 to disable swap.</li>
 <li><strong>namingStrategy</strong> sets the name of the container<ul>
 <li><code>none</code> : uses randomly assigned names from docker (default)</li>
 <li><code>alias</code> : uses the <code>alias</code> specified in the <code>image</code> configuration. An error is thrown, if a container already exists
 with this name.</li>
+</ul>
+</li>
+<li><strong>net</strong> set the network mode for the container:<ul>
+<li><code>bridge</code> : Bridged mode with the default Docker bridge (default)</li>
+<li><code>host</code> : Share the Docker host network interfaces</li>
+<li><code>container:&lt;alias or name&gt;</code> : Connect to the network of the specified container</li>
+<li><code>&lt;custom network&gt;</code> : Use the specified custom network which must be created before with <code>docker network create</code>. 
+Available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/" target="_blank">Docker documentation</a>.</li>
 </ul>
 </li>
 <li><strong>portPropertyFile</strong>, if given, specifies a file into which the
@@ -424,17 +433,17 @@ its purpose are also described <a href="#port-mapping">below</a></li>
 <li><strong>ports</strong> declares how container exposed ports should be
 mapped. This is described below in an extra
 <a href="#port-mapping">section</a>.  </li>
-<li><strong>privileged</strong> (<em>v1.11</em>) give container full access to host (<code>true|false</code>)   </li>
-<li><strong>restartPolicy</strong> (<em>v1.15</em>) specifies the container restart policy, see 
+<li><strong>privileged</strong> give container full access to host (<code>true|false</code>)   </li>
+<li><strong>restartPolicy</strong> specifies the container restart policy, see 
 <a href="#container-restart-policy">below</a></li>
-<li><strong>user</strong> (<em>v1.11</em>) user used inside the container</li>
+<li><strong>user</strong> user used inside the container</li>
 <li><strong>skip</strong> disable creating and starting of the container. This option is best used together with a configuration option.</li>
-<li><strong>volumes</strong> for bind configurtion of host directories and from other containers. See &quot;[Volume binding]
-(#volume-binding)&quot; for details.</li>
+<li><strong>volumes</strong> for bind configurtion of host directories and from other containers. See &quot;<a href="#volume-binding">Volume binding</a>&quot; 
+for details.</li>
 <li><strong>wait</strong> specifies condition which must be fulfilled for the startup
 to complete. See <a href="#wait-during-startup-and-shutdown">below</a> which subelements are
 available and how they can be specified.</li>
-<li><strong>workingDir</strong> (<em>v1.11</em>) working dir for commands to run in</li>
+<li><strong>workingDir</strong> working dir for commands to run in</li>
 </ul>
 <p>Example:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">run</span>&gt;</span>
@@ -578,6 +587,10 @@ DB_PORT_5432_TCP_PORT=5432
 DB_PORT_5432_TCP_ADDR=172.17.0.5
 </code></pre><p>If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name
 obtained via <code>docker ps</code> in the configuration.</p>
+<p>Please note that the link behaviour also depends on the network mode selected. Links as described
+are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no 
+environments variables are set and links create merely network aliases for the linked container. </p>
+<p>For a more detailed documentation for the new link handling please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks" target="_blank">Docker network documentation</a> </p>
 <h5 id="volume-binding"><a name="volume-binding" class="plugin-anchor" href="#volume-binding"><span class="fa fa-link"></span></a>Volume binding</h5>
 <p>A container can bind (or &quot;mount&quot;) volumes from various source when starting up: Either from a directory of
 the host system or from another container which exports one or more directories. The mount configuration is
@@ -737,12 +750,26 @@ coloring is enabled and now color is provided a color is picked for
 you. </li>
 <li><strong>file</strong> Path to a file to which the log output is written. This file is overwritten 
 for every run and colors are switched off. </li>
+<li><strong>driver</strong> Section which can specify a dedicated log driver to use. A <code>&lt;name&gt;</code> tag within this section depicts
+the logging driver with the options specified in <code>&lt;opts&gt;</code>. See the example below for how to use this. </li>
 </ul>
 <p>Example (values can be case insensitive, too) :</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">log</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">prefix</span>&gt;</span>TC<span class="hljs-tag">&lt;/<span class="hljs-title">prefix</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">date</span>&gt;</span>default<span class="hljs-tag">&lt;/<span class="hljs-title">date</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">color</span>&gt;</span>cyan<span class="hljs-tag">&lt;/<span class="hljs-title">color</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-title">log</span>&gt;</span>
+</code></pre>
+<p>The following example switches on the <code>gelf</code> <a href="https://docs.docker.com/engine/admin/logging/overview/" target="_blank">logging driver</a> . 
+This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address=udp://localhost:12201</code> when using <code>docker run</code>. </p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">log</span>&gt;</span>
+  ...
+  <span class="hljs-tag">&lt;<span class="hljs-title">driver</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">name</span>&gt;</span>gelf<span class="hljs-tag">&lt;/<span class="hljs-title">name</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">opts</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-title">gelf-address</span>&gt;</span>udp://localhost:12201<span class="hljs-tag">&lt;/<span class="hljs-title">gelf-address</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-title">opts</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">driver</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">log</span>&gt;</span>
 </code></pre>
 
@@ -796,7 +823,7 @@ for every run and colors are switched off. </li>
 
 <script>
 require(["gitbook"], function(gitbook) {
-    var config = {"edit-link":{"base":"https://github.com/rhuss/docker-maven-plugin/edit/master/doc/manual","label":"Edit This Page"},"anchors":{},"code_tomorrow_scheme":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    var config = {"edit-link":{"base":"https://github.com/fabric8io/docker-maven-plugin/edit/master/doc/manual","label":"Edit This Page"},"anchors":{},"code_tomorrow_scheme":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
     gitbook.start(config);
 });
 </script>

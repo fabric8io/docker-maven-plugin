@@ -61,7 +61,7 @@
         data-chapter-title="Installation"
         data-filepath="installation.md"
         data-basepath="."
-        data-revision="Thu Feb 18 2016 13:30:05 GMT+0000 (UTC)"
+        data-revision="Wed Feb 24 2016 09:50:27 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -374,7 +374,7 @@
 pre- and post-integration phase as seen below. The configuration and
 available goals are described below. </p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">plugin</span>&gt;</span>
-  <span class="hljs-tag">&lt;<span class="hljs-title">groupId</span>&gt;</span>org.jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">groupId</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">groupId</span>&gt;</span>io.fabric8<span class="hljs-tag">&lt;/<span class="hljs-title">groupId</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">artifactId</span>&gt;</span>docker-maven-plugin<span class="hljs-tag">&lt;/<span class="hljs-title">artifactId</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">version</span>&gt;</span>0.13.9<span class="hljs-tag">&lt;/<span class="hljs-title">version</span>&gt;</span>
 
@@ -398,7 +398,7 @@ available goals are described below. </p>
        <span class="hljs-tag">&lt;<span class="hljs-title">phase</span>&gt;</span>pre-integration-test<span class="hljs-tag">&lt;/<span class="hljs-title">phase</span>&gt;</span>
        <span class="hljs-tag">&lt;<span class="hljs-title">goals</span>&gt;</span>
          <span class="hljs-comment">&lt;!-- &quot;build&quot; should be used to create the images with the
-              artefacts --&gt;</span> 
+              artifact --&gt;</span> 
          <span class="hljs-tag">&lt;<span class="hljs-title">goal</span>&gt;</span>build<span class="hljs-tag">&lt;/<span class="hljs-title">goal</span>&gt;</span>
          <span class="hljs-tag">&lt;<span class="hljs-title">goal</span>&gt;</span>start<span class="hljs-tag">&lt;/<span class="hljs-title">goal</span>&gt;</span>
        <span class="hljs-tag">&lt;/<span class="hljs-title">goals</span>&gt;</span>
@@ -464,7 +464,7 @@ available goals are described below. </p>
 
 <script>
 require(["gitbook"], function(gitbook) {
-    var config = {"edit-link":{"base":"https://github.com/rhuss/docker-maven-plugin/edit/master/doc/manual","label":"Edit This Page"},"anchors":{},"code_tomorrow_scheme":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    var config = {"edit-link":{"base":"https://github.com/fabric8io/docker-maven-plugin/edit/master/doc/manual","label":"Edit This Page"},"anchors":{},"code_tomorrow_scheme":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
     gitbook.start(config);
 });
 </script>

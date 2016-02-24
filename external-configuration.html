@@ -61,7 +61,7 @@
         data-chapter-title="External Configuration"
         data-filepath="external-configuration.md"
         data-basepath="."
-        data-revision="Thu Feb 18 2016 13:30:05 GMT+0000 (UTC)"
+        data-revision="Wed Feb 24 2016 09:50:27 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -444,6 +444,12 @@ variables specified.</li>
 <li><strong>docker.extraHosts.idx</strong> List of <code>host:ip</code> to add to <code>/etc/hosts</code></li>
 <li><strong>docker.from</strong> Base image for building an image</li>
 <li><strong>docker.hostname</strong> Container hostname</li>
+<li><strong>docker.log.enabled</strong> Use logging (default: <code>true</code>)</li>
+<li><strong>docker.log.prefix</strong> Output prefix</li>
+<li><strong>docker.log.color</strong> ANSI color to use for the prefix</li>
+<li><strong>docker.log.date</strong> Date format for printing the timestamp</li>
+<li><strong>docker.log.driver.name</strong> Name of an alternative log driver</li>
+<li><strong>docker.log.dirver.opts.VARIABLE</strong> Logging driver options (specified similar as in <code>docker.env.VARIABLE</code>)</li>
 <li><strong>docker.links.idx</strong> defines a list of links to other containers when
 starting a container. <em>idx</em> can be any suffix which is not use
 except when <em>idx</em> is numeric it specifies the order within the
@@ -509,7 +515,7 @@ run and build configuration sections.</p>
 <span class="hljs-tag">&lt;<span class="hljs-title">build</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">plugins</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">plugin</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-title">groupId</span>&gt;</span>org.jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">groupId</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">groupId</span>&gt;</span>io.fabric8<span class="hljs-tag">&lt;/<span class="hljs-title">groupId</span>&gt;</span>
       <span class="hljs-tag">&lt;<span class="hljs-title">artifactId</span>&gt;</span>docker-maven-plugin<span class="hljs-tag">&lt;/<span class="hljs-title">artifactId</span>&gt;</span>
       <span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
         <span class="hljs-tag">&lt;<span class="hljs-title">images</span>&gt;</span>
@@ -576,7 +582,7 @@ run and build configuration sections.</p>
 
 <script>
 require(["gitbook"], function(gitbook) {
-    var config = {"edit-link":{"base":"https://github.com/rhuss/docker-maven-plugin/edit/master/doc/manual","label":"Edit This Page"},"anchors":{},"code_tomorrow_scheme":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    var config = {"edit-link":{"base":"https://github.com/fabric8io/docker-maven-plugin/edit/master/doc/manual","label":"Edit This Page"},"anchors":{},"code_tomorrow_scheme":{},"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
     gitbook.start(config);
 });
 </script>
