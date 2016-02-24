@@ -185,7 +185,7 @@ public class RunImageConfiguration {
         return wait;
     }
 
-    public LogConfiguration getLog() {
+    public LogConfiguration getLogConfiguration() {
         return log;
     }
 

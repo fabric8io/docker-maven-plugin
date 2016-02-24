@@ -1,11 +1,15 @@
 package io.fabric8.maven.docker.access;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import io.fabric8.maven.docker.config.LogConfiguration;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONParser;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,4 +46,21 @@ public class ContainerHostConfigTest {
         expected.put("Binds",binds);
         JSONAssert.assertEquals(expected,result,false);
     }
+
+
+    @Test
+    public void testLogConfig() throws Exception {
+        ContainerHostConfig hc = new ContainerHostConfig();
+        Map<String,String> opts = new HashMap<>();
+        opts.put("gelf-address","udp://10.0.0.1:12201");
+        opts.put("labels","label1,label2");
+        LogConfiguration logConfig = new LogConfiguration.Builder()
+            .logDriverName("gelf")
+            .logDriverOpts(opts)
+            .build();
+        hc.logConfig(logConfig);
+
+        JSONAssert.assertEquals("{LogConfig:{Config:{gelf-address:\"udp://10.0.0.1:12201\",labels:\"label1,label2\"},Type:gelf}}", (JSONObject) hc.toJsonObject(), false);
+    }
+
 }

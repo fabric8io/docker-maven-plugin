@@ -274,7 +274,8 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
-                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry());
+                .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
+                .logConfig(runConfig.getLogConfiguration());
 
         addVolumeConfig(config, runConfig);
         addNetworkingConfig(config, runConfig);

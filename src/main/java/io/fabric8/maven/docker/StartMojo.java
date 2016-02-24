@@ -260,7 +260,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         if (runConfig != null) {
-            LogConfiguration logConfig = runConfig.getLog();
+            LogConfiguration logConfig = runConfig.getLogConfiguration();
             if (logConfig != null) {
                 return logConfig.isEnabled();
             } else {

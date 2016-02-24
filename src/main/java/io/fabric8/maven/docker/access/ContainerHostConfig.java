@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.docker.config.LogConfiguration;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -124,6 +125,28 @@ public class ContainerHostConfig {
         return this;
     }
 
+    public ContainerHostConfig logConfig(LogConfiguration logConfig) {
+        if (logConfig != null) {
+            LogConfiguration.LogDriver logDriver = logConfig.getDriver();
+            if (logDriver != null) {
+                JSONObject logConfigJson = new JSONObject();
+                logConfigJson.put("Type", logDriver.getName());
+
+                Map<String,String> opts = logDriver.getOpts();
+                if (opts != null && opts.size() > 0) {
+                    JSONObject config = new JSONObject();
+                    for (Map.Entry<String, String> logOpt : opts.entrySet()) {
+                        config.put(logOpt.getKey(), logOpt.getValue());
+                    }
+                    logConfigJson.put("Config", config);
+                }
+
+                startConfig.put("LogConfig", logConfigJson);
+            }
+        }
+        return this;
+    }
+    
     /**
      * Get JSON which is used for <em>starting</em> a container
      *
