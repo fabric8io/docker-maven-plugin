@@ -270,6 +270,16 @@ public class PropertyConfigHandlerTest {
         assertEquals("post_start_command", wait.getExec().getPostStart());
         assertEquals("pre_stop_command", wait.getExec().getPreStop());
         assertEquals(5, wait.getTime());
+
+        LogConfiguration config = runConfig.getLogConfiguration();
+        assertEquals("green", config.getColor());
+        assertTrue(config.isEnabled());
+        assertEquals("SRV", config.getPrefix());
+        assertEquals("iso8601", config.getDate());
+        assertEquals("json",config.getDriver().getName());
+        assertEquals(2, config.getDriver().getOpts().size());
+        assertEquals("1024", config.getDriver().getOpts().get("max-size"));
+        assertEquals("10", config.getDriver().getOpts().get("max-file"));
     }
 
     private List<String> a(String ... args) {
@@ -334,6 +344,13 @@ public class PropertyConfigHandlerTest {
             k(ConfigKey.WAIT_LOG), "pattern",
             k(ConfigKey.WAIT_TIME), "5",
             k(ConfigKey.WAIT_URL), "http://foo.com",
+            k(ConfigKey.LOG_PREFIX), "SRV",
+            k(ConfigKey.LOG_COLOR), "green",
+            k(ConfigKey.LOG_ENABLED), "true",
+            k(ConfigKey.LOG_DATE), "iso8601",
+            k(ConfigKey.LOG_DRIVER_NAME), "json",
+            k(ConfigKey.LOG_DRIVER_OPTS) + ".max-size", "1024",
+            k(ConfigKey.LOG_DRIVER_OPTS) + ".max-file", "10",
             k(ConfigKey.WORKING_DIR), "foo"
         };
     }

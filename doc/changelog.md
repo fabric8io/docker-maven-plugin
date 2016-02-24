@@ -9,6 +9,8 @@
   - Moved to to [fabric8io](https://github.com/orgs/fabric8io/dashboard) as GitHub organization which implies
     also changes in the maven coordinates (Maven group-id is now **io.fabric8**)
   - Fix wait section in samples (#385)
+  - Add logging configuration to property handler
+  - Add support for a logging driver (#379)
   
 With version `0.14.0` this plugin moved to the [fabric8](http://fabric8.io) community in order to provide
 even better services. This include a change in the Maven coordinates. I.e. the Maven group id is now **io.fabric8** 

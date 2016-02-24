@@ -82,6 +82,12 @@ one image layer is created.
 * **docker.extraHosts.idx** List of `host:ip` to add to `/etc/hosts`
 * **docker.from** Base image for building an image
 * **docker.hostname** Container hostname
+* **docker.log.enabled** Use logging (default: `true`)
+* **docker.log.prefix** Output prefix
+* **docker.log.color** ANSI color to use for the prefix
+* **docker.log.date** Date format for printing the timestamp
+* **docker.log.driver.name** Name of an alternative log driver
+* **docker.log.dirver.opts.VARIABLE** Logging driver options (specified similar as in `docker.env.VARIABLE`)
 * **docker.links.idx** defines a list of links to other containers when
   starting a container. *idx* can be any suffix which is not use
   except when *idx* is numeric it specifies the order within the

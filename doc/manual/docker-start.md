@@ -39,10 +39,10 @@ The `<run>` configuration knows the following sub elements:
 * **links** declares how containers are linked together see
   description on [container linking](#container-linking). 
 * **log** specifies the log configuration for whether and how log
-  messages from the running containers should be printed. See
+  messages from the running containers should be printed. This also can configure the 
+  [log driver](https://docs.docker.com/engine/admin/logging/overview/) to use. See
   [below](#log-configuration) for a detailed description of this configuration
   section. 
-* **logConfig** specify log-driver and log-opts see [below](#log-options) 
 * **memory** memory limit in bytes
 * **memorySwap** total memory usage (memory + swap); use -1 to disable swap.
 * **namingStrategy** sets the name of the container
@@ -420,6 +420,8 @@ configuring the log output:
   you. 
 * **file** Path to a file to which the log output is written. This file is overwritten 
   for every run and colors are switched off. 
+* **driver** Section which can specify a dedicated log driver to use. A `<name>` tag within this section depicts
+  the logging driver with the options specified in `<opts>`. See the example below for how to use this. 
 
 Example (values can be case insensitive, too) :
 
@@ -431,13 +433,17 @@ Example (values can be case insensitive, too) :
 </log>
 ````
 
-##### Log options
-Specify --log-driver and --log-opts in docker run command. Not tested / working along with [Log configuration](#log-configuration)
+The following example switches on the `gelf` [logging driver](https://docs.docker.com/engine/admin/logging/overview/) . 
+This is equivalent to the options `--log-driver=gelf --log-opt gelf-address=udp://localhost:12201` when using `docker run`. 
+
 ````xml
-<logConfig>
-	<logDriver>gelf</logDriver>
-	<logOpts>
-		<gelf-address>udp://localhost:12201</gelf-address>
-	</logOpts>
-</logConfig>
+<log>
+  ...
+  <driver>
+    <name>gelf</name>
+    <opts>
+   	  <gelf-address>udp://localhost:12201</gelf-address>
+    </opts>
+  </driver>
+</log>
 ````

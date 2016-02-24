@@ -104,9 +104,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .ports(listWithPrefix(prefix, PORTS, properties))
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
                 .restartPolicy(extractRestartPolicy(prefix, properties))
-                .logConfig(extractLogConfig(prefix, properties))
                 .user(withPrefix(prefix, USER, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
+                .log(extractLogConfig(prefix,properties))
                 .wait(extractWaitConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .skip(withPrefix(prefix, ConfigKey.SKIP_RUN, properties))
@@ -165,11 +165,18 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private LogConfig extractLogConfig(String prefix, Properties properties) {
-        return new LogConfig.Builder()
-                .logDriver(withPrefix(prefix, ConfigKey.LOG_DRIVER, properties))
-                .logOpts(mapWithPrefix(prefix, ConfigKey.LOG_OPTS, properties))
-                .build();
+    private LogConfiguration extractLogConfig(String prefix, Properties properties) {
+        LogConfiguration.Builder builder = new LogConfiguration.Builder()
+            .color(withPrefix(prefix, LOG_COLOR, properties))
+            .date(withPrefix(prefix, LOG_DATE, properties))
+            .prefix(withPrefix(prefix, LOG_PREFIX, properties))
+            .logDriverName(withPrefix(prefix, LOG_DRIVER_NAME, properties))
+            .logDriverOpts(mapWithPrefix(prefix, LOG_DRIVER_OPTS, properties));
+        Boolean enabled = booleanWithPrefix(prefix, LOG_ENABLED, properties);
+        if (enabled != null) {
+            builder.enabled(enabled);
+        }
+        return builder.build();
     }
 
     private WaitConfiguration extractWaitConfig(String prefix, Properties properties) {

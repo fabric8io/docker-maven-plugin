@@ -77,7 +77,7 @@ public class LogOutputSpecFactory {
         RunImageConfiguration runConfig = imageConfiguration.getRunConfiguration();
         LogConfiguration logConfig = null;
         if (runConfig != null) {
-            logConfig = runConfig.getLog();
+            logConfig = runConfig.getLogConfiguration();
         }
         if (logConfig == null) {
             logConfig = LogConfiguration.DEFAULT;

@@ -275,7 +275,7 @@ public class RunService {
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
-                .logConfig(runConfig.getLogConfig());
+                .logConfig(runConfig.getLogConfiguration());
 
         addVolumeConfig(config, runConfig);
         addNetworkingConfig(config, runConfig);

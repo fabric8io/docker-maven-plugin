@@ -108,9 +108,6 @@ public class RunImageConfiguration {
     private RestartPolicy restartPolicy;
 
     /** @parameter */
-    private LogConfig logConfig;
-    
-    /** @parameter */
     private boolean skip = false;
     
     public RunImageConfiguration() { }
@@ -188,7 +185,7 @@ public class RunImageConfiguration {
         return wait;
     }
 
-    public LogConfiguration getLog() {
+    public LogConfiguration getLogConfiguration() {
         return log;
     }
 
@@ -242,10 +239,6 @@ public class RunImageConfiguration {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
 
-    public LogConfig getLogConfig() {
-        return logConfig;
-    }
-    
     public boolean skip() {
         return skip;
     }
@@ -390,11 +383,6 @@ public class RunImageConfiguration {
             return this;
         }
 
-        public Builder logConfig(LogConfig logConfig) {
-            config.logConfig = logConfig;
-            return this;
-        }
-        
         public Builder skip(String skip) {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);

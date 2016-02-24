@@ -1,46 +1,42 @@
 package io.fabric8.maven.docker.config;
 
+import java.util.Map;
+
 /**
  * @author roland
  * @since 12.10.14
  */
 public class LogConfiguration {
 
-    public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null);
+    public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null, null);
 
-    /**
-     * @parameter default-value="true"
-     */
+    /** @parameter default-value="true" */
     private boolean enabled = true;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String prefix;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String date;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String color;
 
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private String file;
+
+    /** @parameter */
+    private LogDriver driver;
 
     public LogConfiguration() {}
 
-    private LogConfiguration(boolean enabled, String prefix, String color, String date, String file) {
+    private LogConfiguration(boolean enabled, String prefix, String color, String date, String file, LogDriver driver) {
         this.enabled = enabled;
         this.prefix = prefix;
         this.date = date;
         this.color = color;
         this.file = file;
+        this.driver = driver;
     }
 
     public String getPrefix() {
@@ -63,12 +59,43 @@ public class LogConfiguration {
         return file;
     }
 
+    public LogDriver getDriver() {
+        return driver;
+    }
+
+    // =======================================================================================
+
+    public static class LogDriver {
+
+        /** @parameter */
+        private String name;
+
+        /** @parameter */
+        private Map<String, String> opts;
+
+        public LogDriver() {};
+
+        private LogDriver(String name, Map<String, String> opts) {
+            this.name = name;
+            this.opts = opts;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Map<String, String> getOpts() {
+            return opts;
+        }
+    }
+
     // =============================================================================
 
     public static class Builder {
         private boolean enabled = true;
-        private String prefix, timestamp, color, file;
-
+        private String prefix, date, color, file;
+        private Map<String, String> driverOpts;
+        private String driverName;
         public Builder enabled(boolean enabled) {
             this.enabled = enabled;
             return this;
@@ -79,8 +106,8 @@ public class LogConfiguration {
             return this;
         }
 
-        public Builder timestamp(String timestamp) {
-            this.timestamp = timestamp;
+        public Builder date(String date) {
+            this.date = date;
             return this;
         }
 
@@ -94,8 +121,20 @@ public class LogConfiguration {
             return this;
         }
 
+        public Builder logDriverName(String logDriver) {
+            this.driverName = logDriver;
+            return this;
+        }
+
+        public Builder logDriverOpts(Map<String, String> logOpts) {
+            this.driverOpts = logOpts;
+            return this;
+        }
+
+
         public LogConfiguration build() {
-            return new LogConfiguration(enabled, prefix, color, timestamp, file);
+            return new LogConfiguration(enabled, prefix, color, date, file,
+                                        driverName != null ? new LogDriver(driverName,driverOpts) : null);
         }
     }
 }
