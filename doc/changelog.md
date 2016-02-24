@@ -1,16 +1,16 @@
 # ChangeLog
 
 * **0.14.0-SNAPSHOT**
-  - Add support for Docker network and `host`, `bridge` and `container` network modes (#335)
-  - Add support for older Maven versions, minimum required version is now 3.0.5 (#290)
-  - Update to maven-assembly-plugin 2.6 which fixes issue with line endings on windows (#127)
+  - Add support for Docker network and `host`, `bridge` and `container` network modes ([#335](https://github.com/fabric8io/docker-maven-plugin/issues/335))
+  - Add support for older Maven versions, minimum required version is now 3.0.5 ([#290](https://github.com/fabric8io/docker-maven-plugin/issues/290))
+  - Update to maven-assembly-plugin 2.6 which fixes issue with line endings on windows ([#127](https://github.com/fabric8io/docker-maven-plugin/issues/127))
   - Disabled color output on Windows because ANSI emulation can't be enabled in Maven's sl4j logger which 
     caches system out/err
   - Moved to to [fabric8io](https://github.com/orgs/fabric8io/dashboard) as GitHub organization which implies
     also changes in the maven coordinates (Maven group-id is now **io.fabric8**)
-  - Fix wait section in samples (#385)
+  - Fix wait section in samples ([#385](https://github.com/fabric8io/docker-maven-plugin/issues/385))
   - Add logging configuration to property handler
-  - Add support for a logging driver (#379)
+  - Add support for a logging driver ([#379](https://github.com/fabric8io/docker-maven-plugin/issues/379))
   
 With version `0.14.0` this plugin moved to the [fabric8](http://fabric8.io) community in order to provide
 even better services. This include a change in the Maven coordinates. I.e. the Maven group id is now **io.fabric8** 
