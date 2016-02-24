@@ -6,7 +6,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.14.1-SNAPSHOT</version>
+  <version>0.14.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>maven-docker-plugin</name>
@@ -18,7 +18,7 @@
     <developer>
       <name>Roland Huss</name>
       <id>roland</id>
-      <email>roland@jolokia.org</email>
+      <email>rhuss@redhat.com</email>
       <roles>
         <role>Developer</role>
       </roles>
