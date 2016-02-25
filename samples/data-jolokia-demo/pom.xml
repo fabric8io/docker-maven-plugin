@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.14.1</version>
+  <version>0.14.2-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 

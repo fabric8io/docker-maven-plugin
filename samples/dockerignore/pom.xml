@@ -1,0 +1,42 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for showing a vanilla Dockerfile
+  usage from the top-level directory
+  -->
+
+  <parent>
+    <groupId>io.fabric8</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.14.2-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-sample-toplevel-dockerfile</artifactId>
+  <version>0.14.2-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.14.1</version>
+        <configuration>
+          <images>
+            <image>
+              <alias>simple</alias>
+              <name>dmp-sample/toplevel-dockerfile</name>
+              <build>
+                <assembly>
+                  <dockerFileDir>${project.basedir}</dockerFileDir>
+                </assembly>
+              </build>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
