@@ -73,7 +73,8 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
                 fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
             } else if (assemblyConfig.getDockerFileDir() != null) {
                 try {
-                    File dockerFileDir = EnvUtil.prepareAbsoluteSourceDirPath(createMojoParameters(), assemblyConfig.getDockerFileDir());
+                    File dockerFileDir = EnvUtil.prepareAbsoluteSourceDirPath(createMojoParameters(),
+                                                                              assemblyConfig.getDockerFileDir());
                     fromImage = DockerFileUtil.extractBaseImage(new File(dockerFileDir, "Dockerfile"));
                 } catch (IOException e) {
                     // Cant extract base image, so we wont try an autopull. An error will occur later anyway when
