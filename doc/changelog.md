@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.14.1**
+  - First (test) release performed with a fabric8 CD pipeline. No new features.
+  
 * **0.14.0**
   - Add support for Docker network and `host`, `bridge` and `container` network modes ([#335](https://github.com/fabric8io/docker-maven-plugin/issues/335))
   - Add support for older Maven versions, minimum required version is now 3.0.5 ([#290](https://github.com/fabric8io/docker-maven-plugin/issues/290))

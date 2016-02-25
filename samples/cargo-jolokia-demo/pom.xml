@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>cargo-jolokia-demo</artifactId>
-  <version>0.14.0</version>
+  <version>0.14.1</version>
 
   <url>http://www.jolokia.org</url>
 
