@@ -1,5 +1,10 @@
 # ChangeLog
 
+* **0.14.2-SNAPSHOT**
+  - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
+    This is the default now, which should be close enough to `true` (except that it won't fail the build
+    when the image couldn't be removed) (#401)
+
 * **0.14.1**
   - First (test) release performed with a fabric8 CD pipeline. No new features.
   

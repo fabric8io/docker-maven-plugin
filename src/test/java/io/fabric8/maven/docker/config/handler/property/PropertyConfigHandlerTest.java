@@ -138,10 +138,10 @@ public class PropertyConfigHandlerTest {
     
     @Test
     public void testNoCleanup() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CLEANUP), "false" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CLEANUP), "none" };
         
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(false, config.getBuildConfiguration().cleanup());
+        assertEquals(CleanupMode.NONE, config.getBuildConfiguration().cleanupMode());
     }
 
     @Test
@@ -200,7 +200,7 @@ public class PropertyConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
-        assertEquals(true, buildConfig.cleanup());
+        assertEquals(CleanupMode.TRY_TO_REMOVE, buildConfig.cleanupMode());
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals(a("8080"), buildConfig.getPorts());

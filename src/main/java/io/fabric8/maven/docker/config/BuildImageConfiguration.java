@@ -38,9 +38,9 @@ public class BuildImageConfiguration {
     private List<String> runCmds;
 
     /**
-     * @parameter default-value="true"
+     * @parameter default-value="try"
      */
-    private boolean cleanup = true;
+    private String cleanup = "try";
 
     /**
      * @parameter default-value="false"
@@ -159,8 +159,8 @@ public class BuildImageConfiguration {
         return command;
     }
     
-    public boolean cleanup() {
-        return cleanup;
+    public CleanupMode cleanupMode() {
+        return CleanupMode.parse(cleanup);
     }
 
     public boolean nocache() {
@@ -258,9 +258,7 @@ public class BuildImageConfiguration {
         }
         
         public Builder cleanup(String cleanup) { 
-            if (cleanup != null) {
-                config.cleanup = Boolean.valueOf(cleanup);
-            }
+            config.cleanup = cleanup;
             return this;
         }
 

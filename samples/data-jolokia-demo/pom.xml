@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.14.2-SNAPSHOT</version>
+  <version>0.14.1</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -106,6 +106,7 @@
                  ${jolokia.port}. Multiple port mappings can be specified here-->
                   <port>${jolokia.host}:${jolokia.port}:8080</port>
                 </ports>
+                <net>host</net>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <log>Server startup</log>

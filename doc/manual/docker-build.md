@@ -10,7 +10,9 @@ of an image configuration. The available subelements are
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
 * **cleanup** Cleanup dangling (untagged) images after each build (including any containers
-  created from them). Default is `true`
+  created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this
+  is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail
+  the build and `none` if no cleanup is requested.
 * **nocache** Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache`
   when running Maven.
 * **cmd** A command to execute by default (i.e. if no command

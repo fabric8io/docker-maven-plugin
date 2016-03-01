@@ -52,9 +52,9 @@ values in the `<build>` and `<run>` sections.
   when creating the assembly archive
 * **docker.assembly.dockerFileDir** specifies a directory containing an external Dockerfile
   that will be used to create the image
-* **docker.cleanup** Cleanup dangling (untagged) images after each build (including 
-any containers
-  created from them). Default is `true`
+* **docker.cleanup** Cleanup dangling (untagged) images after each build 
+  (including any containers created from them). Default is `try` (which wont fail the build if removing fails),
+  other possible values are `none` (no cleanup) or `remove` (remove but fail if unsuccessful) 
 * **docker.nocache** Don't use Docker's build cache.This can be overwritten by setting a 
   system property `docker.nocache` when running Maven.
 * **docker.optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only 
