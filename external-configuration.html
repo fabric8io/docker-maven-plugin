@@ -61,7 +61,7 @@
         data-chapter-title="External Configuration"
         data-filepath="external-configuration.md"
         data-basepath="."
-        data-revision="Thu Feb 25 2016 07:56:34 GMT+0000 (UTC)"
+        data-revision="Tue Mar 01 2016 11:25:36 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -414,9 +414,9 @@ use. </li>
 when creating the assembly archive</li>
 <li><strong>docker.assembly.dockerFileDir</strong> specifies a directory containing an external Dockerfile
 that will be used to create the image</li>
-<li><strong>docker.cleanup</strong> Cleanup dangling (untagged) images after each build (including 
-any containers
-created from them). Default is <code>true</code></li>
+<li><strong>docker.cleanup</strong> Cleanup dangling (untagged) images after each build 
+(including any containers created from them). Default is <code>try</code> (which wont fail the build if removing fails),
+other possible values are <code>none</code> (no cleanup) or <code>remove</code> (remove but fail if unsuccessful) </li>
 <li><strong>docker.nocache</strong> Don&apos;t use Docker&apos;s build cache.This can be overwritten by setting a 
 system property <code>docker.nocache</code> when running Maven.</li>
 <li><strong>docker.optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only 

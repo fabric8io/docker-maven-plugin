@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Thu Feb 25 2016 07:56:34 GMT+0000 (UTC)"
+        data-revision="Tue Mar 01 2016 11:25:36 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -379,7 +379,9 @@ of an image configuration. The available subelements are</p>
 <li><strong>assembly</strong> specifies the assembly configuration as described in
 <a href="#build-assembly">Build Assembly</a></li>
 <li><strong>cleanup</strong> Cleanup dangling (untagged) images after each build (including any containers
-created from them). Default is <code>true</code></li>
+created from them). Default is <code>try</code> which tries to remove the old image, but doesn&apos;t fail the build if this
+is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail
+the build and <code>none</code> if no cleanup is requested.</li>
 <li><strong>nocache</strong> Don&apos;t use Docker&apos;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code>
 when running Maven.</li>
 <li><strong>cmd</strong> A command to execute by default (i.e. if no command
