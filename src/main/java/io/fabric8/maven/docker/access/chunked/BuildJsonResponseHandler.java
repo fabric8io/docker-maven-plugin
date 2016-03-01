@@ -16,13 +16,10 @@ public class BuildJsonResponseHandler implements EntityStreamReaderUtil.JsonEnti
     public void process(JSONObject json) throws DockerAccessException {
         if (json.has("error")) {
             String msg = json.getString("error");
-            log.error("Error building image: " + msg);
-
             String detailMsg = "";
             if (json.has("errorDetail")) {
                 JSONObject details = json.getJSONObject("errorDetail");
                 detailMsg = details.getString("message");
-                log.error(detailMsg);
             }
             throw new DockerAccessException("%s %s", json.get("error"),
                     (msg.equals(detailMsg) || "".equals(detailMsg) ? "" : "(" + detailMsg + ")"));

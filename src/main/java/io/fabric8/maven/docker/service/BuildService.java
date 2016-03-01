@@ -5,6 +5,7 @@ import java.io.File;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
@@ -41,7 +42,8 @@ public class BuildService {
 
         String oldImageId = null;
 
-        if (buildConfig.cleanup()) {
+        CleanupMode cleanupMode = buildConfig.cleanupMode();
+        if (cleanupMode.isRemove()) {
             oldImageId = queryService.getImageId(imageName);
         }
 
@@ -49,13 +51,22 @@ public class BuildService {
         // auto is now supported by docker, consider switching?
         String newImageId =
                 doBuildImage(imageName, dockerArchive,
-                             buildConfig.cleanup(),
+                             cleanupMode.isRemove(),
                              noCache);
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
-        if (oldImageShouldBeRemoved(oldImageId, newImageId)) {
-            docker.removeImage(oldImageId, true);
-            log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
+        if (oldImageId != null && !oldImageId.equals(newImageId)) {
+            try {
+                docker.removeImage(oldImageId, true);
+                log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
+            } catch (DockerAccessException exp) {
+                if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
+                    log.warn(imageConfig.getDescription() +": " + exp.getMessage() + " (old image)" +
+                             (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
+                } else {
+                    throw exp;
+                }
+            }
         }
     }
 
@@ -67,7 +78,4 @@ public class BuildService {
         return queryService.getImageId(imageName);
     }
 
-    private boolean oldImageShouldBeRemoved(String oldImageId, String newImageId) {
-        return oldImageId != null && !oldImageId.equals(newImageId);
-    }
 }

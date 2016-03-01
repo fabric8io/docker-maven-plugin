@@ -99,8 +99,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
             delegate.post(url, request.toString(), createExecResponseHandler(outputSpec), HTTP_OK);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to start container id [%s]", containerId);
+            throw new DockerAccessException(e, "Unable to start container id [%s]", containerId);
         }
     }
 
@@ -145,8 +144,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
             return json.getString("Id");
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to exec [%s] on container [%s]", request.toString(),
+            throw new DockerAccessException(e, "Unable to exec [%s] on container [%s]", request.toString(),
                                             containerId);
         }
 
@@ -168,8 +166,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             // only need first 12 to id a container
             return json.getString("Id").substring(0, 12);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to create container for [%s]",
+            throw new DockerAccessException(e, "Unable to create container for [%s]",
                                             containerConfig.getImageName());
         }
     }
@@ -180,8 +177,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.startContainer(containerId);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_OK);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to start container id [%s]", containerId);
+            throw new DockerAccessException(e, "Unable to start container id [%s]", containerId);
         }
     }
 
@@ -191,8 +187,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.stopContainer(containerId, killWait);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to stop container id [%s]", containerId);
+            throw new DockerAccessException(e, "Unable to stop container id [%s]", containerId);
         }
     }
 
@@ -203,8 +198,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.buildImage(image, forceRemove, noCache);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to build image [%s]", image);
+            throw new DockerAccessException(e, "Unable to build image [%s]", image);
         }
     }
 
@@ -215,8 +209,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.copyArchive(containerId, targetPath);
             delegate.put(url, archive, HTTP_OK);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to copy archive %s to container [%s] with path %s",
+            throw new DockerAccessException(e, "Unable to copy archive %s to container [%s] with path %s",
                                             archive.toPath(), containerId, targetPath);
         }
     }
@@ -241,8 +234,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String response = delegate.get(url, HTTP_OK);
             return new ContainerDetails(new JSONObject(response));
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to retrieve container name for [%s]", containerId);
+            throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerId);
         }
     }
 
@@ -271,8 +263,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try {
             return delegate.get(url, new ApacheHttpClientDelegate.StatusCodeResponseHandler(), HTTP_OK, HTTP_NOT_FOUND) == HTTP_OK;
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to check image [%s]", name);
+            throw new DockerAccessException(e, "Unable to check image [%s]", name);
         }
     }
 
@@ -291,8 +282,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try {
             return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to inspect image [%s]", name);
+            throw new DockerAccessException(e, "Unable to inspect image [%s]", name);
         }
     }
 
@@ -303,8 +293,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.removeContainer(containerId, removeVolumes);
             delegate.delete(url, HTTP_NO_CONTENT);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to remove container [%s]", containerId);
+            throw new DockerAccessException(e, "Unable to remove container [%s]", containerId);
         }
     }
 
@@ -318,8 +307,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             delegate.post(pullUrl, null, createAuthHeader(authConfig),
                           createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            throw new DockerAccessException(e, "Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         }
     }
 
@@ -333,8 +321,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             delegate.post(pushUrl, null, createAuthHeader(authConfig),
                           createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            throw new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         } finally {
             if (temporaryImage != null) {
                 removeImage(temporaryImage);
@@ -351,9 +338,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.tagContainer(source, target, force);
             delegate.post(url, HTTP_CREATED);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to add tag [%s] to image [%s]", targetImage,
-                                            sourceImage);
+            throw new DockerAccessException(e, "Unable to add tag [%s] to image [%s]", targetImage,
+                                            sourceImage, e);
         }
     }
 
@@ -369,8 +355,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
             return response.getStatusCode() == HTTP_OK;
         } catch (IOException e) {
-            log.error(e.getMessage());
-            throw new DockerAccessException("Unable to remove image [%s]", image);
+            throw new DockerAccessException(e, "Unable to remove image [%s]", image);
         }
     }
 
