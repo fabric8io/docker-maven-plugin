@@ -152,32 +152,22 @@ Some other highlights in random order (and not complete):
 
 ### Why another Maven Plugin ?
 
-If you search it GitHub you will find a whole cosmos of Maven Docker
+If you search on GitHub you will find a whole cosmos of Maven Docker
 plugins (As of November 2014: 12 (!) plugins which 4 actively maintained).
 On the one hand, variety is a good thing, but on the other hand for
 users it is hard to decide which one to choose. So, you might wonder
 why you should choose this one.
 
-I setup a dedicated [shootout project](https://github.com/rhuss/shootout-docker-maven)
+There s a dedicated [shootout project](https://github.com/fabric8io/shootout-docker-maven)
 which compares the four most active plugins. It contains a simple demo
 project with a database and a microservice image, along with an integration
 test. Each plugin is configured to create images and run the
-integration test (if possible). Although it might be a bit biased, I
-think it can be useful for figuring out which plugin suites you best.
+integration test (if possible). Although it might be a bit biased, it can 
+be useful for figuring out which plugin suites you best.
 
-But here is my motivation for writing this plugin: 
+The high-level design goals and initial motiviation fort this plugin are:
 
-First of all, you might wonder, why did I start this plugin if there
-were already quite a few out there?
-
-The reason is quite simple: I didn't know about them when I started, and if
-you look at the commit history you will see that they all started
-roughly at the same time (March 2014).
-
-My design goals were quite simple, and these were my initial needs for
-this plugin:
-
-* I needed a flexible, **dynamic port mapping** from container to host
+* A flexible, **dynamic port mapping** from container to host
   ports so that truly isolated builds could be made. This should
   work on indirect setups with VMs like
   [boot2docker](https://github.com/boot2docker/boot2docker) for
@@ -192,30 +182,24 @@ this plugin:
   start a container. So, only a handful options should be exposed,
   which needs not necessarily map directly to docker config setup.
 
-* The plugin should play nicely with
-  [Cargo](http://cargo.codehaus.org/) so that deployments into
-  containers is easy.
-
-* I wanted as **few dependencies** as possible for this plugin. So I
-  decided to *not* use the Java Docker API
+* There should be as **few dependencies** as possible for this plugin. So it
+  does *not* use the Java Docker API
   [docker-java](https://github.com/docker-java/docker-java) which is
   external to docker and has a different lifecycle than Docker's
   [remote API](http://docs.docker.io/en/latest/reference/api/docker_remote_api/).
-  That is probably the biggest difference to the other
-  docker-maven-plugins since AFAIK they all rely on this API. Since
-  this plugin needs only a small subset of the whole API,
-  I think it is OK to do the REST calls directly. That way I only have
-  to deal with Docker peculiarities and not docker-java's as well.
-  As a side-effect, this plugin has fewer transitive dependencies.
+  Since this plugin needs only a small subset of the whole API,
+  it is OK to do the REST calls directly. That way the plugin has
+  to deal only with Docker peculiarities and not docker-java's as well.
+  As a side-effect, it has fewer transitive dependencies.
   FYI: There are other Docker Java/Groovy client libraries out, which
   might be suitable for plugins like this:
   [fabric/fabric-docker-api](https://github.com/fabric8io/fabric8/tree/master/fabric/fabric-docker-api),
-  [sprotify/docker-client](https://github.com/spotify/docker-client)
+  [spotify/docker-client](https://github.com/spotify/docker-client)
   or
   [gesellix-docker/docker-client](https://github.com/gesellix-docker/docker-client).
   Can you see the pattern ;-) ?
   
 So, final words: Enjoy this plugin, and please use the
 [issue tracker](https://github.com/fabric8io/docker-maven-plugin/issues)
-for anything what hurts, or when you have a wish list. I'm quite
-committed to this plugin and have quite some plans. Please stay tuned...
+for anything what hurts, or when you have a wish list. 
+
