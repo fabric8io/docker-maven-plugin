@@ -17,9 +17,9 @@ of an image configuration. The available subelements are
   when running Maven.
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See 
-  [Start-up Arguments](#start-up-arguments) for details.
-* **entrypoint** An entrypoint allows you to configure a container that will run as an executable. 
-  See [Start-up Arguments](#start-up-arguments) for details.
+  [Start-up Arguments](#startup-arguments) for details.
+* **entryPoint** An entrypoint allows you to configure a container that will run as an executable. 
+  See [Start-up Arguments](#startup-arguments) for details.
 * **env** holds environments as described in
   [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
 * **from** specifies the base image which should be used for this
@@ -215,7 +215,7 @@ the `data-jolokia-demo`'s pom.xml.
 
 Alternatively `descriptorRef` can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
-used for `assemblyDescriptorRef`:
+used for `descriptorRef`:
 
 * **artifact-with-dependencies** will copy your project's artifact and
   all its dependencies. Also, when a `classpath` file exists in the target 
@@ -227,6 +227,20 @@ used for `assemblyDescriptorRef`:
 * **rootWar** will copy the artifact as `ROOT.war` to the exposed
   directory. I.e. Tomcat will then deploy the war under the root
   context. 
+
+For example, 
+
+```xml
+<images>
+  <image>
+    <build>
+      <assembly>
+         <descriptorRef>artifact-with-dependencies</descriptorRef>
+         .....
+```
+
+will add the created artifact with the name `${project.build.finalName}.${artifact.extension}`
+and all jar dependencies in the the `baseDir` (which is `/maven` by default).
 
 All declared files end up in the configured `basedir` (or `/maven`
 by default) in the created image.
