@@ -160,9 +160,6 @@
         <executions>
           <execution>
             <id>start</id>
-             <configuration>
-               <dockerHost>http://172.28.128.4:2375</dockerHost>
-             </configuration>
             <phase>pre-integration-test</phase>
             <goals>
               <goal>build</goal>
@@ -171,9 +168,6 @@
           </execution>
           <execution>
             <id>stop</id>
-            <configuration>
-              <dockerHost>http://172.28.128.4:2375</dockerHost>
-            </configuration>
             <phase>post-integration-test</phase>
             <goals>
               <goal>stop</goal>
