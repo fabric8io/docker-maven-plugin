@@ -106,7 +106,6 @@
                  ${jolokia.port}. Multiple port mappings can be specified here-->
                   <port>${jolokia.host}:${jolokia.port}:8080</port>
                 </ports>
-                <net>host</net>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <log>Server startup</log>
