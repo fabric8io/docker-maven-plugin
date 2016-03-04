@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Tue Mar 01 2016 11:25:36 GMT+0000 (UTC)"
+        data-revision="Fri Mar 04 2016 16:42:11 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -386,9 +386,9 @@ the build and <code>none</code> if no cleanup is requested.</li>
 when running Maven.</li>
 <li><strong>cmd</strong> A command to execute by default (i.e. if no command
 is provided when a container for this image is started). See 
-<a href="#start-up-arguments">Start-up Arguments</a> for details.</li>
-<li><strong>entrypoint</strong> An entrypoint allows you to configure a container that will run as an executable. 
-See <a href="#start-up-arguments">Start-up Arguments</a> for details.</li>
+<a href="#startup-arguments">Start-up Arguments</a> for details.</li>
+<li><strong>entryPoint</strong> An entrypoint allows you to configure a container that will run as an executable. 
+See <a href="#startup-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>env</strong> holds environments as described in
 <a href="#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>. </li>
 <li><strong>from</strong> specifies the base image which should be used for this
@@ -561,7 +561,7 @@ IDE autocompletion. As an example, refer to the profile <code>inline</code> in
 the <code>data-jolokia-demo</code>&apos;s pom.xml. </p>
 <p>Alternatively <code>descriptorRef</code> can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
-used for <code>assemblyDescriptorRef</code>:</p>
+used for <code>descriptorRef</code>:</p>
 <ul>
 <li><strong>artifact-with-dependencies</strong> will copy your project&apos;s artifact and
 all its dependencies. Also, when a <code>classpath</code> file exists in the target 
@@ -574,6 +574,16 @@ dependencies. </li>
 directory. I.e. Tomcat will then deploy the war under the root
 context. </li>
 </ul>
+<p>For example, </p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">images</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">build</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">assembly</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-title">descriptorRef</span>&gt;</span>artifact-with-dependencies<span class="hljs-tag">&lt;/<span class="hljs-title">descriptorRef</span>&gt;</span>
+         .....
+</code></pre>
+<p>will add the created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code>
+and all jar dependencies in the the <code>baseDir</code> (which is <code>/maven</code> by default).</p>
 <p>All declared files end up in the configured <code>basedir</code> (or <code>/maven</code>
 by default) in the created image.</p>
 <p>If the assembly references the artifact to build with this pom, it is 
