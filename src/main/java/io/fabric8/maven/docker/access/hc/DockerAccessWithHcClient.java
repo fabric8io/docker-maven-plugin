@@ -398,11 +398,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
     // ===========================================================================================================
 
     private void logWarnings(JSONObject body) {
-        Object warningsObj = body.get("Warnings");
-        if (warningsObj != JSONObject.NULL) {
-            JSONArray warnings = (JSONArray) warningsObj;
-            for (int i = 0; i < warnings.length(); i++) {
-                log.warn(warnings.getString(i));
+        if (body.has("Warnings")) {
+            Object warningsObj = body.get("Warnings");
+            if (warningsObj != JSONObject.NULL) {
+                JSONArray warnings = (JSONArray) warningsObj;
+                for (int i = 0; i < warnings.length(); i++) {
+                    log.warn(warnings.getString(i));
+                }
             }
         }
     }

@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.14.3-SNAPSHOT**
+  - Be more conservative when no "warnings" are returned on create (#407)
+
 * **0.14.2**
   - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
     This is the default now, which should be close enough to `true` (except that it won't fail the build
