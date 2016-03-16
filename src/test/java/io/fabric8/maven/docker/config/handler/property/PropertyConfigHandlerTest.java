@@ -117,6 +117,19 @@ public class PropertyConfigHandlerTest {
     }
 
     @Test
+    public void testArg() throws Exception {
+        String value = "foo";
+        String key = "USER1";
+        List<ImageConfiguration> configs = configHandler.resolve(
+                imageConfiguration,props(
+                        "docker.name","demo",
+                        "docker.arg." + key, value));
+        assertEquals(1,configs.size());
+        Map<String, String> args = configs.get(0).getBuildConfiguration().getArg();
+        assertEquals(value, args.get(key));
+    }
+
+    @Test
     public void testAssembly() throws Exception {
         List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props(getTestAssemblyData()));
         assertEquals(1, configs.size());

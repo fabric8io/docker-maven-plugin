@@ -53,6 +53,9 @@ public class DockerFileBuilder {
     // environment
     private Map<String,String> envEntries = new HashMap<>();
 
+    // build args
+    private Map<String,String> argEntries = new HashMap<>();
+
     // image labels
     private Map<String, String> labels = new HashMap<>();
 
@@ -91,6 +94,7 @@ public class DockerFileBuilder {
         }
 
         addOptimisation();
+        addArg(b);
         addEnv(b);
         addLabels(b);
         addPorts(b);
@@ -169,6 +173,10 @@ public class DockerFileBuilder {
         addMap(b, DockerFileKeyword.ENV, envEntries);
     }
 
+    private void addArg(StringBuilder b) {
+        addArgMap(b, DockerFileKeyword.ARG, argEntries);
+    }
+
     private void addLabels(StringBuilder b) {
         addMap(b, DockerFileKeyword.LABEL, labels);
     }
@@ -181,6 +189,14 @@ public class DockerFileBuilder {
                 entries[i++] = quote(entry.getKey()) + "=" + quote(entry.getValue());
             }
             keyword.addTo(b, entries);
+        }
+    }
+
+    private void addArgMap(StringBuilder b,DockerFileKeyword keyword, Map<String,String> map) {
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            String value = StringUtils.isNotBlank(entry.getValue()) ? "=" + quote(entry.getValue()) : "";
+            String argEntry = quote(entry.getKey()) + value;
+            keyword.addTo(b, argEntry);
         }
     }
 
@@ -325,6 +341,13 @@ public class DockerFileBuilder {
         if (values != null) {
             this.envEntries.putAll(values);
             validateMap(envEntries);
+        }
+        return this;
+    }
+
+    public DockerFileBuilder arg(Map<String, String> values) {
+        if (values != null) {
+            this.argEntries.putAll(values);
         }
         return this;
     }

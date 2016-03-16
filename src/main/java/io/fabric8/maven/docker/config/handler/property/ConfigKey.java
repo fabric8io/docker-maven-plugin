@@ -24,6 +24,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
 public enum ConfigKey {
 
     ALIAS,
+    ARG,
     ASSEMBLY_BASEDIR("assembly.baseDir"),
     ASSEMBLY_DESCRIPTOR("assembly.descriptor"),
     ASSEMBLY_DESCRIPTOR_REF("assembly.descriptorRef"),

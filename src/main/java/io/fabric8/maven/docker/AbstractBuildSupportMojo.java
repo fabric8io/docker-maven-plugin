@@ -2,6 +2,8 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -49,6 +51,9 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
 
+    @Parameter(property = "docker.build.args", defaultValue = "")
+    private String buildArgs;
+
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
                                   sourceDirectory, outputDirectory);
@@ -60,7 +65,17 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
-        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig));
+        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig), addBuildArgs());
+    }
+
+    private Map<String, String> addBuildArgs() {
+        HashMap<String, String> args = new HashMap<>();
+        String[] argPairs = buildArgs.split(",");
+        for(String argPair : argPairs){
+            String[] keyValue = argPair.split("=");
+            args.put(keyValue[0], keyValue[1]);
+        }
+        return args;
     }
 
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)

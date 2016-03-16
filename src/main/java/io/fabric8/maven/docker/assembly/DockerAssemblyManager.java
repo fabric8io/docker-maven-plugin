@@ -253,6 +253,7 @@ public class DockerAssemblyManager {
     DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig) {
         DockerFileBuilder builder =
                 new DockerFileBuilder()
+                        .arg(buildConfig.getArg())
                         .env(buildConfig.getEnv())
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
