@@ -86,6 +86,19 @@ public class TimestampTest {
         new Timestamp("");
     }
 
+    @Test
+    public void testNumericTimeZoneOffset() throws Exception {
+        Timestamp ts3p = new Timestamp("2016-03-16T17:06:30.714387000+03");
+        Timestamp ts530p = new Timestamp("2016-03-16T17:06:30.714387000+05:30");
+        Timestamp ts4 = new Timestamp("2016-03-16T17:06:30.714387000-04:00");
+        Timestamp ts2 = new Timestamp("2016-03-16T17:06:30.714387000-02:00");
+        Timestamp tsz = new Timestamp("2016-03-16T17:06:30.714387000Z");
+        assertTrue(ts2.compareTo(ts4) < 0);
+        assertTrue(tsz.compareTo(ts2) < 0);
+        assertTrue(ts3p.compareTo(ts4) < 0);
+        assertTrue(ts530p.compareTo(ts3p) < 0);
+    }
+
     @Test(expected = NullPointerException.class)
     public void testNullSpec() throws Exception {
         new Timestamp(null);
