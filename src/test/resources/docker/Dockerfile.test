@@ -1,6 +1,5 @@
 FROM image
 MAINTAINER maintainer@example.com
-ARG user1=pass
 ENV foo=bar
 LABEL com.acme.foobar="How are \"you\" ?"
 EXPOSE 8080
