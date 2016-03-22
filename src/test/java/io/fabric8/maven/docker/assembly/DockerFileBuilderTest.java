@@ -22,7 +22,6 @@ public class DockerFileBuilderTest {
                 .baseImage("image")
                 .cmd(a)
                 .env(ImmutableMap.of("foo", "bar"))
-                .arg(ImmutableMap.of("user1", "pass"))
                 .basedir("/export")
                 .expose(Collections.singletonList("8080"))
                 .maintainer("maintainer@example.com")
@@ -32,26 +31,6 @@ public class DockerFileBuilderTest {
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
-        assertEquals(expected, stripCR(dockerfileContent));
-    }
-
-    @Test
-    public void testBuildWithBlankArgDockerFile() throws Exception {
-        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
-        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
-                .baseImage("image")
-                .cmd(a)
-                .env(ImmutableMap.of("foo", "bar"))
-                .arg(ImmutableMap.of("user1", ""))
-                .basedir("/export")
-                .expose(Collections.singletonList("8080"))
-                .maintainer("maintainer@example.com")
-                .workdir("/tmp")
-                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second"))
-                .content();
-        String expected = loadFile("docker/Dockerfile_blankArg.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
 

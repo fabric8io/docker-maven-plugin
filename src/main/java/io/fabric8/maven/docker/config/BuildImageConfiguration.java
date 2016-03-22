@@ -70,11 +70,6 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
-    private Map<String,String> arg;
-
-    /**
-     * @parameter
-     */
     private Map<String,String> labels;
 
     /**
@@ -149,10 +144,6 @@ public class BuildImageConfiguration {
 
     public Map<String, String> getEnv() {
         return env;
-    }
-
-    public Map<String, String> getArg() {
-        return arg;
     }
 
     public Map<String, String> getLabels() {
@@ -250,11 +241,6 @@ public class BuildImageConfiguration {
 
         public Builder env(Map<String, String> env) {
             config.env = env;
-            return this;
-        }
-
-        public Builder arg(Map<String, String> arg) {
-            config.arg = arg;
             return this;
         }
 

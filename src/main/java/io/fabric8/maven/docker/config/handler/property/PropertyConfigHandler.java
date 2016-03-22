@@ -66,7 +66,6 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .optimise(withPrefix(prefix, OPTIMISE, properties))
                 .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
-                .arg(mapWithPrefix(prefix, ARG, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
                 .labels(mapWithPrefix(prefix,LABELS,properties))
                 .ports(extractPortValues(prefix, properties))
