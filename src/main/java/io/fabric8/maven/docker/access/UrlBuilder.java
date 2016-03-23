@@ -121,6 +121,16 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String listNetworks() {
+        return u("networks")
+                .build();
+    }
+
+    public String createNetwork() {
+        return u("networks/create")
+                .build();
+    }
+
     // ============================================================================
 
     @SuppressWarnings("deprecation")

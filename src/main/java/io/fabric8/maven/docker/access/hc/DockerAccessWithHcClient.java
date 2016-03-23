@@ -19,6 +19,8 @@ import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ContainersListElement;
+import io.fabric8.maven.docker.model.Network;
+import io.fabric8.maven.docker.model.NetworksListElement;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
@@ -171,6 +173,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
+
     @Override
     public void startContainer(String containerId) throws DockerAccessException {
         try {
@@ -256,6 +259,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throw new DockerAccessException(e.getMessage());
         }
     }
+
 
     @Override
     public boolean hasImage(String name) throws DockerAccessException {
@@ -356,6 +360,48 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return response.getStatusCode() == HTTP_OK;
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove image [%s]", image);
+        }
+    }
+
+    @Override
+    public List<Network> listNetworks() throws DockerAccessException {
+        String url = urlBuilder.listNetworks();
+
+        try {
+            String response = delegate.get(url, HTTP_OK);
+            JSONArray array = new JSONArray(response);
+            List<Network> networks = new ArrayList<>(array.length());
+
+            for (int i = 0; i < array.length(); i++) {
+                networks.add(new NetworksListElement(array.getJSONObject(i)));
+            }
+
+            return networks;
+        } catch (IOException e) {
+            throw new DockerAccessException(e.getMessage());
+        }
+    }
+
+    @Override
+    public String createNetwork(NetworkCreateConfig networkConfig)
+            throws DockerAccessException {
+        String createJson = networkConfig.toJson();
+        log.debug("Network create config: " + createJson);
+        try {
+            String url = urlBuilder.createNetwork();
+            String response =
+                    delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
+            log.debug(response);
+            JSONObject json = new JSONObject(response);
+            if (json.has("Warnings")) {
+                logWarnings(json);
+            }
+
+            // only need first 12 to id a container
+            return json.getString("Id").substring(0, 12);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to create network for [%s]",
+                    networkConfig.getName());
         }
     }
 

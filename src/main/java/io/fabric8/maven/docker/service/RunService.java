@@ -411,4 +411,16 @@ public class RunService {
         log.info(descriptor.getDescription() + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
                  containerId.substring(0, 12));
     }
+
+    public void createCustomNetwork(RunImageConfiguration runConfig) throws DockerAccessException {
+        final NetworkingMode networkingMode = runConfig.getNetworkingMode();
+        if (networkingMode.isCustomNetwork()) {
+            String customNetwork = networkingMode.getCustomNetwork();
+            if (!queryService.hasNetwork(customNetwork)) {
+                docker.createNetwork(new NetworkCreateConfig(customNetwork));
+            } else {
+                log.debug("Custom Network " + customNetwork + " found");
+            }
+        }
+    }
 }
