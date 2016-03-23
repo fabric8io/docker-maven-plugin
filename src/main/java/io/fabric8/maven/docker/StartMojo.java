@@ -46,6 +46,10 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
+    // Whether to create the customs networks (user-defined bridge network) before starting
+    @Parameter(property = "docker.createCustomNetworks", defaultValue = "true")
+    protected boolean createCustomNetworks;
+
     // whether to block during to start. Set it via Sysem property docker.follow
     private boolean follow;
 
@@ -81,6 +85,9 @@ public class StartMojo extends AbstractDockerMojo {
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
+                if (createCustomNetworks) {
+                    runService.createCustomNetwork(runConfig);
+                }
 
                 String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties);
 
