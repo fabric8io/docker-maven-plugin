@@ -93,7 +93,7 @@ public class ImageName {
             }
         }
 
-        validate();
+        doValidate();
     }
 
     public String getRepository() {
@@ -189,6 +189,16 @@ public class ImageName {
         return user;
     }
 
+    /**
+     * Check whether the given name validates agains the Docker rules for names
+     *
+     * @param image image name to validate
+     * d@throws IllegalArgumentException if the name doesnt validate
+     */
+    public static void validate(String image) {
+        // Validation will be triggered during construction
+        new ImageName(image);
+    }
     // ================================================================================================
 
     // Validations patterns, taken directly from the docker source
@@ -200,7 +210,7 @@ public class ImageName {
     private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
 
     // Validate parts and throw an IllegalArgumentException if a part is not valid
-    private void validate() {
+    private void doValidate() {
         List<String> errors = new ArrayList<>();
         // Stripp of user from repository name
         String image = user != null ? repository.substring(user.length() + 1) : repository;

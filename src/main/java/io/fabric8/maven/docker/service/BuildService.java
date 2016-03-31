@@ -7,6 +7,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -38,6 +39,8 @@ public class BuildService {
         throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
+        ImageName.validate(imageName);
+
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
         String oldImageId = null;
