@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.util;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ImageNameTest {
 
@@ -72,6 +73,36 @@ public class ImageNameTest {
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalFormat() throws Exception {
         new ImageName("");
+    }
+
+    @Test
+    public void namesUsedByDockerTests() {
+        StringBuffer longTag = new StringBuffer();
+        for (int i = 0; i < 130; i++) {
+            longTag.append("a");
+        }
+        String[] illegal = {
+            "fo$z$", "Foo@3cc", "Foo$3", "Foo*3", "Fo^3", "Foo!3", "F)xcz(", "fo%asd", "FOO/bar",
+            "repo:fo$z$", "repo:Foo@3cc", "repo:Foo$3", "repo:Foo*3", "repo:Fo^3", "repo:Foo!3",
+            "repo:%goodbye", "repo:#hashtagit", "repo:F)xcz(", "repo:-foo", "repo:..","repo:" + longTag.toString(),
+            "-busybox:test", "-test/busybox:test", "-index:5000/busybox:test"
+
+        };
+
+        for (String i : illegal) {
+            try {
+                new ImageName(i);
+                fail(String.format("Name '%s' should fail",i));
+            } catch (IllegalArgumentException exp) {};
+        }
+
+        String[] legal = {
+            "fooo/bar", "fooaa/test", "foooo:t", "HOSTNAME.DOMAIN.COM:443/foo/bar"
+        };
+
+        for (String l : legal) {
+            new ImageName(l);
+        }
     }
 
     // =======================================================================================
