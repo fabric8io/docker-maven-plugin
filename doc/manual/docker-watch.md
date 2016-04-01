@@ -32,9 +32,9 @@ are two watch modes, which can be specified in multiple ways:
 
         $ mvn docker:start docker:watch -Ddocker.watchMode=run
 
-* `both` : Enables both `build` and `run`. This is the default `both`. 
+* `both` : Enables both `build` and `run`. This is the default. 
 
-* `none` : Image is complete ignored for watching
+* `none` : Image is completely ignored for watching.
 
 * `copy` : Copy changed files into the running container. This is the
   fast way to update a container, however the target container must
