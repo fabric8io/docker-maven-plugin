@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.File;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -35,7 +36,7 @@ public class BuildService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache)
+    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
         throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
@@ -55,7 +56,7 @@ public class BuildService {
         String newImageId =
                 doBuildImage(imageName, dockerArchive,
                              cleanupMode.isRemove(),
-                             noCache);
+                             noCache, buildArgs);
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
@@ -75,9 +76,9 @@ public class BuildService {
 
     // ===============================================================
 
-    private String doBuildImage(String imageName, File dockerArchive, boolean cleanUp, boolean noCache)
+    private String doBuildImage(String imageName, File dockerArchive, boolean cleanUp, boolean noCache, Map<String, String> buildArgs)
         throws DockerAccessException, MojoExecutionException {
-        docker.buildImage(imageName, dockerArchive, cleanUp, noCache);
+        docker.buildImage(imageName, dockerArchive, cleanUp, noCache, buildArgs);
         return queryService.getImageId(imageName);
     }
 

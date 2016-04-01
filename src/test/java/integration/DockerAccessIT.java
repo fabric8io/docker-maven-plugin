@@ -3,6 +3,7 @@ package integration;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
@@ -52,7 +53,7 @@ public class DockerAccessIT {
     @Ignore
     public void testBuildImage() throws DockerAccessException {
         File file = new File("src/test/resources/integration/busybox-test.tar");
-        dockerClient.buildImage(IMAGE_TAG, file, false, false);
+        dockerClient.buildImage(IMAGE_TAG, file, false, false, Collections.<String, String>emptyMap());
         assertTrue(hasImage(IMAGE_TAG));
 
         testRemoveImage(IMAGE_TAG);

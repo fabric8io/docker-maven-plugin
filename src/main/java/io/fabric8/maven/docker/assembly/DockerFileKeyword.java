@@ -17,6 +17,7 @@ public enum DockerFileKeyword
     CMD,
     USER,
     ENV,
+    ARG,
     LABEL,
     COPY,
     VOLUME;

@@ -2,6 +2,9 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -49,6 +52,9 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
 
+    @Parameter(property = "docker.build.args", defaultValue = "")
+    private String buildArgs;
+
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
                                   sourceDirectory, outputDirectory);
@@ -60,7 +66,40 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
-        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig));
+        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig), addBuildArgs(imageConfig));
+    }
+
+    private Map<String, String> addBuildArgs(ImageConfiguration imageConfig) {
+        Properties properties = project.getProperties();
+        Properties systemProperties = System.getProperties();
+        Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(imageConfig, properties);
+        Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(imageConfig, systemProperties);
+        buildArgsFromProject.putAll(buildArgsFromSystem);
+        return buildArgsFromProject;
+    }
+
+    private Map<String, String> addBuildArgsFromProperties(ImageConfiguration imageConfig, Properties properties) {
+        String argPrefix  = "docker.arg.";
+        String imageArgPrefix = "docker.iarg.";
+        String aliasPrefix = imageArgPrefix + imageConfig.getAlias() + "." ;
+        String namePrefix = imageArgPrefix + imageConfig.getName() + "." ;
+        Map<String, String> buildArgs = new HashMap<>();
+        for(Object keyObj : properties.keySet()){
+            String key = (String)keyObj;
+            String argKey;
+            if (key.startsWith(argPrefix)){
+                argKey = key.replace(argPrefix, "");
+            }else if (key.startsWith(aliasPrefix)){
+                argKey = key.replace(aliasPrefix, "");
+            }else if(key.startsWith(namePrefix)){
+                argKey = key.replace(namePrefix, "");
+            }else{
+                continue;
+            }
+            buildArgs.put(argKey, properties.getProperty(key));
+            log.debug(String.format("Build args set %s", buildArgs));
+        }
+        return buildArgs;
     }
 
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)

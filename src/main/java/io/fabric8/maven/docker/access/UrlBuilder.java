@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 import io.fabric8.maven.docker.util.ImageName;
+import org.json.JSONObject;
 
 public final class UrlBuilder {
 
@@ -17,13 +18,17 @@ public final class UrlBuilder {
         this.apiVersion = apiVersion;
         this.baseUrl = stripSlash(baseUrl);
     }
-    
-    public String buildImage(String image, boolean forceRemove, boolean noCache) {
-        return u("build")
-                .p("t",image)
-                .p(forceRemove ? "forcerm" : "rm", true)
-                .p("nocache", noCache)
-                .build();
+
+    public String buildImage(String image, boolean forceRemove, boolean noCache, Map<String, String> buildArgs) {
+
+        Builder urlBuilder = u("build")
+            .p("t", image)
+            .p(forceRemove ? "forcerm" : "rm", true)
+            .p("nocache", noCache);
+        if (!buildArgs.isEmpty()) {
+            urlBuilder.p("buildargs", new JSONObject(buildArgs).toString());
+        }
+        return urlBuilder.build();
     }
 
     public String copyArchive(String containerId, String targetPath) {

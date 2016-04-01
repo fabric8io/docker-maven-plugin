@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.access;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
@@ -169,9 +170,11 @@ public interface DockerAccess {
      * @param dockerArchive from which the docker image should be build
      * @param forceRemove whether to remove intermediate containers
      * @param noCache whether to use cache when building the image
+     * @param buildArgs buildArgs to add then building the image
      * @throws DockerAccessException if docker host reports an error during building of an image
      */
-    void buildImage(String image, File dockerArchive, boolean forceRemove, boolean noCache) throws DockerAccessException;
+    void buildImage(String image, File dockerArchive, boolean forceRemove, boolean noCache,
+                    Map<String, String> buildArgs) throws DockerAccessException;
 
     /**
      * Alias an image in the repository with a complete new name. (Note that this maps to a Docker Remote API 'tag'
