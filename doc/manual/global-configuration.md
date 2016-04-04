@@ -22,7 +22,7 @@ parentheses.
   use to communicate with the server.
 * **certPath** (`docker.certPath`) Since 1.3.0 Docker remote API requires
   communication via SSL and authentication with certificates when used
-  with boot2docker. These
+  with boot2docker or docker-machine. These
   certificates are normally stored
   in `~/.docker/`. With this configuration the path can be set
   explicitly. If not set, the fallback is first taken from the
