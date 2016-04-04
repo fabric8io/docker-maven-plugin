@@ -170,8 +170,9 @@ The high-level design goals and initial motiviation fort this plugin are:
 * A flexible, **dynamic port mapping** from container to host
   ports so that truly isolated builds could be made. This should
   work on indirect setups with VMs like
-  [boot2docker](https://github.com/boot2docker/boot2docker) for
-  running on OS X.
+  [boot2docker](https://github.com/boot2docker/boot2docker) or
+  [docker-machine](https://docs.docker.com/machine/) for
+  running on OS X/Windows.
 
 * It should be possible to **pull images** on the fly to get
   self-contained and repeatable builds with the only requirement to
