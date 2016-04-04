@@ -1,11 +1,84 @@
 ### docker:build
 
+
 This goal will build all images which have a `<build>` configuration
-section, or, if the global configuration `image` is set, only those
-images contained in this variable will be build. 
+section, or, if the global configuration variable `image` (property:
+`docker.image`) is set, only the images contained in this variable
+(comma separated) will be built.
+
+Image can be build in two different ways:
+
+#### Plugin XML Configuration
+
+Here all configurartion required to build the image is contained in
+the plugin configuration. By default its the standard XML based
+configuration for the plugin but can be switched to a property based
+configuration syntax as described in the section
+[External configuration](external-configuration.md). The XML
+configuration syntax is reqcommended because of its more structured
+and typed nature. 
+
+When using this mode, the Dockerfile is created on the fly with all
+instructions extracted from the configuration given. 
+
+#### External Dockerfile
+
+Alternatively an external Dockerfile template can be used. This mode
+is switch on by using one of these two configuration options within
+the `<build>` configuration section.
+
+* **dockerFileDir** specifies a directory containing a
+ `Dockerfile` that will be used to create the image. 
+ 
+* **dockerFile** specifies a specific Dockerfile. The `dockerFileDir`
+  is set to the directory containing the file.
+
+If `dockerFileDir` is a relative path looked up in
+`${project.basedDir}/src/main/docker`. You can make easily an absolute
+path by prefixing with `${project.baseDir}`.
+
+Any additional files located in the `dockerFileDir` directory will
+also be added to the build context as well as any files specified by
+an assembly. However, you still need to insert `ADD` or `COPY`
+directives yourself into the Dockerfile. If this directory contains a
+`.maven-dockerignore` file, then it is used for excluding files for
+the build. Each line in this file is treated as an
+[FileSet exclude pattern](http://ant.apache.org/manual/Types/fileset.html)
+as used by the [maven-assembly-plugin](http://maven.apache
+.org/plugins/maven-assembly-plugin/). It is similar to `.dockerignore`
+when using Docker but has a slightly different syntax (hence the
+different name).
+
+Except for the [assembly configuration](#build-assembly) all other
+configuration options are ignored for now. For the future it is
+planned to introduce special keywords lile `DMP_ADD_ASSEMBLY` which
+can be used in the Dockerfile template to placing the configuration
+resulting from the additional configuration.
+
+The following example used a Dockerfile in the directory
+`src/main/docker/demo`: 
+
+```xml
+<plugin>
+ <configuration>
+   <images>
+     <image>
+       <name>user/demo</name>
+       <build>
+         <dockerFileDir>demo</dockerFileDir>
+       </build>
+     </image>
+   </images>
+ </configuration>
+ ...
+</plugin>
+```
+
+#### Configuration
 
 All build relevant configuration is contained in the `<build>` section
-of an image configuration. The available subelements are
+of an image configuration. In addition to `<dockerFileDir>` and
+`<dockerFile>` the following configuration options are available:
 
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
@@ -99,16 +172,9 @@ Here's an example:
 * **descriptorRef** is an alias to a predefined assembly
   descriptor. The available aliases are also described in the
   [Docker Assembly](#docker-assembly) section.
-* **dockerFileDir** specifies a directory containing an external Dockerfile
-  that will be used to create the image. Any additional files located in this
-  directory will also be added to the image. Usage of this directive will take
-  precedence over any configuration specified in the `build` element. In addition to
-  the files specified within the assembly also all files contained in this directory
-  are added to the docker build directory. If this path is not an absolute path it 
-  is resolved relatively to `src/main/docker`. You can make easily an absolute path by 
-  using `${project.baseDir}` as prefix for your path. If this directory contains a `.maven-dockerignore` file, 
-  this file is used for excluding files in the build. Each line is treated as an [FileSet exclude pattern](http://ant.apache.org/manual/Types/fileset.html) as used by the [maven-assembly-plugin](http://maven.apache
-  .org/plugins/maven-assembly-plugin/). 
+* **dockerFileDir** specifies a directory containing an external
+  Dockerfile. **This option is deprecated, please use <dockerFileDir>
+  directly in the <build> section. See above for the usage.** 
 * **exportBasedir** indicates if the `basedir` should be exported as a volume.
   This value is `true` by default except in the case the `basedir` is set to 
   the container root (`/`). It is also `false` by default when a base image is used with `from` 

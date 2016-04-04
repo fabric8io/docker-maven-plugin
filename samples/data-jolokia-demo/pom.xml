@@ -381,22 +381,23 @@
 
     <profile>
       <id>dockerfile</id>
+      <properties>
+        <dockerfile>demo/Dockerfile</dockerfile>
+      </properties>
       <build>
         <plugins>
           <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <configuration combine.self="override">
-              <autoPull>false</autoPull>
+              <autoPull>true</autoPull>
               <images>
                 <image>
                   <!-- Artifact Image-->
                   <name>jolokia/${project.artifactId}-dockerfile:${project.version}</name>
                   <alias>jolokia</alias>
                   <build>
-                    <assembly>
-                      <dockerFileDir>demo</dockerFileDir>
-                    </assembly>
+                    <dockerFile>${dockerfile}</dockerFile>
                     <args>
                       <deploymentDir>maven</deploymentDir>
                     </args>
@@ -453,7 +454,6 @@
         </plugins>
       </build>
     </profile>
-
 
     <profile>
       <id>wildfly</id>

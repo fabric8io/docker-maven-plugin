@@ -37,6 +37,7 @@ public class DockerFileUtil {
      * @return the base image name or <code>null</code> if none is found.
      */
     public static String extractBaseImage(File dockerfile) throws IOException {
+        // TODO: Interpolate Maven properties
         try (BufferedReader reader = new BufferedReader(new FileReader(dockerfile))) {
             String line;
             Pattern fromPattern = Pattern.compile("^\\s*FROM\\s+([^\\s]+).*$", Pattern.CASE_INSENSITIVE);

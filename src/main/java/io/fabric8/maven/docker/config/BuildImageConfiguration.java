@@ -1,14 +1,34 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.File;
 import java.util.*;
 
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 
 /**
  * @author roland
  * @since 02.09.14
  */
 public class BuildImageConfiguration {
+
+    /**
+     * Directory holding an external Dockerfile which is used to build the
+     * image. This Dockerfile will be enriched by the addition build configuration
+     *
+     * @parameter
+     */
+    private String dockerFileDir;
+
+    /**
+     * Path to a dockerfile to use. Its parent directory is used as build context (i.e. as <code>dockerFileDir</code>).
+     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly givem
+     * <code>dockerFileDir</code>
+     *
+     * @parameter
+     */
+    private String dockerFile;
 
     // Base Image name of the data image to use.
     /**
@@ -102,7 +122,7 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private AssemblyConfiguration assembly;
-    
+
     /**
      * @parameter
      */
@@ -113,7 +133,19 @@ public class BuildImageConfiguration {
      */
     private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
 
+    // Path to Dockerfile to use, initialized lazily ....
+    File dockerFileFile;
+    private boolean dockerFileMode;
+
     public BuildImageConfiguration() {}
+
+    public boolean isDockerFileMode() {
+        return dockerFileMode;
+    }
+
+    public File getDockerFile() {
+        return dockerFileFile;
+    }
 
     public String getFrom() {
         return from;
@@ -196,9 +228,23 @@ public class BuildImageConfiguration {
         return args;
     }
 
+    public File getAbsoluteDockerFilePath(MojoParameters mojoParams) {
+        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
+    }
+
     public static class Builder {
         private final BuildImageConfiguration config = new BuildImageConfiguration();
-        
+
+        public Builder dockerFileDir(String dir) {
+            config.dockerFileDir = dir;
+            return this;
+        }
+
+        public Builder dockerFile(String file) {
+            config.dockerFile = file;
+            return this;
+        }
+
         public Builder from(String from) {
             config.from = from;
             return this;
@@ -310,7 +356,7 @@ public class BuildImageConfiguration {
         }
     }
 
-    public String validate(Logger log) throws IllegalArgumentException {
+    public String initAndValidate(Logger log) throws IllegalArgumentException {
         if (entryPoint != null) {
             entryPoint.validate();
         }
@@ -332,6 +378,36 @@ public class BuildImageConfiguration {
             log.warn("   <cmd>" + command + "</cmd>");
         }
 
-        return null;
+        initDockerFileFile(log);
+
+        if (args != null) {
+            // ARG support came in later
+            return "1.21";
+        } else {
+            return null;
+        }
+    }
+
+    // Initialize the dockerfile location and the build mode
+    private void initDockerFileFile(Logger log) {
+        if (dockerFile != null) {
+            dockerFileFile = new File(dockerFile);
+            dockerFileMode = true;
+        } else if (dockerFileDir != null) {
+            dockerFileFile = new File(dockerFileDir, "Dockerfile");
+            dockerFileMode = true;
+        } else {
+            String deprecatedDockerFileDir = getAssemblyConfiguration() != null ?
+                getAssemblyConfiguration().getDockerFileDir() :
+                null;
+            if (deprecatedDockerFileDir != null) {
+                log.warn("<dockerFileDir> in the <assembly> section of a <build> configuration is deprecated");
+                log.warn("Please use <dockerFileDir> or <dockerFile> directly within the <build> configuration instead");
+                dockerFileFile = new File(deprecatedDockerFileDir,"Dockerfile");
+                dockerFileMode = true;
+            } else {
+                dockerFileMode = false;
+            }
+        }
     }
 }

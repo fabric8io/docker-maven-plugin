@@ -207,7 +207,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         String apiVersion = this.apiVersion;
         if (images != null) {
             for (ImageConfiguration imageConfiguration : images) {
-                apiVersion = EnvUtil.extractLargerVersion(apiVersion,imageConfiguration.validate(log));
+                apiVersion = EnvUtil.extractLargerVersion(apiVersion,imageConfiguration.initAndValidate(log));
             }
         }
         return apiVersion;

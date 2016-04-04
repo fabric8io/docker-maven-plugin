@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.File;
-import java.util.Collections;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
@@ -115,7 +114,7 @@ public class BuildServiceTest {
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
-        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), anyBoolean(), anyBoolean(), anyMap());
+        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), (String) eq(null), anyBoolean(), anyBoolean(), anyMap());
     }
 
     private void thenOldImageIsNotRemoved() throws DockerAccessException {
@@ -127,7 +126,7 @@ public class BuildServiceTest {
     }
 
     private void whenBuildImage(boolean cleanup, boolean nocache) throws DockerAccessException, MojoExecutionException {
-        doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), anyBoolean(), anyBoolean(), anyMap());
+        doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), (String) eq(null), anyBoolean(), anyBoolean(), anyMap());
 
         if (cleanup) {
             when(docker.removeImage(oldImageId)).thenReturn(true);

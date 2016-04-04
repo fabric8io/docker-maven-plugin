@@ -29,6 +29,7 @@ public class AssemblyConfiguration {
 
     /**
      * @parameter
+     * @deprecated Use {@link BuildImageConfiguration#dockerFileDir} instead
      */
     private String dockerFileDir;
 

@@ -112,7 +112,7 @@ public class RunImageConfiguration {
     
     public RunImageConfiguration() { }
 
-    public String validate() {
+    public String initAndValidate() {
         if (entrypoint != null) {
             entrypoint.validate();
         }

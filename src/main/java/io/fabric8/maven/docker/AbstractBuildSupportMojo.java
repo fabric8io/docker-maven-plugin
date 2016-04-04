@@ -2,9 +2,6 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
@@ -72,27 +69,43 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-        String fromImage = buildConfig.getFrom();
+
+        String fromImage;
+        if (buildConfig.isDockerFileMode()) {
+            fromImage = extractBaseFromDockerfile(buildConfig);
+        } else {
+            fromImage = extractBaseFromConfiguration(buildConfig);
+        }
+        if (fromImage != null) {
+            String pullRegistry =
+                EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), this.pullRegistry, registry);
+            checkImageWithAutoPull(hub, fromImage, pullRegistry, true);
+        }
+    }
+
+    private String extractBaseFromConfiguration(BuildImageConfiguration buildConfig) {
+        String fromImage;
+        fromImage = buildConfig.getFrom();
         if (fromImage == null) {
             AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
             if (assemblyConfig == null) {
                 fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
-            } else if (assemblyConfig.getDockerFileDir() != null) {
-                try {
-                    File dockerFileDir = EnvUtil.prepareAbsoluteSourceDirPath(createMojoParameters(),
-                                                                              assemblyConfig.getDockerFileDir());
-                    fromImage = DockerFileUtil.extractBaseImage(new File(dockerFileDir, "Dockerfile"));
-                } catch (IOException e) {
-                    // Cant extract base image, so we wont try an autopull. An error will occur later anyway when
-                    // building the image, so we are passive here.
-                    fromImage = null;
-                }
             }
         }
-        if (fromImage != null) {
-            String pullRegistry = EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), this.pullRegistry, registry);
-            checkImageWithAutoPull(hub, fromImage, pullRegistry, true);
+        return fromImage;
+    }
+
+    private String extractBaseFromDockerfile(BuildImageConfiguration buildConfig) {
+        String fromImage;
+        try {
+            File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(createMojoParameters());
+            fromImage = DockerFileUtil.extractBaseImage(fullDockerFilePath);
+        } catch (IOException e) {
+            // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
+            // building the image, so we are passive here.
+            fromImage = null;
         }
+        return fromImage;
     }
 
     private boolean checkForNocache(ImageConfiguration imageConfig) {

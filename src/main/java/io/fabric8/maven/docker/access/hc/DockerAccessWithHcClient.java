@@ -192,10 +192,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void buildImage(String image, File dockerArchive, boolean forceRemove, boolean noCache,
+    public void buildImage(String image, File dockerArchive, String dockerfileName, boolean forceRemove, boolean noCache,
                            Map<String, String> buildArgs) throws DockerAccessException {
         try {
-            String url = urlBuilder.buildImage(image, forceRemove, noCache, buildArgs);
+            String url = urlBuilder.buildImage(image, dockerfileName, forceRemove, noCache, buildArgs);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to build image [%s]", image);
