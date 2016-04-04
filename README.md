@@ -4,15 +4,11 @@
 [![Travis](https://secure.travis-ci.org/fabric8io/docker-maven-plugin.png)](http://travis-ci.org/fabric8io/docker-maven-plugin)
 [![Circle CI](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration)
 
-> The Maven group id changed from version 0.13.9 to 0.14.0. Please update the Maven group id in your
-> `pom.xml` to **io.fabric8** (formerly: org.jolokia). This is because of moving this personal 
-> project to a [fabric8](http://fabric8.io) community project.
-
 This is a Maven plugin for managing Docker images and containers for your builds.
 It works with Maven 3.0.5 and Docker 1.6.0 or later.
 
 The current Docker API version used is `v1.18` (which is the minimal required API version). If you want to use the 
-copy mode for `docker:watch` you need `v1.20` or greater (Docker 1.8.1). For using custom networks `v1.21` (Docker 1.9) is required. See the **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** 
+copy mode for `docker:watch` you need `v1.20` or greater (Docker 1.8.1). For using custom networks and build args `v1.21` (Docker 1.9) is required. See the **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** 
 for details on how to override this value for new
 versions of Docker. 
 

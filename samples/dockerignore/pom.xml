@@ -15,7 +15,7 @@
   </parent>
 
   <artifactId>dmp-sample-dockerignore</artifactId>
-  <version>0.14.2</version>
+  <version>0.15.0-SNAPSHOT</version>
 
   <build>
     <plugins>
@@ -28,9 +28,7 @@
               <alias>simple</alias>
               <name>dmp-sample/dockerignore</name>
               <build>
-                <assembly>
-                  <dockerFileDir>${project.basedir}</dockerFileDir>
-                </assembly>
+                <dockerFileDir>${project.basedir}</dockerFileDir>
               </build>
             </image>
           </images>
