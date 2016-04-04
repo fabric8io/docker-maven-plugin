@@ -1,3 +1,4 @@
 FROM consol/tomcat-7.0:latest
-ADD jolokia.war /maven/
-ADD jolokia-it.war /maven/
+ARG deploymentDir
+ADD jolokia.war /${deploymentDir}/
+ADD jolokia-it.war /${deploymentDir}/

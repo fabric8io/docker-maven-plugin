@@ -41,6 +41,8 @@ up from the following properties, which correspond to corresponding
 values in the `<build>` and `<run>` sections.
 
 * **docker.alias** Alias name
+* **docker.args.BUILDVAR** Set the value of a build variable. The syntax is the same as for 
+  specifying environment variables (see below).
 * **docker.assembly.baseDir** Directory name for the exported artifacts as
   described in an assembly (which is `/maven` by default).
 * **docker.assembly.descriptor** Path to the assembly descriptor when
@@ -52,16 +54,14 @@ values in the `<build>` and `<run>` sections.
   when creating the assembly archive
 * **docker.assembly.dockerFileDir** specifies a directory containing an external Dockerfile
   that will be used to create the image
-* **docker.cleanup** Cleanup dangling (untagged) images after each build 
-  (including any containers created from them). Default is `try` (which wont fail the build if removing fails),
-  other possible values are `none` (no cleanup) or `remove` (remove but fail if unsuccessful) 
 * **docker.nocache** Don't use Docker's build cache.This can be overwritten by setting a 
   system property `docker.nocache` when running Maven.
-* **docker.optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only 
-one image layer is created.
 * **docker.bind.idx** Sets a list of paths to bind/expose in the container
 * **docker.capAdd.idx** List of kernel capabilities to add to the container
 * **docker.capDrop.idx** List of kernel capabilities to remove from the container
+* **docker.cleanup** Cleanup dangling (untagged) images after each build 
+  (including any containers created from them). Default is `try` (which wont fail the build if removing fails),
+  other possible values are `none` (no cleanup) or `remove` (remove but fail if unsuccessful) 
 * **docker.cmd** Command to execute. This is used both when
   running a container and as default command when creating an image.
 * **docker.domainname** Container domain name
@@ -75,13 +75,13 @@ one image layer is created.
   be provided. This environment is used both for building images and
   running containers. The value cannot be empty but can contain Maven property names which are
   resolved before the Dockerfile is created
-* **docker.labels.LABEL** Sets a label which works similarly like setting environment variables. 
 * **docker.envPropertyFile** specifies the path to a property file whose properties are 
   used as environment variables. The environment variables takes precedence over any other environment
   variables specified.
 * **docker.extraHosts.idx** List of `host:ip` to add to `/etc/hosts`
 * **docker.from** Base image for building an image
 * **docker.hostname** Container hostname
+* **docker.labels.LABEL** Sets a label which works similarly like setting environment variables. 
 * **docker.log.enabled** Use logging (default: `true`)
 * **docker.log.prefix** Output prefix
 * **docker.log.color** ANSI color to use for the prefix
@@ -95,10 +95,13 @@ one image layer is created.
   indexes sorted and the all non-numeric indexes in arbitrary order).
   For example `<docker.links.1>db</docker.links.1>` specifies a link
   to the image with alias 'db'.
+* **docker.maintainer** defines the maintainer's email as used when building an image
 * **docker.memory** Container memory (in bytes)
 * **docker.memorySwap** Total memory (swap + memory) `-1` to disable swap
 * **docker.name** Image name
 * **docker.namingStrategy** Container naming (either `none` or `alias`)
+* **docker.optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only 
+one image layer is created.
 * **docker.portPropertyFile** specifies a path to a port mapping used
   when starting a container.
 * **docker.ports.idx** Sets a port mapping. For example
@@ -111,10 +114,9 @@ one image layer is created.
 * **docker.registry** Registry to use for pushing images.
 * **docker.restartPolicy.name** Container restart policy
 * **docker.restartPolicy.retry** Max restrart retries if `on-failure` used
+* **docker.tags.idx** defines a list of tags to apply to a built image
 * **docker.user** Container user
 * **docker.volumes.idx** defines a list of volumes to expose when building an image
-* **docker.tags.idx** defines a list of tags to apply to a built image
-* **docker.maintainer** defines the maintainer's email as used when building an image
 * **docker.volumesFrom.idx** defines a list of image aliases from which
   the volumes should be mounted of the container. The list semantics
   is the same as for links (see above). For examples

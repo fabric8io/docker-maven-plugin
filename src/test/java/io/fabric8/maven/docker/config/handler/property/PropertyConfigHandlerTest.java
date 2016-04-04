@@ -211,6 +211,7 @@ public class PropertyConfigHandlerTest {
 
         validateEnv(buildConfig.getEnv());
         validateLabels(buildConfig.getLabels());
+        validateArgs(buildConfig.getArgs());
         /*
          * validate only the descriptor is required and defaults are all used, 'testAssembly' validates 
          * all options can be set 
@@ -222,6 +223,10 @@ public class PropertyConfigHandlerTest {
         assertNull(assemblyConfig.getUser());
         assertNull(assemblyConfig.exportBasedir());
         assertFalse(assemblyConfig.isIgnorePermissions());
+    }
+
+    private void validateArgs(Map<String, String> args) {
+        assertEquals("http://proxy",args.get("PROXY"));
     }
 
     private void validateLabels(Map<String, String> labels) {
@@ -320,6 +325,7 @@ public class PropertyConfigHandlerTest {
             k(ConfigKey.DOMAINNAME), "domain.com",
             k(ConfigKey.ENTRYPOINT), "entrypoint.sh",
             k(ConfigKey.ENV) + ".HOME", "/Users/roland",
+            k(ConfigKey.ARGS) + ".PROXY", "http://proxy",
             k(ConfigKey.LABELS) + ".com.acme.label", "Hello\"World",
             k(ConfigKey.ENV_PROPERTY_FILE), "/tmp/envProps.txt",
             k(ConfigKey.EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",

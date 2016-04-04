@@ -170,7 +170,7 @@ public interface DockerAccess {
      * @param dockerArchive from which the docker image should be build
      * @param forceRemove whether to remove intermediate containers
      * @param noCache whether to use cache when building the image
-     * @param buildArgs buildArgs to add then building the image
+     * @param buildArgs buildArgs to add then building the image. Can be <code>null</code> for no build args.
      * @throws DockerAccessException if docker host reports an error during building of an image
      */
     void buildImage(String image, File dockerArchive, boolean forceRemove, boolean noCache,

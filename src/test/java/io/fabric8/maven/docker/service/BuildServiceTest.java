@@ -133,6 +133,6 @@ public class BuildServiceTest {
             when(docker.removeImage(oldImageId)).thenReturn(true);
         }
 
-        buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap());
+        buildService.buildImage(imageConfig, params, nocache);
     }
 }

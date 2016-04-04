@@ -21,7 +21,11 @@ of an image configuration. The available subelements are
 * **entryPoint** An entrypoint allows you to configure a container that will run as an executable. 
   See [Start-up Arguments](#startup-arguments) for details.
 * **env** holds environments as described in
-  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels). 
+  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
+* **args** is Map specifying the value of [Docker build args](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg) 
+  which should be used when building the image with an external Dockerfile which uses build arguments. 
+  The key-value syntax is the same as when defining Maven properties (or `labels` or `env`). 
+  This argument is ignored when no external Dockerfile is used. 
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
@@ -33,7 +37,7 @@ of an image configuration. The available subelements are
 * **runCmds** specifies commands to be run during the build process. It contains **run** elements 
   which are passed to bash. The run commands are inserted right after the assembly and after **workdir** in to the
   Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime
-  behaviour when starting containers. 
+  behaviour when starting containers.  
 * **optimise** if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
 * **compression** is the compression mode how the build archive is transmitted to the docker daemon (`docker:build`) and how 
   docker build archives are attached to this build as sources (`docker:source`). The value can be `none` (default), 

@@ -25,7 +25,7 @@ public final class UrlBuilder {
             .p("t", image)
             .p(forceRemove ? "forcerm" : "rm", true)
             .p("nocache", noCache);
-        if (!buildArgs.isEmpty()) {
+        if (buildArgs != null && !buildArgs.isEmpty()) {
             urlBuilder.p("buildargs", new JSONObject(buildArgs).toString());
         }
         return urlBuilder.build();

@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.14.2</version>
+  <version>0.14.3-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -397,6 +397,9 @@
                     <assembly>
                       <dockerFileDir>demo</dockerFileDir>
                     </assembly>
+                    <args>
+                      <deploymentDir>maven</deploymentDir>
+                    </args>
                   </build>
                   <run>
                     <ports>
@@ -404,9 +407,9 @@
                     </ports>
                     <wait>
                       <!-- The plugin waits until this URL is reachable via HTTP ... -->
-                      <wait>
+                      <http>
                         <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
-                      </wait>
+                      </http>
                       <time>10000</time>
                     </wait>
                   </run>

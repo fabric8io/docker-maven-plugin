@@ -36,7 +36,7 @@ public class BuildService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
+    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache)
         throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
@@ -56,7 +56,7 @@ public class BuildService {
         String newImageId =
                 doBuildImage(imageName, dockerArchive,
                              cleanupMode.isRemove(),
-                             noCache, buildArgs);
+                             noCache, buildConfig.getArgs());
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {

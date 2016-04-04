@@ -53,24 +53,29 @@ public class BuildImageConfiguration {
     private boolean optimise = false;
 
     /**
-     * @paramter
+     * @parameter
      */
     private List<String> volumes;
 
     /**
-     * @paramter
+     * @parameter
      */
     private List<String> tags;
     
     /**
      * @parameter
      */
-    private Map<String,String> env;
+    private Map<String, String> env;
 
     /**
      * @parameter
      */
-    private Map<String,String> labels;
+    private Map<String, String> labels;
+
+    /**
+     * @parameter
+     */
+    private Map<String, String> args;
 
     /**
      * @parameter
@@ -187,6 +192,10 @@ public class BuildImageConfiguration {
         return runCmds;
     }
 
+    public Map<String, String> getArgs() {
+        return args;
+    }
+
     public static class Builder {
         private final BuildImageConfiguration config = new BuildImageConfiguration();
         
@@ -241,6 +250,11 @@ public class BuildImageConfiguration {
 
         public Builder env(Map<String, String> env) {
             config.env = env;
+            return this;
+        }
+
+        public Builder args(Map<String, String> args) {
+            config.args = args;
             return this;
         }
 
