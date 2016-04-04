@@ -61,7 +61,7 @@
         data-chapter-title="docker:start"
         data-filepath="docker-start.md"
         data-basepath="."
-        data-revision="Tue Mar 22 2016 08:18:00 GMT+0000 (UTC)"
+        data-revision="Mon Apr 04 2016 07:31:26 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -618,7 +618,7 @@ been created from the image <code>jolokia/docker-demo</code> are mounted directl
 the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
 the full image name, an alias name like <em>service</em> can be used, too.</p>
 <p>Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This
-should even work for boot2docker:</p>
+should even work for boot2docker/docker-machine:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">volumes</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">bind</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">volume</span>&gt;</span>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}<span class="hljs-tag">&lt;/<span class="hljs-title">volume</span>&gt;</span> 
