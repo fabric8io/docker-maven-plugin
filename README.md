@@ -4,13 +4,8 @@
 [![Travis](https://secure.travis-ci.org/fabric8io/docker-maven-plugin.png)](http://travis-ci.org/fabric8io/docker-maven-plugin)
 [![Circle CI](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration)
 
-This is a Maven plugin for managing Docker images and containers for your builds.
+This is a Maven plugin for building Docker images and managing containers for integration tests.
 It works with Maven 3.0.5 and Docker 1.6.0 or later.
-
-The current Docker API version used is `v1.18` (which is the minimal required API version). If you want to use the 
-copy mode for `docker:watch` you need `v1.20` or greater (Docker 1.8.1). For using custom networks and build args `v1.21` (Docker 1.9) is required. See the **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** 
-for details on how to override this value for new
-versions of Docker. 
 
 #### Goals
 
@@ -35,6 +30,13 @@ versions of Docker.
 * [ChangeLog](doc/changelog.md) has the release history of this plugin.
 * [Contributing](doc/contributing.md) explains how you can contribute to this project. Pull requests are highly appreciated!
   
+#### Docker API Support
+
+* Docker 1.6 (**v1.18**) is the minimal required version 
+* Docker 1.8.1 (**v1.20**) is required for `docker:watch`
+* Docker 1.9 (**v1.21**) is required of using custom networks and build args.
+
+
 
 
 
