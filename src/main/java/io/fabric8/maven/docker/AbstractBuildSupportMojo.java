@@ -2,7 +2,11 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
+import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -20,6 +24,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 
 /**
  * @author roland
+ * @author balazsmaria
  * @since 26/06/15
  */
 abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
@@ -63,7 +68,27 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
-        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig));
+        hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig), addBuildArgs());
+    }
+
+    private Map<String, String> addBuildArgs() {
+        Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(project.getProperties());
+        Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
+        return ImmutableMap.<String, String>builder().putAll(buildArgsFromProject).putAll(buildArgsFromSystem).build();
+    }
+
+    private Map<String, String> addBuildArgsFromProperties(Properties properties) {
+        String argPrefix  = "docker.buildArg.";
+        Map<String, String> buildArgs = new HashMap<>();
+        for(Object keyObj : properties.keySet()){
+            String key = (String)keyObj;
+            if (key.startsWith(argPrefix)){
+                String argKey = key.replace(argPrefix, "");
+                buildArgs.put(argKey, properties.getProperty(key));
+            }
+        }
+        log.debug(String.format("Build args set %s", buildArgs));
+        return buildArgs;
     }
 
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.File;
+import java.util.Collections;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
@@ -132,6 +133,6 @@ public class BuildServiceTest {
             when(docker.removeImage(oldImageId)).thenReturn(true);
         }
 
-        buildService.buildImage(imageConfig, params, nocache);
+        buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap());
     }
 }
