@@ -8,7 +8,10 @@ section, or, if the global configuration variable `image` (property:
 
 Image can be build in two different ways:
 
-#### Plugin XML Configuration
+* **Inline plugin configuration** with everything specified with the POM. 
+* **External Dockerfiles** which can be enriched by build information.
+
+#### Inline plugin configuration
 
 Here all configurartion required to build the image is contained in
 the plugin configuration. By default its the standard XML based
@@ -80,6 +83,11 @@ All build relevant configuration is contained in the `<build>` section
 of an image configuration. In addition to `<dockerFileDir>` and
 `<dockerFile>` the following configuration options are available:
 
+* **args** is Map specifying the value of [Docker build args](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg) 
+  which should be used when building the image with an external Dockerfile which uses build arguments. 
+  The key-value syntax is the same as when defining Maven properties (or `labels` or `env`). 
+  This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as 
+  described in [Build Args](#build-args)
 * **assembly** specifies the assembly configuration as described in
   [Build Assembly](#build-assembly)
 * **cleanup** Cleanup dangling (untagged) images after each build (including any containers
@@ -95,10 +103,6 @@ of an image configuration. In addition to `<dockerFileDir>` and
   See [Start-up Arguments](#startup-arguments) for details.
 * **env** holds environments as described in
   [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
-* **args** is Map specifying the value of [Docker build args](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg) 
-  which should be used when building the image with an external Dockerfile which uses build arguments. 
-  The key-value syntax is the same as when defining Maven properties (or `labels` or `env`). 
-  This argument is ignored when no external Dockerfile is used. 
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
@@ -369,11 +373,20 @@ descriptor like above to achieve the desired naming.
 
 Currently the `jar` and `war` plugins properly honor the usage of `finalName`.
 
-#### Build-Args
-To set the value of a [Docker build arg](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg), there are two possibilities:
-- set a system property, eg.: `docker.buildArg.myBuildArg=myValue` or
-- set a project property, eg.:
-```
-<docker.buildArg.myBuildArg>myValue</docker.buildArg.myBuildArg>
-```
-Please note that the system property setting will always override the project property.
+#### Build Args
+
+As described in section [Configuration](#configuration) for external Dockerfiles [Docker build arg](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg) can be used. In addition to the 
+configuration within the plugin configuration you can also use properties to specify them:
+
+* Set a system property when running Maven, eg.: `-Ddocker.buildArg.http_proxy=http://proxy:8001`. This is especially
+  useful when using predefined Docker arguments for setting proxies transparently.
+  
+* Set a project property within the `pom.xml`, eg.:
+
+        <docker.buildArg.myBuildArg>myValue</docker.buildArg.myBuildArg>
+
+Please note that the system property setting will always override the project property. Also note that for all
+properties which are not Docker [predefined](https://docs.docker.com/engine/reference/builder/#arg) properties, 
+the external Dockerfile must contain an `ARGS` instruction. 
+
+
