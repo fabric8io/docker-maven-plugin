@@ -369,3 +369,11 @@ descriptor like above to achieve the desired naming.
 
 Currently the `jar` and `war` plugins properly honor the usage of `finalName`.
 
+#### Build-Args
+To set the value of a [Docker build arg](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg), there are two possibilities:
+- set a system property, eg.: `docker.buildArg.myBuildArg=myValue` or
+- set a project property, eg.:
+```
+<docker.buildArg.myBuildArg>myValue</docker.buildArg.myBuildArg>
+```
+Please note that the system property setting will always override the project property.

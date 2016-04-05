@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.service;
 import java.io.File;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -33,10 +34,11 @@ public class BuildService {
      * @param imageConfig the image configuration
      * @param params mojo params for the project
      * @param noCache if not null, dictate the caching behaviour. Otherwise its taken from the build configuration
+     * @param buildArgs
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache)
+    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
         throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
@@ -52,13 +54,16 @@ public class BuildService {
         }
 
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
+
+        Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
+
         // auto is now supported by docker, consider switching?
         String newImageId =
                 doBuildImage(imageName,
                              dockerArchive,
                              getDockerfileName(buildConfig),
                              cleanupMode.isRemove(),
-                             noCache, buildConfig.getArgs());
+                             noCache, mergedBuildMap);
         log.info(imageConfig.getDescription() + ": Built image " + newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
@@ -74,6 +79,15 @@ public class BuildService {
                 }
             }
         }
+    }
+
+    private Map<String, String> prepareBuildArgs(Map<String, String> buildArgs, BuildImageConfiguration buildConfig) {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder().
+                putAll(buildArgs);
+            if(buildConfig.getArgs() != null){
+                builder.putAll(buildConfig.getArgs());
+            }
+        return builder.build();
     }
 
     private String getDockerfileName(BuildImageConfiguration buildConfig) {
