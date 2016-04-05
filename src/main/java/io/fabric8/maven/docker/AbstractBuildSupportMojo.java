@@ -83,7 +83,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         for(Object keyObj : properties.keySet()){
             String key = (String)keyObj;
             if (key.startsWith(argPrefix)){
-                String argKey = key.replace(argPrefix, "");
+                String argKey = key.replaceFirst(argPrefix, "");
                 buildArgs.put(argKey, properties.getProperty(key));
             }
         }
