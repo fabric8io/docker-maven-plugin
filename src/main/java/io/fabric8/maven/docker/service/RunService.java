@@ -98,8 +98,8 @@ public class RunService {
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id, pomLabel);
 
-        if (mappedPorts.containsDynamicPorts() || mappedPorts.containsDynamicHostIps()) {
-            updateMappedPorts(id, mappedPorts);
+        if (mappedPorts.needsPropertiesUpdate()) {
+            updateMappedPortsAndAddresses(id, mappedPorts);
         }
 
         return id;
@@ -364,10 +364,10 @@ public class RunService {
         tracker.registerContainer(id, imageConfig, pomLabel);
     }
 
-    private void updateMappedPorts(String containerId, PortMapping mappedPorts) throws DockerAccessException {
+    private void updateMappedPortsAndAddresses(String containerId, PortMapping mappedPorts) throws DockerAccessException {
         Container container = queryService.getContainer(containerId);
         if (container.isRunning()) {
-            mappedPorts.updateVariablesWithDynamicPorts(container.getPortBindings());
+            mappedPorts.updateProperties(container.getPortBindings());
         } else {
             log.warn("Container " + containerId + " is not running anymore, can not extract dynamic ports");
         }

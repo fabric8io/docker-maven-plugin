@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.EnvUtil;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Entity holding port mappings which can be set through the configuration.
@@ -46,13 +48,13 @@ public class PortMapping {
     private final Map<String, String> specToHostPortVariableMap = new HashMap<>();
 
     /**
-     * Create the mapping from a configuration. The configuation is list of port mapping specifications which has the
+     * Create the mapping from a configuration. The configuration is list of port mapping specifications which has the
      * format used by docker for port mapping (i.e. host_ip:host_port:container_port)
      * <ul>
      * <li>The "host_ip" part is optional. If not given, the all interfaces are used</li>
      * <li>If "host_port" is non numeric it is taken as a variable name. If this variable is given as value in
      * variables, this number is used as host port. If no numeric value is given, it is considered to be filled with the
-     * real, dynamically created port value when {@link #updateVariablesWithDynamicPorts(Map)} is called</li>
+     * real, dynamically created port value when {@link #updateProperties(Map)} is called</li>
      * </ul>
      *
      * @param portMappings a list of configuration strings where each string hast the format
@@ -69,17 +71,13 @@ public class PortMapping {
         }
     }
 
-    public boolean containsDynamicHostIps() {
-        return !specToHostIpVariableMap.isEmpty();
-    }
-
     /**
-     * Whether this mapping contains dynamically assigned ports
-     * 
-     * @return dynamically assigned ports
+     * Check whether property needs updates for dynamically obtained host ports and ip adresses.
+     *
+     * @return true if any property are used which need to be filled in, false otherwise
      */
-    public boolean containsDynamicPorts() {
-        return !specToHostPortVariableMap.isEmpty();
+    public boolean needsPropertiesUpdate() {
+        return !specToHostPortVariableMap.isEmpty() || !specToHostIpVariableMap.isEmpty();
     }
 
     /**
@@ -89,31 +87,27 @@ public class PortMapping {
         return containerPortToHostPort.keySet();
     }
 
-    public Map<String, Integer> getContainerPortToHostPortMap() {
-        return containerPortToHostPort;
-    }
-
     /**
-     * Update variable-to-port mappings with dynamically obtained ports. This should only be called once after the
-     * dynamic ports could be obtained.
+     * Update variable-to-port mappings with dynamically obtained ports and host ips.
+     * This should only be called once after this dynamically allocated parts has been be obtained.
      *
-     * @param dockerObtainedDynamicPorts keys are the container ports, values are the dynamically mapped host ports,
+     * @param dockerObtainedDynamicBindings keys are the container ports, values are the dynamically mapped host ports and host ips.
      */
-    public void updateVariablesWithDynamicPorts(Map<String, Container.PortBinding> dockerObtainedDynamicPorts) {
-        for (Map.Entry<String, Container.PortBinding> entry : dockerObtainedDynamicPorts.entrySet()) {
+    public void updateProperties(Map<String, Container.PortBinding> dockerObtainedDynamicBindings) {
+        for (Map.Entry<String, Container.PortBinding> entry : dockerObtainedDynamicBindings.entrySet()) {
             String variable = entry.getKey();
             Container.PortBinding portBinding = entry.getValue();
 
             if (portBinding != null) {
                 update(hostPortVariableMap, specToHostPortVariableMap.get(variable), portBinding.getHostPort());
-                
+
                 String hostIp = portBinding.getHostIp();
 
                 // Use the docker host if binding is on all interfaces
                 if ("0.0.0.0".equals(hostIp)) {
                     hostIp = projProperties.getProperty("docker.host.address");
                 }
-                
+
                 update(hostIpVariableMap, specToHostIpVariableMap.get(variable), hostIp);
             }
         }
@@ -122,11 +116,92 @@ public class PortMapping {
         updateDynamicProperties(hostIpVariableMap);
     }
 
+    /**
+     * Create a JSON specification which can be used to in a Docker API request as the 'PortBindings' part
+     * for creating container.
+     *
+     * @return 'PortBindings' object or null if no port mappings are used.
+     */
+    JSONObject toDockerPortBindingsJson() {
+        Map<String, Integer> portMap = getContainerPortToHostPortMap();
+        if (!portMap.isEmpty()) {
+            JSONObject portBindings = new JSONObject();
+            Map<String, String> bindToMap = getBindToHostMap();
+
+            for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
+                String containerPortSpec = entry.getKey();
+                Integer hostPort = entry.getValue();
+
+                JSONObject o = new JSONObject();
+                o.put("HostPort", hostPort != null ? hostPort.toString() : "");
+
+                if (bindToMap.containsKey(containerPortSpec)) {
+                    o.put("HostIp", bindToMap.get(containerPortSpec));
+                }
+
+                JSONArray array = new JSONArray();
+                array.put(o);
+
+                portBindings.put(containerPortSpec, array);
+            }
+            return portBindings;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Return the content of the mapping as an array with all specifications as given
+     *
+     * @return port mappings as JSON array or null if no mappings exist
+     */
+    public JSONArray toJson() {
+        Map<String, Integer> portMap = getContainerPortToHostPortMap();
+        if (!portMap.isEmpty()) {
+            JSONArray ret = new JSONArray();
+            Map<String, String> bindToMap = getBindToHostMap();
+
+            for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
+                JSONObject mapping = new JSONObject();
+                String containerPortSpec = entry.getKey();
+                Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(entry.getKey());
+                if (!matcher.matches()) {
+                    throw new IllegalStateException("Internal error: " + entry.getKey() +
+                                                    " doesn't contain protocol part and doesn't match "
+                                                    + PROTOCOL_SPLIT_PATTERN);
+                }
+                mapping.put("containerPort", Integer.parseInt(matcher.group(1)));
+                if (matcher.group(2) != null) {
+                    mapping.put("protocol", matcher.group(2));
+                }
+                Integer hostPort = entry.getValue();
+                if (hostPort != null) {
+                    mapping.put("hostPort", hostPort);
+                }
+
+                if (bindToMap.containsKey(containerPortSpec)) {
+                    mapping.put("hostIP", bindToMap.get(containerPortSpec));
+                }
+                ret.put(mapping);
+            }
+            return ret;
+        } else {
+            return null;
+        }
+    }
+
+    // ==========================================================================================================
+
     // visible for testing
     Map<String, String> getBindToHostMap() {
         return bindToHostMap;
     }
-    
+
+    // visible for testing
+    Map<String, Integer> getContainerPortToHostPortMap() {
+        return containerPortToHostPort;
+    }
+
     // visible for testing
     Map<String, String> getHostIpVariableMap() {
         return hostIpVariableMap;
@@ -144,15 +219,17 @@ public class PortMapping {
 
     private IllegalArgumentException createInvalidMappingError(String mapping, NumberFormatException exp) {
         return new IllegalArgumentException("\nInvalid port mapping '" + mapping + "'\n" +
-                "Required format: '<+bindTo>:<hostPort>:<mappedPort>(/tcp|udp)'\n" +
-                "See: https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/manual.md#port-mapping");
+                "Required format: '<hostIP>:<hostPort>:<containerPort>(/tcp|udp)'\n" +
+                "See the reference manual for more details");
     }
 
     private void createMapping(String[] parts, String protocol) {
         if (parts.length == 3) {
             mapBindToAndHostPortSpec(parts[0], parts[1], createPortSpec(parts[2], protocol));
-        } else {
+        } else if (parts.length == 2) {
             mapHostPortToSpec(parts[0], createPortSpec(parts[1], protocol));
+        } else {
+            mapHostPortToSpec(null, createPortSpec(parts[0], protocol));
         }
     }
 
@@ -170,7 +247,7 @@ public class PortMapping {
 
     // Check for a variable containing a port, return it as integer or <code>null</code> is not found or not a number
     // First check system properties, then the variables given
-    private Integer getPortFromVariableOrSystemProperty(String var) {
+    private Integer getPortFromProjectOrSystemProperty(String var) {
         String sysProp = System.getProperty(var);
         if (sysProp != null) {
             return getAsIntOrNull(sysProp);
@@ -214,19 +291,23 @@ public class PortMapping {
 
     private void mapHostPortToSpec(String hPort, String portSpec) {
         Integer hostPort;
-        try {
-            hostPort = Integer.parseInt(hPort);
-        } catch (@SuppressWarnings("unused") NumberFormatException exp) {
-            // Port should be dynamically assigned and set to the variable give in hPort
-            String portPropertyName = extractPortPropertyName(hPort);
+        if (hPort == null) {
+            hostPort = null;
+        } else {
+            try {
+                hostPort = Integer.parseInt(hPort);
+            } catch (@SuppressWarnings("unused") NumberFormatException exp) {
+                // Port should be dynamically assigned and set to the variable give in hPort
+                String portPropertyName = extractPortPropertyName(hPort);
 
-            hostPort = getPortFromVariableOrSystemProperty(portPropertyName);
-            if (hostPort != null) {
-                // hPort: Variable name, hostPort: Port coming from the variable
-                hostPortVariableMap.put(portPropertyName, hostPort);
-            } else {
-                // containerPort: Port from container, hPort: Variable name to be filled later on
-                specToHostPortVariableMap.put(portSpec, portPropertyName);
+                hostPort = getPortFromProjectOrSystemProperty(portPropertyName);
+                if (hostPort != null) {
+                    // portPropertyName: Prop name, hostPort: Port from a property value (prefilled)
+                    hostPortVariableMap.put(portPropertyName, hostPort);
+                } else {
+                    // portSpec: Port from container, portPropertyName: Variable name to be filled in later
+                    specToHostPortVariableMap.put(portSpec, portPropertyName);
+                }
             }
         }
         containerPortToHostPort.put(portSpec, hostPort);
@@ -235,10 +316,8 @@ public class PortMapping {
     private void parsePortMapping(String input) throws IllegalArgumentException {
         try {
             Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(input);
-            if (input.indexOf(':') == -1 || !matcher.matches()) {
-                throw createInvalidMappingError(input, null);
-            }
-
+            // Matches always
+            matcher.matches();
             String mapping = matcher.group(1);
             String protocol = matcher.group(2);
             if (protocol == null) {
@@ -274,6 +353,7 @@ public class PortMapping {
             dynamicProperties.setProperty(var, val);
         }
     }
+
 
     public static class PropertyWriteHelper {
 

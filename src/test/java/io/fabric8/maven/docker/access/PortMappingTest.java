@@ -4,7 +4,10 @@ import java.util.*;
 
 import io.fabric8.maven.docker.model.Container;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.json.JSONArray;
 import org.junit.*;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONParser;
 
 import static org.junit.Assert.*;
 
@@ -40,12 +43,12 @@ public class PortMappingTest {
                 "http://pirx:49901/", "http://pirx:${other.port}/",
                 "http://49900/49901", "http://${jolokia.port}/${other.port}");
 
-        thenHasDynamicHostPorts();
+        thenNeedsPropertyUpdate();
+
         thenDynamicHostPortsSizeIs(2);
         thenHostPortVariableEquals("jolokia.port", 49900);
         thenHostPortVariableEquals("other.port", 49901);
 
-        thenHasDynamicHostIps();
         thenDynamicHostIpsSizeIs(1);
         thenHostIpVariableEquals("other.ip", "127.0.0.1");
 
@@ -96,7 +99,7 @@ public class PortMappingTest {
         givenAPortMapping("jolokia.port:8080");
         whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
 
-        thenHasDynamicHostPorts();
+        thenNeedsPropertyUpdate();
         thenDynamicHostPortsSizeIs(1);
         thenHostPortVariableEquals("jolokia.port", 49900);
     }
@@ -105,6 +108,13 @@ public class PortMappingTest {
     public void testHostnameAsBindHost() {
         givenAPortMapping("localhost:80:80");
         thenBindToHostMapContainsValue("127.0.0.1");
+    }
+
+    @Test
+    public void testSingleContainerPort() {
+        givenAPortMapping("8080");
+        thenContainerPortToHostPortMapSizeIs(1);
+        thenContainerPortToHostPortMapHasOnlyPortSpec("8080");
     }
 
     @Test
@@ -183,6 +193,18 @@ public class PortMappingTest {
         }
     }
 
+    @Test
+    public void testToJson() {
+        givenAPortMapping("49000:8080/udp", "127.0.0.1:49001:8081");
+        thenAssertJsonEquals("[{ hostPort: 49000, containerPort: 8080, protocol: udp }," +
+                             " { hostIP: '127.0.0.1', hostPort: 49001, containerPort: 8081, protocol: tcp}]");
+    }
+
+    private void thenAssertJsonEquals(String json) {
+        JSONArray jsonArray = (JSONArray) JSONParser.parseJSON(json);
+        JSONAssert.assertEquals(jsonArray,mapping.toJson(), true);
+    }
+
     private void givenADockerHostAddress(String host) {
         properties.setProperty("docker.host.address", host);
     }
@@ -238,12 +260,8 @@ public class PortMappingTest {
         assertEquals(size, mapping.getHostPortVariableMap().size());
     }
 
-    private void thenHasDynamicHostIps() {
-        assertTrue(mapping.containsDynamicHostIps());
-    }
-
-    private void thenHasDynamicHostPorts() {
-        assertTrue(mapping.containsDynamicPorts());
+    private void thenNeedsPropertyUpdate() {
+        assertTrue(mapping.needsPropertiesUpdate());
     }
 
     private void thenHostIpVariableEquals(String key, String ip) {
@@ -264,13 +282,13 @@ public class PortMappingTest {
         Map<String, Container.PortBinding> dynMapping = new HashMap<>();
         dynMapping.put(cPort + "/tcp", null);
 
-        mapping.updateVariablesWithDynamicPorts(dynMapping);
+        mapping.updateProperties(dynMapping);
     }
 
     private void whenUpdateDynamicMapping(int cPort, int hPort, String hIp) {
         Map<String, Container.PortBinding> dynMapping = new HashMap<>();
         dynMapping.put(cPort + "/tcp", new Container.PortBinding(hPort, hIp));
 
-        mapping.updateVariablesWithDynamicPorts(dynMapping);
+        mapping.updateProperties(dynMapping);
     }
 }

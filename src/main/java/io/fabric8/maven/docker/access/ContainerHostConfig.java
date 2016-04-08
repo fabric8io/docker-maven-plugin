@@ -82,28 +82,8 @@ public class ContainerHostConfig {
     }
 
     public ContainerHostConfig portBindings(PortMapping portMapping) {
-        Map<String, Integer> portMap = portMapping.getContainerPortToHostPortMap();
-        if (!portMap.isEmpty()) {
-            JSONObject portBindings = new JSONObject();
-            Map<String, String> bindToMap = portMapping.getBindToHostMap();
-
-            for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
-                String containerPortSpec = entry.getKey();
-                Integer hostPort = entry.getValue();
-
-                JSONObject o = new JSONObject();
-                o.put("HostPort", hostPort != null ? hostPort.toString() : "");
-
-                if (bindToMap.containsKey(containerPortSpec)) {
-                    o.put("HostIp", bindToMap.get(containerPortSpec));
-                }
-
-                JSONArray array = new JSONArray();
-                array.put(o);
-
-                portBindings.put(containerPortSpec, array);
-            }
-
+        JSONObject portBindings = portMapping.toDockerPortBindingsJson();
+        if (portBindings != null) {
             startConfig.put("PortBindings", portBindings);
         }
         return this;

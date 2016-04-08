@@ -150,7 +150,7 @@ public class PortMappingPropertyWriteHelperTest {
         for (int i = 0; i < ports.length; i += 2) {
             dynMapping.put(ports[i] + "/tcp", new Container.PortBinding(ports[i + 1], ip));
         }
-        mapping.updateVariablesWithDynamicPorts(dynMapping);
+        mapping.updateProperties(dynMapping);
     }
 
     private void whenWritePortMappings(String imageFile, PortMapping portMapping) throws IOException {

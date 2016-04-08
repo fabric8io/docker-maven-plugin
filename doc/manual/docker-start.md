@@ -23,13 +23,13 @@ The `<run>` configuration knows the following sub elements:
   used. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
 * **domainname**  domain name for the container
 * **dns** list of `host` elements specifying dns servers for the container to use
-* **dnsSearch** list of `host` elements specying dns search domains 
+* **dnsSearch** list of `host` elements specifying dns search domains 
 * **entrypoint** set the entry point for the container. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
-  typical maven property format as described [below](#setting-environment-variables-and-labels).
+  typical maven property format as described [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
 * **labels** specifies one or more labels which should be attached to the container. They are specified in the
-  typical maven property format as described [below](#setting-environment-variables-and-labels).
+  typical maven property format as described in [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
 * **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
   specified in this property file overrides the environment variables specified in the configuration.
 * **extraHosts** list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
@@ -37,11 +37,11 @@ The `<run>` configuration knows the following sub elements:
   at container startup.
 * **hostname** desired hostname for the container
 * **links** declares how containers are linked together see
-  description on [container linking](#container-linking). 
+  description on [Container Linking](#container-linking). 
 * **log** specifies the log configuration for whether and how log
   messages from the running containers should be printed. This also can configure the 
   [log driver](https://docs.docker.com/engine/admin/logging/overview/) to use. See
-  [below](#log-configuration) for a detailed description of this configuration
+  [Log Configuration](#log-configuration) for a detailed description of this configuration
   section. 
 * **memory** memory limit in bytes
 * **memorySwap** total memory usage (memory + swap); use -1 to disable swap.
@@ -57,19 +57,19 @@ The `<run>` configuration knows the following sub elements:
     Available for Docker 1.9 and newer. For more about the networking options please refer to the [Docker documentation](https://docs.docker.com/engine/userguide/networking/work-with-networks/).
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
-  its purpose are also described [below](#port-mapping)
+  its purpose are also described in [Port mapping](#port-mapping)
 * **ports** declares how container exposed ports should be
   mapped. This is described below in an extra
-  [section](#port-mapping).  
+  section [Port mapping](#port-mapping).  
 * **privileged** give container full access to host (`true|false`)   
 * **restartPolicy** specifies the container restart policy, see 
-  [below](#container-restart-policy)
+  [Container Restart Policy](#container-restart-policy)
 * **user** user used inside the container
 * **skip** disable creating and starting of the container. This option is best used together with a configuration option.
-* **volumes** for bind configurtion of host directories and from other containers. See "[Volume binding](#volume-binding)" 
+* **volumes** for bind configurtion of host directories and from other containers. See [Volume binding](#volume-binding) 
   for details.
 * **wait** specifies condition which must be fulfilled for the startup
-  to complete. See [below](#wait-during-startup-and-shutdown) which subelements are
+  to complete. See [Wait during Startup and Shutdown](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
 * **workingDir** working dir for commands to run in
 
@@ -151,7 +151,7 @@ A `port` stanza may take one of the following forms:
   form will result in an explicit mapping between the docker host and the corresponding 
   port inside the container. In the above example, port 18080 would be exposed on the 
   docker host and mapped to port 8080 in the running container. 
-* **host.port:80** A tuple consisting of a string and a numeric value separated by a
+* ***host.port*:80** A tuple consisting of a string and a numeric value separated by a
   `:`. In this form, the string portion of the tuple will correspond
   to a Maven property. If the property is undefined when the `start`
   task executes, a port will be dynamically selected by Docker in the
@@ -166,17 +166,17 @@ A `port` stanza may take one of the following forms:
   expression similar to `<value>${host.port}</value>`. This can be
   used to pin a port from the outside when doing some initial testing
   similar to `mvn -Dhost.port=10080 docker:start`
-* **&lt;bindTo&gt;:host.port:80** A tuple consisting of two strings and a numeric value separated
-  by a `:`. In this form, `<bindTo>` is an ip address on the host the container should bind to.
+* **bindTo:*host.port*:80** A tuple consisting of two strings and a numeric value separated
+  by a `:`. In this form, `bindTo` is an ip address on the host the container should bind to.
   As a convenience, a hostname pointing to the docker host may also
   be specified. The container will fail to start if the hostname can not be 
   resolved.  
-* **+host.ip:host.port:80** A tuple consisting of two strings and a numeric value separated
-  by a `:`. In this form, the host ip of the container will be placed into a Maven property.
+* **+host.ip:*host.port*:80** A tuple consisting of two strings and a numeric value separated
+  by a `:`. In this form, the host ip of the container will be placed into a Maven property name `host.ip`.
   If docker reports that value to be `0.0.0.0`, the value of `docker.host.address` will
   be substituted instead. In the event you want to use this form and have the container bind 
-  to a specific hostname/ip address, you can declare a Maven property of the same name and correct
-  value to use. `host:post` functions in the same manner as described above. 
+  to a specific hostname/ip address, you can declare a Maven property of the same name (`host.ip` in this example) 
+  containing the value to use. `host:port` works in the same way as described above. 
   
 The following are examples of valid configuration entries:
 

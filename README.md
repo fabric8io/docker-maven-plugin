@@ -18,6 +18,7 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 | [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/docker-push.html)     | Push images to a registry             |
 | [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/docker-remove.html) | Remove images from local docker host  |
 | [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/docker-logs.html)     | Show container logs                   |
+| [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/docker-source.html)   | Attach docker build archive to Maven project |
 
 #### Documentation
 
