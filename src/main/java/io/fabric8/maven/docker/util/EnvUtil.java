@@ -1,11 +1,18 @@
 package io.fabric8.maven.docker.util;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.AbstractDockerMojo;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -19,32 +26,6 @@ public class EnvUtil {
     public static final String MAVEN_PROPERTY_REGEXP = "\\s*\\$\\{\\s*([^}]+)\\s*}\\s*$";
 
     private EnvUtil() {}
-
-    // Check both, url and env DOCKER_HOST (first takes precedence)
-    public static String extractUrl(String dockerHost) {
-        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
-        if (connect == null) {
-            File unixSocket = new File("/var/run/docker.sock");
-            if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
-                connect = "unix:///var/run/docker.sock";
-            } else {
-                throw new IllegalArgumentException("No url given, no DOCKER_HOST environment variable and no read/writable '/var/run/docker.sock'");
-            }
-        }
-        String protocol = connect.contains(":" + AbstractDockerMojo.DOCKER_HTTPS_PORT) ? "https:" : "http:";
-        return connect.replaceFirst("^tcp:", protocol);
-    }
-    
-    public static String getCertPath(String certPath) {
-        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
-        if (path == null) {
-            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
-            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
-                return dockerHome.getAbsolutePath();
-            }
-        }
-        return path;
-    }
 
     /**
      * Compare to version strings and return the larger version strings. This is used in calculating

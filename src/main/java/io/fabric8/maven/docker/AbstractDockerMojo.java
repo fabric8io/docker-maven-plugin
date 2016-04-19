@@ -3,18 +3,18 @@ package io.fabric8.maven.docker;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
-import io.fabric8.maven.docker.service.QueryService;
-import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.service.ServiceHubFactory;
-import io.fabric8.maven.docker.util.*;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -24,10 +24,25 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.service.ServiceHubFactory;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.util.DockerMachine;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.PomLabel;
 
 /**
  * Base class for this plugin.
@@ -176,11 +191,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
         DockerAccess access = null;
         if (isDockerAccessRequired()) {
-            String dockerUrl = EnvUtil.extractUrl(dockerHost);
+            DockerMachine dockerMachine = new DockerMachine(log, getPluginContext());
+            String dockerUrl = dockerMachine.extractUrl(dockerHost);
             try {
                 String version =  minimalVersion != null ? minimalVersion : API_VERSION;
                 access = new DockerAccessWithHcClient("v" + version, dockerUrl,
-                                                      EnvUtil.getCertPath(certPath), maxConnections, log);
+                        dockerMachine.getCertPath(certPath), maxConnections, log);
                 access.start();
                 setDockerHostAddressProperty(dockerUrl);
             }
