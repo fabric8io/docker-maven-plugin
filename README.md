@@ -22,6 +22,7 @@ versions of Docker.
 | --------------------------------------------- | ------------------------------------- |
 | [`docker:start`](https://fabric8io.github.io/docker-maven-plugin/docker-start.html)   | Create and start containers           |
 | [`docker:stop`](https://fabric8io.github.io/docker-maven-plugin/docker-stop.html)     | Stop and destroy containers           |
+| [`docker:env`](https://fabric8io.github.io/docker-maven-plugin/docker-env.md)         | Set environment variables            |
 | [`docker:build`](https://fabric8io.github.io/docker-maven-plugin/docker-build.html)   | Build images                          |
 | [`docker:watch`](https://fabric8io.github.io/docker-maven-plugin/docker-watch.html)   | Watch for doing rebuilds and restarts |
 | [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/docker-push.html)     | Push images to a registry             |

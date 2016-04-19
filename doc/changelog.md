@@ -1,5 +1,10 @@
 # ChangeLog
 
+* **0.14.3**
+  - Introduce a goal `env` which sets the java environment variables for the current maven process 
+    from docker-machine setup.  Running this goal is functionally similar to running 
+    `eval $(docker-machine env)`.  This is useful for jenkins jobs.
+
 * **0.14.2**
   - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
     This is the default now, which should be close enough to `true` (except that it won't fail the build
