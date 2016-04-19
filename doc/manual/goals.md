@@ -5,6 +5,7 @@ in the following sections.
 
 | Goal                                | Description                          |
 | ----------------------------------- | ------------------------------------ |
+| [`docker:env`](docker-env.md)       | Set environment variables            |
 | [`docker:build`](docker-build.md)   | Build images                         |
 | [`docker:start`](docker-start.md)   | Create and start containers          |
 | [`docker:stop`](docker-stop.md)     | Stop and destroy containers          |

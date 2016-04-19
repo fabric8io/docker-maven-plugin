@@ -2,6 +2,7 @@
 * [Global Configuration](global-configuration.md)
 * [Image Configuration](image-configuration.md)
 * [Maven Goals](goals.md)
+  - [docker:env](docker-env.md)
   - [docker:build](docker-build.md)
   - [docker:start](docker-start.md)
   - [docker:stop](docker-stop.md)

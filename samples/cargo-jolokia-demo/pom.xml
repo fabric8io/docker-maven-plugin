@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>cargo-jolokia-demo</artifactId>
-  <version>0.14.2</version>
+  <version>0.14.3-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -93,6 +93,12 @@
         <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
              in pre-integration-test and stop it in post-integration-test. -->
         <executions>
+            <execution>
+              <id>docker-machine-env</id>
+              <goals>
+                <goal>env</goal>
+              </goals>
+            </execution>
             <execution>
               <id>start</id>
               <phase>pre-integration-test</phase>

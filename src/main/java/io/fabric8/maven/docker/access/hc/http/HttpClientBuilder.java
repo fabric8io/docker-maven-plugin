@@ -27,9 +27,12 @@ import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
-import org.apache.http.impl.client.*;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
 import io.fabric8.maven.docker.access.KeyStoreUtil;
+import io.fabric8.maven.docker.util.EnvUtil;
 
 /**
  * @author roland
@@ -85,7 +88,7 @@ public class HttpClientBuilder {
                             .loadKeyMaterial(keyStore, "docker".toCharArray())
                             .loadTrustMaterial(keyStore)
                             .build();
-            String tlsVerify = System.getenv("DOCKER_TLS_VERIFY");
+            String tlsVerify = EnvUtil.getEnv("DOCKER_TLS_VERIFY");
             SSLConnectionSocketFactory sslsf =
                     tlsVerify != null && !tlsVerify.equals("0") && !tlsVerify.equals("false") ?
                             new SSLConnectionSocketFactory(sslContext) :

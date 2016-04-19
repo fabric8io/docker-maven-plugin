@@ -1,12 +1,21 @@
 package io.fabric8.maven.docker.util;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.AbstractDockerMojo;
 import org.codehaus.plexus.util.StringUtils;
+
+import io.fabric8.maven.docker.AbstractDockerMojo;
 
 /**
  * Utility class for various (loosely) environment related tasks.
@@ -17,12 +26,22 @@ import org.codehaus.plexus.util.StringUtils;
 public class EnvUtil {
 
     public static final String MAVEN_PROPERTY_REGEXP = "\\s*\\$\\{\\s*([^}]+)\\s*}\\s*$";
+    private static Map<String, String> DOCKER_MACHINE_ENVIRONMENT = new HashMap<>();
 
     private EnvUtil() {}
 
+    public static String getEnv(String key) {
+        String value = DOCKER_MACHINE_ENVIRONMENT.get(key);
+        return value != null ? value : System.getenv(key);
+    }
+
+    public static void putEnv(String key, String value) {
+        DOCKER_MACHINE_ENVIRONMENT.put(key, value);
+    }
+
     // Check both, url and env DOCKER_HOST (first takes precedence)
     public static String extractUrl(String dockerHost) {
-        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
+        String connect = dockerHost != null ? dockerHost : getEnv("DOCKER_HOST");
         if (connect == null) {
             File unixSocket = new File("/var/run/docker.sock");
             if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
@@ -36,7 +55,7 @@ public class EnvUtil {
     }
     
     public static String getCertPath(String certPath) {
-        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
+        String path = certPath != null ? certPath : getEnv("DOCKER_CERT_PATH");
         if (path == null) {
             File dockerHome = new File(System.getProperty("user.home") + "/.docker");
             if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
@@ -206,7 +225,7 @@ public class EnvUtil {
             }
         }
         // Check environment as last resort
-        return System.getenv("DOCKER_REGISTRY");
+        return getEnv("DOCKER_REGISTRY");
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {

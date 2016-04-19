@@ -6,6 +6,7 @@ This is a Maven plugin for managing Docker images and containers for your builds
 
 | Goal                                          | Description                           |
 | --------------------------------------------- | ------------------------------------- |
+| [`docker:env`](docker-env.md)       | Set environment variables             |
 | [`docker:build`](docker-build.md)   | Build images                          |
 | [`docker:start`](docker-start.md)   | Create and start containers           |
 | [`docker:stop`](docker-stop.md)     | Stop and destroy containers           |
@@ -13,5 +14,5 @@ This is a Maven plugin for managing Docker images and containers for your builds
 | [`docker:push`](docker-push.md)     | Push images to a registry             |
 | [`docker:remove`](docker-remove.md) | Remove images from local docker host  |
 | [`docker:logs`](docker-logs.md)     | Show container logs                   |
-| [`docker:logs`](docker-source.md)   | Attach docker build archive to Maven project |
+| [`docker:source`](docker-source.md) | Attach docker build archive to Maven project |
 
