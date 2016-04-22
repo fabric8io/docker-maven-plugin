@@ -14,14 +14,15 @@
   * Starts (and optionally pull) the jolokia/tomcat-7.0 container with the data container linked to it
   * Waits until Tomcat is up (i.e. until it is reachable via an HTTP request)
   * Runs an integration test via maven-failsafe-plugin, using rest-assured for accessing the deployed app.
-  * Prints out some version information about the contaner running (in order prove that's not a fake ;-)
+  * Prints out some version information about the container running (in order prove that's not a fake ;-)
   * Stops and removes the containers.
 
   -->
 
   <groupId>io.fabric8</groupId>
   <artifactId>cargo-jolokia-demo</artifactId>
-  <version>0.14.2</version>
+  <version>0.14.3-SNAPSHOT</version>
+  <packaging>docker</packaging>
 
   <url>http://www.jolokia.org</url>
 
@@ -52,12 +53,14 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.jayway.restassured</groupId>
       <artifactId>rest-assured</artifactId>
       <version>2.3.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -67,6 +70,7 @@
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
+        <extensions>true</extensions>
         <configuration>
           <images>
             <image>
@@ -81,34 +85,15 @@
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
                   <http>
-                    <url>http://localhost:${jolokia.port}/jolokia</url>
+                    <url>http://${docker.host.address}:${jolokia.port}/jolokia</url>
                   </http>
-                  <!-- ... but at max 2 seconds -->
-                  <time>2000</time>
+                  <!-- ... but at max 10 seconds -->
+                  <time>10000</time>
                 </wait>
               </run>
             </image>
           </images>
         </configuration>
-        <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
-             in pre-integration-test and stop it in post-integration-test. -->
-        <executions>
-            <execution>
-              <id>start</id>
-              <phase>pre-integration-test</phase>
-              <goals>
-                <goal>build</goal>
-                <goal>start</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>stop</id>
-              <phase>post-integration-test</phase>
-              <goals>
-                <goal>stop</goal>
-              </goals>
-            </execution>
-        </executions>
       </plugin>
 
 
@@ -167,20 +152,6 @@
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>2.17</version>
-        <executions>
-          <execution>
-            <id>integration-test</id>
-            <goals>
-              <goal>integration-test</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>verify</id>
-            <goals>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <systemPropertyVariables>
             <!-- Needs to be repeated here (the following two lines strangely doesn't work when the next line is omitted although)
@@ -194,16 +165,6 @@
         </configuration>
       </plugin>
 
-
-      <!-- Tell surefire to skip test, we are using the failsafe plugin -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.10</version>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 </project>
