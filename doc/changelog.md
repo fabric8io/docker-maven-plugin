@@ -7,7 +7,9 @@
   - Add support for builds args in external Dockerfiles (#334) 
   - Moved `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
    `build>assembly>dockerFileDir` is now deprecated and will be removed.
-    
+  - Added new lifecycles "docker" (build + run), "docker-build" (build only) and 
+    "docker-tar" (creating source) 
+      
 * **0.14.2**
   - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
     This is the default now, which should be close enough to `true` (except that it won't fail the build

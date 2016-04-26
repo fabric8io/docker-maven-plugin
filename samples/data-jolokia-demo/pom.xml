@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -200,8 +200,12 @@
     <repository>
       <id>snapshots-repo</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      <releases><enabled>false</enabled></releases>
-      <snapshots><enabled>true</enabled></snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
@@ -287,8 +291,8 @@
                     <from>${image}</from>
                     <assembly>
                       <mode>dir</mode>
-                      <inline xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
-                              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      <inline xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                              xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
                               xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
                         <id>jolokia-it</id>
 
@@ -454,7 +458,9 @@
         <server.name>tomcat</server.name>
         <server.version>7.0</server.version>
       </properties>
-      <activation><activeByDefault>true</activeByDefault></activation>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
     </profile>
 
     <profile>
@@ -465,5 +471,31 @@
       </properties>
     </profile>
 
+    <profile>
+      <id>post-integration-test</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.soebes.maven.plugins</groupId>
+            <artifactId>echo-maven-plugin</artifactId>
+            <version>0.2</version>
+            <executions>
+              <execution>
+                <phase>integration-test</phase>
+                <goals>
+                  <goal>echo</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <echos>
+                <echo>============= Post Integration Test ========================</echo>
+              </echos>
+            </configuration>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
