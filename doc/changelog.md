@@ -5,10 +5,11 @@
   - Fix parsing of timestamps with numeric timezone (#410)
   - Validate image names to fit Docker conventions (#423, #419)
   - Add support for builds args in external Dockerfiles (#334) 
-  - Moved `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
+  - Move `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
    `build>assembly>dockerFileDir` is now deprecated and will be removed.
-  - Added new lifecycles "docker" (build + run), "docker-build" (build only) and 
+  - Add new lifecycles "docker" (build + run), "docker-build" (build only) and 
     "docker-tar" (creating source) 
+  - Add `docker:run` as an alias to `docker:start`
       
 * **0.14.2**
   - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
