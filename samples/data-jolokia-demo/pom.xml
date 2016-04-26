@@ -472,7 +472,7 @@
     </profile>
 
     <profile>
-      <id>post-integration-test</id>
+      <id>properties</id>
       <build>
         <plugins>
           <plugin>
@@ -489,7 +489,8 @@
             </executions>
             <configuration>
               <echos>
-                <echo>============= Post Integration Test ========================</echo>
+                <echo>============= Props  =============</echo>
+                <echo>IP : ${docker.container.server.ip}</echo>
               </echos>
             </configuration>
           </plugin>

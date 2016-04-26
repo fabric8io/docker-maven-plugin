@@ -12,7 +12,19 @@ CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will a
  you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but 
  not removed so that you can make postmortem analysis).
 
-The `<run>` configuration knows the following sub elements:
+By default container specific properties are exposed as Maven properties. These properties have the format
+`docker.container.`*<alias>*`.`*<prop>* where *alias* is the name of the container (see below) and *<prop>* is one of
+the following container properties:
+
+* **ip** : The internal IP address of the container.
+
+For example the Maven property `docker.container.tomcat.ip` would container the Docker internal IP for a container with 
+an alias "tomcat". You can set the global configuration **exposeContainerInfo** to an empty string to not expose container 
+information that way or to a string for an other prefix than `docker.container`.
+
+#### <run> Configuration
+    
+The `<run>` configuration section knows the following sub elements:
 
 * **capAdd** a list of `add` elements to specify kernel parameters to add to
   the container.

@@ -8,9 +8,12 @@
   - Move `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
    `build>assembly>dockerFileDir` is now deprecated and will be removed.
   - Add new lifecycles "docker" (build + run), "docker-build" (build only) and 
-    "docker-tar" (creating source) 
+    "docker-tar" (creating source)  (#433)
   - Add `docker:run` as an alias to `docker:start`
-      
+  - Expose certain container properties also as Maven properties. By default
+    the format is `docker.container.<alias>.ip` for the internal IP address of container with alias `<alias>`.
+    (#198)
+  
 * **0.14.2**
   - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
     This is the default now, which should be close enough to `true` (except that it won't fail the build

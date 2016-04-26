@@ -9,7 +9,9 @@ package io.fabric8.maven.docker;
  */
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -32,6 +34,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
 
+
 /**
  * Goal for creating and starting a docker container. This goal evaluates the image configuration
  *
@@ -46,8 +49,24 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
-    // whether to block during to start. Set it via Sysem property docker.follow
+    // whether to block during to start. Set it via System property docker.follow
     private boolean follow;
+
+    /**
+     * Expose container information like the internal IP as Maven properties which
+     * can be reused in the build information. The value of this property is the prefix
+     * used for the properties. The default prefix is "docker.container". Only information
+     * of images having an alias are exposed and have the format <code>&lt;prefix&gt;.&lt;alias&gt;.&lt;property&gt;</code>.
+     * (e.g. <code>docker.container.mycontainer.ip</code>
+     * The following properties are currently supported:
+     * <ul>
+     *   <li><strong>ip</strong> : the container's internal IP address as chosen by Docker</li>
+     * </ul>
+     *
+     * If set to an empty string, no properties are exposed.
+     */
+    @Parameter(property = "docker.exposeContainerInfo")
+    private String exposeContainerProps = "docker.container";
 
     /**
      * {@inheritDoc}
@@ -97,6 +116,9 @@ public class StartMojo extends AbstractDockerMojo {
                 if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
                     runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), imageConfig);
                 }
+
+                // Expose container info as properties
+                exposeContainerProps(hub.getQueryService(), containerId,imageConfig.getAlias());
             }
             if (follow) {
                 runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
@@ -270,5 +292,23 @@ public class StartMojo extends AbstractDockerMojo {
         }
         return false;
     }
+
+    private void exposeContainerProps(QueryService queryService, String containerId, String alias)
+        throws DockerAccessException {
+        if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(alias)) {
+            Container container = queryService.getContainer(containerId);
+            Properties props = project.getProperties();
+            String ip = container.getIPAddress();
+            if (StringUtils.isNotEmpty(ip)) {
+                String key = addDot(exposeContainerProps) + addDot(alias) + "ip";
+                props.put(key, ip);
+            }
+        }
+    }
+
+    private String addDot(String part) {
+        return part.endsWith(".") ? part : part + ".";
+    }
+
 
 }
