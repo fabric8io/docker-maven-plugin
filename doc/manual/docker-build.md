@@ -102,7 +102,7 @@ of an image configuration. In addition to `<dockerFileDir>` and
 * **entryPoint** An entrypoint allows you to configure a container that will run as an executable. 
   See [Start-up Arguments](#startup-arguments) for details.
 * **env** holds environments as described in
-  [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
+  [Setting Environment Variables and Labels](docker-start.md#setting-environment-variables-and-labels).
 * **from** specifies the base image which should be used for this
   image. If not given this default to `busybox:latest` and is suitable
   for a pure data image.
