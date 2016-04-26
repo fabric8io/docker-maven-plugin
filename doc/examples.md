@@ -7,7 +7,7 @@ This plugin comes with some commented examples in the `samples/` directory:
 [data-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/data-jolokia-demo)
 is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX
 bridge in a tomcat. It uses a Docker data container which is linked
-into the Tomcat container and contains the WAR files to deply. There
+into the Tomcat container and contains the WAR files to deploy. There
 are two flavor of tests
 
 * One with two image where a (almost naked) data container with the

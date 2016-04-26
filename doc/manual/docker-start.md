@@ -283,7 +283,7 @@ the exporting container exposes these directories). The image must be also confi
 the full image name, an alias name like *service* can be used, too.
 
 Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This
-should even work for boot2docker:
+should even work for boot2docker/docker-machine:
 
 ````xml
 <volumes>

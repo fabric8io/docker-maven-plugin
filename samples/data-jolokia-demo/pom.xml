@@ -22,6 +22,8 @@
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
   <version>0.15.0-SNAPSHOT</version>
+  <!-- add custom lifecycle -->
+  <packaging>docker</packaging>
 
   <url>http://www.jolokia.org</url>
 
@@ -75,6 +77,7 @@
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <version>${project.version}</version>
+        <extensions>true</extensions> <!-- enables using 'docker' packaging above -->
         <configuration>
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
@@ -155,31 +158,6 @@
             </image>
           </images>
         </configuration>
-        <!-- Connect this plugin to the maven lifecycle around the integration-test phase. I.e. start the container
-             in pre-integration-test and stop it in post-integration-test. -->
-        <executions>
-          <execution>
-            <id>start</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>build</goal>
-              <goal>start</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>stop</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>sources</id>
-            <goals>
-              <goal>source</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <!-- fails-safe-plugin should be used instead of surefire so that the container gets stopped even
@@ -187,20 +165,6 @@
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>2.17</version>
-        <executions>
-          <execution>
-            <id>integration-test</id>
-            <goals>
-              <goal>integration-test</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>verify</id>
-            <goals>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <systemPropertyVariables>
             <!-- Needs to be repeated here (the following two lines strangely doesn't work when the next line is omitted although)
@@ -211,17 +175,6 @@
             <jolokia.url>http://${docker.host.address}:${jolokia.port}/jolokia</jolokia.url>
             <jolokia.version>${jolokia.version}</jolokia.version>
           </systemPropertyVariables>
-        </configuration>
-      </plugin>
-
-
-      <!-- Tell surefire to skip test, we are using the failsafe plugin -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.10</version>
-        <configuration>
-          <skip>true</skip>
         </configuration>
       </plugin>
 

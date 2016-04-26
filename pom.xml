@@ -209,8 +209,10 @@
     </dependency>
   </dependencies>
 
+      
   <build>
     <plugins>
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
@@ -246,10 +248,36 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/filtered-resources/META-INF/plexus</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources/META-INF/plexus</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>  
+      </plugin>
+
        <plugin>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-metadata</artifactId>
         <version>1.5.5</version>
+        <configuration>
+	      <staticMetadataDirectory>${basedir}/target/filtered-resources/META-INF/plexus</staticMetadataDirectory>
+	    </configuration>
         <executions>
           <execution>
             <goals>
