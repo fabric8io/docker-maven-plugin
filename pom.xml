@@ -6,7 +6,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.15.0-SNAPSHOT</version>
+  <version>0.15.0</version>
   <packaging>maven-plugin</packaging>
 
   <name>maven-docker-plugin</name>
@@ -366,7 +366,7 @@
   <scm>
     <connection>scm:git:git://github.com/fabric8io/docker-maven-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/fabric8io/docker-maven-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v0.15.0</tag>
     <url>git://github.com/fabric8io/docker-maven-plugin.git</url>
   </scm>
 
