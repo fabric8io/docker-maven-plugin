@@ -16,20 +16,13 @@
             <phases>
               <process-resources>org.apache.maven.plugins:maven-resources-plugin:2.7:resources</process-resources>
               <compile>org.apache.maven.plugins:maven-compiler-plugin:3.5.1:compile</compile>
-              <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:2.7:testResources
-              </process-test-resources>
+              <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:2.7:testResources</process-test-resources>
               <test-compile>org.apache.maven.plugins:maven-compiler-plugin:3.5.1:testCompile</test-compile>
               <test>org.apache.maven.plugins:maven-surefire-plugin:2.19.1:test</test>
-              <package>
-                org.apache.maven.plugins:maven-jar-plugin:2.6:jar,${project.groupId}:${project.artifactId}:${project.version}:build
-              </package>
-              <pre-integration-test>${project.groupId}:${project.artifactId}:${project.version}:start
-              </pre-integration-test>
-              <integration-test>org.apache.maven.plugins:maven-failsafe-plugin:2.19.1:integration-test
-              </integration-test>
-              <post-integration-test>${project.groupId}:${project.artifactId}:${project.version}:stop
-              </post-integration-test>
-              <verify>org.apache.maven.plugins:maven-failsafe-plugin:2.19.1:verify</verify>
+              <package>org.apache.maven.plugins:maven-jar-plugin:2.6:jar,${project.groupId}:${project.artifactId}:${project.version}:build</package>
+              <pre-integration-test>${project.groupId}:${project.artifactId}:${project.version}:start</pre-integration-test>
+              <integration-test>org.apache.maven.plugins:maven-failsafe-plugin:2.19.1:integration-test</integration-test>
+              <verify>${project.groupId}:${project.artifactId}:${project.version}:stop,org.apache.maven.plugins:maven-failsafe-plugin:2.19.1:verify</verify>
               <deploy>${project.groupId}:${project.artifactId}:${project.version}:push</deploy>
             </phases>
           </lifecycle>
@@ -48,13 +41,10 @@
             <phases>
               <process-resources>org.apache.maven.plugins:maven-resources-plugin:2.7:resources</process-resources>
               <compile>org.apache.maven.plugins:maven-compiler-plugin:3.5.1:compile</compile>
-              <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:2.7:testResources
-              </process-test-resources>
+              <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:2.7:testResources</process-test-resources>
               <test-compile>org.apache.maven.plugins:maven-compiler-plugin:3.5.1:testCompile</test-compile>
               <test>org.apache.maven.plugins:maven-surefire-plugin:2.19.1:test</test>
-              <package>
-                org.apache.maven.plugins:maven-jar-plugin:2.6:jar,${project.groupId}:${project.artifactId}:${project.version}:build
-              </package>
+              <package>org.apache.maven.plugins:maven-jar-plugin:2.6:jar,${project.groupId}:${project.artifactId}:${project.version}:build</package>
               <deploy>${project.groupId}:${project.artifactId}:${project.version}:push</deploy>
             </phases>
           </lifecycle>
