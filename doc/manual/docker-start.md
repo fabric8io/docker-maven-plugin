@@ -18,7 +18,7 @@ the following container properties:
 
 * **ip** : The internal IP address of the container.
 
-For example the Maven property `docker.container.tomcat.ip` would container the Docker internal IP for a container with 
+For example the Maven property `docker.container.tomcat.ip` would hold the Docker internal IP for a container with 
 an alias "tomcat". You can set the global configuration **exposeContainerInfo** to an empty string to not expose container 
 information that way or to a string for an other prefix than `docker.container`.
 
