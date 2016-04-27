@@ -7,7 +7,7 @@
   - Add support for builds args in external Dockerfiles (#334) 
   - Move `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
    `build>assembly>dockerFileDir` is now deprecated and will be removed.
-  - Add new lifecycles "docker" (build + run), "docker-build" (build only) and 
+  - Add new packaging "docker" (build + run), "docker-build" (build only) and 
     "docker-tar" (creating source)  (#433)
   - Add `docker:run` as an alias to `docker:start`
   - Expose certain container properties also as Maven properties. By default
