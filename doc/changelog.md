@@ -3,7 +3,7 @@
 * **0.15.0** (2016-04-27)
   - Be more conservative when no "warnings" are returned on create ([#407](https://github.com/fabric8io/docker-maven-plugin/issues/407))
   - Fix parsing of timestamps with numeric timezone ([#410](https://github.com/fabric8io/docker-maven-plugin/issues/410))
-  - Validate image names to fit Docker conventions (#423, #419)
+  - Validate image names to fit Docker conventions ([#423](https://github.com/fabric8io/docker-maven-plugin/issues/423)) ([#419](https://github.com/fabric8io/docker-maven-plugin/issues/419))
   - Add support for builds args in external Dockerfiles ([#334](https://github.com/fabric8io/docker-maven-plugin/issues/334)) 
   - Move `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
    `build>assembly>dockerFileDir` is now deprecated and will be removed.
