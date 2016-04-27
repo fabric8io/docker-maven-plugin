@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Mon Apr 04 2016 07:31:26 GMT+0000 (UTC)"
+        data-revision="Wed Apr 27 2016 13:20:50 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -371,11 +371,81 @@
                     
                         <h3 id="dockerbuild"><a name="dockerbuild" class="plugin-anchor" href="#dockerbuild"><span class="fa fa-link"></span></a>docker:build</h3>
 <p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration
-section, or, if the global configuration <code>image</code> is set, only those
-images contained in this variable will be build. </p>
-<p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
-of an image configuration. The available subelements are</p>
+section, or, if the global configuration variable <code>image</code> (property:
+<code>docker.image</code>) is set, only the images contained in this variable
+(comma separated) will be built.</p>
+<p>Image can be build in two different ways:</p>
 <ul>
+<li><strong>Inline plugin configuration</strong> with everything specified with the POM. </li>
+<li><strong>External Dockerfiles</strong> which can be enriched by build information.</li>
+</ul>
+<h4 id="inline-plugin-configuration"><a name="inline-plugin-configuration" class="plugin-anchor" href="#inline-plugin-configuration"><span class="fa fa-link"></span></a>Inline plugin configuration</h4>
+<p>Here all configurartion required to build the image is contained in
+the plugin configuration. By default its the standard XML based
+configuration for the plugin but can be switched to a property based
+configuration syntax as described in the section
+<a href="external-configuration.html">External configuration</a>. The XML
+configuration syntax is reqcommended because of its more structured
+and typed nature. </p>
+<p>When using this mode, the Dockerfile is created on the fly with all
+instructions extracted from the configuration given. </p>
+<h4 id="external-dockerfile"><a name="external-dockerfile" class="plugin-anchor" href="#external-dockerfile"><span class="fa fa-link"></span></a>External Dockerfile</h4>
+<p>Alternatively an external Dockerfile template can be used. This mode
+is switch on by using one of these two configuration options within
+the <code>&lt;build&gt;</code> configuration section.</p>
+<ul>
+<li><p><strong>dockerFileDir</strong> specifies a directory containing a
+<code>Dockerfile</code> that will be used to create the image. </p>
+</li>
+<li><p><strong>dockerFile</strong> specifies a specific Dockerfile. The <code>dockerFileDir</code>
+is set to the directory containing the file.</p>
+</li>
+</ul>
+<p>If <code>dockerFileDir</code> is a relative path looked up in
+<code>${project.basedDir}/src/main/docker</code>. You can make easily an absolute
+path by prefixing with <code>${project.baseDir}</code>.</p>
+<p>Any additional files located in the <code>dockerFileDir</code> directory will
+also be added to the build context as well as any files specified by
+an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code>
+directives yourself into the Dockerfile. If this directory contains a
+<code>.maven-dockerignore</code> file, then it is used for excluding files for
+the build. Each line in this file is treated as an
+<a href="http://ant.apache.org/manual/Types/fileset.html" target="_blank">FileSet exclude pattern</a>
+as used by the <a href="http://maven.apache
+.org/plugins/maven-assembly-plugin/" target="_blank">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code>
+when using Docker but has a slightly different syntax (hence the
+different name).</p>
+<p>Except for the <a href="#build-assembly">assembly configuration</a> all other
+configuration options are ignored for now. For the future it is
+planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which
+can be used in the Dockerfile template to placing the configuration
+resulting from the additional configuration.</p>
+<p>The following example used a Dockerfile in the directory
+<code>src/main/docker/demo</code>: </p>
+<pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">plugin</span>&gt;</span>
+ <span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-title">images</span>&gt;</span>
+     <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>
+       <span class="hljs-tag">&lt;<span class="hljs-title">name</span>&gt;</span>user/demo<span class="hljs-tag">&lt;/<span class="hljs-title">name</span>&gt;</span>
+       <span class="hljs-tag">&lt;<span class="hljs-title">build</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-title">dockerFileDir</span>&gt;</span>demo<span class="hljs-tag">&lt;/<span class="hljs-title">dockerFileDir</span>&gt;</span>
+       <span class="hljs-tag">&lt;/<span class="hljs-title">build</span>&gt;</span>
+     <span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-title">images</span>&gt;</span>
+ <span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
+ ...
+<span class="hljs-tag">&lt;/<span class="hljs-title">plugin</span>&gt;</span>
+</code></pre>
+<h4 id="configuration"><a name="configuration" class="plugin-anchor" href="#configuration"><span class="fa fa-link"></span></a>Configuration</h4>
+<p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
+of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
+<code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
+<ul>
+<li><strong>args</strong> is Map specifying the value of <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg" target="_blank">Docker build args</a> 
+which should be used when building the image with an external Dockerfile which uses build arguments. 
+The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>). 
+This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as 
+described in <a href="#build-args">Build Args</a></li>
 <li><strong>assembly</strong> specifies the assembly configuration as described in
 <a href="#build-assembly">Build Assembly</a></li>
 <li><strong>cleanup</strong> Cleanup dangling (untagged) images after each build (including any containers
@@ -390,7 +460,7 @@ is provided when a container for this image is started). See
 <li><strong>entryPoint</strong> An entrypoint allows you to configure a container that will run as an executable. 
 See <a href="#startup-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>env</strong> holds environments as described in
-<a href="#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>. </li>
+<a href="docker-start.html#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</li>
 <li><strong>from</strong> specifies the base image which should be used for this
 image. If not given this default to <code>busybox:latest</code> and is suitable
 for a pure data image.</li>
@@ -402,7 +472,7 @@ for a pure data image.</li>
 <li><strong>runCmds</strong> specifies commands to be run during the build process. It contains <strong>run</strong> elements 
 which are passed to bash. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the
 Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime
-behaviour when starting containers. </li>
+behaviour when starting containers.  </li>
 <li><strong>optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only one image layer is created.</li>
 <li><strong>compression</strong> is the compression mode how the build archive is transmitted to the docker daemon (<code>docker:build</code>) and how 
 docker build archives are attached to this build as sources (<code>docker:source</code>). The value can be <code>none</code> (default), 
@@ -460,16 +530,9 @@ described in the section <a href="#docker-assembly">Docker Assembly</a> below. <
 <li><strong>descriptorRef</strong> is an alias to a predefined assembly
 descriptor. The available aliases are also described in the
 <a href="#docker-assembly">Docker Assembly</a> section.</li>
-<li><strong>dockerFileDir</strong> specifies a directory containing an external Dockerfile
-that will be used to create the image. Any additional files located in this
-directory will also be added to the image. Usage of this directive will take
-precedence over any configuration specified in the <code>build</code> element. In addition to
-the files specified within the assembly also all files contained in this directory
-are added to the docker build directory. If this path is not an absolute path it 
-is resolved relatively to <code>src/main/docker</code>. You can make easily an absolute path by 
-using <code>${project.baseDir}</code> as prefix for your path. If this directory contains a <code>.maven-dockerignore</code> file, 
-this file is used for excluding files in the build. Each line is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html" target="_blank">FileSet exclude pattern</a> as used by the <a href="http://maven.apache
-.org/plugins/maven-assembly-plugin/" target="_blank">maven-assembly-plugin</a>. </li>
+<li><strong>dockerFileDir</strong> specifies a directory containing an external
+Dockerfile. <strong>This option is deprecated, please use <dockerfiledir>
+directly in the <build> section. See above for the usage.</build></dockerfiledir></strong> </li>
 <li><strong>exportBasedir</strong> indicates if the <code>basedir</code> should be exported as a volume.
 This value is <code>true</code> by default except in the case the <code>basedir</code> is set to 
 the container root (<code>/</code>). It is also <code>false</code> by default when a base image is used with <code>from</code> 
@@ -627,6 +690,20 @@ possible to change the name of the final build artifact with the following:</p>
 there is no guarantee the plugin creating your artifact will honor it in which case you will need to use a custom
 descriptor like above to achieve the desired naming.</p>
 <p>Currently the <code>jar</code> and <code>war</code> plugins properly honor the usage of <code>finalName</code>.</p>
+<h4 id="build-args"><a name="build-args" class="plugin-anchor" href="#build-args"><span class="fa fa-link"></span></a>Build Args</h4>
+<p>As described in section <a href="#configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg" target="_blank">Docker build arg</a> can be used. In addition to the 
+configuration within the plugin configuration you can also use properties to specify them:</p>
+<ul>
+<li><p>Set a system property when running Maven, eg.: <code>-Ddocker.buildArg.http_proxy=http://proxy:8001</code>. This is especially
+useful when using predefined Docker arguments for setting proxies transparently.</p>
+</li>
+<li><p>Set a project property within the <code>pom.xml</code>, eg.:</p>
+<pre><code>  &lt;docker.buildArg.myBuildArg&gt;myValue&lt;/docker.buildArg.myBuildArg&gt;
+</code></pre></li>
+</ul>
+<p>Please note that the system property setting will always override the project property. Also note that for all
+properties which are not Docker <a href="https://docs.docker.com/engine/reference/builder/#arg" target="_blank">predefined</a> properties, 
+the external Dockerfile must contain an <code>ARGS</code> instruction. </p>
 
                     
                     </section>

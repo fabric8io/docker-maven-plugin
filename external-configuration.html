@@ -61,7 +61,7 @@
         data-chapter-title="External Configuration"
         data-filepath="external-configuration.md"
         data-basepath="."
-        data-revision="Mon Apr 04 2016 07:31:26 GMT+0000 (UTC)"
+        data-revision="Wed Apr 27 2016 13:20:50 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -403,6 +403,8 @@ up from the following properties, which correspond to corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 <ul>
 <li><strong>docker.alias</strong> Alias name</li>
+<li><strong>docker.args.BUILDVAR</strong> Set the value of a build variable. The syntax is the same as for 
+specifying environment variables (see below).</li>
 <li><strong>docker.assembly.baseDir</strong> Directory name for the exported artifacts as
 described in an assembly (which is <code>/maven</code> by default).</li>
 <li><strong>docker.assembly.descriptor</strong> Path to the assembly descriptor when
@@ -414,16 +416,14 @@ use. </li>
 when creating the assembly archive</li>
 <li><strong>docker.assembly.dockerFileDir</strong> specifies a directory containing an external Dockerfile
 that will be used to create the image</li>
-<li><strong>docker.cleanup</strong> Cleanup dangling (untagged) images after each build 
-(including any containers created from them). Default is <code>try</code> (which wont fail the build if removing fails),
-other possible values are <code>none</code> (no cleanup) or <code>remove</code> (remove but fail if unsuccessful) </li>
 <li><strong>docker.nocache</strong> Don&apos;t use Docker&apos;s build cache.This can be overwritten by setting a 
 system property <code>docker.nocache</code> when running Maven.</li>
-<li><strong>docker.optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only 
-one image layer is created.</li>
 <li><strong>docker.bind.idx</strong> Sets a list of paths to bind/expose in the container</li>
 <li><strong>docker.capAdd.idx</strong> List of kernel capabilities to add to the container</li>
 <li><strong>docker.capDrop.idx</strong> List of kernel capabilities to remove from the container</li>
+<li><strong>docker.cleanup</strong> Cleanup dangling (untagged) images after each build 
+(including any containers created from them). Default is <code>try</code> (which wont fail the build if removing fails),
+other possible values are <code>none</code> (no cleanup) or <code>remove</code> (remove but fail if unsuccessful) </li>
 <li><strong>docker.cmd</strong> Command to execute. This is used both when
 running a container and as default command when creating an image.</li>
 <li><strong>docker.domainname</strong> Container domain name</li>
@@ -437,13 +437,13 @@ sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can
 be provided. This environment is used both for building images and
 running containers. The value cannot be empty but can contain Maven property names which are
 resolved before the Dockerfile is created</li>
-<li><strong>docker.labels.LABEL</strong> Sets a label which works similarly like setting environment variables. </li>
 <li><strong>docker.envPropertyFile</strong> specifies the path to a property file whose properties are 
 used as environment variables. The environment variables takes precedence over any other environment
 variables specified.</li>
 <li><strong>docker.extraHosts.idx</strong> List of <code>host:ip</code> to add to <code>/etc/hosts</code></li>
 <li><strong>docker.from</strong> Base image for building an image</li>
 <li><strong>docker.hostname</strong> Container hostname</li>
+<li><strong>docker.labels.LABEL</strong> Sets a label which works similarly like setting environment variables. </li>
 <li><strong>docker.log.enabled</strong> Use logging (default: <code>true</code>)</li>
 <li><strong>docker.log.prefix</strong> Output prefix</li>
 <li><strong>docker.log.color</strong> ANSI color to use for the prefix</li>
@@ -457,10 +457,13 @@ list (i.e. the list contains first a entries with numeric
 indexes sorted and the all non-numeric indexes in arbitrary order).
 For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link
 to the image with alias &apos;db&apos;.</li>
+<li><strong>docker.maintainer</strong> defines the maintainer&apos;s email as used when building an image</li>
 <li><strong>docker.memory</strong> Container memory (in bytes)</li>
 <li><strong>docker.memorySwap</strong> Total memory (swap + memory) <code>-1</code> to disable swap</li>
 <li><strong>docker.name</strong> Image name</li>
 <li><strong>docker.namingStrategy</strong> Container naming (either <code>none</code> or <code>alias</code>)</li>
+<li><strong>docker.optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only 
+one image layer is created.</li>
 <li><strong>docker.portPropertyFile</strong> specifies a path to a port mapping used
 when starting a container.</li>
 <li><strong>docker.ports.idx</strong> Sets a port mapping. For example
@@ -473,10 +476,9 @@ the index should be count up. </li>
 <li><strong>docker.registry</strong> Registry to use for pushing images.</li>
 <li><strong>docker.restartPolicy.name</strong> Container restart policy</li>
 <li><strong>docker.restartPolicy.retry</strong> Max restrart retries if <code>on-failure</code> used</li>
+<li><strong>docker.tags.idx</strong> defines a list of tags to apply to a built image</li>
 <li><strong>docker.user</strong> Container user</li>
 <li><strong>docker.volumes.idx</strong> defines a list of volumes to expose when building an image</li>
-<li><strong>docker.tags.idx</strong> defines a list of tags to apply to a built image</li>
-<li><strong>docker.maintainer</strong> defines the maintainer&apos;s email as used when building an image</li>
 <li><strong>docker.volumesFrom.idx</strong> defines a list of image aliases from which
 the volumes should be mounted of the container. The list semantics
 is the same as for links (see above). For examples

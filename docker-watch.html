@@ -61,7 +61,7 @@
         data-chapter-title="docker:watch"
         data-filepath="docker-watch.md"
         data-basepath="."
-        data-revision="Mon Apr 04 2016 07:31:26 GMT+0000 (UTC)"
+        data-revision="Wed Apr 27 2016 13:20:50 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -398,9 +398,9 @@ rebuilt. This mode works reliably only when used together with
 <code>docker:start</code>.</p>
 <pre><code>  $ mvn docker:start docker:watch -Ddocker.watchMode=run
 </code></pre></li>
-<li><p><code>both</code> : Enables both <code>build</code> and <code>run</code>. This is the default <code>both</code>. </p>
+<li><p><code>both</code> : Enables both <code>build</code> and <code>run</code>. This is the default. </p>
 </li>
-<li><p><code>none</code> : Image is complete ignored for watching</p>
+<li><p><code>none</code> : Image is completely ignored for watching.</p>
 </li>
 <li><p><code>copy</code> : Copy changed files into the running container. This is the
 fast way to update a container, however the target container must

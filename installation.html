@@ -61,7 +61,7 @@
         data-chapter-title="Installation"
         data-filepath="installation.md"
         data-basepath="."
-        data-revision="Mon Apr 04 2016 07:31:26 GMT+0000 (UTC)"
+        data-revision="Wed Apr 27 2016 13:20:50 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -413,6 +413,39 @@ available goals are described below. </p>
   <span class="hljs-tag">&lt;/<span class="hljs-title">executions</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">plugin</span>&gt;</span>
 </code></pre>
+<p>When working with this plugin you can use an own packaging with a specialized lifecycle in order to keep your pom files small. Three packaging variants are available:</p>
+<ul>
+<li><strong>docker</strong> : This binds <code>docker:build</code> to the package phase and <code>docker:start</code> / <code>docker:stop</code> to the pre- and post-integration phase respectively. Also <code>docker:push</code> is bound to the deploy phase.</li>
+<li><strong>docker-build</strong> : Much like the <em>docker</em> packaging, except that there are no integration tests configured by default.</li>
+<li><strong>docker-tar</strong> : Create a so called <em>Docker tar</em> archive which is used as the artifact and which later can be use for building an image. It contains essentially a <code>Dockerfile</code> with supporting files. See <a href="docker-source">docker:source</a> for more details. </li>
+</ul>
+<p>These packaging definitions include the <em>jar</em> lifecycle methods so they are well suited simple Microservice style projects.
+For example:</p>
+<pre><code>&lt;pom&gt;
+  &lt;artifactId&gt;demo&lt;/artifactId&gt;
+  &lt;version&gt;0.0.1&lt;/version&gt;
+  &lt;packaging&gt;docker&lt;/packaging&gt;
+  ...
+  &lt;build&gt;
+    &lt;plugins&gt;
+      &lt;plugin&gt;
+        &lt;groupId&gt;io.fabric8&lt;/groupId&gt;
+        &lt;artifactId&gt;docker-maven-plugin&lt;/artifactId&gt;
+        &lt;extensions&gt;true&lt;/extensions&gt;
+        &lt;configuration&gt;
+          &lt;images&gt;
+            &lt;image&gt;
+            ...
+            &lt;/image&gt;
+          &lt;/images&gt;
+        &lt;/configuration&gt;
+      &lt;/plugin&gt;
+    &lt;/plugins&gt;
+    ....
+  &lt;build&gt;
+&lt;/pom&gt;
+</code></pre><p>This will create the jar (if any), build the Docker images, start the configured Docker containers, runs the integration tests, stops the configured Docker container when you enter <code>mvn install</code>. With <code>mvn deploy</code> you can additionally push the images to a Docker configuration. Please note the <code>&lt;extensions&gt;true&lt;/extensions&gt;</code> which is mandatory when you use a custom lifecycle.</p>
+<p>The rest of this manual is now about how to configure the plugin for your images.</p>
 
                     
                     </section>

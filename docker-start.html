@@ -61,7 +61,7 @@
         data-chapter-title="docker:start"
         data-filepath="docker-start.md"
         data-basepath="."
-        data-revision="Mon Apr 04 2016 07:31:26 GMT+0000 (UTC)"
+        data-revision="Wed Apr 27 2016 13:20:50 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -380,7 +380,17 @@ useful when used from the command line as system property <code>docker.showLogs<
 CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that 
  you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but 
  not removed so that you can make postmortem analysis).</p>
-<p>The <code>&lt;run&gt;</code> configuration knows the following sub elements:</p>
+<p>By default container specific properties are exposed as Maven properties. These properties have the format
+<code>docker.container.</code><em><alias></alias></em><code>.</code><em><prop></prop></em> where <em>alias</em> is the name of the container (see below) and <em><prop></prop></em> is one of
+the following container properties:</p>
+<ul>
+<li><strong>ip</strong> : The internal IP address of the container.</li>
+</ul>
+<p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with 
+an alias &quot;tomcat&quot;. You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container 
+information that way or to a string for an other prefix than <code>docker.container</code>.</p>
+<h4 id="configuration"><a name="configuration" class="plugin-anchor" href="#configuration"><span class="fa fa-link"></span></a><run> Configuration</run></h4>
+<p>The <code>&lt;run&gt;</code> configuration section knows the following sub elements:</p>
 <ul>
 <li><strong>capAdd</strong> a list of <code>add</code> elements to specify kernel parameters to add to
 the container.</li>
@@ -391,13 +401,13 @@ container&apos;s startup. If not given, the image&apos;s default command is
 used. See <a href="docker-build.html#start-up-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>domainname</strong>  domain name for the container</li>
 <li><strong>dns</strong> list of <code>host</code> elements specifying dns servers for the container to use</li>
-<li><strong>dnsSearch</strong> list of <code>host</code> elements specying dns search domains </li>
+<li><strong>dnsSearch</strong> list of <code>host</code> elements specifying dns search domains </li>
 <li><strong>entrypoint</strong> set the entry point for the container. See <a href="docker-build.html#start-up-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>env</strong> can contain environment variables as subelements which are
 set during startup of the container. They are specified in the
-typical maven property format as described <a href="#setting-environment-variables-and-labels">below</a>.</li>
+typical maven property format as described <a href="#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</li>
 <li><strong>labels</strong> specifies one or more labels which should be attached to the container. They are specified in the
-typical maven property format as described <a href="#setting-environment-variables-and-labels">below</a>.</li>
+typical maven property format as described in <a href="#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</li>
 <li><strong>envPropertyFile</strong> can be a path to a property file holding environment variables. If given, the variables
 specified in this property file overrides the environment variables specified in the configuration.</li>
 <li><strong>extraHosts</strong> list of <code>host</code> elements in the form <code>host:ip</code> to add to the container&apos;s <code>/etc/hosts</code> file. 
@@ -405,11 +415,11 @@ Additionally, you may specify a <code>host</code> element in the form <code>host
 at container startup.</li>
 <li><strong>hostname</strong> desired hostname for the container</li>
 <li><strong>links</strong> declares how containers are linked together see
-description on <a href="#container-linking">container linking</a>. </li>
+description on <a href="#container-linking">Container Linking</a>. </li>
 <li><strong>log</strong> specifies the log configuration for whether and how log
 messages from the running containers should be printed. This also can configure the 
 <a href="https://docs.docker.com/engine/admin/logging/overview/" target="_blank">log driver</a> to use. See
-<a href="#log-configuration">below</a> for a detailed description of this configuration
+<a href="#log-configuration">Log Configuration</a> for a detailed description of this configuration
 section. </li>
 <li><strong>memory</strong> memory limit in bytes</li>
 <li><strong>memorySwap</strong> total memory usage (memory + swap); use -1 to disable swap.</li>
@@ -429,19 +439,19 @@ Available for Docker 1.9 and newer. For more about the networking options please
 </li>
 <li><strong>portPropertyFile</strong>, if given, specifies a file into which the
 mapped properties should be written to. The format of this file and
-its purpose are also described <a href="#port-mapping">below</a></li>
+its purpose are also described in <a href="#port-mapping">Port mapping</a></li>
 <li><strong>ports</strong> declares how container exposed ports should be
 mapped. This is described below in an extra
-<a href="#port-mapping">section</a>.  </li>
+section <a href="#port-mapping">Port mapping</a>.  </li>
 <li><strong>privileged</strong> give container full access to host (<code>true|false</code>)   </li>
 <li><strong>restartPolicy</strong> specifies the container restart policy, see 
-<a href="#container-restart-policy">below</a></li>
+<a href="#container-restart-policy">Container Restart Policy</a></li>
 <li><strong>user</strong> user used inside the container</li>
 <li><strong>skip</strong> disable creating and starting of the container. This option is best used together with a configuration option.</li>
-<li><strong>volumes</strong> for bind configurtion of host directories and from other containers. See &quot;<a href="#volume-binding">Volume binding</a>&quot; 
+<li><strong>volumes</strong> for bind configurtion of host directories and from other containers. See <a href="#volume-binding">Volume binding</a> 
 for details.</li>
 <li><strong>wait</strong> specifies condition which must be fulfilled for the startup
-to complete. See <a href="#wait-during-startup-and-shutdown">below</a> which subelements are
+to complete. See <a href="#wait-during-startup-and-shutdown">Wait during Startup and Shutdown</a> which subelements are
 available and how they can be specified.</li>
 <li><strong>workingDir</strong> working dir for commands to run in</li>
 </ul>
@@ -508,7 +518,7 @@ equivalent to the port mapping when using the Docker CLI with option
 form will result in an explicit mapping between the docker host and the corresponding 
 port inside the container. In the above example, port 18080 would be exposed on the 
 docker host and mapped to port 8080 in the running container. </li>
-<li><strong>host.port:80</strong> A tuple consisting of a string and a numeric value separated by a
+<li><strong><em>host.port</em>:80</strong> A tuple consisting of a string and a numeric value separated by a
 <code>:</code>. In this form, the string portion of the tuple will correspond
 to a Maven property. If the property is undefined when the <code>start</code>
 task executes, a port will be dynamically selected by Docker in the
@@ -523,17 +533,17 @@ property <code>host.port</code> which may then later be used in a property
 expression similar to <code>&lt;value&gt;${host.port}&lt;/value&gt;</code>. This can be
 used to pin a port from the outside when doing some initial testing
 similar to <code>mvn -Dhost.port=10080 docker:start</code></li>
-<li><strong>&lt;bindTo&gt;:host.port:80</strong> A tuple consisting of two strings and a numeric value separated
-by a <code>:</code>. In this form, <code>&lt;bindTo&gt;</code> is an ip address on the host the container should bind to.
+<li><strong>bindTo:<em>host.port</em>:80</strong> A tuple consisting of two strings and a numeric value separated
+by a <code>:</code>. In this form, <code>bindTo</code> is an ip address on the host the container should bind to.
 As a convenience, a hostname pointing to the docker host may also
 be specified. The container will fail to start if the hostname can not be 
 resolved.  </li>
-<li><strong>+host.ip:host.port:80</strong> A tuple consisting of two strings and a numeric value separated
-by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property.
+<li><strong>+host.ip:<em>host.port</em>:80</strong> A tuple consisting of two strings and a numeric value separated
+by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property name <code>host.ip</code>.
 If docker reports that value to be <code>0.0.0.0</code>, the value of <code>docker.host.address</code> will
 be substituted instead. In the event you want to use this form and have the container bind 
-to a specific hostname/ip address, you can declare a Maven property of the same name and correct
-value to use. <code>host:post</code> functions in the same manner as described above. </li>
+to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example) 
+containing the value to use. <code>host:port</code> works in the same way as described above. </li>
 </ul>
 <p>The following are examples of valid configuration entries:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">properties</span>&gt;</span>
@@ -618,7 +628,7 @@ been created from the image <code>jolokia/docker-demo</code> are mounted directl
 the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
 the full image name, an alias name like <em>service</em> can be used, too.</p>
 <p>Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This
-should even work for boot2docker/docker-machine:</p>
+should even work for boot2docker and docker-machine:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">volumes</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">bind</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">volume</span>&gt;</span>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}<span class="hljs-tag">&lt;/<span class="hljs-title">volume</span>&gt;</span> 
