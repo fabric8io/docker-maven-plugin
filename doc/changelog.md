@@ -1,18 +1,18 @@
 # ChangeLog
 
 * **0.15.0-SNAPSHOT**
-  - Be more conservative when no "warnings" are returned on create (#407)
-  - Fix parsing of timestamps with numeric timezone (#410)
+  - Be more conservative when no "warnings" are returned on create ([#407](https://github.com/fabric8io/docker-maven-plugin/issues/407))
+  - Fix parsing of timestamps with numeric timezone ([#410](https://github.com/fabric8io/docker-maven-plugin/issues/410))
   - Validate image names to fit Docker conventions (#423, #419)
-  - Add support for builds args in external Dockerfiles (#334) 
+  - Add support for builds args in external Dockerfiles ([#334](https://github.com/fabric8io/docker-maven-plugin/issues/334)) 
   - Move `dockerFileDir` to topLevel `<build>` and introduced `dockerFile` directive
    `build>assembly>dockerFileDir` is now deprecated and will be removed.
   - Add new packaging "docker" (build + run), "docker-build" (build only) and 
-    "docker-tar" (creating source)  (#433)
+    "docker-tar" (creating source)  ([#433](https://github.com/fabric8io/docker-maven-plugin/issues/433))
   - Add `docker:run` as an alias to `docker:start`
   - Expose certain container properties also as Maven properties. By default
     the format is `docker.container.<alias>.ip` for the internal IP address of container with alias `<alias>`.
-    (#198)
+    ([#198](https://github.com/fabric8io/docker-maven-plugin/issues/198))
   
 * **0.14.2**
   - Introduce a mode `try` for `<cleanup>` so that an image gets removed if not being still used. 
