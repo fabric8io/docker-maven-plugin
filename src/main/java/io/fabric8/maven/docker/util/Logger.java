@@ -57,20 +57,21 @@ public interface Logger {
     boolean isDebugEnabled();
 
     /**
-     * Start a progress bar
-     * @param total the total number to be expected
+     * Start a progress bar* @param total the total number to be expected
      */
-    void progressStart(int total);
+    void progressStart();
 
     /**
      * Update the progress
      *
-     * @param current the current number to be expected
+     * @param layerId the image id of the layer fetched
+     * @param status a status message
+     * @param progressMessage the progressBar
      */
-    void progressUpdate(int current);
+    void progressUpdate(String layerId, String status, String progressMessage);
 
     /**
-     * Finis progress meter. Must be always called if {@link #progressStart(int)} has been
+     * Finis progress meter. Must be always called if {@link #progressStart()} has been
      * used.
      */
     void progressFinished();

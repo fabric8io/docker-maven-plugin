@@ -6,8 +6,6 @@ import org.json.JSONObject;
 
 public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.JsonEntityResponseHandler {
 
-    private boolean downloadInProgress = false;
-
     private final Logger log;
     
     public PullOrPushResponseJsonHandler(Logger log) {
@@ -17,30 +15,48 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
     @Override
     public void process(JSONObject json) throws DockerAccessException {
         if (json.has("progressDetail")) {
-            JSONObject details = json.getJSONObject("progressDetail");
-            if (details.has("total")) {
-                if (!downloadInProgress) {
-                    log.progressStart(details.getInt("total"));
-                }
-                log.progressUpdate(details.getInt("current"));
-                downloadInProgress = true;
-                return;
-            } 
-               
-            if (downloadInProgress) {
-                log.progressFinished();
-            }
-            downloadInProgress = false;
-        }
-        if (json.has("error")) {
-            String msg = json.getString("error").trim();
-            String details = json.getJSONObject("errorDetail").getString("message").trim();
-            throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
+            log.progressUpdate(getStringOrEmpty(json, "id"),
+                               getStringOrEmpty(json, "status"),
+                               getStringOrEmpty(json, "progress"));
+        } else if (json.has("error")) {
+            throwDockerAccessException(json);
         } else {
-            if (json.length() > 0) {
-                log.info("... " + extractInfo(json));
-            }
+            log.progressFinished();
+            logInfoMessage(json);
+            log.progressStart();
         }
+    }
+
+    private void logInfoMessage(JSONObject json) {
+        String value;
+        if (json.has("stream")) {
+            value = json.getString("stream").replaceFirst("\n$", "");
+        } else if (json.has("status")) {
+            value = json.getString("status");
+        } else {
+            value = json.toString();
+        }
+        log.info(value);
+    }
+
+    private void throwDockerAccessException(JSONObject json) throws DockerAccessException {
+        String msg = json.getString("error").trim();
+        String details = json.getJSONObject("errorDetail").getString("message").trim();
+        throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
+    }
+
+    private String getStringOrEmpty(JSONObject json, String what) {
+        return json.has(what) ? json.getString(what) : "";
+    }
+
+    @Override
+    public void start() {
+        log.progressStart();
+    }
+
+    @Override
+    public void stop() {
+        log.progressFinished();
     }
 
     private String extractInfo(JSONObject json) {

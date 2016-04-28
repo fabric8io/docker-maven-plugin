@@ -1,6 +1,10 @@
 package io.fabric8.maven.docker.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.util.StringUtils;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 
@@ -20,9 +24,6 @@ public class AnsiLogger implements Logger {
 
     private final Log log;
 
-    private int oldProgress = 0;
-    private int total = 0;
-
     private boolean verbose;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
@@ -30,7 +31,18 @@ public class AnsiLogger implements Logger {
             COLOR_ERROR = RED,
             COLOR_INFO = GREEN,
             COLOR_WARNING = YELLOW,
-            COLOR_PROGRESS = CYAN;
+            COLOR_PROGRESS_ID = YELLOW,
+            COLOR_PROGRESS_STATUS = GREEN,
+            COLOR_PROGRESS_BAR = CYAN;
+
+    // Map remembering lines
+    private ThreadLocal<Map<String, Integer>> imageLines = new ThreadLocal<Map<String,Integer>>();
+
+    // Old image id when used in non ansi mode
+    private String oldImageId;
+
+    // Whether to use ANSI codes
+    private boolean useAnsi;
 
     public AnsiLogger(Log log, boolean useColor, boolean verbose) {
         this.log = log;
@@ -102,40 +114,79 @@ public class AnsiLogger implements Logger {
      * 
      * @param total the total number to be expected
      */
-    public void progressStart(int total) {
+    public void progressStart() {
         // A progress indicator is always written out to standard out if a tty is enabled.
         if (log.isInfoEnabled()) {
-            print(ansi().fg(COLOR_PROGRESS) + "       ");
-            oldProgress = 0;
-            this.total = total;
+            imageLines.remove();
+            imageLines.set(new HashMap<String, Integer>());
+            oldImageId = null;
         }
     }
 
     /**
      * Update the progress
-     *
-     * @param current the current number to be expected
      */
-    public void progressUpdate(int current) {
-        if (log.isInfoEnabled()) {
-            print("=");
-            int newProgress = (current * 10 + 5) / total;
-            if (newProgress > oldProgress) {
-                print(" " + newProgress + "0% ");
-                oldProgress = newProgress;
+    public void progressUpdate(String layerId, String status, String progressMessage) {
+        if (log.isInfoEnabled() && StringUtils.isNotEmpty(layerId)) {
+            if (useAnsi) {
+                updateAnsiProgress(layerId, status, progressMessage);
+            } else {
+                updateNonAnsiProgress(layerId);
             }
             flush();
         }
     }
 
+    private void updateAnsiProgress(String imageId, String status, String progressMessage) {
+        Map<String,Integer> imgLineMap = imageLines.get();
+        Integer line = imgLineMap.get(imageId);
+
+        int diff = 0;
+        if (line == null) {
+            line = imgLineMap.size();
+            imgLineMap.put(imageId, line);
+        } else {
+            diff = imgLineMap.size() - line;
+        }
+
+        if (diff > 0) {
+            print(ansi().cursorUp(diff).eraseLine(Ansi.Erase.ALL).toString());
+        }
+
+        String progress = progressMessage != null ? progressMessage : "";
+        String msg =
+            ansi()
+                .fg(COLOR_PROGRESS_ID).a(imageId).reset().a(": ")
+                .fg(COLOR_PROGRESS_STATUS).a(status + " ")
+                .fg(COLOR_PROGRESS_BAR).a(progress).toString();
+        println(msg);
+
+        if (diff > 0) {
+            // move cursor back down to bottom
+            print(ansi().cursorDown(diff - 1).toString());
+        }
+    }
+
+    private void updateNonAnsiProgress(String imageId) {
+        if (!imageId.equals(oldImageId)) {
+            print("\n" + imageId + ": .");
+            oldImageId = imageId;
+        } else {
+            print(".");
+        }
+    }
+
     /**
-     * Finis progress meter. Must be always called if {@link #progressStart(int)} has been used.
+     * Finis progress meter. Must be always called if {@link #progressStart()} has been used.
      */
     public void progressFinished() {
         if (log.isInfoEnabled()) {
-            println(ansi().reset().toString());
-            oldProgress = 0;
-            total = 0;
+            imageLines.remove();
+            oldImageId = null;
+            print(ansi().reset().toString());
+            if (!useAnsi) {
+                println("");
+            }
         }
     }
     
@@ -144,12 +195,10 @@ public class AnsiLogger implements Logger {
     }
     
     private void initializeColor(boolean useColor) {
-        // sl4j simple logger used by Maven seems to escape ANSI escapes
-        if (System.console() == null || log.isDebugEnabled() || isWindows()) {
-            useColor = false;
-        }
+        // sl4j simple logger used by Maven seems to escape ANSI escapes on Windows
+        this.useAnsi = useColor && System.console() != null && !log.isDebugEnabled() && !isWindows();
         
-        if (useColor) {
+        if (useAnsi) {
             AnsiConsole.systemInstall();
             Ansi.setEnabled(true);
         }

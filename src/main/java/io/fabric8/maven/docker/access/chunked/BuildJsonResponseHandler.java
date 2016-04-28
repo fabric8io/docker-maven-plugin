@@ -34,4 +34,11 @@ public class BuildJsonResponseHandler implements EntityStreamReaderUtil.JsonEnti
             }
         }
     }
+
+    // Lifecycle methods not needed ...
+    @Override
+    public void start() {}
+
+    @Override
+    public void stop() {}
 }

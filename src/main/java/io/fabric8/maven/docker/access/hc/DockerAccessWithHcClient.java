@@ -444,5 +444,4 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return null;
         }
     }
-
 }
