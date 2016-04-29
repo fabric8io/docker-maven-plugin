@@ -54,9 +54,8 @@ public class ContainerCreateConfig {
         if (env != null && env.size() > 0) {
             for (Map.Entry<String, String> entry : env.entrySet()) {
                 String value = entry.getValue();
-                if (value == null || value.length() == 0) {
-                    throw new IllegalArgumentException(String.format("Env variable '%s' must not be null or empty",
-                                                                     entry.getKey()));
+                if (value == null) {
+                    value = "";
                 }
                 envProps.put(entry.getKey(), StrSubstitutor.replace(value, mavenProps));
             }
@@ -152,8 +151,8 @@ public class ContainerCreateConfig {
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
             String value = envProps.getProperty(key);
-            if (value == null || value.length() == 0) {
-                throw new IllegalArgumentException(String.format("Env variable '%s' must not be null or empty",key));
+            if (value == null) {
+                value = "";
             }
             containerEnv.put(key + "=" + value);
         }

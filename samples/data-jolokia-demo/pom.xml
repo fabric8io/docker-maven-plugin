@@ -101,6 +101,7 @@
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
                   <!-- Base starts jolokia by default. With this, it can be disabled -->
                   <JOLOKIA_OFF>1</JOLOKIA_OFF>
+                  <EMPTY_PROP></EMPTY_PROP>
                 </env>
                 <envPropertyFile>${project.basedir}/src/main/docker/environment.properties</envPropertyFile>
                 <ports>
