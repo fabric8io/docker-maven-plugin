@@ -153,11 +153,14 @@ public class AnsiLogger implements Logger {
             print(ansi().cursorUp(diff).eraseLine(Ansi.Erase.ALL).toString());
         }
 
+        // Status with progress bars: (max length = 11, hence pad to 11)
+        // Extracting
+        // Downloading
         String progress = progressMessage != null ? progressMessage : "";
         String msg =
             ansi()
                 .fg(COLOR_PROGRESS_ID).a(imageId).reset().a(": ")
-                .fg(COLOR_PROGRESS_STATUS).a(status + " ")
+                .fg(COLOR_PROGRESS_STATUS).a(StringUtils.rightPad(status,11) + " ")
                 .fg(COLOR_PROGRESS_BAR).a(progress).toString();
         println(msg);
 

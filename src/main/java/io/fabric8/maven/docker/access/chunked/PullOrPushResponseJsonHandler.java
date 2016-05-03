@@ -58,15 +58,4 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
     public void stop() {
         log.progressFinished();
     }
-
-    private String extractInfo(JSONObject json) {
-        StringBuilder ret = new StringBuilder();
-        for (String key : new String[] {"id", "status", "stream" }) {
-            if (json.has(key)) {
-                ret.append(json.getString(key));
-                ret.append(" ");
-            }
-        }
-        return ret.toString().trim();
-    }
 }
