@@ -21,6 +21,7 @@ import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
 
+import io.fabric8.maven.docker.access.hc.ClientBuilder;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
@@ -28,6 +29,7 @@ import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import io.fabric8.maven.docker.access.KeyStoreUtil;
 
@@ -35,24 +37,19 @@ import io.fabric8.maven.docker.access.KeyStoreUtil;
  * @author roland
  * @since 05/06/15
  */
-public class HttpClientBuilder {
+public class HttpClientBuilder implements ClientBuilder {
 
-    private String certPath = null;
-    private int maxConnections = 100;
+    private final String certPath;
+    private final int maxConnections;
 
-    public HttpClientBuilder certPath(String certPath) {
+    public HttpClientBuilder(String certPath, int maxConnections) {
         this.certPath = certPath;
-        return this;
-    }
-
-    public HttpClientBuilder maxConnections(int maxConnections) {
         this.maxConnections = maxConnections;
-        return this;
     }
 
-    public CloseableHttpClient build() throws IOException {
+    public CloseableHttpClient buildPooledClient() throws IOException {
         org.apache.http.impl.client.HttpClientBuilder builder = HttpClients.custom();
-        HttpClientConnectionManager manager = getConnectionFactory(certPath, maxConnections);
+        HttpClientConnectionManager manager = getPooledConnectionFactory(certPath, maxConnections);
         builder.setConnectionManager(manager);
         // TODO: For push-redirects working for 301, the redirect strategy should be relaxed (see #351)
         // However not sure whether we should do it right now and whether this is correct, since normally
@@ -66,12 +63,23 @@ public class HttpClientBuilder {
         return builder.build();
     }
 
-    private static HttpClientConnectionManager getConnectionFactory(String certPath, int maxConnections) throws IOException {
+    public CloseableHttpClient buildBasicClient() throws IOException {
+        return HttpClients.custom().setConnectionManager(getBasicConnectionFactory(certPath)).build();
+    }
+
+    private static HttpClientConnectionManager getPooledConnectionFactory(String certPath, int maxConnections) throws IOException {
         PoolingHttpClientConnectionManager ret =  certPath != null ?
                 new PoolingHttpClientConnectionManager(getSslFactoryRegistry(certPath)) :
                 new PoolingHttpClientConnectionManager();
         ret.setDefaultMaxPerRoute(maxConnections);
+        ret.setMaxTotal(maxConnections);
         return ret;
+    }
+
+    private static HttpClientConnectionManager getBasicConnectionFactory(String certPath) throws IOException {
+        return certPath != null ?
+            new BasicHttpClientConnectionManager(getSslFactoryRegistry(certPath)) :
+            new BasicHttpClientConnectionManager();
     }
 
     private static Registry<ConnectionSocketFactory> getSslFactoryRegistry(String certPath) throws IOException {

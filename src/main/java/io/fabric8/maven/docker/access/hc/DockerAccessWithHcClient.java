@@ -76,15 +76,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate =
-                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder().build(uri.getPath(), maxConnections));
+                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder(uri.getPath(), maxConnections));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
         } else {
-            HttpClientBuilder builder = new HttpClientBuilder();
-            if (isSSL(baseUrl)) {
-                builder.certPath(certPath);
-            }
-            builder.maxConnections(maxConnections);
-            this.delegate = new ApacheHttpClientDelegate(builder.build());
+            this.delegate = new ApacheHttpClientDelegate(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
     }
@@ -222,7 +217,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public LogGetHandle getLogAsync(String containerId, LogCallback callback) {
-        LogRequestor extractor = new LogRequestor(delegate.getHttpClient(), urlBuilder, containerId, callback);
+        LogRequestor extractor = new LogRequestor(delegate.createBasicClient(), urlBuilder, containerId, callback);
         extractor.start();
         return extractor;
     }

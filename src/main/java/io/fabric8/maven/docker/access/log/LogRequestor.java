@@ -51,7 +51,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     private DockerAccessException exception;
 
-    // Remember for asynchronous handling
+    // Remember for asynchronous handling so that the request can be aborted from the outside
     private HttpUriRequest request;
 
     private final UrlBuilder urlBuilder;
@@ -106,7 +106,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
             while (IOUtils.read(is, headBuf, 0, 8) > 0) {
                 int type = headBuf[0];
                 int declaredLength = extractLength(headBuf);
-                if(declaredLength == 0) {
+                if (declaredLength == 0) {
                     continue;
                 }
                 byte[] buf = new byte[declaredLength];
@@ -136,7 +136,8 @@ public class LogRequestor extends Thread implements LogGetHandle {
     private void callLogCallback(int type, String txt) throws LogCallback.DoneException {
         Matcher matcher = LOG_LINE.matcher(txt);
         if (!matcher.matches()) {
-            callback.error("Invalid log format for '" + txt + "' (expected: \"<timestamp> <txt>\")");
+            callback.error(String.format("Invalid log format for '%s' (expected: \"<timestamp> <txt>\") [%04x %04x]",
+                                         txt,(int) (txt.toCharArray())[0],(int) (txt.toCharArray())[1]));
             throw new LogCallback.DoneException();
         }
         Timestamp ts = new Timestamp(matcher.group(1));
