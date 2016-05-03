@@ -1,9 +1,9 @@
 # ChangeLog
 
-* **0.15.1-SNAPSHOT
-  - Fix push / pull progress bar (#91)
-  - Allow empty environment variable (#434)
-  - Async log request get now their own HTTP client (#344) (#259)
+* **0.15.1** (2016-05-03)
+  - Fix push / pull progress bar ([#91](https://github.com/fabric8io/docker-maven-plugin/issues/91))
+  - Allow empty environment variable ([#434](https://github.com/fabric8io/docker-maven-plugin/issues/434))
+  - Async log request get now their own HTTP client ([#344](https://github.com/fabric8io/docker-maven-plugin/issues/344)) ([#259](https://github.com/fabric8io/docker-maven-plugin/issues/259))
   
 * **0.15.0** (2016-04-27)
   - Be more conservative when no "warnings" are returned on create ([#407](https://github.com/fabric8io/docker-maven-plugin/issues/407))

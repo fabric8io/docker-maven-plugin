@@ -8,7 +8,7 @@ available goals are described below.
 <plugin>
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.15.0</version>
+  <version>0.15.1</version>
 
   <configuration>
      ....
