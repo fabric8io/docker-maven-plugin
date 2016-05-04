@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.15.2-SNAPSHOT** 
+  - More robust response stream parsing (#436)
+
 * **0.15.1** (2016-05-03)
   - Fix push / pull progress bar ([#91](https://github.com/fabric8io/docker-maven-plugin/issues/91))
   - Allow empty environment variable ([#434](https://github.com/fabric8io/docker-maven-plugin/issues/434))
