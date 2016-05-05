@@ -14,7 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -66,12 +65,7 @@ public class DockerEnvironment {
             final Process process = startDockerMachineProcess();
             try {
                 closeOutputStream(process.getOutputStream());
-                Future<IOException> stderrFuture = startStreamPump(process.getErrorStream(), (line) -> {
-                    synchronized (log) {
-                        log.error(line);
-                    }
-                });
-
+                Future<IOException> stderrFuture = startStreamPump(process.getErrorStream());
                 outputStreamPump(process.getInputStream());
 
                 stopStreamPump(stderrFuture);
@@ -131,7 +125,7 @@ public class DockerEnvironment {
             log.info(line);
         }
 
-        private Future<IOException> startStreamPump(final InputStream errorStream, Consumer<String> logLine) {
+        private Future<IOException> startStreamPump(final InputStream errorStream) {
             return executor.submit(new Callable<IOException>() {
                 @Override
                 public IOException call() {
@@ -141,7 +135,9 @@ public class DockerEnvironment {
                             if (line == null) {
                                 break;
                             }
-                            logLine.accept(line);
+                            synchronized (log) {
+                                log.error(line);
+                            }
                         }
                         return null;
                     } catch (IOException e) {
