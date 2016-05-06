@@ -266,7 +266,9 @@ public class RunImageConfiguration {
         }
 
         public Builder cmd(String cmd) {
-            config.cmd = new Arguments(cmd);
+            if (cmd != null) {
+                config.cmd = new Arguments(cmd);
+            }
             return this;
         }
 
@@ -276,7 +278,9 @@ public class RunImageConfiguration {
         }
 
         public Builder entrypoint(String entrypoint) {
-            config.entrypoint = new Arguments(entrypoint);
+            if (entrypoint != null) {
+                config.entrypoint = new Arguments(entrypoint);
+            }
             return this;
         }
 

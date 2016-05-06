@@ -244,7 +244,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         List<ImageConfiguration> ret = new ArrayList<>();
         if (images != null) {
             for (ImageConfiguration image : images) {
-                ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
+                for (ImageConfiguration resolved : imageConfigResolver.resolve(image, project.getProperties())) {
+                    resolved.initAndValidate(log);
+                    ret.add(resolved);
+                }
             }
             verifyImageNames(ret);
         }
