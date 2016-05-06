@@ -29,6 +29,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import io.fabric8.maven.docker.util.Timestamp;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
@@ -156,7 +157,8 @@ public class LogRequestor extends Thread implements LogGetHandle {
         try {
             ByteStreams.readFully(is, payload.array());
         } catch (EOFException e) {
-            throw new IOException("Failed to read log message. Could not read all " + size + " bytes. " + e.getMessage(), e);
+            throw new IOException("Failed to read log message. Could not read all " + size + " bytes. " + e.getMessage() +
+                                  " [ Header: " + Hex.encodeHexString(headerBuffer.array()) + "]", e);
         }
 
         String message = Charsets.UTF_8.newDecoder().decode(payload).toString();
@@ -170,9 +172,10 @@ public class LogRequestor extends Thread implements LogGetHandle {
             exception = new DockerAccessException("Error while reading logs (" + status + ")");
         }
         try (InputStream is = response.getEntity().getContent()) {
-            boolean keepReading = readStreamFrame(is);
-            while (keepReading) {
-                keepReading = readStreamFrame(is);
+            while (true) {
+                if (!readStreamFrame(is)) {
+                    return;
+                }
             }
         } catch (IOException e) {
             callback.error("Cannot process chunk response: " + e);

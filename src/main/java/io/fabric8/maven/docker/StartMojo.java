@@ -240,10 +240,12 @@ public class StartMojo extends AbstractDockerMojo {
             public boolean check() {
                 if (first) {
                     final Pattern pattern = Pattern.compile(logPattern);
+                    log.debug("LogWaitChecker: Pattern to match '" + logPattern + "'");
                     DockerAccess docker = hub.getDockerAccess();
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
                         @Override
                         public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
+                            log.debug(String.format("LogWaitChecker: Tying to match '%s'",txt));
                             if (pattern.matcher(txt).find()) {
                                 detected = true;
                                 throw new LogCallback.DoneException();
