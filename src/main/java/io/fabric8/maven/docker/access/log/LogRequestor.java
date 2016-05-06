@@ -102,6 +102,29 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
     }
 
+    private static class NoBytesReadException extends IOException {
+        public NoBytesReadException() {
+        }
+    }
+
+    /**
+     * This is a copy of ByteStreams.readFully(), with the slight change that it throws
+     * NoBytesReadException if zero bytes are read. Otherwise it is identical.
+     *
+     * @param in
+     * @param bytes
+     * @throws IOException
+     */
+    private void readFully(InputStream in, byte[] bytes) throws IOException {
+        int read = ByteStreams.read(in, bytes, 0, bytes.length);
+        if (read == 0) {
+            throw new NoBytesReadException();
+        } else if (read != bytes.length) {
+            throw new EOFException("reached end of stream after reading "
+                    + read + " bytes; " + bytes.length + " bytes expected");
+        }
+    }
+
     private boolean readStreamFrame(InputStream is) throws IOException, LogCallback.DoneException {
         // Read the header, which is composed of eight bytes. The first byte is an integer
         // indicating the stream type (0 = stdin, 1 = stdout, 2 = stderr), the next three are thrown
@@ -109,9 +132,12 @@ public class LogRequestor extends Thread implements LogGetHandle {
         ByteBuffer headerBuffer = ByteBuffer.allocate(8);
         headerBuffer.order(ByteOrder.BIG_ENDIAN);
         try {
-            ByteStreams.readFully(is, headerBuffer.array());
-        } catch (EOFException e) {
+            this.readFully(is, headerBuffer.array());
+        } catch (NoBytesReadException e) {
+            // Not bytes read for stream. Return false to stop consuming stream.
             return false;
+        } catch (EOFException e) {
+            throw new IOException("Failed to read log header. Could not read all 8 bytes. " + e.getMessage(), e);
         }
 
         // Grab the stream type (stdout, stderr, stdin) from first byte and throw away other 3 bytes.
@@ -130,7 +156,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
         try {
             ByteStreams.readFully(is, payload.array());
         } catch (EOFException e) {
-            return false;
+            throw new IOException("Failed to read log message. Could not read all " + size + " bytes. " + e.getMessage(), e);
         }
 
         String message = Charsets.UTF_8.newDecoder().decode(payload).toString();
