@@ -53,7 +53,8 @@ values in the `<build>` and `<run>` sections.
 * **docker.assembly.ignorePermissions** If set to `true` existing file permissions are ignored
   when creating the assembly archive
 * **docker.assembly.dockerFileDir** specifies a directory containing an external Dockerfile
-  that will be used to create the image
+  that will be used to create the image. This is deprecated please use `docker.dockerFileDir` or `docker.dockerFile` 
+  instead.
 * **docker.nocache** Don't use Docker's build cache.This can be overwritten by setting a 
   system property `docker.nocache` when running Maven.
 * **docker.bind.idx** Sets a list of paths to bind/expose in the container
@@ -67,6 +68,9 @@ values in the `<build>` and `<run>` sections.
 * **docker.domainname** Container domain name
 * **docker.dns.idx** List of dns servers to use
 * **docker.dnsSearch.idx** List of dns search domains
+* **docker.dockerFile** specifies a Dockerfile to use. This property must point to the Dockerfile itself. 
+* **docker.dockerFileDir** specifies a directory containing an external dockerfile that will be 
+used to create the image. The dockerfile must be name `Dockerfile`
 * **docker.entrypoint** Container entry point
 * **docker.workdir** Container working directory
 * **docker.env.VARIABLE** Sets an environment
@@ -128,8 +132,8 @@ one image layer is created.
 * **docker.wait.time** Amount of time to wait during startup of a
     container (in ms)
 * **docker.wait.log** Wait for a log output to appear.
-* **wait.exec.postStart** Command to execute after the container has start up. 
-* **wait.exec.preStop** Command to execute before command stops.
+* **docker.wait.exec.postStart** Command to execute after the container has start up. 
+* **docker.wait.exec.preStop** Command to execute before command stops.
 * **docker.wait.shutdown** Time in milliseconds to wait between stopping a container and removing it.
 * **docker.wait.kill** Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.
 * **docker.workingDir** Working dir for commands to run in

@@ -2,7 +2,8 @@
 
 * **0.15.2-SNAPSHOT** 
   - More robust response stream parsing (#436)
-
+  - Add `docker.dockerFileDir` and `docker.dockerFile` to the properties configuration provider. (#438)
+  
 * **0.15.1** (2016-05-03)
   - Fix push / pull progress bar ([#91](https://github.com/fabric8io/docker-maven-plugin/issues/91))
   - Allow empty environment variable ([#434](https://github.com/fabric8io/docker-maven-plugin/issues/434))

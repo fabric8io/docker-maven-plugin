@@ -206,7 +206,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private String validateConfiguration(Logger log) {
         String apiVersion = this.apiVersion;
         if (images != null) {
-            for (ImageConfiguration imageConfiguration : images) {
+            for (ImageConfiguration imageConfiguration : getImages()) {
                 apiVersion = EnvUtil.extractLargerVersion(apiVersion,imageConfiguration.initAndValidate(log));
             }
         }
@@ -244,10 +244,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         List<ImageConfiguration> ret = new ArrayList<>();
         if (images != null) {
             for (ImageConfiguration image : images) {
-                for (ImageConfiguration resolved : imageConfigResolver.resolve(image, project.getProperties())) {
-                    resolved.initAndValidate(log);
-                    ret.add(resolved);
-                }
+                ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
             }
             verifyImageNames(ret);
         }
