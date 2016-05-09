@@ -165,6 +165,7 @@ public class StartMojo extends AbstractDockerMojo {
             logOut.add("on url " + waitUrl);
         }
         if (wait.getLog() != null) {
+            log.debug("LogWaitChecker: Waiting on " + wait.getLog());
             checkers.add(getLogWaitChecker(wait.getLog(), hub, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
@@ -228,8 +229,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String
-            containerId) {
+    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String  containerId) {
         return new WaitUtil.WaitChecker() {
 
             boolean first = true;
@@ -237,7 +237,7 @@ public class StartMojo extends AbstractDockerMojo {
             boolean detected = false;
 
             @Override
-            public boolean check() {
+            public synchronized boolean check() {
                 if (first) {
                     final Pattern pattern = Pattern.compile(logPattern);
                     log.debug("LogWaitChecker: Pattern to match '" + logPattern + "'");
@@ -245,7 +245,7 @@ public class StartMojo extends AbstractDockerMojo {
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
                         @Override
                         public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
-                            log.debug(String.format("LogWaitChecker: Tying to match '%s'",txt));
+                            log.debug(String.format("LogWaitChecker: Tying to match '%s' [Pattern: %s] [thread: %d]",txt,logPattern,Thread.currentThread().getId()));
                             if (pattern.matcher(txt).find()) {
                                 detected = true;
                                 throw new LogCallback.DoneException();
