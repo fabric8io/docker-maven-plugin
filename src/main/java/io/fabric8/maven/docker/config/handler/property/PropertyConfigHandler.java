@@ -78,6 +78,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .maintainer(withPrefix(prefix, MAINTAINER, properties))
                 .workdir(withPrefix(prefix, WORKDIR, properties))
                 .skip(withPrefix(prefix, ConfigKey.SKIP_BUILD, properties))
+                .user(withPrefix(prefix, USER, properties))
                 .build();
     }
 

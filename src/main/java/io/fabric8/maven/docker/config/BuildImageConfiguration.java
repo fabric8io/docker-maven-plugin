@@ -118,6 +118,9 @@ public class BuildImageConfiguration {
      */
     private Arguments cmd;
 
+    /** @parameter */
+    private String user;
+
     /**
      * @parameter
      */
@@ -222,6 +225,10 @@ public class BuildImageConfiguration {
 
     public List<String> getRunCmds() {
         return runCmds;
+    }
+
+    public String getUser() {
+      return user;
     }
 
     public Map<String, String> getArgs() {
@@ -343,7 +350,12 @@ public class BuildImageConfiguration {
             config.entryPoint.setShell(entryPoint);
             return this;
         }
-        
+
+        public Builder user(String user) {
+            config.user = user;
+            return this;
+        }
+
         public Builder skip(String skip) {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);
