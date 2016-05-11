@@ -139,7 +139,7 @@ public class ContainerCreateConfig {
         if (volume.contains(":")) {
             String[] parts = volume.split(":");
             if (parts.length > 1) {
-                return parts[1];
+                return parts[parts.length - 1];
             }
         }
         return volume;
