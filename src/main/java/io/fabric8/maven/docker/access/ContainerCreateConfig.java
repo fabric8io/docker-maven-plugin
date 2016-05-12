@@ -9,8 +9,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ContainerCreateConfig {
-    final JSONObject createConfig = new JSONObject();
-    final String imageName;
+
+    private final JSONObject createConfig = new JSONObject();
+    private final String imageName;
 
     public ContainerCreateConfig(String imageName) {
         this.imageName = imageName;
