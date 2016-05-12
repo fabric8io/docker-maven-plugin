@@ -142,6 +142,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected Logger log;
 
+    protected List<ImageConfiguration> resolvedImages;
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
      * {@link #executeInternal(ServiceHub)}
@@ -241,6 +243,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private List<ImageConfiguration> resolveImages() {
+        if (resolvedImages != null) {
+            return resolvedImages;
+        }
         List<ImageConfiguration> ret = new ArrayList<>();
         if (images != null) {
             for (ImageConfiguration image : images) {
@@ -248,7 +253,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             }
             verifyImageNames(ret);
         }
-        return ret;
+        return resolvedImages = ret;
     }
 
     // Extract authentication information
