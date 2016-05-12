@@ -13,7 +13,7 @@ Image can be build in two different ways:
 
 #### Inline plugin configuration
 
-Here all configurartion required to build the image is contained in
+Here all configuration required to build the image is contained in
 the plugin configuration. By default its the standard XML based
 configuration for the plugin but can be switched to a property based
 configuration syntax as described in the section
