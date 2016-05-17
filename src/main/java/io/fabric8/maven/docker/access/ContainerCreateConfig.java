@@ -9,8 +9,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ContainerCreateConfig {
-    final JSONObject createConfig = new JSONObject();
-    final String imageName;
+
+    private final JSONObject createConfig = new JSONObject();
+    private final String imageName;
 
     public ContainerCreateConfig(String imageName) {
         this.imageName = imageName;
@@ -139,7 +140,7 @@ public class ContainerCreateConfig {
         if (volume.contains(":")) {
             String[] parts = volume.split(":");
             if (parts.length > 1) {
-                return parts[1];
+                return parts[parts.length - 1];
             }
         }
         return volume;

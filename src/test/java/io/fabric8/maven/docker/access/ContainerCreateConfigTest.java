@@ -57,6 +57,22 @@ public class ContainerCreateConfigTest {
     }
 
     @Test
+    public void testBind() {
+        String[] testData = new String[] {
+            "c:\\this\\is\\my\\path:/data", "/data",
+            "/home/user:/user", "/user"};
+        for (int i = 0; i < testData.length; i += 2) {
+            ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
+            cc.binds(Arrays.asList(testData[i]));
+
+            JSONObject volumes = (JSONObject) new JSONObject(cc.toJson()).get("Volumes");
+            assertEquals(1, volumes.length());
+            assertTrue(volumes.has(testData[i+1]));
+        }
+    }
+
+
+    @Test
     public void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(null,null,Collections.<String, String>emptyMap());
