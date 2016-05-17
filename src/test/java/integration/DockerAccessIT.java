@@ -1,25 +1,37 @@
 package integration;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.common.collect.Lists;
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import com.google.common.collect.Lists;
+
 import io.fabric8.maven.docker.AbstractDockerMojo;
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.model.Container.PortBinding;
-import org.junit.*;
-
-import static org.junit.Assert.*;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.DockerMachine;
+import io.fabric8.maven.docker.util.Logger;
 
 /*
  * if run from your ide, this test assumes you have configured the runner w/ the appropriate env variables
@@ -38,8 +50,10 @@ public class DockerAccessIT {
     private String containerId;
     private final DockerAccessWithHcClient dockerClient;
 
-    public DockerAccessIT() {
-        this.dockerClient = createClient(EnvUtil.extractUrl(null), new AnsiLogger(new SystemStreamLog(), true, true));
+    public DockerAccessIT() throws MojoExecutionException {
+        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
+        String url = new DockerMachine(logger, new HashMap<>()).extractUrl(null);
+        this.dockerClient = createClient(url, logger);
     }
 
     @Before
@@ -79,10 +93,14 @@ public class DockerAccessIT {
 
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
-            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, EnvUtil.getCertPath(null), 20, logger);
+            String certPath = new DockerMachine(logger, new HashMap<>()).getCertPath(null);
+            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             throw new RuntimeException();
+        } catch (MojoExecutionException e) {
+            logger.error(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
