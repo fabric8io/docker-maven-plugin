@@ -37,8 +37,8 @@ the `<build>` configuration section.
   is set to the directory containing the file.
 
 If `dockerFileDir` is a relative path looked up in
-`${project.basedDir}/src/main/docker`. You can make easily an absolute
-path by prefixing with `${project.baseDir}`.
+`${project.basedir}/src/main/docker`. You can make easily an absolute
+path by prefixing with `${project.basedir}`.
 
 Any additional files located in the `dockerFileDir` directory will
 also be added to the build context as well as any files specified by
