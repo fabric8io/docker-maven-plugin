@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Thu May 12 2016 08:43:42 GMT+0000 (UTC)"
+        data-revision="Tue May 17 2016 07:12:51 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -402,8 +402,8 @@ is set to the directory containing the file.</p>
 </li>
 </ul>
 <p>If <code>dockerFileDir</code> is a relative path looked up in
-<code>${project.basedDir}/src/main/docker</code>. You can make easily an absolute
-path by prefixing with <code>${project.baseDir}</code>.</p>
+<code>${project.basedir}/src/main/docker</code>. You can make easily an absolute
+path by prefixing with <code>${project.basedir}</code>.</p>
 <p>Any additional files located in the <code>dockerFileDir</code> directory will
 also be added to the build context as well as any files specified by
 an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code>
