@@ -262,7 +262,8 @@ public class DockerAssemblyManager {
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
                         .run(buildConfig.getRunCmds())
-                        .volumes(buildConfig.getVolumes());
+                        .volumes(buildConfig.getVolumes())
+                        .user(buildConfig.getUser());
         if (buildConfig.getMaintainer() != null) {
             builder.maintainer(buildConfig.getMaintainer());
         }
@@ -272,7 +273,7 @@ public class DockerAssemblyManager {
         if (assemblyConfig != null) {
             builder.add(ASSEMBLY_NAME, "")
                    .basedir(assemblyConfig.getBasedir())
-                   .user(assemblyConfig.getUser())
+                   .assemblyUser(assemblyConfig.getUser())
                    .exportBasedir(assemblyConfig.exportBasedir());
         } else {
             builder.exportBasedir(false);
