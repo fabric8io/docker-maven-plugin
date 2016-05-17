@@ -132,10 +132,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     Map authConfig;
 
-    // Relevant images configuration to use. This includes also references to external
-    // images
+    // Image configurations configured  directly.
     @Parameter
     private List<ImageConfiguration> images;
+
+    // Images resolved with external image resolvers and hooks for subclass to
+    // mangle the image configurations.
+    private List<ImageConfiguration> resolvedImages;
 
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
@@ -230,7 +233,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @return list of image configuration to use
      */
     protected List<ImageConfiguration> getImages() {
-        List<ImageConfiguration> resolvedImages = resolveImages();
+        List<ImageConfiguration> resolvedImages = resolvedImages();
         List<ImageConfiguration> ret = new ArrayList<>();
         for (ImageConfiguration imageConfig : resolvedImages) {
             if (matchesConfiguredImages(this.image, imageConfig)) {
