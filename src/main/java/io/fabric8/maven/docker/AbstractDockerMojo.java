@@ -9,7 +9,7 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
-import io.fabric8.maven.docker.config.ConfigurationResolver;
+import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
@@ -36,7 +36,7 @@ import io.fabric8.maven.docker.log.LogOutputSpecFactory;
  * @author roland
  * @since 26.03.14
  */
-public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigurationResolver.Customizer {
+public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigHelper.Customizer {
 
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
@@ -182,19 +182,19 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private String initImageConfiguration() {
         // Resolve images
         final Properties resolveProperties = project.getProperties();
-        resolvedImages = ConfigurationResolver.resolveImages(
+        resolvedImages = ConfigHelper.resolveImages(
             images,                  // Unresolved images
-            new ConfigurationResolver.Resolver() {
+            new ConfigHelper.Resolver() {
                 @Override
                 public List<ImageConfiguration> resolve(ImageConfiguration image) {
                     return imageConfigResolver.resolve(image, resolveProperties);
                 }
             }, image,                   // A filter which image to process
             this                    // customizer (can be overwritten by a subclass)
-                                                            );
+                                                   );
 
         // Initialize configuration and detect minimal API version
-        return ConfigurationResolver.initAndValidate(resolvedImages, apiVersion, log);
+        return ConfigHelper.initAndValidate(resolvedImages, apiVersion, log);
     }
 
     // Customization hook for subclasses to influence the final configuration. This method is called

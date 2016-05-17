@@ -28,7 +28,9 @@ import io.fabric8.maven.docker.util.Logger;
  * @author roland
  * @since 17/05/16
  */
-public class ConfigurationResolver {
+public class ConfigHelper {
+
+    private ConfigHelper() {}
 
     /**
      * Resolve image with an external image resolver

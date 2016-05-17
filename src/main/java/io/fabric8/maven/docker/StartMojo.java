@@ -245,7 +245,8 @@ public class StartMojo extends AbstractDockerMojo {
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
                         @Override
                         public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
-                            log.debug(String.format("LogWaitChecker: Tying to match '%s' [Pattern: %s] [thread: %d]",txt,logPattern,Thread.currentThread().getId()));
+                            log.debug(String.format("LogWaitChecker: Tying to match '%s' [Pattern: %s] [thread: %d]",
+                                                    txt,logPattern,Thread.currentThread().getId()));
                             if (pattern.matcher(txt).find()) {
                                 detected = true;
                                 throw new LogCallback.DoneException();
@@ -278,7 +279,7 @@ public class StartMojo extends AbstractDockerMojo {
             } else if (showLogs.equalsIgnoreCase("false")) {
                 return false;
             } else {
-                return ConfigurationResolver.matchesConfiguredImages(showLogs, imageConfig);
+                return ConfigHelper.matchesConfiguredImages(showLogs, imageConfig);
             }
         }
 
