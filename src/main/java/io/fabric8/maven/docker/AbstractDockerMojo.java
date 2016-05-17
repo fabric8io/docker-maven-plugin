@@ -240,15 +240,26 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return ret;
     }
 
-    private List<ImageConfiguration> resolveImages() {
-        List<ImageConfiguration> ret = new ArrayList<>();
-        if (images != null) {
-            for (ImageConfiguration image : images) {
-                ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
+    // Resolve only once. Do this lazily.
+    private List<ImageConfiguration> resolvedImages() {
+        if (resolvedImages == null ) {
+            List<ImageConfiguration> ret = new ArrayList<>();
+            if (images != null) {
+                for (ImageConfiguration image : images) {
+                    ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
+                }
+                verifyImageNames(ret);
             }
-            verifyImageNames(ret);
+            resolvedImages = customizeImageConfigurations(ret);
         }
-        return ret;
+        return resolvedImages;
+    }
+
+    /**
+     * Allow subclasses to customize the given image configuration. No-op by default.
+     */
+    protected List<ImageConfiguration> customizeImageConfigurations(List<ImageConfiguration> configs) {
+        return configs;
     }
 
     // Extract authentication information
