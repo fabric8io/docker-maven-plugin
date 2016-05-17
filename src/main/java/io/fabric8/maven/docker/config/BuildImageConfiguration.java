@@ -310,10 +310,9 @@ public class BuildImageConfiguration {
         }
 
         public Builder cmd(String cmd) {
-            if (config.cmd == null) {
-                config.cmd = new Arguments();
+            if (cmd != null) {
+                config.cmd = new Arguments(cmd);
             }
-            config.cmd.setShell(cmd);
             return this;
         }
         
@@ -337,10 +336,9 @@ public class BuildImageConfiguration {
         }
 
         public Builder entryPoint(String entryPoint) {
-            if (config.entryPoint == null) {
-                config.entryPoint = new Arguments();
+            if (entryPoint != null) {
+                config.entryPoint = new Arguments(entryPoint);
             }
-            config.entryPoint.setShell(entryPoint);
             return this;
         }
         

@@ -43,6 +43,8 @@ public enum ConfigKey {
     DOMAINNAME,
     DNS,
     DNS_SEARCH,
+    DOCKER_FILE,
+    DOCKER_FILE_DIR,
     ENTRYPOINT,
     ENV,
     ENV_PROPERTY_FILE,
