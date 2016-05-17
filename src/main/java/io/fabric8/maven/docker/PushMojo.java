@@ -36,7 +36,10 @@ public class PushMojo extends AbstractDockerMojo {
                 AuthConfig authConfig = prepareAuthConfig(new ImageName(name), configuredRegistry, true);
 
                 DockerAccess docker = hub.getDockerAccess();
-                docker.pushImage(name, authConfig, configuredRegistry);
+
+                if(!skipPushLatestTag) {
+                    docker.pushImage(name, authConfig, configuredRegistry);
+                }
 
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {

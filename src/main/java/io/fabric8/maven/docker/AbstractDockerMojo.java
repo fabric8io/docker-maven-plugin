@@ -137,6 +137,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     private List<ImageConfiguration> images;
 
+    // to skip pushing images with tag 'latest', if only explicit tagged images
+    // are allowed
+    @Parameter(property = "docker.skipPushLatestTag", defaultValue = "false")
+    protected boolean skipPushLatestTag;
+
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
 
