@@ -119,7 +119,8 @@ one image layer is created.
 * **docker.restartPolicy.name** Container restart policy
 * **docker.restartPolicy.retry** Max restrart retries if `on-failure` used
 * **docker.tags.idx** defines a list of tags to apply to a built image
-* **docker.user** Container user
+* **docker.user** User to switch to at the end of a Dockerfile. Not to confuse with `docker.username` which is used for
+  authentication when interacting with a Docker registry.
 * **docker.volumes.idx** defines a list of volumes to expose when building an image
 * **docker.volumesFrom.idx** defines a list of image aliases from which
   the volumes should be mounted of the container. The list semantics

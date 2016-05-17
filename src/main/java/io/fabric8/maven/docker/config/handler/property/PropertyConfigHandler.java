@@ -77,9 +77,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .tags(listWithPrefix(prefix, TAGS, properties))
                 .maintainer(withPrefix(prefix, MAINTAINER, properties))
                 .workdir(withPrefix(prefix, WORKDIR, properties))
-                .skip(withPrefix(prefix, ConfigKey.SKIP_BUILD, properties))
-                .dockerFile(withPrefix(prefix, ConfigKey.DOCKER_FILE, properties))
-                .dockerFileDir(withPrefix(prefix, ConfigKey.DOCKER_FILE_DIR, properties))
+                .skip(withPrefix(prefix, SKIP_BUILD, properties))
+                .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
+                .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
+                .user(withPrefix(prefix, USER, properties))
                 .build();
     }
 
@@ -112,7 +113,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .log(extractLogConfig(prefix,properties))
                 .wait(extractWaitConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
-                .skip(withPrefix(prefix, ConfigKey.SKIP_RUN, properties))
+                .skip(withPrefix(prefix, SKIP_RUN, properties))
                 .build();
     }
 

@@ -15,6 +15,8 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
+import static io.fabric8.maven.docker.assembly.DockerFileKeyword.WORKDIR;
+
 /**
  * Enum holding possible configuration keys
  *

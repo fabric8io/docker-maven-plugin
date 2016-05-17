@@ -122,6 +122,7 @@ of an image configuration. In addition to `<dockerFileDir>` and
 * **skip** if set to true disables building of the image. This config option is best used together with a maven property
 * **tags** contains a list of additional `tag` elements with which an
   image is to be tagged after the build.
+* **user** is the user to which the Dockerfile should switch to the end (corresponds to the `USER` Dockerfile directive).
 * **volumes** contains a list of `volume` elements to create a container
   volume.
 * **workdir** the directory to change to when starting the container.

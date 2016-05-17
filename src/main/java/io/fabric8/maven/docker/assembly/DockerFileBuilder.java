@@ -37,6 +37,9 @@ public class DockerFileBuilder {
     private Boolean exportBasedir = null;
 
     // User under which the files should be added
+    private String assemblyUser;
+
+    // User to run as
     private String user;
 
     // List of files to add. Source and destination follow except that destination
@@ -103,7 +106,15 @@ public class DockerFileBuilder {
         addCmd(b);
         addEntryPoint(b);
 
+        addUser(b);
+
         return b.toString();
+    }
+
+    private void addUser(StringBuilder b) {
+        if (user != null) {
+            DockerFileKeyword.USER.addTo(b, user);
+        }
     }
 
     private void addWorkdir(StringBuilder b) {
@@ -135,11 +146,11 @@ public class DockerFileBuilder {
     }
 
     private void addEntries(StringBuilder b) {
-        if (user != null) {
+        if (assemblyUser != null) {
             String tmpDir = createTempDir();
             copyAddEntries(b,tmpDir);
 
-            String[] userParts = StringUtils.split(user, ":");
+            String[] userParts = StringUtils.split(assemblyUser, ":");
             String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
             String chmod = "chown -R " + userArg + " " + tmpDir + " && cp -rp " + tmpDir + "/* / && rm -rf " + tmpDir;
             if (userParts.length > 2) {
@@ -272,6 +283,11 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder entryPoint(Arguments entryPoint) {
         this.entryPoint = entryPoint;
+        return this;
+    }
+
+    public DockerFileBuilder assemblyUser(String assemblyUser) {
+        this.assemblyUser = assemblyUser;
         return this;
     }
 
