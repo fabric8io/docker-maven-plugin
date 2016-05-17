@@ -9,6 +9,7 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
+import io.fabric8.maven.docker.config.ConfigurationResolver;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
@@ -35,7 +36,7 @@ import io.fabric8.maven.docker.log.LogOutputSpecFactory;
  * @author roland
  * @since 26.03.14
  */
-public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable {
+public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigurationResolver.Customizer {
 
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
@@ -132,7 +133,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     Map authConfig;
 
-    // Image configurations configured  directly.
+    // Image configurations configured directly.
     @Parameter
     private List<ImageConfiguration> images;
 
@@ -159,7 +160,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             log = new AnsiLogger(getLog(), useColor, verbose);
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
-            String minimalApiVersion = validateConfiguration(log);
+            // The 'real' images configuration to use (configured images + externally resolved images)
+            String minimalApiVersion = initImageConfiguration();
             DockerAccess access = null;
             try {
                 access = createDockerAccess(minimalApiVersion);
@@ -174,6 +176,31 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             }
         }
+    }
+
+    // Resolve and customize image configuration
+    private String initImageConfiguration() {
+        // Resolve images
+        final Properties resolveProperties = project.getProperties();
+        resolvedImages = ConfigurationResolver.resolveImages(
+            images,                  // Unresolved images
+            new ConfigurationResolver.Resolver() {
+                @Override
+                public List<ImageConfiguration> resolve(ImageConfiguration image) {
+                    return imageConfigResolver.resolve(image, resolveProperties);
+                }
+            }, image,                   // A filter which image to process
+            this                    // customizer (can be overwritten by a subclass)
+                                                            );
+
+        // Initialize configuration and detect minimal API version
+        return ConfigurationResolver.initAndValidate(resolvedImages, apiVersion, log);
+    }
+
+    // Customization hook for subclasses to influence the final configuration. This method is called
+    // before initialization and validation of the configuration.
+    public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
+        return imageConfigs;
     }
 
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
@@ -194,7 +221,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return access;
     }
 
-
     /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
      * docker tar archives)
@@ -203,17 +229,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     protected boolean isDockerAccessRequired() {
         return true;
-    }
-
-    // Return minimal required version
-    private String validateConfiguration(Logger log) {
-        String apiVersion = this.apiVersion;
-        if (images != null) {
-            for (ImageConfiguration imageConfiguration : getImages()) {
-                apiVersion = EnvUtil.extractLargerVersion(apiVersion,imageConfiguration.initAndValidate(log));
-            }
-        }
-        return apiVersion;
     }
 
     /**
@@ -232,56 +247,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      *
      * @return list of image configuration to use
      */
-    protected List<ImageConfiguration> getImages() {
-        List<ImageConfiguration> resolvedImages = resolvedImages();
-        List<ImageConfiguration> ret = new ArrayList<>();
-        for (ImageConfiguration imageConfig : resolvedImages) {
-            if (matchesConfiguredImages(this.image, imageConfig)) {
-                ret.add(imageConfig);
-            }
-        }
-        return ret;
-    }
-
-    // Resolve only once. Do this lazily.
-    private List<ImageConfiguration> resolvedImages() {
-        if (resolvedImages == null ) {
-            List<ImageConfiguration> ret = new ArrayList<>();
-            if (images != null) {
-                for (ImageConfiguration image : images) {
-                    ret.addAll(imageConfigResolver.resolve(image, project.getProperties()));
-                }
-                verifyImageNames(ret);
-            }
-            resolvedImages = customizeImageConfigurations(ret);
-        }
+    protected List<ImageConfiguration> getResolvedImages() {
         return resolvedImages;
     }
 
-    /**
-     * Allow subclasses to customize the given image configuration. No-op by default.
-     */
-    protected List<ImageConfiguration> customizeImageConfigurations(List<ImageConfiguration> configs) {
-        return configs;
-    }
-
-    // Extract authentication information
-    private void verifyImageNames(List<ImageConfiguration> ret) {
-        for (ImageConfiguration config : ret) {
-            if (config.getName() == null) {
-                throw new IllegalArgumentException("Configuration error: <image> must have a non-null <name>");
-            }
-        }
-    }
-
-    // Check if the provided image configuration matches the given
-    protected boolean matchesConfiguredImages(String imageList, ImageConfiguration imageConfig) {
-        if (imageList == null) {
-            return true;
-        }
-        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(imageList.split("\\s*,\\s*")));
-        return imagesAllowed.contains(imageConfig.getName()) || imagesAllowed.contains(imageConfig.getAlias());
-    }
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {

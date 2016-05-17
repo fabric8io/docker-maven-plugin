@@ -42,7 +42,7 @@ public class LogsMojo extends AbstractDockerMojo {
         QueryService queryService = hub.getQueryService();
         LogDispatcher logDispatcher = getLogDispatcher(hub);
 
-        for (ImageConfiguration image : getImages()) {
+        for (ImageConfiguration image : getResolvedImages()) {
             String imageName = image.getName();
             if (logAll) {
                 for (Container container : queryService.getContainersForImage(imageName)) {

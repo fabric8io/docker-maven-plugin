@@ -29,7 +29,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        for (ImageConfiguration imageConfig : getImages()) {
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 if (buildConfig.skip()) {

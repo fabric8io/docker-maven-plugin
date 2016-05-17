@@ -84,7 +84,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         MojoParameters mojoParameters = createMojoParameters();
 
         try {
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
+            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
                 String imageId = queryService.getImageId(imageConfig.getName());

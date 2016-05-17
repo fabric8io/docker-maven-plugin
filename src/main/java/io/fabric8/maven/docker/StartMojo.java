@@ -88,7 +88,7 @@ public class StartMojo extends AbstractDockerMojo {
         boolean success = false;
         PomLabel pomLabel = getPomLabel();
         try {
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
+            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
                 // Still to check: How to work with linking, volumes, etc ....
@@ -278,7 +278,7 @@ public class StartMojo extends AbstractDockerMojo {
             } else if (showLogs.equalsIgnoreCase("false")) {
                 return false;
             } else {
-                return matchesConfiguredImages(showLogs, imageConfig);
+                return ConfigurationResolver.matchesConfiguredImages(showLogs, imageConfig);
             }
         }
 

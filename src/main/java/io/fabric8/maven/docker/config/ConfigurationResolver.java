@@ -1,0 +1,141 @@
+package io.fabric8.maven.docker.config;
+/*
+ * 
+ * Copyright 2016 Roland Huss
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import java.util.*;
+
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Logger;
+
+/**
+ * Utility class which helps in resolving, customizing, initializing and validating
+ * image configuration.
+ *
+ * @author roland
+ * @since 17/05/16
+ */
+public class ConfigurationResolver {
+
+    /**
+     * Resolve image with an external image resolver
+     *
+     * @param images the original image config list (can be null)
+     * @param imageResolver the resolver used to come extend on an image configuration
+     * @param imageNameFilter filter to select only certain image configurations with the given name
+     * @param imageCustomizer final customization hook for mangling the configuration
+     * @return a list of resolved and customized image configuration.
+     */
+    public static List<ImageConfiguration> resolveImages(List<ImageConfiguration> images,
+                                                         Resolver imageResolver,
+                                                         String imageNameFilter,
+                                                         Customizer imageCustomizer) {
+        List<ImageConfiguration> ret = resolveConfiguration(imageResolver, images);
+        ret = imageCustomizer.customizeConfig(ret);
+        return filterImages(imageNameFilter,ret);
+    }
+
+    /**
+     * Initialize and validate the configuration.
+     *
+     * @param images the images to check
+     * @param apiVersion the original API version intended to use
+     * @param log a logger for printing out diagnostic messages
+     * @return the minimal API Docker API required to be used for the given configuration.
+     */
+    public static String initAndValidate(List<ImageConfiguration> images, String apiVersion,
+                                         Logger log) {
+        // Init and validate configs. After this step, getResolvedImages() contains the valid configuration.
+        return initAndValidateConfiguration(apiVersion, log, images);
+    }
+
+    // Check if the provided image configuration matches the given
+    public static boolean matchesConfiguredImages(String imageList, ImageConfiguration imageConfig) {
+        if (imageList == null) {
+            return true;
+        }
+        Set<String> imagesAllowed = new HashSet<>(Arrays.asList(imageList.split("\\s*,\\s*")));
+        return imagesAllowed.contains(imageConfig.getName()) || imagesAllowed.contains(imageConfig.getAlias());
+    }
+
+    // ===========================================================================================================
+
+    // Filter image configuration on name. Given filter should be either null (no filter) or a comma separated
+    // list of image names which should be used
+    private static List<ImageConfiguration> filterImages(String nameFilter, List<ImageConfiguration> imagesToFilter) {
+        List<ImageConfiguration> ret = new ArrayList<>();
+        for (ImageConfiguration imageConfig : imagesToFilter) {
+            if (matchesConfiguredImages(nameFilter, imageConfig)) {
+                ret.add(imageConfig);
+            }
+        }
+        return ret;
+    }
+
+    // Resolve and initialize external configuration
+    private static List<ImageConfiguration> resolveConfiguration(Resolver imageResolver,
+                                                                 List<ImageConfiguration> unresolvedImages) {
+        List<ImageConfiguration> ret = new ArrayList<>();
+        if (unresolvedImages != null) {
+            for (ImageConfiguration image : unresolvedImages) {
+                ret.addAll(imageResolver.resolve(image));
+            }
+            verifyImageNames(ret);
+        }
+        return ret;
+    }
+
+
+    // Return minimal required version
+    private static String initAndValidateConfiguration(String initApiVersion,
+                                                Logger log,
+                                                List<ImageConfiguration> configsToInitAndValidate) {
+        String apiVersion = initApiVersion;
+        for (ImageConfiguration imageConfiguration : configsToInitAndValidate) {
+            apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(log));
+        }
+        return apiVersion;
+    }
+
+    // Extract authentication information
+    private static void verifyImageNames(List<ImageConfiguration> ret) {
+        for (ImageConfiguration config : ret) {
+            if (config.getName() == null) {
+                throw new IllegalArgumentException("Configuration error: <image> must have a non-null <name>");
+            }
+        }
+    }
+
+
+    // =========================================================================
+
+    /**
+     * Allow subclasses to customize the given set of image configurations. This is called
+     * after resolving of images. a customizer is free to change the image configuration as he want.
+     * use with responsibility.
+     */
+    public interface Customizer {
+        List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs);
+    }
+
+    /**
+     * A resolve can map one given image configuration to one or more image configurations
+     * This is e.g. used for resolving properties
+     */
+    public interface Resolver {
+        List<ImageConfiguration> resolve(ImageConfiguration image);
+    }
+}

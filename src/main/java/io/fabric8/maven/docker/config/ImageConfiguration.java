@@ -138,11 +138,11 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     public String initAndValidate(Logger log) {
         String minimalApiVersion = null;
-        if (null != build) {
+        if (build != null) {
             minimalApiVersion = build.initAndValidate(log);
         }
-        if (null != run) {
-            minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion,run.initAndValidate());
+        if (run != null) {
+            minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion, run.initAndValidate());
         }
         return minimalApiVersion;
     }

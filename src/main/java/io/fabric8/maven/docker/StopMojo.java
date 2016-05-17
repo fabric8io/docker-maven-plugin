@@ -58,7 +58,7 @@ public class StopMojo extends AbstractDockerMojo {
     }
 
     private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException {
-        for (ImageConfiguration image : getImages()) {
+        for (ImageConfiguration image : getResolvedImages()) {
             for (Container container : getContainersToStop(queryService, image)) {
                 if (shouldStopContainer(container, pomLabel)) {
                     runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
