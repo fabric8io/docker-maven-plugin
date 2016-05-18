@@ -245,9 +245,12 @@ public class DockerAssemblyManager {
                     DefaultArchivedFileSet.archivedFileSet(new File(outputDir, "maven." + buildMode.getExtension()));
             archiveSet.setPrefix(ASSEMBLY_NAME + "/");
             archiveSet.setIncludingEmptyDirectories(true);
+            archiveSet.setUsingDefaultExcludes(false);
             archiver.addArchivedFileSet(archiveSet);
         } else {
-            archiver.addFileSet(DefaultFileSet.fileSet(outputDir));
+            DefaultFileSet fileSet = DefaultFileSet.fileSet(outputDir);
+            fileSet.setUsingDefaultExcludes(false);
+            archiver.addFileSet(fileSet);
         }
         archiver.setDestFile(archive);
         return archiver;
