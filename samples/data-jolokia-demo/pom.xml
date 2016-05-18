@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.15.1</version>
+  <version>0.15.2-SNAPSHOT</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 

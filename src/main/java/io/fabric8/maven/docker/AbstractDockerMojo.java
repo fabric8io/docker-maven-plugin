@@ -189,9 +189,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 public List<ImageConfiguration> resolve(ImageConfiguration image) {
                     return imageConfigResolver.resolve(image, resolveProperties);
                 }
-            }, image,                   // A filter which image to process
-            this                    // customizer (can be overwritten by a subclass)
-                                                   );
+            },
+            image,                   // A filter which image to process
+            this);                     // customizer (can be overwritten by a subclass)
 
         // Initialize configuration and detect minimal API version
         return ConfigHelper.initAndValidate(resolvedImages, apiVersion, log);

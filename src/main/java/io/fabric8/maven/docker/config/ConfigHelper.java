@@ -103,8 +103,8 @@ public class ConfigHelper {
 
     // Return minimal required version
     private static String initAndValidateConfiguration(String initApiVersion,
-                                                Logger log,
-                                                List<ImageConfiguration> configsToInitAndValidate) {
+                                                       Logger log,
+                                                       List<ImageConfiguration> configsToInitAndValidate) {
         String apiVersion = initApiVersion;
         for (ImageConfiguration imageConfiguration : configsToInitAndValidate) {
             apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(log));

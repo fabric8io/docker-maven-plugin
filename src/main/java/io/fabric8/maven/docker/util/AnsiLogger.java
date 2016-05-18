@@ -20,9 +20,10 @@ import static org.fusesource.jansi.Ansi.ansi;
 public class AnsiLogger implements Logger {
 
     // prefix used for console output
-    private static final String LOG_PREFIX = "DOCKER> ";
+    private static final String DEFAULT_LOG_PREFIX = "DOCKER> ";
 
     private final Log log;
+    private final String prefix;
 
     private boolean verbose;
 
@@ -45,8 +46,13 @@ public class AnsiLogger implements Logger {
     private boolean useAnsi;
 
     public AnsiLogger(Log log, boolean useColor, boolean verbose) {
+        this(log, useColor, verbose, DEFAULT_LOG_PREFIX);
+    }
+
+    public AnsiLogger(Log log, boolean useColor, boolean verbose, String prefix) {
         this.log = log;
         this.verbose = verbose;
+        this.prefix = prefix;
         initializeColor(useColor);
     }
 
@@ -55,37 +61,32 @@ public class AnsiLogger implements Logger {
      *
      * @param message message to print out
      */
-    public void debug(String message) {
-        log.debug(LOG_PREFIX + message);
+    public void debug(String message, Object ... params) {
+        log.debug(prefix + String.format(message, params));
     }
-
-    public void debug(String format, Object... args) {
-        log.debug(LOG_PREFIX + String.format(format, args));
-    }
-    
     /**
      * Informational message
      *
      * @param message info
      */
-    public void info(String message) {
-        log.info(colored(message, COLOR_INFO, true));
+    public void info(String message, Object ... params) {
+        log.info(colored(message, COLOR_INFO, true, params));
     }
 
     @Override
-    public void verbose(String message) {
+    public void verbose(String message, Object ... params) {
         if (verbose) {
-            log.info(ansi().fgBright(BLACK).a(LOG_PREFIX).a(message).reset().toString());
+            log.info(ansi().fgBright(BLACK).a(prefix).a(String.format(message,params)).reset().toString());
         }
     }
 
     /**
      * A warning.
      *
-     * @param message warning
+     * @param format warning
      */
-    public void warn(String message) {
-        log.warn(colored(message, COLOR_WARNING, true));
+    public void warn(String format, Object ... params) {
+        log.warn(colored(format, COLOR_WARNING, true, params));
     }
 
     /**
@@ -93,8 +94,8 @@ public class AnsiLogger implements Logger {
      *
      * @param message error
      */
-    public void error(String message) {
-        log.error(colored(message, COLOR_ERROR, true));
+    public void error(String message, Object ... params) {
+        log.error(colored(message, COLOR_ERROR, true, params));
     }
 
     @Override
@@ -111,8 +112,6 @@ public class AnsiLogger implements Logger {
 
     /**
      * Start a progress bar
-     * 
-     * @param total the total number to be expected
      */
     public void progressStart() {
         // A progress indicator is always written out to standard out if a tty is enabled.
@@ -223,11 +222,11 @@ public class AnsiLogger implements Logger {
         System.out.print(txt);
     }
 
-    private static String colored(String message, Ansi.Color color, boolean addPrefix) {
+    private String colored(String message, Ansi.Color color, boolean addPrefix, Object ... params) {
         Ansi ansi = ansi().fg(color);
         if (addPrefix) {
-            ansi.a(LOG_PREFIX);
+            ansi.a(prefix);
         }
-        return ansi.a(message).reset().toString();
+        return ansi.a(String.format(message,params)).reset().toString();
     }
 }
