@@ -61,7 +61,7 @@
         data-chapter-title="docker:build"
         data-filepath="docker-build.md"
         data-basepath="."
-        data-revision="Thu May 19 2016 15:18:03 GMT+0000 (UTC)"
+        data-revision="Thu May 19 2016 15:39:18 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -480,6 +480,7 @@ docker build archives are attached to this build as sources (<code>docker:source
 <li><strong>skip</strong> if set to true disables building of the image. This config option is best used together with a maven property</li>
 <li><strong>tags</strong> contains a list of additional <code>tag</code> elements with which an
 image is to be tagged after the build.</li>
+<li><strong>user</strong> is the user to which the Dockerfile should switch to the end (corresponds to the <code>USER</code> Dockerfile directive).</li>
 <li><strong>volumes</strong> contains a list of <code>volume</code> elements to create a container
 volume.</li>
 <li><strong>workdir</strong> the directory to change to when starting the container.</li>

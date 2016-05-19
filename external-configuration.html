@@ -61,7 +61,7 @@
         data-chapter-title="External Configuration"
         data-filepath="external-configuration.md"
         data-basepath="."
-        data-revision="Thu May 19 2016 15:18:03 GMT+0000 (UTC)"
+        data-revision="Thu May 19 2016 15:39:18 GMT+0000 (UTC)"
         data-innerlanguage="">
     
 
@@ -415,7 +415,8 @@ use. </li>
 <li><strong>docker.assembly.ignorePermissions</strong> If set to <code>true</code> existing file permissions are ignored
 when creating the assembly archive</li>
 <li><strong>docker.assembly.dockerFileDir</strong> specifies a directory containing an external Dockerfile
-that will be used to create the image</li>
+that will be used to create the image. This is deprecated please use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code> 
+instead.</li>
 <li><strong>docker.nocache</strong> Don&apos;t use Docker&apos;s build cache.This can be overwritten by setting a 
 system property <code>docker.nocache</code> when running Maven.</li>
 <li><strong>docker.bind.idx</strong> Sets a list of paths to bind/expose in the container</li>
@@ -429,6 +430,9 @@ running a container and as default command when creating an image.</li>
 <li><strong>docker.domainname</strong> Container domain name</li>
 <li><strong>docker.dns.idx</strong> List of dns servers to use</li>
 <li><strong>docker.dnsSearch.idx</strong> List of dns search domains</li>
+<li><strong>docker.dockerFile</strong> specifies a Dockerfile to use. This property must point to the Dockerfile itself. </li>
+<li><strong>docker.dockerFileDir</strong> specifies a directory containing an external dockerfile that will be 
+used to create the image. The dockerfile must be name <code>Dockerfile</code></li>
 <li><strong>docker.entrypoint</strong> Container entry point</li>
 <li><strong>docker.workdir</strong> Container working directory</li>
 <li><strong>docker.env.VARIABLE</strong> Sets an environment
@@ -477,7 +481,8 @@ the index should be count up. </li>
 <li><strong>docker.restartPolicy.name</strong> Container restart policy</li>
 <li><strong>docker.restartPolicy.retry</strong> Max restrart retries if <code>on-failure</code> used</li>
 <li><strong>docker.tags.idx</strong> defines a list of tags to apply to a built image</li>
-<li><strong>docker.user</strong> Container user</li>
+<li><strong>docker.user</strong> User to switch to at the end of a Dockerfile. Not to confuse with <code>docker.username</code> which is used for
+authentication when interacting with a Docker registry.</li>
 <li><strong>docker.volumes.idx</strong> defines a list of volumes to expose when building an image</li>
 <li><strong>docker.volumesFrom.idx</strong> defines a list of image aliases from which
 the volumes should be mounted of the container. The list semantics
@@ -490,8 +495,8 @@ volumes exported by the <code>data</code> image.</li>
 <li><strong>docker.wait.time</strong> Amount of time to wait during startup of a
   container (in ms)</li>
 <li><strong>docker.wait.log</strong> Wait for a log output to appear.</li>
-<li><strong>wait.exec.postStart</strong> Command to execute after the container has start up. </li>
-<li><strong>wait.exec.preStop</strong> Command to execute before command stops.</li>
+<li><strong>docker.wait.exec.postStart</strong> Command to execute after the container has start up. </li>
+<li><strong>docker.wait.exec.preStop</strong> Command to execute before command stops.</li>
 <li><strong>docker.wait.shutdown</strong> Time in milliseconds to wait between stopping a container and removing it.</li>
 <li><strong>docker.wait.kill</strong> Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.</li>
 <li><strong>docker.workingDir</strong> Working dir for commands to run in</li>
