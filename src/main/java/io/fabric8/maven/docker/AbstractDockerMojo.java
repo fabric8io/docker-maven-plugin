@@ -157,7 +157,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
-            log = new AnsiLogger(getLog(), useColor, verbose);
+            log = new AnsiLogger(getLog(), useColor, verbose, getLogPrefix());
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)
@@ -170,12 +170,19 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             } catch (DockerAccessException exp) {
                 log.error(exp.getMessage());
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
+            } catch (MojoExecutionException exp) {
+                log.error(exp.getMessage());
+                throw exp;
             } finally {
                 if (access != null) {
                     access.shutdown();
                 }
             }
         }
+    }
+
+    protected String getLogPrefix() {
+        return AnsiLogger.DEFAULT_LOG_PREFIX;
     }
 
     // Resolve and customize image configuration

@@ -152,7 +152,13 @@ public class WaitConfiguration {
         }
 
         public WaitConfiguration build() {
-            return new WaitConfiguration(time, new ExecConfiguration(postStart, preStop), new HttpConfiguration(url,method,status), new TcpConfiguration(tcpHost, tcpPorts), log, shutdown, kill);
+            return new WaitConfiguration(time,
+                                         postStart != null || preStop != null ? new ExecConfiguration(postStart, preStop) : null,
+                                         url != null ? new HttpConfiguration(url,method,status) : null,
+                                         tcpPorts != null ? new TcpConfiguration(tcpHost, tcpPorts) : null,
+                                         log,
+                                         shutdown,
+                                         kill);
         }
 
         public Builder preStop(String command) {

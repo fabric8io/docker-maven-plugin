@@ -20,7 +20,7 @@ import static org.fusesource.jansi.Ansi.ansi;
 public class AnsiLogger implements Logger {
 
     // prefix used for console output
-    private static final String DEFAULT_LOG_PREFIX = "DOCKER> ";
+    public static final String DEFAULT_LOG_PREFIX = "DOCKER> ";
 
     private final Log log;
     private final String prefix;

@@ -53,7 +53,7 @@ public class RemoveMojo extends AbstractDockerMojo {
             if (removeAll || image.isDataImage()) {
                 if (queryService.hasImage(name)) {
                     if (hub.getDockerAccess().removeImage(name,true)) {
-                        log.info(image.getDescription() + ": Remove");
+                        log.info("%s: Remove",image.getDescription());
                     }
                 }
             }

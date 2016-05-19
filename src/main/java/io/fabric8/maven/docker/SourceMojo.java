@@ -67,7 +67,7 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 if (buildConfig.skip()) {
-                    log.info(imageConfig.getDescription() + ": Skipped creating source");
+                    log.info("%s: Skipped creating source",imageConfig.getDescription());
                 } else {
                     imageConfigs.add(imageConfig);
                 }

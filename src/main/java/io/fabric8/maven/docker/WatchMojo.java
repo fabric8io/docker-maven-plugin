@@ -33,6 +33,7 @@ import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.service.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
@@ -115,7 +116,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 }
 
                 if (tasks.size() > 0) {
-                    log.info(imageConfig.getDescription() + ": Watch for " + StringUtils.join(tasks.toArray()," and "));
+                    log.info("%s: Watch for %s",imageConfig.getDescription(),StringUtils.join(tasks.toArray()," and "));
                 }
             }
             log.info("Waiting ...");
@@ -145,14 +146,15 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
                 if (entries != null && entries.size() > 0) {
                     try {
-                        log.info(imageConfig.getDescription() + ": Assembly changed. Copying changed files to container ...");
+                        log.info("%s: Assembly changed. Copying changed files to container ...", imageConfig.getDescription());
 
                         File changedFilesArchive = archiveService.createChangedFilesArchive(entries,files.getAssemblyDirectory(),
                                                                                           imageConfig.getName(),mojoParameters);
                         hub.getDockerAccess().copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(hub.getRunService(), watcher);
                     } catch (MojoExecutionException | IOException e) {
-                        log.error(imageConfig.getDescription() + ": Error when copying files to container " + watcher.getContainerId() + ": " + e);
+                        log.error("%s: Error when copying files to container %s: %s",
+                                  imageConfig.getDescription(),watcher.getContainerId(),e.getMessage());
                     }
                 }
             }
@@ -178,7 +180,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
                 if (entries != null && entries.size() > 0) {
                     try {
-                        log.info(imageConfig.getDescription() + ": Assembly changed. Rebuild ...");
+                        log.info("%s: Assembly changed. Rebuild ...", imageConfig.getDescription());
 
                         buildImage(hub, imageConfig);
 
@@ -189,7 +191,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                         }
                         callPostGoal(hub, watcher);
                     } catch (MojoExecutionException | MojoFailureException | IOException e) {
-                        log.error(imageConfig.getDescription() + ": Error when rebuilding " + e);
+                        log.error("%s: Error when rebuilding - %s",imageConfig.getDescription(),e);
                     }
                 }
             }
@@ -214,7 +216,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                         callPostGoal(hub, watcher);
                     }
                 } catch (DockerAccessException | MojoFailureException | MojoExecutionException e) {
-                    log.warn(watcher.getImageConfiguration().getDescription() + ": Error when restarting image " + e);
+                    log.warn("%s: Error when restarting image - %s",watcher.getImageConfiguration().getDescription(),e);
                 }
             }
         };
