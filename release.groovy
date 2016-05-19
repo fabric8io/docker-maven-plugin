@@ -7,7 +7,6 @@ def stage(){
   return stageProject{
     project = repo()
     useGitTagForNextVersion = true
-    extraImagesToStage = externalImages()
   }
 }
 
