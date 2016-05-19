@@ -29,11 +29,11 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        for (ImageConfiguration imageConfig : getImages()) {
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 if (buildConfig.skip()) {
-                    log.info(imageConfig.getDescription() + ": Skipped building");
+                    log.info("%s : Skipped building",imageConfig.getDescription());
                 } else {
                     buildAndTag(hub, imageConfig);
                 }
@@ -54,7 +54,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (tags.size() > 0) {
-            log.info(imageConfig.getDescription() + ": Tag with " + EnvUtil.stringJoin(tags, ","));
+            log.info("%s: Tag with %s",imageConfig.getDescription(),EnvUtil.stringJoin(tags, ","));
 
             for (String tag : tags) {
                 if (tag != null) {

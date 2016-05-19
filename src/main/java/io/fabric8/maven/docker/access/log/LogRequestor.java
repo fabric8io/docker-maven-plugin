@@ -15,22 +15,25 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.ByteStreams;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import io.fabric8.maven.docker.util.Timestamp;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
-
-import static java.lang.Math.min;
 
 /**
  * Extractor for parsing the response of a log request
@@ -100,29 +103,79 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
     }
 
+    private static class NoBytesReadException extends IOException {
+        public NoBytesReadException() {
+        }
+    }
+
+    /**
+     * This is a copy of ByteStreams.readFully(), with the slight change that it throws
+     * NoBytesReadException if zero bytes are read. Otherwise it is identical.
+     *
+     * @param in
+     * @param bytes
+     * @throws IOException
+     */
+    private void readFully(InputStream in, byte[] bytes) throws IOException {
+        int read = ByteStreams.read(in, bytes, 0, bytes.length);
+        if (read == 0) {
+            throw new NoBytesReadException();
+        } else if (read != bytes.length) {
+            throw new EOFException("reached end of stream after reading "
+                    + read + " bytes; " + bytes.length + " bytes expected");
+        }
+    }
+
+    private boolean readStreamFrame(InputStream is) throws IOException, LogCallback.DoneException {
+        // Read the header, which is composed of eight bytes. The first byte is an integer
+        // indicating the stream type (0 = stdin, 1 = stdout, 2 = stderr), the next three are thrown
+        // out, and the final four are the size of the remaining stream as an integer.
+        ByteBuffer headerBuffer = ByteBuffer.allocate(8);
+        headerBuffer.order(ByteOrder.BIG_ENDIAN);
+        try {
+            this.readFully(is, headerBuffer.array());
+        } catch (NoBytesReadException e) {
+            // Not bytes read for stream. Return false to stop consuming stream.
+            return false;
+        } catch (EOFException e) {
+            throw new IOException("Failed to read log header. Could not read all 8 bytes. " + e.getMessage(), e);
+        }
+
+        // Grab the stream type (stdout, stderr, stdin) from first byte and throw away other 3 bytes.
+        int type = headerBuffer.get();
+
+        // Skip three bytes, then read size from remaining four bytes.
+        int size = headerBuffer.getInt(4);
+
+        // Ignore empty messages and keep reading.
+        if (size <= 0) {
+            return true;
+        }
+
+        // Read the actual message
+        ByteBuffer payload = ByteBuffer.allocate(size);
+        try {
+            ByteStreams.readFully(is, payload.array());
+        } catch (EOFException e) {
+            throw new IOException("Failed to read log message. Could not read all " + size + " bytes. " + e.getMessage() +
+                                  " [ Header: " + Hex.encodeHexString(headerBuffer.array()) + "]", e);
+        }
+
+        String message = Charsets.UTF_8.newDecoder().decode(payload).toString();
+        callLogCallback(type, message);
+        return true;
+    }
+
     private void parseResponse(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        if (status.getStatusCode() != 200) {
+            exception = new DockerAccessException("Error while reading logs (" + status + ")");
+        }
         try (InputStream is = response.getEntity().getContent()) {
-            byte[] headBuf = new byte[8];
-            while (IOUtils.read(is, headBuf, 0, 8) > 0) {
-                int type = headBuf[0];
-                int declaredLength = extractLength(headBuf);
-                if (declaredLength == 0) {
-                    continue;
-                }
-                byte[] buf = new byte[declaredLength];
-                int len = IOUtils.read(is, buf, 0, declaredLength);
-                if (len < 1) {
-                    callback.error("Invalid log format: Couldn't read " + declaredLength + " bytes from stream");
-                    finish();
+            while (true) {
+                if (!readStreamFrame(is)) {
                     return;
                 }
-                String txt = new String(buf, 0, len, "UTF-8");
-
-                callLogCallback(type, txt);
-            }
-            StatusLine status = response.getStatusLine();
-            if (status.getStatusCode() != 200) {
-                exception = new DockerAccessException("Error while reading logs (" + status + ")");
             }
         } catch (IOException e) {
             callback.error("Cannot process chunk response: " + e);
@@ -144,14 +197,6 @@ public class LogRequestor extends Thread implements LogGetHandle {
         String logTxt = matcher.group(2);
         callback.log(type, ts, logTxt);
     }
-
-    private int extractLength(byte[] b) {
-        return b[7] & 0xFF |
-               (b[6] & 0xFF) << 8 |
-               (b[5] & 0xFF) << 16 |
-               (b[4] & 0xFF) << 24;
-    }
-
 
     private HttpUriRequest getLogRequest(boolean follow) {
         return RequestUtil.newGet(urlBuilder.containerLogs(containerId, follow));

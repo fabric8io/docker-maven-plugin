@@ -77,5 +77,4 @@ public class ImageConfigResolver implements Initializable {
             return Collections.singletonList(unresolvedConfig);
         }
     }
-
 }

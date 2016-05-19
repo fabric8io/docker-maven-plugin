@@ -15,6 +15,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
+import java.io.File;
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
@@ -142,6 +143,14 @@ public class PropertyConfigHandlerTest {
         
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(CleanupMode.NONE, config.getBuildConfiguration().cleanupMode());
+    }
+
+    @Test
+    public void testDockerfile() throws Exception {
+        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "src/main/docker/" };
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        config.initAndValidate(null);
+        assertEquals(new File("src/main/docker/Dockerfile"), config.getBuildConfiguration().getDockerFile());
     }
 
     @Test

@@ -48,12 +48,12 @@ public class RemoveMojo extends AbstractDockerMojo {
     protected void executeInternal(ServiceHub hub) throws DockerAccessException {
         QueryService queryService = hub.getQueryService();
         
-        for (ImageConfiguration image : getImages()) {
+        for (ImageConfiguration image : getResolvedImages()) {
             String name = image.getName();
             if (removeAll || image.isDataImage()) {
                 if (queryService.hasImage(name)) {
                     if (hub.getDockerAccess().removeImage(name,true)) {
-                        log.info(image.getDescription() + ": Remove");
+                        log.info("%s: Remove",image.getDescription());
                     }
                 }
             }

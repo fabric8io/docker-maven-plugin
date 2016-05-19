@@ -88,7 +88,7 @@ public class StartMojo extends AbstractDockerMojo {
         boolean success = false;
         PomLabel pomLabel = getPomLabel();
         try {
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getImages())) {
+            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
                 // Still to check: How to work with linking, volumes, etc ....
@@ -165,6 +165,7 @@ public class StartMojo extends AbstractDockerMojo {
             logOut.add("on url " + waitUrl);
         }
         if (wait.getLog() != null) {
+            log.debug("LogWaitChecker: Waiting on %s",wait.getLog());
             checkers.add(getLogWaitChecker(wait.getLog(), hub, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
@@ -174,7 +175,10 @@ public class StartMojo extends AbstractDockerMojo {
                 Container container = hub.getDockerAccess().inspectContainer(containerId);
                 String host = tcpConfig.getHost();
                 List<Integer> ports = new ArrayList<>();
-
+                List<Integer> portsConfigured = tcpConfig.getPorts();
+                if (portsConfigured == null || portsConfigured.size() == 0) {
+                    throw new MojoExecutionException("TCP wait config given but no ports to wait on");
+                }
                 if (host == null) {
                     // Host defaults to ${docker.host.address}.
                     host = projectProperties.getProperty("docker.host.address");
@@ -182,11 +186,11 @@ public class StartMojo extends AbstractDockerMojo {
 
                 if ("localhost".equals(host) && container.getIPAddress() != null) {
                     host = container.getIPAddress();
-                    ports = tcpConfig.getPorts();
-                    log.info(String.format("%s: Waiting for ports %s directly on container with IP (%s).",
-                                           imageConfig.getDescription(), ports, host));
+                    ports = portsConfigured;
+                    log.info("%s: Waiting for ports %s directly on container with IP (%s).",
+                             imageConfig.getDescription(), ports, host);
                 } else {
-                    for (int port : tcpConfig.getPorts()) {
+                    for (int port : portsConfigured) {
                         Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
                         if (binding == null) {
                             throw new MojoExecutionException(String.format(
@@ -195,9 +199,8 @@ public class StartMojo extends AbstractDockerMojo {
                         }
                         ports.add(binding.getHostPort());
                     }
-                    log.info(String.format("%s: Waiting for exposed ports %s on remote host (%s), " +
-                                           "since they are not directly accessible.",
-                                           imageConfig.getDescription(), ports, host));
+                    log.info("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.",
+                             imageConfig.getDescription(), ports, host);
                 }
 
                 WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
@@ -228,8 +231,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String
-            containerId) {
+    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String  containerId) {
         return new WaitUtil.WaitChecker() {
 
             boolean first = true;
@@ -237,13 +239,16 @@ public class StartMojo extends AbstractDockerMojo {
             boolean detected = false;
 
             @Override
-            public boolean check() {
+            public synchronized boolean check() {
                 if (first) {
                     final Pattern pattern = Pattern.compile(logPattern);
+                    log.debug("LogWaitChecker: Pattern to match '%s'",logPattern);
                     DockerAccess docker = hub.getDockerAccess();
                     logHandle = docker.getLogAsync(containerId, new LogCallback() {
                         @Override
                         public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
+                            log.debug("LogWaitChecker: Tying to match '%s' [Pattern: %s] [thread: %d]",
+                                      txt, logPattern, Thread.currentThread().getId());
                             if (pattern.matcher(txt).find()) {
                                 detected = true;
                                 throw new LogCallback.DoneException();
@@ -276,7 +281,7 @@ public class StartMojo extends AbstractDockerMojo {
             } else if (showLogs.equalsIgnoreCase("false")) {
                 return false;
             } else {
-                return matchesConfiguredImages(showLogs, imageConfig);
+                return ConfigHelper.matchesConfiguredImages(showLogs, imageConfig);
             }
         }
 

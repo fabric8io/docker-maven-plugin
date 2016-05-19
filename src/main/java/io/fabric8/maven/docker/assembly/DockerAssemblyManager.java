@@ -245,9 +245,12 @@ public class DockerAssemblyManager {
                     DefaultArchivedFileSet.archivedFileSet(new File(outputDir, "maven." + buildMode.getExtension()));
             archiveSet.setPrefix(ASSEMBLY_NAME + "/");
             archiveSet.setIncludingEmptyDirectories(true);
+            archiveSet.setUsingDefaultExcludes(false);
             archiver.addArchivedFileSet(archiveSet);
         } else {
-            archiver.addFileSet(DefaultFileSet.fileSet(outputDir));
+            DefaultFileSet fileSet = DefaultFileSet.fileSet(outputDir);
+            fileSet.setUsingDefaultExcludes(false);
+            archiver.addFileSet(fileSet);
         }
         archiver.setDestFile(archive);
         return archiver;
@@ -262,7 +265,8 @@ public class DockerAssemblyManager {
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
                         .run(buildConfig.getRunCmds())
-                        .volumes(buildConfig.getVolumes());
+                        .volumes(buildConfig.getVolumes())
+                        .user(buildConfig.getUser());
         if (buildConfig.getMaintainer() != null) {
             builder.maintainer(buildConfig.getMaintainer());
         }
@@ -272,7 +276,7 @@ public class DockerAssemblyManager {
         if (assemblyConfig != null) {
             builder.add(ASSEMBLY_NAME, "")
                    .basedir(assemblyConfig.getBasedir())
-                   .user(assemblyConfig.getUser())
+                   .assemblyUser(assemblyConfig.getUser())
                    .exportBasedir(assemblyConfig.exportBasedir());
         } else {
             builder.exportBasedir(false);

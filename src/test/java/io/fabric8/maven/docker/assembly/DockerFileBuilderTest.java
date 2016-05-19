@@ -96,14 +96,24 @@ public class DockerFileBuilderTest {
     }
 
     @Test
-    public void testUserWithChown() {
-        String dockerFile = new DockerFileBuilder().user("jboss:jboss:jboss")
+    public void testAssemblyUserWithChown() {
+        String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss")
                                                    .add("a","a/nested").add("b","b/deeper/nested").content();
         String EXPECTED_REGEXP = "chown\\s+-R\\s+jboss:jboss\\s+([^\\s]+)"
                                  + "\\s+&&\\s+cp\\s+-rp\\s+\\1/\\*\\s+/\\s+&&\\s+rm\\s+-rf\\s+\\1";
         Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
         assertTrue(pattern.matcher(dockerFile).find());
     }
+
+    @Test
+    public void testUser() {
+        String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss").user("bob")
+                                                   .add("a","a/nested").add("b","b/deeper/nested").content();
+        String EXPECTED_REGEXP = "USER bob$";
+        Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
+        assertTrue(pattern.matcher(dockerFile).find());
+    }
+
 
     @Test
     public void testExportBaseDir() {

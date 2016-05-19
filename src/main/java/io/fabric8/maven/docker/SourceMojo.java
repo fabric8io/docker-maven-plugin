@@ -29,10 +29,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProjectHelper;
 
-import static io.fabric8.maven.docker.config.RunImageConfiguration.NamingStrategy.alias;
-import static io.fabric8.maven.docker.config.WatchMode.build;
-import static org.apache.maven.plugin.assembly.utils.ProjectUtils.getClassifier;
-
 /**
  * Mojo for attaching one more source docker tar file to an artifact.
  *
@@ -67,11 +63,11 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         MojoParameters params = createMojoParameters();
         List<ImageConfiguration> imageConfigs = new ArrayList<>();
-        for (ImageConfiguration imageConfig : getImages()) {
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
                 if (buildConfig.skip()) {
-                    log.info(imageConfig.getDescription() + ": Skipped creating source");
+                    log.info("%s: Skipped creating source",imageConfig.getDescription());
                 } else {
                     imageConfigs.add(imageConfig);
                 }

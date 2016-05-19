@@ -15,6 +15,8 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
+import static io.fabric8.maven.docker.assembly.DockerFileKeyword.WORKDIR;
+
 /**
  * Enum holding possible configuration keys
  *
@@ -43,6 +45,8 @@ public enum ConfigKey {
     DOMAINNAME,
     DNS,
     DNS_SEARCH,
+    DOCKER_FILE,
+    DOCKER_FILE_DIR,
     ENTRYPOINT,
     ENV,
     ENV_PROPERTY_FILE,

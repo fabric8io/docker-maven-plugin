@@ -28,7 +28,7 @@ public class PushMojo extends AbstractDockerMojo {
     /** {@inheritDoc} */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        for (ImageConfiguration imageConfig : getImages()) {
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
             if (buildConfig != null) {
