@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>dmp-sample-parent</artifactId>
-  <version>0.15.2-SNAPSHOT</version>
+  <version>0.15.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <url>http://www.jolokia.org</url>
@@ -44,4 +44,11 @@
     </pluginManagement>
   </build>
 
+  <modules>
+   <module>net</module>
+   <module>properties</module>
+   <module>dockerignore</module> 
+   <module>data-jolokia-demo</module> 
+   <!-- module>cargo-jolokia-demo</module --> 
+  </modules>
 </project>
