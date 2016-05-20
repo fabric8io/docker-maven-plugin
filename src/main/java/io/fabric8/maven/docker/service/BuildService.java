@@ -9,9 +9,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class BuildService {
@@ -53,7 +51,9 @@ public class BuildService {
             oldImageId = queryService.getImageId(imageName);
         }
 
+        long time = System.currentTimeMillis();
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
+        log.info("%s: Created %s in %s", dockerArchive.getName(), imageConfig.getDescription(), EnvUtil.formatDurationTillNow(time));
 
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
 

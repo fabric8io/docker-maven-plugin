@@ -59,6 +59,9 @@ public class BuildServiceTest {
                 .thenReturn(null);
 
         buildService = new BuildService(docker, queryService, archiveService, log);
+
+        when(archiveService.createArchive(anyString(),any(BuildImageConfiguration.class),any(MojoParameters.class)))
+            .thenReturn(new File("docker-build.tar"));
     }
 
     @Test
@@ -115,7 +118,7 @@ public class BuildServiceTest {
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
-        verify(docker).buildImage(eq(imageConfig.getName()), (File) eq(null), (String) eq(null), anyBoolean(), anyBoolean(), anyMap());
+        verify(docker).buildImage(eq(imageConfig.getName()), eq(new File("docker-build.tar")), (String) eq(null), anyBoolean(), anyBoolean(), anyMap());
     }
 
     private void thenOldImageIsNotRemoved() throws DockerAccessException {
