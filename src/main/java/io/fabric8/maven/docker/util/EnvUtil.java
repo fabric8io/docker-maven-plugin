@@ -209,7 +209,7 @@ public class EnvUtil {
      * @return time in seconds
      *
      */
-    public static String formatDurationTillNow(long start) {
+    public static String formatDurationTill(long start) {
         long duration = System.currentTimeMillis() - start;
         StringBuilder res = new StringBuilder();
 

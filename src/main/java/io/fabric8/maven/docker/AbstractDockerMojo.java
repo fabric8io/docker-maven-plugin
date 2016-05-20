@@ -343,7 +343,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
-        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTillNow(time));
+        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
 
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the

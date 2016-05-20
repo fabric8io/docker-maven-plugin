@@ -1,7 +1,7 @@
 # ChangeLog
 
 * **0.15.3-SNAPSHOT**
-  - Add duration information when pulling and building images (#313)
+  - Add duration information when pulling, building and pushing images (#313)
 
 * **0.15.2** (2016-05-19) 
   - More robust response stream parsing ([#436](https://github.com/fabric8io/docker-maven-plugin/issues/436))
