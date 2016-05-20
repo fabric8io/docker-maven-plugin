@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.15.3-SNAPSHOT**
+* **0.15-SNAPSHOT**
   - Add duration information when pulling, building and pushing images (#313)
 
 * **0.15.2** (2016-05-19) 
