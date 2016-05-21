@@ -159,8 +159,12 @@ public class StartMojo extends AbstractDockerMojo {
             WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
             if (httpConfig != null) {
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus()));
+                log.info("%s: Waiting on url %s with method %s for status %s.",
+                        imageConfig.getDescription(), waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
             } else {
                 checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
+                log.info("%s: Waiting on url %s.",
+                        imageConfig.getDescription(), waitUrl);
             }
             logOut.add("on url " + waitUrl);
         }
