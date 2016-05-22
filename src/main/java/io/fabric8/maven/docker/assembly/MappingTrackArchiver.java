@@ -97,7 +97,7 @@ public class MappingTrackArchiver extends TrackingArchiver {
                 ret.addEntry(localMavenRepoFile, target);
             }
         } catch (IOException e) {
-            log.warn("Cannot add " + localMavenRepoFile + " for watching: " + e + ". Ignoring for watch ...");
+            log.warn("Cannot add %s for watching: %s. Ignoring for watch ...", localMavenRepoFile, e.getMessage());
         }
     }
 
@@ -113,7 +113,8 @@ public class MappingTrackArchiver extends TrackingArchiver {
             try {
                 return new File(localRepo.getBasedir(), localRepo.pathOf(artifact));
             } catch (InvalidArtifactRTException e) {
-                log.warn("Cannot get the local repository path for " + artifact + " in base dir " + localRepo.getBasedir() + ": " + e);
+                log.warn("Cannot get the local repository path for %s in base dir %s : %s",
+                         artifact, localRepo.getBasedir(), e.getMessage());
             }
         }
         return null;
@@ -145,10 +146,11 @@ public class MappingTrackArchiver extends TrackingArchiver {
                 if (options.size() == 1) {
                     return getArtifactFromPomProperties(type,options.get(0));
                 } else {
-                    log.warn("Found " + options.size() + " pom.properties in " + jar);
+                    log.warn("Found %d pom.properties in %s", options.size(), jar);
                 }
             } catch (IOException e) {
-                log.warn("IO Exception while examing " + jar + " for maven coordinates: " + e + ". Ignoring for watching ...");
+                log.warn("IO Exception while examining %s for maven coordinates: %s. Ignoring for watching ...",
+                         jar, e.getMessage());
             }
         }
         return null;

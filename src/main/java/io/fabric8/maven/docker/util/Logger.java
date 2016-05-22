@@ -1,6 +1,5 @@
 package io.fabric8.maven.docker.util;
 
-import static org.bouncycastle.asn1.ua.DSTU4145NamedCurves.params;
 
 /**
  * Simple log handler for printing used during the maven build
@@ -18,6 +17,15 @@ public interface Logger {
      */
     void debug(String format, Object ... params);
 
+
+    /**
+     * Debug message if debugging is enabled.
+     *
+     * @param msg message to print
+     */
+    void debug(String msg);
+
+
     /**
      * Informational message
      *
@@ -25,6 +33,13 @@ public interface Logger {
      * @param params parameter for formatting message
      */
     void info(String format, Object ... params);
+
+    /**
+     * Informational message
+     *
+     * @param message to print
+     */
+    void info(String message);
 
     /**
      * Verbose message
@@ -43,12 +58,26 @@ public interface Logger {
     void warn(String format, Object ... params);
 
     /**
+     * A warning.
+     *
+     * @param message to print
+     */
+    void warn(String message);
+
+    /**
      * Severe errors
      *
      * @param format error message format
      * @param params parameter for formatting message
      */
     void error(String format, Object ... params);
+
+    /**
+     * Severe errors
+     *
+     * @param message to print
+     */
+    void error(String message);
 
     /**
      * Prepare the given message as an error message

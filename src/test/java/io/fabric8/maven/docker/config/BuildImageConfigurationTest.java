@@ -72,7 +72,7 @@ public class BuildImageConfigurationTest {
                 assembly(assemblyConfig).build();
 
         new NonStrictExpectations() {{
-            logger.warn(withSubstring("deprecated"));
+            logger.warn(withSubstring("deprecated"),(Object[]) any);
         }};
 
         config.initAndValidate(logger);

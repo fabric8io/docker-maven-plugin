@@ -201,7 +201,7 @@ public class RunService {
                 try {
                     stopStartedContainers(keepContainer, removeVolumes, null);
                 } catch (DockerAccessException e) {
-                    log.error("Error while stopping containers: " + e);
+                    log.error("Error while stopping containers: %s", e.getMessage());
                 }
             }
         });
@@ -211,7 +211,7 @@ public class RunService {
         List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
         for (ImageConfiguration config : images) {
             if (config.getRunConfiguration().skip()) {
-                log.info(config.getDescription() + ": Skipped running");
+                log.info("%s: Skipped running", config.getDescription());
             } else {
                 ret.add(config);
             }
@@ -359,7 +359,7 @@ public class RunService {
     }
 
     private void startContainer(ImageConfiguration imageConfig, String id, PomLabel pomLabel) throws DockerAccessException {
-        log.info(imageConfig.getDescription() + ": Start container " + id);
+        log.info("%s: Start container %s",imageConfig.getDescription(), id);
         docker.startContainer(id);
         tracker.registerContainer(id, imageConfig, pomLabel);
     }
@@ -369,7 +369,7 @@ public class RunService {
         if (container.isRunning()) {
             mappedPorts.updateProperties(container.getPortBindings());
         } else {
-            log.warn("Container " + containerId + " is not running anymore, can not extract dynamic ports");
+            log.warn("Container %s is not running anymore, can not extract dynamic ports",containerId);
         }
     }
 
@@ -383,32 +383,34 @@ public class RunService {
             try {
                 execInContainer(containerId, descriptor.getPreStop(), descriptor.getImageConfiguration());
             } catch (DockerAccessException e) {
-                log.error(e.getMessage());
+                log.error("%s", e.getMessage());
             }
         }
         // Stop the container
         int killGracePeriod = descriptor.getKillGracePeriod();
         int killGracePeriodInSeconds = (killGracePeriod + 500) / 1000;
         if (killGracePeriod != 0 && killGracePeriodInSeconds == 0) {
-            log.warn("A kill grace period of " + killGracePeriod + "ms leads to no wait at all since its rounded to seconds. " +
-                     "Please use at least 500 as value for wait.kill");
+            log.warn("A kill grace period of %d ms leads to no wait at all since its rounded to seconds. " +
+                     "Please use at least 500 as value for wait.kill",killGracePeriod);
         }
         access.stopContainer(containerId, killGracePeriodInSeconds);
         if (killGracePeriod > 0) {
-            log.debug("Shutdown: Wait " + killGracePeriodInSeconds + " s after stopping and before killing container");
+            log.debug("Shutdown: Wait %d s after stopping and before killing container", killGracePeriodInSeconds);
             WaitUtil.sleep(killGracePeriodInSeconds * 1000);
         }
         if (!keepContainer) {
             int shutdownGracePeriod = descriptor.getShutdownGracePeriod();
             if (shutdownGracePeriod != 0) {
-                log.debug("Shutdown: Wait " + shutdownGracePeriod + " ms before removing container");
+                log.debug("Shutdown: Wait %d ms before removing container", shutdownGracePeriod);
                 WaitUtil.sleep(shutdownGracePeriod);
             }
             // Remove the container
             access.removeContainer(containerId, removeVolumes);
         }
         
-        log.info(descriptor.getDescription() + ": Stop" + (keepContainer ? "" : " and remove") + " container " +
+        log.info("%s: Stop%s container %s",
+                 descriptor.getDescription(),
+                 (keepContainer ? "" : " and remove"),
                  containerId.substring(0, 12));
     }
 }

@@ -33,6 +33,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
+import static org.bouncycastle.asn1.cmp.PKIStatus.waiting;
 
 
 /**
@@ -218,7 +219,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         if (checkers.isEmpty()) {
             if (wait.getTime() > 0) {
-                log.info(imageConfig.getDescription() + ": Pausing for " + wait.getTime() + " ms");
+                log.info("%s: Pausing for %d ms", imageConfig.getDescription(), wait.getTime());
                 WaitUtil.sleep(wait.getTime());
             }
             return;
@@ -226,10 +227,11 @@ public class StartMojo extends AbstractDockerMojo {
 
         try {
             long waited = WaitUtil.wait(wait.getTime(), checkers);
-            log.info(imageConfig.getDescription() + ": Waited " + StringUtils.join(logOut.toArray(), " and ") + " " + waited + " ms");
+            log.info("%s : Waited %s %d ms",imageConfig.getDescription(), StringUtils.join(logOut.toArray(), " and "), waited);
         } catch (WaitUtil.WaitTimeoutException exp) {
-            String desc = imageConfig.getDescription() + ": Timeout after " + exp.getWaited() + " ms while waiting " +
-                          StringUtils.join(logOut.toArray(), " and ");
+            String desc = String.format("%s: Timeout after %d ms while waiting %s",
+                                        imageConfig.getDescription(), exp.getWaited(),
+                                        StringUtils.join(logOut.toArray(), " and "));
             log.error(desc);
             throw new MojoExecutionException(desc);
         }
@@ -261,7 +263,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                         @Override
                         public void error(String error) {
-                            log.error(error);
+                            log.error("%s", error);
                         }
                     });
                     first = false;

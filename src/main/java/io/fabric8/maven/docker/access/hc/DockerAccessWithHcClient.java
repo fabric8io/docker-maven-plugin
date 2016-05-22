@@ -149,7 +149,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public String createContainer(ContainerCreateConfig containerConfig, String containerName)
             throws DockerAccessException {
         String createJson = containerConfig.toJson();
-        log.debug("Container create config: " + createJson);
+        log.debug("Container create config: %s", createJson);
 
         try {
             String url = urlBuilder.createContainer(containerName);
@@ -409,7 +409,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         for (int i = 0; i < logElements.length(); i++) {
             JSONObject entry = logElements.getJSONObject(i);
             for (Object key : entry.keySet()) {
-                log.debug(key + ": " + entry.get(key.toString()));
+                log.debug("%s: %s", key, entry.get(key.toString()));
             }
         }
     }

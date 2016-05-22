@@ -36,7 +36,7 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
         } else {
             value = json.toString();
         }
-        log.info(value);
+        log.info("%s", value);
     }
 
     private void throwDockerAccessException(JSONObject json) throws DockerAccessException {

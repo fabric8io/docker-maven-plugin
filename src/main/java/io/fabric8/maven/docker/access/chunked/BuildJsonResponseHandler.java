@@ -25,12 +25,12 @@ public class BuildJsonResponseHandler implements EntityStreamReaderUtil.JsonEnti
                     (msg.equals(detailMsg) || "".equals(detailMsg) ? "" : "(" + detailMsg + ")"));
         } else if (json.has("stream")) {
             String message = json.getString("stream");
-            log.verbose(message.trim());
+            log.verbose("%s", message.trim());
         } else if (json.has("status")) {
             String status = json.getString("status").trim();
             String id = json.has("id") ? json.getString("id") : null;
             if (status.matches("^.*(Download|Pulling).*")) {
-                log.info("  " + (id != null ? id + " " : "") + status);
+                log.info("  %s%s",id != null ? id + " " : "",status);
             }
         }
     }

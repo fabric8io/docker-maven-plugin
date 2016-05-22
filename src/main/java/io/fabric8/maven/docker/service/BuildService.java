@@ -64,15 +64,15 @@ public class BuildService {
                              getDockerfileName(buildConfig),
                              cleanupMode.isRemove(),
                              noCache, mergedBuildMap);
-        log.info(imageConfig.getDescription() + ": Built image " + newImageId);
+        log.info("%s: Built image %s",imageConfig.getDescription(), newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
             try {
                 docker.removeImage(oldImageId, true);
-                log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
+                log.info("%s: Removed image ", imageConfig.getDescription(), oldImageId);
             } catch (DockerAccessException exp) {
                 if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
-                    log.warn(imageConfig.getDescription() +": " + exp.getMessage() + " (old image)" +
+                    log.warn("%s: %s (old image)%s", imageConfig.getDescription(), exp.getMessage(),
                              (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
                 } else {
                     throw exp;
