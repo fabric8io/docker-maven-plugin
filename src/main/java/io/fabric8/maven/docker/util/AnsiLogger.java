@@ -8,7 +8,6 @@ import org.codehaus.plexus.util.StringUtils;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 
-import static com.sun.corba.se.impl.naming.cosnaming.NamingUtils.debug;
 import static org.fusesource.jansi.Ansi.Color.*;
 import static org.fusesource.jansi.Ansi.ansi;
 
