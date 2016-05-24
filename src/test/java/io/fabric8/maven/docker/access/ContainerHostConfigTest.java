@@ -18,7 +18,7 @@ public class ContainerHostConfigTest {
     @Test(expected = IllegalArgumentException.class)
     public void testExtraHostsDoesNotResolve() {
         ContainerHostConfig hc = new ContainerHostConfig();
-        hc.extraHosts(Arrays.asList("database.pvt:a.b.pvt"));
+        hc.extraHosts(Arrays.asList("database.pvt:ahostnamewhichreallyshouldnot.exist.zz"));
     }
     
     @Test(expected = IllegalArgumentException.class)
