@@ -1,12 +1,18 @@
 # ChangeLog
 
+* **0.15.3**
+  - Add duration information when pulling, building and pushing images ([#313](https://github.com/fabric8io/docker-maven-plugin/issues/313))
+  - Fixed logging to always use format strings ([#457](https://github.com/fabric8io/docker-maven-plugin/issues/457))
+  - Allow extended image names ([#459](https://github.com/fabric8io/docker-maven-plugin/issues/459))
+  
 * **0.15.2** (2016-05-19) 
   - More robust response stream parsing ([#436](https://github.com/fabric8io/docker-maven-plugin/issues/436))
-  - Add `docker.dockerFileDir` and `docker.dockerFile` to the properties configuration provider. ([#438](https://github.com/fabric8io/docker-maven-plugin/issues/438))
+  - Add `docker.dockerFileDir` and `dogit dcker.dockerFile` to the properties configuration provider. ([#438](https://github.com/fabric8io/docker-maven-plugin/issues/438))
   - Fix splitting of bind volumes for Windows pathes ([#443](https://github.com/fabric8io/docker-maven-plugin/issues/443))
   - Add new build config option `user` for switching the user at the end of the Dockerfile. `docker.user` can be used
     for the properties configuration provider ([#441](https://github.com/fabric8io/docker-maven-plugin/issues/441))
   - Include dot dirs when creating the build tar ([#446](https://github.com/fabric8io/docker-maven-plugin/issues/446))
+  - Fix property handler with wait config but empty tcp wait connection ([#451])
   
 * **0.15.1** (2016-05-03)
   - Fix push / pull progress bar ([#91](https://github.com/fabric8io/docker-maven-plugin/issues/91))

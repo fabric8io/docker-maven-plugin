@@ -87,7 +87,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
                 buildArgs.put(argKey, properties.getProperty(key));
             }
         }
-        log.debug(String.format("Build args set %s", buildArgs));
+        log.debug("Build args set %s", buildArgs);
         return buildArgs;
     }
 

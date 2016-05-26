@@ -385,7 +385,7 @@ public class BuildImageConfiguration {
             log.warn("https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/changelog.md");
             log.warn("");
             log.warn("For now, the command is automatically translated for you to the shell form:");
-            log.warn("   <cmd>" + command + "</cmd>");
+            log.warn("   <cmd>%s</cmd>", command);
         }
 
         initDockerFileFile(log);

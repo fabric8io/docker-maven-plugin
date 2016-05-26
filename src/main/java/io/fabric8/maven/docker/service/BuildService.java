@@ -9,9 +9,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class BuildService {
@@ -53,7 +51,9 @@ public class BuildService {
             oldImageId = queryService.getImageId(imageName);
         }
 
+        long time = System.currentTimeMillis();
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
+        log.info("%s: Created %s in %s", dockerArchive.getName(), imageConfig.getDescription(), EnvUtil.formatDurationTill(time));
 
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
 
@@ -64,15 +64,15 @@ public class BuildService {
                              getDockerfileName(buildConfig),
                              cleanupMode.isRemove(),
                              noCache, mergedBuildMap);
-        log.info(imageConfig.getDescription() + ": Built image " + newImageId);
+        log.info("%s: Built image %s",imageConfig.getDescription(), newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
             try {
                 docker.removeImage(oldImageId, true);
-                log.info(imageConfig.getDescription() + ": Removed image " + oldImageId);
+                log.info("%s: Removed image ", imageConfig.getDescription(), oldImageId);
             } catch (DockerAccessException exp) {
                 if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
-                    log.warn(imageConfig.getDescription() +": " + exp.getMessage() + " (old image)" +
+                    log.warn("%s: %s (old image)%s", imageConfig.getDescription(), exp.getMessage(),
                              (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
                 } else {
                     throw exp;

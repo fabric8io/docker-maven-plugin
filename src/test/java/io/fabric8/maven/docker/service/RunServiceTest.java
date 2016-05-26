@@ -94,9 +94,9 @@ public class RunServiceTest {
     public void shutdownWithoutKeepingContainers() throws Exception {
         new Expectations() {{
             docker.stopContainer(container, 0);
-            log.debug(anyString); minTimes = 1;
+            log.debug(anyString, (Object[]) any); minTimes = 1;
             docker.removeContainer(container, false);
-            log.info(with(getLogArgCheck(container, true)));
+            new LogInfoMatchingExpectations(container, true);
         }};
 
         long start = System.currentTimeMillis();
@@ -104,7 +104,6 @@ public class RunServiceTest {
         assertTrue("Waited for at least " + SHUTDOWN_WAIT + " ms",
                 System.currentTimeMillis() - start >= SHUTDOWN_WAIT);
     }
-
     @Test
     public void killafterAndShutdownWithoutKeepingContainers() throws Exception {
         setupForKillWait();
@@ -128,9 +127,9 @@ public class RunServiceTest {
     private void setupForKillWait() throws DockerAccessException {
         new Expectations() {{
             docker.stopContainer(container, (KILL_AFTER + 500) / 1000);
-            log.debug(anyString); minTimes = 1;
+            log.debug(anyString, (Object[]) any); minTimes = 1;
             docker.removeContainer(container, false);
-            log.info(with(getLogArgCheck(container, true)));
+            new LogInfoMatchingExpectations(container, true);
         }};
     }
 
@@ -138,9 +137,9 @@ public class RunServiceTest {
     public void shutdownWithoutKeepingContainersAndRemovingVolumes() throws Exception {
         new Expectations() {{
             docker.stopContainer(container, 0);
-            log.debug(anyString); minTimes = 1;
+            log.debug(anyString, (Object[]) any); minTimes = 1;
             docker.removeContainer(container, true);
-            log.info(with(getLogArgCheck(container, true)));
+            new LogInfoMatchingExpectations(container, true);
         }};
 
         long start = System.currentTimeMillis();
@@ -153,7 +152,7 @@ public class RunServiceTest {
     public void shutdownWithKeepingContainer() throws Exception {
         new Expectations() {{
             docker.stopContainer(container, 0);
-            log.info(with(getLogArgCheck(container, false)));
+            new LogInfoMatchingExpectations(container, false);
         }};
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), true, false);
@@ -169,7 +168,7 @@ public class RunServiceTest {
             docker.createExecContainer(container, (Arguments) withNotNull());result = "execContainerId";
             docker.startExecContainer("execContainerId", (LogOutputSpec) any);
             docker.stopContainer(container, 0);
-            log.info(with(getLogArgCheck(container, false)));
+            new LogInfoMatchingExpectations(container, false);
         }};
         long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfigWithExecConfig(SHUTDOWN_WAIT), true, false);
@@ -183,7 +182,7 @@ public class RunServiceTest {
             docker.stopContainer(container, 0);
             log.debug(anyString); times = 0;
             docker.removeContainer(container, false);
-            log.info(with(getLogArgCheck(container, true)));
+            new LogInfoMatchingExpectations(container, true);
         }};
 
         long start = System.currentTimeMillis();
@@ -201,16 +200,6 @@ public class RunServiceTest {
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, false);
     }
 
-    private Delegate<String> getLogArgCheck(final String container, final boolean withRemove) {
-        return new Delegate<String>() {
-            boolean checkArg(String txt) {
-                assertTrue(txt.toLowerCase().contains("stop"));
-                assertEquals(withRemove, txt.toLowerCase().contains("remove"));
-                assertTrue("Log '" + txt + "' contains " + container,txt.contains(container.substring(0,12)));
-                return true;
-            }
-        };
-    }
 
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
@@ -245,7 +234,7 @@ public class RunServiceTest {
         Map<String, String> map = (Map<String, String>) field.get(tracker);
         map.put(key, value);
     }
-    
+
     // Better than poking into the private vars would be to use createAndStart() with the mock to build up the map.
     private void givenAnImageConfiguration(String name, String alias, String containerId) throws Exception {
         addToTracker("imageToContainerMap", name, containerId);
@@ -350,5 +339,14 @@ public class RunServiceTest {
 
     private List<String> volumesFrom() {
         return Arrays.asList("parent", "other:ro");
+    }
+
+    final class LogInfoMatchingExpectations extends Expectations {
+        LogInfoMatchingExpectations(String container, boolean withRemove) {
+            log.info(withSubstring("Stop"),
+                     anyString,
+                     withRemove ? withSubstring("remove") : withNotEqual(" and remiver"),
+                     withSubstring(container.substring(0,12)));
+        }
     }
 }

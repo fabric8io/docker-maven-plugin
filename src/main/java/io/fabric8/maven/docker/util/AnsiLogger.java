@@ -56,46 +56,55 @@ public class AnsiLogger implements Logger {
         initializeColor(useColor);
     }
 
-    /**
-     * Debug message if debugging is enabled.
-     *
-     * @param message message to print out
-     */
+    /** {@inheritDoc} */
     public void debug(String message, Object ... params) {
-        log.debug(prefix + String.format(message, params));
+        if (isDebugEnabled()) {
+            log.debug(prefix + String.format(message, params));
+        }
     }
-    /**
-     * Informational message
-     *
-     * @param message info
-     */
+
+    /** {@inheritDoc} */
+    public void debug(String msg) {
+        if (isDebugEnabled()) {
+            debug("%s", msg);
+        }
+    }
+
+    /** {@inheritDoc} */
     public void info(String message, Object ... params) {
         log.info(colored(message, COLOR_INFO, true, params));
     }
 
-    @Override
+    /** {@inheritDoc} */
+    public void info(String message) {
+        info("%s", message);
+    }
+
+    /** {@inheritDoc} */
     public void verbose(String message, Object ... params) {
         if (verbose) {
             log.info(ansi().fgBright(BLACK).a(prefix).a(String.format(message,params)).reset().toString());
         }
     }
 
-    /**
-     * A warning.
-     *
-     * @param format warning
-     */
+    /** {@inheritDoc} */
     public void warn(String format, Object ... params) {
         log.warn(colored(format, COLOR_WARNING, true, params));
     }
 
-    /**
-     * Severe errors
-     *
-     * @param message error
-     */
+    /** {@inheritDoc} */
+    public void warn(String message) {
+        warn("%s", message);
+    }
+
+    /** {@inheritDoc} */
     public void error(String message, Object ... params) {
         log.error(colored(message, COLOR_ERROR, true, params));
+    }
+
+    /** {@inheritDoc} */
+    public void error(String message) {
+        error("%s", message);
     }
 
     @Override

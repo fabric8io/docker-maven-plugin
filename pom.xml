@@ -6,10 +6,10 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.15.3-SNAPSHOT</version>
+  <version>0.15-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
-  <name>maven-docker-plugin</name>
+  <name>docker-maven-plugin</name>
   <description>Docker Maven Plugin</description>
 
   <url>http://github.com/fabric8io/docker-maven-plugin</url>

@@ -168,10 +168,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
-                log.error(exp.getMessage());
+                log.error("%s", exp.getMessage());
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } catch (MojoExecutionException exp) {
-                log.error(exp.getMessage());
+                log.error("%s", exp.getMessage());
                 throw exp;
             } finally {
                 if (access != null) {
@@ -324,17 +324,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /**
      * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
      * is not existent, throw an error
-     *
-     * @param hub access object to lookup an image (if autoPull is enabled)
+     *  @param hub access object to lookup an image (if autoPull is enabled)
      * @param image image name
      * @param registry optional registry which is used if the image itself doesn't have a registry.
      * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
-     *
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
     protected void checkImageWithAutoPull(ServiceHub hub, String image, String registry,
-            boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
+                                          boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = hub.getQueryService();
         if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
@@ -343,7 +341,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
         DockerAccess docker = hub.getDockerAccess();
         ImageName imageName = new ImageName(image);
+        long time = System.currentTimeMillis();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
+        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
+
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
             // full name with the registry to the short name with no-registry.

@@ -149,7 +149,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public String createContainer(ContainerCreateConfig containerConfig, String containerName)
             throws DockerAccessException {
         String createJson = containerConfig.toJson();
-        log.debug("Container create config: " + createJson);
+        log.debug("Container create config: %s", createJson);
 
         try {
             String url = urlBuilder.createContainer(containerName);
@@ -365,13 +365,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     // visible for testing?
-    private HcChunckedResponseHandlerWrapper createBuildResponseHandler() {
-        return new HcChunckedResponseHandlerWrapper(log, new BuildJsonResponseHandler(log));
+    private HcChunkedResponseHandlerWrapper createBuildResponseHandler() {
+        return new HcChunkedResponseHandlerWrapper(new BuildJsonResponseHandler(log));
     }
 
     // visible for testing?
-    private HcChunckedResponseHandlerWrapper createPullOrPushResponseHandler() {
-        return new HcChunckedResponseHandlerWrapper(log, new PullOrPushResponseJsonHandler(log));
+    private HcChunkedResponseHandlerWrapper createPullOrPushResponseHandler() {
+        return new HcChunkedResponseHandlerWrapper(new PullOrPushResponseJsonHandler(log));
     }
 
     private Map<String, String> createAuthHeader(AuthConfig authConfig) {
@@ -409,7 +409,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         for (int i = 0; i < logElements.length(); i++) {
             JSONObject entry = logElements.getJSONObject(i);
             for (Object key : entry.keySet()) {
-                log.debug(key + ": " + entry.get(key.toString()));
+                log.debug("%s: %s", key, entry.get(key.toString()));
             }
         }
     }
@@ -419,14 +419,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     // Preparation for performing requests
-    private static class HcChunckedResponseHandlerWrapper implements ResponseHandler<Object> {
+    private static class HcChunkedResponseHandlerWrapper implements ResponseHandler<Object> {
 
         private EntityStreamReaderUtil.JsonEntityResponseHandler handler;
-        private Logger log;
 
-        public HcChunckedResponseHandlerWrapper(Logger log,
-                                                EntityStreamReaderUtil.JsonEntityResponseHandler handler) {
-            this.log = log;
+        HcChunkedResponseHandlerWrapper(EntityStreamReaderUtil.JsonEntityResponseHandler handler) {
             this.handler = handler;
         }
 

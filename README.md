@@ -30,14 +30,10 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
   setups which you can use as blueprints for your own projects.
 * [ChangeLog](doc/changelog.md) has the release history of this plugin.
 * [Contributing](doc/contributing.md) explains how you can contribute to this project. Pull requests are highly appreciated!
-  
+
+
 #### Docker API Support
 
-* Docker 1.6 (**v1.18**) is the minimal required version 
+* Docker 1.6 (**v1.18**) is the minimal required version
 * Docker 1.8.1 (**v1.20**) is required for `docker:watch`
 * Docker 1.9 (**v1.21**) is required of using custom networks and build args.
-
-
-
-
-

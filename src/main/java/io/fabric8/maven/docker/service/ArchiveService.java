@@ -57,7 +57,7 @@ public class ArchiveService {
     public File createDockerBuildArchive(ImageConfiguration imageConfig, MojoParameters params)
             throws MojoExecutionException {
         File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params);
-        log.info(imageConfig.getDescription() + ": Created docker source tar " + ret);
+        log.info("%s: Created docker source tar %s",imageConfig.getDescription(), ret);
         return ret;
     }
 
