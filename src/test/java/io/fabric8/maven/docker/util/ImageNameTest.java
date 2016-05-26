@@ -44,15 +44,7 @@ public class ImageNameTest {
                         .fullName("consol/tomcat-8.0").fullNameWithTag("consol/tomcat-8.0:8.0.9")
         };
 
-        for (int i = 0; i < data.length; i += 2) {
-            ImageName name = new ImageName((String) data[i]);
-            Res res = (Res) data[i+1];
-            assertEquals("Registry " + i,res.registry,name.getRegistry());
-            assertEquals("Repository " + i,res.repository,name.getRepository());
-            assertEquals("Tag " + i,res.tag,name.getTag());
-            assertEquals("RepoWithRegistry " + i,res.fullName, name.getNameWithoutTag(null));
-            assertEquals("FullName " + i,res.fullNameWithTag,name.getFullName(null));
-        }
+        verifyData(data);
     }
 
     @Test
@@ -87,9 +79,13 @@ public class ImageNameTest {
                         .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:0.9.6"),
         };
 
+        verifyData(data);
+    }
+
+    private void verifyData(Object[] data) {
         for (int i = 0; i < data.length; i += 2) {
             ImageName name = new ImageName((String) data[i]);
-            Res res = (Res) data[i+1];
+            Res res = (Res) data[i + 1];
             assertEquals("Registry " + i,res.registry,name.getRegistry());
             assertEquals("Repository " + i,res.repository,name.getRepository());
             assertEquals("Tag " + i,res.tag,name.getTag());
