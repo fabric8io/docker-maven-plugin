@@ -205,6 +205,7 @@ public class ImageName {
     // https://github.com/docker/docker/blob/master/vendor/src/github.com/docker/distribution/reference/regexp.go
     // https://github.com/docker/docker/blob/master/vendor/src/github.com/docker/distribution/reference/reference.go
     private final Pattern NAME_COMP_REGEXP = Pattern.compile("[a-z0-9]+(?:(?:[._]|__|[-]*)[a-z0-9]+)*");
+    private final Pattern COMP_PATH_REGEXP = Pattern.compile("([/]?[a-z0-9]+(?:(?:[._]|__|[-]*)[a-z0-9]+)*)*");
     private final String hPartPattern = "(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])";
     private final Pattern REGISTRY_REGEXP = Pattern.compile("^" + hPartPattern + "(?:\\." + hPartPattern + ")*(?::[0-9]+)?$");
     private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
@@ -216,7 +217,7 @@ public class ImageName {
         String image = user != null ? repository.substring(user.length() + 1) : repository;
         Object[] checks = new Object[] {
             "registry",REGISTRY_REGEXP, registry,
-            "image", NAME_COMP_REGEXP, image,
+            "image", COMP_PATH_REGEXP, image,
             "user", NAME_COMP_REGEXP, user,
             "tag", TAG_REGEXP, tag
         };
