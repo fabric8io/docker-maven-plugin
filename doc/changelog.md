@@ -12,7 +12,7 @@
   - Add new build config option `user` for switching the user at the end of the Dockerfile. `docker.user` can be used
     for the properties configuration provider ([#441](https://github.com/fabric8io/docker-maven-plugin/issues/441))
   - Include dot dirs when creating the build tar ([#446](https://github.com/fabric8io/docker-maven-plugin/issues/446))
-  - Fix property handler with wait config but empty tcp wait connection ([#451])
+  - Fix property handler with wait config but empty tcp wait connection ([#451](https://github.com/fabric8io/docker-maven-plugin/issues/451))
   
 * **0.15.1** (2016-05-03)
   - Fix push / pull progress bar ([#91](https://github.com/fabric8io/docker-maven-plugin/issues/91))
