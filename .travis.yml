@@ -1,6 +1,9 @@
 language: java
 jdk:
-  - oraclejdk7
+  - oraclejdk8
+after_script:
+  - "[[ $TRAVIS_PULL_REQUEST == false ]] && [[ $TRAVIS_JDK_VERSION == oraclejdk8 ]] && mvn -Psonarqube package sonar:sonar -Dsonar.host.url=https://nemo.sonarqube.org -Dsonar.login=${SONAR_TOKEN}"
+
 notifications:
   webhooks:
     urls:

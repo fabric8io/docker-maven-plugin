@@ -10,9 +10,6 @@ general:
   branches:
     ignore:
       - 'gh-pages'
-test:
-  post:
-    - "( [[ x${CI_PR_NUMBER} == x ]] && mvn -Psonarqube clean package sonar:sonar -Dsonar.login=${SONAR_TOKEN} ) || true"
 
 deployment:
   website:

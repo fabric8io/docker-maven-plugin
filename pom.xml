@@ -436,7 +436,6 @@
       <id>sonarqube</id>
 
       <properties>
-        <sonar.host.url>https://nemo.sonarqube.org</sonar.host.url>
         <jacoco.version>0.7.6.201602180812</jacoco.version>
       </properties>
 
