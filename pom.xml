@@ -35,7 +35,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jmockit.version>1.10</jmockit.version>
-    <jacoco.version>0.7.6.201602180812</jacoco.version>
     <maven.version>3.2.3</maven.version>
   </properties>
 
@@ -434,7 +433,13 @@
 
     <!-- Enable JaCoCo Test -->
     <profile>
-      <id>jacoco</id>
+      <id>sonarqube</id>
+
+      <properties>
+        <sonar.host.url>https://nemo.sonarqube.org</sonar.host.url>
+        <jacoco.version>0.7.6.201602180812</jacoco.version>
+      </properties>
+
       <dependencies>
         <!-- JaCoCo runtime must be in classpath for offline mode -->
         <dependency>
