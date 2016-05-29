@@ -35,7 +35,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jmockit.version>1.10</jmockit.version>
-    <jacoco.version>0.7.1.201405082137</jacoco.version>
+    <jacoco.version>0.7.6.201602180812</jacoco.version>
     <maven.version>3.2.3</maven.version>
   </properties>
 
@@ -329,11 +329,6 @@
           </configuration>
         </plugin>
 
-        <plugin>
-          <groupId>org.codehaus.sonar</groupId>
-          <artifactId>sonar-maven-plugin</artifactId>
-          <version>4.3</version>
-        </plugin>
       </plugins>
 
     </pluginManagement>
