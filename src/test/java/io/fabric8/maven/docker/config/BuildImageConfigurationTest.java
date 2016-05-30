@@ -19,8 +19,8 @@ package io.fabric8.maven.docker.config;
 import java.io.File;
 
 import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,8 +71,8 @@ public class BuildImageConfigurationTest {
             new BuildImageConfiguration.Builder().
                 assembly(assemblyConfig).build();
 
-        new NonStrictExpectations() {{
-            logger.warn(withSubstring("deprecated"),(Object[]) any);
+        new Expectations() {{
+            logger.warn(withSubstring("deprecated"));
         }};
 
         config.initAndValidate(logger);

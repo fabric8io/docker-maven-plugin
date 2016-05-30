@@ -60,7 +60,7 @@ public class DockerAssemblyManagerTest {
 
         ReflectionUtils.setVariableValueInObject(assemblyManager, "trackArchiver", trackArchiver);
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mojoParams.getOutputDirectory();
             result = "target/"; times = 3;
 

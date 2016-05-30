@@ -31,6 +31,7 @@ import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -42,76 +43,54 @@ import org.junit.runner.RunWith;
 public class MojoExecutionServiceTest {
 
     @Tested
+    @Mocked
     MojoExecutionService executionService;
 
-    @Mocked @Injectable
+    @Mocked
+    @Injectable
     protected MavenProject project;
 
-    @Mocked @Injectable
+    @Mocked
+    @Injectable
     MavenSession session;
 
-    @Mocked @Injectable
-    BuildPluginManager pluginManager;
-
     @Mocked
-    Object repository;
+    @Injectable
+    BuildPluginManager pluginManager;
 
     @Mocked
     PluginDescriptor pluginDescriptor;
 
+    private final String PLUGIN_NAME = "io.fabric8:fabric8-maven-plugin";
+    private final String GOAL_NAME = "delete-pods";
+
+
     @Test
-    public void straight() throws MojoFailureException, MojoExecutionException, InvalidPluginDescriptorException, PluginResolutionException, PluginDescriptorParsingException, PluginNotFoundException, PluginConfigurationException, PluginManagerException, IOException, XmlPullParserException {
-        call("io.fabric8:fabric8-maven-plugin", "delete-pods", null, true);
+    public void straight() throws Exception {
+        expectNewPlugin();
+        expectDescriptor();
+        overrideGetPluginDescriptor();
+        executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME);
+
+        new Verifications() {{}};
     }
 
     @Test
-    public void straightWithExecutionId() throws MojoFailureException, MojoExecutionException, InvalidPluginDescriptorException, PluginResolutionException, PluginDescriptorParsingException, PluginNotFoundException, PluginConfigurationException, PluginManagerException, IOException, XmlPullParserException {
-        call("io.fabric8:fabric8-maven-plugin", "delete-pods", "1", true);
+    public void straightWithExecutionId() throws Exception {
+        expectNewPlugin();
+        expectDescriptor();
+        overrideGetPluginDescriptor();
+        executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME + "#1");
     }
 
     @Test(expected = MojoExecutionException.class)
-    public void noDescriptor() throws MojoFailureException, MojoExecutionException, InvalidPluginDescriptorException, PluginResolutionException, PluginDescriptorParsingException, PluginNotFoundException, PluginConfigurationException, PluginManagerException, IOException, XmlPullParserException {
-        call("io.fabric8:fabric8-maven-plugin", "delete-pods", null, false);
-    }
+    public void noDescriptor() throws Exception {
+        expectNewPlugin();
+        expectNoDescriptor();
+        overrideGetPluginDescriptor();
+        executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME);
 
-    private void call(final String plugin, final String goal, final String executionId, final boolean withDescriptor) throws MojoFailureException, MojoExecutionException, InvalidPluginDescriptorException, PluginResolutionException, PluginDescriptorParsingException, PluginNotFoundException, PluginConfigurationException, PluginManagerException, IOException, XmlPullParserException {
-        new Expectations() {{
-            project.getPlugin(plugin);
-            result = new Plugin();
-
-            pluginDescriptor.getMojo(goal);
-            if (withDescriptor) {
-                MojoDescriptor descriptor = new MojoDescriptor();
-                PlexusConfiguration config = new XmlPlexusConfiguration(Xpp3DomBuilder.build(new StringReader("<config name='test'><test>1</test></config>")));
-                descriptor.setMojoConfiguration(config);
-                result = descriptor;
-
-                pluginManager.executeMojo(session, (MojoExecution) any);
-            } else {
-                result = null;
-            }
-        }};
-
-        PluginDescriptorLoaderMock loaderMock = new PluginDescriptorLoaderMock(pluginDescriptor);
-        executionService.callPluginGoal(plugin + ":" + goal + (executionId != null ? "#" + executionId : "") );
-
-        new Verifications() {{
-        }};
-    }
-
-    static final class PluginDescriptorLoaderMock extends MockUp<MojoExecutionService> {
-
-        private PluginDescriptor pluginDescriptor;
-
-        public PluginDescriptorLoaderMock(PluginDescriptor pluginDescriptor) {
-            this.pluginDescriptor = pluginDescriptor;
-        }
-
-        @Mock
-        PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
-            throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-            return pluginDescriptor;
-        }
+        new Verifications() {{}};
     }
 
     @Test(expected = MojoFailureException.class)
@@ -127,5 +106,44 @@ public class MojoExecutionServiceTest {
     @Test(expected = MojoFailureException.class)
     public void wrongFormat() throws MojoFailureException, MojoExecutionException {
         executionService.callPluginGoal("blubber");
+    }
+
+    // ============================================================================================
+
+    private Expectations expectNewPlugin() {
+        return new Expectations() {{
+            project.getPlugin(PLUGIN_NAME);
+            result = new Plugin();
+        }};
+    }
+
+    private Expectations expectDescriptor() throws IOException, XmlPullParserException, PluginConfigurationException, MojoFailureException, MojoExecutionException, PluginManagerException {
+        return new Expectations() {{
+            pluginDescriptor.getMojo(GOAL_NAME);
+            result = createPluginDescriptor();
+
+            pluginManager.executeMojo(session, (MojoExecution) any);
+        }};
+    }
+
+    private MojoDescriptor createPluginDescriptor() throws XmlPullParserException, IOException {
+        MojoDescriptor descriptor = new MojoDescriptor();
+        PlexusConfiguration config = new XmlPlexusConfiguration(Xpp3DomBuilder.build(new StringReader("<config name='test'><test>1</test></config>")));
+        descriptor.setMojoConfiguration(config);
+        return descriptor;
+    }
+
+    private Expectations expectNoDescriptor() {
+        return new Expectations() {{
+            pluginDescriptor.getMojo(GOAL_NAME);
+            result = null;
+        }};
+    }
+
+    private Expectations overrideGetPluginDescriptor() throws NoSuchMethodException, InvocationTargetException, InvalidPluginDescriptorException, IllegalAccessException, PluginResolutionException, PluginNotFoundException, PluginDescriptorParsingException {
+        return new Expectations() {{
+            executionService.getPluginDescriptor((MavenProject) any,(Plugin) any);
+            result = pluginDescriptor;
+        }};
     }
 }

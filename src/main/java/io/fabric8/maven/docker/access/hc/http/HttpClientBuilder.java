@@ -26,12 +26,13 @@ import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import io.fabric8.maven.docker.access.KeyStoreUtil;
+import org.apache.http.ssl.SSLContexts;
 
 /**
  * @author roland
@@ -89,16 +90,16 @@ public class HttpClientBuilder implements ClientBuilder {
 
             SSLContext sslContext =
                     SSLContexts.custom()
-                            .useTLS()
-                            .loadKeyMaterial(keyStore, "docker".toCharArray())
-                            .loadTrustMaterial(keyStore)
-                            .build();
+                               .useProtocol(SSLConnectionSocketFactory.TLS)
+                               .loadKeyMaterial(keyStore, "docker".toCharArray())
+                               .loadTrustMaterial(keyStore, null)
+                               .build();
             String tlsVerify = System.getenv("DOCKER_TLS_VERIFY");
             SSLConnectionSocketFactory sslsf =
                     tlsVerify != null && !tlsVerify.equals("0") && !tlsVerify.equals("false") ?
                             new SSLConnectionSocketFactory(sslContext) :
-                            new SSLConnectionSocketFactory(sslContext,
-                                                           SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+                            new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+
             return RegistryBuilder.<ConnectionSocketFactory> create().register("https", sslsf).build();
         }
         catch (GeneralSecurityException e) {

@@ -1,9 +1,6 @@
 package io.fabric8.maven.docker.util;
 
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
+import mockit.*;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
@@ -59,8 +56,8 @@ public class AuthConfigHandlerTest {
     @Before
     public void containerSetup() throws ComponentLookupException {
         final SecDispatcher secDispatcher = new MockSecDispatcher().getMockInstance();
-        new NonStrictExpectations() {{
-            container.lookup(SecDispatcher.ROLE, "maven"); result = secDispatcher;
+        new Expectations() {{
+            container.lookup(SecDispatcher.ROLE, "maven"); minTimes = 0; result = secDispatcher;
 
         }};
         factory = new AuthConfigFactory(container);
@@ -303,29 +300,30 @@ public class AuthConfigHandlerTest {
 
 
     private void setupServers() {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             List<Server> servers = new ArrayList<>();
-            String data[] = {
-                    "test.org", "fabric8io", "secret2", "fabric8io@redhat.com",
-                    "test.org/roland", "roland", "secret", "roland@jolokia.org",
-                    "docker.io", "tanja", "doublesecret", "tanja@jolokia.org",
-                    "another.repo.org/joe", "joe", "3secret", "joe@foobar.com"
-            };
-            for (int i = 0; i < data.length; i += 4) {
-                Server server = new Server();
-                server.setId(data[i]);
-                server.setUsername(data[i+1]);
-                server.setPassword(data[i+2]);
-                Xpp3Dom dom = new Xpp3Dom("configuration");
-                Xpp3Dom email = new Xpp3Dom("email");
-                email.setValue(data[i+3]);
-                dom.addChild(email);
-                server.setConfiguration(dom);
-                servers.add(server);
-            }
+
+            servers.add(create("test.org", "fabric8io", "secret2", "fabric8io@redhat.com"));
+            servers.add(create("test.org/roland", "roland", "secret", "roland@jolokia.org"));
+            servers.add(create("docker.io", "tanja", "doublesecret", "tanja@jolokia.org"));
+            servers.add(create("another.repo.org/joe", "joe", "3secret", "joe@foobar.com"));
             settings.getServers();
             result = servers;
-        }};
+        }
+
+            private Server create(String id, String user, String password, String email) {
+                Server server = new Server();
+                server.setId(id);
+                server.setUsername(user);
+                server.setPassword(password);
+                Xpp3Dom dom = new Xpp3Dom("configuration");
+                Xpp3Dom emailD = new Xpp3Dom("email");
+                emailD.setValue(email);
+                dom.addChild(emailD);
+                server.setConfiguration(dom);
+                return server;
+            }
+        };
     }
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {

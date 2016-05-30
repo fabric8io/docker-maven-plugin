@@ -63,7 +63,7 @@ public class RunServiceTest {
          * it didn't seem worth the effort to build a separate test to verify the json and then mock/verify all the calls here
          */
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             queryService.getContainerName("redisContainer1"); result = "db1";
             queryService.getContainerName("redisContainer2"); result = "db2";
             queryService.getContainerName("parentContainer"); result = "parentContainer";
