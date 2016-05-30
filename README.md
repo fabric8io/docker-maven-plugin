@@ -5,6 +5,7 @@
 [![Circle CI](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration.svg?style=shield)](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/integration)
 [![Coverage](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:docker-maven-plugin/coverage.svg)](https://nemo.sonarqube.org/overview?id=io.fabric8%3Adocker-maven-plugin)
 [![Technical Debt](https://img.shields.io/sonar/https/nemo.sonarqube.org/io.fabric8:docker-maven-plugin/tech_debt.svg)](https://nemo.sonarqube.org/overview?id=io.fabric8%3Adocker-maven-plugin)
+[![Dependency Status](https://www.versioneye.com/java/io.fabric8:docker-maven-plugin/badge?style=flat)](https://www.versioneye.com/java/io.fabric8:docker-maven-plugin/)
 
 This is a Maven plugin for building Docker images and managing containers for integration tests.
 It works with Maven 3.0.5 and Docker 1.6.0 or later.
