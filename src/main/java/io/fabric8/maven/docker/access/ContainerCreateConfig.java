@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.access;
 import java.io.*;
 import java.util.*;
 
+import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import io.fabric8.maven.docker.config.Arguments;
 import org.json.JSONArray;
@@ -137,13 +138,14 @@ public class ContainerCreateConfig {
     }
 
     private String extractContainerPath(String volume) {
-        if (volume.contains(":")) {
-            String[] parts = volume.split(":");
+        String path  = EnvUtil.fixupPath(volume);
+        if (path.contains(":")) {
+            String[] parts = path.split(":");
             if (parts.length > 1) {
-                return parts[parts.length - 1];
+                return parts[1];
             }
         }
-        return volume;
+        return path;
     }
 
     private void addEnvironment(Properties envProps) {

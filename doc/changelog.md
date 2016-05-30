@@ -1,5 +1,9 @@
 # ChangeLog
 
+* **0.15-SNAPSHOT**
+  - Update dependencies: Apache HttpClient 4.5.2, JMockit 1.23, ...
+  - Fix read-only bindings (#462) 
+  
 * **0.15.3** (2016-05-27)
   - Add duration information when pulling, building and pushing images ([#313](https://github.com/fabric8io/docker-maven-plugin/issues/313))
   - Fixed logging to always use format strings ([#457](https://github.com/fabric8io/docker-maven-plugin/issues/457))

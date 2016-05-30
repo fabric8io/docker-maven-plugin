@@ -60,7 +60,8 @@ public class ContainerCreateConfigTest {
     public void testBind() {
         String[] testData = new String[] {
             "c:\\this\\is\\my\\path:/data", "/data",
-            "/home/user:/user", "/user"};
+            "/home/user:/user", "/user",
+            "c:\\this\\too:/data:ro", "/data"};
         for (int i = 0; i < testData.length; i += 2) {
             ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
             cc.binds(Arrays.asList(testData[i]));

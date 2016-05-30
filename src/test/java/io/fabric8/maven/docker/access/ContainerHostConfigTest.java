@@ -8,6 +8,7 @@ import io.fabric8.maven.docker.config.LogConfiguration;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.experimental.theories.DataPoints;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONParser;
 
@@ -38,13 +39,19 @@ public class ContainerHostConfigTest {
 
     @Test
     public void testBinds() throws Exception {
-        ContainerHostConfig hc = new ContainerHostConfig();
-        JSONObject result = (JSONObject) hc.binds(Arrays.asList("c:\\Users\\roland\\sample:/sample")).toJsonObject();
-        JSONObject expected = new JSONObject();
-        JSONArray binds = new JSONArray();
-        binds.put("/c/Users/roland/sample:/sample");
-        expected.put("Binds",binds);
-        JSONAssert.assertEquals(expected,result,false);
+        String[] data = {
+            "c:\\Users\\roland\\sample:/sample", "/c/Users/roland/sample:/sample",
+            "M:\\Users\\roland\\sample:/sample:ro", "/m/Users/roland/sample:/sample:ro"
+        };
+        for (int i = 0; i < data.length; i+=2) {
+            ContainerHostConfig hc = new ContainerHostConfig();
+            JSONObject result = (JSONObject) hc.binds(Arrays.asList(data[i])).toJsonObject();
+            JSONObject expected = new JSONObject();
+            JSONArray binds = new JSONArray();
+            binds.put(data[i+1]);
+            expected.put("Binds",binds);
+            JSONAssert.assertEquals(expected,result,false);
+        }
     }
 
 

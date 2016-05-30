@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.util.EnvUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,10 +22,9 @@ public class ContainerHostConfig {
             JSONArray binds = new JSONArray();
 
             for (String volume : bind) {
+                volume = EnvUtil.fixupPath(volume);
+
                 if (volume.contains(":")) {
-                    // Hack-fix for mounting on Windows where the ${projectDir} variable and other
-                    // contain backslashes and what not. Related to #188
-                    volume = volume.replace("\\", "/").replaceAll("^(?i:C:)", "/c");
                     binds.put(volume);
                 }
             }
