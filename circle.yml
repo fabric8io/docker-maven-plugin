@@ -6,6 +6,10 @@ branches:
   only:
     - master
 
+# Dependency resolution happens during `mvn install`. Seem to be broken on some deps
+dependencies:
+  override:
+
 general:
   branches:
     ignore:
