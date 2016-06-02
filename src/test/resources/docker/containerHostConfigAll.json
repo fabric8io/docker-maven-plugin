@@ -2,6 +2,7 @@
     "Binds": [ "/host_tmp:/container_tmp" ],
     "Links": [ "db1:db1", "db2:db2" ],
     "PortBindings": { "22/tcp": [ { "HostIp" : "0.0.0.0", "HostPort": "11022" }] },
+    "ShmSize": 1024,
     "Privileged":true,
     "Dns": ["8.8.8.8"],
     "DnsSearch": ["domain.com"],
