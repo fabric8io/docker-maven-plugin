@@ -72,6 +72,7 @@ public enum ConfigKey {
     POST_START("wait.exec.postStart"),
     PRE_STOP("wait.exec.preStop"),
     PRIVILEGED,
+    SHMSIZE,
     REGISTRY,
     RESTART_POLICY_NAME("restartPolicy.name"),
     RESTART_POLICY_RETRY("restartPolicy.retry"),

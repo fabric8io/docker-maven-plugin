@@ -106,6 +106,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .namingStrategy(withPrefix(prefix, NAMING_STRATEGY, properties))
                 .portPropertyFile(withPrefix(prefix, PORT_PROPERTY_FILE, properties))
                 .ports(listWithPrefix(prefix, PORTS, properties))
+                .shmSize(longWithPrefix(prefix, SHMSIZE, properties))
                 .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
                 .restartPolicy(extractRestartPolicy(prefix, properties))
                 .user(withPrefix(prefix, USER, properties))
