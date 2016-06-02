@@ -2,51 +2,39 @@ package io.fabric8.maven.docker.config;
 
 import java.util.List;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
  * @author roland
  * @since 12.10.14
  */
 public class WaitConfiguration {
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private int time;
 
     /**
-     * @parameter
-     * @deprecated Use <http><url></url></http> instead
+     * @deprecated Use &lt;http&gt;&lturl&gt;&lt;/url&gt;&lt;/http&gt; instead
      */
+    @Parameter
     private String url;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private HttpConfiguration http;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private ExecConfiguration exec;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private TcpConfiguration tcp;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String log;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private int shutdown;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private int kill;
 
     public WaitConfiguration() {}
@@ -173,9 +161,10 @@ public class WaitConfiguration {
     }
 
     public static class ExecConfiguration {
-        /** @parameter */
+        @Parameter
         private String postStart;
-        /** @parameter */
+
+        @Parameter
         private String preStop;
 
         public ExecConfiguration() {}
@@ -196,13 +185,13 @@ public class WaitConfiguration {
 
     public static class HttpConfiguration {
 
-        /** @parameter */
+        @Parameter
         private String url;
 
-        /** @parameter */
+        @Parameter
         private String method;
 
-        /** @parameter */
+        @Parameter
         private String status;
 
         public HttpConfiguration() {}
@@ -227,8 +216,10 @@ public class WaitConfiguration {
 
     public static class TcpConfiguration
     {
+        @Parameter
         private String host;
 
+        @Parameter
         private List<Integer> ports;
 
         public TcpConfiguration() {};

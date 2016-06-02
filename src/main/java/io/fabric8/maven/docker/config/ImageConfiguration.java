@@ -5,6 +5,7 @@ import java.util.*;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -12,40 +13,25 @@ import io.fabric8.maven.docker.util.StartOrderResolver;
  */
 public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
-    /**
-     * @parameter
-     * @required
-     */
+    @Parameter(required = true)
     private String name;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String alias;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private RunImageConfiguration run;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private BuildImageConfiguration build;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private WatchImageConfiguration watch;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private Map<String,String> external;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String registry;
     
     // Used for injection

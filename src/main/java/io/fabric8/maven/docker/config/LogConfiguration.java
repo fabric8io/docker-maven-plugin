@@ -2,6 +2,8 @@ package io.fabric8.maven.docker.config;
 
 import java.util.Map;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
  * @author roland
  * @since 12.10.14
@@ -10,22 +12,22 @@ public class LogConfiguration {
 
     public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null, null);
 
-    /** @parameter default-value="true" */
+    @Parameter(defaultValue = "true")
     private boolean enabled = true;
 
-    /** @parameter */
+    @Parameter
     private String prefix;
 
-    /** @parameter */
+    @Parameter
     private String date;
 
-    /** @parameter */
+    @Parameter
     private String color;
 
-    /** @parameter */
+    @Parameter
     private String file;
 
-    /** @parameter */
+    @Parameter
     private LogDriver driver;
 
     public LogConfiguration() {}

@@ -1,13 +1,16 @@
 package io.fabric8.maven.docker.config;
 
 import io.fabric8.maven.docker.util.EnvUtil;
+import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.*;
 
 public class Arguments {
 
+    @Parameter
     private String shell;
 
+    @Parameter
     private List<String> exec;
 
     /**

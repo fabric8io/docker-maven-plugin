@@ -55,6 +55,8 @@ public class SourceMojo extends  AbstractBuildSupportMojo {
      *        configured which is use as part of the classifier.
      *     </li>
      * </ul>
+     *
+     * Use this ...
      */
     @Parameter
     private SourceMode sourceMode = SourceMode.first;

@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 
 /**
  * @author roland
@@ -12,102 +14,104 @@ import java.util.Map;
 public class RunImageConfiguration {
 
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
-    
-    // Environment variables to set when starting the container. key: variable name, value: env value
-    /** @parameter */
+
+    /**
+     * Environment variables to set when starting the container. key: variable name, value: env value
+     */
+    @Parameter
     private Map<String, String> env;
 
-    /** @parameter */
+    @Parameter
     private Map<String,String> labels;
 
     // Path to a property file holding environment variables
-    /** @parameter */
+    @Parameter
     private String envPropertyFile;
 
     // Command to execute in container
-    /** @parameter */
+    @Parameter
     private Arguments cmd;
 
     // container domain name
-    /** @parameter */
+    @Parameter
     private String domainname;
 
     // container entry point
-    /** @parameter */
+    @Parameter
     private Arguments entrypoint;
 
     // container hostname
-    /** @parameter */
+    @Parameter
     private String hostname;
 
     // container user
-    /** @parameter */
+    @Parameter
     private String user;
 
     // working directory
-    /** @parameter */
+    @Parameter
     private String workingDir;
 
     // memory in bytes
-    /** @parameter */
+    @Parameter
     private Long memory;
 
     // total memory (swap + ram) in bytes, -1 to disable
-    /** @parameter */
+    @Parameter
     private Long memorySwap;
 
     // Path to a file where the dynamically mapped properties are written to
-    /** @parameter */
+    @Parameter
     private String portPropertyFile;
 
-    /** @parameter */
+    @Parameter
     private String net;
 
-    /** @parameter */
+    @Parameter
     private List<String> dns;
 
-    /** @parameter */
+    @Parameter
     private List<String> dnsSearch;
 
-    /** @parameter */
+    @Parameter
     private List<String> capAdd;
 
-    /** @parameter */
+    @Parameter
     private List<String> capDrop;
 
-    /** @parameter */
+    @Parameter
     private Boolean privileged;
 
-    /** @parameter */
+    @Parameter
     private List<String> extraHosts;
 
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
-    /** @parameter */
+    @Parameter
     private List<String> ports;
 
-    /** @parameter */
+    @Parameter
     private NamingStrategy namingStrategy;
 
     // Mount volumes from the given image's started containers
-    /** @parameter */
+    @Parameter
     private VolumeConfiguration volumes;
 
     // Links to other container started
-    /** @parameter */
+    @Parameter
     private List<String> links;
 
     // Configuration for how to wait during startup of the container
-    /** @parameter */
+    @Parameter
     private WaitConfiguration wait;
 
-    /** @parameter */
+    @Parameter
     private LogConfiguration log;
     
-    /** @parameter */
+    @Parameter
     private RestartPolicy restartPolicy;
 
-    /** @parameter */
+    @Parameter
     private boolean skip = false;
     
     public RunImageConfiguration() { }

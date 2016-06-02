@@ -17,6 +17,8 @@ package io.fabric8.maven.docker.config;/*
 
 import java.util.*;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
  * Run configuration for volumes.
  *
@@ -27,17 +29,15 @@ public class VolumeConfiguration {
 
     /**
      * List of images names from where volumes are mounted
-     *
-     * @parameter
      */
+    @Parameter
     private List<String> from;
 
     /**
      * List of bind parameters for binding/mounting host directories
      * into the container
-     *
-     * @parameter
      */
+    @Parameter
     private List<String> bind;
 
     /**

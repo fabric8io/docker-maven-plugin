@@ -1,28 +1,22 @@
 package io.fabric8.maven.docker.config;
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
  * Configuration for watching on image changes
  */
 public class WatchImageConfiguration {
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private int interval = 5000; // default
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private WatchMode mode;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String postGoal;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String postExec;
 
     public WatchImageConfiguration() {};

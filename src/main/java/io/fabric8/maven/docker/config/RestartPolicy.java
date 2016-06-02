@@ -15,6 +15,8 @@ package io.fabric8.maven.docker.config;/*
  * limitations under the License.
  */
 
+import org.apache.maven.plugins.annotations.Parameter;
+
 /**
 * @author roland
 * @since 08/12/14
@@ -23,14 +25,10 @@ public class RestartPolicy {
 
     public static final RestartPolicy DEFAULT = new RestartPolicy();
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String name;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private int retry;
 
     public RestartPolicy() {};
