@@ -173,11 +173,6 @@
       <version>1.22</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.jolokia</groupId>
-      <artifactId>poblano</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
 
     <!-- =============================================================================== -->
 
@@ -227,6 +222,7 @@
           <source>1.7</source>
           <target>1.7</target>
           <compilerArgument>-Xlint:deprecation</compilerArgument>
+          <showWarnings>true</showWarnings>
         </configuration>
       </plugin>
 

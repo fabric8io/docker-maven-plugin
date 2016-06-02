@@ -152,7 +152,7 @@ public final class UrlBuilder {
 
     // Entry point for builder
     private Builder u(String format, String ... args) {
-        return new Builder(createUrl(String.format(format,encodeArgs(args))));
+        return new Builder(createUrl(String.format(format, (Object[]) encodeArgs(args))));
     }
 
     private String[] encodeArgs(String[] args) {
