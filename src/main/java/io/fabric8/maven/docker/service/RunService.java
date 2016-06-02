@@ -229,6 +229,7 @@ public class RunService {
                     .domainname(runConfig.getDomainname())
                     .user(runConfig.getUser())
                     .workingDir(runConfig.getWorkingDir())
+                    .shmSize(runConfig.getShmSize())
                     .memory(runConfig.getMemory())
                     .memorySwap(runConfig.getMemorySwap())
                     .entrypoint(runConfig.getEntrypoint())

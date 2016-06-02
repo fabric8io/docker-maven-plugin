@@ -2,6 +2,7 @@
   "Env": ["foo=bar"],
   "User": "user",
   "Entrypoint": [ "entrypoint" ],
+  "ShmSize": 1024,
   "Memory": 1,
   "MemorySwap": 1,
   "Domainname": "domain.com",

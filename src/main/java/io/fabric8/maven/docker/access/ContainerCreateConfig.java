@@ -98,6 +98,10 @@ public class ContainerCreateConfig {
         return add("Hostname", hostname);
     }
 
+    public ContainerCreateConfig shmSize(Long shmSize) {
+        return add("ShmSize", shmSize);
+    }
+
     public ContainerCreateConfig memory(Long memory) {
         return add("Memory", memory);
     }

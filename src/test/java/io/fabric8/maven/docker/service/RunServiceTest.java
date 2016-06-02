@@ -247,6 +247,7 @@ public class RunServiceTest {
                         .hostname("hostname")
                         .domainname("domain.com")
                         .user("user")
+                        .shmSize(1024L)
                         .memory(1L)
                         .memorySwap(1L)
                         .env(env())
