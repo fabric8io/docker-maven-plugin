@@ -2,8 +2,8 @@
 
 * **0.15.4** (2016-06-03)
   - Update dependencies: Apache HttpClient 4.5.2, JMockit 1.23, ...
-  - Fix read-only bindings (#462) 
-  - Add 'shmSize' as option to the build config (#463)
+  - Fix read-only bindings ([#462](https://github.com/fabric8io/docker-maven-plugin/issues/462)) 
+  - Add 'shmSize' as option to the build config ([#463](https://github.com/fabric8io/docker-maven-plugin/issues/463))
   - Fixed issue with `memory` and `
     
 * **0.15.3** (2016-05-27)
