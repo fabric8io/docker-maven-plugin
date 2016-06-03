@@ -229,8 +229,6 @@ public class RunService {
                     .domainname(runConfig.getDomainname())
                     .user(runConfig.getUser())
                     .workingDir(runConfig.getWorkingDir())
-                    .memory(runConfig.getMemory())
-                    .memorySwap(runConfig.getMemorySwap())
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
@@ -275,6 +273,8 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
+                .memory(runConfig.getMemory())
+                .memorySwap(runConfig.getMemorySwap())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
                 .logConfig(runConfig.getLogConfiguration());
 

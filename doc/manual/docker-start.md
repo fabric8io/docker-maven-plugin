@@ -57,7 +57,7 @@ The `<run>` configuration section knows the following sub elements:
   section. 
 * **memory** memory limit in bytes
 * **memorySwap** total memory usage (memory + swap); use -1 to disable swap.
-* **shmSize** size of /dev/shm in bytes.
+* **shmSize** size of `/dev/shm` in bytes.
 * **namingStrategy** sets the name of the container
   - `none` : uses randomly assigned names from docker (default)
   - `alias` : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists

@@ -41,6 +41,14 @@ public class ContainerHostConfig {
         return addAsArray("CapDrop", capDrop);
     }
 
+    public ContainerHostConfig memory(Long memory) {
+        return add("Memory", memory);
+    }
+
+    public ContainerHostConfig memorySwap(Long memorySwap) {
+        return add("MemorySwap", memorySwap);
+    }
+
     public ContainerHostConfig dns(List<String> dns) {
         return addAsArray("Dns", dns);
     }

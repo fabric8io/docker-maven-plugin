@@ -99,14 +99,6 @@ public class ContainerCreateConfig {
         return add("Hostname", hostname);
     }
 
-    public ContainerCreateConfig memory(Long memory) {
-        return add("Memory", memory);
-    }
-
-    public ContainerCreateConfig memorySwap(Long memorySwap) {
-        return add("MemorySwap", memorySwap);
-    }
-
     public ContainerCreateConfig user(String user) {
         return add("User", user);
     }

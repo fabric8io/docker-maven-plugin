@@ -2,8 +2,6 @@
   "Env": ["foo=bar"],
   "User": "user",
   "Entrypoint": [ "entrypoint" ],
-  "Memory": 1,
-  "MemorySwap": 1,
   "Domainname": "domain.com",
   "ExposedPorts": {"22/tcp": {}},
   "Image": "base",
@@ -20,6 +18,8 @@
     "ShmSize": 1024,
     "Privileged": true,
     "CapAdd": ["NET_ADMIN"],
+    "Memory": 1,
+    "MemorySwap": 1,
     "Binds": ["/host_tmp:/container_tmp"],
     "ExtraHosts": ["localhost:127.0.0.1"],
     "VolumesFrom": [
