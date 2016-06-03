@@ -17,6 +17,7 @@
     "CapDrop": ["MKNOD"],
     "Links": ["db1:db1", "db2:db2"],
     "DnsSearch": ["domain.com"],
+    "ShmSize": 1024,
     "Privileged": true,
     "CapAdd": ["NET_ADMIN"],
     "Binds": ["/host_tmp:/container_tmp"],

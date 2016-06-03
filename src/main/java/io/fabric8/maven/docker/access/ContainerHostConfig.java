@@ -93,6 +93,10 @@ public class ContainerHostConfig {
         return add("Privileged", privileged);
     }
 
+    public ContainerHostConfig shmSize(Long shmSize) {
+        return add("ShmSize", shmSize);
+    }
+
 
     public ContainerHostConfig restartPolicy(String name, int retry) {
         if (name != null) {

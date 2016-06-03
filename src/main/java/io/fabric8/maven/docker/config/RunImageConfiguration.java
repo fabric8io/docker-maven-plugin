@@ -52,6 +52,10 @@ public class RunImageConfiguration {
     @Parameter
     private String workingDir;
 
+    // Size of /dev/shm in bytes
+    /** @parameter */
+    private Long shmSize;
+
     // memory in bytes
     @Parameter
     private Long memory;
@@ -159,6 +163,10 @@ public class RunImageConfiguration {
 
     public String getUser() {
         return user;
+    }
+
+    public Long getShmSize() {
+        return shmSize;
     }
 
     public Long getMemory() {
@@ -311,6 +319,11 @@ public class RunImageConfiguration {
 
         public Builder user(String user) {
             config.user = user;
+            return this;
+        }
+
+        public Builder shmSize(Long shmSize) {
+            config.shmSize = shmSize;
             return this;
         }
 

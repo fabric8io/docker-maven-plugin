@@ -270,6 +270,7 @@ public class RunService {
                 .links(links)
                 .portBindings(mappedPorts)
                 .privileged(runConfig.getPrivileged())
+                .shmSize(runConfig.getShmSize())
                 .dns(runConfig.getDns())
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
