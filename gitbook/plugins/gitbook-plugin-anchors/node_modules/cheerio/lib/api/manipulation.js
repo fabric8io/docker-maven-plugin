@@ -6,6 +6,7 @@ var _ = require('lodash'),
     utils = require('../utils'),
     domEach = utils.domEach,
     cloneDom = utils.cloneDom,
+    isHtml = utils.isHtml,
     slice = Array.prototype.slice;
 
 // Create an array of nodes, recursing into arrays and parsing strings if
@@ -101,6 +102,26 @@ var uniqueSplice = function(array, spliceIdx, spliceCount, newElems, parent) {
   return array.splice.apply(array, spliceArgs);
 };
 
+exports.appendTo = function(target) {
+  if (!target.cheerio) {
+    target = this.constructor.call(this.constructor, target, null, this._originalRoot);
+  }
+
+  target.append(this);
+
+  return this;
+};
+
+exports.prependTo = function(target) {
+  if (!target.cheerio) {
+    target = this.constructor.call(this.constructor, target, null, this._originalRoot);
+  }
+
+  target.prepend(this);
+
+  return this;
+};
+
 exports.append = _insert(function(dom, children, parent) {
   uniqueSplice(children, children.length, 0, dom, parent);
 });
@@ -108,6 +129,40 @@ exports.append = _insert(function(dom, children, parent) {
 exports.prepend = _insert(function(dom, children, parent) {
   uniqueSplice(children, 0, 0, dom, parent);
 });
+
+exports.wrap = function(wrapper) {
+  var wrapperFn = typeof wrapper === 'function' && wrapper,
+      lastIdx = this.length - 1;
+
+  _.forEach(this, _.bind(function(el, i) {
+    var parent = el.parent || el.root,
+        siblings = parent.children,
+        dom, index;
+
+    if (!parent) {
+      return;
+    }
+
+    if (wrapperFn) {
+      wrapper = wrapperFn.call(el, i);
+    }
+
+    if (typeof wrapper === 'string' && !isHtml(wrapper)) {
+      wrapper = this.parents().last().find(wrapper).clone();
+    }
+
+    dom = this._makeDomArray(wrapper, i < lastIdx).slice(0, 1);
+    index = siblings.indexOf(el);
+
+    updateDOM([el], dom[0]);
+    // The previous operation removed the current element from the `siblings`
+    // array, so the `dom` array can be inserted without removing any
+    // additional elements.
+    uniqueSplice(siblings, index, 0, dom, parent);
+  }, this));
+
+  return this;
+};
 
 exports.after = function() {
   var elems = slice.call(arguments),
@@ -316,7 +371,7 @@ exports.html = function(str) {
       el.next = el.prev = el.parent = null;
     });
 
-    var content = str.cheerio ? str.clone().get() : evaluate(str, opts);
+    var content = str.cheerio ? str.clone().get() : evaluate('' + str, opts);
 
     updateDOM(content, el);
   });
@@ -347,7 +402,7 @@ exports.text = function(str) {
     });
 
     var elem = {
-      data: str,
+      data: '' + str,
       type: 'text',
       parent: el,
       prev: null,

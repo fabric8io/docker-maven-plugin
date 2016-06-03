@@ -3,6 +3,7 @@
 */
 
 var parse = require('./parse'),
+    isHtml = require('./utils').isHtml,
     _ = require('lodash');
 
 /*
@@ -16,12 +17,6 @@ var api = [
   require('./api/css'),
   require('./api/forms')
 ];
-
-/*
- * A simple way to check for HTML strings or ID strings
- */
-
-var quickExpr = /^(?:[^#<]*(<[\w\W]+>)[^>]*$|#([\w\-]*)$)/;
 
 /*
  * Instance of cheerio
@@ -49,9 +44,9 @@ var Cheerio = module.exports = function(selector, context, root, options) {
 
   // $([dom])
   if (Array.isArray(selector)) {
-    _.forEach(selector, function(elem, idx) {
+    _.forEach(selector, _.bind(function(elem, idx) {
       this[idx] = elem;
-    }, this);
+    }, this));
     this.length = selector.length;
     return this;
   }
@@ -117,18 +112,6 @@ Cheerio.prototype.length = 0;
 Cheerio.prototype.splice = Array.prototype.splice;
 
 /*
- * Check if string is HTML
- */
-var isHtml = function(str) {
-  // Faster than running regex, if str starts with `<` and ends with `>`, assume it's HTML
-  if (str.charAt(0) === '<' && str.charAt(str.length - 1) === '>' && str.length >= 3) return true;
-
-  // Run the regex
-  var match = quickExpr.exec(str);
-  return !!(match && match[1]);
-};
-
-/*
  * Make a cheerio object
  *
  * @api private
@@ -142,8 +125,6 @@ Cheerio.prototype._make = function(dom, context) {
 
 /**
  * Turn a cheerio object into an array
- *
- * @deprecated
  */
 
 Cheerio.prototype.toArray = function() {

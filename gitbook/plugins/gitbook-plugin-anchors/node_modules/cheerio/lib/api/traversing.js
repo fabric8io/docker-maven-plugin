@@ -29,7 +29,9 @@ exports.find = function(selectorOrHaystack) {
     }, this));
   }
 
-  return this._make(select(selectorOrHaystack, elems, this.options));
+  var options = {__proto__: this.options, context: this.toArray()};
+
+  return this._make(select(selectorOrHaystack, elems, options));
 };
 
 // Get the parent of each element in the current set of matched elements,
@@ -259,8 +261,7 @@ exports.siblings = function(selector) {
 
   var elems = _.filter(
     parent ? parent.children() : this.siblingsAndMe(),
-    function(elem) { return isTag(elem) && !this.is(elem); },
-    this
+    _.bind(function(elem) { return isTag(elem) && !this.is(elem); }, this)
   );
 
   if (selector !== undefined) {

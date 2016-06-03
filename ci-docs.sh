@@ -5,8 +5,8 @@ echo ===========================================
 cd doc/manual && \
 npm install -g gitbook-cli && \
 mkdir -p _book && \
-gitbook install .  && \
-gitbook build . && \
+gitbook -v 2.1.0 install .  && \
+gitbook -v 2.1.0 build . && \
 git clone -b gh-pages git@github.com:fabric8io/docker-maven-plugin.git gh-pages && \
 cp -rv _book/* gh-pages/ && \
 cd gh-pages && \

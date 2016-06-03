@@ -23,8 +23,11 @@ module.exports = {
 	},
 
 	//traversal
-	descendant: function(next){
+	descendant: function(next, rule, options, context, acceptSelf){
 		return function descendant(elem){
+
+			if (acceptSelf && next(elem)) return true;
+
 			var found = false;
 
 			while(!found && (elem = getParent(elem))){
