@@ -55,6 +55,9 @@ import org.codehaus.plexus.util.StringUtils;
 @Mojo(name = "watch")
 public class WatchMojo extends AbstractBuildSupportMojo {
 
+    /**
+     * Watching mode for rebuilding images
+     */
     @Parameter(property = "docker.watchMode", defaultValue = "both")
     private WatchMode watchMode;
 

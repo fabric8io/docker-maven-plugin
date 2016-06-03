@@ -1,9 +1,12 @@
 package io.fabric8.maven.docker;
 
+import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
+import java.util.List;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -84,7 +87,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.apiVersion")
     private String apiVersion;
 
-    // URL to docker daemon
+    /**
+     * URL to docker daemon
+     */
     @Parameter(property = "docker.host")
     private String dockerHost;
 
@@ -111,9 +116,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.skip", defaultValue = "false")
     private boolean skip;
 
-    // Whether to restrict operation to a single image. This can be either
-    // the image or an alias name. It can also be comma separated list.
-    // This parameter is typically set via the command line.
+    /**
+     * Whether to restrict operation to a single image. This can be either
+     * the image or an alias name. It can also be comma separated list.
+     * This parameter is typically set via the command line.
+     */
     @Parameter(property = "docker.image")
     private String image;
 
@@ -133,7 +140,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     Map authConfig;
 
-    // Image configurations configured directly.
+    /**
+     * Image configurations configured directly.
+     */
     @Parameter
     private List<ImageConfiguration> images;
 

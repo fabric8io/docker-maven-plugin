@@ -227,8 +227,14 @@ public class RunImageConfiguration {
 
     // Naming scheme for how to name container
     public enum NamingStrategy {
-        none,  // No extra naming
-        alias  // Use the alias as defined in the configuration
+        /**
+         * No extra naming
+         */
+        none,
+        /**
+         * Use the alias as defined in the configuration
+         */
+        alias
     }
 
     public NamingStrategy getNamingStrategy() {
