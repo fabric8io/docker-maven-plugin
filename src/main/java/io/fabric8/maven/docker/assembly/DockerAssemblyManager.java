@@ -43,7 +43,6 @@ public class DockerAssemblyManager {
     // Assembly name used also as build directory within outputBuildDir
     public static final String ASSEMBLY_NAME = "maven";
     public static final String DOCKER_IGNORE = ".maven-dockerignore";
-    public static final String DOCKER_INCLUDE = ".maven-dockerinclude";
 
     @Requirement
     private AssemblyArchiver assemblyArchiver;
@@ -203,11 +202,6 @@ public class DockerAssemblyManager {
             ArrayList<String> excludes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
             excludes.add(DOCKER_IGNORE);
             fileSet.setExcludes(excludes.toArray(new String[excludes.size()]));
-        }
-        File dockerInclude = new File(directory, DOCKER_INCLUDE);
-        if (dockerInclude.exists()) {
-            ArrayList<String> includes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerInclude)));
-            fileSet.setIncludes(includes.toArray(new String[includes.size()]));
         }
     }
 
