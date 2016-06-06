@@ -43,14 +43,21 @@ path by prefixing with `${project.basedir}`.
 Any additional files located in the `dockerFileDir` directory will
 also be added to the build context as well as any files specified by
 an assembly. However, you still need to insert `ADD` or `COPY`
-directives yourself into the Dockerfile. If this directory contains a
-`.maven-dockerignore` file, then it is used for excluding files for
+directives yourself into the Dockerfile.
+
+If this directory contains a `.maven-dockerignore` file, then it is used for excluding files for
 the build. Each line in this file is treated as an
 [FileSet exclude pattern](http://ant.apache.org/manual/Types/fileset.html)
 as used by the [maven-assembly-plugin](http://maven.apache
 .org/plugins/maven-assembly-plugin/). It is similar to `.dockerignore`
 when using Docker but has a slightly different syntax (hence the
 different name).
+
+If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for
+the build. Each line in this file is also treated as an
+[FileSet exclude pattern](http://ant.apache.org/manual/Types/fileset.html)
+as used by the [maven-assembly-plugin](http://maven.apache
+.org/plugins/maven-assembly-plugin/).
 
 Except for the [assembly configuration](#build-assembly) all other
 configuration options are ignored for now. For the future it is
