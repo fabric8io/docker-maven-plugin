@@ -36,7 +36,17 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     
     // Used for injection
     public ImageConfiguration() {}
-   
+
+    public ImageConfiguration(ImageConfiguration that) {
+        this.name = that.name;
+        this.alias = that.alias;
+        this.run = that.run;
+        this.build = that.build;
+        this.watch = that.watch;
+        this.external = that.external;
+        this.registry = that.registry;
+    }
+
     @Override
     public String getName() {
         return name;
@@ -137,7 +147,16 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     // Builder for image configurations
 
     public static class Builder {
-        private ImageConfiguration config = new ImageConfiguration();
+        private final ImageConfiguration config;
+
+        public Builder() {
+            this.config = new ImageConfiguration();
+        }
+
+
+        public Builder(ImageConfiguration that) {
+            this.config = new ImageConfiguration(that);
+        }
 
         public Builder name(String name) {
             config.name = name;
