@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="4.1" data-basepath="." data-revision="Fri Jun 03 2016 13:28:01 GMT+0000 (UTC)">
+    <div class="book" data-level="4.1" data-basepath="." data-revision="Mon Jun 06 2016 09:20:17 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -467,14 +467,19 @@ path by prefixing with <code>${project.basedir}</code>.</p>
 <p>Any additional files located in the <code>dockerFileDir</code> directory will
 also be added to the build context as well as any files specified by
 an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code>
-directives yourself into the Dockerfile. If this directory contains a
-<code>.maven-dockerignore</code> file, then it is used for excluding files for
+directives yourself into the Dockerfile.</p>
+<p>If this directory contains a <code>.maven-dockerignore</code> file, then it is used for excluding files for
 the build. Each line in this file is treated as an
 <a href="http://ant.apache.org/manual/Types/fileset.html" target="_blank">FileSet exclude pattern</a>
 as used by the <a href="http://maven.apache
 .org/plugins/maven-assembly-plugin/" target="_blank">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code>
 when using Docker but has a slightly different syntax (hence the
 different name).</p>
+<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for
+the build. Each line in this file is also treated as an
+<a href="http://ant.apache.org/manual/Types/fileset.html" target="_blank">FileSet exclude pattern</a>
+as used by the <a href="http://maven.apache
+.org/plugins/maven-assembly-plugin/" target="_blank">maven-assembly-plugin</a>.</p>
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other
 configuration options are ignored for now. For the future it is
 planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which
