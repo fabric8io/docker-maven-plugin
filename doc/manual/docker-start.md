@@ -1,29 +1,29 @@
 ### docker:start
 
 Creates and starts docker containers. This goals evaluates
-the configuration's `<run>` section of all given (and enabled images). In order to switch on 
+the configuration's `<run>` section of all given (and enabled images). In order to switch on
 globally the logs **showLogs** can be used as global configuration (i.e. outside of `<images>`).
-If set it will print out all standard output and standard error messages for all containers started. 
-As value the images for which logs should be shown can be given as a comma separated list. This is probably most 
-useful when used from the command line as system property `docker.showLogs`.   
+If set it will print out all standard output and standard error messages for all containers started.
+As value the images for which logs should be shown can be given as a comma separated list. This is probably most
+useful when used from the command line as system property `docker.showLogs`.
 
 Also you can specify `docker.follow` as system property so that the `docker:start` will never return but block until
-CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that 
- you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but 
+CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that
+ you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but
  not removed so that you can make postmortem analysis).
 
 By default container specific properties are exposed as Maven properties. These properties have the format
-`docker.container.`*<alias>*`.`*<prop>* where *alias* is the name of the container (see below) and *<prop>* is one of
-the following container properties:
+`docker.container.`*alias*`.`*prop* where *alias* is the name of the container (see below) and *prop* is one of the following container properties:
 
 * **ip** : The internal IP address of the container.
+* **id** : The container id
 
-For example the Maven property `docker.container.tomcat.ip` would hold the Docker internal IP for a container with 
-an alias "tomcat". You can set the global configuration **exposeContainerInfo** to an empty string to not expose container 
+For example the Maven property `docker.container.tomcat.ip` would hold the Docker internal IP for a container with
+an alias "tomcat". You can set the global configuration **exposeContainerInfo** to an empty string to not expose container
 information that way or to a string for an other prefix than `docker.container`.
 
 #### <run> Configuration
-    
+
 The `<run>` configuration section knows the following sub elements:
 
 * **capAdd** a list of `add` elements to specify kernel parameters to add to
@@ -35,7 +35,7 @@ The `<run>` configuration section knows the following sub elements:
   used. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
 * **domainname**  domain name for the container
 * **dns** list of `host` elements specifying dns servers for the container to use
-* **dnsSearch** list of `host` elements specifying dns search domains 
+* **dnsSearch** list of `host` elements specifying dns search domains
 * **entrypoint** set the entry point for the container. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
@@ -44,17 +44,17 @@ The `<run>` configuration section knows the following sub elements:
   typical maven property format as described in [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
 * **envPropertyFile** can be a path to a property file holding environment variables. If given, the variables
   specified in this property file overrides the environment variables specified in the configuration.
-* **extraHosts** list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. 
-  Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved 
+* **extraHosts** list of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file.
+  Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved
   at container startup.
 * **hostname** desired hostname for the container
 * **links** declares how containers are linked together see
-  description on [Container Linking](#container-linking). 
+  description on [Container Linking](#container-linking).
 * **log** specifies the log configuration for whether and how log
-  messages from the running containers should be printed. This also can configure the 
+  messages from the running containers should be printed. This also can configure the
   [log driver](https://docs.docker.com/engine/admin/logging/overview/) to use. See
   [Log Configuration](#log-configuration) for a detailed description of this configuration
-  section. 
+  section.
 * **memory** memory limit in bytes
 * **memorySwap** total memory usage (memory + swap); use -1 to disable swap.
 * **shmSize** size of `/dev/shm` in bytes.
@@ -66,20 +66,20 @@ The `<run>` configuration section knows the following sub elements:
   - `bridge` : Bridged mode with the default Docker bridge (default)
   - `host` : Share the Docker host network interfaces
   - `container:<alias or name>` : Connect to the network of the specified container
-  - `<custom network>` : Use the specified custom network which must be created before with `docker network create`. 
+  - `<custom network>` : Use the specified custom network which must be created before with `docker network create`.
     Available for Docker 1.9 and newer. For more about the networking options please refer to the [Docker documentation](https://docs.docker.com/engine/userguide/networking/work-with-networks/).
 * **portPropertyFile**, if given, specifies a file into which the
   mapped properties should be written to. The format of this file and
   its purpose are also described in [Port mapping](#port-mapping)
 * **ports** declares how container exposed ports should be
   mapped. This is described below in an extra
-  section [Port mapping](#port-mapping).  
-* **privileged** give container full access to host (`true|false`)   
-* **restartPolicy** specifies the container restart policy, see 
+  section [Port mapping](#port-mapping).
+* **privileged** give container full access to host (`true|false`)
+* **restartPolicy** specifies the container restart policy, see
   [Container Restart Policy](#container-restart-policy)
 * **user** user used inside the container
 * **skip** disable creating and starting of the container. This option is best used together with a configuration option.
-* **volumes** for bind configurtion of host directories and from other containers. See [Volume binding](#volume-binding) 
+* **volumes** for bind configurtion of host directories and from other containers. See [Volume binding](#volume-binding)
   for details.
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [Wait during Startup and Shutdown](#wait-during-startup-and-shutdown) which subelements are
@@ -106,7 +106,7 @@ Example:
   </links>
   <wait>
     <http>
-      <url>http://localhost:${jolokia.port}/jolokia</url>    
+      <url>http://localhost:${jolokia.port}/jolokia</url>
     </http>
     <time>10000</time>
   </wait>
@@ -122,7 +122,7 @@ Example:
 ##### Setting environment variables and labels
 
 When creating a container one or more environment variables can be set
-via configuration with the `env` parameter 
+via configuration with the `env` parameter
 
 ```xml
 <env>
@@ -135,9 +135,9 @@ If you put this configuration into profiles you can easily create
 various test variants with a single image (e.g. by
 switching the JDK or whatever).
 
-It is also possible to set the environment variables from the outside of the plugin's 
+It is also possible to set the environment variables from the outside of the plugin's
 configuration with the parameter `envPropertyFile`. If given, this property file
-is used to set the environment variables where the keys and values specify the environment variable. 
+is used to set the environment variables where the keys and values specify the environment variable.
 Environment variables specified in this file override any environment variables specified in the configuration.
 
 Labels can be set inline the same way as environment variables:
@@ -155,15 +155,15 @@ Labels can be set inline the same way as environment variables:
 The `<ports>` configuration contains a list of port mappings. Each
 mapping has multiple parts, each separate by a colon. This is
 equivalent to the port mapping when using the Docker CLI with option
-`-p`. 
+`-p`.
 
 
 A `port` stanza may take one of the following forms:
 
-* **18080:8080** : A tuple consisting of two numeric values separated by a `:`. This 
-  form will result in an explicit mapping between the docker host and the corresponding 
-  port inside the container. In the above example, port 18080 would be exposed on the 
-  docker host and mapped to port 8080 in the running container. 
+* **18080:8080** : A tuple consisting of two numeric values separated by a `:`. This
+  form will result in an explicit mapping between the docker host and the corresponding
+  port inside the container. In the above example, port 18080 would be exposed on the
+  docker host and mapped to port 8080 in the running container.
 * ***host.port*:80** A tuple consisting of a string and a numeric value separated by a
   `:`. In this form, the string portion of the tuple will correspond
   to a Maven property. If the property is undefined when the `start`
@@ -182,15 +182,15 @@ A `port` stanza may take one of the following forms:
 * **bindTo:*host.port*:80** A tuple consisting of two strings and a numeric value separated
   by a `:`. In this form, `bindTo` is an ip address on the host the container should bind to.
   As a convenience, a hostname pointing to the docker host may also
-  be specified. The container will fail to start if the hostname can not be 
-  resolved.  
+  be specified. The container will fail to start if the hostname can not be
+  resolved.
 * **+host.ip:*host.port*:80** A tuple consisting of two strings and a numeric value separated
   by a `:`. In this form, the host ip of the container will be placed into a Maven property name `host.ip`.
   If docker reports that value to be `0.0.0.0`, the value of `docker.host.address` will
-  be substituted instead. In the event you want to use this form and have the container bind 
-  to a specific hostname/ip address, you can declare a Maven property of the same name (`host.ip` in this example) 
-  containing the value to use. `host:port` works in the same way as described above. 
-  
+  be substituted instead. In the event you want to use this form and have the container bind
+  to a specific hostname/ip address, you can declare a Maven property of the same name (`host.ip` in this example)
+  containing the value to use. `host:port` works in the same way as described above.
+
 The following are examples of valid configuration entries:
 
 ```xml
@@ -202,8 +202,8 @@ The following are examples of valid configuration entries:
 ...
 
 <ports>
-  <port>18080:8080</port> 
-  <port>host.port:80</port> 
+  <port>18080:8080</port>
+  <port>host.port:80</port>
   <port>127.0.0.1:80:80</port>
   <port>localhost:host.port:80</port>
   <port>+container.ip.property:host.port:5678</port>
@@ -214,17 +214,17 @@ The following are examples of valid configuration entries:
 
 Another useful configuration option is `portPropertyFile` which can be used to
 to write out the container's host ip and any dynamic ports that have been
-resolved. The keys of this property file are the property names defined in the 
-port mapping configuration and their values those of the corresponding 
-docker attributes. 
+resolved. The keys of this property file are the property names defined in the
+port mapping configuration and their values those of the corresponding
+docker attributes.
 
-This property file might be useful with tests or with other maven plugins that will be unable 
+This property file might be useful with tests or with other maven plugins that will be unable
 to use the resolved properties because they can only be updated after the container has started
 and plugins resolve their properties in an earlier lifecycle phase.
 
-If you don't need to write out such a property file and thus don't need to preserve the property names, 
-you can use normal maven properties as well. E.g. `${host.var}:${port.var}:8080` instead of 
-`+host.var:port.var:8080`.  
+If you don't need to write out such a property file and thus don't need to preserve the property names,
+you can use normal maven properties as well. E.g. `${host.var}:${port.var}:8080` instead of
+`+host.var:port.var:8080`.
 
 ##### Container linking
 
@@ -245,7 +245,7 @@ Example for linking to a container with name or alias *postgres* :
 ```
 
 This will create the following environment variables, given that the
-postgres image exposes TCP port 5432: 
+postgres image exposes TCP port 5432:
 
 ```
 DB_NAME=/web2/db
@@ -260,10 +260,10 @@ If you wish to link to existing containers not managed by the plugin, you may do
 obtained via `docker ps` in the configuration.
 
 Please note that the link behaviour also depends on the network mode selected. Links as described
-are referred to by Docker as *legacy links* and might vanish in the future. For custom networks no 
-environments variables are set and links create merely network aliases for the linked container. 
+are referred to by Docker as *legacy links* and might vanish in the future. For custom networks no
+environments variables are set and links create merely network aliases for the linked container.
 
-For a more detailed documentation for the new link handling please refer to the [Docker network documentation](https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks) 
+For a more detailed documentation for the new link handling please refer to the [Docker network documentation](https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks)
 
 ##### Volume binding
 
@@ -301,7 +301,7 @@ should even work for boot2docker and docker-machine:
 ````xml
 <volumes>
   <bind>
-    <volume>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}</volume> 
+    <volume>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}</volume>
     <volume>${project.basedir}/data:/data</volume>
   </bind>
 </volumes>
@@ -318,11 +318,11 @@ specified withing a `<restartPolicy>` section with the following sub-elements:
 * **name** restart policy name, choose from:
   * `always` (*v1.15*) always restart
   * `on-failure` (*v1.15*) restart on container non-exit code of zero
-* **retry** if `on-failure` is used, controls max number of attempts to 
+* **retry** if `on-failure` is used, controls max number of attempts to
   restart before giving up.
 
-The behavior to apply when the container exits. The value is an object with a Name 
-property of either "always" to always restart or "on-failure" to restart only when the 
+The behavior to apply when the container exits. The value is an object with a Name
+property of either "always" to always restart or "on-failure" to restart only when the
 container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the
  number of times to retry before giving up. The default is not to restart. (optional)
 
@@ -336,7 +336,7 @@ some condition is met. These conditions can be specified within a
 * **http** specifies an HTTP ping check which periodically polls an URL. It knows the following sub-elements:
   - **url** holds an URL and is mandatory
   - **method** Optional HTTP method to use.
-  - **status** Status code which if returned is considered to be a successful ping. This code can be given either as 
+  - **status** Status code which if returned is considered to be a successful ping. This code can be given either as
     a single number (200) or as a range (200..399). The default is `200..399`
 * **log** is a regular expression which is applied against the log
   output of an container and blocks until the pattern is matched.
@@ -352,10 +352,10 @@ some condition is met. These conditions can be specified within a
 * **tcp** specifies TCP port check which periodically polls given tcp ports. It knows the following sub-elements:
   - **host** is the hostname or the IP address. It defaults to `${docker.host.address}`.
   - **ports** is a list of TCP ports to check.
-  
+
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
-conditions. The build will abort if you wait on an url or log output and reach the timeout. 
+conditions. The build will abort if you wait on an url or log output and reach the timeout.
 If only a `<time>` is specified, the build will wait that amount of milliseconds and then continues.
 
 Example:
@@ -382,7 +382,7 @@ Example:
      </ports>
   </tcp>
 </wait>
-```` 
+````
 
 This setup will wait for the given URL to be reachable but ten seconds
 at most. Additionally, it will be waited for the TCP ports 3306 and 9999.
@@ -390,12 +390,12 @@ Also, when stopping the container after an integration tests, the
 build wait for 500 ms before it tries to remove the container (if not `keepContainer`
 or `keepRunning` is used). You can use maven properties in each
 condition, too. In the example, the `${host.port}` property is
-probably set before within a port mapping section. 
- 
-The property `${docker.host.address}` is set implicitly to the address of the Docker host. This host will 
+probably set before within a port mapping section.
+
+The property `${docker.host.address}` is set implicitly to the address of the Docker host. This host will
 be taken from the `docker.host` configuration if HTTP or HTTPS is used. If a Unix socket is used for communication
-with the docker daemon, then `localhost` is assumed. You can override this property always by setting this Maven 
-property explicitly. 
+with the docker daemon, then `localhost` is assumed. You can override this property always by setting this Maven
+property explicitly.
 
 ##### Log configuration
 
@@ -410,13 +410,13 @@ configuring the log output:
   default if a `<log>` section is given.
 * **prefix** Prefix to use for the log output in order to identify the
   container. By default the image `alias` is used or alternatively the
-  container `id`. 
+  container `id`.
 * **date** Dateformat to use for log timestamps. If `<date>` is not
   given no timestamp will be shown. The date specification can be
   either a constant or a date format. The recognized constants are:
   * `NONE` Switch off timestamp output. Useful on the command line
     (`-Ddocker.logDate=NONE`) for switching off otherwise enabled
-    logging. 
+    logging.
   * `DEFAULT` A default format in the form `HH:mm:ss.SSS`
   * `MEDIUM` Joda medium date time format
   * `SHORT` Joda short date time format
@@ -424,17 +424,17 @@ configuring the log output:
   * `ISO8601` Full ISO-8601 formatted date time with milli seconds
   As an alternative a date-time format string as recognized by
   [JodaTime](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html)
-  is possible. In order to set a consistent date format 
+  is possible. In order to set a consistent date format
   the global configuration parameter `logDate` can be used.
 * **color** Color used for coloring the prefix when coloring is enabeld
   (i.e. if running in a console and `useColor` is set). The available
   colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If
   coloring is enabled and now color is provided a color is picked for
-  you. 
-* **file** Path to a file to which the log output is written. This file is overwritten 
-  for every run and colors are switched off. 
+  you.
+* **file** Path to a file to which the log output is written. This file is overwritten
+  for every run and colors are switched off.
 * **driver** Section which can specify a dedicated log driver to use. A `<name>` tag within this section depicts
-  the logging driver with the options specified in `<opts>`. See the example below for how to use this. 
+  the logging driver with the options specified in `<opts>`. See the example below for how to use this.
 
 Example (values can be case insensitive, too) :
 
@@ -446,8 +446,8 @@ Example (values can be case insensitive, too) :
 </log>
 ````
 
-The following example switches on the `gelf` [logging driver](https://docs.docker.com/engine/admin/logging/overview/) . 
-This is equivalent to the options `--log-driver=gelf --log-opt gelf-address=udp://localhost:12201` when using `docker run`. 
+The following example switches on the `gelf` [logging driver](https://docs.docker.com/engine/admin/logging/overview/) .
+This is equivalent to the options `--log-driver=gelf --log-opt gelf-address=udp://localhost:12201` when using `docker run`.
 
 ````xml
 <log>
