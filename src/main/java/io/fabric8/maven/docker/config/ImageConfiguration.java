@@ -132,7 +132,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return String.format("ImageConfiguration {name='%s', alias='%s'}", name, alias);
     }
 
-    public String initAndValidate(Logger log) {
+    public String initAndValidate(ConfigHelper.NameFormatter nameFormatter, Logger log) {
+        name = nameFormatter.format(name);
         String minimalApiVersion = null;
         if (build != null) {
             minimalApiVersion = build.initAndValidate(log);

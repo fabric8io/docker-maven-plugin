@@ -49,7 +49,6 @@ public class ImageName {
         this(fullName,null);
     }
 
-
     /**
      * Create an image name with a tag. If a tag is provided (i.e. is not null) then this tag is used.
      * Otherwise the tag of the provided name is used (if any).

@@ -23,7 +23,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.c;
 import static org.junit.Assert.*;
 
 /**
@@ -74,7 +73,7 @@ public class ConfigHelperTest {
     @Test
     public void initAndValidate() throws Exception {
         List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
-        String api = ConfigHelper.initAndValidate(configs,"v1.16",null);
+        String api = ConfigHelper.initAndValidate(configs, "v1.16", ConfigHelper.NameFormatter.IDENTITY, null);
         assertEquals("v1.16",api);
     }
 

@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.service;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
@@ -10,58 +11,50 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import mockit.*;
+import mockit.integration.junit4.JMockit;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.runner.RunWith;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.*;
-
+@RunWith(JMockit.class)
 public class BuildServiceTest {
 
     private static final String NEW_IMAGE_ID = "efg789efg789";
     private static final String OLD_IMAGE_ID = "abc123abc123";
 
+    @Tested
     private BuildService buildService;
 
-    @Mock
+    @Injectable
     private DockerAccess docker;
 
-    @Mock
+    @Mocked
     private DockerAssemblyManager dockerAssemblyManager;
 
     private ImageConfiguration imageConfig;
 
-    @Mock
+    @Injectable
     private Logger log;
 
     private String oldImageId;
 
-    @Mock
+    @Mocked
     private MojoParameters params;
 
-    @Mock
+    @Injectable
     private QueryService queryService;
 
-    @Mock
+    @Injectable
     private ArchiveService archiveService;
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
-        when(dockerAssemblyManager.createDockerTarArchive(anyString(), any(MojoParameters.class), any(BuildImageConfiguration.class)))
-                .thenReturn(null);
-
-        buildService = new BuildService(docker, queryService, archiveService, log);
-
-        when(archiveService.createArchive(anyString(),any(BuildImageConfiguration.class),any(MojoParameters.class)))
-            .thenReturn(new File("docker-build.tar"));
+        new Expectations() {{
+            archiveService.createArchive(anyString, (BuildImageConfiguration) any, (MojoParameters) any);
+            result = new File("docker-build.tar");
+        }};
     }
 
     @Test
@@ -86,7 +79,7 @@ public class BuildServiceTest {
     public void testCleanupCachedImage() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(OLD_IMAGE_ID, OLD_IMAGE_ID);
-        whenBuildImage(true,false);
+        whenBuildImage(false, false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -95,7 +88,7 @@ public class BuildServiceTest {
     public void testCleanupNoExistingImage() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(null, NEW_IMAGE_ID);
-        whenBuildImage(true,false);
+        whenBuildImage(false, false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -112,30 +105,45 @@ public class BuildServiceTest {
                 .build();
     }
 
-    private void givenImageIds(String oldImageId, String newImageId) throws DockerAccessException {
+    private void givenImageIds(final String oldImageId, final String newImageId) throws DockerAccessException {
         this.oldImageId = oldImageId;
-        when(queryService.getImageId(imageConfig.getName())).thenReturn(oldImageId).thenReturn(newImageId);
+        new Expectations() {{
+            queryService.getImageId(imageConfig.getName()); returns(oldImageId,newImageId);
+        }};
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
-        verify(docker).buildImage(eq(imageConfig.getName()), eq(new File("docker-build.tar")), (String) eq(null), anyBoolean(), anyBoolean(), anyMap());
+        new Verifications() {{
+            docker.buildImage(withEqual(imageConfig.getName()),
+                              withEqual(new File("docker-build.tar")),
+                              (String) withNull(),
+                              anyBoolean, anyBoolean, (Map) any);
+        }};
     }
 
     private void thenOldImageIsNotRemoved() throws DockerAccessException {
-        verify(docker, never()).removeImage(oldImageId);
+        new FullVerifications(docker) {{
+
+        }};
     }
 
     private void thenOldImageIsRemoved() throws DockerAccessException {
-        verify(docker).removeImage(oldImageId,true);
+        new Verifications() {{
+            docker.removeImage(oldImageId, true);
+        }};
     }
 
     private void whenBuildImage(boolean cleanup, boolean nocache) throws DockerAccessException, MojoExecutionException {
-        doNothing().when(docker).buildImage(eq(imageConfig.getName()), (File) isNull(), (String) eq(null), anyBoolean(), anyBoolean(), anyMap());
-
+        new Expectations() {{
+            docker.buildImage(withEqual(imageConfig.getName()), (File) any, (String) withNull(), anyBoolean, anyBoolean, (Map) any);
+        }};
         if (cleanup) {
-            when(docker.removeImage(oldImageId)).thenReturn(true);
+            new Expectations() {{
+                docker.removeImage(withEqual(oldImageId), withEqual(true));result = true;
+            }};
         }
 
         buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap());
+
     }
 }

@@ -149,7 +149,7 @@ public class PropertyConfigHandlerTest {
     public void testDockerfile() throws Exception {
         String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "src/main/docker/" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        config.initAndValidate(null);
+        config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
         assertEquals(new File("src/main/docker/Dockerfile"), config.getBuildConfiguration().getDockerFile());
     }
 

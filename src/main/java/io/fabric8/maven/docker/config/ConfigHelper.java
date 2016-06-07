@@ -53,15 +53,20 @@ public class ConfigHelper {
     /**
      * Initialize and validate the configuration.
      *
+     *
      * @param images the images to check
      * @param apiVersion the original API version intended to use
+     * @param nameFormatter formmatter for image names
      * @param log a logger for printing out diagnostic messages
      * @return the minimal API Docker API required to be used for the given configuration.
      */
-    public static String initAndValidate(List<ImageConfiguration> images, String apiVersion,
+    public static String initAndValidate(List<ImageConfiguration> images, String apiVersion, NameFormatter nameFormatter,
                                          Logger log) {
         // Init and validate configs. After this step, getResolvedImages() contains the valid configuration.
-        return initAndValidateConfiguration(apiVersion, log, images);
+        for (ImageConfiguration imageConfiguration : images) {
+            apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(nameFormatter, log));
+        }
+        return apiVersion;
     }
 
     // Check if the provided image configuration matches the given
@@ -101,17 +106,6 @@ public class ConfigHelper {
     }
 
 
-    // Return minimal required version
-    private static String initAndValidateConfiguration(String initApiVersion,
-                                                       Logger log,
-                                                       List<ImageConfiguration> configsToInitAndValidate) {
-        String apiVersion = initApiVersion;
-        for (ImageConfiguration imageConfiguration : configsToInitAndValidate) {
-            apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(log));
-        }
-        return apiVersion;
-    }
-
     // Extract authentication information
     private static void verifyImageNames(List<ImageConfiguration> ret) {
         for (ImageConfiguration config : ret) {
@@ -127,7 +121,7 @@ public class ConfigHelper {
     /**
      * Allow subclasses to customize the given set of image configurations. This is called
      * after resolving of images. a customizer is free to change the image configuration as he want.
-     * use with responsibility.
+     * Use this with responsibility.
      */
     public interface Customizer {
         List<ImageConfiguration> customizeConfig(List<ImageConfiguration> configs);
@@ -140,4 +134,19 @@ public class ConfigHelper {
     public interface Resolver {
         List<ImageConfiguration> resolve(ImageConfiguration image);
     }
+
+    /**
+     * Format an image name by replacing certain placeholders
+     */
+    public interface NameFormatter {
+        String format(String name);
+
+        NameFormatter IDENTITY = new NameFormatter() {
+            public String format(String name) {
+                return name;
+            }
+        };
+    }
+
+
 }

@@ -1,10 +1,8 @@
 package io.fabric8.maven.docker;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
 
@@ -210,7 +208,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             this);                     // customizer (can be overwritten by a subclass)
 
         // Initialize configuration and detect minimal API version
-        return ConfigHelper.initAndValidate(resolvedImages, apiVersion, log);
+        return ConfigHelper.initAndValidate(resolvedImages, apiVersion, createNameFormatter(project), log);
+    }
+
+    private ConfigHelper.NameFormatter createNameFormatter(MavenProject project) {
+        return new ImageNameFormatter(project);
     }
 
     // Customization hook for subclasses to influence the final configuration. This method is called
