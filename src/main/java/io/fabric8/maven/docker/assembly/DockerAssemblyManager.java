@@ -43,6 +43,7 @@ public class DockerAssemblyManager {
     // Assembly name used also as build directory within outputBuildDir
     public static final String ASSEMBLY_NAME = "maven";
     public static final String DOCKER_IGNORE = ".maven-dockerignore";
+    public static final String DOCKER_EXCLUDE = ".maven-dockerexclude";
     public static final String DOCKER_INCLUDE = ".maven-dockerinclude";
 
     @Requirement
@@ -198,12 +199,22 @@ public class DockerAssemblyManager {
 
     private void addDockerIgnoreIfPresent(DefaultFileSet fileSet) throws IOException {
         File directory = fileSet.getDirectory();
-        File dockerIgnore = new File(directory, DOCKER_IGNORE);
-        if (dockerIgnore.exists()) {
-            ArrayList<String> excludes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
-            excludes.add(DOCKER_IGNORE);
-            fileSet.setExcludes(excludes.toArray(new String[excludes.size()]));
+        addDockerExcludes(fileSet, directory);
+        addDockerIncludes(fileSet, directory);
+    }
+
+    private void addDockerExcludes(DefaultFileSet fileSet, File directory) throws IOException {
+        for (String file : new String[] { DOCKER_EXCLUDE, DOCKER_IGNORE } ) {
+            File dockerIgnore = new File(directory, file);
+            if (dockerIgnore.exists()) {
+                ArrayList<String> excludes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
+                excludes.add(DOCKER_IGNORE);
+                fileSet.setExcludes(excludes.toArray(new String[excludes.size()]));
+            }
         }
+    }
+
+    private void addDockerIncludes(DefaultFileSet fileSet, File directory) throws IOException {
         File dockerInclude = new File(directory, DOCKER_INCLUDE);
         if (dockerInclude.exists()) {
             ArrayList<String> includes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerInclude)));
@@ -353,6 +364,8 @@ public class DockerAssemblyManager {
             throw new MojoExecutionException(assemblyReader, e.getMessage(), "Docker assembly configuration is invalid: " + e.getMessage());
         }
     }
+
+
 
     // Archiver used to adapt for customizations
     private interface ArchiverCustomizer {
