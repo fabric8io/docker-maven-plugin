@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="3" data-basepath="." data-revision="Mon Jun 06 2016 09:20:17 GMT+0000 (UTC)">
+    <div class="book" data-level="3" data-basepath="." data-revision="Tue Jun 07 2016 14:05:16 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -432,13 +432,12 @@
                         <a id="edit-link" href="https://github.com/fabric8io/docker-maven-plugin/edit/master/doc/manual/image-configuration.md" class="btn fa fa-edit pull-left">&#xA0;&#xA0;Edit This Page</a><h2 id="image-configuration"><a name="image-configuration" class="plugin-anchor" href="#image-configuration"><span class="fa fa-link"></span></a>Image configuration</h2>
 <p>The plugin&apos;s configuration is centered around <em>images</em>. These are
 specified for each image within the <code>&lt;images&gt;</code> element of the
-configuration with one <code>&lt;image&gt;</code> element per image to use. </p>
+configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 <ul>
 <li><strong>name</strong> : Each <code>&lt;image&gt;</code> configuration has a mandatory, unique docker
-repository <em>name</em>. This can include registry and tag parts, too. For
-definition of the repository name please refer to the
-Docker documentation</li>
+repository <em>name</em>. This can include registry and tag parts, but also placeholder
+parameters. See below for a detailed explanation.</li>
 <li><strong>alias</strong> is a shortcut name for an image which can be used for
 identifying the image within this configuration. This is used when
 linking images together or for specifying it with the global
@@ -460,18 +459,27 @@ contains a <code>&lt;type&gt;</code> element specifying the handler for getting 
 configuration. See <a href="#external-configuration">External configuration</a>
 for details.</li>
 </ul>
-<p>Either <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> must be present. They are explained in
+<p>When specifying the name you can use several placeholders which are replaced
+during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
+<ul>
+<li><strong>%g</strong> The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id <code>io.fabric8</code> this placeholder would insert <code>fabric8</code>.</li>
+<li><strong>%a</strong> A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker).</li>
+<li><strong>%v</strong> The project version. Synonym to <code>${project.version}</code>.</li>
+<li><strong>%l</strong> If the project version ends with <code>-SNAPSHOT</code> then this placeholder is <code>latest</code>, otherwise its the full version (same as <code>%v</code>).</li>
+<li><strong>%t</strong> If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</li>
+</ul>
+<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in
 details in the corresponding goal sections.</p>
 <p>Example:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
   ....
   <span class="hljs-tag">&lt;<span class="hljs-title">images</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">image</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-title">name</span>&gt;</span>jolokia/docker-demo:0.1<span class="hljs-tag">&lt;/<span class="hljs-title">name</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">name</span>&gt;</span>%g/docker-demo:0.1<span class="hljs-tag">&lt;/<span class="hljs-title">name</span>&gt;</span>
       <span class="hljs-tag">&lt;<span class="hljs-title">alias</span>&gt;</span>service<span class="hljs-tag">&lt;/<span class="hljs-title">alias</span>&gt;</span>
       <span class="hljs-tag">&lt;<span class="hljs-title">run</span>&gt;</span>....<span class="hljs-tag">&lt;/<span class="hljs-title">run</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-title">build</span>&gt;</span>....<span class="hljs-tag">&lt;/<span class="hljs-title">build</span>&gt;</span>      
-    <span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>  
+      <span class="hljs-tag">&lt;<span class="hljs-title">build</span>&gt;</span>....<span class="hljs-tag">&lt;/<span class="hljs-title">build</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-title">image</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">images</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
 </code></pre>

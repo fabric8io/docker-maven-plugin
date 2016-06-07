@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="4.2" data-basepath="." data-revision="Mon Jun 06 2016 09:20:17 GMT+0000 (UTC)">
+    <div class="book" data-level="4.2" data-basepath="." data-revision="Tue Jun 07 2016 14:05:16 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -431,23 +431,23 @@
                     
                         <a id="edit-link" href="https://github.com/fabric8io/docker-maven-plugin/edit/master/doc/manual/docker-start.md" class="btn fa fa-edit pull-left">&#xA0;&#xA0;Edit This Page</a><h3 id="docker-start"><a name="docker-start" class="plugin-anchor" href="#docker-start"><span class="fa fa-link"></span></a>docker:start</h3>
 <p>Creates and starts docker containers. This goals evaluates
-the configuration&apos;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on 
+the configuration&apos;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on
 globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>).
-If set it will print out all standard output and standard error messages for all containers started. 
-As value the images for which logs should be shown can be given as a comma separated list. This is probably most 
-useful when used from the command line as system property <code>docker.showLogs</code>.   </p>
+If set it will print out all standard output and standard error messages for all containers started.
+As value the images for which logs should be shown can be given as a comma separated list. This is probably most
+useful when used from the command line as system property <code>docker.showLogs</code>.</p>
 <p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until
-CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that 
- you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but 
+CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that
+ you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but
  not removed so that you can make postmortem analysis).</p>
 <p>By default container specific properties are exposed as Maven properties. These properties have the format
-<code>docker.container.</code><em><alias></alias></em><code>.</code><em><prop></prop></em> where <em>alias</em> is the name of the container (see below) and <em><prop></prop></em> is one of
-the following container properties:</p>
+<code>docker.container.</code><em>alias</em><code>.</code><em>prop</em> where <em>alias</em> is the name of the container (see below) and <em>prop</em> is one of the following container properties:</p>
 <ul>
 <li><strong>ip</strong> : The internal IP address of the container.</li>
+<li><strong>id</strong> : The container id</li>
 </ul>
-<p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with 
-an alias &quot;tomcat&quot;. You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container 
+<p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with
+an alias &quot;tomcat&quot;. You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container
 information that way or to a string for an other prefix than <code>docker.container</code>.</p>
 <h4 id="-run-configuration"><a name="-run-configuration" class="plugin-anchor" href="#-run-configuration"><span class="fa fa-link"></span></a><run> Configuration</run></h4>
 <p>The <code>&lt;run&gt;</code> configuration section knows the following sub elements:</p>
@@ -461,7 +461,7 @@ container&apos;s startup. If not given, the image&apos;s default command is
 used. See <a href="docker-build.html#start-up-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>domainname</strong>  domain name for the container</li>
 <li><strong>dns</strong> list of <code>host</code> elements specifying dns servers for the container to use</li>
-<li><strong>dnsSearch</strong> list of <code>host</code> elements specifying dns search domains </li>
+<li><strong>dnsSearch</strong> list of <code>host</code> elements specifying dns search domains</li>
 <li><strong>entrypoint</strong> set the entry point for the container. See <a href="docker-build.html#start-up-arguments">Start-up Arguments</a> for details.</li>
 <li><strong>env</strong> can contain environment variables as subelements which are
 set during startup of the container. They are specified in the
@@ -470,17 +470,17 @@ typical maven property format as described <a href="#setting-environment-variabl
 typical maven property format as described in <a href="#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</li>
 <li><strong>envPropertyFile</strong> can be a path to a property file holding environment variables. If given, the variables
 specified in this property file overrides the environment variables specified in the configuration.</li>
-<li><strong>extraHosts</strong> list of <code>host</code> elements in the form <code>host:ip</code> to add to the container&apos;s <code>/etc/hosts</code> file. 
-Additionally, you may specify a <code>host</code> element in the form <code>host:host</code> to have the right side host ip address resolved 
+<li><strong>extraHosts</strong> list of <code>host</code> elements in the form <code>host:ip</code> to add to the container&apos;s <code>/etc/hosts</code> file.
+Additionally, you may specify a <code>host</code> element in the form <code>host:host</code> to have the right side host ip address resolved
 at container startup.</li>
 <li><strong>hostname</strong> desired hostname for the container</li>
 <li><strong>links</strong> declares how containers are linked together see
-description on <a href="#container-linking">Container Linking</a>. </li>
+description on <a href="#container-linking">Container Linking</a>.</li>
 <li><strong>log</strong> specifies the log configuration for whether and how log
-messages from the running containers should be printed. This also can configure the 
+messages from the running containers should be printed. This also can configure the
 <a href="https://docs.docker.com/engine/admin/logging/overview/" target="_blank">log driver</a> to use. See
 <a href="#log-configuration">Log Configuration</a> for a detailed description of this configuration
-section. </li>
+section.</li>
 <li><strong>memory</strong> memory limit in bytes</li>
 <li><strong>memorySwap</strong> total memory usage (memory + swap); use -1 to disable swap.</li>
 <li><strong>shmSize</strong> size of <code>/dev/shm</code> in bytes.</li>
@@ -494,7 +494,7 @@ with this name.</li>
 <li><code>bridge</code> : Bridged mode with the default Docker bridge (default)</li>
 <li><code>host</code> : Share the Docker host network interfaces</li>
 <li><code>container:&lt;alias or name&gt;</code> : Connect to the network of the specified container</li>
-<li><code>&lt;custom network&gt;</code> : Use the specified custom network which must be created before with <code>docker network create</code>. 
+<li><code>&lt;custom network&gt;</code> : Use the specified custom network which must be created before with <code>docker network create</code>.
 Available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/" target="_blank">Docker documentation</a>.</li>
 </ul>
 </li>
@@ -503,13 +503,13 @@ mapped properties should be written to. The format of this file and
 its purpose are also described in <a href="#port-mapping">Port mapping</a></li>
 <li><strong>ports</strong> declares how container exposed ports should be
 mapped. This is described below in an extra
-section <a href="#port-mapping">Port mapping</a>.  </li>
-<li><strong>privileged</strong> give container full access to host (<code>true|false</code>)   </li>
-<li><strong>restartPolicy</strong> specifies the container restart policy, see 
+section <a href="#port-mapping">Port mapping</a>.</li>
+<li><strong>privileged</strong> give container full access to host (<code>true|false</code>)</li>
+<li><strong>restartPolicy</strong> specifies the container restart policy, see
 <a href="#container-restart-policy">Container Restart Policy</a></li>
 <li><strong>user</strong> user used inside the container</li>
 <li><strong>skip</strong> disable creating and starting of the container. This option is best used together with a configuration option.</li>
-<li><strong>volumes</strong> for bind configurtion of host directories and from other containers. See <a href="#volume-binding">Volume binding</a> 
+<li><strong>volumes</strong> for bind configurtion of host directories and from other containers. See <a href="#volume-binding">Volume binding</a>
 for details.</li>
 <li><strong>wait</strong> specifies condition which must be fulfilled for the startup
 to complete. See <a href="#wait-during-startup-and-shutdown">Wait during Startup and Shutdown</a> which subelements are
@@ -534,7 +534,7 @@ available and how they can be specified.</li>
   <span class="hljs-tag">&lt;/<span class="hljs-title">links</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">wait</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">http</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-title">url</span>&gt;</span>http://localhost:${jolokia.port}/jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">url</span>&gt;</span>    
+      <span class="hljs-tag">&lt;<span class="hljs-title">url</span>&gt;</span>http://localhost:${jolokia.port}/jolokia<span class="hljs-tag">&lt;/<span class="hljs-title">url</span>&gt;</span>
     <span class="hljs-tag">&lt;/<span class="hljs-title">http</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">time</span>&gt;</span>10000<span class="hljs-tag">&lt;/<span class="hljs-title">time</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">wait</span>&gt;</span>
@@ -548,7 +548,7 @@ available and how they can be specified.</li>
 </code></pre>
 <h5 id="setting-environment-variables-and-labels"><a name="setting-environment-variables-and-labels" class="plugin-anchor" href="#setting-environment-variables-and-labels"><span class="fa fa-link"></span></a>Setting environment variables and labels</h5>
 <p>When creating a container one or more environment variables can be set
-via configuration with the <code>env</code> parameter </p>
+via configuration with the <code>env</code> parameter</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">env</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">JAVA_HOME</span>&gt;</span>/opt/jdk8<span class="hljs-tag">&lt;/<span class="hljs-title">JAVA_HOME</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">CATALINA_OPTS</span>&gt;</span>-Djava.security.egd=file:/dev/./urandom<span class="hljs-tag">&lt;/<span class="hljs-title">CATALINA_OPTS</span>&gt;</span>
@@ -557,9 +557,9 @@ via configuration with the <code>env</code> parameter </p>
 <p>If you put this configuration into profiles you can easily create
 various test variants with a single image (e.g. by
 switching the JDK or whatever).</p>
-<p>It is also possible to set the environment variables from the outside of the plugin&apos;s 
+<p>It is also possible to set the environment variables from the outside of the plugin&apos;s
 configuration with the parameter <code>envPropertyFile</code>. If given, this property file
-is used to set the environment variables where the keys and values specify the environment variable. 
+is used to set the environment variables where the keys and values specify the environment variable.
 Environment variables specified in this file override any environment variables specified in the configuration.</p>
 <p>Labels can be set inline the same way as environment variables:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">labels</span>&gt;</span>
@@ -572,13 +572,13 @@ Environment variables specified in this file override any environment variables 
 <p>The <code>&lt;ports&gt;</code> configuration contains a list of port mappings. Each
 mapping has multiple parts, each separate by a colon. This is
 equivalent to the port mapping when using the Docker CLI with option
-<code>-p</code>. </p>
+<code>-p</code>.</p>
 <p>A <code>port</code> stanza may take one of the following forms:</p>
 <ul>
-<li><strong>18080:8080</strong> : A tuple consisting of two numeric values separated by a <code>:</code>. This 
-form will result in an explicit mapping between the docker host and the corresponding 
-port inside the container. In the above example, port 18080 would be exposed on the 
-docker host and mapped to port 8080 in the running container. </li>
+<li><strong>18080:8080</strong> : A tuple consisting of two numeric values separated by a <code>:</code>. This
+form will result in an explicit mapping between the docker host and the corresponding
+port inside the container. In the above example, port 18080 would be exposed on the
+docker host and mapped to port 8080 in the running container.</li>
 <li><strong><em>host.port</em>:80</strong> A tuple consisting of a string and a numeric value separated by a
 <code>:</code>. In this form, the string portion of the tuple will correspond
 to a Maven property. If the property is undefined when the <code>start</code>
@@ -597,14 +597,14 @@ similar to <code>mvn -Dhost.port=10080 docker:start</code></li>
 <li><strong>bindTo:<em>host.port</em>:80</strong> A tuple consisting of two strings and a numeric value separated
 by a <code>:</code>. In this form, <code>bindTo</code> is an ip address on the host the container should bind to.
 As a convenience, a hostname pointing to the docker host may also
-be specified. The container will fail to start if the hostname can not be 
-resolved.  </li>
+be specified. The container will fail to start if the hostname can not be
+resolved.</li>
 <li><strong>+host.ip:<em>host.port</em>:80</strong> A tuple consisting of two strings and a numeric value separated
 by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property name <code>host.ip</code>.
 If docker reports that value to be <code>0.0.0.0</code>, the value of <code>docker.host.address</code> will
-be substituted instead. In the event you want to use this form and have the container bind 
-to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example) 
-containing the value to use. <code>host:port</code> works in the same way as described above. </li>
+be substituted instead. In the event you want to use this form and have the container bind
+to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example)
+containing the value to use. <code>host:port</code> works in the same way as described above.</li>
 </ul>
 <p>The following are examples of valid configuration entries:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">properties</span>&gt;</span>
@@ -615,8 +615,8 @@ containing the value to use. <code>host:port</code> works in the same way as des
 ...
 
 <span class="hljs-tag">&lt;<span class="hljs-title">ports</span>&gt;</span>
-  <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>18080:8080<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span> 
-  <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>host.port:80<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span> 
+  <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>18080:8080<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>host.port:80<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>127.0.0.1:80:80<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>localhost:host.port:80<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">port</span>&gt;</span>+container.ip.property:host.port:5678<span class="hljs-tag">&lt;/<span class="hljs-title">port</span>&gt;</span>
@@ -626,15 +626,15 @@ containing the value to use. <code>host:port</code> works in the same way as des
 </code></pre>
 <p>Another useful configuration option is <code>portPropertyFile</code> which can be used to
 to write out the container&apos;s host ip and any dynamic ports that have been
-resolved. The keys of this property file are the property names defined in the 
-port mapping configuration and their values those of the corresponding 
-docker attributes. </p>
-<p>This property file might be useful with tests or with other maven plugins that will be unable 
+resolved. The keys of this property file are the property names defined in the
+port mapping configuration and their values those of the corresponding
+docker attributes.</p>
+<p>This property file might be useful with tests or with other maven plugins that will be unable
 to use the resolved properties because they can only be updated after the container has started
 and plugins resolve their properties in an earlier lifecycle phase.</p>
-<p>If you don&apos;t need to write out such a property file and thus don&apos;t need to preserve the property names, 
-you can use normal maven properties as well. E.g. <code>${host.var}:${port.var}:8080</code> instead of 
-<code>+host.var:port.var:8080</code>.  </p>
+<p>If you don&apos;t need to write out such a property file and thus don&apos;t need to preserve the property names,
+you can use normal maven properties as well. E.g. <code>${host.var}:${port.var}:8080</code> instead of
+<code>+host.var:port.var:8080</code>.</p>
 <h5 id="container-linking"><a name="container-linking" class="plugin-anchor" href="#container-linking"><span class="fa fa-link"></span></a>Container linking</h5>
 <p>The <code>&lt;links&gt;</code> configuration contains a list of containers that should
 be linked to this container according to
@@ -649,7 +649,7 @@ equivalent to the linking when using the Docker CLI <code>--link</code> option.<
 <span class="hljs-tag">&lt;/<span class="hljs-title">links</span>&gt;</span>
 </code></pre>
 <p>This will create the following environment variables, given that the
-postgres image exposes TCP port 5432: </p>
+postgres image exposes TCP port 5432:</p>
 <pre><code>DB_NAME=/web2/db
 DB_PORT=tcp://172.17.0.5:5432
 DB_PORT_5432_TCP=tcp://172.17.0.5:5432
@@ -659,9 +659,9 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5
 </code></pre><p>If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name
 obtained via <code>docker ps</code> in the configuration.</p>
 <p>Please note that the link behaviour also depends on the network mode selected. Links as described
-are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no 
-environments variables are set and links create merely network aliases for the linked container. </p>
-<p>For a more detailed documentation for the new link handling please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks" target="_blank">Docker network documentation</a> </p>
+are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no
+environments variables are set and links create merely network aliases for the linked container.</p>
+<p>For a more detailed documentation for the new link handling please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks" target="_blank">Docker network documentation</a></p>
 <h5 id="volume-binding"><a name="volume-binding" class="plugin-anchor" href="#volume-binding"><span class="fa fa-link"></span></a>Volume binding</h5>
 <p>A container can bind (or &quot;mount&quot;) volumes from various source when starting up: Either from a directory of
 the host system or from another container which exports one or more directories. The mount configuration is
@@ -692,7 +692,7 @@ the full image name, an alias name like <em>service</em> can be used, too.</p>
 should even work for boot2docker and docker-machine:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">volumes</span>&gt;</span>
   <span class="hljs-tag">&lt;<span class="hljs-title">bind</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-title">volume</span>&gt;</span>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}<span class="hljs-tag">&lt;/<span class="hljs-title">volume</span>&gt;</span> 
+    <span class="hljs-tag">&lt;<span class="hljs-title">volume</span>&gt;</span>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}<span class="hljs-tag">&lt;/<span class="hljs-title">volume</span>&gt;</span>
     <span class="hljs-tag">&lt;<span class="hljs-title">volume</span>&gt;</span>${project.basedir}/data:/data<span class="hljs-tag">&lt;/<span class="hljs-title">volume</span>&gt;</span>
   <span class="hljs-tag">&lt;/<span class="hljs-title">bind</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">volumes</span>&gt;</span>
@@ -708,11 +708,11 @@ specified withing a <code>&lt;restartPolicy&gt;</code> section with the followin
 <li><code>on-failure</code> (<em>v1.15</em>) restart on container non-exit code of zero</li>
 </ul>
 </li>
-<li><strong>retry</strong> if <code>on-failure</code> is used, controls max number of attempts to 
+<li><strong>retry</strong> if <code>on-failure</code> is used, controls max number of attempts to
 restart before giving up.</li>
 </ul>
-<p>The behavior to apply when the container exits. The value is an object with a Name 
-property of either &quot;always&quot; to always restart or &quot;on-failure&quot; to restart only when the 
+<p>The behavior to apply when the container exits. The value is an object with a Name
+property of either &quot;always&quot; to always restart or &quot;on-failure&quot; to restart only when the
 container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the
  number of times to retry before giving up. The default is not to restart. (optional)</p>
 <h5 id="wait-during-startup-and-shutdown"><a name="wait-during-startup-and-shutdown" class="plugin-anchor" href="#wait-during-startup-and-shutdown"><span class="fa fa-link"></span></a>Wait during startup and shutdown</h5>
@@ -723,7 +723,7 @@ some condition is met. These conditions can be specified within a
 <li><strong>http</strong> specifies an HTTP ping check which periodically polls an URL. It knows the following sub-elements:<ul>
 <li><strong>url</strong> holds an URL and is mandatory</li>
 <li><strong>method</strong> Optional HTTP method to use.</li>
-<li><strong>status</strong> Status code which if returned is considered to be a successful ping. This code can be given either as 
+<li><strong>status</strong> Status code which if returned is considered to be a successful ping. This code can be given either as
 a single number (200) or as a range (200..399). The default is <code>200..399</code></li>
 </ul>
 </li>
@@ -748,7 +748,7 @@ error when trying to remove a container to fast after it has been stopped.</li>
 </ul>
 <p>As soon as one condition is met the build continues. If you add a
 <code>&lt;time&gt;</code> constraint this works more or less as a timeout for other
-conditions. The build will abort if you wait on an url or log output and reach the timeout. 
+conditions. The build will abort if you wait on an url or log output and reach the timeout.
 If only a <code>&lt;time&gt;</code> is specified, the build will wait that amount of milliseconds and then continues.</p>
 <p>Example:</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">wait</span>&gt;</span>
@@ -779,11 +779,11 @@ Also, when stopping the container after an integration tests, the
 build wait for 500 ms before it tries to remove the container (if not <code>keepContainer</code>
 or <code>keepRunning</code> is used). You can use maven properties in each
 condition, too. In the example, the <code>${host.port}</code> property is
-probably set before within a port mapping section. </p>
-<p>The property <code>${docker.host.address}</code> is set implicitly to the address of the Docker host. This host will 
+probably set before within a port mapping section.</p>
+<p>The property <code>${docker.host.address}</code> is set implicitly to the address of the Docker host. This host will
 be taken from the <code>docker.host</code> configuration if HTTP or HTTPS is used. If a Unix socket is used for communication
-with the docker daemon, then <code>localhost</code> is assumed. You can override this property always by setting this Maven 
-property explicitly. </p>
+with the docker daemon, then <code>localhost</code> is assumed. You can override this property always by setting this Maven
+property explicitly.</p>
 <h5 id="log-configuration"><a name="log-configuration" class="plugin-anchor" href="#log-configuration"><span class="fa fa-link"></span></a>Log configuration</h5>
 <p>When running containers the standard output and standard error of the
 container can be printed out. Several options are available for
@@ -796,13 +796,13 @@ on the command line with <code>-Ddocker.showLogs</code>. Logging is enabled by
 default if a <code>&lt;log&gt;</code> section is given.</li>
 <li><strong>prefix</strong> Prefix to use for the log output in order to identify the
 container. By default the image <code>alias</code> is used or alternatively the
-container <code>id</code>. </li>
+container <code>id</code>.</li>
 <li><strong>date</strong> Dateformat to use for log timestamps. If <code>&lt;date&gt;</code> is not
 given no timestamp will be shown. The date specification can be
 either a constant or a date format. The recognized constants are:<ul>
 <li><code>NONE</code> Switch off timestamp output. Useful on the command line
 (<code>-Ddocker.logDate=NONE</code>) for switching off otherwise enabled
-logging. </li>
+logging.</li>
 <li><code>DEFAULT</code> A default format in the form <code>HH:mm:ss.SSS</code></li>
 <li><code>MEDIUM</code> Joda medium date time format</li>
 <li><code>SHORT</code> Joda short date time format</li>
@@ -810,7 +810,7 @@ logging. </li>
 <li><code>ISO8601</code> Full ISO-8601 formatted date time with milli seconds
 As an alternative a date-time format string as recognized by
 <a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html" target="_blank">JodaTime</a>
-is possible. In order to set a consistent date format 
+is possible. In order to set a consistent date format
 the global configuration parameter <code>logDate</code> can be used.</li>
 </ul>
 </li>
@@ -818,11 +818,11 @@ the global configuration parameter <code>logDate</code> can be used.</li>
 (i.e. if running in a console and <code>useColor</code> is set). The available
 colors are <code>YELLOW</code>, <code>CYAN</code>, <code>MAGENTA</code>, <code>GREEN</code>, <code>RED</code>, <code>BLUE</code>. If
 coloring is enabled and now color is provided a color is picked for
-you. </li>
-<li><strong>file</strong> Path to a file to which the log output is written. This file is overwritten 
-for every run and colors are switched off. </li>
+you.</li>
+<li><strong>file</strong> Path to a file to which the log output is written. This file is overwritten
+for every run and colors are switched off.</li>
 <li><strong>driver</strong> Section which can specify a dedicated log driver to use. A <code>&lt;name&gt;</code> tag within this section depicts
-the logging driver with the options specified in <code>&lt;opts&gt;</code>. See the example below for how to use this. </li>
+the logging driver with the options specified in <code>&lt;opts&gt;</code>. See the example below for how to use this.</li>
 </ul>
 <p>Example (values can be case insensitive, too) :</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">log</span>&gt;</span>
@@ -831,8 +831,8 @@ the logging driver with the options specified in <code>&lt;opts&gt;</code>. See 
   <span class="hljs-tag">&lt;<span class="hljs-title">color</span>&gt;</span>cyan<span class="hljs-tag">&lt;/<span class="hljs-title">color</span>&gt;</span>
 <span class="hljs-tag">&lt;/<span class="hljs-title">log</span>&gt;</span>
 </code></pre>
-<p>The following example switches on the <code>gelf</code> <a href="https://docs.docker.com/engine/admin/logging/overview/" target="_blank">logging driver</a> . 
-This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address=udp://localhost:12201</code> when using <code>docker run</code>. </p>
+<p>The following example switches on the <code>gelf</code> <a href="https://docs.docker.com/engine/admin/logging/overview/" target="_blank">logging driver</a> .
+This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address=udp://localhost:12201</code> when using <code>docker run</code>.</p>
 <pre><code class="lang-xml"><span class="hljs-tag">&lt;<span class="hljs-title">log</span>&gt;</span>
   ...
   <span class="hljs-tag">&lt;<span class="hljs-title">driver</span>&gt;</span>
