@@ -309,10 +309,15 @@ public class StartMojo extends AbstractDockerMojo {
         if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(alias)) {
             Container container = queryService.getContainer(containerId);
             Properties props = project.getProperties();
+            String prefix = addDot(exposeContainerProps) + addDot(alias);
             String ip = container.getIPAddress();
             if (StringUtils.isNotEmpty(ip)) {
-                String key = addDot(exposeContainerProps) + addDot(alias) + "ip";
+                String key = prefix + "ip";
                 props.put(key, ip);
+            }
+            if (StringUtils.isNotEmpty(containerId)) {
+                String key = prefix + "containerId";
+                props.put(key, containerId);
             }
         }
     }
