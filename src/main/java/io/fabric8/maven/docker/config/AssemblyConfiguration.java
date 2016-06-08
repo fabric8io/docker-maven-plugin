@@ -53,6 +53,11 @@ public class AssemblyConfiguration {
      */
     private String user;
 
+    /**
+     * @parameter default-value="auto"
+     */
+    private String normalizePermissions;
+
     public Boolean exportBasedir() {
         return exportBasedir;
     }
@@ -87,6 +92,25 @@ public class AssemblyConfiguration {
 
     public Boolean isIgnorePermissions() {
         return (ignorePermissions != null) ? ignorePermissions : Boolean.FALSE;
+    }
+
+    public Boolean isNormalizePermissions() {
+        if (normalizePermissions == null) {
+            normalizePermissions = "auto";
+        }
+
+        switch (normalizePermissions.toLowerCase()) {
+            case "true":
+                return true;
+            case "false":
+                return false;
+            default:
+                return isWindows();
+        }
+    }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
     }
     
     public static class Builder {
@@ -130,6 +154,11 @@ public class AssemblyConfiguration {
 
         public Builder ignorePermissions(Boolean ignorePermissions) {
             config.ignorePermissions = set(ignorePermissions);
+            return this;
+        }
+
+        public Builder normalizePermissions(String normalizePermissions) {
+            config.normalizePermissions = set(normalizePermissions);
             return this;
         }
 

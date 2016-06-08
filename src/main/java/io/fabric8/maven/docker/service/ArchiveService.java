@@ -15,19 +15,19 @@ package io.fabric8.maven.docker.service;/*
  * limitations under the License.
  */
 
-import java.io.File;
-import java.util.List;
-
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
 import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * @author roland
@@ -56,7 +56,7 @@ public class ArchiveService {
      */
     public File createDockerBuildArchive(ImageConfiguration imageConfig, MojoParameters params)
             throws MojoExecutionException {
-        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params);
+        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params, log);
         log.info("%s: Created docker source tar %s",imageConfig.getDescription(), ret);
         return ret;
     }
@@ -97,8 +97,8 @@ public class ArchiveService {
 
     // =============================================
 
-    File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params)
+    File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, Logger log)
             throws MojoExecutionException {
-        return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig);
+        return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig, log);
     }
 }

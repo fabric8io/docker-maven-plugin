@@ -1,16 +1,19 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import java.io.File;
+import java.util.Map;
 
 public class BuildService {
 
@@ -52,7 +55,7 @@ public class BuildService {
         }
 
         long time = System.currentTimeMillis();
-        File dockerArchive = archiveService.createArchive(imageName, buildConfig, params);
+        File dockerArchive = archiveService.createArchive(imageName, buildConfig, params, log);
         log.info("%s: Created %s in %s", dockerArchive.getName(), imageConfig.getDescription(), EnvUtil.formatDurationTill(time));
 
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
