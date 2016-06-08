@@ -1,10 +1,7 @@
 package io.fabric8.maven.docker.assembly;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
 import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,6 +24,13 @@ import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -65,10 +69,11 @@ public class DockerAssemblyManager {
      * @param imageName Name of the image to create (used for creating build directories)
      * @param params Mojos parameters (used for finding the directories)
      * @param buildConfig configuration for how to build the image
+     * @param log Logger used to display warning if permissions are to be normalized
      * @return file holding the path to the created assembly tar file
      * @throws MojoExecutionException
      */
-    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig)
+    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig, Logger log)
             throws MojoExecutionException {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
@@ -89,13 +94,14 @@ public class DockerAssemblyManager {
                     throw new MojoExecutionException("Configured Dockerfile \"" +
                                                      buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesnt exist");
                 }
-                // User dedicated Dockerfile from extra
+                // User dedicated Dockerfile from extra director
                 customizer = new ArchiverCustomizer() {
                     @Override
-                    public void customize(TarArchiver archiver) throws IOException {
+                    public TarArchiver customize(TarArchiver archiver) throws IOException {
                         DefaultFileSet fileSet = DefaultFileSet.fileSet(dockerFile.getParentFile());
                         addDockerIgnoreIfPresent(fileSet);
                         archiver.addFileSet(fileSet);
+                        return archiver;
                     }
                 };
             } else {
@@ -106,10 +112,20 @@ public class DockerAssemblyManager {
                 final File dockerFile = new File(buildDirs.getOutputDirectory(),"Dockerfile");
                 customizer = new ArchiverCustomizer() {
                     @Override
-                    public void customize(TarArchiver archiver) throws IOException {
+                    public TarArchiver customize(TarArchiver archiver) throws IOException {
                         archiver.addFile(dockerFile, "Dockerfile");
+                        return archiver;
                     }
                 };
+            }
+
+            // If required make all files in the assembly executable
+            if (assemblyConfig != null) {
+                AssemblyConfiguration.PermissionMode mode = assemblyConfig.getPermissions();
+                if (mode == AssemblyConfiguration.PermissionMode.exec ||
+                    mode == AssemblyConfiguration.PermissionMode.auto && EnvUtil.isWindows()) {
+                    customizer = new AllFilesExecCustomizer(customizer, log);
+                }
             }
 
             return createBuildTarBall(buildDirs, customizer, assemblyMode, buildConfig.getCompression());
@@ -186,9 +202,9 @@ public class DockerAssemblyManager {
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, buildMode);
-            archiverCustomizer.customize(archiver);
-            archiver.createArchive();
+            archiver = archiverCustomizer.customize(archiver);
             archiver.setCompression(compression.getTarCompressionMethod());
+            archiver.createArchive();
             return archive;
         } catch (NoSuchArchiverException e) {
             throw new MojoExecutionException("No archiver for type 'tar' found", e);
@@ -365,10 +381,9 @@ public class DockerAssemblyManager {
         }
     }
 
-
-
     // Archiver used to adapt for customizations
-    private interface ArchiverCustomizer {
-        void customize(TarArchiver archiver) throws IOException;
+    interface ArchiverCustomizer {
+        TarArchiver customize(TarArchiver archiver) throws IOException;
     }
+
 }

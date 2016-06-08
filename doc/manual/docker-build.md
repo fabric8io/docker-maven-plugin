@@ -192,7 +192,12 @@ Here's an example:
   the container root (`/`). It is also `false` by default when a base image is used with `from`
   since exporting makes no sense in this case and will waste disk space unnecessarily.
 * **ignorePermissions** indicates if existing file permissions should be ignored
-  when creating the assembly archive. This value is `false` by default.
+  when creating the assembly archive with a mode `dir`. This value is `false` by default. This property is
+  deprecated, use a `permissionMode` of `ignore` instead.
+* **permissions** can be `ignore` to use the permission as found on files regardless on any 
+  assembly configuration, `keep` to respect the assembly provided permissions, `exec` for setting 
+  the executable bit on all files (required for Windows when using an assembly mode `dir`) or `auto` to let the 
+  plugin select `exec` on Windows and `keep` on others. `keep` is the default value.
 * **mode** specifies how the assembled files should be collected. By default the files a simply
   copied (`dir`), but can be set to be a Tar- (`tar`), compressed Tar- (`tgz`) or Zip- (`zip`) Archive.
   The archive formats have the advantage that file permission can be preserved better (since the copying is

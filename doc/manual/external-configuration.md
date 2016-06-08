@@ -51,7 +51,11 @@ values in the `<build>` and `<run>` sections.
   use. 
 * **docker.assembly.exportBaseDir** If `true` export base directory
 * **docker.assembly.ignorePermissions** If set to `true` existing file permissions are ignored
-  when creating the assembly archive
+  when creating the assembly archive. Deprecated, use a permission mode of `ignore` instead.
+* **docker.assembly.permissions** can be `ignore` to use the permission as found on files regardless on any 
+  assembly configuration, `keep` to respect the assembly provided permissions, `exec` for setting 
+  the executable bit on all files (required for Windows when using an assembly mode `dir`) or `auto` to let the 
+  plugin select `exec` on Windows and `keep` on others. `keep` is the default value. 
 * **docker.assembly.dockerFileDir** specifies a directory containing an external Dockerfile
   that will be used to create the image. This is deprecated please use `docker.dockerFileDir` or `docker.dockerFile` 
   instead.

@@ -24,8 +24,20 @@ public class DockerAssemblyConfigurationSourceTest {
         this.assemblyConfig = new AssemblyConfiguration.Builder()
                 .descriptor("assembly.xml")
                 .descriptorRef("project")
-                .ignorePermissions(false)
+                .permissions("keep")
                 .build();
+    }
+
+    @Test
+    public void permissionMode() {
+        try {
+            new AssemblyConfiguration.Builder().permissions("blub").build();
+        } catch (IllegalArgumentException exp) {
+            assertTrue(exp.getMessage().contains("blub"));
+        }
+
+        AssemblyConfiguration config = new AssemblyConfiguration.Builder().ignorePermissions(false).permissions("ignore").build();
+        assertTrue(config.isIgnorePermissions());;
     }
 
     @Test
@@ -67,7 +79,7 @@ public class DockerAssemblyConfigurationSourceTest {
 
     private void testCreateSource(MojoParameters params) {
         DockerAssemblyConfigurationSource source =
-                new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params),assemblyConfig);
+                new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params), assemblyConfig);
 
         String[] descriptors = source.getDescriptors();
         String[] descriptorRefs = source.getDescriptorReferences();
@@ -78,7 +90,7 @@ public class DockerAssemblyConfigurationSourceTest {
         assertEquals("count of descriptors references", 1, descriptorRefs.length);
         assertEquals("reference must be project", "project", descriptorRefs[0]);
 
-        assertFalse("We must not ignore permissions problems", source.isIgnorePermissions());
+        assertFalse("we must not ignore permissions when creating the archive", source.isIgnorePermissions());
 
         String outputDir = params.getOutputDirectory();
 
