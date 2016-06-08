@@ -146,6 +146,7 @@
               <name>fabric8/${project.artifactId}:${project.version}</name>
               <build>
                 <tags>
+                  <tag>${project.version}</tag>
                   <tag>latest</tag>
                 </tags>
                 <!-- The assembly descriptor prepares the "/maven" directory in the temporary data

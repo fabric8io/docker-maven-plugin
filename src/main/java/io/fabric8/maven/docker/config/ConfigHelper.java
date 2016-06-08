@@ -128,7 +128,7 @@ public class ConfigHelper {
     }
 
     /**
-     * A resolve can map one given image configuration to one or more image configurations
+     * A resolver can map one given image configuration to one or more image configurations
      * This is e.g. used for resolving properties
      */
     public interface Resolver {
