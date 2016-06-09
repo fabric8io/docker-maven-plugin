@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="4.1" data-basepath="." data-revision="Wed Jun 08 2016 10:06:18 GMT+0000 (UTC)">
+    <div class="book" data-level="4.1" data-basepath="." data-revision="Thu Jun 09 2016 13:46:07 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -522,9 +522,9 @@ the build and <code>none</code> if no cleanup is requested.</li>
 when running Maven.</li>
 <li><strong>cmd</strong> A command to execute by default (i.e. if no command
 is provided when a container for this image is started). See
-<a href="#startup-arguments">Start-up Arguments</a> for details.</li>
+<a href="#startup-arguments">Startup Arguments</a> for details.</li>
 <li><strong>entryPoint</strong> An entrypoint allows you to configure a container that will run as an executable.
-See <a href="#startup-arguments">Start-up Arguments</a> for details.</li>
+See <a href="#startup-arguments">Startup Arguments</a> for details.</li>
 <li><strong>env</strong> holds environments as described in
 <a href="docker-start.html#setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</li>
 <li><strong>from</strong> specifies the base image which should be used for this
@@ -625,7 +625,7 @@ user <code>jboss</code> (this is this &quot;run-user&quot;) after changing the f
 </ul>
 <p>In the event you do not need to include any artifacts with the image, you may
 safely omit this element from the configuration.</p>
-<h5 id="start-up-arguments"><a name="start-up-arguments" class="plugin-anchor" href="#start-up-arguments"><span class="fa fa-link"></span></a>Start-up Arguments</h5>
+<h5 id="startup-arguments"><a name="startup-arguments" class="plugin-anchor" href="#startup-arguments"><span class="fa fa-link"></span></a>Startup Arguments</h5>
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint" target="_blank">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd" target="_blank">cmd</a> for a container.</p>
 <p>The difference is, that an <code>entrypoint</code> is the command that always be executed, with the <code>cmd</code> as argument.
