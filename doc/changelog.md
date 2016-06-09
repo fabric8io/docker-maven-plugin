@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.15-SNAPSHOT**
+* **0.15.6** (2016-06-09)
   - Add support for '.maven-dockerinclude' for including certain files in plain Dockerfile build ([#471](https://github.com/fabric8io/docker-maven-plugin/issues/471))
   - Add support for placeholder in image names.
   - Expose container id as Maven property `docker.container.<alias>.id` ([#412](https://github.com/fabric8io/docker-maven-plugin/issues/412))
