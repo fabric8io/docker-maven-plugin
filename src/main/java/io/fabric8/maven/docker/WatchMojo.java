@@ -124,7 +124,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             }
             log.info("Waiting ...");
             if (!keepRunning) {
-                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes);
+                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, createCustomNetworks);
             }
             wait();
         } catch (InterruptedException e) {

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.List;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -121,6 +120,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Parameter(property = "docker.image")
     private String image;
+
+    /**
+     * Whether to create the customs networks (user-defined bridge networks) before starting
+     */
+    @Parameter(property = "docker.createCustomNetworks", defaultValue = "false")
+    protected boolean createCustomNetworks;
 
     // Default registry to use if no registry is specified
     @Parameter(property = "docker.registry")

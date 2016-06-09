@@ -1,10 +1,13 @@
 package io.fabric8.maven.docker.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.util.AutoPullMode;
@@ -58,6 +61,30 @@ public class QueryService {
             }
         }
         return null;
+    }
+
+    /**
+     * Get a network for a given network name.
+     * @param networkName name of network to lookup
+     * @return the network found or <code>null</code> if no network is available.
+     * @throws DockerAccessException in case of an remote error
+     */
+    public Network getNetworkByName(final String networkName) throws DockerAccessException {
+        for (Network el : docker.listNetworks()) {
+            if (networkName.equals(el.getName())) {
+                return el;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get all networks.
+     * @return the network found or <code>null</code> if no network is available.
+     * @throws DockerAccessException in case of an remote error
+     */
+    public Set<Network> getNetworks() throws DockerAccessException {
+        return new HashSet<>(docker.listNetworks());
     }
 
     /**
@@ -136,6 +163,18 @@ public class QueryService {
         return getContainerByName(containerName) != null;
     }
     
+    /**
+     * Check whether a network with the given name exists
+     *
+     * @param networkName network name
+     * @return true if a network with this name exists, false otherwise.
+     * @throws DockerAccessException
+     */
+
+    public boolean hasNetwork(String networkName) throws DockerAccessException {
+        return getNetworkByName(networkName) != null;
+    }
+
     /**
      * Check whether the given Image is locally available.
      *
