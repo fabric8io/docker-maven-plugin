@@ -4,7 +4,7 @@
   - Add support for '.maven-dockerinclude' for including certain files in plain Dockerfile build ([#471](https://github.com/fabric8io/docker-maven-plugin/issues/471))
   - Add support for placeholders in image names.
   - Expose container id as Maven property `docker.container.<alias>.id` ([#412](https://github.com/fabric8io/docker-maven-plugin/issues/412))
-  - Fix broken link in documentation (#468)
+  - Fix broken link in documentation ([#468](https://github.com/fabric8io/docker-maven-plugin/issues/468))
 
 * **0.15.4** (2016-06-03)
   - Update dependencies: Apache HttpClient 4.5.2, JMockit 1.23, ...
