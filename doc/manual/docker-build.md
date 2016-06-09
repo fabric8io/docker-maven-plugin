@@ -105,9 +105,9 @@ of an image configuration. In addition to `<dockerFileDir>` and
   when running Maven.
 * **cmd** A command to execute by default (i.e. if no command
   is provided when a container for this image is started). See
-  [Start-up Arguments](#startup-arguments) for details.
+  [Startup Arguments](#startup-arguments) for details.
 * **entryPoint** An entrypoint allows you to configure a container that will run as an executable.
-  See [Start-up Arguments](#startup-arguments) for details.
+  See [Startup Arguments](#startup-arguments) for details.
 * **env** holds environments as described in
   [Setting Environment Variables and Labels](docker-start.md#setting-environment-variables-and-labels).
 * **from** specifies the base image which should be used for this
@@ -213,7 +213,7 @@ Here's an example:
 In the event you do not need to include any artifacts with the image, you may
 safely omit this element from the configuration.
 
-##### Start-up Arguments
+##### Startup Arguments
 
 Using `entryPoint` and `cmd` it is possible to specify the [entry point](https://docs.docker.com/reference/builder/#entrypoint)
 or [cmd](https://docs.docker.com/reference/builder/#cmd) for a container.

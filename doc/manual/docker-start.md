@@ -32,11 +32,11 @@ The `<run>` configuration section knows the following sub elements:
   from the container.
 * **cmd** is a command which should be executed at the end of the
   container's startup. If not given, the image's default command is
-  used. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
+  used. See [Startup Arguments](docker-build.html#startup-arguments) for details.
 * **domainname**  domain name for the container
 * **dns** list of `host` elements specifying dns servers for the container to use
 * **dnsSearch** list of `host` elements specifying dns search domains
-* **entrypoint** set the entry point for the container. See [Start-up Arguments](docker-build.html#start-up-arguments) for details.
+* **entrypoint** set the entry point for the container. See [Startup Arguments](docker-build.html#startup-arguments) for details.
 * **env** can contain environment variables as subelements which are
   set during startup of the container. They are specified in the
   typical maven property format as described [Setting Environment Variables and Labels](#setting-environment-variables-and-labels).
