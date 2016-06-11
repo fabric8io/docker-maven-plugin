@@ -14,7 +14,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -35,9 +34,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
 
     @Parameter
     private MavenArchiveConfiguration archive;
-
-    @Parameter(defaultValue = "${session}", readonly = true)
-    protected MavenSession session;
 
     @Component
     private MavenFileFilter mavenFileFilter;
