@@ -5,32 +5,64 @@ connection to the Docker host. The corresponding system properties
 which can be used to set it from the outside are given in
 parentheses. 
 
-* **dockerHost** (`docker.host`) Use this variable to specify the URL
-  to on your Docker Daemon is listening. This plugin requires the
-  usage of the Docker remote API so this must be enabled. If this
-  configuration option is not given, the environment variable
-  `DOCKER_HOST` is evaluated. If this is also not set the plugin will use `unix:///var/run/docker.sock`
-  as a default. The scheme of this URL can be either given
-  directly as `http` or `https` depending on whether plain HTTP
-  communication is enabled or SSL should be used (default since Docker
-  1.3.0). Alternatively the scheme could be `tcp` in which case the protocol is
-  determined via the IANA assigned port: 2375 for `http` and 2376 for
-  `https`. Finally Unix sockets are supported with when a scheme `unix` is used together with the 
-  filesystem path to the unix socket.
-* **apiVersion** (`docker.apiVersion`) Use this variable if you are using
-  an older version of docker not compatible with the current default 
-  use to communicate with the server.
-* **certPath** (`docker.certPath`) Since 1.3.0 Docker remote API requires
-  communication via SSL and authentication with certificates when used
-  with boot2docker or docker-machine. These
-  certificates are normally stored
-  in `~/.docker/`. With this configuration the path can be set
-  explicitly. If not set, the fallback is first taken from the
-  environment variable `DOCKER_CERT_PATH` and then as last resort
-  `~/.docker/`. The keys in this are expected with it standard names
+The docker-maven-plugin uses the Docker remote API so the URL of your
+Docker Daemon must somehow be specified. The URL can be specified by
+the dockerHost or machine configuration, or by the `DOCKER_HOST`
+environment variable.
+
+Since 1.3.0, the Docker remote API supports communication via SSL and
+authentication with certificates.  The path to the certificates can
+be specified by the certPath or machine configuration, or by the
+`DOCKER_CERT_PATH` environment variable.
+
+* **apiVersion** (`docker.apiVersion`) Use this parameter if you are
+  using an older version of Docker not compatible with the current
+  default used to communicate with the server.
+* **dockerHost** (`docker.host`)
+  Use this parameter to directly specify the URL of the Docker Daemon.
+  If this configuration option is not given, then the **&lt;machine&gt;**
+  configuration section is consulted.  
+  The scheme of the URL can be either given directly as `http` or `https`
+  depending on whether plain HTTP communication is enabled or SSL should
+  be used. Alternatively the scheme could be `tcp` in which case the
+  protocol is determined via the IANA assigned port: 2375 for `http`
+  and 2376 for `https`. Finally, Unix sockets are supported by using
+  the scheme `unix` together with the filesystem path to the unix socket.  
+  The discovery sequence used by the docker-maven-plugin to determine
+  the URL is:
+  - value of **dockerHost** (`docker.host`)
+  - the `DOCKER_HOST` associated with the docker-machine named in **&lt;machine&gt;**.
+  - the value of the environment variable `DOCKER_HOST`.
+  - `unix:///var/run/docker.sock` if it a readable socket.
+* **certPath** (`docker.certPath`)
+  Use this parameter to directly specify the directory of SSL
+  certificates to use when communicating with the Docker daemon.
+  If this configuration option is not given, then the **&lt;machine&gt;**
+  configuration section is consulted.  
+  The keys in this directory are expected to have the standard names
   `ca.pem`, `cert.pem` and `key.pem`. Please refer to the
   [Docker documentation](https://docs.docker.com/articles/https/) for
-  more information about SSL security with Docker. 
+  more information about SSL security with Docker.  
+  The discovery sequence used by the docker-maven-plugin to determine
+  the SSL certificate directory is:
+   - value of **certPath** (`docker.certPath`)
+   - the `DOCKER_CERT_PATH` associated with the docker-machine named in **&lt;machine&gt;**.
+   - the value of the environment variable `DOCKER_CERT_PATH`.
+   - user directory `~/.docker/`
+* **machine** Use this configuration section with sub-elements to work
+   with a docker-machine.  The docker-machine executable must be
+   available in the PATH on the host running the maven build.  If the
+   named docker-machine is not started, it will be started.
+ * **name** (`docker.machine.name`)
+  This parameter specifies the name of a docker-machine.  The
+  docker-machine will be queried for the Docker Daemon URL and
+  certificate path. If **name** is not set, the docker-machine named
+  'default' will be queried.
+ * **autoCreate** (`docker.machine.autoCreate`)
+  Setting this parameter true will create the docker-machine if it
+  does not exist.  If not provided, this parameter will be false.
+ * **createOptions**
+  This is the map of name to value pairs used when creating a docker-machine.
 * **image** (`docker.image`) In order to temporarily restrict the
   operation of plugin goals this configuration option can be
   used. Typically this will be set via the system property
@@ -48,7 +80,7 @@ parentheses.
   With this parameter the execution of this plugin can be skipped
   completely. 
 * **skipTags** (`docker.skipTags`)
-  If set to `true` the plugin won't add any tags to images that have been built.
+  If set to `true` the docker-maven-plugin won't add any tags to images that have been built.
 * **registry** (`docker.registry`)
   Specify globally a registry to use for pulling and pushing
   images. See [Registry handling](registry-handling.md) for details. 
@@ -62,32 +94,49 @@ parentheses.
   during run which has no `<build>` section. Valid values are `on|off|always`.
 * **authConfig** holds the authentication information when pulling from
   or pushing to Docker registry. There is a dedicated section 
-  [Authentication](#authentication) for how doing security.
+  [Authentication](authentication.md) for security.
 * **logDate** (`docker.logDate`) specifies the date format which is used for printing out
   container logs. This configuration can be overwritten by individual
   run configurations and described below. The format is described in
-  [Log configuration](#log-configuration) below. 
+  [Log configuration](docker-start.html#log-configuration).
 * **logStdout** (`docker.logStdout`) if set, do all container logging to standard output, 
-  regardless whether a `file` for log output is specified. See also [Log configuration](#log-configuration)
+  regardless whether a `file` for log output is specified. See also
+  [Log configuration](docker-start.html#log-configuration)
 * **portPropertyFile** if given, specifies a global file into which the
   mapped properties should be written to. The format of this file and
-  its purpose are also described in [Port Mapping](#port-mapping).
+  its purpose are also described in [Port Mapping](docker-start.html#port-mapping).
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.
 * **outputDirectory** (`docker.target.dir`) specifies the default output directory to be
-  used by the plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
+  used by docker-maven-plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
 * **maxConnections** (`docker.maxConnections`) specifies how many parallel connections are allowed to be opened
   to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), 
   so don't put that number to low. Default is 100 which should be suitable for most of the cases.
 
-Example:
+Examples:
 
 ````xml
+<!-- directly configure communication with daemon -->
 <configuration>
    <dockerHost>https://localhost:2376</dockerHost>
    <certPath>src/main/dockerCerts</certPath>
    <useColor>true</useColor>
+   .....
+</configuration>
+````
+
+
+````xml
+<!-- work with a docker-machine -->
+<configuration>
+  <machine>
+    <autoCreate>true</autoCreate>
+      <createOptions>
+        <driver>virtualbox</driver>
+        <virtualbox-cpu-count>2</virtualbox-cpu-count>
+    </createOptions>
+   </machine>
    .....
 </configuration>
 ````

@@ -28,7 +28,6 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.15.7</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
@@ -83,9 +82,14 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>${project.version}</version>
         <extensions>true</extensions> <!-- enables using 'docker' packaging above -->
         <configuration>
+          <machine>
+            <createOptions>
+              <driver>virtualbox</driver>
+            </createOptions>
+          </machine>
+
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
