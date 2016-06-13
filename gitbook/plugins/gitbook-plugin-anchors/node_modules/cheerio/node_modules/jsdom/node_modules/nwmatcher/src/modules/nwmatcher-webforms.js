@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2015 Diego Perini
+ * Copyright (C) 2007-2016 Diego Perini
  * All rights reserved.
  *
  * this is just a small example to show
