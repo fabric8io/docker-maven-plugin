@@ -22,13 +22,13 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.15.7</version>
+    <version>0.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.15.7</version>
+  <version>0.15-SNAPSHOT</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
@@ -115,7 +115,7 @@
                   <!-- Port mappings: Container internal port (which must be exposed) will be
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${jolokia.port}. Multiple port mappings can be specified here-->
-                  <port>${jolokia.host}:${jolokia.port}:8080</port>
+                  <port>${BLA_BLUB}</port>
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
