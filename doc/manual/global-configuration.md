@@ -80,6 +80,8 @@ parentheses.
 * **maxConnections** (`docker.maxConnections`) specifies how many parallel connections are allowed to be opened
   to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), 
   so don't put that number to low. Default is 100 which should be suitable for most of the cases.
+* **createCustomNetworks** ('docker.createCustomNetworks') If given it will create Docker Networks during `docker:start`
+  and remove it during `docker:stop` if you provide a custom network in the run configuration of an image.
 
 Example:
 

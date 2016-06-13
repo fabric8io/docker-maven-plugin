@@ -9,6 +9,7 @@ import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.Network;
 
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
@@ -196,6 +197,34 @@ public interface DockerAccess {
      * @throws DockerAccessException if an image cannot be removed
      */
     boolean removeImage(String image, boolean ... force) throws DockerAccessException;
+
+    /**
+     * List networks
+     *
+     * @return list of <code>Network<code> objects
+     * @throws DockerAccessException if the networks could not be listed
+     */
+    List<Network> listNetworks() throws DockerAccessException;
+
+    /**
+     * Create a network from the given configuration.
+     *
+     *
+     * @param configuration network configuration
+     * @throws DockerAccessException if the container could not be created.
+     */
+
+    String createNetwork(NetworkCreateConfig configuration) throws DockerAccessException;
+
+    /**
+     * Remove an network from this docker installation
+     *
+     * @param networkId network to remove
+     * @return true if an network was removed, false if none was removed
+     * @throws DockerAccessException if an image cannot be removed
+     */
+    boolean removeNetwork(String networkId) throws DockerAccessException;
+
 
     /**
      * Lifecycle method for this access class which must be called before any other method is called.

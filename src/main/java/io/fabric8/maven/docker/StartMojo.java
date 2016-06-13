@@ -101,6 +101,9 @@ public class StartMojo extends AbstractDockerMojo {
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
+                if (createCustomNetworks) {
+                    runService.createCustomNetwork(runConfig);
+                }
 
                 String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties);
 
@@ -122,7 +125,7 @@ public class StartMojo extends AbstractDockerMojo {
                 exposeContainerProps(hub.getQueryService(), containerId,imageConfig.getAlias());
             }
             if (follow) {
-                runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes);
+                runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes, createCustomNetworks);
                 wait();
             }
 
@@ -137,7 +140,7 @@ public class StartMojo extends AbstractDockerMojo {
         } finally {
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes, pomLabel);
+                runService.stopStartedContainers(keepContainer, removeVolumes, createCustomNetworks, pomLabel);
             }
         }
     }

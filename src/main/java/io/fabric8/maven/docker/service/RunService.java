@@ -21,6 +21,7 @@ import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.*;
 
 
@@ -150,10 +151,21 @@ public class RunService {
      */
     public void stopStartedContainers(boolean keepContainer,
                                       boolean removeVolumes,
+                                      boolean removeCustomNetworks,
                                       PomLabel pomLabel)
             throws DockerAccessException {
+        Set<Network> networksToRemove = new HashSet<>();
         for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(pomLabel)) {
+            collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
             shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+        }
+        removeCustomNetworks(networksToRemove);
+    }
+
+    private void collectCustomNetworks(Set<Network> networksToRemove, ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeCustomNetworks) throws DockerAccessException {
+        final NetworkingMode networkingMode = descriptor.getImageConfiguration().getRunConfiguration().getNetworkingMode();
+        if (removeCustomNetworks && networkingMode.isCustomNetwork()) {
+           networksToRemove.add(queryService.getNetworkByName(networkingMode.getCustomNetwork()));
         }
     }
 
@@ -194,12 +206,12 @@ public class RunService {
     /**
      * Add a shutdown hook in order to stop all registered containers
      */
-    public void addShutdownHookForStoppingContainers(final boolean keepContainer, final boolean removeVolumes) {
+    public void addShutdownHookForStoppingContainers(final boolean keepContainer, final boolean removeVolumes, final boolean removeCustomNetworks) {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    stopStartedContainers(keepContainer, removeVolumes, null);
+                    stopStartedContainers(keepContainer, removeVolumes, removeCustomNetworks, null);
                 } catch (DockerAccessException e) {
                     log.error("Error while stopping containers: %s", e.getMessage());
                 }
@@ -413,5 +425,23 @@ public class RunService {
                  descriptor.getDescription(),
                  (keepContainer ? "" : " and remove"),
                  containerId.substring(0, 12));
+    }
+
+    public void createCustomNetwork(RunImageConfiguration runConfig) throws DockerAccessException {
+        final NetworkingMode networkingMode = runConfig.getNetworkingMode();
+        if (networkingMode.isCustomNetwork()) {
+            String customNetwork = networkingMode.getCustomNetwork();
+            if (!queryService.hasNetwork(customNetwork)) {
+                docker.createNetwork(new NetworkCreateConfig(customNetwork));
+            } else {
+                log.debug("Custom Network " + customNetwork + " found");
+            }
+        }
+    }
+
+    public void removeCustomNetworks(Collection<Network> networks) throws DockerAccessException {
+        for (Network network : networks) {
+            docker.removeNetwork(network.getId());
+        }
     }
 }
