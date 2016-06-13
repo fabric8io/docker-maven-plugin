@@ -217,7 +217,7 @@ public class PortMapping {
         return containerPortToHostPort;
     }
 
-    private IllegalArgumentException createInvalidMappingError(String mapping, NumberFormatException exp) {
+    private IllegalArgumentException createInvalidMappingError(String mapping, Exception exp) {
         return new IllegalArgumentException("\nInvalid port mapping '" + mapping + "'\n" +
                 "Required format: '<hostIP>:<hostPort>:<containerPort>(/tcp|udp)'\n" +
                 "See the reference manual for more details");
@@ -325,7 +325,7 @@ public class PortMapping {
             }
 
             createMapping(mapping.split(":", 3), protocol);
-        } catch (NumberFormatException exp) {
+        } catch (NullPointerException | NumberFormatException exp) {
             throw createInvalidMappingError(input, exp);
         }
     }
