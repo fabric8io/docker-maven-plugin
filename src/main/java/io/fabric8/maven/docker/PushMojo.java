@@ -26,6 +26,9 @@ public class PushMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.push.registry")
     private String pushRegistry;
 
+    @Parameter(property="docker.skipPush", defaultValue="false")
+    private boolean skipPush;
+
     /** {@inheritDoc} */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
