@@ -11,3 +11,7 @@ with tag `1.5` to the registry `docker.test.org` at port
 `5000`. Security information (i.e. user and password) can be specified
 in multiple ways as described in section [Authentication](authentication.html).
 
+* **skipPush** (`docker.skipPush`)
+  If set to `true` the plugin won't push any images that have been built.
+
+

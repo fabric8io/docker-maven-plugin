@@ -26,25 +26,30 @@ public class PushMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.push.registry")
     private String pushRegistry;
 
+    @Parameter(property="docker.skipPush", defaultValue="false")
+    private boolean skipPush;
+
     /** {@inheritDoc} */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        for (ImageConfiguration imageConfig : getResolvedImages()) {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            String name = imageConfig.getName();
-            if (buildConfig != null) {
-                String configuredRegistry = getConfiguredRegistry(imageConfig, pushRegistry);
-                AuthConfig authConfig = prepareAuthConfig(new ImageName(name), configuredRegistry, true);
+        if (!skipPush) {
+            for (ImageConfiguration imageConfig : getResolvedImages()) {
+                BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+                String name = imageConfig.getName();
+                if (buildConfig != null) {
+                    String configuredRegistry = getConfiguredRegistry(imageConfig, pushRegistry);
+                    AuthConfig authConfig = prepareAuthConfig(new ImageName(name), configuredRegistry, true);
 
-                DockerAccess docker = hub.getDockerAccess();
+                    DockerAccess docker = hub.getDockerAccess();
 
-                long start = System.currentTimeMillis();
-                docker.pushImage(name, authConfig, configuredRegistry);
-                log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
+                    long start = System.currentTimeMillis();
+                    docker.pushImage(name, authConfig, configuredRegistry);
+                    log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
-                for (String tag : imageConfig.getBuildConfiguration().getTags()) {
-                    if (tag != null) {
-                        docker.pushImage(new ImageName(name,tag).getFullName(), authConfig, configuredRegistry);
+                    for (String tag : imageConfig.getBuildConfiguration().getTags()) {
+                        if (tag != null) {
+                            docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry);
+                        }
                     }
                 }
             }
