@@ -36,8 +36,8 @@ Example:
 </image>
 ```
 
-Given this example configuration a single image configuration is build
-up from the following properties, which correspond to corresponding
+Given this example configuration a single image configuration is built
+up from the following properties, which correspond to the corresponding
 values in the `<build>` and `<run>` sections.
 
 * **docker.alias** Alias name
@@ -83,6 +83,7 @@ used to create the image. The dockerfile must be name `Dockerfile`
   used as environment variables. The environment variables takes precedence over any other environment
   variables specified.
 * **docker.extraHosts.idx** List of `host:ip` to add to `/etc/hosts`
+* **docker.fetchLimit ** Number of running and stopped containers to return. A value of 0 returns all running and stopped containers. Default is 100.
 * **docker.from** Base image for building an image
 * **docker.hostname** Container hostname
 * **docker.labels.LABEL** Sets a label which works similarly like setting environment variables. 

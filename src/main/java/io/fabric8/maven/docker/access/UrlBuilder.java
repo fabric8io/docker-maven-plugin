@@ -53,7 +53,7 @@ public final class UrlBuilder {
                 .p("follow", follow)
                 .build();
     }
-    
+
     public String createContainer(String name) {
         return u("containers/create")
                 .p("name", name)
@@ -70,10 +70,16 @@ public final class UrlBuilder {
         return u("containers/%s/json", containerId)
                 .build();
     }
-    
+
     public String listContainers(int limit) {
         return u("containers/json")
                 .p("limit", limit)
+                .build();
+    }
+
+    public String listAllContainers() {
+        return u("containers/json")
+                .p("all", 0)
                 .build();
     }
 

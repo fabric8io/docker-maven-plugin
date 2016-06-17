@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config.handler.property;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,14 +40,14 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     @Override
     public List<ImageConfiguration> resolve(ImageConfiguration config, Properties properties) throws IllegalArgumentException {
         String prefix = getPrefix(config);
-        
+
         RunImageConfiguration run = extractRunConfiguration(prefix,properties);
         BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
         WatchImageConfiguration watch = extractWatchConfig(prefix, properties);
 
         String name = extractName(prefix, properties);
         String alias = withPrefix(prefix, ALIAS, properties);
-        
+
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
@@ -85,7 +85,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private RunImageConfiguration extractRunConfiguration(String prefix, Properties properties) {
-
+        
         return new RunImageConfiguration.Builder()
                 .capAdd(listWithPrefix(prefix, CAP_ADD, properties))
                 .capDrop(listWithPrefix(prefix, CAP_DROP, properties))
@@ -113,6 +113,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
                 .log(extractLogConfig(prefix,properties))
                 .wait(extractWaitConfig(prefix, properties))
+                .fetchLimit(intWithPrefix(prefix, FETCH_LIMIT, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
                 .build();
@@ -120,7 +121,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {
         return new AssemblyConfiguration.Builder()
-                .basedir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))        
+                .basedir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))
                 .descriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
                 .descriptorRef(withPrefix(prefix, ASSEMBLY_DESCRIPTOR_REF, properties))
                 .dockerFileDir(withPrefix(prefix, ASSEMBLY_DOCKER_FILE_DIR, properties))
@@ -130,7 +131,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .mode(withPrefix(prefix, ASSEMBLY_MODE, properties))
                 .build();
     }
-    
+
     private String extractName(String prefix, Properties properties) throws IllegalArgumentException {
         String name = withPrefix(prefix, NAME, properties);
         if (name == null) {
@@ -138,7 +139,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         }
         return name;
     }
-    
+
     // Extract only the values of the port mapping
     private List<String> extractPortValues(String prefix, Properties properties) {
         List<String> ret = new ArrayList<>();
@@ -204,7 +205,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .tcpPorts(asIntList(listWithPrefix(prefix, WAIT_TCP_PORT, properties)))
                 .build();
     }
-    
+
     private WatchImageConfiguration extractWatchConfig(String prefix, Properties properties) {
         return new WatchImageConfiguration.Builder()
                 .interval(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
@@ -219,7 +220,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .from(listWithPrefix(prefix, VOLUMES_FROM, properties))
                 .build();
     }
-  
+
     private int asInt(String s) {
         return s != null ? Integer.parseInt(s) : 0;
     }
@@ -241,11 +242,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     private List<String> listWithPrefix(String prefix, ConfigKey key, Properties properties) {
         return extractFromPropertiesAsList(key.asPropertyKey(prefix), properties);
     }
-   
+
     private Map<String, String> mapWithPrefix(String prefix, ConfigKey key, Properties properties) {
         return extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties);
     }
-        
+
     private String withPrefix(String prefix, ConfigKey key, Properties properties) {
         return properties.getProperty(key.asPropertyKey(prefix));
     }
@@ -253,6 +254,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     private Long longWithPrefix(String prefix, ConfigKey key, Properties properties) {
         String prop = withPrefix(prefix, key, properties);
         return prop == null ? null : Long.valueOf(prop);
+    }
+
+    private Integer intWithPrefix(String prefix, ConfigKey key, Properties properties) {
+        String prop = withPrefix(prefix, key, properties);
+        return prop == null ? null : Integer.valueOf(prop);
     }
 
     private Boolean booleanWithPrefix(String prefix, ConfigKey key, Properties properties) {
