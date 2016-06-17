@@ -44,7 +44,7 @@ public class ServiceHub {
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
-               Logger logger, LogOutputSpecFactory logSpecFactory) {
+               Logger logger, LogOutputSpecFactory logSpecFactory, int dockerFetchLimit) {
 
         this.dockerAccess = dockerAccess;
         this.logSpecFactory = logSpecFactory;
@@ -53,7 +53,7 @@ public class ServiceHub {
         archiveService = new ArchiveService(dockerAssemblyManager, logger);
 
         if (dockerAccess != null) {
-            queryService = new QueryService(dockerAccess, logger);
+            queryService = new QueryService(dockerAccess, logger, dockerFetchLimit);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
         } else {
