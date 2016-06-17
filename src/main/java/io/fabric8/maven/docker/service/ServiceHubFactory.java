@@ -18,7 +18,7 @@ public class ServiceHubFactory {
 
     // Track started containers
     private final ContainerTracker containerTracker = new ContainerTracker();
-    
+
     @Requirement
     protected BuildPluginManager pluginManager;
 
@@ -27,10 +27,10 @@ public class ServiceHubFactory {
 
     private LogOutputSpecFactory logOutputSpecFactory;
 
-    public ServiceHub createServiceHub(MavenProject project, MavenSession session, DockerAccess access, Logger log, LogOutputSpecFactory logSpecFactory) {
+    public ServiceHub createServiceHub(MavenProject project, MavenSession session, DockerAccess access, Logger log, LogOutputSpecFactory logSpecFactory, int dockerFetchLimit) {
         this.logOutputSpecFactory = logSpecFactory;
         return new ServiceHub(access, containerTracker, pluginManager, dockerAssemblyManager, project, session,
-                              log, logSpecFactory);
+                              log, logSpecFactory, dockerFetchLimit);
     }
 
     public LogOutputSpecFactory getLogOutputSpecFactory() {

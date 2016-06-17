@@ -120,6 +120,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.skip", defaultValue = "false")
     private boolean skip;
 
+    // Max number of containers to fetch when stopping/removing
+    @Parameter(property = "docker.fetchLimit", defaultValue = "100")
+    protected int fetchLimit;
+
     /**
      * Whether to restrict operation to a single image. This can be either
      * the image or an alias name. It can also be comma separated list.
@@ -139,7 +143,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // property file to write out with port mappings
     @Parameter
     protected String portPropertyFile;
-    
+
     // Authentication information
     @Parameter
     Map authConfig;
@@ -178,7 +182,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             DockerAccess access = null;
             try {
                 access = createDockerAccess(minimalApiVersion);
-                ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
+                fetchLimit = resolvedImages.get(0).getRunConfiguration().getFetchLimit() != null
+                        ? resolvedImages.get(0).getRunConfiguration().getFetchLimit() : fetchLimit;
+                ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory, fetchLimit);
                 executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
                 log.error("%s", exp.getMessage());
@@ -225,6 +231,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Customization hook for subclasses to influence the final configuration. This method is called
     // before initialization and validation of the configuration.
+    @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
         return imageConfigs;
     }

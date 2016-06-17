@@ -188,7 +188,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void buildImage(String image, File dockerArchive, String dockerfileName, boolean forceRemove, boolean noCache,
-                           Map<String, String> buildArgs) throws DockerAccessException {
+            Map<String, String> buildArgs) throws DockerAccessException {
         try {
             String url = urlBuilder.buildImage(image, dockerfileName, forceRemove, noCache, buildArgs);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
@@ -198,7 +198,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void copyArchive(String containerId,File archive, String targetPath)
+    public void copyArchive(String containerId, File archive, String targetPath)
             throws DockerAccessException {
         try {
             String url = urlBuilder.copyArchive(containerId, targetPath);
@@ -235,7 +235,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public List<Container> listContainers(int limit) throws DockerAccessException {
-        String url = urlBuilder.listContainers(limit);
+        String url = limit == 0 ? urlBuilder.listAllContainers() : urlBuilder.listContainers(limit);
 
         try {
             String response = delegate.get(url, HTTP_OK);
@@ -300,7 +300,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
         try {
             delegate.post(pullUrl, null, createAuthHeader(authConfig),
-                          createPullOrPushResponseHandler(), HTTP_OK);
+                    createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         }
@@ -314,7 +314,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         String temporaryImage = tagTemporaryImage(name, registry);
         try {
             delegate.post(pushUrl, null, createAuthHeader(authConfig),
-                          createPullOrPushResponseHandler(), HTTP_OK);
+                    createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         } finally {
@@ -334,7 +334,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             delegate.post(url, HTTP_CREATED);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to add tag [%s] to image [%s]", targetImage,
-                                            sourceImage, e);
+                    sourceImage, e);
         }
     }
 

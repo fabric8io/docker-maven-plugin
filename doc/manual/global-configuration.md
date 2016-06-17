@@ -47,6 +47,8 @@ parentheses.
 * **skip** (`docker.skip`)
   With this parameter the execution of this plugin can be skipped
   completely. 
+* **fetchLimit** (`docker.fetchLimit`)
+  Number of running and stopped containers to return. A value of 0 returns all running and stopped containers. Default is 100.
 * **skipTags** (`docker.skipTags`)
   If set to `true` the plugin won't add any tags to images that have been built.
 * **registry** (`docker.registry`)
