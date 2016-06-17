@@ -17,7 +17,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 public class QueryService {
 
     // Default limit when listing containers
-    private static final int CONTAINER_LIMIT = 100;
+    private final int containerLimit;
 
     // Access to docker daemon & logger
     private DockerAccess docker;
@@ -29,7 +29,8 @@ public class QueryService {
      * @param docker remote access to docker daemon
      * @param log logger
      */
-    public QueryService(DockerAccess docker, Logger log) {
+    public QueryService(DockerAccess docker, Logger log, int dockerFetchLimit) {
+        this.containerLimit = dockerFetchLimit;
         this.docker = docker;
         this.log = log;
     }
@@ -52,7 +53,7 @@ public class QueryService {
      * @throws DockerAccessException in case of an remote error
      */
     public Container getContainerByName(final String containerName) throws DockerAccessException {
-        for (Container el : docker.listContainers(CONTAINER_LIMIT)) {
+        for (Container el : docker.listContainers(containerLimit)) {
             if (containerName.equals(el.getName())) {
                 return el;
             }
@@ -79,7 +80,7 @@ public class QueryService {
      * @throws DockerAccessException if the request fails
      */
     public List<Container> getContainersForImage(final String image) throws DockerAccessException {
-        List<Container> list = docker.listContainers(CONTAINER_LIMIT);
+        List<Container> list = docker.listContainers(containerLimit);
         List<Container> ret = new ArrayList<>();
         for (Container el : list) {
             if (image.equals(el.getImage())) {
@@ -91,7 +92,7 @@ public class QueryService {
 
     /**
      * Finds the id of an image.
-     * 
+     *
      * @param imageName name of the image.
      * @return the id of the image
      * @throws DockerAccessException if the request fails
@@ -99,7 +100,7 @@ public class QueryService {
     public String getImageId(String imageName) throws DockerAccessException {
         return docker.getImageId(imageName);
     }
-    
+
     /**
      * Get the id of the latest container started for an image
      *
@@ -135,7 +136,7 @@ public class QueryService {
     public boolean hasContainer(String containerName) throws DockerAccessException {
         return getContainerByName(containerName) != null;
     }
-    
+
     /**
      * Check whether the given Image is locally available.
      *
