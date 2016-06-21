@@ -120,7 +120,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     }
     
     public String getDescription() {
-        return String.format("[%s] %s", name, (alias != null ? "\"" + alias + "\"" : ""));
+        return String.format("[%s] %s", name, (alias != null ? "\"" + alias + "\"" : "")).trim();
     }
 
     public String getRegistry() {
