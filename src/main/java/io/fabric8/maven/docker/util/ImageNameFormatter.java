@@ -34,6 +34,13 @@ import org.apache.maven.project.MavenProject;
  */
 public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
+    /**
+     * Property to lookup for image name which overwrites the calculated default, which is calculated
+     * on the project version and depends whether it is a snapshot project or not.
+     * Used with format modifier %v
+     */
+    public static final String DOCKER_IMAGE_TAG = "docker.image.tag";
+
     private final Map<String, Lookup> lookups;
 
     public ImageNameFormatter(MavenProject project) {
@@ -158,12 +165,6 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
     private static class DefaultTagLookup extends AbstractLookup {
 
-        /**
-         * Property to lookup for image name which overwrites the calculated default, which is calculated
-         * on the project version and depends whether it is a snapshot project or not.
-         * Used with format modifier %v
-         */
-        private static final String DOCKER_IMAGE_TAG = "docker.image.tag";
 
         // how to resolve the version
         private final Mode mode;
@@ -195,6 +196,9 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
                     }
                 }
             }
+            // lets store the value in the property in case we build multiple images with a timestamp
+            // or we wish to save the tag
+            project.getProperties().put(DOCKER_IMAGE_TAG, tag);
             return tag;
         }
     }

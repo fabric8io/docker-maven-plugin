@@ -237,6 +237,18 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
+    protected void clearResolvedImages() {
+        Map ctx = getPluginContext();
+        ctx.remove(CONTEXT_KEY_RESOLVED_IMAGES);
+    }
+
+    protected List<ImageConfiguration> recreateResolvedImages() {
+        clearResolvedImages();
+        initImageConfiguration();
+        return getResolvedImages();
+    }
+
+
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
         DockerAccess access = null;
         if (isDockerAccessRequired()) {

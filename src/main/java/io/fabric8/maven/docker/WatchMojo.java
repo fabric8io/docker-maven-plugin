@@ -228,7 +228,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         };
     }
 
-    private void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
+    protected void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
         // Stop old one
         RunService runService = hub.getRunService();
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
@@ -266,7 +266,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     // ===============================================================================================================
 
     // Helper class for holding state and parameter when watching images
-    private class ImageWatcher {
+    protected class ImageWatcher {
 
         private final WatchMode mode;
         private final AtomicReference<String> imageIdRef, containerIdRef;
