@@ -1,8 +1,10 @@
 package io.fabric8.maven.docker;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 
@@ -21,8 +23,10 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.components.io.resources.EncodingSupported;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
@@ -51,9 +55,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key under which to store the minimal API version to use
     public static final String CONTEXT_KEY_MINIMAL_API_VERSION = "CONTEXT_KEY_MINIMAL_API_VERSION";
 
-    // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
-    // docker installations.
-    public static final String DOCKER_HTTPS_PORT = "2376";
+    // Current 'now' timestamp for creating timestamped versiom. Static in order to share it
+    private static Date now = null;
 
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
@@ -199,7 +202,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // Resolve and customize image configuration
-    private String initImageConfiguration() {
+    private String initImageConfiguration() throws MojoExecutionException {
         // Resolve images
         final Properties resolveProperties = project.getProperties();
         resolvedImages = getResolvedImagesFromPluginContext();
@@ -299,10 +302,41 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // Used for formatting the image name
-    private ConfigHelper.NameFormatter createNameFormatter(MavenProject project) {
-        return new ImageNameFormatter(project);
+    private ConfigHelper.NameFormatter createNameFormatter(MavenProject project) throws MojoExecutionException {
+        return new ImageNameFormatter(project, getNow());
     }
 
+    /**
+     * Get the current date. Can be overwritten by a subclass to pick up an already existing timestamp
+     * As a side effect it will create timestamp file
+     * @return timestamp to use
+     */
+    protected synchronized Date getNow() throws MojoExecutionException {
+        if (now == null) {
+            now = createBuildTimestampFileWithCurrentDate();
+        }
+        return now;
+    }
+
+    // create a timestamp file holding time in epoch seconds
+    private Date createBuildTimestampFileWithCurrentDate() throws MojoExecutionException {
+        File timestampFile = getBuildTimeStampFile();
+        try {
+            if (timestampFile.exists()) {
+                timestampFile.delete();
+            }
+            Date now = new Date();
+            FileUtils.fileWrite(timestampFile, StandardCharsets.US_ASCII.name(), Long.toString(now.getTime()));
+            return now;
+        } catch (IOException e) {
+            throw new MojoExecutionException("Cannot create " + timestampFile + " for storing time " + now.getTime(),e);
+        }
+    }
+
+    // used for storing a timestamp
+    protected File getBuildTimeStampFile() {
+        return new File(project.getBuild().getOutputDirectory(),"build.timestamp");
+    }
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {

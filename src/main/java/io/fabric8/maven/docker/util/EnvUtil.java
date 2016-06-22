@@ -1,12 +1,14 @@
 package io.fabric8.maven.docker.util;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.AbstractDockerMojo;
+import org.apache.commons.io.IOUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 import static java.util.concurrent.TimeUnit.*;
@@ -21,6 +23,10 @@ public class EnvUtil {
 
     public static final String MAVEN_PROPERTY_REGEXP = "\\s*\\$\\{\\s*([^}]+)\\s*}\\s*$";
 
+    // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
+    // docker installations.
+    public static final String DOCKER_HTTPS_PORT = "2376";
+
     private EnvUtil() {}
 
     // Check both, url and env DOCKER_HOST (first takes precedence)
@@ -34,7 +40,7 @@ public class EnvUtil {
                 throw new IllegalArgumentException("No url given, no DOCKER_HOST environment variable and no read/writable '/var/run/docker.sock'");
             }
         }
-        String protocol = connect.contains(":" + AbstractDockerMojo.DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
         return connect.replaceFirst("^tcp:", protocol);
     }
     
@@ -257,6 +263,8 @@ public class EnvUtil {
 
         return res.toString();
     }
+
+    // ======================================================================================================
 
     private static boolean propMatchesPrefix(String prefix, String key) {
         return key.startsWith(prefix) && key.length() >= prefix.length();

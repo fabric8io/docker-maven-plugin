@@ -18,6 +18,7 @@ package io.fabric8.maven.docker;/*
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -36,6 +37,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -61,7 +63,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.watchMode", defaultValue = "both")
     private WatchMode watchMode;
 
-    @Parameter(property = "docker.watchInterval", defaultValue = "500")
+    @Parameter(property = "docker.watchInterval", defaultValue = "5000")
     private int watchInterval;
 
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
@@ -131,6 +133,22 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             log.warn("Interrupted");
         } finally {
             executor.shutdownNow();
+        }
+    }
+
+    @Override
+    // Reuse an existing timestamp file
+    protected synchronized Date getNow() throws MojoExecutionException {
+        File timestampFile = getBuildTimeStampFile();
+        if (timestampFile.exists()) {
+            try {
+                String ts = FileUtils.fileRead(timestampFile);
+                return new Date(Long.parseLong(ts));
+            } catch (IOException e) {
+                throw new MojoExecutionException("Cannot read " + timestampFile + " (although it exists)",e);
+            }
+        } else {
+            return new Date();
         }
     }
 

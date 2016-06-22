@@ -16,6 +16,7 @@ package io.fabric8.maven.docker.util;
  * limitations under the License.
  */
 
+import java.util.Date;
 import java.util.Properties;
 
 import mockit.*;
@@ -39,6 +40,9 @@ public class ImageNameFormatterTest {
     @Injectable
     private MavenProject project;
 
+    @Injectable
+    private Date now = new Date();
+    
     @Tested
     private ImageNameFormatter formatter;
 

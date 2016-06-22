@@ -142,4 +142,11 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
             return buildConfig.nocache();
         }
     }
+
+    /**
+     * Returns the file used to store the latest docker label created in the case of timestamp builds
+     */
+    protected File getDockerLabelFile() {
+        return new File(outputDirectory, "docker-label.txt");
+    }
 }
