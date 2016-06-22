@@ -189,24 +189,17 @@ public class StartMojo extends AbstractDockerMojo {
                     host = projectProperties.getProperty("docker.host.address");
                 }
 
-                if ("localhost".equals(host) && container.getIPAddress() != null) {
-                    host = container.getIPAddress();
-                    ports = portsConfigured;
-                    log.info("%s: Waiting for ports %s directly on container with IP (%s).",
-                             imageConfig.getDescription(), ports, host);
-                } else {
-                    for (int port : portsConfigured) {
-                        Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
-                        if (binding == null) {
-                            throw new MojoExecutionException(String.format(
-                                    "Cannot watch on port %d, since there is no network binding", port
-                            ));
-                        }
-                        ports.add(binding.getHostPort());
+                for (int port : portsConfigured) {
+                    Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
+                    if (binding == null) {
+                        throw new MojoExecutionException(String.format(
+                                "Cannot watch on port %d, since there is no network binding", port
+                        ));
                     }
-                    log.info("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.",
-                             imageConfig.getDescription(), ports, host);
+                    ports.add(binding.getHostPort());
                 }
+                log.info("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.",
+                         imageConfig.getDescription(), ports, host);
 
                 WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
                 checkers.add(tcpWaitChecker);
