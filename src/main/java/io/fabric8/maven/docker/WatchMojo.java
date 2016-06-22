@@ -61,7 +61,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.watchMode", defaultValue = "both")
     private WatchMode watchMode;
 
-    @Parameter(property = "docker.watchInterval", defaultValue = "5000")
+    @Parameter(property = "docker.watchInterval", defaultValue = "500")
     private int watchInterval;
 
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
@@ -176,6 +176,9 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final AssemblyFiles files = hub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
+        if (files.isEmpty()) {
+            log.error("No assembly files for " + imageConfig + ". Are you sure you invoked this goal after the `package` goal?");
+        }
 
         return new Runnable() {
             @Override
@@ -225,7 +228,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         };
     }
 
-    private void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
+    protected void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
         // Stop old one
         RunService runService = hub.getRunService();
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
@@ -263,7 +266,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     // ===============================================================================================================
 
     // Helper class for holding state and parameter when watching images
-    private class ImageWatcher {
+    protected class ImageWatcher {
 
         private final WatchMode mode;
         private final AtomicReference<String> imageIdRef, containerIdRef;
