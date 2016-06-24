@@ -115,7 +115,7 @@
                   <!-- Port mappings: Container internal port (which must be exposed) will be
                  dynamically mapped and this (random) port will be assigned to the maven variable
                  ${jolokia.port}. Multiple port mappings can be specified here-->
-                  <port>${BLA_BLUB}</port>
+                  <port>${jolokia.host}:${jolokia.port}:8080</port>
                 </ports>
                 <wait>
                   <!-- The plugin waits until this URL is reachable via HTTP ... -->
@@ -143,7 +143,7 @@
             <image>
               <alias>data</alias>
               <!-- Artifact Image-->
-              <name>fabric8/${project.artifactId}:${project.version}</name>
+              <name>fabric8/${project.artifactId}:%t</name>
               <build>
                 <tags>
                   <tag>${project.version}</tag>

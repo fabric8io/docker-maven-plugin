@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -45,15 +46,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key holding the log dispatcher
     public static final String CONTEXT_KEY_LOG_DISPATCHER = "CONTEXT_KEY_DOCKER_LOG_DISPATCHER";
 
-    // Key under which resolved images can be stored so that it can be reused by all Mojos once created
-    public static final String CONTEXT_KEY_RESOLVED_IMAGES = "CONTEXT_KEY_RESOLVED_IMAGES";
-
-    // Key under which to store the minimal API version to use
-    public static final String CONTEXT_KEY_MINIMAL_API_VERSION = "CONTEXT_KEY_MINIMAL_API_VERSION";
-
-    // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
-    // docker installations.
-    public static final String DOCKER_HTTPS_PORT = "2376";
+    // Key under which the build timestamp is stored so that other mojos can reuse it
+    public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
 
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
@@ -174,7 +168,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)
-            String minimalApiVersion = initImageConfiguration();
+            String minimalApiVersion = initImageConfiguration(getBuildTimestamp());
             DockerAccess access = null;
             try {
                 access = createDockerAccess(minimalApiVersion);
@@ -194,18 +188,44 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
+    /**
+     * Get the current build timestamp. this has either already been created by a previous
+     * call or a new current date is created
+     * @return timestamp to use
+     */
+    protected synchronized Date getBuildTimestamp() throws MojoExecutionException {
+        Date now = (Date) getPluginContext().get(CONTEXT_KEY_BUILD_TIMESTAMP);
+        if (now == null) {
+            now = getReferenceDate();
+            getPluginContext().put(CONTEXT_KEY_BUILD_TIMESTAMP,now);
+        }
+        return now;
+    }
+
+    // Get the referenc date for the build. By default this is picked up
+    // from an existing build date file. If this does not exist, the current date is used.
+    protected Date getReferenceDate() throws MojoExecutionException {
+        Date referenceDate = EnvUtil.loadTimestamp(getBuildTimestampFile());
+        return referenceDate != null ? referenceDate : new Date();
+    }
+
+    // used for storing a timestamp
+    protected File getBuildTimestampFile() {
+        return new File(project.getBuild().getDirectory(),"docker_build.timestamp");
+    }
+
+    /**
+     * Log prefix to use when doing the logs
+     * @return
+     */
     protected String getLogPrefix() {
         return AnsiLogger.DEFAULT_LOG_PREFIX;
     }
 
     // Resolve and customize image configuration
-    private String initImageConfiguration() {
+    private String initImageConfiguration(Date buildTimeStamp) throws MojoExecutionException {
         // Resolve images
         final Properties resolveProperties = project.getProperties();
-        resolvedImages = getResolvedImagesFromPluginContext();
-        if (resolvedImages != null) {
-            return getResolvedApiVersion();
-        }
         resolvedImages = ConfigHelper.resolveImages(
             images,                  // Unresolved images
             new ConfigHelper.Resolver() {
@@ -218,23 +238,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             this);                     // customizer (can be overwritten by a subclass)
 
         // Initialize configuration and detect minimal API version
-        String ret = ConfigHelper.initAndValidate(resolvedImages, apiVersion, createNameFormatter(project), log);
-        storeInPluginContext(resolvedImages, ret);
-        return ret;
+        return ConfigHelper.initAndValidate(resolvedImages, apiVersion, new ImageNameFormatter(project, buildTimeStamp), log);
     }
 
     // Customization hook for subclasses to influence the final configuration. This method is called
     // before initialization and validation of the configuration.
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
         return imageConfigs;
-    }
-
-    private void storeInPluginContext(List<ImageConfiguration> resolvedImages, String apiVersion) {
-        Map ctx = getPluginContext();
-        ctx.put(CONTEXT_KEY_RESOLVED_IMAGES, resolvedImages);
-        if (apiVersion != null) {
-            ctx.put(CONTEXT_KEY_MINIMAL_API_VERSION, apiVersion);
-        }
     }
 
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
@@ -284,25 +294,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected List<ImageConfiguration> getResolvedImages() {
         return resolvedImages;
     }
-
-    // Look up resolved images from the plugin context where it has been
-    // potentially stored by another plugin
-    private List<ImageConfiguration> getResolvedImagesFromPluginContext() {
-         return (List<ImageConfiguration>) getPluginContext().get(CONTEXT_KEY_RESOLVED_IMAGES);
-    }
-
-    // The minimal api version as detected during resolving of the image
-    // configuration.
-    private String getResolvedApiVersion() {
-        String minimalApiVersion = (String) getPluginContext().get(CONTEXT_KEY_MINIMAL_API_VERSION);
-        return  minimalApiVersion != null ? minimalApiVersion : apiVersion;
-    }
-
-    // Used for formatting the image name
-    private ConfigHelper.NameFormatter createNameFormatter(MavenProject project) {
-        return new ImageNameFormatter(project);
-    }
-
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {

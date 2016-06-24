@@ -198,6 +198,7 @@ public class ImageName {
         // Validation will be triggered during construction
         new ImageName(image);
     }
+
     // ================================================================================================
 
     // Validations patterns, taken directly from the docker source

@@ -68,6 +68,13 @@ public class AssemblyFiles {
     }
 
     /**
+     * Returns true if there are no entries
+     */
+    public boolean isEmpty() {
+        return entries.isEmpty();
+    }
+
+    /**
      * Return destination directory where the files are copied into
      *
      * @return top-level directory holding the assembled files

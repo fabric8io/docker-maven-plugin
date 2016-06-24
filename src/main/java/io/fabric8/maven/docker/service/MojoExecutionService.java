@@ -100,16 +100,27 @@ public class MojoExecutionService {
     }
 
     PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
-        throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, MojoFailureException {
 
-
-        Object repositorySession = session.getRepositorySession();
-
-        Method loadPlugin = pluginManager.getClass().getMethod("loadPlugin",
-                                                               plugin.getClass(),
-                                                               project.getRemotePluginRepositories().getClass(),
-                                                               repositorySession.getClass());
-        return (PluginDescriptor) loadPlugin.invoke(pluginManager, plugin, project.getRemotePluginRepositories(), repositorySession);
+        try {
+            Method loadPlugin = pluginManager.getClass().getMethod("loadPluginDescriptor",
+                                                            plugin.getClass(),
+                                                            project.getClass(),
+                                                            session.getClass());
+            return (PluginDescriptor) loadPlugin.invoke(plugin, project, session);
+        } catch (NoSuchMethodException exp) {
+            try {
+                // Fallback for older Maven versions
+                Object repositorySession = session.getRepositorySession();
+                Method loadPlugin = pluginManager.getClass().getMethod("loadPlugin",
+                                                                       plugin.getClass(),
+                                                                       project.getRemotePluginRepositories().getClass(),
+                                                                       repositorySession.getClass());
+                return (PluginDescriptor) loadPlugin.invoke(pluginManager, plugin, project.getRemotePluginRepositories(), repositorySession);
+            } catch (NoSuchMethodException exp2) {
+                throw new MojoFailureException("Cannot load plugin descriptor for plugin " + plugin.getGroupId() + ":" + plugin.getArtifactId(),exp2);
+            }
+        }
     }
 
     private String[] splitGoalSpec(String fullGoal) throws MojoFailureException {

@@ -18,6 +18,7 @@ package io.fabric8.maven.docker;/*
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -36,6 +37,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -173,9 +175,12 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
     private Runnable createBuildWatchTask(final ServiceHub hub, final ImageWatcher watcher,
                                           final MojoParameters mojoParameters, final boolean doRestart)
-            throws MojoExecutionException {
+        throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final AssemblyFiles files = hub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
+        if (files.isEmpty()) {
+            log.error("No assembly files for " + imageConfig + ". Are you sure you invoked this goal after the `package` goal?");
+        }
 
         return new Runnable() {
             @Override
