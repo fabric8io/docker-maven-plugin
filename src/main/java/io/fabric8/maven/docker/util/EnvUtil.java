@@ -1,14 +1,15 @@
 package io.fabric8.maven.docker.util;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 import static java.util.concurrent.TimeUnit.*;
@@ -294,5 +295,30 @@ public class EnvUtil {
             return file;
         }
         return new File(new File(params.getProject().getBasedir(), directory), path);
+    }
+
+    // create a timestamp file holding time in epoch seconds
+    public static void storeTimestamp(File tsFile, Date buildDate) throws MojoExecutionException {
+        try {
+            if (tsFile.exists()) {
+                tsFile.delete();
+            }
+            FileUtils.fileWrite(tsFile, StandardCharsets.US_ASCII.name(), Long.toString(buildDate.getTime()));
+        } catch (IOException e) {
+            throw new MojoExecutionException("Cannot create " + tsFile + " for storing time " + buildDate.getTime(),e);
+        }
+    }
+
+    public static Date loadTimestamp(File tsFile) throws MojoExecutionException {
+        try {
+            if (tsFile.exists()) {
+                String ts = FileUtils.fileRead(tsFile);
+                return new Date(Long.parseLong(ts));
+            } else {
+                return null;
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Cannot read timestamp " + tsFile,e);
+        }
     }
 }

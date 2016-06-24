@@ -140,7 +140,7 @@ public class MojoExecutionServiceTest {
         }};
     }
 
-    private Expectations overrideGetPluginDescriptor() throws NoSuchMethodException, InvocationTargetException, InvalidPluginDescriptorException, IllegalAccessException, PluginResolutionException, PluginNotFoundException, PluginDescriptorParsingException {
+    private Expectations overrideGetPluginDescriptor() throws NoSuchMethodException, InvocationTargetException, InvalidPluginDescriptorException, IllegalAccessException, PluginResolutionException, PluginNotFoundException, PluginDescriptorParsingException, MojoFailureException {
         return new Expectations() {{
             executionService.getPluginDescriptor((MavenProject) any,(Plugin) any);
             result = pluginDescriptor;

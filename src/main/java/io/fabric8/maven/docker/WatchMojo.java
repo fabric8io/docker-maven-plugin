@@ -136,22 +136,6 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         }
     }
 
-    @Override
-    // Reuse an existing timestamp file
-    protected synchronized Date getNow() throws MojoExecutionException {
-        File timestampFile = getBuildTimeStampFile();
-        if (timestampFile.exists()) {
-            try {
-                String ts = FileUtils.fileRead(timestampFile);
-                return new Date(Long.parseLong(ts));
-            } catch (IOException e) {
-                throw new MojoExecutionException("Cannot read " + timestampFile + " (although it exists)",e);
-            }
-        } else {
-            return new Date();
-        }
-    }
-
     private void schedule(Runnable runnable, long interval) {
         executor.scheduleAtFixedRate(runnable, 0, interval, TimeUnit.MILLISECONDS);
     }
@@ -191,7 +175,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
     private Runnable createBuildWatchTask(final ServiceHub hub, final ImageWatcher watcher,
                                           final MojoParameters mojoParameters, final boolean doRestart)
-            throws MojoExecutionException {
+        throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final AssemblyFiles files = hub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
         if (files.isEmpty()) {

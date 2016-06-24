@@ -36,7 +36,7 @@ public class ConfigHelper {
      * Resolve image with an external image resolver
      *
      * @param images the original image config list (can be null)
-     * @param imageResolver the resolver used to come extend on an image configuration
+     * @param imageResolver the resolver used to extend on an image configuration
      * @param imageNameFilter filter to select only certain image configurations with the given name
      * @param imageCustomizer final customization hook for mangling the configuration
      * @return a list of resolved and customized image configuration.

@@ -3,6 +3,7 @@ package io.fabric8.maven.docker;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -36,6 +37,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : getResolvedImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+
             if (buildConfig != null) {
                 if (buildConfig.skip()) {
                     log.info("%s : Skipped building",imageConfig.getDescription());
@@ -44,6 +46,12 @@ public class BuildMojo extends AbstractBuildSupportMojo {
                 }
             }
         }
+    }
+
+    // We ignore an already existing date file and always return the current date
+    @Override
+    protected Date getReferenceDate() throws MojoExecutionException {
+        return new Date();
     }
 
     private void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)

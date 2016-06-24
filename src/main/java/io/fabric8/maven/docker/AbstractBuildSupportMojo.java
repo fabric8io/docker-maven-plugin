@@ -2,9 +2,8 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
@@ -21,6 +20,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import org.apache.maven.shared.utils.io.FileUtils;
 
 /**
  * @author roland
@@ -35,9 +35,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
 
     @Parameter
     private MavenArchiveConfiguration archive;
-
-    @Parameter(defaultValue = "${session}", readonly = true)
-    protected MavenSession session;
 
     @Component
     private MavenFileFilter mavenFileFilter;
@@ -62,9 +59,10 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
                                   sourceDirectory, outputDirectory);
     }
 
+
     protected void buildImage(ServiceHub hub, ImageConfiguration imageConfig)
             throws DockerAccessException, MojoExecutionException {
-
+        EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
         autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
@@ -143,10 +141,4 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         }
     }
 
-    /**
-     * Returns the file used to store the latest docker label created in the case of timestamp builds
-     */
-    protected File getDockerLabelFile() {
-        return new File(outputDirectory, "docker-label.txt");
-    }
 }
