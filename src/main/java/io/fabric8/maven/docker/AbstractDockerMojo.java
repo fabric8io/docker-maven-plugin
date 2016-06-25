@@ -52,6 +52,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
 
+    // Filename for holding the build timestamp
+    public static final String DOCKER_BUILD_TIMESTAMP = "docker_build.timestamp";
+
     // Current maven project
     @Parameter(defaultValue= "${project}", readonly = true)
     protected MavenProject project;
@@ -211,7 +214,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // used for storing a timestamp
     protected File getBuildTimestampFile() {
-        return new File(project.getBuild().getDirectory(),"docker_build.timestamp");
+        return new File(project.getBuild().getDirectory(), DOCKER_BUILD_TIMESTAMP);
     }
 
     /**
