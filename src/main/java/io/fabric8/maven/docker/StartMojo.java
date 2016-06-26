@@ -71,6 +71,16 @@ public class StartMojo extends AbstractDockerMojo {
     private String exposeContainerProps = "docker.container";
 
     /**
+     * Whether to create the customs networks (user-defined bridge networks) before starting automatically
+     */
+    @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
+    protected boolean autoCreateCustomNetworks;
+
+    // property file to write out with port mappings
+    @Parameter
+    protected String portPropertyFile;
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -105,8 +115,9 @@ public class StartMojo extends AbstractDockerMojo {
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
-                if (createCustomNetworks) {
-                    runService.createCustomNetwork(runConfig);
+                NetworkingMode networkMode = runConfig.getNetworkingMode();
+                if (autoCreateCustomNetworks && networkMode.isCustomNetwork()) {
+                    runService.createCustomNetworkIfNotExistant(runConfig.getNetworkingMode().getCustomNetwork());
                 }
 
                 String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties);
@@ -129,7 +140,7 @@ public class StartMojo extends AbstractDockerMojo {
                 exposeContainerProps(hub.getQueryService(), containerId,imageConfig.getAlias());
             }
             if (follow) {
-                runService.addShutdownHookForStoppingContainers(keepContainer,removeVolumes, createCustomNetworks);
+                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
                 wait();
             }
 
@@ -144,7 +155,7 @@ public class StartMojo extends AbstractDockerMojo {
         } finally {
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes, createCustomNetworks, pomLabel);
+                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, pomLabel);
             }
         }
     }

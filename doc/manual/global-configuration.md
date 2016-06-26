@@ -11,6 +11,9 @@ parentheses.
 * **authConfig** holds the authentication information when pulling from
   or pushing to Docker registry. There is a dedicated section 
   [Authentication](#authentication) for how doing security.
+ * **autoCreateCustomNetworks** (`docker.autoCreateCustomNetworks`) If set to it will create 
+  Docker networks during `docker:start` and remove it during `docker:stop` if you provide 
+  a custom network in the run configuration of an image. The default is `false`.
 * **autoPull** (`docker.autoPull`)
   By default external images (base image for building or images to
   start) are downloaded automatically if they don't exist locally.
@@ -42,9 +45,6 @@ parentheses.
   `ca.pem`, `cert.pem` and `key.pem`. Please refer to the
   [Docker documentation](https://docs.docker.com/articles/https/) for
   more information about SSL security with Docker. 
- * **createCustomNetworks** (`docker.createCustomNetworks`) If given it will create 
-  Docker networks during `docker:start` and remove it during `docker:stop` if you provide 
-  a custom network in the run configuration of an image.
 * **image** (`docker.image`) In order to temporarily restrict the
   operation of plugin goals this configuration option can be
   used. Typically this will be set via the system property

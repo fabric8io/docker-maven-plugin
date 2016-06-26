@@ -199,7 +199,7 @@ public interface DockerAccess {
     boolean removeImage(String image, boolean ... force) throws DockerAccessException;
 
     /**
-     * List networks
+     * List all networks
      *
      * @return list of <code>Network<code> objects
      * @throws DockerAccessException if the networks could not be listed
@@ -207,8 +207,7 @@ public interface DockerAccess {
     List<Network> listNetworks() throws DockerAccessException;
 
     /**
-     * Create a network from the given configuration.
-     *
+     * Create a custom network from the given configuration.
      *
      * @param configuration network configuration
      * @throws DockerAccessException if the container could not be created.
@@ -217,7 +216,7 @@ public interface DockerAccess {
     String createNetwork(NetworkCreateConfig configuration) throws DockerAccessException;
 
     /**
-     * Remove an network from this docker installation
+     * Remove a custom network
      *
      * @param networkId network to remove
      * @return true if an network was removed, false if none was removed

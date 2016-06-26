@@ -427,15 +427,11 @@ public class RunService {
                  containerId.substring(0, 12));
     }
 
-    public void createCustomNetwork(RunImageConfiguration runConfig) throws DockerAccessException {
-        final NetworkingMode networkingMode = runConfig.getNetworkingMode();
-        if (networkingMode.isCustomNetwork()) {
-            String customNetwork = networkingMode.getCustomNetwork();
-            if (!queryService.hasNetwork(customNetwork)) {
-                docker.createNetwork(new NetworkCreateConfig(customNetwork));
-            } else {
-                log.debug("Custom Network " + customNetwork + " found");
-            }
+    public void createCustomNetworkIfNotExistant(String customNetwork) throws DockerAccessException {
+        if (!queryService.hasNetwork(customNetwork)) {
+            docker.createNetwork(new NetworkCreateConfig(customNetwork));
+        } else {
+            log.debug("Custom Network " + customNetwork + " found");
         }
     }
 

@@ -74,6 +74,12 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.watchPostExec")
     private String watchPostExec;
 
+    /**
+     * Whether to create the customs networks (user-defined bridge networks) before starting automatically
+     */
+    @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
+    protected boolean autoCreateCustomNetworks;
+
     // Scheduler
     private ScheduledExecutorService executor;
 
@@ -125,7 +131,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
             }
             log.info("Waiting ...");
             if (!keepRunning) {
-                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, createCustomNetworks);
+                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
             }
             wait();
         } catch (InterruptedException e) {

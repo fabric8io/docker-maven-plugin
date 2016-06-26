@@ -124,12 +124,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.image")
     private String image;
 
-    /**
-     * Whether to create the customs networks (user-defined bridge networks) before starting
-     */
-    @Parameter(property = "docker.createCustomNetworks", defaultValue = "false")
-    protected boolean createCustomNetworks;
-
     // Default registry to use if no registry is specified
     @Parameter(property = "docker.registry")
     protected String registry;
@@ -138,10 +132,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.maxConnections", defaultValue = "100")
     private int maxConnections;
 
-    // property file to write out with port mappings
-    @Parameter
-    protected String portPropertyFile;
-    
     // Authentication information
     @Parameter
     Map authConfig;

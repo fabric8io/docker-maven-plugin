@@ -42,6 +42,12 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
     private boolean keepRunning;
 
+    /**
+     * Whether to create the customs networks (user-defined bridge networks) before starting automatically
+     */
+    @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
+    protected boolean autoCreateCustomNetworks;
+
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
         QueryService queryService = hub.getQueryService();
@@ -51,7 +57,7 @@ public class StopMojo extends AbstractDockerMojo {
 
         if (!keepRunning) {
             if (invokedTogetherWithDockerStart()) {
-                runService.stopStartedContainers(keepContainer, removeVolumes, createCustomNetworks, pomLabel);
+                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, pomLabel);
             } else {
                 stopContainers(queryService, runService, pomLabel);
             }
@@ -118,7 +124,7 @@ public class StopMojo extends AbstractDockerMojo {
     }
 
     private Set<Network> getNetworksToRemove(QueryService queryService, PomLabel pomLabel) throws DockerAccessException {
-        if (!createCustomNetworks) {
+        if (!autoCreateCustomNetworks) {
             return Collections.emptySet();
         }
         Set<Network> customNetworks = new HashSet<>();
