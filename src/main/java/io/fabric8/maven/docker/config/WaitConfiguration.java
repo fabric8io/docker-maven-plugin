@@ -91,6 +91,7 @@ public class WaitConfiguration {
         private String postStart;
         private List<Integer> tcpPorts;
         private String tcpHost;
+        private TcpConfigMode tcpMode;
 
         public Builder time(int time) {
             this.time = time;
@@ -127,23 +128,29 @@ public class WaitConfiguration {
             return this;
         }
 
-        public Builder tcpPorts(List<Integer> tcpPorts)
-        {
+        public Builder tcpPorts(List<Integer> tcpPorts) {
             this.tcpPorts = tcpPorts;
             return this;
         }
 
-        public Builder tcpHost(String tcpHost)
-        {
+        public Builder tcpHost(String tcpHost) {
             this.tcpHost = tcpHost;
             return this;
         }
+
+        public Builder tcpMode(String tcpMode) {
+            if (tcpMode != null) {
+                this.tcpMode = TcpConfigMode.valueOf(tcpMode.toLowerCase());
+            }
+            return this;
+        }
+
 
         public WaitConfiguration build() {
             return new WaitConfiguration(time,
                                          postStart != null || preStop != null ? new ExecConfiguration(postStart, preStop) : null,
                                          url != null ? new HttpConfiguration(url,method,status) : null,
-                                         tcpPorts != null ? new TcpConfiguration(tcpHost, tcpPorts) : null,
+                                         tcpPorts != null ? new TcpConfiguration(tcpMode, tcpHost, tcpPorts) : null,
                                          log,
                                          shutdown,
                                          kill);
@@ -214,6 +221,13 @@ public class WaitConfiguration {
         }
     }
 
+    public enum TcpConfigMode {
+        // Use mapped ports
+        mapped,
+        // Use ports directly on the container
+        direct,
+    }
+
     public static class TcpConfiguration
     {
         @Parameter
@@ -222,21 +236,27 @@ public class WaitConfiguration {
         @Parameter
         private List<Integer> ports;
 
-        public TcpConfiguration() {};
+        @Parameter
+        private TcpConfigMode mode;
 
-        private TcpConfiguration(String host, List<Integer> ports) {
+        public TcpConfiguration() {}
+
+        private TcpConfiguration(TcpConfigMode mode, String host, List<Integer> ports) {
+            this.mode = mode;
             this.host = host;
             this.ports = ports;
         }
 
-        public String getHost()
-        {
+        public String getHost() {
             return host;
         }
 
-        public List<Integer> getPorts()
-        {
+        public List<Integer> getPorts() {
             return ports;
+        }
+
+        public TcpConfigMode getMode() {
+            return mode;
         }
     }
 

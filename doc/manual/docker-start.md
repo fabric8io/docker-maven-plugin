@@ -350,9 +350,16 @@ some condition is met. These conditions can be specified within a
   - **postStart** Command to run after the above wait criteria has been met
   - **preStop** Command to run before the container is stopped.
 * **tcp** specifies TCP port check which periodically polls given tcp ports. It knows the following sub-elements:
-  - **host** is the hostname or the IP address. It defaults to `${docker.host.address}`.
-  - **ports** is a list of TCP ports to check.
-
+  - **mode** can be either `mapped` which uses the mapped ports or `direct` in which case the container ports are 
+   addressed directly. In the later case the host field should be left empty in order to select the container ip 
+   (which must be routed which is only the case when running on the Docker daemon's host directly). Default is `direct` when host
+   is *localhost*, `mapped` otherwise. 
+   The direct mode might help when a so called *user-proxy* is enabled on the Docker daemon which makes the mapped
+   ports directly available even when the container is not ready yet.
+  - **host** is the hostname or the IP address. It defaults to `${docker.host.address}` for a mapped mode and the container 
+  ip address for the direct mode.
+  - **ports** is a list of TCP ports to check. These are supposed to be the container internal ports.
+  
 As soon as one condition is met the build continues. If you add a
 `<time>` constraint this works more or less as a timeout for other
 conditions. The build will abort if you wait on an url or log output and reach the timeout.

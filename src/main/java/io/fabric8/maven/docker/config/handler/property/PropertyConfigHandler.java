@@ -202,6 +202,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .shutdown(asInt(withPrefix(prefix, WAIT_SHUTDOWN, properties)))
                 .tcpHost(withPrefix(prefix, WAIT_TCP_HOST, properties))
                 .tcpPorts(asIntList(listWithPrefix(prefix, WAIT_TCP_PORT, properties)))
+                .tcpMode(withPrefix(prefix, WAIT_TCP_MODE, properties))
                 .build();
     }
     

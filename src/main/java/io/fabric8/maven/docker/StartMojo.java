@@ -33,8 +33,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
-import static org.bouncycastle.asn1.cmp.PKIStatus.waiting;
-
 
 /**
  * Goal for creating and starting a docker container. This goal evaluates the image configuration
@@ -155,63 +153,21 @@ public class StartMojo extends AbstractDockerMojo {
 
         ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
         ArrayList<String> logOut = new ArrayList<>();
+
         if (wait.getUrl() != null) {
-            String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
-            WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
-            if (httpConfig != null) {
-                checkers.add(new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus()));
-                log.info("%s: Waiting on url %s with method %s for status %s.",
-                        imageConfig.getDescription(), waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
-            } else {
-                checkers.add(new WaitUtil.HttpPingChecker(waitUrl));
-                log.info("%s: Waiting on url %s.",
-                        imageConfig.getDescription(), waitUrl);
-            }
-            logOut.add("on url " + waitUrl);
+            checkers.add(getUrlWaitChecker(imageConfig.getDescription(), projectProperties, wait, logOut));
         }
+
         if (wait.getLog() != null) {
             log.debug("LogWaitChecker: Waiting on %s",wait.getLog());
             checkers.add(getLogWaitChecker(wait.getLog(), hub, containerId));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
+
         if (wait.getTcp() != null) {
-            WaitConfiguration.TcpConfiguration tcpConfig = wait.getTcp();
             try {
                 Container container = hub.getDockerAccess().inspectContainer(containerId);
-                String host = tcpConfig.getHost();
-                List<Integer> ports = new ArrayList<>();
-                List<Integer> portsConfigured = tcpConfig.getPorts();
-                if (portsConfigured == null || portsConfigured.size() == 0) {
-                    throw new MojoExecutionException("TCP wait config given but no ports to wait on");
-                }
-                if (host == null) {
-                    // Host defaults to ${docker.host.address}.
-                    host = projectProperties.getProperty("docker.host.address");
-                }
-
-                if ("localhost".equals(host) && container.getIPAddress() != null) {
-                    host = container.getIPAddress();
-                    ports = portsConfigured;
-                    log.info("%s: Waiting for ports %s directly on container with IP (%s).",
-                             imageConfig.getDescription(), ports, host);
-                } else {
-                    for (int port : portsConfigured) {
-                        Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
-                        if (binding == null) {
-                            throw new MojoExecutionException(String.format(
-                                    "Cannot watch on port %d, since there is no network binding", port
-                            ));
-                        }
-                        ports.add(binding.getHostPort());
-                    }
-                    log.info("%s: Waiting for exposed ports %s on remote host (%s), since they are not directly accessible.",
-                             imageConfig.getDescription(), ports, host);
-                }
-
-                WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
-                checkers.add(tcpWaitChecker);
-                logOut.add("on tcp port '" + tcpWaitChecker.getPending() + "'");
-
+                checkers.add(getTcpWaitChecker(container, imageConfig.getDescription(), projectProperties, wait.getTcp(), logOut));
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Unable to access container.", e);
             }
@@ -227,7 +183,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         try {
             long waited = WaitUtil.wait(wait.getTime(), checkers);
-            log.info("%s : Waited %s %d ms",imageConfig.getDescription(), StringUtils.join(logOut.toArray(), " and "), waited);
+            log.info("%s: Waited %s %d ms",imageConfig.getDescription(), StringUtils.join(logOut.toArray(), " and "), waited);
         } catch (WaitUtil.WaitTimeoutException exp) {
             String desc = String.format("%s: Timeout after %d ms while waiting %s",
                                         imageConfig.getDescription(), exp.getWaited(),
@@ -235,6 +191,83 @@ public class StartMojo extends AbstractDockerMojo {
             log.error(desc);
             throw new MojoExecutionException(desc);
         }
+    }
+
+    private WaitUtil.WaitChecker getUrlWaitChecker(String imageConfigDesc,
+                                                   Properties projectProperties,
+                                                   WaitConfiguration wait,
+                                                   ArrayList<String> logOut) {
+        String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
+        WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
+        WaitUtil.HttpPingChecker checker;
+        if (httpConfig != null) {
+            checker = new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
+            log.info("%s: Waiting on url %s with method %s for status %s.",
+                    imageConfigDesc, waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
+        } else {
+            checker = new WaitUtil.HttpPingChecker(waitUrl);
+            log.info("%s: Waiting on url %s.", imageConfigDesc, waitUrl);
+        }
+        logOut.add("on url " + waitUrl);
+        return checker;
+    }
+
+    private WaitUtil.WaitChecker getTcpWaitChecker(Container container,
+                                                   String imageConfigDesc,
+                                                   Properties projectProperties,
+                                                   WaitConfiguration.TcpConfiguration tcpConfig,
+                                                   ArrayList<String> logOut) throws MojoExecutionException {
+        List<Integer> ports = new ArrayList<>();
+
+        List<Integer> portsConfigured = getTcpPorts(tcpConfig);
+        String host = getTcpHost(tcpConfig, projectProperties);
+        WaitConfiguration.TcpConfigMode mode = getTcpMode(tcpConfig, host, projectProperties);
+
+        if (mode == WaitConfiguration.TcpConfigMode.mapped) {
+            for (int port : portsConfigured) {
+                Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
+                if (binding == null) {
+                    throw new MojoExecutionException(
+                        String.format("Cannot watch on port %d, since there is no network binding", port));
+                }
+                ports.add(binding.getHostPort());
+            }
+            log.info("%s: Waiting for mapped ports %s on host %s", imageConfigDesc, ports, host);
+        } else {
+            host = container.getIPAddress();
+            ports = portsConfigured;
+            log.info("%s: Waiting for ports %s directly on container with IP (%s).",
+                     imageConfigDesc, ports, host);
+        }
+        WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
+        logOut.add("on tcp port '" + tcpWaitChecker.getPending() + "'");
+        return tcpWaitChecker;
+    }
+
+    private List<Integer> getTcpPorts(WaitConfiguration.TcpConfiguration tcpConfig) throws MojoExecutionException {
+        List<Integer> portsConfigured = tcpConfig.getPorts();
+        if (portsConfigured == null || portsConfigured.size() == 0) {
+            throw new MojoExecutionException("TCP wait config given but no ports to wait on");
+        }
+        return portsConfigured;
+    }
+
+    private WaitConfiguration.TcpConfigMode getTcpMode(WaitConfiguration.TcpConfiguration tcpConfig, String host, Properties projectProperties) {
+        WaitConfiguration.TcpConfigMode mode = tcpConfig.getMode();
+        if (mode == null) {
+            return "localhost".equals(host) ? WaitConfiguration.TcpConfigMode.direct : WaitConfiguration.TcpConfigMode.mapped;
+        } else {
+            return mode;
+        }
+    }
+
+    private String getTcpHost(WaitConfiguration.TcpConfiguration tcpConfig, Properties projectProperties) {
+        String host = tcpConfig.getHost();
+        if (host == null) {
+            // Host defaults to ${docker.host.address}.
+            host = projectProperties.getProperty("docker.host.address");
+        }
+        return host;
     }
 
     private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String  containerId) {
