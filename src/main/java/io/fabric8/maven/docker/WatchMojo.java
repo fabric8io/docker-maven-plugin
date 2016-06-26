@@ -18,9 +18,10 @@ package io.fabric8.maven.docker;/*
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -29,15 +30,13 @@ import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
+import io.fabric8.maven.docker.service.*;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.StartOrderResolver;
-import io.fabric8.maven.docker.service.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -179,7 +178,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final AssemblyFiles files = hub.getArchiveService().getAssemblyFiles(imageConfig, mojoParameters);
         if (files.isEmpty()) {
-            log.error("No assembly files for " + imageConfig + ". Are you sure you invoked this goal after the `package` goal?");
+            log.error("No assembly files for %s. Are you sure you invoked together with the `package` goal?", imageConfig.getDescription());
+            throw new MojoExecutionException("No files to watch found for " + imageConfig);
         }
 
         return new Runnable() {
