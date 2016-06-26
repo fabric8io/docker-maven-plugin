@@ -7,8 +7,9 @@
   - Add `docker.skip.build`, `docker.skip.run`, `docker.skip.push` properties and 
     renamed `docker.skipTags` to `docker.skip.tag` (#483)
   - Reverted jansi back to version 1.11 because of [this issue](https://github.com/fusesource/jansi/issues/58)
-  
-  
+  - Add new assembly config options `permissions` for fine tuning permissions in the docker.tar (#477). Deprecated `ignorePermissions`
+    in favor of a `<permissions>ignore</permissions>`
+   
 * **0.15.7** (2016-06-09)
   - Add support for '.maven-dockerinclude' for including certain files in plain Dockerfile build ([#471](https://github.com/fabric8io/docker-maven-plugin/issues/471))
   - Add support for placeholders in image names.

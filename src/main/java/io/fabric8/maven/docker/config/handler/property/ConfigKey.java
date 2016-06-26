@@ -32,6 +32,7 @@ public enum ConfigKey {
     ASSEMBLY_DESCRIPTOR_REF("assembly.descriptorRef"),
     ASSEMBLY_EXPORT_BASEDIR("assembly.exportBaseDir"),
     ASSEMBLY_IGNORE_PERMISSIONS("assembly.ignorePermissions"),
+    ASSEMBLY_PERMISSIONS("assembly.permissions"),
     ASSEMBLY_DOCKER_FILE_DIR("assembly.dockerFileDir"),
     ASSEMBLY_USER("assembly.user"),
     ASSEMBLY_MODE("assembly.mode"),

@@ -321,4 +321,8 @@ public class EnvUtil {
             throw new MojoExecutionException("Cannot read timestamp " + tsFile,e);
         }
     }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
+    }
 }

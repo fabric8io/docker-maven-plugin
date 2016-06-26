@@ -40,6 +40,7 @@ public class AssemblyConfiguration {
 
     /**
      * @paramter default-value="false"
+     * @deprecated use permissionMode == ignore instead.
      */
     private Boolean ignorePermissions;
 
@@ -52,6 +53,11 @@ public class AssemblyConfiguration {
      * @parameter
      */
     private String user;
+
+    /**
+     * @parameter default-value="keep"
+     */
+    private PermissionMode permissions;
 
     public Boolean exportBasedir() {
         return exportBasedir;
@@ -86,9 +92,17 @@ public class AssemblyConfiguration {
     }
 
     public Boolean isIgnorePermissions() {
+        // New permission mode has precedence
+        if (permissions != null) {
+            return permissions == PermissionMode.ignore;
+        }
         return (ignorePermissions != null) ? ignorePermissions : Boolean.FALSE;
     }
-    
+
+    public PermissionMode getPermissions() {
+        return permissions != null ? permissions : PermissionMode.keep;
+    }
+
     public static class Builder {
 
         private final AssemblyConfiguration config = new AssemblyConfiguration();
@@ -128,8 +142,16 @@ public class AssemblyConfiguration {
             return this;
         }
 
+        @Deprecated
         public Builder ignorePermissions(Boolean ignorePermissions) {
             config.ignorePermissions = set(ignorePermissions);
+            return this;
+        }
+
+        public Builder permissions(String permissions) {
+            if (permissions != null) {
+                config.permissions = PermissionMode.valueOf(permissions.toLowerCase());
+            }
             return this;
         }
 
@@ -153,4 +175,27 @@ public class AssemblyConfiguration {
             return prop;
         }
     }
+
+    public enum PermissionMode {
+
+        /**
+         * Auto detect permission mode
+         */
+        auto,
+
+        /**
+         * Make everything executable
+         */
+        exec,
+
+        /**
+         * Leave all as it is
+         */
+        keep,
+
+        /**
+         * Ignore permission when using an assembly mode of "dir"
+         */
+        ignore
+        }
 }

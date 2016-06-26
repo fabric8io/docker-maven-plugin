@@ -52,7 +52,7 @@ public class BuildServiceTest {
     @Before
     public void setup() throws Exception {
         new Expectations() {{
-            archiveService.createArchive(anyString, (BuildImageConfiguration) any, (MojoParameters) any);
+            archiveService.createArchive(anyString, (BuildImageConfiguration) any, (MojoParameters) any, log);
             result = new File("docker-build.tar");
         }};
     }
