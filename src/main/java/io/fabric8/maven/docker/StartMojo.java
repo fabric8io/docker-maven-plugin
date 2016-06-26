@@ -48,6 +48,9 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
+    @Parameter(property = "docker.skip.run", defaultValue = "false")
+    private boolean skipRun;
+
     // whether to block during to start. Set it via System property docker.follow
     private boolean follow;
 
@@ -73,6 +76,9 @@ public class StartMojo extends AbstractDockerMojo {
     @Override
     public synchronized void executeInternal(final ServiceHub hub) throws DockerAccessException,
                                                                           MojoExecutionException {
+        if (skipRun) {
+            return;
+        }
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
         Properties projProperties = project.getProperties();

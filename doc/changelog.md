@@ -4,6 +4,7 @@
   - Removed image configuration caching (#495)
   - Fix for tcp wait when used with Docker for Mac (#430)
   - Add warning when assembly is empty when watching a Docker image (#490)
+  - Add `docker.skip.build`, `docker.skip.run`, `docker.skip.push` properties and renamed `docker.skipTags` to `docker.skip.tag` (#483)
   
 * **0.15.7** (2016-06-09)
   - Add support for '.maven-dockerinclude' for including certain files in plain Dockerfile build ([#471](https://github.com/fabric8io/docker-maven-plugin/issues/471))
