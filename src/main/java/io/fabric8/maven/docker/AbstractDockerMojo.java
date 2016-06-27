@@ -261,9 +261,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
         DockerAccess access = null;
         if (isDockerAccessRequired()) {
-            DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector();
-            String dockerUrl = dockerConnectionDetector.extractUrl(dockerHost);
             try {
+                DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector();
+                String dockerUrl = dockerConnectionDetector.extractUrl(dockerHost);
                 String version =  minimalVersion != null ? minimalVersion : API_VERSION;
                 access = new DockerAccessWithHcClient("v" + version, dockerUrl,
                                                       dockerConnectionDetector.getCertPath(certPath), maxConnections, log);

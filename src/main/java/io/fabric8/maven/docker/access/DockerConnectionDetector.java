@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.access;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import io.fabric8.maven.docker.util.*;
@@ -37,7 +38,7 @@ public class DockerConnectionDetector {
      * @return The docker host url
      * @throws MojoExecutionException
      */
-    public String extractUrl(String dockerHost) throws MojoExecutionException {
+    public String extractUrl(String dockerHost) throws IOException {
         String connect = getValueWithFallback(dockerHost, "DOCKER_HOST");
         if (connect != null) {
             String protocol = connect.contains(":" + EnvUtil.DOCKER_HTTPS_PORT) ? "https:" : "http:";
@@ -47,7 +48,7 @@ public class DockerConnectionDetector {
         if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
             return "unix:///var/run/docker.sock";
         } 
-        throw new MojoExecutionException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock'");
+        throw new IllegalArgumentException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock'");
     }
     
     /**
@@ -62,7 +63,7 @@ public class DockerConnectionDetector {
      * @return The docker certificate location, or null
      * @throws MojoExecutionException
      */
-    public String getCertPath(String certPath) throws MojoExecutionException {
+    public String getCertPath(String certPath) throws IOException {
         String path = getValueWithFallback(certPath, "DOCKER_CERT_PATH");
         // Final fallback
         if (path == null) {
@@ -86,7 +87,7 @@ public class DockerConnectionDetector {
      * @param value to check
      * @param envVar the env var to use as fallback
      */
-    private String getValueWithFallback(String value, String envVar) throws MojoExecutionException {
+    private String getValueWithFallback(String value, String envVar) throws IOException {
         if (value != null) {
             return value;
         }

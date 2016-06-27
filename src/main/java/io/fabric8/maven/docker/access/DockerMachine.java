@@ -6,7 +6,6 @@ import java.util.concurrent.*;
 
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * launch docker-machine to obtain environment settings
@@ -16,7 +15,7 @@ public class DockerMachine {
     private final Logger log;
     private final DockerMachineConfiguration machine;
 
-    public DockerMachine(Logger log, DockerMachineConfiguration machine) throws MojoExecutionException {
+    public DockerMachine(Logger log, DockerMachineConfiguration machine) throws IOException {
         this.log = log;
         this.machine = machine;
 
@@ -26,7 +25,7 @@ public class DockerMachine {
                 if (Boolean.TRUE == machine.getAutoCreate()) {
                     new CreateCommand().execute();
                 } else {
-                    throw new MojoExecutionException(machine.getName() + " does not exist and docker.machine.autoCreate is false");
+                    throw new IllegalStateException(machine.getName() + " does not exist and docker.machine.autoCreate is false");
                 }
                 break;
             case Running:
@@ -41,7 +40,7 @@ public class DockerMachine {
         DoesNotExist, Running, Stopped
     }
 
-    public Map<String, String> getEnvironment() throws MojoExecutionException {
+    public Map<String, String> getEnvironment() throws IOException {
         return new EnvCommand().getEnvironment();
     }
 
@@ -49,7 +48,7 @@ public class DockerMachine {
         private final ExecutorService executor = Executors.newFixedThreadPool(2);
         int statusCode;
 
-        void execute() throws MojoExecutionException {
+        void execute() throws IOException {
             final Process process = startDockerMachineProcess();
             start();
             try {
@@ -59,14 +58,14 @@ public class DockerMachine {
 
                 stopStreamPump(stderrFuture);
                 checkProcessExit(process);
-            } catch (MojoExecutionException e) {
+            } catch (IOException e) {
                 process.destroy();
                 throw e;
             } finally {
                 end();
             }
             if (statusCode != 0) {
-                throw new MojoExecutionException("docker-machine exited with status " + statusCode);
+                throw new IOException("docker-machine exited with status " + statusCode);
             }
 
         }
@@ -95,17 +94,17 @@ public class DockerMachine {
             }
         }
 
-        private Process startDockerMachineProcess(String... args) throws MojoExecutionException {
+        private Process startDockerMachineProcess(String... args) throws IOException {
             try {
                 return Runtime.getRuntime().exec(getArgs());
             } catch (IOException e) {
-                throw new MojoExecutionException("failed to start docker-machine", e);
+                throw new IOException("failed to start docker-machine", e);
             }
         }
 
         protected abstract String[] getArgs();
 
-        private void outputStreamPump(final InputStream inputStream) throws MojoExecutionException {
+        private void outputStreamPump(final InputStream inputStream) throws IOException {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));) {
                 for (; ; ) {
                     String line = reader.readLine();
@@ -115,7 +114,7 @@ public class DockerMachine {
                     processLine(line);
                 }
             } catch (IOException e) {
-                throw new MojoExecutionException("failed to read docker-machine output", e);
+                throw new IOException("failed to read docker-machine output", e);
             }
         }
 
@@ -145,16 +144,16 @@ public class DockerMachine {
             });
         }
 
-        private void stopStreamPump(Future<IOException> future) throws MojoExecutionException {
+        private void stopStreamPump(Future<IOException> future) throws IOException {
             try {
                 IOException e = future.get(2, TimeUnit.SECONDS);
                 if (e != null) {
-                    throw new MojoExecutionException("failed to read docker-machine error stream", e);
+                    throw new IOException("failed to read docker-machine error stream", e);
                 }
             } catch (InterruptedException ignore) {
                 Thread.currentThread().interrupt();
             } catch (ExecutionException | TimeoutException e) {
-                throw new MojoExecutionException("failed to stop docker-machine error stream", e);
+                throw new IOException("failed to stop docker-machine error stream", e);
             }
         }
     }
@@ -194,7 +193,7 @@ public class DockerMachine {
             env.put(name, value);
         }
 
-        public Map<String, String> getEnvironment() throws MojoExecutionException {
+        public Map<String, String> getEnvironment() throws IOException {
             execute();
             return env;
         }
@@ -223,10 +222,10 @@ public class DockerMachine {
             }
         }
 
-        public Status getStatus() throws MojoExecutionException {
+        public Status getStatus() throws IOException {
             try {
                 execute();
-            } catch (MojoExecutionException ex) {
+            } catch (IOException ex) {
                 if (statusCode == 1) {
                     status = Status.DoesNotExist;
                 } else {
@@ -234,7 +233,7 @@ public class DockerMachine {
                 }
             }
             if (message != null) {
-                throw new MojoExecutionException(message);
+                throw new IOException(message);
             }
             return status;
         }

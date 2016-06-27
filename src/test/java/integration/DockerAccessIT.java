@@ -2,24 +2,23 @@ package integration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import com.google.common.collect.Lists;
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.access.DockerConnectionDetector;
-import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import io.fabric8.maven.docker.AbstractDockerMojo;
+import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
-import org.junit.*;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /*
@@ -39,7 +38,7 @@ public class DockerAccessIT {
     private String containerId;
     private final DockerAccessWithHcClient dockerClient;
 
-    public DockerAccessIT() throws MojoExecutionException {
+    public DockerAccessIT() throws IOException {
         AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
         String url = createDockerConnectionDetector(logger).extractUrl(null);
         this.dockerClient = createClient(url, logger);
@@ -91,10 +90,8 @@ public class DockerAccessIT {
             return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
-            throw new RuntimeException();
-        } catch (MojoExecutionException e) {
             logger.error(e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException();
         }
     }
 

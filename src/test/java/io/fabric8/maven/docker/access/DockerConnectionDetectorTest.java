@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.access;
 
 import java.io.File;
+import java.io.IOException;
 
 import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.util.AnsiLogger;
@@ -15,12 +16,12 @@ public class DockerConnectionDetectorTest {
     DockerConnectionDetector machine = new DockerConnectionDetector(logger, null);
 
     @Test
-    public void testGetUrlFromHostConfig() throws MojoExecutionException {
+    public void testGetUrlFromHostConfig() throws MojoExecutionException, IOException {
         Assert.assertEquals("hostconfig", machine.extractUrl("hostconfig"));
     }
 
     @Test
-    public void testGetUrlFromEnvironment() throws MojoExecutionException {
+    public void testGetUrlFromEnvironment() throws MojoExecutionException, IOException {
         String dockerHost = System.getenv("DOCKER_HOST");
         if (dockerHost != null) {
             Assert.assertEquals(dockerHost, machine.extractUrl(null));
@@ -33,12 +34,12 @@ public class DockerConnectionDetectorTest {
     }
 
     @Test
-    public void testGetCertPathFromCertConfig() throws MojoExecutionException {
+    public void testGetCertPathFromCertConfig() throws MojoExecutionException, IOException {
         Assert.assertEquals("certconfig", machine.getCertPath("certconfig"));
     }
 
     @Test
-    public void testGetCertPathFromEnvironment() throws MojoExecutionException {
+    public void testGetCertPathFromEnvironment() throws MojoExecutionException, IOException {
         String certPath = System.getenv("DOCKER_CERT_PATH");
         if (certPath != null) {
             Assert.assertEquals(certPath, machine.getCertPath(null));
