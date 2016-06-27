@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="5" data-basepath="." data-revision="Mon Jun 13 2016 19:02:07 GMT+0000 (UTC)">
+    <div class="book" data-level="5" data-basepath="." data-revision="Mon Jun 27 2016 13:47:01 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -473,7 +473,11 @@ building an image</li>
 use. </li>
 <li><strong>docker.assembly.exportBaseDir</strong> If <code>true</code> export base directory</li>
 <li><strong>docker.assembly.ignorePermissions</strong> If set to <code>true</code> existing file permissions are ignored
-when creating the assembly archive</li>
+when creating the assembly archive. Deprecated, use a permission mode of <code>ignore</code> instead.</li>
+<li><strong>docker.assembly.permissions</strong> can be <code>ignore</code> to use the permission as found on files regardless on any 
+assembly configuration, <code>keep</code> to respect the assembly provided permissions, <code>exec</code> for setting 
+the executable bit on all files (required for Windows when using an assembly mode <code>dir</code>) or <code>auto</code> to let the 
+plugin select <code>exec</code> on Windows and <code>keep</code> on others. <code>keep</code> is the default value. </li>
 <li><strong>docker.assembly.dockerFileDir</strong> specifies a directory containing an external Dockerfile
 that will be used to create the image. This is deprecated please use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code> 
 instead.</li>
@@ -558,6 +562,9 @@ volumes exported by the <code>data</code> image.</li>
 <li><strong>docker.wait.exec.postStart</strong> Command to execute after the container has start up. </li>
 <li><strong>docker.wait.exec.preStop</strong> Command to execute before command stops.</li>
 <li><strong>docker.wait.shutdown</strong> Time in milliseconds to wait between stopping a container and removing it.</li>
+<li><strong>docker.wait.tcp.mode</strong> Either <code>mapped</code> or <code>direct</code> when waiting on TCP connections</li>
+<li><strong>docker.wait.tcp.host</strong> Hostname to use for a TCP wait checks</li>
+<li><strong>docker.wait.tcp.port.idx</strong> List of ports to use for a TCP check.</li>
 <li><strong>docker.wait.kill</strong> Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.</li>
 <li><strong>docker.workingDir</strong> Working dir for commands to run in</li>
 </ul>

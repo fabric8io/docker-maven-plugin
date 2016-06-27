@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="4.2" data-basepath="." data-revision="Mon Jun 13 2016 19:02:07 GMT+0000 (UTC)">
+    <div class="book" data-level="4.2" data-basepath="." data-revision="Mon Jun 27 2016 13:47:01 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -741,8 +741,15 @@ error when trying to remove a container to fast after it has been stopped.</li>
 </ul>
 </li>
 <li><strong>tcp</strong> specifies TCP port check which periodically polls given tcp ports. It knows the following sub-elements:<ul>
-<li><strong>host</strong> is the hostname or the IP address. It defaults to <code>${docker.host.address}</code>.</li>
-<li><strong>ports</strong> is a list of TCP ports to check.</li>
+<li><strong>mode</strong> can be either <code>mapped</code> which uses the mapped ports or <code>direct</code> in which case the container ports are 
+addressed directly. In the later case the host field should be left empty in order to select the container ip 
+(which must be routed which is only the case when running on the Docker daemon&apos;s host directly). Default is <code>direct</code> when host
+is <em>localhost</em>, <code>mapped</code> otherwise. 
+The direct mode might help when a so called <em>user-proxy</em> is enabled on the Docker daemon which makes the mapped
+ports directly available even when the container is not ready yet.</li>
+<li><strong>host</strong> is the hostname or the IP address. It defaults to <code>${docker.host.address}</code> for a mapped mode and the container 
+ip address for the direct mode.</li>
+<li><strong>ports</strong> is a list of TCP ports to check. These are supposed to be the container internal ports.</li>
 </ul>
 </li>
 </ul>

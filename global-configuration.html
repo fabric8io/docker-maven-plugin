@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="2" data-basepath="." data-revision="Mon Jun 13 2016 19:02:07 GMT+0000 (UTC)">
+    <div class="book" data-level="2" data-basepath="." data-revision="Mon Jun 27 2016 13:47:01 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -434,22 +434,34 @@
 connection to the Docker host. The corresponding system properties
 which can be used to set it from the outside are given in
 parentheses. </p>
+<p>The docker-maven-plugin uses the Docker remote API so the URL of your
+Docker Daemon must somehow be specified. The URL can be specified by
+the dockerHost or machine configuration, or by the <code>DOCKER_HOST</code>
+environment variable.</p>
+<p>Since 1.3.0, the Docker remote API supports communication via SSL and
+authentication with certificates.  The path to the certificates can
+be specified by the certPath or machine configuration, or by the
+<code>DOCKER_CERT_PATH</code> environment variable.</p>
 <ul>
-<li><strong>dockerHost</strong> (<code>docker.host</code>) Use this variable to specify the URL
-to on your Docker Daemon is listening. This plugin requires the
-usage of the Docker remote API so this must be enabled. If this
-configuration option is not given, the environment variable
-<code>DOCKER_HOST</code> is evaluated. If this is also not set the plugin will use <code>unix:///var/run/docker.sock</code>
-as a default. The scheme of this URL can be either given
-directly as <code>http</code> or <code>https</code> depending on whether plain HTTP
-communication is enabled or SSL should be used (default since Docker
-1.3.0). Alternatively the scheme could be <code>tcp</code> in which case the protocol is
-determined via the IANA assigned port: 2375 for <code>http</code> and 2376 for
-<code>https</code>. Finally Unix sockets are supported with when a scheme <code>unix</code> is used together with the 
-filesystem path to the unix socket.</li>
 <li><strong>apiVersion</strong> (<code>docker.apiVersion</code>) Use this variable if you are using
 an older version of docker not compatible with the current default 
 use to communicate with the server.</li>
+<li><strong>authConfig</strong> holds the authentication information when pulling from
+or pushing to Docker registry. There is a dedicated section 
+<a href="authentication.html">Authentication</a> for how doing security.<ul>
+<li><strong>autoCreateCustomNetworks</strong> (<code>docker.autoCreateCustomNetworks</code>) If set to it will create 
+Docker networks during <code>docker:start</code> and remove it during <code>docker:stop</code> if you provide 
+a custom network in the run configuration of an image. The default is <code>false</code>.</li>
+</ul>
+</li>
+<li><strong>autoPull</strong> (<code>docker.autoPull</code>)
+By default external images (base image for building or images to
+start) are downloaded automatically if they don&apos;t exist locally.
+With this options this can be switched off by setting this value to <code>off</code>.
+Checking for a newer version of an image and downloading it if it
+exists can be forced by setting this value to <code>always</code>. This will force an image 
+to be always pulled. This is true for any base image during build and for any image 
+during run which has no <code>&lt;build&gt;</code> section. Valid values are <code>on|off|always</code>.</li>
 <li><strong>certPath</strong> (<code>docker.certPath</code>) Since 1.3.0 Docker remote API requires
 communication via SSL and authentication with certificates when used
 with boot2docker or docker-machine. These
@@ -461,6 +473,22 @@ environment variable <code>DOCKER_CERT_PATH</code> and then as last resort
 <code>ca.pem</code>, <code>cert.pem</code> and <code>key.pem</code>. Please refer to the
 <a href="https://docs.docker.com/articles/https/" target="_blank">Docker documentation</a> for
 more information about SSL security with Docker. </li>
+<li><strong>dockerHost</strong> (<code>docker.host</code>)
+Use this parameter to directly specify the URL of the Docker Daemon.
+If this configuration option is not given, then the optional <code>&lt;machine&gt;</code>
+configuration section is consulted.<br>The scheme of the URL can be either given directly as <code>http</code> or <code>https</code>
+depending on whether plain HTTP communication is enabled or SSL should
+be used. Alternatively the scheme could be <code>tcp</code> in which case the
+protocol is determined via the IANA assigned port: 2375 for <code>http</code>
+and 2376 for <code>https</code>. Finally, Unix sockets are supported by using
+the scheme <code>unix</code> together with the filesystem path to the unix socket.<br>The discovery sequence used by the docker-maven-plugin to determine
+the URL is:<ul>
+<li>value of <strong>dockerHost</strong> (<code>docker.host</code>)</li>
+<li>the <code>DOCKER_HOST</code> associated with the docker-machine named in <code>&lt;machine&gt;</code>. See below for details.</li>
+<li>the value of the environment variable <code>DOCKER_HOST</code>.</li>
+<li><code>unix:///var/run/docker.sock</code> if it is a readable socket.  </li>
+</ul>
+</li>
 <li><strong>image</strong> (<code>docker.image</code>) In order to temporarily restrict the
 operation of plugin goals this configuration option can be
 used. Typically this will be set via the system property
@@ -468,40 +496,36 @@ used. Typically this will be set via the system property
 name (either its alias or full name) or it can be a comma separated
 list with multiple image names. Any name which doesn&apos;t refer an
 image in the configuration will be ignored. </li>
-<li><strong>verbose</strong> (<code>docker.verbose</code>) Switch on the verbose mode, which e.g. will 
-print single build steps when creating an image. Switched off by default.</li>
-<li><strong>useColor</strong> (<code>docker.useColor</code>)
-If set to <code>true</code> the log output of this plugin will be colored. By
-default the output is colored if the build is running with a TTY,
-without color otherwise.</li>
-<li><strong>skip</strong> (<code>docker.skip</code>)
-With this parameter the execution of this plugin can be skipped
-completely. </li>
-<li><strong>skipTags</strong> (<code>docker.skipTags</code>)
-If set to <code>true</code> the plugin won&apos;t add any tags to images that have been built.</li>
-<li><strong>registry</strong> (<code>docker.registry</code>)
-Specify globally a registry to use for pulling and pushing
-images. See <a href="registry-handling.html">Registry handling</a> for details. </li>
-<li><strong>autoPull</strong> (<code>docker.autoPull</code>)
-By default external images (base image for building or images to
-start) are downloaded automatically if they don&apos;t exist locally.
-With this options this can be switched off by setting this value to <code>off</code>.
-Checking for a newer version of an image and downloading it if it
-exists can be forced by setting this value to <code>always</code>. This will force an image 
-to be always pulled. This is true for any base image during build and for any image 
-during run which has no <code>&lt;build&gt;</code> section. Valid values are <code>on|off|always</code>.</li>
-<li><strong>authConfig</strong> holds the authentication information when pulling from
-or pushing to Docker registry. There is a dedicated section 
-<a href="#authentication">Authentication</a> for how doing security.</li>
 <li><strong>logDate</strong> (<code>docker.logDate</code>) specifies the date format which is used for printing out
 container logs. This configuration can be overwritten by individual
 run configurations and described below. The format is described in
-<a href="#log-configuration">Log configuration</a> below. </li>
+<a href="docker-start.html##log-configuration">Log configuration</a> below. </li>
 <li><strong>logStdout</strong> (<code>docker.logStdout</code>) if set, do all container logging to standard output, 
-regardless whether a <code>file</code> for log output is specified. See also <a href="#log-configuration">Log configuration</a></li>
+regardless whether a <code>file</code> for log output is specified. See also <a href="docker-start.html##log-configuration">Log configuration</a></li>
+<li><strong>maxConnections</strong> (<code>docker.maxConnections</code>) specifies how many parallel connections are allowed to be opened
+to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), 
+so don&apos;t put that number to low. Default is 100 which should be suitable for most of the cases.</li>
+<li><strong>outputDirectory</strong> (<code>docker.target.dir</code>) specifies the default output directory to be
+used by this plugin. The default value is <code>target/docker</code> and is only used for the goal <code>docker:build</code>.</li>
 <li><strong>portPropertyFile</strong> if given, specifies a global file into which the
 mapped properties should be written to. The format of this file and
-its purpose are also described in <a href="#port-mapping">Port Mapping</a>.</li>
+its purpose are also described in <a href="docker-start.html#port-mapping">Port Mapping</a>.</li>
+<li><strong>registry</strong> (<code>docker.registry</code>)
+Specify globally a registry to use for pulling and pushing
+images. See <a href="registry-handling.html">Registry handling</a> for details. </li>
+<li><strong>skip</strong> (<code>docker.skip</code>)
+With this parameter the execution of this plugin can be skipped
+completely. </li>
+<li><strong>skipBuild</strong> (<code>docker.skip.build</code>)
+If set not images will be build (which implies also <em>skip.tag</em>) with <code>docker:build</code></li>
+<li><strong>skipPush</strong> (<code>docker.skip.push</code>)
+If set dont push any images even when <code>docker:push</code> is called.</li>
+<li><strong>skipRun</strong> (<code>docker.skip.run</code>)
+If set dont create and start any containers with <code>docker:start</code> or <code>docker:run</code></li>
+<li><strong>skipTag</strong> (<code>docker.skip.tag</code>)
+If set to <code>true</code> this plugin won&apos;t add any tags to images that have been built with <code>docker:build</code></li>
+<li><strong>skipMachine</strong> (<code>docker.skip.machine</code>) 
+Skip using docker machine in any case</li>
 <li><strong>sourceDirectory</strong> (<code>docker.source.dir</code>) specifies the default directory that contains
 the assembly descriptor(s) used by the plugin. The default value is <code>src/main/docker</code>. This
 option is only relevant for the <code>docker:build</code> goal.</li>
@@ -516,6 +540,38 @@ so don&apos;t put that number to low. Default is 100 which should be suitable fo
    <span class="hljs-tag">&lt;<span class="hljs-title">dockerHost</span>&gt;</span>https://localhost:2376<span class="hljs-tag">&lt;/<span class="hljs-title">dockerHost</span>&gt;</span>
    <span class="hljs-tag">&lt;<span class="hljs-title">certPath</span>&gt;</span>src/main/dockerCerts<span class="hljs-tag">&lt;/<span class="hljs-title">certPath</span>&gt;</span>
    <span class="hljs-tag">&lt;<span class="hljs-title">useColor</span>&gt;</span>true<span class="hljs-tag">&lt;/<span class="hljs-title">useColor</span>&gt;</span>
+   .....
+<span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
+</code></pre>
+<p>docker-maven-plugin supports also Docker machine (which must be installed locally, of course). 
+A Docker machine configuration can be provided with a top-level <code>&lt;machine&gt;</code> configuration section.<br>This configuration section knows the following options:</p>
+<ul>
+<li><strong>name</strong> for the Docker machine&apos;s name. Default is <code>default</code></li>
+<li><strong>autoCreate</strong> if set to <code>true</code> then a Docker machine will automatically created. Default is <code>false</code>.</li>
+<li><strong>createOptions</strong> is a map with options for Docker machine when auto-creating a machine. See the docker machine
+documentation for possible options.</li>
+</ul>
+<p>When no Docker host is configured or available as environment variable, then the configured Docker machine 
+is used. If the machine exists but is not running, it is started automatically. If it does not exists but <code>autoCreate</code>
+is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine 
+which has been created because of <code>autoCreate</code> gets never deleted by docker-maven-plugin. This needs to be done manually 
+if required. </p>
+<p>In absent of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide
+the name of a Docker machine. Similarly the property <code>docker.machine.autoCreate</code> can be set to true for creating 
+a Docker machine, too. </p>
+<p>You can use the property <code>docker.skip.machine</code> if you want to override the internal detection mechanism to always
+disable docker machine support.</p>
+<p>Example:</p>
+<pre><code class="lang-xml"><span class="hljs-comment">&lt;!-- Work with a docker-machine --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-title">configuration</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-title">machine</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">name</span>&gt;</span>maven<span class="hljs-tag">&lt;/<span class="hljs-title">name</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">autoCreate</span>&gt;</span>true<span class="hljs-tag">&lt;/<span class="hljs-title">autoCreate</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-title">createOptions</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">driver</span>&gt;</span>virtualbox<span class="hljs-tag">&lt;/<span class="hljs-title">driver</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-title">virtualbox-cpu-count</span>&gt;</span>2<span class="hljs-tag">&lt;/<span class="hljs-title">virtualbox-cpu-count</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-title">createOptions</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-title">machine</span>&gt;</span>
    .....
 <span class="hljs-tag">&lt;/<span class="hljs-title">configuration</span>&gt;</span>
 </code></pre>

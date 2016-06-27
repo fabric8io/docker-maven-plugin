@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="4.5" data-basepath="." data-revision="Mon Jun 13 2016 19:02:07 GMT+0000 (UTC)">
+    <div class="book" data-level="4.5" data-basepath="." data-revision="Mon Jun 27 2016 13:47:01 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -440,6 +440,14 @@ way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>d
 with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port
 <code>5000</code>. Security information (i.e. user and password) can be specified
 in multiple ways as described in section <a href="authentication.html">Authentication</a>.</p>
+<p>Options:</p>
+<ul>
+<li><strong>skipPush</strong> (<code>docker.skip.push</code>)
+If set to <code>true</code> the plugin won&apos;t push any images that have been built.</li>
+<li><strong>pushRegistry</strong> (<code>docker.push.registry</code>)
+The registry to use when pushing the image. See <a href="registry-handling.html">Registry Handling</a> for 
+more details.</li>
+</ul>
 
                     
                     </section>

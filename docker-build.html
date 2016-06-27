@@ -48,7 +48,7 @@
     <body>
         
         
-    <div class="book" data-level="4.1" data-basepath="." data-revision="Mon Jun 13 2016 19:02:07 GMT+0000 (UTC)">
+    <div class="book" data-level="4.1" data-basepath="." data-revision="Mon Jun 27 2016 13:47:01 GMT+0000 (UTC)">
     
 
 <div class="book-summary">
@@ -605,7 +605,12 @@ This value is <code>true</code> by default except in the case the <code>basedir<
 the container root (<code>/</code>). It is also <code>false</code> by default when a base image is used with <code>from</code>
 since exporting makes no sense in this case and will waste disk space unnecessarily.</li>
 <li><strong>ignorePermissions</strong> indicates if existing file permissions should be ignored
-when creating the assembly archive. This value is <code>false</code> by default.</li>
+when creating the assembly archive with a mode <code>dir</code>. This value is <code>false</code> by default. This property is
+deprecated, use a <code>permissionMode</code> of <code>ignore</code> instead.</li>
+<li><strong>permissions</strong> can be <code>ignore</code> to use the permission as found on files regardless on any 
+assembly configuration, <code>keep</code> to respect the assembly provided permissions, <code>exec</code> for setting 
+the executable bit on all files (required for Windows when using an assembly mode <code>dir</code>) or <code>auto</code> to let the 
+plugin select <code>exec</code> on Windows and <code>keep</code> on others. <code>keep</code> is the default value.</li>
 <li><strong>mode</strong> specifies how the assembled files should be collected. By default the files a simply
 copied (<code>dir</code>), but can be set to be a Tar- (<code>tar</code>), compressed Tar- (<code>tgz</code>) or Zip- (<code>zip</code>) Archive.
 The archive formats have the advantage that file permission can be preserved better (since the copying is
