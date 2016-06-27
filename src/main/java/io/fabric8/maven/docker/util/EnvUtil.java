@@ -31,32 +31,6 @@ public class EnvUtil {
 
     private EnvUtil() {}
 
-    // Check both, url and env DOCKER_HOST (first takes precedence)
-    public static String extractUrl(String dockerHost) {
-        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
-        if (connect == null) {
-            File unixSocket = new File("/var/run/docker.sock");
-            if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
-                connect = "unix:///var/run/docker.sock";
-            } else {
-                throw new IllegalArgumentException("No url given, no DOCKER_HOST environment variable and no read/writable '/var/run/docker.sock'");
-            }
-        }
-        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
-        return connect.replaceFirst("^tcp:", protocol);
-    }
-    
-    public static String getCertPath(String certPath) {
-        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
-        if (path == null) {
-            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
-            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
-                return dockerHome.getAbsolutePath();
-            }
-        }
-        return path;
-    }
-
     /**
      * Compare to version strings and return the larger version strings. This is used in calculating
      * the minimal required API version for this plugin. Version strings must be comparable as floating numbers.
@@ -283,11 +257,11 @@ public class EnvUtil {
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareDirectoryPath(params.getProject(), new File(params.getOutputDirectory(), dir).toString(), path);
+        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
     }
 
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareDirectoryPath(params.getProject(), params.getSourceDirectory(), path);
+        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
     }
 
     private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
@@ -295,7 +269,7 @@ public class EnvUtil {
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(project.getBasedir(), directory), path);
+        return new File(new File(params.getProject().getBasedir(), directory), path);
     }
 
     // create a timestamp file holding time in epoch seconds

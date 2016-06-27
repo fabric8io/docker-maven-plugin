@@ -18,6 +18,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -264,7 +265,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private String getPrefix(ImageConfiguration config) {
-        String prefix = config.getExternalConfiguration().getPropertiesConfiguration().getPrefix();
+        String prefix = config.getExternalConfig().get("prefix");
         if (prefix == null) {
             prefix = "docker";
         }

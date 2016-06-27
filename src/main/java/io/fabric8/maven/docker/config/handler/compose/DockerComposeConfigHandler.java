@@ -9,10 +9,8 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
-import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.maven.project.MavenProject;
-import io.fabric8.maven.docker.config.external.DockerComposeConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
+import org.apache.maven.project.MavenProject;
 import org.yaml.snakeyaml.Yaml;
 
 public class DockerComposeConfigHandler implements ExternalConfigHandler {
@@ -27,12 +25,11 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
     @Override
     @SuppressWarnings("unchecked")
     public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) {
-        DockerComposeConfiguration composeConfig = unresolvedConfig.getExternalConfiguration().getComposeConfiguration();
+        DockerComposeConfiguration config = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
 
-        String resolvedComposePath = resolveFilePath(composeConfig, project);
+        String resolvedComposePath = resolveFilePath(config.getBasedir(), config.getComposeFile(), project);
         String resolvedComposeParent = new File(resolvedComposePath).getParent();
 
-        Map<String, ImageConfiguration> serviceMap = composeConfig.getServiceMap();
         List<ImageConfiguration> resolved = new ArrayList<>();
         for (Object configuration : configurations(resolvedComposePath)) {
             Map<String, Object> map = (Map<String, Object>) configuration;
@@ -41,7 +38,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 Map<String, Object> values = (Map<String, Object>) entry.getValue();
 
                 DockerComposeValueProvider provider =
-                        new DockerComposeValueProvider(service, values, getServiceConfig(service, serviceMap));
+                        new DockerComposeValueProvider(service, values);
                 resolved.add(buildImageConfiguration(provider, resolvedComposeParent));
             }
         }
@@ -149,15 +146,10 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         return provider.getWatchImageConfiguration();
     }
 
-    private ImageConfiguration getServiceConfig(String service, Map<String, ImageConfiguration> serviceMap) {
-        if (!serviceMap.containsKey(service)) {
-            return EMPTY;
-        }
-        
-        return serviceMap.get(service);
-    }
-
-    private String resolveFilePath(DockerComposeConfiguration composeConfig, MavenProject project) {
-        return EnvUtil.prepareDirectoryPath(project, composeConfig.getBasedir(), composeConfig.getYamlFile()).toString();
+    private String resolveFilePath(String baseDir, String compose, MavenProject project) {
+        File yamlFile = new File(compose);
+        return yamlFile.isAbsolute() ?
+            yamlFile.getAbsolutePath() :
+            new File(new File(project.getBasedir(),baseDir),compose).getAbsolutePath();
     }
 }

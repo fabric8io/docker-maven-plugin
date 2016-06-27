@@ -6,9 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.jolokia.docker.maven.config.RestartPolicy;
-import org.jolokia.docker.maven.config.RunImageConfiguration;
-import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 
 public abstract class AbstractConfigHandlerTest {
 
@@ -18,7 +17,7 @@ public abstract class AbstractConfigHandlerTest {
 
     protected abstract String getEnvPropertyFile();
     
-    protected abstract NamingStrategy getRunNamingStrategy();
+    protected abstract RunImageConfiguration.NamingStrategy getRunNamingStrategy();
     
     protected abstract void validateEnv(Map<String, String> env);
     

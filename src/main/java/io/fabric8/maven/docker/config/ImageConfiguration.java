@@ -62,15 +62,14 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     }
 
     public BuildImageConfiguration getBuildConfiguration() {
-        // return an empty image
-        return (build == null) ? new BuildImageConfiguration() : build;
+        return build;
     }
 
     public WatchImageConfiguration getWatchConfiguration() {
         return watch;
     }
 
-    public ExternalImageConfiguration getExternalConfiguration() {
+    public Map<String, String> getExternalConfig() {
         return external;
     }
 
@@ -180,7 +179,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
             return this;
         }
 
-        public Builder externalConfig(ExternalImageConfiguration externalConfig) {
+        public Builder externalConfig(Map<String, String> externalConfig) {
             config.external = externalConfig;
             return this;
         }

@@ -2,24 +2,17 @@ package io.fabric8.maven.docker.config.handler.compose;
 
 import java.util.*;
 
-import org.jolokia.docker.maven.config.ImageConfiguration;
-import org.jolokia.docker.maven.config.RestartPolicy;
-import org.jolokia.docker.maven.config.RestartPolicy.Builder;
-import org.jolokia.docker.maven.config.RunImageConfiguration.NamingStrategy;
-import org.jolokia.docker.maven.config.WaitConfiguration;
-import org.jolokia.docker.maven.config.WatchImageConfiguration;
+import io.fabric8.maven.docker.config.*;
+
 
 class DockerComposeValueProvider {
 
     private final Map<String, Object> configuration;
-    private final ImageConfiguration extended;
-
     private final String service;
 
-    public DockerComposeValueProvider(String service, Map<String, Object> configuration, ImageConfiguration extended) {
+    public DockerComposeValueProvider(String service, Map<String, Object> configuration) {
         this.service = service;
         this.configuration = configuration;
-        this.extended = extended;
     }
 
     public String getAlias() {
@@ -49,7 +42,7 @@ class DockerComposeValueProvider {
     }
 
     public String getCleanup() {
-        return toString(extended.getBuildConfiguration().cleanup());
+        return "true";
     }
 
     public String getCommand() {
@@ -57,7 +50,7 @@ class DockerComposeValueProvider {
     }
 
     public String getCompression() {
-        return extended.getBuildConfiguration().getCompression().name();
+        return "tar";
     }
 
     public String getCpuSet() {
@@ -102,8 +95,7 @@ class DockerComposeValueProvider {
     }
 
     public String getImage() {
-        // use the image name defined in the service when building
-        return (getBuildDir() != null) ? extended.getName() : getString("image");
+        return getString("image");
     }
 
     public Map<String, String> getLabels() {
@@ -123,11 +115,12 @@ class DockerComposeValueProvider {
     }
 
     public String getNamingStrategy() {
-        return NamingStrategy.alias.toString();
+        return RunImageConfiguration.NamingStrategy.alias.toString();
     }
 
     public String getPortPropertyFile() {
-        return extended.getRunConfiguration().getPortPropertyFile();
+        // not supported
+        return null;
     }
 
     public Boolean getPrivileged() {
@@ -140,7 +133,7 @@ class DockerComposeValueProvider {
             return null;
         }
 
-        Builder builder = new RestartPolicy.Builder();
+        RestartPolicy.Builder builder = new RestartPolicy.Builder();
         if (restart.contains(":")) {
             String[] parts = restart.split("\\:", 2);
             builder.name(parts[0]).retry(Integer.valueOf(parts[1]));
@@ -176,11 +169,11 @@ class DockerComposeValueProvider {
     }
 
     public String getSkipBuild() {
-        return toString(extended.getBuildConfiguration().skip());
+        return "false";
     }
 
     public String getSkipRun() {
-        return toString(extended.getRunConfiguration().skip());
+        return "false";
     }
 
     private String toString(boolean bool) {
@@ -208,11 +201,13 @@ class DockerComposeValueProvider {
     }
 
     public WaitConfiguration getWaitConfiguration() {
-        return extended.getRunConfiguration().getWaitConfiguration();
+        // Not supported
+        return null;
     }
 
     public WatchImageConfiguration getWatchImageConfiguration() {
-        return extended.getWatchConfiguration();
+        // Not supported
+        return null;
     }
 
     public String getWorkingDir() {

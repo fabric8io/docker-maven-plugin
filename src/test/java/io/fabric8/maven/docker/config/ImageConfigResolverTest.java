@@ -18,6 +18,7 @@ package io.fabric8.maven.docker.config;/*
 import java.util.*;
 
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.ReflectionUtils;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
@@ -91,7 +92,7 @@ public class ImageConfigResolverTest {
         }
 
         @Override
-        public List<ImageConfiguration> resolve(ImageConfiguration referenceConfig, Properties properties) {
+        public List<ImageConfiguration> resolve(ImageConfiguration referenceConfig, MavenProject project) {
             List<ImageConfiguration> ret = new ArrayList<>();
             for (int i = 0; i < nr;i++) {
                 ImageConfiguration config = getImageConfiguration("image " + i);
