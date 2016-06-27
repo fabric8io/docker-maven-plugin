@@ -34,13 +34,14 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @Override
     public String getType() {
-        return "props";
+        return "properties";
     }
 
     @Override
-    public List<ImageConfiguration> resolve(ImageConfiguration config, Properties properties) throws IllegalArgumentException {
+    public List<ImageConfiguration> resolve(ImageConfiguration config, MavenProject project) throws IllegalArgumentException {
         String prefix = getPrefix(config);
-        
+        Properties properties = project.getProperties();
+
         RunImageConfiguration run = extractRunConfiguration(prefix,properties);
         BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
         WatchImageConfiguration watch = extractWatchConfig(prefix, properties);
@@ -263,8 +264,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private String getPrefix(ImageConfiguration config) {
-        Map<String, String> refConfig = config.getExternalConfig();
-        String prefix = refConfig != null ? refConfig.get("prefix") : null;
+        String prefix = config.getExternalConfiguration().getPropertiesConfiguration().getPrefix();
         if (prefix == null) {
             prefix = "docker";
         }

@@ -29,8 +29,7 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 05/12/14
  */
-public class PropertyConfigHandlerTest {
-
+public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private PropertyConfigHandler configHandler;
     private ImageConfiguration imageConfiguration;
@@ -38,7 +37,7 @@ public class PropertyConfigHandlerTest {
     @Before
     public void setUp() throws Exception {
         configHandler = new PropertyConfigHandler();
-        imageConfiguration = new ImageConfiguration.Builder().build();
+        imageConfiguration = buildAnUnresolvedImage();
     }
     
     @Test
@@ -64,12 +63,12 @@ public class PropertyConfigHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testEmpty() throws Exception {
-        configHandler.resolve(imageConfiguration, props());
+        resolveImage(imageConfiguration, props());
     }
 
     @Test
     public void testPorts() throws Exception {
-        List<ImageConfiguration> configs = configHandler.resolve(
+        List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
                         "docker.name","demo",
                         "docker.ports.1", "jolokia.port:8080",
@@ -92,7 +91,7 @@ public class PropertyConfigHandlerTest {
 
     @Test
     public void testEnvAndLabels() throws Exception {
-        List<ImageConfiguration> configs = configHandler.resolve(
+        List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
                         "docker.name","demo",
                         "docker.env.HOME", "/tmp",
@@ -119,7 +118,7 @@ public class PropertyConfigHandlerTest {
 
     @Test
     public void testAssembly() throws Exception {
-        List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props(getTestAssemblyData()));
+        List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestAssemblyData()));
         assertEquals(1, configs.size());
 
         AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
@@ -193,16 +192,47 @@ public class PropertyConfigHandlerTest {
 
         validateBuildConfiguration(resolved.getBuildConfiguration());
         validateRunConfiguration(resolved.getRunConfiguration());
+        validateWaitConfiguraion(resolved.getRunConfiguration().getWaitConfiguration());
+    }
+
+    @Override
+    protected String getEnvPropertyFile() {
+        return "/tmp/envProps.txt";
+    }
+
+    @Override
+    protected NamingStrategy getRunNamingStrategy() {
+        return NamingStrategy.none;
+    }
+
+    @Override
+    protected void validateEnv(Map<String, String> env) {
+        assertTrue(env.containsKey("HOME"));
+        assertEquals("/Users/roland", env.get("HOME"));
+    }
+
+    private ImageConfiguration buildAnUnresolvedImage() {
+        PropertiesConfiguration propsConfig = new PropertiesConfiguration.Builder()
+                .build();
+
+        ExternalImageConfiguration externalConfig = new ExternalImageConfiguration.Builder()
+                .properties(propsConfig)
+                .build();
+
+        return new ImageConfiguration.Builder()
+                .externalConfig(externalConfig)
+                .build();
+    }
+
+    private List<ImageConfiguration> resolveImage(ImageConfiguration image, Properties properties) {
+        MavenProject project = mock(MavenProject.class);
+        when(project.getProperties()).thenReturn(properties);
+
+        return configHandler.resolve(imageConfiguration, project);
     }
     
     private ImageConfiguration resolveExternalImageConfig(String[] testData) {
-        Map<String, String> external = new HashMap<>();
-        external.put("type", "props");
-
-        ImageConfiguration config = new ImageConfiguration.Builder().name("image").alias("alias").externalConfig(external).build();
-        PropertyConfigHandler handler = new PropertyConfigHandler();
-        
-        List<ImageConfiguration> resolvedImageConfigs = handler.resolve(config, props(testData));
+        List<ImageConfiguration> resolvedImageConfigs = resolveImage(imageConfiguration, props(testData));
         assertEquals(1, resolvedImageConfigs.size());
 
         return resolvedImageConfigs.get(0);
@@ -296,8 +326,8 @@ public class PropertyConfigHandlerTest {
         assertEquals("10", config.getDriver().getOpts().get("max-file"));
     }
 
-    private List<String> a(String ... args) {
-        return Arrays.asList(args);
+    private void validateLabels(Map<String, String> labels) {
+        assertEquals("Hello\"World",labels.get("com.acme.label"));
     }
 
     private Properties props(String ... args) {

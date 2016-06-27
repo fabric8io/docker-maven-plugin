@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
@@ -282,11 +283,11 @@ public class EnvUtil {
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
+        return prepareDirectoryPath(params.getProject(), new File(params.getOutputDirectory(), dir).toString(), path);
     }
 
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
+        return prepareDirectoryPath(params.getProject(), params.getSourceDirectory(), path);
     }
 
     private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
@@ -294,7 +295,7 @@ public class EnvUtil {
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+        return new File(new File(project.getBasedir(), directory), path);
     }
 
     // create a timestamp file holding time in epoch seconds

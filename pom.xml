@@ -264,7 +264,7 @@
               </resources>
             </configuration>
           </execution>
-        </executions>  
+        </executions>
       </plugin>
 
        <plugin>
