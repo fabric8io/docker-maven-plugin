@@ -34,6 +34,22 @@ parentheses.
   determined via the IANA assigned port: 2375 for `http` and 2376 for
   `https`. Finally Unix sockets are supported with when a scheme `unix` is used together with the 
   filesystem path to the unix socket.
+* **dockerHost** (`docker.host`)
+  Use this parameter to directly specify the URL of the Docker Daemon.
+  If this configuration option is not given, then the optional `<machine>`
+  configuration section is consulted.  
+  The scheme of the URL can be either given directly as `http` or `https`
+  depending on whether plain HTTP communication is enabled or SSL should
+  be used. Alternatively the scheme could be `tcp` in which case the
+  protocol is determined via the IANA assigned port: 2375 for `http`
+  and 2376 for `https`. Finally, Unix sockets are supported by using
+  the scheme `unix` together with the filesystem path to the unix socket.  
+  The discovery sequence used by the docker-maven-plugin to determine
+  the URL is:
+  - value of **dockerHost** (`docker.host`)
+  - the `DOCKER_HOST` associated with the docker-machine named in `<machine>`.
+  - the value of the environment variable `DOCKER_HOST`.
+  - `unix:///var/run/docker.sock` if it is a readable socket.  
 * **certPath** (`docker.certPath`) Since 1.3.0 Docker remote API requires
   communication via SSL and authentication with certificates when used
   with boot2docker or docker-machine. These

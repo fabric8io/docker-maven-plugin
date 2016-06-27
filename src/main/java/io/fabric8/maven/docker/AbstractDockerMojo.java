@@ -27,6 +27,7 @@ import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.MachineConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -63,8 +64,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected Settings settings;
 
     // Current maven project
-    @Parameter(defaultValue= "${session}", readonly = true)
+    @Parameter(property= "session")
     protected MavenSession session;
+
+    // Current mojo execution
+    @Parameter(property= "mojoExecution")
+    protected MojoExecution execution;
 
     // Handler for external configurations
     @Component
@@ -141,6 +146,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Parameter
     private List<ImageConfiguration> images;
+
+    // Docker-machine configuration
+    @Parameter
+    private MachineConfiguration machine;
 
     // Images resolved with external image resolvers and hooks for subclass to
     // mangle the image configurations.
@@ -248,11 +257,26 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
         DockerAccess access = null;
         if (isDockerAccessRequired()) {
-            String dockerUrl = EnvUtil.extractUrl(dockerHost);
+            boolean isDefaults = machine == null;
+            if (isDefaults) {
+                // create instance to resolve system defines
+                // docker.machine.name and docker.machine.autoCreate
+                machine = new MachineConfiguration();
+            }
+            isDefaults &= machine.resolveDefines(new PluginParameterExpressionEvaluator(session, execution), getLog());
+            log.debug(machine.toString());
+            if (isDefaults) {
+                // if no <machine> configuration and no system defines, do not
+                // use docker-machine
+                machine = null;
+            }
+
+            DockerMachine dockerMachine = new DockerMachine(log, machine);
+            String dockerUrl = dockerMachine.extractUrl(dockerHost);
             try {
                 String version =  minimalVersion != null ? minimalVersion : API_VERSION;
                 access = new DockerAccessWithHcClient("v" + version, dockerUrl,
-                                                      EnvUtil.getCertPath(certPath), maxConnections, log);
+                        dockerMachine.getCertPath(certPath), maxConnections, log);
                 access.start();
                 setDockerHostAddressProperty(dockerUrl);
             }

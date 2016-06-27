@@ -22,13 +22,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.15-SNAPSHOT</version>
+    <version>0.15.7</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.fabric8</groupId>
   <artifactId>cargo-jolokia-demo</artifactId>
-  <version>0.15-SNAPSHOT</version>
 
   <url>http://www.jolokia.org</url>
 
@@ -78,6 +77,13 @@
         <version>${project.version}</version>
         <extensions>true</extensions>
         <configuration>
+        <machine>
+          <autoCreate>true</autoCreate>
+          <createOptions>
+            <virtualbox-memory>10000</virtualbox-memory>
+            <virtualbox-no-share></virtualbox-no-share>
+          </createOptions>
+        </machine>
           <images>
             <image>
               <name>${image}</name>
