@@ -86,14 +86,16 @@ be specified by the certPath or machine configuration, or by the
 * **skip** (`docker.skip`)
   With this parameter the execution of this plugin can be skipped
   completely. 
-* **skip.build** (`docker.skip.build`)
+* **skipBuild** (`docker.skip.build`)
   If set not images will be build (which implies also *skip.tag*) with `docker:build`
-* **skip.push** (`docker.skip.push`)
+* **skipPush** (`docker.skip.push`)
   If set dont push any images even when `docker:push` is called.
-* **skip.run** (`docker.skip.run`)
+* **skipRun** (`docker.skip.run`)
   If set dont create and start any containers with `docker:start` or `docker:run`
-* **skip.tag** (`docker.skip.tag`)
+* **skipTag** (`docker.skip.tag`)
   If set to `true` this plugin won't add any tags to images that have been built with `docker:build`
+* **skipMachine** (`docker.skip.machine`) 
+  Skip using docker machine in any case
 * **sourceDirectory** (`docker.source.dir`) specifies the default directory that contains
   the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
   option is only relevant for the `docker:build` goal.
@@ -118,18 +120,23 @@ docker-maven-plugin supports also Docker machine (which must be installed locall
 A Docker machine configuration can be provided with a top-level `<machine>` configuration section.  
 This configuration section knows the following options:
 
-* **name** for the Docker machine's name
+* **name** for the Docker machine's name. Default is `default`
 * **autoCreate** if set to `true` then a Docker machine will automatically created. Default is `false`.
 * **createOptions** is a map with options for Docker machine when auto-creating a machine. See the docker machine
   documentation for possible options.
 
 When no Docker host is configured or available as environment variable, then the configured Docker machine 
 is used. If the machine exists but is not running, it is started automatically. If it does not exists but `autoCreate`
-is true, then the machine is created and started. Otherwise an error is printed.
+is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine 
+which has been created because of `autoCreate` gets never deleted by docker-maven-plugin. This needs to be done manually 
+if required. 
 
 In absent of a `<machine>` configuration section the Maven property `docker.machine.name` can be used to provide
 the name of a Docker machine. Similarly the property `docker.machine.autoCreate` can be set to true for creating 
 a Docker machine, too. 
+
+You can use the property `docker.skip.machine` if you want to override the internal detection mechanism to always
+disable docker machine support.
 
 Example:
 

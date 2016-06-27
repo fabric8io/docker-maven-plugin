@@ -85,12 +85,6 @@
         <artifactId>docker-maven-plugin</artifactId>
         <extensions>true</extensions> <!-- enables using 'docker' packaging above -->
         <configuration>
-          <machine>
-            <createOptions>
-              <driver>virtualbox</driver>
-            </createOptions>
-          </machine>
-
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
@@ -509,6 +503,27 @@
             </configuration>
           </plugin>
 
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>machine</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <machine>
+                <name>maven</name>
+                <autoCreate>true</autoCreate>
+                <createOptions>
+                  <driver>virtualbox</driver>
+                </createOptions>
+              </machine>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>

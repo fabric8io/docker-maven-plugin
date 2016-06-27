@@ -12,20 +12,18 @@ public class DockerMachineConfiguration {
 
     public static final String DOCKER_MACHINE_NAME_PROP = "docker.machine.name";
     public static final String DOCKER_MACHINE_AUTO_CREATE_PROP = "docker.machine.autoCreate";
-    
+
     /**
      * Name of the docker-machine
-     * @parameter expression="${docker.machine.name}" default-value="default"
      */
     @Parameter
-    private String name;
+    private String name = "default";
 
     /**
      * Should the docker-machine be created if it does not exist?
-     * @parameter expression="${docker.machine.autoCreate}" default-value="false"
      */
     @Parameter
-    private Boolean autoCreate;
+    private Boolean autoCreate = Boolean.FALSE;
 
     /**
      * When creating a docker-machine, the map of createOptions for the driver.
@@ -37,6 +35,8 @@ public class DockerMachineConfiguration {
      */
     @Parameter
     private Map<String, String> createOptions;
+
+    public DockerMachineConfiguration() {}
 
     public DockerMachineConfiguration(String name, String autoCreate) {
         this.name = name;

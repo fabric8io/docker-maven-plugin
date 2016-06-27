@@ -108,6 +108,4 @@ public class DockerConnectionDetector {
             return null;
         }
     }
-
-
 }

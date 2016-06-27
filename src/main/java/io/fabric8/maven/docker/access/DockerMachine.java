@@ -1,26 +1,12 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
+import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * launch docker-machine to obtain environment settings
@@ -36,18 +22,18 @@ public class DockerMachine {
 
         Status status = new StatusCommand().getStatus();
         switch (status) {
-        case DoesNotExist:
-            if (Boolean.TRUE == machine.getAutoCreate()) {
-                new CreateCommand().execute();
-            } else {
-                throw new MojoExecutionException(machine.getName() + " does not exist and docker.machine.autoCreate is false");
-            }
-            break;
-        case Running:
-            break;
-        case Stopped:
-            new StartCommand().execute();
-            break;
+            case DoesNotExist:
+                if (Boolean.TRUE == machine.getAutoCreate()) {
+                    new CreateCommand().execute();
+                } else {
+                    throw new MojoExecutionException(machine.getName() + " does not exist and docker.machine.autoCreate is false");
+                }
+                break;
+            case Running:
+                break;
+            case Stopped:
+                new StartCommand().execute();
+                break;
         }
     }
 
@@ -65,6 +51,7 @@ public class DockerMachine {
 
         void execute() throws MojoExecutionException {
             final Process process = startDockerMachineProcess();
+            start();
             try {
                 closeOutputStream(process.getOutputStream());
                 Future<IOException> stderrFuture = startStreamPump(process.getErrorStream());
@@ -75,11 +62,19 @@ public class DockerMachine {
             } catch (MojoExecutionException e) {
                 process.destroy();
                 throw e;
+            } finally {
+                end();
             }
             if (statusCode != 0) {
                 throw new MojoExecutionException("docker-machine exited with status " + statusCode);
             }
+
         }
+
+        // Hooks for logging ...
+        protected void start() {}
+        protected void end() {}
+
 
         private void checkProcessExit(Process process) {
             try {
@@ -112,7 +107,7 @@ public class DockerMachine {
 
         private void outputStreamPump(final InputStream inputStream) throws MojoExecutionException {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));) {
-                for (;;) {
+                for (; ; ) {
                     String line = reader.readLine();
                     if (line == null) {
                         break;
@@ -125,7 +120,7 @@ public class DockerMachine {
         }
 
         protected void processLine(String line) {
-            log.info(line);
+            log.verbose(line);
         }
 
         private Future<IOException> startStreamPump(final InputStream errorStream) {
@@ -133,13 +128,13 @@ public class DockerMachine {
                 @Override
                 public IOException call() {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream));) {
-                        for (;;) {
+                        for (; ; ) {
                             String line = reader.readLine();
                             if (line == null) {
                                 break;
                             }
                             synchronized (log) {
-                                log.error(line);
+                                log.warn(line);
                             }
                         }
                         return null;
@@ -168,20 +163,20 @@ public class DockerMachine {
     private static final int SET_PREFIX_LEN = SET_PREFIX.length();
 
     // docker-machine env <name>
-    class EnvCommand extends DockerCommand {
+    private class EnvCommand extends DockerCommand {
 
         private final Map<String, String> env = new HashMap<>();
 
         @Override
         protected String[] getArgs() {
-            return new String[] { "docker-machine", "env", machine.getName(), "--shell", "cmd" };
+            return new String[]{"docker-machine", "env", machine.getName(), "--shell", "cmd"};
         }
 
         @Override
         protected void processLine(String line) {
-        	if(log.isDebugEnabled()) {
-        		log.verbose("%s", line);
-        	}
+            if (log.isDebugEnabled()) {
+                log.verbose("%s", line);
+            }
             if (line.startsWith(SET_PREFIX)) {
                 setEnvironmentVariable(line.substring(SET_PREFIX_LEN));
             }
@@ -195,7 +190,7 @@ public class DockerMachine {
             }
             String name = line.substring(0, equals);
             String value = line.substring(equals + 1);
-            log.info(name + "=" + value);
+            log.debug(name + "=" + value);
             env.put(name, value);
         }
 
@@ -206,19 +201,19 @@ public class DockerMachine {
     }
 
     // docker-machine status <name>
-    class StatusCommand extends DockerCommand {
+    private class StatusCommand extends DockerCommand {
 
         private Status status;
         private String message;
 
         @Override
         protected String[] getArgs() {
-            return new String[] { "docker-machine", "status", machine.getName() };
+            return new String[]{"docker-machine", "status", machine.getName()};
         }
 
         @Override
         protected void processLine(String line) {
-            log.verbose(line);
+            log.info("Docker machine \"%s\" is %s",machine.getName(),line.toLowerCase());
             if ("Running".equals(line)) {
                 status = Status.Running;
             } else if ("Stopped".equals(line)) {
@@ -231,12 +226,10 @@ public class DockerMachine {
         public Status getStatus() throws MojoExecutionException {
             try {
                 execute();
-            }
-            catch(MojoExecutionException ex) {
-                if(statusCode==1) {
+            } catch (MojoExecutionException ex) {
+                if (statusCode == 1) {
                     status = Status.DoesNotExist;
-                }
-                else {
+                } else {
                     throw ex;
                 }
             }
@@ -248,7 +241,9 @@ public class DockerMachine {
     }
 
     // docker-machine create --driver virtualbox <name>
-    class CreateCommand extends DockerCommand {
+    private class CreateCommand extends DockerCommand {
+
+        private long start;
 
         @Override
         protected String[] getArgs() {
@@ -267,14 +262,41 @@ public class DockerMachine {
             args.add(machine.getName());
             return args.toArray(new String[args.size()]);
         }
+
+        @Override
+        protected void start() {
+            log.info("Creating docker machine \"%s\" with args %s",
+                     machine.getName(),
+                     machine.getCreateOptions() != null ? machine.getCreateOptions().toString() : "");
+            log.info("This might take a while ...");
+            start = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void end() {
+            log.info("Created docker machine \"%s\" in %d seconds",machine.getName(), (System.currentTimeMillis() - start) / 1000);
+        }
     }
 
     // docker-machine start <name>
-    class StartCommand extends DockerCommand {
+    private class StartCommand extends DockerCommand {
+
+        private long start;
 
         @Override
         protected String[] getArgs() {
-            return new String[] { "docker-machine", "start", machine.getName() };
+            return new String[]{"docker-machine", "start", machine.getName()};
+        }
+
+        @Override
+        protected void start() {
+            log.info("Starting docker machine \"%s\"", machine.getName());
+            start = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void end() {
+            log.info("Started docker machine \"%s\" in %d seconds",machine.getName(), (System.currentTimeMillis() - start) / 1000);
         }
     }
 }

@@ -120,6 +120,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private boolean skip;
 
     /**
+     * Whether the usage of docker machine should be skipped competely
+     */
+    @Parameter(property = "docker.skip.machine", defaultValue = "false")
+    private boolean skipMachine;
+
+    /**
      * Whether to restrict operation to a single image. This can be either
      * the image or an alias name. It can also be comma separated list.
      * This parameter is typically set via the command line.
@@ -274,10 +280,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private DockerConnectionDetector createDockerConnectionDetector() {
         if (machine == null) {
             Properties projectProps = project.getProperties();
-            if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
-                machine = new DockerMachineConfiguration(
-                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
-                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
+            if (!skipMachine) {
+                if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
+                    machine = new DockerMachineConfiguration(
+                        projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
+                        projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
+                }
             }
         }
         return new DockerConnectionDetector(log, machine);
