@@ -47,7 +47,7 @@ public class DockerConnectionDetector {
         if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
             return "unix:///var/run/docker.sock";
         } 
-        throw new IllegalArgumentException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock'");
+        throw new MojoExecutionException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock'");
     }
     
     /**

@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.15.8** (2016-06-25)
+* **0.15.8** (2016-06-27)
   - Removed image configuration caching (#495)
   - Fix for tcp wait when used with Docker for Mac (#430)
   - Add warning when assembly is empty when watching a Docker image (#490)
@@ -10,7 +10,8 @@
   - Add new assembly config options `permissions` for fine tuning permissions in the docker.tar (#477). Deprecated `ignorePermissions`
     in favor of a `<permissions>ignore</permissions>`
   - Add auto creation of custom networks if the option `autoCreateCustomNetwork` is set (#482)
-  
+  - Support for docker machine added (#481)
+
 * **0.15.7** (2016-06-09)
   - Add support for '.maven-dockerinclude' for including certain files in plain Dockerfile build ([#471](https://github.com/fabric8io/docker-maven-plugin/issues/471))
   - Add support for placeholders in image names.
