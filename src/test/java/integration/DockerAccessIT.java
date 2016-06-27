@@ -10,14 +10,14 @@ import java.util.Properties;
 import com.google.common.collect.Lists;
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.DockerMachine;
+import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import io.fabric8.maven.docker.AbstractDockerMojo;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.MachineConfiguration;
+import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -41,15 +41,13 @@ public class DockerAccessIT {
 
     public DockerAccessIT() throws MojoExecutionException {
         AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
-        String url = createDockerMachine(logger).extractUrl(null);
+        String url = createDockerConnectionDetector(logger).extractUrl(null);
         this.dockerClient = createClient(url, logger);
     }
 
-    private DockerMachine createDockerMachine(Logger logger) {
-        MachineConfiguration machine = new MachineConfiguration();
-        machine.setName("default");
-        machine.setAutoCreate(Boolean.FALSE);
-        return new DockerMachine(logger, machine);
+    private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
+        DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false");
+        return new DockerConnectionDetector(logger, machine);
     }
 
     @Before
@@ -89,7 +87,7 @@ public class DockerAccessIT {
 
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
-            String certPath = createDockerMachine(logger).getCertPath(null);
+            String certPath = createDockerConnectionDetector(logger).getCertPath(null);
             return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen

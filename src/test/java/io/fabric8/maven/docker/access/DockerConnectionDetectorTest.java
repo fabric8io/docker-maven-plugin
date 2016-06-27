@@ -1,16 +1,18 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.access;
 
 import java.io.File;
 
+import io.fabric8.maven.docker.access.DockerConnectionDetector;
+import io.fabric8.maven.docker.util.AnsiLogger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DockerMachineTest {
+public class DockerConnectionDetectorTest {
 
     AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
-    DockerMachine machine = new DockerMachine(logger, null);
+    DockerConnectionDetector machine = new DockerConnectionDetector(logger, null);
 
     @Test
     public void testGetUrlFromHostConfig() throws MojoExecutionException {
@@ -24,7 +26,7 @@ public class DockerMachineTest {
             Assert.assertEquals(dockerHost, machine.extractUrl(null));
         } else {
             try {
-                Assert.assertEquals("/var/run/docker.sock", machine.extractUrl(null));
+                Assert.assertEquals("unix:///var/run/docker.sock", machine.extractUrl(null));
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
             }
         }

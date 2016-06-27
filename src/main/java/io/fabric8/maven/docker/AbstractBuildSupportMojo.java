@@ -2,10 +2,12 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -18,8 +20,6 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import org.apache.maven.shared.utils.io.FileUtils;
 
 /**
  * @author roland

@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.access;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,20 +17,20 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import io.fabric8.maven.docker.config.MachineConfiguration;
+import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 
 /**
  * launch docker-machine to obtain environment settings
  */
-public class DockerEnvironment {
+public class DockerMachine {
 
     private final Logger log;
-    private final MachineConfiguration machine;
-    private final Map<String, String> env;
+    private final DockerMachineConfiguration machine;
 
-    public DockerEnvironment(Logger log, MachineConfiguration machine) throws MojoExecutionException {
+    public DockerMachine(Logger log, DockerMachineConfiguration machine) throws MojoExecutionException {
         this.log = log;
         this.machine = machine;
 
@@ -49,15 +49,14 @@ public class DockerEnvironment {
             new StartCommand().execute();
             break;
         }
-        env = new EnvCommand().getEnvironment();
     }
 
     enum Status {
         DoesNotExist, Running, Stopped
     }
 
-    public Map<String, String> getEnvironment() {
-        return env;
+    public Map<String, String> getEnvironment() throws MojoExecutionException {
+        return new EnvCommand().getEnvironment();
     }
 
     abstract class DockerCommand {

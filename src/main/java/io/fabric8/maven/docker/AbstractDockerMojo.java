@@ -6,9 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.service.QueryService;
@@ -27,7 +25,7 @@ import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.MachineConfiguration;
+import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -149,7 +147,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Docker-machine configuration
     @Parameter
-    private MachineConfiguration machine;
+    private DockerMachineConfiguration machine;
 
     // Images resolved with external image resolvers and hooks for subclass to
     // mangle the image configurations.
@@ -257,26 +255,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
         DockerAccess access = null;
         if (isDockerAccessRequired()) {
-            boolean isDefaults = machine == null;
-            if (isDefaults) {
-                // create instance to resolve system defines
-                // docker.machine.name and docker.machine.autoCreate
-                machine = new MachineConfiguration();
-            }
-            isDefaults &= machine.resolveDefines(new PluginParameterExpressionEvaluator(session, execution), getLog());
-            log.debug(machine.toString());
-            if (isDefaults) {
-                // if no <machine> configuration and no system defines, do not
-                // use docker-machine
-                machine = null;
-            }
-
-            DockerMachine dockerMachine = new DockerMachine(log, machine);
-            String dockerUrl = dockerMachine.extractUrl(dockerHost);
+            DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector();
+            String dockerUrl = dockerConnectionDetector.extractUrl(dockerHost);
             try {
                 String version =  minimalVersion != null ? minimalVersion : API_VERSION;
                 access = new DockerAccessWithHcClient("v" + version, dockerUrl,
-                        dockerMachine.getCertPath(certPath), maxConnections, log);
+                                                      dockerConnectionDetector.getCertPath(certPath), maxConnections, log);
                 access.start();
                 setDockerHostAddressProperty(dockerUrl);
             }
@@ -285,6 +269,18 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             }
         }
         return access;
+    }
+
+    private DockerConnectionDetector createDockerConnectionDetector() {
+        if (machine == null) {
+            Properties projectProps = project.getProperties();
+            if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
+                machine = new DockerMachineConfiguration(
+                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
+                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
+            }
+        }
+        return new DockerConnectionDetector(log, machine);
     }
 
     /**

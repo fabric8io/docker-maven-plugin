@@ -9,9 +9,9 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.fabric8.maven.docker.config.MachineConfiguration;
+import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.DockerEnvironment;
+import io.fabric8.maven.docker.access.DockerMachine;
 
 /*
  * if run from your ide, this test assumes you have docker-machine installed
@@ -21,11 +21,8 @@ public class DockerMachineIT {
 
     @Test
     public void testLaunchDockerMachine() throws Exception {
-        MachineConfiguration mc = new MachineConfiguration();
-        mc.setName("default");
-        mc.setAutoCreate(true);
-        mc.setCreateOptions(ImmutableMap.of("driver", "virtualbox"));
-        DockerEnvironment de = new DockerEnvironment(new AnsiLogger(new SystemStreamLog(), true, true), mc);
+        DockerMachineConfiguration mc = new DockerMachineConfiguration("default","true");
+        DockerMachine de = new DockerMachine(new AnsiLogger(new SystemStreamLog(), true, true), mc);
         Map<String, String> environment = de.getEnvironment();
         Assert.assertTrue(environment.get("DOCKER_HOST") != null);
     }
