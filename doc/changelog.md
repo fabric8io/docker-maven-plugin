@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.15.9** (2016-06-28)
+  - Fixed issue when target directory does not exist yet ([#497](https://github.com/fabric8io/docker-maven-plugin/issues/497))
+  
 * **0.15.8** (2016-06-27)
   - Removed image configuration caching ([#495](https://github.com/fabric8io/docker-maven-plugin/issues/495))
   - Fix for tcp wait when used with Docker for Mac ([#430](https://github.com/fabric8io/docker-maven-plugin/issues/430))
