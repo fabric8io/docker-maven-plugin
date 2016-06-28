@@ -51,7 +51,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public static final String API_VERSION = "1.18";
 
     // Filename for holding the build timestamp
-    public static final String DOCKER_BUILD_TIMESTAMP = "docker_build.timestamp";
+    public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
 
     // Current maven project
     @Parameter(defaultValue= "${project}", readonly = true)
