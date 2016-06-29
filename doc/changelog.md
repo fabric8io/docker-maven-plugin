@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.15-SNAPSHOT**
+  - Dont do redirect when waiting on an HTTP port (#499)
+
 * **0.15.9** (2016-06-28)
   - Fixed issue when target directory does not exist yet ([#497](https://github.com/fabric8io/docker-maven-plugin/issues/497))
   
