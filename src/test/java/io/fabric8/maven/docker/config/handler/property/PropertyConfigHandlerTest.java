@@ -270,7 +270,14 @@ public class PropertyConfigHandlerTest {
         assertEquals("tomcat", runConfig.getUser());
         assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
         assertEquals("foo", runConfig.getWorkingDir());
-
+        assertNotNull( runConfig.getUlimits());
+        assertEquals(4, runConfig.getUlimits().size());        
+        assertUlimitEquals(ulimit("memlock",10,10),runConfig.getUlimits().get(0));
+        assertUlimitEquals(ulimit("memlock",null,-1),runConfig.getUlimits().get(1));
+        assertUlimitEquals(ulimit("memlock",1024,null),runConfig.getUlimits().get(2));
+        assertUlimitEquals(ulimit("memlock",2048,null),runConfig.getUlimits().get(3));
+        
+        
         validateEnv(runConfig.getEnv());
 
         // not sure it's worth it to implement 'equals/hashcode' for these
@@ -296,6 +303,18 @@ public class PropertyConfigHandlerTest {
         assertEquals("10", config.getDriver().getOpts().get("max-file"));
     }
 
+    private ULimitConfig ulimit(String name, Integer hard, Integer soft) {
+	ULimitConfig uLimitConfig = new ULimitConfig();
+	uLimitConfig.setName(name);
+	if (hard != null) {
+	    uLimitConfig.setHard(hard);
+	}
+	if (soft != null) {
+	    uLimitConfig.setSoft(soft);
+	}
+	return uLimitConfig;
+    }
+    
     private List<String> a(String ... args) {
         return Arrays.asList(args);
     }
@@ -352,6 +371,10 @@ public class PropertyConfigHandlerTest {
             k(ConfigKey.RESTART_POLICY_NAME), "on-failure",
             k(ConfigKey.RESTART_POLICY_RETRY), "1",
             k(ConfigKey.USER), "tomcat",
+            k(ConfigKey.ULIMITS)+".1", "memlock=10:10",
+            k(ConfigKey.ULIMITS)+".2", "memlock=:-1",
+            k(ConfigKey.ULIMITS)+".3", "memlock=1024:",
+            k(ConfigKey.ULIMITS)+".4", "memlock=2048",
             k(ConfigKey.VOLUMES) + ".1", "/foo",
             k(ConfigKey.VOLUMES_FROM) + ".1", "from",
             k(ConfigKey.PRE_STOP), "pre_stop_command",
@@ -376,5 +399,10 @@ public class PropertyConfigHandlerTest {
 
     private String k(ConfigKey from) {
         return from.asPropertyKey();
+    }
+    private void assertUlimitEquals(ULimitConfig expected, ULimitConfig actual){
+    	assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getSoft(), actual.getSoft());
+        assertEquals(expected.getHard(), actual.getHard());    	
     }
 }

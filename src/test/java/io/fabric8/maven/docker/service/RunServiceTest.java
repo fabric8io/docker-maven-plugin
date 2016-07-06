@@ -254,6 +254,7 @@ public class RunServiceTest {
                         .cmd("date")
                         .entrypoint("entrypoint")
                         .extraHosts(extraHosts())
+                        .ulimits(ulimits())
                         .workingDir("/foo")
                         .ports(ports())
                         .links(links())
@@ -310,7 +311,10 @@ public class RunServiceTest {
 
         return env;
     }
-
+    private List<ULimitConfig> ulimits(){
+        return new ULimitConfig.Builder().add(Collections.singletonList("memlock=1024:2048")).build();
+    }
+    
     private List<String> extraHosts() {
         return Collections.singletonList("localhost:127.0.0.1");
     }
