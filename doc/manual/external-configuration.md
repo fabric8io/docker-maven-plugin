@@ -113,7 +113,7 @@ one image layer is created.
 * **docker.portPropertyFile** specifies a path to a port mapping used
   when starting a container.
 * **docker.ports.idx** Sets a port mapping. For example
-  `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps
+  `<docker.ports.1>jolokia.ports:8080</docker.ports.1>` maps
   the container port 8080 dynamically to a host port and assigns this
   host port to the Maven property `${jolokia.port}`. See
   [Port mapping](#port-mapping) for possible mapping options. When creating images images only
@@ -125,6 +125,7 @@ one image layer is created.
 * **docker.tags.idx** defines a list of tags to apply to a built image
 * **docker.user** User to switch to at the end of a Dockerfile. Not to confuse with `docker.username` which is used for
   authentication when interacting with a Docker registry.
+* **docker.ulimits.idx** defines ulimits in the container. Ulimit is specified with a soft and hard limit `<type>=<soft limit>[:<hard limit>]`. For example `<docker.ulimits.1>memlock=-1:-1</docker.ulimits.1>`   
 * **docker.volumes.idx** defines a list of volumes to expose when building an image
 * **docker.volumesFrom.idx** defines a list of image aliases from which
   the volumes should be mounted of the container. The list semantics

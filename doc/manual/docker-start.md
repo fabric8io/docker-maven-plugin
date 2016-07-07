@@ -79,12 +79,14 @@ The `<run>` configuration section knows the following sub elements:
   [Container Restart Policy](#container-restart-policy)
 * **user** user used inside the container
 * **skip** disable creating and starting of the container. This option is best used together with a configuration option.
-* **volumes** for bind configurtion of host directories and from other containers. See [Volume binding](#volume-binding)
+* **ulimits** ulimits in the container. 
+* **volumes** for bind configuration of host directories and from other containers. See [Volume binding](#volume-binding)
   for details.
 * **wait** specifies condition which must be fulfilled for the startup
   to complete. See [Wait during Startup and Shutdown](#wait-during-startup-and-shutdown) which subelements are
   available and how they can be specified.
 * **workingDir** working dir for commands to run in
+
 
 Example:
 
@@ -101,6 +103,13 @@ Example:
   <ports>
     <port>jolokia.port:8080</port>
   </ports>
+  <ulimits>
+    <ulimit>
+      <name>memlock</name>
+      <hard>-1</hard>
+      <soft>-1</soft>
+    </ulimit>
+  <ulimits>
   <links>
     <link>db</db>
   </links>
