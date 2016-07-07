@@ -116,6 +116,9 @@ public class RunImageConfiguration {
     private RestartPolicy restartPolicy;
 
     @Parameter
+    private List<ULimitConfig> ulimits;
+
+    @Parameter
     private boolean skip = false;
     
     public RunImageConfiguration() { }
@@ -231,6 +234,23 @@ public class RunImageConfiguration {
 
     public List<String> getLinks() {
         return links;
+    }
+
+    /**
+     *
+     * @return the ulimits
+     */
+    public List<ULimitConfig> getUlimits() {
+	return ulimits;
+    }
+
+    /**
+     *
+     * @param pUlimits
+     *            le ulimits a affecter
+     */
+    public void setUlimits(List<ULimitConfig> pUlimits) {
+	ulimits = pUlimits;
     }
 
     // Naming scheme for how to name container
@@ -366,6 +386,11 @@ public class RunImageConfiguration {
             config.extraHosts = extraHosts;
             return this;
         }
+
+	public Builder ulimits(List<ULimitConfig> ulimits) {
+	    config.ulimits = ulimits;
+	    return this;
+	}
 
         public Builder ports(List<String> ports) {
             config.ports = ports;

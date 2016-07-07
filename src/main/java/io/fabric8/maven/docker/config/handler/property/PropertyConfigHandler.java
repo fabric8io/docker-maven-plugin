@@ -18,6 +18,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
+
 import org.codehaus.plexus.component.annotations.Component;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -115,6 +116,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .wait(extractWaitConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
+                .ulimits(extractUlimits(prefix, properties))
                 .build();
     }
 
@@ -213,6 +215,16 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .postGoal(withPrefix(prefix, WATCH_POSTGOAL, properties))
                 .mode(withPrefix(prefix, WATCH_POSTGOAL, properties))
                 .build();
+    }
+
+    private List<ULimitConfig> extractUlimits(String prefix, Properties properties) {
+
+	List<String> ulimits = listWithPrefix(prefix, ConfigKey.ULIMITS, properties);
+	if (ulimits == null) {
+	    return null;
+	}
+	return new ULimitConfig.Builder().add(ulimits).build();
+
     }
 
     private VolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {

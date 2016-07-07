@@ -292,6 +292,7 @@ public class RunService {
 
         addVolumeConfig(config, runConfig);
         addNetworkingConfig(config, runConfig);
+        addUlimitConfig(config, runConfig);
 
         return config;
     }
@@ -315,6 +316,13 @@ public class RunService {
         }
     }
 
+    private void addUlimitConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
+        List<ULimitConfig> ulimitsConfig = runConfig.getUlimits();
+        if (ulimitsConfig != null) {
+            config.ulimits(ulimitsConfig);
+        }
+    }
+    
     List<String> findContainerIdsForLinks(List<String> links, boolean leaveUnresolvedIfNotFound) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitOnLastColon(links)) {
