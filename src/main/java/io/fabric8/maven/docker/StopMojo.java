@@ -42,6 +42,12 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
     private boolean keepRunning;
 
+    @Parameter(property = "docker.allContainers", defaultValue = "false")
+    private boolean allContainers;
+
+    @Parameter(property = "docker.sledgehammer", defaultValue = "false")
+    private boolean sledgehammer;
+
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
@@ -109,13 +115,7 @@ public class StopMojo extends AbstractDockerMojo {
     }
 
     private boolean isStopAllContainers() {
-        for (String prop : new String[] { "docker.allContainers", "docker.sledgeHammer" }) {
-            String val = System.getProperty(prop);
-            if (val != null && Boolean.valueOf(val)) {
-                return true;
-            }
-        }
-        return false;
+        return allContainers | sledgehammer;
     }
 
     private boolean invokedTogetherWithDockerStart() {
