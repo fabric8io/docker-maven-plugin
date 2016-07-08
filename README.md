@@ -14,14 +14,14 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 
 | Goal                                          | Description                           |
 | --------------------------------------------- | ------------------------------------- |
-| [`docker:start`](https://fabric8io.github.io/docker-maven-plugin/docker-start.html)   | Create and start containers           |
-| [`docker:stop`](https://fabric8io.github.io/docker-maven-plugin/docker-stop.html)     | Stop and destroy containers           |
-| [`docker:build`](https://fabric8io.github.io/docker-maven-plugin/docker-build.html)   | Build images                          |
-| [`docker:watch`](https://fabric8io.github.io/docker-maven-plugin/docker-watch.html)   | Watch for doing rebuilds and restarts |
-| [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/docker-push.html)     | Push images to a registry             |
-| [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/docker-remove.html) | Remove images from local docker host  |
-| [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/docker-logs.html)     | Show container logs                   |
-| [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/docker-source.html)   | Attach docker build archive to Maven project |
+| [`docker:start`](https://fabric8io.github.io/docker-maven-plugin/#docker:start)   | Create and start containers           |
+| [`docker:stop`](https://fabric8io.github.io/docker-maven-plugin/#docker:stop)     | Stop and destroy containers           |
+| [`docker:build`](https://fabric8io.github.io/docker-maven-plugin/#docker:build)   | Build images                          |
+| [`docker:watch`](https://fabric8io.github.io/docker-maven-plugin/#docker:watch)   | Watch for doing rebuilds and restarts |
+| [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/#docker:push)     | Push images to a registry             |
+| [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:remove) | Remove images from local docker host  |
+| [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/#docker:logs)     | Show container logs                   |
+| [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/#docker:source)   | Attach docker build archive to Maven project |
 
 #### Documentation
 

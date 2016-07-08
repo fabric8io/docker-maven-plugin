@@ -1,0 +1,34 @@
+= Maven Goals
+
+This plugin supports the following goals which are explained in detail
+in the following sections.
+
+|===
+|Goal |Description
+
+|link:docker-build[`docker:build`]
+|Build images
+
+|link:docker-start[`docker:start`]
+|Create and start containers
+
+|link:docker-stop[`docker:stop`]
+|Stop and destroy containers
+
+|link:docker-push[`docker:push`]
+|Push images to a registry
+
+|link:docker-remove[`docker:remove`]
+|Remove images from local docker host
+
+|link:docker-logs[`docker:logs`]
+|Show container logs
+
+|link:docker-source.md[`docker:source`]
+|Attach docker build archive to Maven project
+|===
+
+Note that all goals are orthogonal to each other. For example in order
+to start a container for your application you typically have to build
+its image before. `docker:start` does *not* imply building the image
+so you should use it then in combination with `docker:build`.

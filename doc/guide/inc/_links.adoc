@@ -1,0 +1,18 @@
+
+= Further reading
+
+* The https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/intro.md[Introduction] is a high level
+overview of this plugin's features and provides an usage example.
+* Examples:
+** https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/examples.md[Examples]
+are below `samples/` and contain example
+setups which you can use as blueprints for your own projects.
+** A https://github.com/fabric8io/shootout-docker-maven[Shooutout] for
+comparing docker maven plugins
+** Another
+https://github.com/fabric8io/docker-maven-sample[sample project]
+with a Microservice and a Database.
+* https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/changelog.md[ChangeLog]
+has the release history of this plugin.
+* https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/contributing.md[Contributing]
+explains how you can contribute to this project. Pull requests are highly appreciated!
