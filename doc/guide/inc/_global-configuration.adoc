@@ -17,39 +17,36 @@ authentication with certificates.  The path to the certificates can
 be specified by the certPath or machine configuration, or by the
 `DOCKER_CERT_PATH` environment variable.
 
-* *apiVersion* (`docker.apiVersion`) Use this variable if you are using
-an older version of docker not compatible with the current default
-use to communicate with the server.
-* *authConfig* holds the authentication information when pulling from
-or pushing to Docker registry. There is a dedicated section
-link:authentication.md[Authentication] for how doing security.
-* *autoCreateCustomNetworks* (`docker.autoCreateCustomNetworks`) If set to it will create
-  Docker networks during `docker:start` and remove it during `docker:stop` if you provide
-  a custom network in the run configuration of an image. The default is `false`.
-* *autoPull* (`docker.autoPull`)
-By default external images (base image for building or images to
+.Global Configuration
+[cols="1,5,1"]
+|===
+| Parameter | Description | Property
+
+| *apiVersion*
+| Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
+| `docker.apiVersion`
+
+| *authConfig*
+| Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <<authentication, Authentication>> for how doing security.
+|
+
+| *autoCreate CustomNetworks*
+| Create automatically Docker networks during `docker:start` and remove it during `docker:stop` if you provide a custom network in the run configuration of an image. The default is `false`.
+| `docker.autoCreate` `CustomNetworks`
+
+| *autoPull*
+| By default external images (base image for building or images to
 start) are downloaded automatically if they don't exist locally.
-With this options this can be switched off by setting this value to `off`.
-Checking for a newer version of an image and downloading it if it
-exists can be forced by setting this value to `always`. This will force an image
-to be always pulled. This is true for any base image during build and for any image
-during run which has no `<build>` section. Valid values are `on|off|always`.
-* *certPath* (`docker.certPath`) Since 1.3.0 Docker remote API requires
-communication via SSL and authentication with certificates when used
-with boot2docker or docker-machine. These
-certificates are normally stored
-in `~/.docker/`. With this configuration the path can be set
-explicitly. If not set, the fallback is first taken from the
-environment variable `DOCKER_CERT_PATH` and then as last resort
-`~/.docker/`. The keys in this are expected with it standard names
-`ca.pem`, `cert.pem` and `key.pem`. Please refer to the
-https://docs.docker.com/articles/https[Docker documentation] for
-more information about SSL security with Docker.
-* *dockerHost* (`docker.host`)
-Use this parameter to directly specify the URL of the Docker Daemon.
-If this configuration option is not given, then the optional `<machine>`
-configuration section is consulted.
-The scheme of the URL can be either given directly as `http` or `https`
+With this options this can be switched off by setting this value to `off`. Checking for a newer version of an image and downloading it if it
+exists can be forced by setting this value to `always`. This will force an image to be always pulled. This is true for any base image during build and for any image during run which has no `<build>` section. Valid values are `on`, `off` or `always`.
+| `docker.autoPull`
+
+| *certPath*
+| Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
+| `docker.certPath`
+
+| *dockerHost*
+a| The URL of the Docker Daemon. If this configuration option is not given, then the optional `<machine>` configuration section is consulted. The scheme of the URL can be either given directly as `http` or `https`
 depending on whether plain HTTP communication is enabled or SSL should
 be used. Alternatively the scheme could be `tcp` in which case the
 protocol is determined via the IANA assigned port: 2375 for `http`
@@ -57,55 +54,69 @@ and 2376 for `https`. Finally, Unix sockets are supported by using
 the scheme `unix` together with the filesystem path to the unix socket.
 The discovery sequence used by the docker-maven-plugin to determine
 the URL is:
-** value of *dockerHost* (`docker.host`)
-** the `DOCKER_HOST` associated with the docker-machine named in `<machine>`. See below for details.
-** the value of the environment variable `DOCKER_HOST`.
-** `unix:///var/run/docker.sock` if it is a readable socket.
-* *image* (`docker.image`) In order to temporarily restrict the
-operation of plugin goals this configuration option can be
-used. Typically this will be set via the system property
-`docker.image` when Maven is called. The value can be a single image
-name (either its alias or full name) or it can be a comma separated
-list with multiple image names. Any name which doesn't refer an
-image in the configuration will be ignored.
-* *logDate* (`docker.logDate`) specifies the date format which is used for printing out
-container logs. This configuration can be overwritten by individual
-run configurations and described below. The format is described in
-link:docker-start.html##log-configuration[Log configuration] below.
-* *logStdout* (`docker.logStdout`) if set, do all container logging to standard output,
-regardless whether a `file` for log output is specified. See also link:docker-start.html##log-configuration[Log configuration]
-* *maxConnections* (`docker.maxConnections`) specifies how many parallel connections are allowed to be opened
-to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features),
-so don't put that number to low. Default is 100 which should be suitable for most of the cases.
-* *outputDirectory* (`docker.target.dir`) specifies the default output directory to be
-used by this plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
-* *portPropertyFile* if given, specifies a global file into which the
-mapped properties should be written to. The format of this file and
-its purpose are also described in link:docker-start.html#port-mapping[Port Mapping].
-* *registry* (`docker.registry`)
-Specify globally a registry to use for pulling and pushing
-images. See link:registry-handling.md[Registry handling] for details.
-* *skip* (`docker.skip`)
-With this parameter the execution of this plugin can be skipped
-completely.
-* *skipBuild* (`docker.skip.build`)
-If set not images will be build (which implies also _skip.tag_) with `docker:build`
-* *skipPush* (`docker.skip.push`)
-If set dont push any images even when `docker:push` is called.
-* *skipRun* (`docker.skip.run`)
-If set dont create and start any containers with `docker:start` or `docker:run`
-* *skipTag* (`docker.skip.tag`)
-If set to `true` this plugin won't add any tags to images that have been built with `docker:build`
-* *skipMachine* (`docker.skip.machine`)
-Skip using docker machine in any case
-* *sourceDirectory* (`docker.source.dir`) specifies the default directory that contains
-the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This
-option is only relevant for the `docker:build` goal.
-* *outputDirectory* (`docker.target.dir`) specifies the default output directory to be
-used by the plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
-* *maxConnections* (`docker.maxConnections`) specifies how many parallel connections are allowed to be opened
-to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features),
-so don't put that number to low. Default is 100 which should be suitable for most of the cases.
+
+. value of *dockerHost* (`docker.host`)
+. the `DOCKER_HOST` associated with the docker-machine named in `<machine>`. See below for details.
+. the value of the environment variable `DOCKER_HOST`.
+. `unix:///var/run/docker.sock` if it is a readable socket.
+| `docker.host`
+
+| *image*
+| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
+| `docker.image`
+
+| *logDate*
+| Date format which is used for printing out container logs. This configuration can be overwritten by individual run configurations and described below. The format is described in <<loggging,Logging>>.
+| `docker.logDate`
+
+| *logStdout*
+| Fo all container logging to standard output if set to `true`, regardless whether a `file` for log output is specified. See also <<logging,Logging>>
+| `docker.logStdout`
+
+| *maxConnections*
+| Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
+| `docker.maxConnections`
+
+| *outputDirectory*
+| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
+| `docker.target.dir`
+
+| *portPropertyFile*
+| Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<port-mapping,Port Mapping>>.
+|
+
+| *registry*
+| Specify globally a registry to use for pulling and pushing images. See <<registry,Registry handling>> for details.
+| `docker.registry`
+
+| *skip*
+| With this parameter the execution of this plugin can be skipped completely.
+| `docker.skip`
+
+| *skipBuild*
+| If set not images will be build (which implies also _skip.tag_) with `docker:build`
+| `docker.skip.build`
+
+| *skipPush*
+| If set dont push any images even when `docker:push` is called.
+| `docker.skip.push`
+
+| *skipRun*
+| If set dont create and start any containers with `docker:start` or `docker:run`
+| `docker.skip.run`
+
+| *skipTag*
+| If set to `true` this plugin won't add any tags to images that have been built with `docker:build`
+| `docker.skip.tag`
+
+| *skipMachine*
+| Skip using docker machine in any case
+| `docker.skip.machine`
+
+| *sourceDirectory*
+| Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `docker:build` goal.
+| `docker.source.dir`
+|===
 
 Example:
 

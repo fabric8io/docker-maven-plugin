@@ -1,4 +1,4 @@
-
+[[registry]]
 = Registry handling
 
 Docker uses registries to store images. The registry is typically

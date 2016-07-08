@@ -1,39 +1,7 @@
 
 = Introduction
 
-This is a Maven plugin for managing Docker images and containers for your builds with the following Maven goals:
-
-== Goals
-
-|===
-|Goal | Description
-
-|**<<docker:build>>**
-|Build images
-
-|**<<docker:start>>** or **<<docker:start,docker:run>>**
-|Create and start containers
-
-|**<<docker:stop>>**
-|Stop and destroy containers
-
-|**<<docker:watch>>**
-|Watch for doing rebuilds and restarts
-
-|**<<docker:push>>**
-|Push images to a registry
-
-|**<<docker:remove>>**
-|Remove images from local docker host
-
-|**<<docker:logs>>**
-|Show container logs
-
-|**<<docker:source>>**
-|Attach docker build archive to Maven project
-|===
-
-This plugin focuses on two major aspects:
+This is a Maven plugin for managing Docker images and containers. It focuses on two major aspects for a Docker build integration:
 
 == Building docker images
 
@@ -119,7 +87,7 @@ Images can be specified in any order and the plugin will take care of the proper
 <2> <<docker:build,build configuration>> defines how a Docker image should be created
 <3> Base image, in this case `java:8`
 <4> Content of the image can be specified with an <<assembly,assembly descriptor>>
-<5> <<startup,default Command>> to run when a container is created.
+<5> <<startup,Default command>> to run when a container is created.
 <6> <<docker:run,Run configuration>> defines how a container should be created from this image
 <7> <<port-mapping,Port mapping>> defines how container ports should be mapped to host ports
 <8> <<wait,Wait>> section which is a readiness check when starting the service
@@ -140,3 +108,4 @@ Some other highlights, in random order:
 * Color output
 * <<docker:watch,Watching>> on project changes and automatic recreation of image
 * <<property-config,Properties>> as alternative to the XML configuration
+* Support for Docker daemons accepting http or https request via TCP and for Unix sockets

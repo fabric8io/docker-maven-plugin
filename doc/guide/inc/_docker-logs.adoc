@@ -27,4 +27,7 @@ formats.
 
 Example:
 
+[source, sh]
+----
  $ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT
+----
