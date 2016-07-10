@@ -334,8 +334,17 @@
               <version>1.5.4</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <sourceDirectory>doc/guide</sourceDirectory>
+            <attributes>
+              <icons>font</icons>
+              <pagenums/>
+              <toc/>
+              <idprefix/>
+              <idseparator>-</idseparator>
+            </attributes>
+          </configuration>
         </plugin>
-
       </plugins>
 
     </pluginManagement>
@@ -477,18 +486,6 @@
             <configuration>
               <backend>html</backend>
               <sourceHighlighter>coderay</sourceHighlighter>
-              <sourceDirectory>doc/guide</sourceDirectory>
-              <attributes>
-                <imagesdir>./images</imagesdir>
-                <toc>left</toc>
-                <icons>font</icons>
-                <version>${project.version}</version>
-                <sectanchors>true</sectanchors>
-                <!-- set the idprefix to blank -->
-                <idprefix/>
-                <idseparator>-</idseparator>
-                <docinfo1>true</docinfo1>
-              </attributes>
             </configuration>
             <executions>
               <execution>
@@ -514,14 +511,6 @@
             <configuration>
               <backend>pdf</backend>
               <sourceHighlighter>rouge</sourceHighlighter>
-              <sourceDirectory>doc/guide</sourceDirectory>
-              <attributes>
-                <icons>font</icons>
-                <pagenums/>
-                <toc/>
-                <idprefix/>
-                <idseparator>-</idseparator>
-              </attributes>
             </configuration>
             <dependencies>
               <dependency>

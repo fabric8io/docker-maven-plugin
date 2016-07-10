@@ -25,7 +25,7 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 
 #### Documentation
 
-* The **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** has a detailed reference for all and everything.
+* The **[User Manual](https://fabric8io.github.io/docker-maven-plugin)** [[PDF](https://fabric8io.github.io/docker-maven-plugin/docker-maven-plugin.pdf)] has a detailed reference for all and everything.
 * The [Introduction](doc/intro.md) is a high level
   overview of this plugin's features and provides an usage example.
   provided goals and possible configuration parameters.
