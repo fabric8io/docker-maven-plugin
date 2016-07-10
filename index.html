@@ -516,14 +516,14 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-07-08</span>
+<span id="revdate">2016-07-10</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
 <ul class="sectlevel1">
 <li><a href="#introduction">1. Introduction</a>
 <ul class="sectlevel2">
-<li><a href="#building-docker-images">1.1. Building docker images</a></li>
+<li><a href="#building-docker-images">1.1. Building Docker images</a></li>
 <li><a href="#running-containers">1.2. Running containers</a></li>
 <li><a href="#configuration">1.3. Configuration</a></li>
 <li><a href="#example">1.4. Example</a></li>
@@ -596,7 +596,7 @@ table.CodeRay td.code>pre{padding:0}
 <p>This is a Maven plugin for managing Docker images and containers. It focuses on two major aspects for a Docker build integration:</p>
 </div>
 <div class="sect2">
-<h3 id="building-docker-images"><a class="anchor" href="#building-docker-images"></a>1.1. Building docker images</h3>
+<h3 id="building-docker-images"><a class="anchor" href="#building-docker-images"></a>1.1. Building Docker images</h3>
 <div class="paragraph">
 <p>One purpose of this plugin is to create docker images holding the actual application. This is done with the docker:build goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with docker:push.</p>
 </div>
@@ -644,7 +644,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="example"><a class="anchor" href="#example"></a>1.4. Example</h3>
 <div class="paragraph">
-<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt;</a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which is specified in the <a href="#docker:build">&lt;build&gt;</a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is dynamically mapped to a dynmically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
+<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt;</a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which is specified in the <a href="#docker:build">&lt;build&gt;</a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynmically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
 </div>
 <div class="paragraph">
 <p>Images can be specified in any order and the plugin will take care of the proper startup order (and will bail out if it detects circular dependencies).</p>
@@ -925,7 +925,7 @@ be specified by the certPath or machine configuration, or by the
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Element</th>
 <th class="tableblock halign-left valign-top">Description</th>
 <th class="tableblock halign-left valign-top">Property</th>
 </tr>
@@ -977,7 +977,7 @@ the URL is:</p>
 <p>value of <strong>dockerHost</strong> (<code>docker.host</code>)</p>
 </li>
 <li>
-<p>the <code>DOCKER_HOST</code> associated with the docker-machine named in <code>&lt;machine&gt;</code>. See below for details.</p>
+<p>the Docker host associated with the docker-machine named in <code>&lt;machine&gt;</code>, i.e. the <code>DOCKER_HOST</code> from <code>docker-machine env</code>. See <a href="#docker-machine">below</a> for more information about Docker machine support.</p>
 </li>
 <li>
 <p>the value of the environment variable <code>DOCKER_HOST</code>.</p>
@@ -1001,8 +1001,13 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>logStdout</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Fo all container logging to standard output if set to <code>true</code>, regardless whether a <code>file</code> for log output is specified. See also <a href="#logging">Logging</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">For all container logging to standard output if set to <code>true</code>, regardless whether a <code>file</code> for log output is specified. See also <a href="#logging">Logging</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.logStdout</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>machine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker machine configuration. See <a href="#docker-machine">Docker Machine</a> for possible values</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maxConnections</strong></p></td>
@@ -1074,40 +1079,45 @@ the URL is:</p>
 <span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>docker-maven-plugin supports also Docker machine (which must be installed locally, of course).
-A Docker machine configuration can be provided with a top-level <code>&lt;machine&gt;</code> configuration section.
-This configuration section knows the following options:</p>
+<div id="docker-machine" class="paragraph">
+<div class="title">Docker Machine</div>
+<p>This plugin supports also Docker machine (which must be installed locally, of course). A Docker machine configuration can be provided with a top-level <code>&lt;machine&gt;</code> configuration section. This configuration section knows the following options:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>name</strong> for the Docker machine&#8217;s name. Default is <code>default</code></p>
-</li>
-<li>
-<p><strong>autoCreate</strong> if set to <code>true</code> then a Docker machine will automatically created. Default is <code>false</code>.</p>
-</li>
-<li>
-<p><strong>createOptions</strong> is a map with options for Docker machine when auto-creating a machine. See the docker machine
-documentation for possible options.</p>
-</li>
-</ul>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 2. Docker Machine Options</caption>
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker machine&#8217;s name. Default is <code>default</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoCreate</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> then a Docker machine will automatically created. Default is <code>false</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>createOptions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Map with options for Docker machine when auto-creating a machine. See the docker machine documentation for possible options.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>When no Docker host is configured or available as environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but <code>autoCreate</code> is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine which has been created because of <code>autoCreate</code> gets never deleted by docker-maven-plugin. This needs to be done manually if required.</p>
 </div>
 <div class="paragraph">
-<p>When no Docker host is configured or available as environment variable, then the configured Docker machine
-is used. If the machine exists but is not running, it is started automatically. If it does not exists but <code>autoCreate</code>
-is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine
-which has been created because of <code>autoCreate</code> gets never deleted by docker-maven-plugin. This needs to be done manually
-if required.</p>
+<p>In absent of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide the name of a Docker machine. Similarly the property <code>docker.machine.autoCreate</code> can be set to true for creating a Docker machine, too.</p>
 </div>
 <div class="paragraph">
-<p>In absent of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide
-the name of a Docker machine. Similarly the property <code>docker.machine.autoCreate</code> can be set to true for creating
-a Docker machine, too.</p>
-</div>
-<div class="paragraph">
-<p>You can use the property <code>docker.skip.machine</code> if you want to override the internal detection mechanism to always
-disable docker machine support.</p>
+<p>You can use the property <code>docker.skip.machine</code> if you want to override the internal detection mechanism to always disable docker machine support.</p>
 </div>
 <div class="paragraph">
 <p>Example:</p>
@@ -1141,71 +1151,90 @@ configuration with one <code>&lt;image&gt;</code> element per image to use.</p>
 <div class="paragraph">
 <p>The <code>&lt;image&gt;</code> element can contain the following sub elements:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>name</strong> : Each <code>&lt;image&gt;</code> configuration has a mandatory, unique docker
-repository <em>name</em>. This can include registry and tag parts, but also placeholder
-parameters. See below for a detailed explanation.</p>
-</li>
-<li>
-<p><strong>alias</strong> is a shortcut name for an image which can be used for
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 3. Image Configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each <code>&lt;image&gt;</code> configuration has a mandatory, unique docker
+repository <em>name</em>. This can include registry and tag parts, but also placeholder parameters. See below for a detailed explanation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>alias</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shortcut name for an image which can be used for
 identifying the image within this configuration. This is used when
-linking images together or for specifying it with the global
-<strong>image</strong> configuration.</p>
-</li>
-<li>
-<p><strong>registry</strong> is a registry to use for this image. If the <code>name</code>
-already contains a registry this takes precedence. See
-<a href="#_registry-handling">Registry handling</a> for more details.</p>
-</li>
-<li>
-<p><strong>build</strong> is a complex element which contains all the configuration
-aspects when doing a <code>docker:build</code> or <code>docker:push</code>. This element
-can be omitted if the image is only pulled from a registry e.g. as
-support for integration tests like database images.</p>
-</li>
-<li>
-<p><strong>run</strong> contains subelements which describe how containers should be
-created and run when <code>docker:start</code> or <code>docker:stop</code> is called. If
-this image is only used a <em>data container</em> for exporting artifacts
-via volumes this section can be missing.</p>
-</li>
-<li>
-<p><strong>external</strong> can be used to fetch the configuration through other
-means than the intrinsic configuration with <code>run</code> and <code>build</code>. It
-contains a <code>&lt;type&gt;</code> element specifying the handler for getting the
-configuration. See <a href="#_external-configuration">External configuration</a>
-for details.</p>
-</li>
-</ul>
-</div>
+linking images together or for specifying it with the global <strong>image</strong> configuration element.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Registry to use for this image. If the <code>name</code> already contains a registry this takes precedence. See <a href="#registry">Registry handling</a> for more details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>build</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Element which contains all the configuration aspects when doing a <a href="#docker:build"><strong>docker:build</strong></a>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>run</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Eelement which describe how containers should be
+created and run when <a href="#docker:start"><strong>docker:start</strong></a> is called. If this image is only used a <em>data container</em> (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>external</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specification of external configuration as an alternative to this XML based configuration with <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code>. It contains a <code>&lt;type&gt;</code> element specifying the handler for getting the configuration. See <a href="#external-configuration">External configuration</a> for details.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
-<p>When specifying the name you can use several placeholders which are replaced
-during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
+<div class="title">Name placeholders</div>
+<p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>%g</strong> The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id <code>io.fabric8</code> this placeholder would insert <code>fabric8</code>.</p>
-</li>
-<li>
-<p><strong>%a</strong> A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker).</p>
-</li>
-<li>
-<p><strong>%v</strong> The project version. Synonym to <code>${project.version}</code>.</p>
-</li>
-<li>
-<p><strong>%l</strong> If the project version ends with <code>-SNAPSHOT</code> then this placeholder is <code>latest</code>, otherwise its the full version (same as <code>%v</code>).</p>
-</li>
-<li>
-<p><strong>%t</strong> If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 4. Placeholdes</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Placeholder</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%g</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id <code>io.fabric8</code> this placeholder would insert <code>fabric8</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%a</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%v</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The project version. Synonym to <code>${project.version}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%l</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> then this placeholder is <code>latest</code>, otherwise its the full version (same as <code>%v</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
-<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in
-details in the corresponding goal sections.</p>
+<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in details in the corresponding goal sections.</p>
 </div>
 <div class="paragraph">
 <p>Example:</p>
@@ -1235,7 +1264,7 @@ details in the corresponding goal sections.</p>
 in the following sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. Plugin Goals</caption>
+<caption class="title">Table 5. Plugin Goals</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1385,14 +1414,14 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 3. Build configuration</caption>
+<caption class="title">Table 6. Build configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Element</th>
 <th class="tableblock halign-left valign-top">Description</th>
 </tr>
 </thead>
@@ -1526,14 +1555,14 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Assembly Configuration</caption>
+<caption class="title">Table 7. Assembly Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Element</th>
 <th class="tableblock halign-left valign-top">Description</th>
 </tr>
 </thead>
@@ -1663,7 +1692,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 8. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -1794,7 +1823,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>A entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 9. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3703,10 +3732,6 @@ password.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>The <a href="https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/intro.md">Introduction</a> is a high level
-overview of this plugin&#8217;s features and provides an usage example.</p>
-</li>
-<li>
 <p>Examples:</p>
 <div class="ulist">
 <ul>
@@ -3743,7 +3768,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-08 13:34:33 UTC
+Last updated 2016-07-10 08:51:04 UTC
 </div>
 </div>
 </body>
