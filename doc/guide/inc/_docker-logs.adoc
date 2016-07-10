@@ -9,25 +9,27 @@ property. The format of the log output is influenced by run
 configuration of the configured images. The following system
 properties can the behaviour of this goal:
 
-* *docker.logAll* if set to `true` the logs of all containers
-created from images configured for this plugin are printed. The
-container id is then prefixed before every log line. These images
-can contain many containers which are already stopped. It is
-probably a better idea to use `docker logs` diretly from the command
-line.
-* *docker.follow* if given will wait for subsequent log output until
-CRTL-C is pressed. This is similar to the behaviour of `docker logs
--f` (or `tail -f`).
-* *docker.image* can be used to restrict the set of images for which
-log should be fetched. This can be a comma separated list of image
-or alias names.
-* *docker.logDate* specifies the log date to use. See
-"<<_log-configuration,Log configuration>>" above for the available
-formats.
+.Logging options
+[cols="1,5"]
+|===
+| Property | Description
+
+| *docker.logAll*
+| If set to `true` the logs of all containers created from images configured for this plugin are printed. The container id is then prefixed before every log line. These images can contain many containers which are already stopped. It is probably a better idea to use `docker logs` diretly from the command line.
+
+| *docker.follow*
+| If given will wait for subsequent log output until CRTL-C is pressed. This is similar to the behaviour of `docker logs -f` (or `tail -f`).
+
+| *docker.image*
+| Filte to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.
+
+| *docker.logDate*
+| Date format to use. See "<<logging,Logging>>" for available formats.
+|===
 
 Example:
 
 [source, sh]
 ----
- $ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT
+$ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT
 ----

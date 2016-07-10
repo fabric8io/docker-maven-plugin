@@ -5,7 +5,7 @@
 ** https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/examples.md[Examples]
 are below `samples/` and contain example
 setups which you can use as blueprints for your own projects.
-** A https://github.com/fabric8io/shootout-docker-maven[Shooutout] for
+** A https://github.com/fabric8io/shootout-docker-maven[Shootout] for
 comparing docker maven plugins
 ** Another
 https://github.com/fabric8io/docker-maven-sample[sample project]
