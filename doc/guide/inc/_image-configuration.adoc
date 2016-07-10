@@ -37,7 +37,8 @@ created and run when <<docker:start>> is called. If this image is only used a _d
 .Name placeholders
 When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.
 
-.Placeholdes
+.Placeholders
+[cos="1,5"]
 |===
 | Placeholder | Description
 

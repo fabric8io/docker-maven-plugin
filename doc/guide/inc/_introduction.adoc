@@ -5,19 +5,19 @@ This is a Maven plugin for managing Docker images and containers. It focuses on 
 
 == Building Docker images
 
-One purpose of this plugin is to create docker images holding the actual application. This is done with the docker:build goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with docker:push.
+One purpose of this plugin is to create docker images holding the actual application. This is done with the <<docker:build>> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with <<docker:push>>.
 
 == Running containers
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties to your integration test code.
 
-Multiple containers can be managed at once, which can be linked together or share data via volumes. Containers are created and started with the docker:start goal and stopped and destroyed with the docker:stop goal. For integration tests both goals are typically bound to the the pre-integration-test and post-integration-test phase, respectively. It is recommended to use the maven-failsafe-plugin for integration testing in order to stop the docker container even when the tests fail.
+Multiple containers can be managed at once, which can be linked together or share data via volumes. Containers are created and started with the <<docker:start>> goal and stopped and destroyed with the <<docker:stop>> goal. For integration tests both goals are typically bound to the the pre-integration-test and post-integration-test phase, respectively. It is recommended to use the maven-failsafe-plugin for integration testing in order to stop the docker container even when the tests fail.
 
 For proper isolation, container exposed ports can be dynamically and flexibly mapped to local host ports. It is easy to specify a Maven property which will be filled in with a dynamically assigned port after a container has been started. This can then be used as parameter for integration tests to connect to the application.
 
 == Configuration
 
-The plugin configuration contains a global part and a list of image-specific configuration within a `<images>` list, where each image is defined within a `<image>` tag. See below for an example.
+The plugin configuration contains a global part and a list of image-specific configuration within a `<images>` list, where each image is defined within a `<image>` tag. See <<example,below>> for an example.
 
 The <<global-config,global part>> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.
 
@@ -29,6 +29,7 @@ Then, each specific image configuration has three parts:
 
 The `<build>` and `<run>` parts are optional and can be omitted.
 
+[[example]]
 == Example
 
 In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <<docker:start,<run> >> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which is specified in the <<docker:build,<build> >> section. It creates an image which has artifacts and dependencies in the `/maven` directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the `<run>` section this port is mapped to a dynmically chosen port, and then assigned to the Maven property `${tomcat.port}`. This property could be used, for example, by an integration test to access this microservice. An important part is the `<links>` section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with `DB_`).

@@ -20,7 +20,7 @@ from such a external configuration are added to the _regular_
 The available handlers are described in the following.
 
 [[property-config]]
-== Property based Configuration
+== Property based configuration
 
 For simple needs the image configuration can be completely defined via
 Maven properties which are defined outside of this plugin's
