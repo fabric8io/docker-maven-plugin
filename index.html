@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel1">
 <li><a href="#introduction">1. Introduction</a>
 <ul class="sectlevel2">
-<li><a href="#building-docker-images">1.1. Building Docker images</a></li>
-<li><a href="#running-containers">1.2. Running containers</a></li>
+<li><a href="#building-images">1.1. Building Images</a></li>
+<li><a href="#running-containers">1.2. Running Containers</a></li>
 <li><a href="#configuration">1.3. Configuration</a></li>
 <li><a href="#example">1.4. Example</a></li>
 <li><a href="#features">1.5. Features</a></li>
@@ -556,8 +556,8 @@ table.CodeRay td.code>pre{padding:0}
 </ul>
 </li>
 <li><a href="#docker:stop">5.3. <strong>docker:stop</strong></a></li>
-<li><a href="#docker:watch">5.4. <strong>docker:watch</strong></a></li>
-<li><a href="#docker:push">5.5. <strong>docker:push</strong></a></li>
+<li><a href="#docker:push">5.4. <strong>docker:push</strong></a></li>
+<li><a href="#docker:watch">5.5. <strong>docker:watch</strong></a></li>
 <li><a href="#docker:remove">5.6. <strong>docker:remove</strong></a></li>
 <li><a href="#docker:logs">5.7. <strong>docker:logs</strong></a></li>
 <li><a href="#docker:source">5.8. <strong>docker:source</strong></a></li>
@@ -596,13 +596,13 @@ table.CodeRay td.code>pre{padding:0}
 <p>This is a Maven plugin for managing Docker images and containers. It focuses on two major aspects for a Docker build integration:</p>
 </div>
 <div class="sect2">
-<h3 id="building-docker-images"><a class="anchor" href="#building-docker-images"></a>1.1. Building Docker images</h3>
+<h3 id="building-images"><a class="anchor" href="#building-images"></a>1.1. Building Images</h3>
 <div class="paragraph">
 <p>One purpose of this plugin is to create docker images holding the actual application. This is done with the <a href="#docker:build"><strong>docker:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with <a href="#docker:push"><strong>docker:push</strong></a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="running-containers"><a class="anchor" href="#running-containers"></a>1.2. Running containers</h3>
+<h3 id="running-containers"><a class="anchor" href="#running-containers"></a>1.2. Running Containers</h3>
 <div class="paragraph">
 <p>With this plugin it is possible to run completely isolated integration tests so you don&#8217;t need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties to your integration test code.</p>
 </div>
@@ -1289,12 +1289,12 @@ in the following sections.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Stop and destroy containers</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:watch"><strong>docker:watch</strong></a></strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and restarts</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:push"><strong>docker:push</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Push images to a registry</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:watch"><strong>docker:watch</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and restarts</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:remove"><strong>docker:remove</strong></a></strong></p></td>
@@ -1927,7 +1927,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect2">
 <h3 id="docker:start"><a class="anchor" href="#docker:start"></a>5.2. <strong>docker:start</strong></h3>
 <div class="paragraph">
-<p>Creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property <code>docker.showLogs</code>.</p>
+<p>This goals creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property <code>docker.showLogs</code>.</p>
 </div>
 <div class="paragraph">
 <p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).</p>
@@ -2647,19 +2647,13 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <div class="sect2">
 <h3 id="docker:stop"><a class="anchor" href="#docker:stop"></a>5.3. <strong>docker:stop</strong></h3>
 <div class="paragraph">
-<p>Stops and removes a docker container. This goals stops every
-container started with <code>&lt;docker:start&gt;</code> either during the same build
-(e.g. when bound to lifecycle phases when doing integration tests) or
-for containers created by a previous call to <code>&lt;docker:start&gt;</code></p>
+<p>Stops and removes a docker container. This goals stops every container started with <code>&lt;docker:start&gt;</code> either during the same build (e.g. when bound to lifecycle phases when doing integration tests) or for containers created by a previous call to <code>&lt;docker:start&gt;</code></p>
 </div>
 <div class="paragraph">
-<p>If called within the same build run, only the containers that were
-explicitly started during the run will be stopped. Existing containers
-started using <code>docker:start</code> for the project will not be affected.</p>
+<p>If called within the same build run, only the containers that were explicitly started during the run will be stopped. Existing containers started using <code>docker:start</code> for the project will not be affected.</p>
 </div>
 <div class="paragraph">
-<p>If called as a separate invocation, the plugin will stop and remove any
-container it finds whose image is defined in the project&#8217;s configuration. Any existing containers found running whose image name matches but was not started by the plugin will not be affected.</p>
+<p>If called as a separate invocation, the plugin will stop and remove any container it finds whose image is defined in the project&#8217;s configuration. Any existing containers found running whose image name matches but was not started by the plugin will not be affected.</p>
 </div>
 <div class="paragraph">
 <p>In case the naming strategy for an image is <code>alias</code> (i.e. the container name is set to the given alias), then only the container with this alias is stopped. Other containers originating from the same image are not touched.</p>
@@ -2670,85 +2664,111 @@ container it finds whose image is defined in the project&#8217;s configuration. 
 <div class="paragraph">
 <p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>keepContainer</strong> (<code>docker.keepContainer</code>) If given will not destroy
-container after they have been stopped.</p>
-</li>
-<li>
-<p><strong>keepRunning</strong> (<code>docker.keepRunning</code>) actually won&#8217;t stop the
-container. This apparently makes only sense when used on the command
-line when doing integration testing (i.e. calling <code>docker:stop</code>
-during a lifecycle binding) so that the container are still running
-after an integration test. This is useful for analysis of the
-containers (e.g. by entering it with <code>docker exec</code>).</p>
-</li>
-<li>
-<p><strong>removeVolumes</strong> (<code>docker.removeVolumes</code>) If given will remove any
-volumes associated to the container as well. This option will be ignored
-if either <code>keepContainer</code> or <code>keepRunning</code> are true.</p>
-</li>
-<li>
-<p><strong>allContainers</strong> (<code>docker.allContainers</code>) Stops and removes any container that
-matches an image defined in the current project&#8217;s configuration. This was the
-default behavior of the plugin prior up to version 0.13.6</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 17. Stop configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Parameter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> not destroy container after they have been stopped. Default is false.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> actually don&#8217;t stop the container. This apparently makes only sense when used on the command line when doing integration testing (i.e. calling <code>docker:stop</code> during a lifecycle binding) so that the container are still running after an integration test. This is useful for analysis of the containers (e.g. by entering it with <code>docker exec</code>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are true.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>allContainers</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stops and removes any container that matches an image defined in the current project&#8217;s configuration. This was the default behavior of the plugin prior up to version 0.13.6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.allContainers</code></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Example:</p>
 </div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre>$ mvn -Ddocker.keepRunning clean install</pre>
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn -Ddocker.keepRunning clean install</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="docker:watch"><a class="anchor" href="#docker:watch"></a>5.4. <strong>docker:watch</strong></h3>
+<h3 id="docker:push"><a class="anchor" href="#docker:push"></a>5.4. <strong>docker:push</strong></h3>
 <div class="paragraph">
-<p>When developing and testing applications you will often have to
-rebuild Docker images and restart containers. Typing <code>docker:build</code>
-and <code>docker:start</code> all the time is cumbersome. With <code>docker:watch</code> you
-can enable automatic rebuilding of images and restarting of containers
-in case of updates.</p>
+<p>This goals uploads images to the registry which have a <code>&lt;build&gt;</code>
+configuration section. The images to push can be restricted with with
+the global option <code>image</code> (see
+<a href="global-configuration.html">Global Configuration</a> for details). The
+registry to push is by default <code>docker.io</code> but can be
+specified as part of the images&#8217;s <code>name</code> name the Docker
+way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
+with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port
+<code>5000</code>. Security information (i.e. user and password) can be specified
+in multiple ways as described in section <a href="authentication.html">Authentication</a>.</p>
 </div>
 <div class="paragraph">
-<p><code>docker:watch</code> is the top-level goal which perform these tasks. There
-are two watch modes, which can be specified in multiple ways:</p>
+<p>Options:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>build</code> : Automatically rebuild one or more Docker images when one
-of the files selected by an assembly changes. This works for all files
-included directly in <code>assembly.xml</code> but also for arbitrary dependencies.
+<p><strong>skipPush</strong> (<code>docker.skip.push</code>)
+If set to <code>true</code> the plugin won&#8217;t push any images that have been built.</p>
+</li>
+<li>
+<p><strong>pushRegistry</strong> (<code>docker.push.registry</code>)
+The registry to use when pushing the image. See <a href="registry-handling.html">Registry Handling</a> for
+more details.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="docker:watch"><a class="anchor" href="#docker:watch"></a>5.5. <strong>docker:watch</strong></h3>
+<div class="paragraph">
+<p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>docker:build</code> and <code>docker:start</code> all the time is cumbersome. With <code>docker:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
+</div>
+<div class="paragraph">
+<p><code>docker:watch</code> is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.
 For example:</p>
 </li>
 </ul>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>  $ mvn package docker:build docker:watch -Ddocker.watchMode=build</pre>
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn package docker:build docker:watch -Ddocker.watchMode=build</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This mode works only when there is a <code>&lt;build&gt;</code> section
-in an image configuration. Otherwise no automatically build will be triggered for an image with only a <code>&lt;run&gt;</code> section. Note that you need the <code>package</code> phase to be executed before
-otherwise any artifact created by this build can not be included
-into the assembly. As described in the section about <code>docker:start</code> this
-is a Maven limitation.
-* <code>run</code> : Automatically restart container when their associated images
-changes. This is useful if you pull a new version of an image
-externally or especially in combination with the <code>build</code> mode to
-restart containers when their image has been automatically
-rebuilt. This mode works reliably only when used together with
-<code>docker:start</code>.</p>
+<p>This mode works only when there is a <code>&lt;build&gt;</code> section in an image configuration. Otherwise no automatically build will be triggered for an image with only a <code>&lt;run&gt;</code> section. Note that you need the <code>package</code> phase to be executed before otherwise any artifact created by this build can not be included into the assembly. As described in the section about <code>docker:start</code> this is a Maven limitation.
+* <code>run</code> : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the <code>build</code> mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with <code>docker:start</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">  $ mvn docker:start docker:watch -Ddocker.watchMode=run</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn docker:start docker:watch -Ddocker.watchMode=run</code></pre>
 </div>
 </div>
 <div class="ulist">
@@ -2760,49 +2780,58 @@ rebuilt. This mode works reliably only when used together with
 <p><code>none</code> : Image is completely ignored for watching.</p>
 </li>
 <li>
-<p><code>copy</code> : Copy changed files into the running container. This is the
-fast way to update a container, however the target container must
-support hot deply, too so that it makes sense. Most application
-servers like Tomcat supports this.</p>
+<p><code>copy</code> : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deply, too so that it makes sense. Most application servers like Tomcat supports this.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>The mode can also be <code>both</code> or <code>none</code> to select both or none of these
-variants, respectively. The default is <code>both</code>.</p>
+<p>The mode can also be <code>both</code> or <code>none</code> to select both or none of these variants, respectively. The default is <code>both</code>.</p>
 </div>
 <div class="paragraph">
-<p><code>docker:watch</code> will run forever until it is interrupted with <code>CTRL-C</code>
-after which it will stop all containers. Depending on the configuration
-parameters <code>keepContainer</code> and <code>removeVolumes</code> the stopped containers
-with their volumes will be removed, too.</p>
+<p><code>docker:watch</code> will run forever until it is interrupted with <code>CTRL-C</code> after which it will stop all containers. Depending on the configuration parameters <code>keepContainer</code> and <code>removeVolumes</code> the stopped containers with their volumes will be removed, too.</p>
 </div>
 <div class="paragraph">
 <p>When an image is removed while watching it, error messages will be printed out periodically.  So don&#8217;t do that ;-)</p>
 </div>
 <div class="paragraph">
-<p>Dynamically assigned ports stay stable in that they won&#8217;t change after
-a container has been stopped and a new container is created and started. The new
-container will try to allocate the same ports as the previous container.</p>
+<p>Dynamically assigned ports stay stable in that they won&#8217;t change after a container has been stopped and a new container is created and started. The new container will try to allocate the same ports as the previous container.</p>
 </div>
 <div class="paragraph">
-<p>If containers are linked together network or volume wise, and you
-update a container which other containers dependent on, the dependant
-containers are not restarted for now. E.g. when you have a "service"
-container accessing a "db" container and the "db" container is
-updated, then you "service" container will fail until it is restarted,
-too. A future version of this plugin will take care of restarting
+<p>If containers are linked together network or volume wise, and you update a container which other containers dependent on, the dependant containers are not restarted for now. E.g. when you have a "service" container accessing a "db" container and the "db" container is updated, then you "service" container will fail until it is restarted, too.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>A future version of this plugin will take care of restarting
 these containers, too (in the right order), but for now you would have
 to do this manually.</p>
+</div>
+</div>
 </div>
 <div class="paragraph">
 <p>This maven goal can be configured with the following top-level
 parameters:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>watchMode</strong> <code>docker.watchMode</code>: The watch mode specifies what should be watched</p>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 18. Watch configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Watch mode specifies what should be watched</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -2814,10 +2843,7 @@ case</p>
 the container in case</p>
 </li>
 <li>
-<p><code>copy</code> : Changed files are copied into the container. The
-container can be either running or might be already exited (when
-used as a <em>data container</em> linked into a <em>platform
-container</em>). Requires Docker &gt;= 1.8.</p>
+<p><code>copy</code> : Changed files are copied into the container. The container can be either running or might be already exited (when used as a <em>data container</em> linked into a <em>platform container</em>). Requires Docker &gt;= 1.8.</p>
 </li>
 <li>
 <p><code>both</code> : <code>build</code> and <code>run</code> combined</p>
@@ -2829,76 +2855,75 @@ need any watching. <code>none</code> is best used on an per image level, see
 below how this can be specified.</p>
 </li>
 </ul>
-</div>
-</li>
-<li>
-<p><strong>watchInterval</strong> <code>docker.watchInterval</code> specifies the interval in
-milliseconds how  often to check for changes, which must be larger
-than 100ms. The default is 5 seconds.</p>
-</li>
-<li>
-<p><strong>watchPostGoal</strong> A maven goal which should be called if a rebuild
-or a restart has been performed. This goal must have the format
-<code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be
-configured in the <code>pom.xml</code>. For example a post-goal
-<code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs
-in Kubernetes which in turn triggers are new start of a POD within
-the Kubernetes cluster. The value specified here is the the default
-post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code>
-configuration.</p>
-</li>
-<li>
-<p><strong>watchPostExec</strong> can be a command which is executed within the
-container after files are copied into this container for <code>watchMode
-== copy</code>. Note that this container must be running.</p>
-</li>
-<li>
-<p><strong>keepRunning</strong> <code>docker.keepRunning</code> if set to <code>true</code> all
-container will be kept running after <code>docker:watch</code> has been
-stopped. By default this is set to <code>false</code>.</p>
-</li>
-<li>
-<p><strong>keepContainer</strong> <code>docker.keepContainer</code> similar to <code>docker:stop</code>,
-if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all
-container will be removed after they have been stopped. The default
-is <code>true</code>.</p>
-</li>
-<li>
-<p><strong>removeVolumes</strong> <code>docker.removeVolumes</code> if given will remove any
-volumes associated to the container as well. This option will be ignored
-if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p>
-</li>
-</ul>
-</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchMode</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchInterval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchInterval</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostExec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A command which is executed within the container after files are copied into this container when <code>watchMode</code> is <code>copy</code>. Note that this container must be running.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> all container will be kept running after <code>docker:watch</code> has been stopped. By default this is set to <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">As for <code>docker:stop</code>, if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all container will be removed after they have been stopped. The default is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
-<p>Image specific watch configuration goes into an extra image-level
-<code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>).
-The following parameters are recognized:</p>
+<p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>mode</strong> Each image can be configured for having individual watch
-mode. These take precedence of the global watch mode. The mode
-specified in this configuration takes precedence over the globally
-specified mode.</p>
-</li>
-<li>
-<p><strong>interval</strong> The watch interval can be specified in milliseconds on
-image level. If given this will override the global watch interval.</p>
-</li>
-<li>
-<p><strong>postGoal</strong> A post Maven plugin goal after a rebuild or
-restart. The value here must have the format
-<code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code>
-(e.g. <code>io.fabric8:fabric8:delete-pods</code>)</p>
-</li>
-<li>
-<p><strong>postExec</strong> Command to execute after files are copied into a
-running container for <code>mode == copy</code>.</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Each image can be configured for having individual watch mode. These take precedence of the global watch mode. The mode specified in this configuration takes precedence over the globally specified mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>interval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Watch interval can be specified in milliseconds on image level. If given this will override the global watch interval.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post Maven plugin goal after a rebuild or restart. The value here must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> (e.g. <code>io.fabric8:fabric8:delete-pods</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>postExec</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute after files are copied into a
+running container when <code>mode</code> is <code>copy</code>.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Here is an example how the watch mode can be tuned:</p>
 </div>
@@ -2940,42 +2965,7 @@ running container for <code>mode == copy</code>.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>you can build the service image, start up all containers and go into a watch
-loop. Again, you need the <code>package</code> phase in order that the assembly
-can find the artifact build by this project. This is a Maven
-limitation. The <code>db</code> image will never be watch since it assumed to not change
-while watching.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="docker:push"><a class="anchor" href="#docker:push"></a>5.5. <strong>docker:push</strong></h3>
-<div class="paragraph">
-<p>This goals uploads images to the registry which have a <code>&lt;build&gt;</code>
-configuration section. The images to push can be restricted with with
-the global option <code>image</code> (see
-<a href="global-configuration.html">Global Configuration</a> for details). The
-registry to push is by default <code>docker.io</code> but can be
-specified as part of the images&#8217;s <code>name</code> name the Docker
-way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
-with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port
-<code>5000</code>. Security information (i.e. user and password) can be specified
-in multiple ways as described in section <a href="authentication.html">Authentication</a>.</p>
-</div>
-<div class="paragraph">
-<p>Options:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>skipPush</strong> (<code>docker.skip.push</code>)
-If set to <code>true</code> the plugin won&#8217;t push any images that have been built.</p>
-</li>
-<li>
-<p><strong>pushRegistry</strong> (<code>docker.push.registry</code>)
-The registry to use when pushing the image. See <a href="registry-handling.html">Registry Handling</a> for
-more details.</p>
-</li>
-</ul>
+<p>you can build the service image, start up all containers and go into a watch loop. Again, you need the <code>package</code> phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The <code>db</code> image will never be watch since it assumed to not change while watching.</p>
 </div>
 </div>
 <div class="sect2">
@@ -3797,7 +3787,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-10 12:57:54 UTC
+Last updated 2016-07-10 14:49:41 UTC
 </div>
 </div>
 </body>
