@@ -1201,8 +1201,8 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 4. Placeholders</caption>
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
 </colgroup>
 <thead>
 <tr>
@@ -3011,39 +3011,43 @@ property. The format of the log output is influenced by run
 configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>docker.logAll</strong> if set to <code>true</code> the logs of all containers
-created from images configured for this plugin are printed. The
-container id is then prefixed before every log line. These images
-can contain many containers which are already stopped. It is
-probably a better idea to use <code>docker logs</code> diretly from the command
-line.</p>
-</li>
-<li>
-<p><strong>docker.follow</strong> if given will wait for subsequent log output until
-CRTL-C is pressed. This is similar to the behaviour of <code>docker logs
--f</code> (or <code>tail -f</code>).</p>
-</li>
-<li>
-<p><strong>docker.image</strong> can be used to restrict the set of images for which
-log should be fetched. This can be a comma separated list of image
-or alias names.</p>
-</li>
-<li>
-<p><strong>docker.logDate</strong> specifies the log date to use. See
-"<a href="#_log-configuration">Log configuration</a>" above for the available
-formats.</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 19. Logging options</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.logAll</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> the logs of all containers created from images configured for this plugin are printed. The container id is then prefixed before every log line. These images can contain many containers which are already stopped. It is probably a better idea to use <code>docker logs</code> diretly from the command line.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.follow</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If given will wait for subsequent log output until CRTL-C is pressed. This is similar to the behaviour of <code>docker logs -f</code> (or <code>tail -f</code>).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.image</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filte to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.logDate</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date format to use. See "<a href="#logging">Logging</a>" for available formats.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh"> $ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT</code></pre>
+<pre class="CodeRay highlight"><code data-lang="sh">$ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT</code></pre>
 </div>
 </div>
 </div>
@@ -3143,241 +3147,267 @@ properties can be defined which by default is <code>docker</code>.</p>
 up from the following properties, which correspond to corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>docker.alias</strong> Alias name</p>
-</li>
-<li>
-<p><strong>docker.args.BUILDVAR</strong> Set the value of a build variable. The syntax is the same as for
-specifying environment variables (see below).</p>
-</li>
-<li>
-<p><strong>docker.assembly.baseDir</strong> Directory name for the exported artifacts as
-described in an assembly (which is <code>/maven</code> by default).</p>
-</li>
-<li>
-<p><strong>docker.assembly.descriptor</strong> Path to the assembly descriptor when
-building an image</p>
-</li>
-<li>
-<p><strong>docker.assembly.descriptorRef</strong> Name of a predefined assembly to
-use.</p>
-</li>
-<li>
-<p><strong>docker.assembly.exportBaseDir</strong> If <code>true</code> export base directory</p>
-</li>
-<li>
-<p><strong>docker.assembly.ignorePermissions</strong> If set to <code>true</code> existing file permissions are ignored
-when creating the assembly archive. Deprecated, use a permission mode of <code>ignore</code> instead.</p>
-</li>
-<li>
-<p><strong>docker.assembly.permissions</strong> can be <code>ignore</code> to use the permission as found on files regardless on any
-assembly configuration, <code>keep</code> to respect the assembly provided permissions, <code>exec</code> for setting
-the executable bit on all files (required for Windows when using an assembly mode <code>dir</code>) or <code>auto</code> to let the
-plugin select <code>exec</code> on Windows and <code>keep</code> on others. <code>keep</code> is the default value.</p>
-</li>
-<li>
-<p><strong>docker.assembly.dockerFileDir</strong> specifies a directory containing an external Dockerfile
-that will be used to create the image. This is deprecated please use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code>
-instead.</p>
-</li>
-<li>
-<p><strong>docker.nocache</strong> Don&#8217;t use Docker&#8217;s build cache.This can be overwritten by setting a
-system property <code>docker.nocache</code> when running Maven.</p>
-</li>
-<li>
-<p><strong>docker.bind.idx</strong> Sets a list of paths to bind/expose in the container</p>
-</li>
-<li>
-<p><strong>docker.capAdd.idx</strong> List of kernel capabilities to add to the container</p>
-</li>
-<li>
-<p><strong>docker.capDrop.idx</strong> List of kernel capabilities to remove from the container</p>
-</li>
-<li>
-<p><strong>docker.cleanup</strong> Cleanup dangling (untagged) images after each build
-(including any containers created from them). Default is <code>try</code> (which wont fail the build if removing fails),
-other possible values are <code>none</code> (no cleanup) or <code>remove</code> (remove but fail if unsuccessful)</p>
-</li>
-<li>
-<p><strong>docker.cmd</strong> Command to execute. This is used both when
-running a container and as default command when creating an image.</p>
-</li>
-<li>
-<p><strong>docker.domainname</strong> Container domain name</p>
-</li>
-<li>
-<p><strong>docker.dns.idx</strong> List of dns servers to use</p>
-</li>
-<li>
-<p><strong>docker.dnsSearch.idx</strong> List of dns search domains</p>
-</li>
-<li>
-<p><strong>docker.dockerFile</strong> specifies a Dockerfile to use. This property must point to the Dockerfile itself.</p>
-</li>
-<li>
-<p><strong>docker.dockerFileDir</strong> specifies a directory containing an external dockerfile that will be
-used to create the image. The dockerfile must be name <code>Dockerfile</code></p>
-</li>
-<li>
-<p><strong>docker.entrypoint</strong> Container entry point</p>
-</li>
-<li>
-<p><strong>docker.workdir</strong> Container working directory</p>
-</li>
-<li>
-<p><strong>docker.env.VARIABLE</strong> Sets an environment
-variable. E.g. <code>&lt;docker.env.JAVA_OPTS&gt;-Xmx512m&lt;/docker.env.JAVA_OPTS&gt;</code>
-sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can
-be provided. This environment is used both for building images and
-running containers. The value cannot be empty but can contain Maven property names which are
-resolved before the Dockerfile is created</p>
-</li>
-<li>
-<p><strong>docker.envPropertyFile</strong> specifies the path to a property file whose properties are
-used as environment variables. The environment variables takes precedence over any other environment
-variables specified.</p>
-</li>
-<li>
-<p><strong>docker.extraHosts.idx</strong> List of <code>host:ip</code> to add to <code>/etc/hosts</code></p>
-</li>
-<li>
-<p><strong>docker.from</strong> Base image for building an image</p>
-</li>
-<li>
-<p><strong>docker.hostname</strong> Container hostname</p>
-</li>
-<li>
-<p><strong>docker.labels.LABEL</strong> Sets a label which works similarly like setting environment variables.</p>
-</li>
-<li>
-<p><strong>docker.log.enabled</strong> Use logging (default: <code>true</code>)</p>
-</li>
-<li>
-<p><strong>docker.log.prefix</strong> Output prefix</p>
-</li>
-<li>
-<p><strong>docker.log.color</strong> ANSI color to use for the prefix</p>
-</li>
-<li>
-<p><strong>docker.log.date</strong> Date format for printing the timestamp</p>
-</li>
-<li>
-<p><strong>docker.log.driver.name</strong> Name of an alternative log driver</p>
-</li>
-<li>
-<p><strong>docker.log.dirver.opts.VARIABLE</strong> Logging driver options (specified similar as in <code>docker.env.VARIABLE</code>)</p>
-</li>
-<li>
-<p><strong>docker.links.idx</strong> defines a list of links to other containers when
-starting a container. <em>idx</em> can be any suffix which is not use
-except when <em>idx</em> is numeric it specifies the order within the
-list (i.e. the list contains first a entries with numeric
-indexes sorted and the all non-numeric indexes in arbitrary order).
-For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link
-to the image with alias 'db'.</p>
-</li>
-<li>
-<p><strong>docker.maintainer</strong> defines the maintainer&#8217;s email as used when building an image</p>
-</li>
-<li>
-<p><strong>docker.memory</strong> Container memory (in bytes)</p>
-</li>
-<li>
-<p><strong>docker.memorySwap</strong> Total memory (swap + memory) <code>-1</code> to disable swap</p>
-</li>
-<li>
-<p><strong>docker.name</strong> Image name</p>
-</li>
-<li>
-<p><strong>docker.namingStrategy</strong> Container naming (either <code>none</code> or <code>alias</code>)</p>
-</li>
-<li>
-<p><strong>docker.optimise</strong> if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only
-one image layer is created.</p>
-</li>
-<li>
-<p><strong>docker.portPropertyFile</strong> specifies a path to a port mapping used
-when starting a container.</p>
-</li>
-<li>
-<p><strong>docker.ports.idx</strong> Sets a port mapping. For example
-<code>&lt;docker.ports.1&gt;jolokia.ports:8080&lt;docker.ports.1&gt;</code> maps
-the container port 8080 dynamically to a host port and assigns this
-host port to the Maven property <code>${jolokia.port}</code>. See
-<a href="#_port-mapping">Port mapping</a> for possible mapping options. When creating images images only
-the right most port is used for exposing the port. For providing multiple port mappings,
-the index should be count up.</p>
-</li>
-<li>
-<p><strong>docker.registry</strong> Registry to use for pushing images.</p>
-</li>
-<li>
-<p><strong>docker.restartPolicy.name</strong> Container restart policy</p>
-</li>
-<li>
-<p><strong>docker.restartPolicy.retry</strong> Max restrart retries if <code>on-failure</code> used</p>
-</li>
-<li>
-<p><strong>docker.tags.idx</strong> defines a list of tags to apply to a built image</p>
-</li>
-<li>
-<p><strong>docker.user</strong> User to switch to at the end of a Dockerfile. Not to confuse with <code>docker.username</code> which is used for
-authentication when interacting with a Docker registry.</p>
-</li>
-<li>
-<p><strong>docker.volumes.idx</strong> defines a list of volumes to expose when building an image</p>
-</li>
-<li>
-<p><strong>docker.volumesFrom.idx</strong> defines a list of image aliases from which
-the volumes should be mounted of the container. The list semantics
-is the same as for links (see above). For examples
-<code>&lt;docker.volumesFrom.1&gt;data&lt;/docker.volumesFrom.1&gt;</code> will mount all
-volumes exported by the <code>data</code> image.</p>
-</li>
-<li>
-<p><strong>docker.wait.http.url</strong> URL to wait for during startup of a container</p>
-</li>
-<li>
-<p><strong>docker.wait.http.method</strong> HTTP method to use for ping check</p>
-</li>
-<li>
-<p><strong>docker.wait.http.status</strong> Status code to wait for when doing HTTP ping check</p>
-</li>
-<li>
-<p><strong>docker.wait.time</strong> Amount of time to wait during startup of a
-container (in ms)</p>
-</li>
-<li>
-<p><strong>docker.wait.log</strong> Wait for a log output to appear.</p>
-</li>
-<li>
-<p><strong>docker.wait.exec.postStart</strong> Command to execute after the container has start up.</p>
-</li>
-<li>
-<p><strong>docker.wait.exec.preStop</strong> Command to execute before command stops.</p>
-</li>
-<li>
-<p><strong>docker.wait.shutdown</strong> Time in milliseconds to wait between stopping a container and removing it.</p>
-</li>
-<li>
-<p><strong>docker.wait.tcp.mode</strong> Either <code>mapped</code> or <code>direct</code> when waiting on TCP connections</p>
-</li>
-<li>
-<p><strong>docker.wait.tcp.host</strong> Hostname to use for a TCP wait checks</p>
-</li>
-<li>
-<p><strong>docker.wait.tcp.port.idx</strong> List of ports to use for a TCP check.</p>
-</li>
-<li>
-<p><strong>docker.wait.kill</strong> Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.</p>
-</li>
-<li>
-<p><strong>docker.workingDir</strong> Working dir for commands to run in</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 20. External properties</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.alias</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Alias name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.args.BUILDVAR</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the value of a build variable. The syntax is the same as for specifying environment variables (see below).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.baseDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory name for the exported artifacts as described in an assembly (which is <code>/maven</code> by default).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.descriptor</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to the assembly descriptor when building an image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.descriptorRef</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of a predefined assembly to use.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.exportBaseDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> export base directory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.ignorePermissions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> existing file permissions are ignored when creating the assembly archive. Deprecated, use a permission mode of <code>ignore</code> instead.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.permissions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">can be <code>ignore</code> to use the permission as found on files regardless on any assembly configuration, <code>keep</code> to respect the assembly provided permissions, <code>exec</code> for setting the executable bit on all files (required for Windows when using an assembly mode <code>dir</code>) or <code>auto</code> to let the plugin select <code>exec</code> on Windows and <code>keep</code> on others. <code>keep</code> is the default value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.dockerFileDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated p ease use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code> instead.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.nocache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache.This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.bind.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a list of paths to bind/expose in the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capAdd.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to add to the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capDrop.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to remove from the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cleanup</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> (which wont fail the build if removing fails), other possible values are <code>none</code> (no cleanup) or <code>remove</code> (remove but fail if unsuccessful)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cmd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute. This is used both when running a container and as default command when creating an image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.domainname</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container domain name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dns.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of dns servers to use</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dnsSearch.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of dns search domains</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dockerFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies a Dockerfile to use. This property must point to the Dockerfile itself.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dockerFileDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies a directory containing an external dockerfile that will be used to create the image. The dockerfile must be name <code>Dockerfile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.entrypoint</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container entry point</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.workdir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container working directory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.env.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable. E.g. <code>&lt;docker.env.JAVA_OPTS&gt;-Xmx512m&lt;/docker.env.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.envPropertyFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the path to a property file whose properties are used as environment variables. The environment variables takes precedence over any other environment variables specified.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.extraHosts.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host:ip</code> to add to <code>/etc/hosts</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.from</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.hostname</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container hostname</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.labels.LABEL</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a label which works similarly like setting environment variables.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.enabled</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use logging (default: <code>true</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.prefix</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Output prefix</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.color</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ANSI color to use for the prefix</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.date</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date format for printing the timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.driver.name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of an alternative log driver</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.dirver.opts.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Logging driver options (specified similar as in <code>docker.env.VARIABLE</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.links.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of links to other containers when starting a container. <em>idx</em> can be any suffix which is not use except when <em>idx</em> is numeric it specifies the order within the list (i.e. the list contains first a entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link to the image with alias 'db'.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.maintainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines the maintainer&#8217;s email as used when building an image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.memory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container memory (in bytes)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.memorySwap</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total memory (swap + memory) <code>-1</code> to disable swap</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Image name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.namingStrategy</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container naming (either <code>none</code> or <code>alias</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.optimise</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only one image layer is created.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.portPropertyFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies a path to a port mapping used when starting a container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.ports.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a port mapping. For example <code>&lt;docker.ports.1&gt;jolokia.ports:8080&lt;docker.ports.1&gt;</code> maps the container port 8080 dynamically to a host port and assigns this host port to the Maven property <code>${jolokia.port}</code>. See <a href="#_port-mapping">Port mapping</a> for possible mapping options. When creating images images only the right most port is used for exposing the port. For providing multiple port mappings, the index should be count up.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.registry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Registry to use for pushing images.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.restartPolicy.name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container restart policy</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.restartPolicy.retry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max restrart retries if <code>on-failure</code> used</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tags.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of tags to apply to a built image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.user</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User to switch to at the end of a Dockerfile. Not to confuse with <code>docker.username</code> which is used for authentication when interacting with a Docker registry.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.volumes.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of volumes to expose when building an image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.volumesFrom.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of image aliases from which the volumes should be mounted of the container. The list semantics is the same as for links (see above). For examples <code>&lt;docker.volumesFrom.1&gt;data&lt;/docker.volumesFrom.1&gt;</code> will mount all volumes exported by the <code>data</code> image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.http.url</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">URL to wait for during startup of a container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.http.method</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP method to use for ping check</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.http.status</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status code to wait for when doing HTTP ping check</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.time</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Amount of time to wait during startup of a container (in ms)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.log</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Wait for a log output to appear.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.exec.postStart</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute after the container has start up.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.exec.preStop</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute before command stops.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.shutdown</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time in milliseconds to wait between stopping a container and removing it.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.tcp.mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Either <code>mapped</code> or <code>direct</code> when waiting on TCP connections</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.tcp.host</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname to use for a TCP wait checks</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.tcp.port.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of ports to use for a TCP check.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.kill</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.workingDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Working dir for commands to run in</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Any other <code>&lt;run&gt;</code> or <code>&lt;build&gt;</code> sections are ignored when this handler
 is used. Multiple property configuration handlers can be used if they
@@ -3760,7 +3790,7 @@ are below <code>samples/</code> and contain example
 setups which you can use as blueprints for your own projects.</p>
 </li>
 <li>
-<p>A <a href="https://github.com/fabric8io/shootout-docker-maven">Shooutout</a> for
+<p>A <a href="https://github.com/fabric8io/shootout-docker-maven">Shootout</a> for
 comparing docker maven plugins</p>
 </li>
 <li>
@@ -3787,7 +3817,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-10 14:49:41 UTC
+Last updated 2016-07-10 15:07:09 UTC
 </div>
 </div>
 </body>
