@@ -92,6 +92,8 @@ below how this can be specified.
 
 Image specific watch configuration goes into an extra image-level `<watch>` section (i.e. `+<image><watch>...</watch></image>+`). The following parameters are recognized:
 
+.Watch configuration for a single image
+[cols="1,5"]
 |===
 | Element | Description
 
