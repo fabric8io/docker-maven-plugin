@@ -3,11 +3,11 @@
 
 This is a Maven plugin for managing Docker images and containers. It focuses on two major aspects for a Docker build integration:
 
-== Building Docker images
+== Building Images
 
 One purpose of this plugin is to create docker images holding the actual application. This is done with the <<docker:build>> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with <<docker:push>>.
 
-== Running containers
+== Running Containers
 
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties to your integration test code.
 

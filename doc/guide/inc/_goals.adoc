@@ -17,11 +17,11 @@ in the following sections.
 |**<<docker:stop>>**
 |Stop and destroy containers
 
-|**<<docker:watch>>**
-|Watch for doing rebuilds and restarts
-
 |**<<docker:push>>**
 |Push images to a registry
+
+|**<<docker:watch>>**
+|Watch for doing rebuilds and restarts
 
 |**<<docker:remove>>**
 |Remove images from local docker host

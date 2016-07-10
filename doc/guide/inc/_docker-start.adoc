@@ -2,7 +2,7 @@
 [[docker:start]]
 == **docker:start**
 
-Creates and starts docker containers. This goals evaluates the configuration's `<run>` section of all given (and enabled images). In order to switch on globally the logs *showLogs* can be used as global configuration (i.e. outside of `<images>`). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property `docker.showLogs`.
+This goals creates and starts docker containers. This goals evaluates the configuration's `<run>` section of all given (and enabled images). In order to switch on globally the logs *showLogs* can be used as global configuration (i.e. outside of `<images>`). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property `docker.showLogs`.
 
 Also you can specify `docker.follow` as system property so that the `docker:start` will never return but block until CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).
 
