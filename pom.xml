@@ -336,13 +336,14 @@
           </dependencies>
           <configuration>
             <sourceDirectory>doc/guide</sourceDirectory>
-            <attributes>
-              <icons>font</icons>
-              <pagenums/>
-              <toc/>
-              <idprefix/>
-              <idseparator>-</idseparator>
-            </attributes>
+              <attributes>
+                <icons>font</icons>
+                <pagenums/>
+                <version>${project.version}</version>
+                <toc/>
+                <idprefix/>
+                <idseparator>-</idseparator>
+              </attributes>
           </configuration>
         </plugin>
       </plugins>
@@ -486,19 +487,13 @@
             <configuration>
               <backend>html</backend>
               <sourceHighlighter>coderay</sourceHighlighter>
+              <attributes>
+                <toc>left</toc>
+              </attributes>
             </configuration>
-            <executions>
-              <execution>
-                <id>output-html</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>process-asciidoc</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
-        <defaultGoal>generate-resources</defaultGoal>
+        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
       </build>
     </profile>
     <profile>
@@ -519,18 +514,9 @@
                 <version>1.5.0-alpha.11</version>
               </dependency>
             </dependencies>
-            <executions>
-              <execution>
-                <id>output-pdf</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>process-asciidoc</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
-        <defaultGoal>generate-resources</defaultGoal>
+        <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
       </build>
     </profile>
   </profiles>
