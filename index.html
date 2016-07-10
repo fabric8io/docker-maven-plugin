@@ -565,7 +565,7 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
 <ul class="sectlevel2">
-<li><a href="#property-config">6.1. Property based Configuration</a></li>
+<li><a href="#property-config">6.1. Property based configuration</a></li>
 </ul>
 </li>
 <li><a href="#registry">7. Registry handling</a></li>
@@ -598,7 +598,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="building-docker-images"><a class="anchor" href="#building-docker-images"></a>1.1. Building Docker images</h3>
 <div class="paragraph">
-<p>One purpose of this plugin is to create docker images holding the actual application. This is done with the docker:build goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with docker:push.</p>
+<p>One purpose of this plugin is to create docker images holding the actual application. This is done with the <a href="#docker:build"><strong>docker:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with <a href="#docker:push"><strong>docker:push</strong></a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -607,7 +607,7 @@ table.CodeRay td.code>pre{padding:0}
 <p>With this plugin it is possible to run completely isolated integration tests so you don&#8217;t need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties to your integration test code.</p>
 </div>
 <div class="paragraph">
-<p>Multiple containers can be managed at once, which can be linked together or share data via volumes. Containers are created and started with the docker:start goal and stopped and destroyed with the docker:stop goal. For integration tests both goals are typically bound to the the pre-integration-test and post-integration-test phase, respectively. It is recommended to use the maven-failsafe-plugin for integration testing in order to stop the docker container even when the tests fail.</p>
+<p>Multiple containers can be managed at once, which can be linked together or share data via volumes. Containers are created and started with the <a href="#docker:start"><strong>docker:start</strong></a> goal and stopped and destroyed with the <a href="#docker:stop"><strong>docker:stop</strong></a> goal. For integration tests both goals are typically bound to the the pre-integration-test and post-integration-test phase, respectively. It is recommended to use the maven-failsafe-plugin for integration testing in order to stop the docker container even when the tests fail.</p>
 </div>
 <div class="paragraph">
 <p>For proper isolation, container exposed ports can be dynamically and flexibly mapped to local host ports. It is easy to specify a Maven property which will be filled in with a dynamically assigned port after a container has been started. This can then be used as parameter for integration tests to connect to the application.</p>
@@ -616,7 +616,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="configuration"><a class="anchor" href="#configuration"></a>1.3. Configuration</h3>
 <div class="paragraph">
-<p>The plugin configuration contains a global part and a list of image-specific configuration within a <code>&lt;images&gt;</code> list, where each image is defined within a <code>&lt;image&gt;</code> tag. See below for an example.</p>
+<p>The plugin configuration contains a global part and a list of image-specific configuration within a <code>&lt;images&gt;</code> list, where each image is defined within a <code>&lt;image&gt;</code> tag. See <a href="#example">below</a> for an example.</p>
 </div>
 <div class="paragraph">
 <p>The <a href="#global-config">global part</a> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.</p>
@@ -1199,7 +1199,7 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Placeholdes</caption>
+<caption class="title">Table 4. Placeholders</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -1935,161 +1935,194 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="paragraph">
 <p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.`<em>alias</em></code>.`<em>prop</em> where <em>alias</em> is the name of the container (see below) and <em>prop</em> is one of the following container properties:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>ip</strong> : The internal IP address of the container.</p>
-</li>
-<li>
-<p><strong>id</strong> : The container id</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 10. Properties provided</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Property</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ip</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal IP address of the container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>id</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container id</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container information that way or to a string for an other prefix than <code>docker.container</code>.</p>
 </div>
 <div class="sect3">
 <h4 id="configuration-2"><a class="anchor" href="#configuration-2"></a>5.2.1. Configuration</h4>
 <div class="paragraph">
-<p>The <code>&lt;run&gt;</code> configuration section knows the following sub elements:</p>
+<p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 11. Run configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>capAdd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>add</code> elements to specify kernel parameters to add to the container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>capDrop</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>drop</code> elements to specify kernel parameters to remove from the container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command which should be executed at the end of the container&#8217;s startup. If not given, the image&#8217;s default command is used. See <a href="#startup">Startup Arguments</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>domainname</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Domain name for the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dns</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host</code> elements specifying dns servers for the container to use</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dnsSearch</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host</code> elements specifying dns search domains</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entrypoint</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry point for the container. See &lt;&lt;startup, Startup Arguments] for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>env</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <a href="#env">Environment and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>envPropertyFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a property file holding environment variables. If given, the variables specified in this property file overrides the environment variables specified in the configuration.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>extraHosts</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host</code> elements in the form <code>host:ip</code> to add to the container&#8217;s <code>/etc/hosts</code> file. Additionally, you may specify a <code>host</code> element in the form <code>host:host</code> to have the right side host ip address resolved at container startup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>hostname</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname of the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels which should be attached to the  container. They are specified in the typical maven property format as described in <a href="#env">Environment and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>links</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Network links for connecting containers together as described in  <a href="#links">Network Links</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>log</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Log configuration for whether and how log messages from the running containers should be printed. This also can configure the <a href="https://docs.docker.com/engine/admin/logging/overview">log driver</a> to use. See <a href="#logging">Logging</a> for a detailed description.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>memory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory limit in bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>memorySwap</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total memory usage (memory + swap); use -1 to disable swap.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namingStrategy</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Naming strategy for how the container name is created:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>capAdd</strong> a list of <code>add</code> elements to specify kernel parameters to add to the container.</p>
+<p><strong>none</strong> : uses randomly assigned names from docker (default)</p>
 </li>
 <li>
-<p><strong>capDrop</strong>  a list of <code>drop</code> elements to specify kernel parameters to remove from the container.</p>
+<p><strong>alias</strong> : uses the <code>alias</code> specified in the <code>image</code> configuration. An error is thrown, if a container already exists with this name.</p>
 </li>
-<li>
-<p><strong>cmd</strong> is a command which should be executed at the end of the
-container&#8217;s startup. If not given, the image&#8217;s default command is
-used. See <a href="docker-build.html#startup-arguments">Startup Arguments</a> for details.</p>
-</li>
-<li>
-<p><strong>domainname</strong>  domain name for the container</p>
-</li>
-<li>
-<p><strong>dns</strong> list of <code>host</code> elements specifying dns servers for the container to use</p>
-</li>
-<li>
-<p><strong>dnsSearch</strong> list of <code>host</code> elements specifying dns search domains</p>
-</li>
-<li>
-<p><strong>entrypoint</strong> set the entry point for the container. See <a href="docker-build.html#startup-arguments">Startup Arguments</a> for details.</p>
-</li>
-<li>
-<p><strong>env</strong> can contain environment variables as subelements which are
-set during startup of the container. They are specified in the
-typical maven property format as described <a href="#_setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</p>
-</li>
-<li>
-<p><strong>labels</strong> specifies one or more labels which should be attached to the container. They are specified in the
-typical maven property format as described in <a href="#_setting-environment-variables-and-labels">Setting Environment Variables and Labels</a>.</p>
-</li>
-<li>
-<p><strong>envPropertyFile</strong> can be a path to a property file holding environment variables. If given, the variables
-specified in this property file overrides the environment variables specified in the configuration.</p>
-</li>
-<li>
-<p><strong>extraHosts</strong> list of <code>host</code> elements in the form <code>host:ip</code> to add to the container&#8217;s <code>/etc/hosts</code> file.
-Additionally, you may specify a <code>host</code> element in the form <code>host:host</code> to have the right side host ip address resolved
-at container startup.</p>
-</li>
-<li>
-<p><strong>hostname</strong> desired hostname for the container</p>
-</li>
-<li>
-<p><strong>links</strong> declares how containers are linked together see
-description on <a href="#_container-linking">Container Linking</a>.</p>
-</li>
-<li>
-<p><strong>log</strong> specifies the log configuration for whether and how log
-messages from the running containers should be printed. This also can configure the
-<a href="https://docs.docker.com/engine/admin/logging/overview">log driver</a> to use. See
-<a href="#_log-configuration">Log Configuration</a> for a detailed description of this configuration
-section.</p>
-</li>
-<li>
-<p><strong>memory</strong> memory limit in bytes</p>
-</li>
-<li>
-<p><strong>memorySwap</strong> total memory usage (memory + swap); use -1 to disable swap.</p>
-</li>
-<li>
-<p><strong>shmSize</strong> size of <code>/dev/shm</code> in bytes.</p>
-</li>
-<li>
-<p><strong>namingStrategy</strong> sets the name of the container</p>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>net</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Network mode for the container:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>none</code> : uses randomly assigned names from docker (default)</p>
+<p><strong>bridge</strong> : Bridged mode with the default Docker bridge (default)</p>
 </li>
 <li>
-<p><code>alias</code> : uses the <code>alias</code> specified in the <code>image</code> configuration. An error is thrown, if a container already exists
-with this name.</p>
+<p><strong>host</strong> : Share the Docker host network interfaces</p>
+</li>
+<li>
+<p><strong>container:&lt;alias or name&gt;</strong> : Connect to the network of the specified container</p>
+</li>
+<li>
+<p><strong>&lt;custom network&gt;</strong> : Use the specified custom network which must be created before with <code>docker network create</code>. Available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
 </li>
 </ul>
-</div>
-</li>
-<li>
-<p><strong>net</strong> set the network mode for the container:</p>
-<div class="ulist">
-<ul>
-<li>
-<p><code>bridge</code> : Bridged mode with the default Docker bridge (default)</p>
-</li>
-<li>
-<p><code>host</code> : Share the Docker host network interfaces</p>
-</li>
-<li>
-<p><code>container:&lt;alias or name&gt;</code> : Connect to the network of the specified container</p>
-</li>
-<li>
-<p><code>&lt;custom network&gt;</code> : Use the specified custom network which must be created before with <code>docker network create</code>.
-Available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p><strong>portPropertyFile</strong>, if given, specifies a file into which the
-mapped properties should be written to. The format of this file and
-its purpose are also described in <a href="#_port-mapping">Port mapping</a></p>
-</li>
-<li>
-<p><strong>ports</strong> declares how container exposed ports should be
-mapped. This is described below in an extra
-section <a href="#_port-mapping">Port mapping</a>.</p>
-</li>
-<li>
-<p><strong>privileged</strong> give container full access to host (<code>true|false</code>)</p>
-</li>
-<li>
-<p><strong>restartPolicy</strong> specifies the container restart policy, see
-<a href="#_container-restart-policy">Container Restart Policy</a></p>
-</li>
-<li>
-<p><strong>user</strong> user used inside the container</p>
-</li>
-<li>
-<p><strong>skip</strong> disable creating and starting of the container. This option is best used together with a configuration option.</p>
-</li>
-<li>
-<p><strong>volumes</strong> for bind configurtion of host directories and from other containers. See <a href="#_volume-binding">Volume binding</a>
-for details.</p>
-</li>
-<li>
-<p><strong>wait</strong> specifies condition which must be fulfilled for the startup
-to complete. See <a href="#_wait-during-startup-and-shutdown">Wait during Startup and Shutdown</a> which subelements are
-available and how they can be specified.</p>
-</li>
-<li>
-<p><strong>workingDir</strong> working dir for commands to run in</p>
-</li>
-</ul>
-</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>portPropertyFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File path into which the mapped port properties are written. The format of this file and its purpose are also described in <a href="#port-mapping">Port mapping</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#port-mapping">Port mappings</a> for exposing container ports to host ports.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>privileged</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> give container full access to host</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>restartPolicy</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#restart">Restart Policy</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shmSize</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Size of <code>/dev/shm</code> in bytes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User used inside the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>volumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Volume configuration for binding to host directories and from other containers. See <a href="#volumes">Volumes</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>wait</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Condition which must be fulfilled for the startup to complete. See <a href="#wait">Wait</a> for all possible ways to wait for a startup condition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>workingDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Working directory for commands to run in</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Example:</p>
 </div>
@@ -2129,8 +2162,7 @@ available and how they can be specified.</p>
 <div class="sect3">
 <h4 id="env"><a class="anchor" href="#env"></a>5.2.2. Environment and Labels</h4>
 <div class="paragraph">
-<p>When creating a container one or more environment variables can be set
-via configuration with the <code>env</code> parameter</p>
+<p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2141,15 +2173,10 @@ via configuration with the <code>env</code> parameter</p>
 </div>
 </div>
 <div class="paragraph">
-<p>If you put this configuration into profiles you can easily create
-various test variants with a single image (e.g. by
-switching the JDK or whatever).</p>
+<p>If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by switching the JDK or whatever).</p>
 </div>
 <div class="paragraph">
-<p>It is also possible to set the environment variables from the outside of the plugin&#8217;s
-configuration with the parameter <code>envPropertyFile</code>. If given, this property file
-is used to set the environment variables where the keys and values specify the environment variable.
-Environment variables specified in this file override any environment variables specified in the configuration.</p>
+<p>It is also possible to set the environment variables from the outside of the plugin&#8217;s configuration with the parameter <code>envPropertyFile</code>. If given, this property file is used to set the environment variables where the keys and values specify the environment variable. Environment variables specified in this file override any environment variables specified in the configuration.</p>
 </div>
 <div class="paragraph">
 <p>Labels can be set inline the same way as environment variables:</p>
@@ -2167,49 +2194,42 @@ Environment variables specified in this file override any environment variables 
 <div class="sect3">
 <h4 id="port-mapping"><a class="anchor" href="#port-mapping"></a>5.2.3. Port Mapping</h4>
 <div class="paragraph">
-<p>The <code>&lt;ports&gt;</code> configuration contains a list of port mappings. Each
-mapping has multiple parts, each separate by a colon. This is
-equivalent to the port mapping when using the Docker CLI with option
-<code>-p</code>.</p>
+<p>The <code>&lt;ports&gt;</code> configuration contains a list of port mappings. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option <code>-p</code>.</p>
 </div>
 <div class="paragraph">
 <p>A <code>port</code> stanza may take one of the following forms:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>18080:8080</strong> : A tuple consisting of two numeric values separated by a <code>:</code>. This
-form will result in an explicit mapping between the docker host and the corresponding
-port inside the container. In the above example, port 18080 would be exposed on the
-docker host and mapped to port 8080 in the running container.</p>
-</li>
-<li>
-<p><strong><em>host.port</em>:80</strong> A tuple consisting of a string and a numeric value separated by a
-<code>:</code>. In this form, the string portion of the tuple will correspond
-to a Maven property. If the property is undefined when the <code>start</code>
-task executes, a port will be dynamically selected by Docker in the
-ephemeral port range and assigned to the property which may then be
-used later in the same POM file. The ephemeral port range is configured
-by the <code>/proc/sys/net/ipv4/ip_local_port_range</code> kernel parameter, which
-typically ranges from 32678 to 61000.  If the property exists and has a
-numeric value, that value will be used as the exposed port on the
-docker host as in the previous form. In the above example, the
-docker service will elect a new port and assign the value to the
-property <code>host.port</code> which may then later be used in a property
-expression similar to <code>&lt;value&gt;${host.port}&lt;/value&gt;</code>. This can be
-used to pin a port from the outside when doing some initial testing
-similar to <code>mvn -Dhost.port=10080 docker:start</code></p>
-</li>
-<li>
-<p><strong>bindTo:_host.port_:80</strong> A tuple consisting of two strings and a numeric value separated
-by a <code>:</code>. In this form, <code>bindTo</code> is an ip address on the host the container should bind to. As a convenience, a hostname pointing to the docker host may also be specified. The container will fail to start if the hostname can not be resolved.</p>
-</li>
-<li>
-<p><strong>+host.ip:_host.port_:80</strong> A tuple consisting of two strings and a numeric value separated
-by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property name <code>host.ip</code>. If docker reports that value to be <code>0.0.0.0</code>, the value of <code>docker.host.address</code> will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example) containing the value to use. <code>host:port</code> works in the same way as described above.</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 12. Port mapping format</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Format</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>18080:8080</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two numeric values separated by a <code>:</code>. This form will result in an explicit mapping between the docker host and the corresponding port inside the container. In the above example, port 18080 would be exposed on the docker host and mapped to port 8080 in the running container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><em>host.port</em>:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of a string and a numeric value separated by a <code>:</code>. In this form, the string portion of the tuple will correspond to a Maven property. If the property is undefined when the <code>start</code> task executes, a port will be dynamically selected by Docker in the ephemeral port range and assigned to the property which may then be used later in the same POM file. The ephemeral port range is configured by the <code>/proc/sys/net/ipv4/ip_local_port_range</code> kernel parameter, which typically ranges from 32678 to 61000.  If the property exists and has numeric value, that value will be used as the exposed port on the docker host as in the previous form. In the above example, the docker service will elect a new port and assign the value to the property <code>host.port</code> which may then later be used in a property expression similar to <code>&lt;value&gt;${host.port}&lt;/value&gt;</code>. This can be used to pin a port from the outside when doing some initial testing similar to <code>mvn -Dhost.port=10080 docker:start</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>bindTo:_host.port_:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two strings and a numeric value separated by a <code>:</code>. In this form, <code>bindTo</code> is an ip address on the host the container should bind to. As a convenience, a hostname pointing to the docker host may also be specified. The container will fail to start if the hostname can not be resolved.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>+host.ip:_host.port_:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two strings and a numeric value separated by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property name <code>host.ip</code>. If docker reports that value to be <code>0.0.0.0</code>, the value of <code>docker.host.address</code> will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example) containing the value to use. <code>host:port</code> works in the same way as described above.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>The following are examples of valid configuration entries:</p>
 </div>
@@ -2234,20 +2254,13 @@ by a <code>:</code>. In this form, the host ip of the container will be placed i
 </div>
 </div>
 <div class="paragraph">
-<p>Another useful configuration option is <code>portPropertyFile</code> which can be used to
-to write out the container&#8217;s host ip and any dynamic ports that have been
-resolved. The keys of this property file are the property names defined in the
-port mapping configuration and their values those of the corresponding
-docker attributes.</p>
+<p>Another useful configuration option is <code>portPropertyFile</code> which can be used to to write out the container&#8217;s host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.</p>
 </div>
 <div class="paragraph">
-<p>This property file might be useful with tests or with other maven plugins that will be unable
-to use the resolved properties because they can only be updated after the container has started
-and plugins resolve their properties in an earlier lifecycle phase.</p>
+<p>This property file might be useful with tests or with other maven plugins that will be unable to use the resolved properties because they can only be updated after the container has started and plugins resolve their properties in an earlier lifecycle phase.</p>
 </div>
 <div class="paragraph">
-<p>If you don&#8217;t need to write out such a property file and thus don&#8217;t need to preserve the property names,
-you can use normal maven properties as well. E.g. <code>${host.var}:${port.var}:8080</code> instead of
+<p>If you don&#8217;t need to write out such a property file and thus don&#8217;t need to preserve the property names, you can use normal maven properties as well. E.g. <code>${host.var}:${port.var}:8080</code> instead of
 <code>+host.var:port.var:8080</code>.</p>
 </div>
 </div>
@@ -2255,12 +2268,7 @@ you can use normal maven properties as well. E.g. <code>${host.var}:${port.var}:
 <h4 id="links"><a class="anchor" href="#links"></a>5.2.4. Network Links</h4>
 <div class="paragraph">
 <p>The <code>&lt;links&gt;</code> configuration contains a list of containers that should
-be linked to this container according to
-<a href="https://docs.docker.com/userguide/dockerlinks">Docker Links</a>. Each
-link can have two parts where the optional right side is separated by
-a <code>:</code> and will be used as the name in the environment variables and
-the left side refers to the name of the container linking to. This is
-equivalent to the linking when using the Docker CLI <code>--link</code> option.</p>
+be linked to this container according to <a href="https://docs.docker.com/userguide/dockerlinks">Docker Links</a>. Each link can have two parts where the optional right side is separated by a <code>:</code> and will be used as the name in the environment variables and the left side refers to the name of the container linking to. This is equivalent to the linking when using the Docker CLI <code>--link</code> option.</p>
 </div>
 <div class="paragraph">
 <p>Example for linking to a container with name or alias <em>postgres</em> :</p>
@@ -2273,8 +2281,7 @@ equivalent to the linking when using the Docker CLI <code>--link</code> option.<
 </div>
 </div>
 <div class="paragraph">
-<p>This will create the following environment variables, given that the
-postgres image exposes TCP port 5432:</p>
+<p>This will create the following environment variables, given that the postgres image exposes TCP port 5432:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2287,13 +2294,10 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name
-obtained via <code>docker ps</code> in the configuration.</p>
+<p>If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name obtained via <code>docker ps</code> in the configuration.</p>
 </div>
 <div class="paragraph">
-<p>Please note that the link behaviour also depends on the network mode selected. Links as described
-are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no
-environments variables are set and links create merely network aliases for the linked container.</p>
+<p>Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container.</p>
 </div>
 <div class="paragraph">
 <p>For a more detailed documentation for the new link handling please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks">Docker network documentation</a></p>
@@ -2302,23 +2306,31 @@ environments variables are set and links create merely network aliases for the l
 <div class="sect3">
 <h4 id="volumes"><a class="anchor" href="#volumes"></a>5.2.5. Volumes</h4>
 <div class="paragraph">
-<p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of
-the host system or from another container which exports one or more directories. The mount configuration is
-specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
+<p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>from</strong> can contain a list of <code>&lt;image&gt;</code> elements which specify
-image names or aliases of containers whose volumes should be imported.</p>
-</li>
-<li>
-<p><strong>bind</strong> can contain a list of <code>&lt;volume&gt;</code> specifications (or <em>host mounts</em>). Use <code>/path</code> to create and
-expose a new volume in the container, <code>/host_path:/container_path</code> to mount a host path into the
-container and <code>/host_path:/container_path:ro</code> to bind it read-only.</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 13. Volume configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>from</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>&lt;image&gt;</code> elements which specify image names or aliases of containers whose volumes should be imported.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>bind</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>&lt;volume&gt;</code> specifications (or <em>host mounts</em>). Use <code>/path</code> to create and expose a new volume in the container, <code>/host_path:/container_path</code> to mount a host path into the container and <code>/host_path:/container_path:ro</code> to bind it read-only.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;volumes&gt;</span>
@@ -2333,15 +2345,10 @@ container and <code>/host_path:/container_path:ro</code> to bind it read-only.</
 </div>
 </div>
 <div class="paragraph">
-<p>In this example the container creates a new volume named  <code>/logs</code> on the container and mounts <code>/opt/host_export</code> from
-the host as <code>/opt/container_import</code> on the container. In addition all exported volumes from the container which has
-been created from the image <code>jolokia/docker-demo</code> are mounted directly into the container (with the same name as
-the exporting container exposes these directories). The image must be also configured for this plugin. Instead of
-the full image name, an alias name like <em>service</em> can be used, too.</p>
+<p>In this example the container creates a new volume named  <code>/logs</code> on the container and mounts <code>/opt/host_export</code> from the host as <code>/opt/container_import</code> on the container. In addition all exported volumes from the container which has been created from the image <code>jolokia/docker-demo</code> are mounted directly into the container (with the same name as the exporting container exposes these directories). The image must be also configured for this plugin. Instead of the full image name, an alias name like <em>service</em> can be used, too.</p>
 </div>
 <div class="paragraph">
-<p>Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This
-should even work for boot2docker and docker-machine:</p>
+<p>Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This should even work for boot2docker and docker-machine:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2354,20 +2361,32 @@ should even work for boot2docker and docker-machine:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>If you wish to mount volumes from an existing container not managed by the plugin, you may do by specifying the container name
-obtained via <code>docker ps</code> in the configuration.</p>
+<p>If you wish to mount volumes from an existing container not managed by the plugin, you may do by specifying the container name obtained via <code>docker ps</code> in the configuration.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="restart"><a class="anchor" href="#restart"></a>5.2.6. Restart Policy</h4>
 <div class="paragraph">
-<p>Specify the behavior to apply when the container exits. These values can be
-specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
+<p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>name</strong> restart policy name, choose from:</p>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 14. Restart Policy configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Restart policy name, choose from:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -2377,19 +2396,16 @@ specified withing a <code>&lt;restartPolicy&gt;</code> section with the followin
 <p><code>on-failure</code> (<em>v1.15</em>) restart on container non-exit code of zero</p>
 </li>
 </ul>
-</div>
-</li>
-<li>
-<p><strong>retry</strong> if <code>on-failure</code> is used, controls max number of attempts to
-restart before giving up.</p>
-</li>
-</ul>
-</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>retry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>on-failure</code> is used, controls max number of attempts to restart before giving up.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
-<p>The behavior to apply when the container exits. The value is an object with a Name
-property of either "always" to always restart or "on-failure" to restart only when the
-container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the
- number of times to retry before giving up. The default is not to restart. (optional)</p>
+<p>The behavior to apply when the container exits. The value is an object with a name property of either "always" to always restart or "on-failure" to restart only when the container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the number of times to retry before giving up. The default is not to restart. (optional)</p>
 </div>
 </div>
 <div class="sect3">
@@ -2399,10 +2415,24 @@ container exit code is non-zero. If on-failure is used, MaximumRetryCount contro
 some condition is met. These conditions can be specified within a
 <code>&lt;wait&gt;</code> section which the following sub-elements:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>http</strong> specifies an HTTP ping check which periodically polls an URL. It knows the following sub-elements:</p>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 15. Wait configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>http</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>HTTP ping check which periodically polls an URL. It knows the following sub-elements:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -2412,30 +2442,33 @@ some condition is met. These conditions can be specified within a
 <p><strong>method</strong> Optional HTTP method to use.</p>
 </li>
 <li>
-<p><strong>status</strong> Status code which if returned is considered to be a successful ping. This code can be given either as
-a single number (200) or as a range (200..399). The default is <code>200..399</code></p>
+<p><strong>status</strong> Status code which if returned is considered to be a successful ping. This code can be given either as a single number (200) or as a range (200..399). The default is <code>200..399</code></p>
 </li>
 </ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>log</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Regular expression which is applied against the log
+output of an container and blocks until the pattern is matched.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>time</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time in milliseconds to block.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>kill</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time in milliseconds between sending <code>SIGTERM</code> and <code>SIGKILL</code> when stopping a container. Since docker itself uses second granularity, you should use at least 1000 milliseconds.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shutdown</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time to wait in milliseconds between stopping a container and removing it. This might be helpful in situation where a Docker croaks with an error when trying to remove a container to fast after it has been stopped.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exec</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Commands to execute during specified lifecycle of the container. It knows the following sub-elements:</p>
 </div>
-</li>
-<li>
-<p><strong>log</strong> is a regular expression which is applied against the log
-output of an container and blocks until the pattern is matched.</p>
-</li>
-<li>
-<p><strong>time</strong> is the time in milliseconds to block.</p>
-</li>
-<li>
-<p><strong>kill</strong> is the time in milliseconds between sending SIGTERM and SIGKILL when stopping a container. Since docker itself
-uses second granularity, you should use at least 1000 milliseconds.</p>
-</li>
-<li>
-<p><strong>shutdown</strong> is the time to wait in milliseconds between stopping a container
-and removing it. This might be helpful in situation where a Docker croaks with an
-error when trying to remove a container to fast after it has been stopped.</p>
-</li>
-<li>
-<p><strong>exec</strong> Specifies commands to execute during specified lifecycle of the container. It knows the following sub-elements:</p>
 <div class="ulist">
 <ul>
 <li>
@@ -2445,36 +2478,31 @@ error when trying to remove a container to fast after it has been stopped.</p>
 <p><strong>preStop</strong> Command to run before the container is stopped.</p>
 </li>
 </ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tcp</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>TCP port check which periodically polls given tcp ports. It knows the following sub-elements:</p>
 </div>
-</li>
-<li>
-<p><strong>tcp</strong> specifies TCP port check which periodically polls given tcp ports. It knows the following sub-elements:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>mode</strong> can be either <code>mapped</code> which uses the mapped ports or <code>direct</code> in which case the container ports are
-addressed directly. In the later case the host field should be left empty in order to select the container ip
-(which must be routed which is only the case when running on the Docker daemon&#8217;s host directly). Default is <code>direct</code> when host
-is <em>localhost</em>, <code>mapped</code> otherwise.
-The direct mode might help when a so called <em>user-proxy</em> is enabled on the Docker daemon which makes the mapped
-ports directly available even when the container is not ready yet.</p>
+<p><strong>mode</strong> can be either <code>mapped</code> which uses the mapped ports or <code>direct</code> in which case the container ports are addressed directly. In the later case the host field should be left empty in order to select the container ip (which must be routed which is only the case when running on the Docker daemon&#8217;s host directly). Default is <code>direct</code> when host is <em>localhost</em>, <code>mapped</code> otherwise. The direct mode might help when a so called <em>user-proxy</em> is enabled on the Docker daemon which makes the mapped ports directly available even when the container is not ready yet.</p>
 </li>
 <li>
-<p><strong>host</strong> is the hostname or the IP address. It defaults to <code>${docker.host.address}</code> for a mapped mode and the container
-ip address for the direct mode.</p>
+<p><strong>host</strong> is the hostname or the IP address. It defaults to <code>${docker.host.address}</code> for a mapped mode and the container ip address for the direct mode.</p>
 </li>
 <li>
 <p><strong>ports</strong> is a list of TCP ports to check. These are supposed to be the container internal ports.</p>
 </li>
 </ul>
-</div>
-</li>
-</ul>
-</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
-<p>As soon as one condition is met the build continues. If you add a
-<code>&lt;time&gt;</code> constraint this works more or less as a timeout for other
-conditions. The build will abort if you wait on an url or log output and reach the timeout. If only a <code>&lt;time&gt;</code> is specified, the build will wait that amount of milliseconds and then continues.</p>
+<p>As soon as one condition is met the build continues. If you add a <code>&lt;time&gt;</code> constraint this works more or less as a timeout for other conditions. The build will abort if you wait on an url or log output and reach the timeout. If only a <code>&lt;time&gt;</code> is specified, the build will wait that amount of milliseconds and then continues.</p>
 </div>
 <div class="paragraph">
 <p>Example:</p>
@@ -2505,14 +2533,10 @@ conditions. The build will abort if you wait on an url or log output and reach t
 </div>
 </div>
 <div class="paragraph">
-<p>This setup will wait for the given URL to be reachable but ten seconds
-at most. Additionally, it will be waited for the TCP ports 3306 and 9999. Also, when stopping the container after an integration tests, the
-build wait for 500 ms before it tries to remove the container (if not <code>keepContainer</code> or <code>keepRunning</code> is used). You can use maven properties in each condition, too. In the example, the <code>${host.port}</code> property is
-probably set before within a port mapping section.</p>
+<p>This setup will wait for the given URL to be reachable but ten seconds at most. Additionally, it will be waited for the TCP ports 3306 and 9999. Also, when stopping the container after an integration tests, the build wait for 500 ms before it tries to remove the container (if not <code>keepContainer</code> or <code>keepRunning</code> is used). You can use maven properties in each condition, too. In the example, the <code>${host.port}</code> property is probably set before within a port mapping section.</p>
 </div>
 <div class="paragraph">
-<p>The property <code>${docker.host.address}</code> is set implicitly to the address of the Docker host. This host will be taken from the <code>docker.host</code> configuration if HTTP or HTTPS is used. If a Unix socket is used for communication with the docker daemon, then <code>localhost</code> is assumed. You can override this property always by setting this Maven
-property explicitly.</p>
+<p>The property <code>${docker.host.address}</code> is set implicitly to the address of the Docker host. This host will be taken from the <code>docker.host</code> configuration if HTTP or HTTPS is used. If a Unix socket is used for communication with the docker daemon, then <code>localhost</code> is assumed. You can override this property always by setting this Maven property explicitly.</p>
 </div>
 </div>
 <div class="sect3">
@@ -2520,24 +2544,32 @@ property explicitly.</p>
 <div class="paragraph">
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>enabled</strong> If given and set to <code>false</code> log output is disabled. This
-is useful if you want to disable log output by default but want to
-use the other configuration options when log output is switched on
-on the command line with <code>-Ddocker.showLogs</code>. Logging is enabled by
-default if a <code>&lt;log&gt;</code> section is given.</p>
-</li>
-<li>
-<p><strong>prefix</strong> Prefix to use for the log output in order to identify the
-container. By default the image <code>alias</code> is used or alternatively the
-container <code>id</code>.</p>
-</li>
-<li>
-<p><strong>date</strong> Dateformat to use for log timestamps. If <code>&lt;date&gt;</code> is not
-given no timestamp will be shown. The date specification can be
-either a constant or a date format. The recognized constants are:</p>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 16. Logging configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>enabled</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>false</code> log output is disabled. This is useful if you want to disable log output by default but want to use the other configuration options when log output is switched on on the command line with <code>-Ddocker.showLogs</code>. Logging is enabled by default if a <code>&lt;log&gt;</code> section is given.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>prefix</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prefix to use for the log output in order to identify the container. By default the image <code>alias</code> is used or alternatively the container <code>id</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>date</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Dateformat to use for log timestamps. If <code>&lt;date&gt;</code> is not given no timestamp will be shown. The date specification can be either a constant or a date format. The recognized constants are:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -2558,32 +2590,29 @@ logging.</p>
 <p><code>LONG</code> Joda long date time format</p>
 </li>
 <li>
-<p><code>ISO8601</code> Full ISO-8601 formatted date time with milli seconds
-As an alternative a date-time format string as recognized by
-<a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html">JodaTime</a>
-is possible. In order to set a consistent date format
-the global configuration parameter <code>logDate</code> can be used.</p>
+<p><code>ISO8601</code> Full ISO-8601 formatted date time with milli seconds</p>
 </li>
 </ul>
 </div>
-</li>
-<li>
-<p><strong>color</strong> Color used for coloring the prefix when coloring is enabeld
-(i.e. if running in a console and <code>useColor</code> is set). The available
-colors are <code>YELLOW</code>, <code>CYAN</code>, <code>MAGENTA</code>, <code>GREEN</code>, <code>RED</code>, <code>BLUE</code>. If
-coloring is enabled and now color is provided a color is picked for
-you.</p>
-</li>
-<li>
-<p><strong>file</strong> Path to a file to which the log output is written. This file is overwritten
-for every run and colors are switched off.</p>
-</li>
-<li>
-<p><strong>driver</strong> Section which can specify a dedicated log driver to use. A <code>&lt;name&gt;</code> tag within this section depicts
-the logging driver with the options specified in <code>&lt;opts&gt;</code>. See the example below for how to use this.</p>
-</li>
-</ul>
-</div>
+<div class="paragraph">
+<p>As an alternative a date-time format string as recognized by
+<a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html">JodaTime</a> is possible. In order to set a consistent date format the global configuration parameter <code>logDate</code> can be used.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>color</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Color used for coloring the prefix when coloring is enabeld (i.e. if running in a console and <code>useColor</code> is set). The available colors are <code>YELLOW</code>, <code>CYAN</code>, <code>MAGENTA</code>, <code>GREEN</code>, <code>RED</code>, <code>BLUE</code>. If coloring is enabled and now color is provided a color is picked for you.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>file</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a file to which the log output is written. This file is overwritten for every run and colors are switched off.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>driver</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section which can specify a dedicated log driver to use. A <code>&lt;name&gt;</code> tag within this section depicts the logging driver with the options specified in <code>&lt;opts&gt;</code>. See the example below for how to use this.</p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>Example (values can be case insensitive, too) :</p>
 </div>
@@ -3098,7 +3127,7 @@ from such a external configuration are added to the <em>regular</em>
 <p>The available handlers are described in the following.</p>
 </div>
 <div class="sect2">
-<h3 id="property-config"><a class="anchor" href="#property-config"></a>6.1. Property based Configuration</h3>
+<h3 id="property-config"><a class="anchor" href="#property-config"></a>6.1. Property based configuration</h3>
 <div class="paragraph">
 <p>For simple needs the image configuration can be completely defined via
 Maven properties which are defined outside of this plugin&#8217;s
@@ -3768,7 +3797,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-10 08:51:04 UTC
+Last updated 2016-07-10 12:57:54 UTC
 </div>
 </div>
 </body>
