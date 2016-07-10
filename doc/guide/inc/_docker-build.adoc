@@ -79,7 +79,7 @@ of an image configuration. In addition to `<dockerFileDir>` and
 .Build configuration
 [cols="1,5"]
 |===
-|Parameter | Description
+| Element | Description
 
 | *args*
 | Map specifying the value of https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build args]
@@ -189,7 +189,7 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 .Assembly Configuration
 [cols="1,5"]
 |===
-| Parameter | Description
+| Element | Description
 
 | *basedir*
 | Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/maven`.

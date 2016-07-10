@@ -1,8 +1,6 @@
 
 = Further reading
 
-* The https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/intro.md[Introduction] is a high level
-overview of this plugin's features and provides an usage example.
 * Examples:
 ** https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/examples.md[Examples]
 are below `samples/` and contain example

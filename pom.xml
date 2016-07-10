@@ -514,6 +514,7 @@
             <configuration>
               <backend>pdf</backend>
               <sourceHighlighter>rouge</sourceHighlighter>
+              <sourceDirectory>doc/guide</sourceDirectory>
               <attributes>
                 <icons>font</icons>
                 <pagenums/>

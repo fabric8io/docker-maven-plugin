@@ -20,7 +20,7 @@ be specified by the certPath or machine configuration, or by the
 .Global Configuration
 [cols="1,5,1"]
 |===
-| Parameter | Description | Property
+| Element | Description | Property
 
 | *apiVersion*
 | Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
@@ -56,7 +56,7 @@ The discovery sequence used by the docker-maven-plugin to determine
 the URL is:
 
 . value of *dockerHost* (`docker.host`)
-. the `DOCKER_HOST` associated with the docker-machine named in `<machine>`. See below for details.
+. the Docker host associated with the docker-machine named in `<machine>`, i.e. the `DOCKER_HOST` from `docker-machine env`. See <<docker-machine,below>> for more information about Docker machine support.
 . the value of the environment variable `DOCKER_HOST`.
 . `unix:///var/run/docker.sock` if it is a readable socket.
 | `docker.host`
@@ -70,8 +70,12 @@ the URL is:
 | `docker.logDate`
 
 | *logStdout*
-| Fo all container logging to standard output if set to `true`, regardless whether a `file` for log output is specified. See also <<logging,Logging>>
+| For all container logging to standard output if set to `true`, regardless whether a `file` for log output is specified. See also <<logging,Logging>>
 | `docker.logStdout`
+
+| *machine*
+| Docker machine configuration. See <<docker-machine, Docker Machine>> for possible values
+|
 
 | *maxConnections*
 | Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
@@ -130,27 +134,31 @@ Example:
 </configuration>
 ----
 
-docker-maven-plugin supports also Docker machine (which must be installed locally, of course).
-A Docker machine configuration can be provided with a top-level `<machine>` configuration section.
-This configuration section knows the following options:
+[[docker-machine]]
+.Docker Machine
+This plugin supports also Docker machine (which must be installed locally, of course). A Docker machine configuration can be provided with a top-level `<machine>` configuration section. This configuration section knows the following options:
 
-* *name* for the Docker machine's name. Default is `default`
-* *autoCreate* if set to `true` then a Docker machine will automatically created. Default is `false`.
-* *createOptions* is a map with options for Docker machine when auto-creating a machine. See the docker machine
-documentation for possible options.
+.Docker Machine Options
+[cols="1,4"]
+|===
+| Element | Description
 
-When no Docker host is configured or available as environment variable, then the configured Docker machine
-is used. If the machine exists but is not running, it is started automatically. If it does not exists but `autoCreate`
-is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine
-which has been created because of `autoCreate` gets never deleted by docker-maven-plugin. This needs to be done manually
-if required.
+| *name*
+| Docker machine's name. Default is `default`
 
-In absent of a `<machine>` configuration section the Maven property `docker.machine.name` can be used to provide
-the name of a Docker machine. Similarly the property `docker.machine.autoCreate` can be set to true for creating
-a Docker machine, too.
+| *autoCreate*
+| if set to `true` then a Docker machine will automatically created. Default is `false`.
 
-You can use the property `docker.skip.machine` if you want to override the internal detection mechanism to always
-disable docker machine support.
+| *createOptions*
+| Map with options for Docker machine when auto-creating a machine. See the docker machine documentation for possible options.
+|===
+
+
+When no Docker host is configured or available as environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but `autoCreate` is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine which has been created because of `autoCreate` gets never deleted by docker-maven-plugin. This needs to be done manually if required.
+
+In absent of a `<machine>` configuration section the Maven property `docker.machine.name` can be used to provide the name of a Docker machine. Similarly the property `docker.machine.autoCreate` can be set to true for creating a Docker machine, too.
+
+You can use the property `docker.skip.machine` if you want to override the internal detection mechanism to always disable docker machine support.
 
 Example:
 
