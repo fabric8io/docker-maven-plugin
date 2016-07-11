@@ -250,7 +250,7 @@
         <version>3.0.0</version>
         <executions>
           <execution>
-            <id>copy-resources</id>
+            <id>copy-plexus-resources</id>
             <phase>process-resources</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -261,6 +261,22 @@
                 <resource>
                   <directory>src/main/resources/META-INF/plexus</directory>
                   <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-asciidoc</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/META-INF/doc/dmp</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/asciidoc</directory>
+                  <filtering>false</filtering>
                 </resource>
               </resources>
             </configuration>
@@ -335,15 +351,15 @@
             </dependency>
           </dependencies>
           <configuration>
-            <sourceDirectory>doc/guide</sourceDirectory>
-              <attributes>
-                <icons>font</icons>
-                <pagenums/>
-                <version>${project.version}</version>
-                <toc/>
+            <sourceDirectory>src/main/asciidoc</sourceDirectory>
+            <attributes>
+              <icons>font</icons>
+              <pagenums/>
+              <version>${project.version}</version>
+              <toc/>
                 <idprefix/>
-                <idseparator>-</idseparator>
-              </attributes>
+              <idseparator>-</idseparator>
+            </attributes>
           </configuration>
         </plugin>
       </plugins>
