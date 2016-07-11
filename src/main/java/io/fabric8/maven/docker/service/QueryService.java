@@ -118,7 +118,7 @@ public class QueryService {
 
     /**
      * Finds the id of an image.
-     * 
+     *
      * @param imageName name of the image.
      * @return the id of the image
      * @throws DockerAccessException if the request fails
@@ -126,7 +126,7 @@ public class QueryService {
     public String getImageId(String imageName) throws DockerAccessException {
         return docker.getImageId(imageName);
     }
-    
+
     /**
      * Get the id of the latest container started for an image
      *
@@ -162,7 +162,7 @@ public class QueryService {
     public boolean hasContainer(String containerName) throws DockerAccessException {
         return getContainerByName(containerName) != null;
     }
-    
+
     /**
      * Check whether a network with the given name exists
      *
@@ -196,30 +196,42 @@ public class QueryService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public boolean imageRequiresAutoPull(String mode, String imageName, boolean always)
+    public boolean imageRequiresAutoPull(String mode, String imageName, boolean always, Set<String> previouslyPulled)
         throws DockerAccessException, MojoExecutionException {
 
         // The logic here is like this (see also #96):
-        // If the image is not available and mode is either ON or ALWAYS --> pull
+        // If the image is not available and mode is one of: ON, ALWAYS, ONCE --> pull
         // If mode == ALWAYS and no build config is available (so its a pulled-image anyway) --> pull
         // otherwise: don't pull
         AutoPullMode autoPullMode = AutoPullMode.fromString(mode);
-        if (pullIfNotPresent(autoPullMode, imageName) ||
-            alwaysPull(autoPullMode, always)) {
+        if (imageRequiresPull(autoPullMode, imageName, always, previouslyPulled)) {
             return true;
-        } else {
-            if (!hasImage(imageName)) {
-                throw new MojoExecutionException(
-                        String.format("No image '%s' found, Please enable 'autoPull' or pull image '%s' yourself (docker pull %s)",
-                                imageName, imageName, imageName));
-            }
+        }
+
+        if (hasImage(imageName)) {
             return false;
         }
+
+        throw new MojoExecutionException(
+                String.format("No image '%s' found, Please enable 'autoPull' or pull image '%s' yourself (docker pull %s)",
+                        imageName, imageName, imageName));
+    }
+
+    private boolean imageRequiresPull(AutoPullMode autoPullMode, String imageName, boolean always, Set<String> previouslyPulled)
+            throws DockerAccessException {
+
+        if (autoPullMode == AutoPullMode.ONCE && previouslyPulled.contains(imageName)) {
+            return false;
+        }
+
+        previouslyPulled.add(imageName);
+
+        return pullIfNotPresent(autoPullMode, imageName) || alwaysPull(autoPullMode, always);
     }
 
     // Check whether ALWAYS is active
     private boolean alwaysPull(AutoPullMode autoPullMode, boolean always) {
-        return always && autoPullMode == AutoPullMode.ALWAYS;
+        return always && autoPullMode.alwaysPull();
     }
 
     // Check if an image is not loaded but should be pulled
