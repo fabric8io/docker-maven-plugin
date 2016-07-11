@@ -1,6 +1,6 @@
 
 [[docker:watch]]
-== **docker:watch**
+== *docker:watch*
 
 include::watch/_overview.adoc[]
 

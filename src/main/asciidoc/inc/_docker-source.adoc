@@ -1,6 +1,6 @@
 
 [[docker:source]]
-== **docker:source**
+== *docker:source*
 
 The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven
 project with a certain classifier. It reuses the configuration from link:docker-build.md[{plugin}:build].

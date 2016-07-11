@@ -1,6 +1,6 @@
 
 [[docker:start]]
-== **docker:start**
+== *docker:start*
 
 include::start/_overview.adoc[]
 

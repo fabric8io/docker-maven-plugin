@@ -1,6 +1,6 @@
 
 [[docker:stop]]
-== **docker:stop**
+== *docker:stop*
 
 Stops and removes a docker container. This goals stops every container started with `<{plugin}:start>` either during the same build (e.g. when bound to lifecycle phases when doing integration tests) or for containers created by a previous call to `<{plugin}:start>`
 

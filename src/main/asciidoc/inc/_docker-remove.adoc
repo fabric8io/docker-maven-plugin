@@ -1,6 +1,6 @@
 
 [[docker:remove]]
-== **docker:remove**
+== *docker:remove*
 
 This goal can be used to clean up images and containers. By default all so called _data images_ are removed with its containers. A data image is an image without a run configuration. This can be tuned by providing the properties `removeAll` which indicates to remove all images managed by this build. As with the other goals, the configuration `image` can be used to tune the images to remove. All containers belonging to the images are removed as well.
 
