@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-07-10</span>
+<span id="revdate">2016-07-11</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -1319,27 +1319,22 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <div class="sect2">
 <h3 id="docker:build">5.1. <strong>docker:build</strong></h3>
 <div class="paragraph">
-<p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration
-section, or, if the global configuration variable <code>image</code> (property:
-<code>docker.image</code>) is set, only the images contained in this variable
-(comma separated) will be built.</p>
+<p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration section, or, if the global configuration variable <code>image</code> (property:
+<code>docker.image</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
 </div>
 <div class="paragraph">
 <p>Image can be build in two different ways:</p>
 </div>
 <div class="paragraph">
 <div class="title">Inline plugin configuration</div>
-<p>With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section
-<a href="#external-configuration">External configuration</a>. The XML configuration syntax is reqcommended because of its more structured and typed nature.</p>
+<p>With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <a href="#external-configuration">External configuration</a>. The XML configuration syntax is recommended because of its more structured and typed nature.</p>
 </div>
 <div class="paragraph">
-<p>When using this mode, the Dockerfile is created on the fly with all
-instructions extracted from the configuration given.</p>
+<p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
 <div class="paragraph">
 <div class="title">External Dockerfile</div>
-<p>Alternatively an external Dockerfile template can be used. This mode
-is switch on by using one of these two configuration options within
+<p>Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
 the <code>&lt;build&gt;</code> configuration section.</p>
 </div>
 <div class="ulist">
@@ -1356,24 +1351,16 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <p>If <code>dockerFileDir</code> is a relative path looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
 </div>
 <div class="paragraph">
-<p>Any additional files located in the <code>dockerFileDir</code> directory will
-also be added to the build context as well as any files specified by
-an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
+<p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for
-the build. Each line in this file is treated as an
-<a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a>
-as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code>
-when using Docker but has a slightly different syntax (hence the
-different name).</p>
+<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
 </div>
 <div class="paragraph">
 <p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
 </div>
 <div class="paragraph">
-<p>Except for the <a href="#assembly">assembly configuration</a> all other
-configuration options are ignored for now.</p>
+<p>Except for the <a href="#assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
 </div>
 <div class="sidebarblock">
 <div class="content">
@@ -3818,7 +3805,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-10 16:00:38 UTC
+Last updated 2016-07-11 10:29:24 UTC
 </div>
 </div>
 </body>
