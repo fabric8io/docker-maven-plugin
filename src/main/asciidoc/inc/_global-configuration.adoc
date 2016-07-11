@@ -31,7 +31,7 @@ be specified by the certPath or machine configuration, or by the
 |
 
 | *autoCreate CustomNetworks*
-| Create automatically Docker networks during `docker:start` and remove it during `docker:stop` if you provide a custom network in the run configuration of an image. The default is `false`.
+| Create automatically Docker networks during `{plugin}:start` and remove it during `{plugin}:stop` if you provide a custom network in the run configuration of an image. The default is `false`.
 | `docker.autoCreate` `CustomNetworks`
 
 | *autoPull*
@@ -82,7 +82,7 @@ the URL is:
 | `docker.maxConnections`
 
 | *outputDirectory*
-| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `docker:build`.
+| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
 | `docker.target.dir`
 
 | *portPropertyFile*
@@ -98,19 +98,19 @@ the URL is:
 | `docker.skip`
 
 | *skipBuild*
-| If set not images will be build (which implies also _skip.tag_) with `docker:build`
+| If set not images will be build (which implies also _skip.tag_) with `{plugin}:build`
 | `docker.skip.build`
 
 | *skipPush*
-| If set dont push any images even when `docker:push` is called.
+| If set dont push any images even when `{plugin}:push` is called.
 | `docker.skip.push`
 
 | *skipRun*
-| If set dont create and start any containers with `docker:start` or `docker:run`
+| If set dont create and start any containers with `{plugin}:start` or `{plugin}:run`
 | `docker.skip.run`
 
 | *skipTag*
-| If set to `true` this plugin won't add any tags to images that have been built with `docker:build`
+| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
 | `docker.skip.tag`
 
 | *skipMachine*
@@ -118,7 +118,7 @@ the URL is:
 | `docker.skip.machine`
 
 | *sourceDirectory*
-| Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `docker:build` goal.
+| Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `{plugin}:build` goal.
 | `docker.source.dir`
 |===
 

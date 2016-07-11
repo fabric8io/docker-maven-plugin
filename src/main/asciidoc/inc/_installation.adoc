@@ -49,9 +49,9 @@ available goals are described below.
 
 When working with this plugin you can use an own packaging with a specialized lifecycle in order to keep your pom files small. Three packaging variants are available:
 
-* *docker* : This binds `docker:build` to the package phase and `docker:start` / `docker:stop` to the pre- and post-integration phase respectively. Also `docker:push` is bound to the deploy phase.
+* *docker* : This binds `{plugin}:build` to the package phase and `{plugin}:start` / `{plugin}:stop` to the pre- and post-integration phase respectively. Also `{plugin}:push` is bound to the deploy phase.
 * *docker-build* : Much like the _docker_ packaging, except that there are no integration tests configured by default.
-* *docker-tar* : Create a so called _Docker tar_ archive which is used as the artifact and which later can be use for building an image. It contains essentially a `Dockerfile` with supporting files. See link:docker-source[docker:source] for more details.
+* *docker-tar* : Create a so called _Docker tar_ archive which is used as the artifact and which later can be use for building an image. It contains essentially a `Dockerfile` with supporting files. See link:docker-source[{plugin}:source] for more details.
 
 These packaging definitions include the _jar_ lifecycle methods so they are well suited simple Microservice style projects.
 For example:

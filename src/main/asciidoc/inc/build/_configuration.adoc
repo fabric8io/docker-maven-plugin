@@ -54,7 +54,7 @@ described in <<build-buildargs,Build Args>>
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
 
 | *compression*
-| The compression mode how the build archive is transmitted to the docker daemon (`docker:build`) and how docker build archives are attached to this build as sources (`docker:source`). The value can be `none` (default), `gzip` or `bzip2`.
+| The compression mode how the build archive is transmitted to the docker daemon (`{plugin}:build`) and how docker build archives are attached to this build as sources (`{plugin}:source`). The value can be `none` (default), `gzip` or `bzip2`.
 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property

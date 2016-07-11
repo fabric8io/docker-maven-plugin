@@ -6,7 +6,7 @@ This goal can be used to clean up images and containers. By default all so calle
 
 Considering three images 'db','tomcat' and 'data' where 'data' is the only data images this example demonstrates the effect of this goal:
 
-* `mvn docker:remove` will remove 'data'
-* `mvn -Ddocker.removeAll docker:remove` will remove all three images
-* `mvn -Ddocker.image=data,tomcat docker:remove` will remove 'data'
-* `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove` will remove 'data' and 'tomcat'
+* `mvn {plugin}:remove` will remove 'data'
+* `mvn -Ddocker.removeAll {plugin}:remove` will remove all three images
+* `mvn -Ddocker.image=data,tomcat {plugin}:remove` will remove 'data'
+* `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll {plugin}:remove` will remove 'data' and 'tomcat'

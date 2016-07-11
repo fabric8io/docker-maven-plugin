@@ -29,7 +29,7 @@ properties can the behaviour of this goal:
 
 Example:
 
-[source, sh]
+[source, sh, subs="+attributes"]
 ----
-$ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT
+$ mvn {plugin}:logs -Ddocker.follow -Ddocker.logDate=DEFAULT
 ----

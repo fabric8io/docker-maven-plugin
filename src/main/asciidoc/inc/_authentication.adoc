@@ -2,7 +2,7 @@
 [[authentication]]
 = Authentication
 
-When pulling (via the `autoPull` mode of `docker:start`) or pushing image, it
+When pulling (via the `autoPull` mode of `{plugin}:start`) or pushing image, it
 might be necessary to authenticate against a Docker registry.
 
 There are three different ways for providing credentials:
@@ -36,8 +36,9 @@ The system property provided credentials are a good compromise when
 using CI servers like Jenkins. You simply provide the credentials from
 the outside:
 
+[source, sh, subs="+attributes"]
 ----
-mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push
+mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t {plugin}:push
 ----
 
 The most secure and also the most _mavenish_ way is to add a server to

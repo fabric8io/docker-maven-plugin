@@ -35,11 +35,11 @@ below how this can be specified.
 |
 
 | *keepRunning*
-| If set to `true` all container will be kept running after `docker:watch` has been stopped. By default this is set to `false`.
+| If set to `true` all container will be kept running after `{plugin}:watch` has been stopped. By default this is set to `false`.
 | `docker.keepRunning`
 
 | *keepContainer*
-| As for `docker:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `true`.
+| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `true`.
 | `docker.keepContainer`
 
 | *removeVolumes*
@@ -101,9 +101,9 @@ Here is an example how the watch mode can be tuned:
 
 Given this configuration
 
-[source,sh]
+[source,sh,subs="+attributes"]
 ----
-mvn package docker:build docker:start docker:watch
+mvn package {plugin}:build {plugin}:start {plugin}:watch
 ----
 
 You can build the service image, start up all containers and go into a watch loop. Again, you need the `package` phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The `db` image will never be watch since it assumed to not change while watching.

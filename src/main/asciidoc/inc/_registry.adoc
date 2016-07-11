@@ -34,9 +34,9 @@ evaluated which can be also provided as system property via
 detecting a registry.
 
 This registry is used for pulling (i.e. for autopull the base image
-when doing a `docker:build`) and pushing with `docker.push`. However,
+when doing a `{plugin}:build`) and pushing with `docker.push`. However,
 when these two goals a are combined on the command line like in `mvn
--Ddocker.registry=myregistry:5000 package docker:build docker:push`
+-Ddocker.registry=myregistry:5000 package {plugin}:build {plugin}:push`
 the same registry is used for both operation. For a more fine grained
 control, separate registries for _pull_ and _push_ can be specified.
 

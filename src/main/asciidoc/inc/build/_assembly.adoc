@@ -121,12 +121,12 @@ will add the created artifact with the name `${project.build.finalName}.${artifa
 
 All declared files end up in the configured `basedir` (or `/maven` by default) in the created image.
 
-If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. This happens either automatically when the `docker:build` target is called as part of a binding (e.g. is `docker:build` is bound to the `pre-integration-test`
+If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. This happens either automatically when the `{plugin}:build` target is called as part of a binding (e.g. is `{plugin}:build` is bound to the `pre-integration-test`
 phase) or it must be ensured when called on the command line:
 
-[source,sh]
+[source,sh,subs="+attributes"]
 ----
-mvn package docker:build
+mvn package {plugin}:build
 ----
 
 This is a general restriction of the Maven lifecycle which applies also

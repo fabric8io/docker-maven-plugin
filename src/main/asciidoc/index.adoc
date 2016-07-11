@@ -7,6 +7,7 @@ Roland Huß;
 :toc-title: docker-maven-plugin
 :doctype: book
 :icons: font
+:plugin: docker
 
 ifndef::ebook-format[:leveloffset: 1]
 
