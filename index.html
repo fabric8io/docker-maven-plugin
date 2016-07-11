@@ -598,7 +598,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="building-images">1.1. Building Images</h3>
 <div class="paragraph">
-<p>One purpose of this plugin is to create docker images holding the actual application. This is done with the <a href="#docker:build"><strong>docker:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (/maven by default). Images that are built with this plugin can be pushed to public or private Docker registries with <a href="#docker:push"><strong>docker:push</strong></a>.</p>
+<p>One purpose of this plugin is to create Docker images holding the actual application. This is done with the <a href="#docker:build"><strong>docker:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (<code>/maven</code> by default). Images that are built with this plugin can be pushed to public or private Docker registries with <a href="#docker:push"><strong>docker:push</strong></a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1261,7 +1261,7 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 <div class="sectionbody">
 <div class="paragraph">
 <p>This plugin supports the following goals which are explained in detail
-in the following sections.</p>
+in the next sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 5. Plugin Goals</caption>
@@ -3606,7 +3606,7 @@ the outside:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push</pre>
+<pre class="CodeRay highlight"><code data-lang="sh">mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -3790,7 +3790,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-11 15:09:41 UTC
+Last updated 2016-07-11 18:44:31 UTC
 </div>
 </div>
 </body>
