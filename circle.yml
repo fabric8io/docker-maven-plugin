@@ -23,5 +23,5 @@ deployment:
     commands:
       - git config --global user.email "circleci@mail.com"
       - git config --global user.name "CircleCI"
-      - ./doc/manual/ci-docs.sh
+      - ./doc/guide/ci-docs.sh
 

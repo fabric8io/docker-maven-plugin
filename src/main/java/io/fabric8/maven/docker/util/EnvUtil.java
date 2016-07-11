@@ -278,6 +278,12 @@ public class EnvUtil {
             if (tsFile.exists()) {
                 tsFile.delete();
             }
+            File dir = tsFile.getParentFile();
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    throw new MojoExecutionException("Cannot create directory " + dir);
+                }
+            }
             FileUtils.fileWrite(tsFile, StandardCharsets.US_ASCII.name(), Long.toString(buildDate.getTime()));
         } catch (IOException e) {
             throw new MojoExecutionException("Cannot create " + tsFile + " for storing time " + buildDate.getTime(),e);

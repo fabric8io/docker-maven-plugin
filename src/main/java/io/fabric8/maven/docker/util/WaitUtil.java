@@ -156,6 +156,7 @@ public class WaitUtil {
                             .setSocketTimeout(HTTP_PING_TIMEOUT)
                             .setConnectTimeout(HTTP_PING_TIMEOUT)
                             .setConnectionRequestTimeout(HTTP_PING_TIMEOUT)
+                            .setRedirectsEnabled(false)
                             .build();
             CloseableHttpClient httpClient = HttpClientBuilder.create()
                     .setDefaultRequestConfig(requestConfig)
