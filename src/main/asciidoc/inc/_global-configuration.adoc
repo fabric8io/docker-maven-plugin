@@ -1,5 +1,5 @@
 
-[[global-config]]
+[[global-configuration]]
 = Global configuration
 
 Global configuration parameters specify overall behavior like the
@@ -70,7 +70,7 @@ the URL is:
 | `docker.logDate`
 
 | *logStdout*
-| For all container logging to standard output if set to `true`, regardless whether a `file` for log output is specified. See also <<logging,Logging>>
+| For all container logging to standard output if set to `true`, regardless whether a `file` for log output is specified. See also <<start-logging,Logging>>
 | `docker.logStdout`
 
 | *machine*
@@ -86,7 +86,7 @@ the URL is:
 | `docker.target.dir`
 
 | *portPropertyFile*
-| Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<port-mapping,Port Mapping>>.
+| Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<start-port-mapping,Port Mapping>>.
 |
 
 | *registry*

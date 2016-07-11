@@ -24,7 +24,7 @@ properties can the behaviour of this goal:
 | Filte to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.
 
 | *docker.logDate*
-| Date format to use. See "<<logging,Logging>>" for available formats.
+| Date format to use. See "<<start-logging,Logging>>" for available formats.
 |===
 
 Example:

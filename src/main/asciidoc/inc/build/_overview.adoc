@@ -1,0 +1,49 @@
+
+[[build-overview]]
+Images can be build in two different ways:
+
+.Inline plugin configuration
+With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <<external-configuration,External configuration>>. The XML configuration syntax is recommended because of its more structured and typed nature.
+
+When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.
+
+.External Dockerfile
+Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
+the `<build>` configuration section.
+
+* *dockerFileDir* specifies a directory containing a `Dockerfile` that will be used to create the image.
+* *dockerFile* specifies a specific Dockerfile. The `dockerFileDir` is set to the directory containing the file.
+
+If `dockerFileDir` is a relative path looked up in `${project.basedir}/src/main/docker`. You can make easily an absolute path by prefixing with `${project.basedir}`.
+
+Any additional files located in the `dockerFileDir` directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert `ADD` or `COPY` directives yourself into the Dockerfile.
+
+If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
+
+If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
+
+Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
+
+****
+For the future it is planned to introduce special keywords lile `DMP_ADD_ASSEMBLY` which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.
+****
+
+The following example uses a Dockerfile in the directory
+`src/main/docker/demo`:
+
+[source,xml]
+----
+<plugin>
+ <configuration>
+   <images>
+     <image>
+       <name>user/demo</name>
+       <build>
+         <dockerFileDir>demo</dockerFileDir>
+       </build>
+     </image>
+   </images>
+ </configuration>
+ ...
+</plugin>
+----

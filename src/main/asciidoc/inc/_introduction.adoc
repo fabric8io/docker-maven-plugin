@@ -19,7 +19,7 @@ For proper isolation, container exposed ports can be dynamically and flexibly ma
 
 The plugin configuration contains a global part and a list of image-specific configuration within a `<images>` list, where each image is defined within a `<image>` tag. See <<example,below>> for an example.
 
-The <<global-config,global part>> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.
+The <<global-configuration,global part>> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.
 
 Then, each specific image configuration has three parts:
 
@@ -87,12 +87,12 @@ Images can be specified in any order and the plugin will take care of the proper
 <1> Image configuration for a Java service with alias "service" and name `fabric8/docker-demo:${project.version}`
 <2> <<docker:build,build configuration>> defines how a Docker image should be created
 <3> Base image, in this case `java:8`
-<4> Content of the image can be specified with an <<assembly,assembly descriptor>>
-<5> <<startup,Default command>> to run when a container is created.
+<4> Content of the image can be specified with an <<build-assembly,assembly descriptor>>
+<5> <<misc-startup,Default command>> to run when a container is created.
 <6> <<docker:run,Run configuration>> defines how a container should be created from this image
-<7> <<port-mapping,Port mapping>> defines how container ports should be mapped to host ports
-<8> <<wait,Wait>> section which is a readiness check when starting the service
-<9> <<links,Network link>> describes how this service container is linked to the database container
+<7> <<start-port-mapping,Port mapping>> defines how container ports should be mapped to host ports
+<8> <<start-wait,Wait>> section which is a readiness check when starting the service
+<9> <<start-links,Network link>> describes how this service container is linked to the database container
 <10> Second image is a plain database image which is only needed for running (hence there is no `<build>` section). The alias is used in the network link section above
 <11> Wait until the corresponding output appears on stdout when starting the Docker container.
 
@@ -108,5 +108,5 @@ Some other highlights, in random order:
 * Specification of <<password-encryption,encrypted>> registry passwords for push and pull in ~/.m2/settings.xml (i.e., outside the pom.xml)
 * Color output
 * <<docker:watch,Watching>> on project changes and automatic recreation of image
-* <<property-config,Properties>> as alternative to the XML configuration
+* <<property-configuration,Properties>> as alternative to the XML configuration
 * Support for Docker daemons accepting http or https request via TCP and for Unix sockets

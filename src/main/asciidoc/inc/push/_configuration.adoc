@@ -1,0 +1,16 @@
+
+
+.Push options
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *skipPush*
+| If set to `true` the plugin won't push any images that have been built.
+| `docker.skip.push`
+
+| *pushRegistry*
+| The registry to use when pushing the image. <<registry,Registry Handling>> for
+more details.
+| `docker.push.registry`
+|===

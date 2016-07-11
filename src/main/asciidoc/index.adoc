@@ -36,7 +36,7 @@ include::inc/_docker-source.adoc[]
 
 include::inc/_external-configuration.adoc[]
 
-include::inc/_registry-handling.adoc[]
+include::inc/_registry.adoc[]
 
 include::inc/_authentication.adoc[]
 
