@@ -531,28 +531,28 @@ table.CodeRay td.code>pre{padding:0}
 </ul>
 </li>
 <li><a href="#installation">2. Installation</a></li>
-<li><a href="#global-config">3. Global configuration</a></li>
+<li><a href="#global-configuration">3. Global configuration</a></li>
 <li><a href="#image-configuration">4. Image configuration</a></li>
 <li><a href="#maven-goals">5. Maven Goals</a>
 <ul class="sectlevel2">
 <li><a href="#docker:build">5.1. <strong>docker:build</strong></a>
 <ul class="sectlevel3">
-<li><a href="#build-config">5.1.1. Configuration</a></li>
-<li><a href="#assembly">5.1.2. Assembly</a></li>
-<li><a href="#startup">5.1.3. Startup Arguments</a></li>
-<li><a href="#build-args">5.1.4. Build Args</a></li>
+<li><a href="#build-configuration">5.1.1. Configuration</a></li>
+<li><a href="#build-assembly">5.1.2. Assembly</a></li>
+<li><a href="#misc-startup">5.1.3. Startup Arguments</a></li>
+<li><a href="#build-buildargs">5.1.4. Build Args</a></li>
 </ul>
 </li>
 <li><a href="#docker:start">5.2. <strong>docker:start</strong></a>
 <ul class="sectlevel3">
-<li><a href="#configuration-2">5.2.1. Configuration</a></li>
-<li><a href="#env">5.2.2. Environment and Labels</a></li>
-<li><a href="#port-mapping">5.2.3. Port Mapping</a></li>
-<li><a href="#links">5.2.4. Network Links</a></li>
-<li><a href="#volumes">5.2.5. Volumes</a></li>
-<li><a href="#restart">5.2.6. Restart Policy</a></li>
-<li><a href="#wait">5.2.7. Wait</a></li>
-<li><a href="#logging">5.2.8. Logging</a></li>
+<li><a href="#start-configuration">5.2.1. Configuration</a></li>
+<li><a href="#misc-env">5.2.2. Environment and Labels</a></li>
+<li><a href="#start-port-mapping">5.2.3. Port Mapping</a></li>
+<li><a href="#start-links">5.2.4. Network Links</a></li>
+<li><a href="#start-restart">5.2.5. Restart Policy</a></li>
+<li><a href="#start-volumes">5.2.6. Volumes</a></li>
+<li><a href="#start-wait">5.2.7. Wait</a></li>
+<li><a href="#start-logging">5.2.8. Logging</a></li>
 </ul>
 </li>
 <li><a href="#docker:stop">5.3. <strong>docker:stop</strong></a></li>
@@ -565,7 +565,7 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
 <ul class="sectlevel2">
-<li><a href="#property-config">6.1. Property based configuration</a></li>
+<li><a href="#property-configuration">6.1. Property based configuration</a></li>
 </ul>
 </li>
 <li><a href="#registry">7. Registry handling</a></li>
@@ -619,7 +619,7 @@ table.CodeRay td.code>pre{padding:0}
 <p>The plugin configuration contains a global part and a list of image-specific configuration within a <code>&lt;images&gt;</code> list, where each image is defined within a <code>&lt;image&gt;</code> tag. See <a href="#example">below</a> for an example.</p>
 </div>
 <div class="paragraph">
-<p>The <a href="#global-config">global part</a> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.</p>
+<p>The <a href="#global-configuration">global part</a> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.</p>
 </div>
 <div class="paragraph">
 <p>Then, each specific image configuration has three parts:</p>
@@ -714,11 +714,11 @@ table.CodeRay td.code>pre{padding:0}
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Content of the image can be specified with an <a href="#assembly">assembly descriptor</a></td>
+<td>Content of the image can be specified with an <a href="#build-assembly">assembly descriptor</a></td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td><a href="#startup">Default command</a> to run when a container is created.</td>
+<td><a href="#misc-startup">Default command</a> to run when a container is created.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
@@ -726,15 +726,15 @@ table.CodeRay td.code>pre{padding:0}
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
-<td><a href="#port-mapping">Port mapping</a> defines how container ports should be mapped to host ports</td>
+<td><a href="#start-port-mapping">Port mapping</a> defines how container ports should be mapped to host ports</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="8"></i><b>8</b></td>
-<td><a href="#wait">Wait</a> section which is a readiness check when starting the service</td>
+<td><a href="#start-wait">Wait</a> section which is a readiness check when starting the service</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="9"></i><b>9</b></td>
-<td><a href="#links">Network link</a> describes how this service container is linked to the database container</td>
+<td><a href="#start-links">Network link</a> describes how this service container is linked to the database container</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="10"></i><b>10</b></td>
@@ -779,7 +779,7 @@ table.CodeRay td.code>pre{padding:0}
 <p><a href="#docker:watch">Watching</a> on project changes and automatic recreation of image</p>
 </li>
 <li>
-<p><a href="#property-config">Properties</a> as alternative to the XML configuration</p>
+<p><a href="#property-configuration">Properties</a> as alternative to the XML configuration</p>
 </li>
 <li>
 <p>Support for Docker daemons accepting http or https request via TCP and for Unix sockets</p>
@@ -896,7 +896,7 @@ For example:</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="global-config">3. Global configuration</h2>
+<h2 id="global-configuration">3. Global configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Global configuration parameters specify overall behavior like the
@@ -1001,7 +1001,7 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>logStdout</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">For all container logging to standard output if set to <code>true</code>, regardless whether a <code>file</code> for log output is specified. See also <a href="#logging">Logging</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">For all container logging to standard output if set to <code>true</code>, regardless whether a <code>file</code> for log output is specified. See also <a href="#start-logging">Logging</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.logStdout</code></p></td>
 </tr>
 <tr>
@@ -1021,7 +1021,7 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>portPropertyFile</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <a href="#port-mapping">Port Mapping</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <a href="#start-port-mapping">Port Mapping</a>.</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
@@ -1322,8 +1322,8 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration section, or, if the global configuration variable <code>image</code> (property:
 <code>docker.image</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
 </div>
-<div class="paragraph">
-<p>Image can be build in two different ways:</p>
+<div id="build-overview" class="paragraph">
+<p>Images can be build in two different ways:</p>
 </div>
 <div class="paragraph">
 <div class="title">Inline plugin configuration</div>
@@ -1360,15 +1360,12 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
 </div>
 <div class="paragraph">
-<p>Except for the <a href="#assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
+<p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
 </div>
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
-<p>For the future it is
-planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which
-can be used in the Dockerfile template to placing the configuration
-resulting from the additional configuration.</p>
+<p>For the future it is planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
 </div>
 </div>
 </div>
@@ -1394,7 +1391,7 @@ resulting from the additional configuration.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-config">5.1.1. Configuration</h4>
+<h4 id="build-configuration">5.1.1. Configuration</h4>
 <div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
 of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
@@ -1418,11 +1415,11 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the value of <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build args</a>
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
-described in <a href="#build-args">Build Args</a></p></td>
+described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>assembly</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#assembly">Build Assembly</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -1434,15 +1431,15 @@ described in <a href="#build-args">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A command to execute by default (i.e. if no command is provided when a container for this image is started). See <a href="#startup">Startup Arguments</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A command to execute by default (i.e. if no command is provided when a container for this image is started). See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entryPoint</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">An entrypoint allows you to configure a container that will run as an executable. See <a href="#startup">Startup Arguments</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An entrypoint allows you to configure a container that will run as an executable. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>env</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#env">Setting Environment Variables and Labels</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>from</strong></p></td>
@@ -1450,7 +1447,7 @@ described in <a href="#build-args">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#env">Setting Environment Variables and Labels</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maintainer</strong></p></td>
@@ -1537,7 +1534,7 @@ remote API.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="assembly">5.1.2. Assembly</h4>
+<h4 id="build-assembly">5.1.2. Assembly</h4>
 <div class="paragraph">
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
@@ -1560,15 +1557,15 @@ remote API.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>inline</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Inlined assembly descriptor as described in <a href="#assembly-descriptor">Assembly Descriptor</a> below.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Inlined assembly descriptor as described in <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>descriptor</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Path to an assembly descriptor file, whose format is described  <a href="#assembly-descriptor">Assembly Descriptor</a> below.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to an assembly descriptor file, whose format is described  <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>descriptorRef</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Alias to a predefined assembly descriptor. The available aliases are also described in <a href="#assembly-descriptor">Assembly Descriptor</a> below.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Alias to a predefined assembly descriptor. The available aliases are also described in <a href="#build-assembly-descriptor">Assembly Descriptor</a> below.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
@@ -1645,7 +1642,7 @@ assembly configuration</p>
 <p>In the event you do not need to include any artifacts with the image, you may safely omit this element from the configuration.</p>
 </div>
 <div class="sect4">
-<h5 id="assembly-descriptor">Assembly Descriptor</h5>
+<h5 id="build-assembly-descriptor">Assembly Descriptor</h5>
 <div class="paragraph">
 <p>With using the <code>inline</code>, <code>descriptor</code> or <code>descriptorRef</code> option
 it is possible to bring local files, artifacts and dependencies into
@@ -1790,7 +1787,7 @@ possible to change the name of the final build artifact with the following:</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="startup">5.1.3. Startup Arguments</h4>
+<h4 id="misc-startup">5.1.3. Startup Arguments</h4>
 <div class="paragraph">
 <p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
@@ -1885,9 +1882,9 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="sect3">
-<h4 id="build-args">5.1.4. Build Args</h4>
+<h4 id="build-buildargs">5.1.4. Build Args</h4>
 <div class="paragraph">
-<p>As described in section <a href="#build-config">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
+<p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
 </div>
 <div class="ulist">
@@ -1913,8 +1910,8 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 <div class="sect2">
 <h3 id="docker:start">5.2. <strong>docker:start</strong></h3>
-<div class="paragraph">
-<p>This goals creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property <code>docker.showLogs</code>.</p>
+<div id="start-overview" class="paragraph">
+<p>This goal creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property <code>docker.showLogs</code>.</p>
 </div>
 <div class="paragraph">
 <p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).</p>
@@ -1949,7 +1946,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container information that way or to a string for an other prefix than <code>docker.container</code>.</p>
 </div>
 <div class="sect3">
-<h4 id="configuration-2">5.2.1. Configuration</h4>
+<h4 id="start-configuration">5.2.1. Configuration</h4>
 <div class="paragraph">
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
@@ -1976,7 +1973,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Command which should be executed at the end of the container&#8217;s startup. If not given, the image&#8217;s default command is used. See <a href="#startup">Startup Arguments</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command which should be executed at the end of the container&#8217;s startup. If not given, the image&#8217;s default command is used. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>domainname</strong></p></td>
@@ -1992,11 +1989,11 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entrypoint</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Entry point for the container. See &lt;&lt;startup, Startup Arguments] for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry point for the container. See &lt;&lt;misc-startup, Startup Arguments] for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>env</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <a href="#env">Environment and Labels</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <a href="#misc-env">Environment and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>envPropertyFile</strong></p></td>
@@ -2012,15 +2009,15 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Labels which should be attached to the  container. They are specified in the typical maven property format as described in <a href="#env">Environment and Labels</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels which should be attached to the  container. They are specified in the typical maven property format as described in <a href="#misc-env">Environment and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>links</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Network links for connecting containers together as described in  <a href="#links">Network Links</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Network links for connecting containers together as described in  <a href="#start-links">Network Links</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>log</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Log configuration for whether and how log messages from the running containers should be printed. This also can configure the <a href="https://docs.docker.com/engine/admin/logging/overview">log driver</a> to use. See <a href="#logging">Logging</a> for a detailed description.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Log configuration for whether and how log messages from the running containers should be printed. This also can configure the <a href="https://docs.docker.com/engine/admin/logging/overview">log driver</a> to use. See <a href="#start-logging">Logging</a> for a detailed description.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>memory</strong></p></td>
@@ -2070,11 +2067,11 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>portPropertyFile</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">File path into which the mapped port properties are written. The format of this file and its purpose are also described in <a href="#port-mapping">Port mapping</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File path into which the mapped port properties are written. The format of this file and its purpose are also described in <a href="#start-port-mapping">Port mapping</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#port-mapping">Port mappings</a> for exposing container ports to host ports.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-port-mapping">Port mappings</a> for exposing container ports to host ports.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>privileged</strong></p></td>
@@ -2082,7 +2079,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>restartPolicy</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#restart">Restart Policy</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-restart">Restart Policy</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shmSize</strong></p></td>
@@ -2098,11 +2095,11 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>volumes</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Volume configuration for binding to host directories and from other containers. See <a href="#volumes">Volumes</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Volume configuration for binding to host directories and from other containers. See <a href="#start-volumes">Volumes</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>wait</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Condition which must be fulfilled for the startup to complete. See <a href="#wait">Wait</a> for all possible ways to wait for a startup condition.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Condition which must be fulfilled for the startup to complete. See <a href="#start-wait">Wait</a> for all possible ways to wait for a startup condition.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>workingDir</strong></p></td>
@@ -2147,7 +2144,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect3">
-<h4 id="env">5.2.2. Environment and Labels</h4>
+<h4 id="misc-env">5.2.2. Environment and Labels</h4>
 <div class="paragraph">
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
@@ -2179,7 +2176,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect3">
-<h4 id="port-mapping">5.2.3. Port Mapping</h4>
+<h4 id="start-port-mapping">5.2.3. Port Mapping</h4>
 <div class="paragraph">
 <p>The <code>&lt;ports&gt;</code> configuration contains a list of port mappings. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option <code>-p</code>.</p>
 </div>
@@ -2252,7 +2249,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect3">
-<h4 id="links">5.2.4. Network Links</h4>
+<h4 id="start-links">5.2.4. Network Links</h4>
 <div class="paragraph">
 <p>The <code>&lt;links&gt;</code> configuration contains a list of containers that should
 be linked to this container according to <a href="https://docs.docker.com/userguide/dockerlinks">Docker Links</a>. Each link can have two parts where the optional right side is separated by a <code>:</code> and will be used as the name in the environment variables and the left side refers to the name of the container linking to. This is equivalent to the linking when using the Docker CLI <code>--link</code> option.</p>
@@ -2291,12 +2288,56 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="volumes">5.2.5. Volumes</h4>
+<h4 id="start-restart">5.2.5. Restart Policy</h4>
+<div class="paragraph">
+<p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 13. Restart Policy configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Restart policy name, choose from:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>always</code> (<em>v1.15</em>) always restart</p>
+</li>
+<li>
+<p><code>on-failure</code> (<em>v1.15</em>) restart on container non-exit code of zero</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>retry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>on-failure</code> is used, controls max number of attempts to restart before giving up.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The behavior to apply when the container exits. The value is an object with a name property of either "always" to always restart or "on-failure" to restart only when the container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the number of times to retry before giving up. The default is not to restart. (optional)</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="start-volumes">5.2.6. Volumes</h4>
 <div class="paragraph">
 <p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Volume configuration</caption>
+<caption class="title">Table 14. Volume configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2352,51 +2393,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="restart">5.2.6. Restart Policy</h4>
-<div class="paragraph">
-<p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Restart Policy configuration</caption>
-<colgroup>
-<col style="width: 16.6666%;">
-<col style="width: 83.3334%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Element</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Restart policy name, choose from:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>always</code> (<em>v1.15</em>) always restart</p>
-</li>
-<li>
-<p><code>on-failure</code> (<em>v1.15</em>) restart on container non-exit code of zero</p>
-</li>
-</ul>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>retry</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>on-failure</code> is used, controls max number of attempts to restart before giving up.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>The behavior to apply when the container exits. The value is an object with a name property of either "always" to always restart or "on-failure" to restart only when the container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the number of times to retry before giving up. The default is not to restart. (optional)</p>
-</div>
-</div>
-<div class="sect3">
-<h4 id="wait">5.2.7. Wait</h4>
+<h4 id="start-wait">5.2.7. Wait</h4>
 <div class="paragraph">
 <p>While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
@@ -2527,7 +2524,7 @@ output of an container and blocks until the pattern is matched.</p></td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="logging">5.2.8. Logging</h4>
+<h4 id="start-logging">5.2.8. Logging</h4>
 <div class="paragraph">
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
@@ -2700,33 +2697,38 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <div class="sect2">
 <h3 id="docker:push">5.4. <strong>docker:push</strong></h3>
 <div class="paragraph">
-<p>This goals uploads images to the registry which have a <code>&lt;build&gt;</code>
-configuration section. The images to push can be restricted with with
-the global option <code>image</code> (see
-<a href="global-configuration.html">Global Configuration</a> for details). The
-registry to push is by default <code>docker.io</code> but can be
-specified as part of the images&#8217;s <code>name</code> name the Docker
-way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
-with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port
-<code>5000</code>. Security information (i.e. user and password) can be specified
-in multiple ways as described in section <a href="authentication.html">Authentication</a>.</p>
+<p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
+the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
+with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
-<div class="paragraph">
-<p>Options:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>skipPush</strong> (<code>docker.skip.push</code>)
-If set to <code>true</code> the plugin won&#8217;t push any images that have been built.</p>
-</li>
-<li>
-<p><strong>pushRegistry</strong> (<code>docker.push.registry</code>)
-The registry to use when pushing the image. See <a href="registry-handling.html">Registry Handling</a> for
-more details.</p>
-</li>
-</ul>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 18. Push options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipPush</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> the plugin won&#8217;t push any images that have been built.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.push</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pushRegistry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The registry to use when pushing the image. <a href="#registry">Registry Handling</a> for
+more details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.registry</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
 <h3 id="docker:watch">5.5. <strong>docker:watch</strong></h3>
@@ -2796,11 +2798,10 @@ to do this manually.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>This maven goal can be configured with the following top-level
-parameters:</p>
+<p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Watch configuration</caption>
+<caption class="title">Table 19. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2881,7 +2882,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Watch configuration for a single image</caption>
+<caption class="title">Table 20. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2953,23 +2954,16 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 </div>
 </div>
 <div class="paragraph">
-<p>you can build the service image, start up all containers and go into a watch loop. Again, you need the <code>package</code> phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The <code>db</code> image will never be watch since it assumed to not change while watching.</p>
+<p>You can build the service image, start up all containers and go into a watch loop. Again, you need the <code>package</code> phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The <code>db</code> image will never be watch since it assumed to not change while watching.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="docker:remove">5.6. <strong>docker:remove</strong></h3>
 <div class="paragraph">
-<p>This goal can be used to clean up images and containers. By default
-all so called <em>data images</em> are removed with its containers. A data
-image is an image without a run configuration. This can be tuned by
-providing the properties <code>removeAll</code> which indicates to remove all
-images managed by this build. As with the other goals, the
-configuration <code>image</code> can be used to tune the images to remove. All
-containers belonging to the images are removed as well.</p>
+<p>This goal can be used to clean up images and containers. By default all so called <em>data images</em> are removed with its containers. A data image is an image without a run configuration. This can be tuned by providing the properties <code>removeAll</code> which indicates to remove all images managed by this build. As with the other goals, the configuration <code>image</code> can be used to tune the images to remove. All containers belonging to the images are removed as well.</p>
 </div>
 <div class="paragraph">
-<p>Considering three images 'db','tomcat' and 'data' where 'data' is the
-only data images this example demonstrates the effect of this goal:</p>
+<p>Considering three images 'db','tomcat' and 'data' where 'data' is the only data images this example demonstrates the effect of this goal:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -2983,8 +2977,7 @@ only data images this example demonstrates the effect of this goal:</p>
 <p><code>mvn -Ddocker.image=data,tomcat docker:remove</code> will remove 'data'</p>
 </li>
 <li>
-<p><code>mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove</code>
-will remove 'data' and 'tomcat'</p>
+<p><code>mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove</code> will remove 'data' and 'tomcat'</p>
 </li>
 </ul>
 </div>
@@ -3000,7 +2993,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Logging options</caption>
+<caption class="title">Table 21. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3026,7 +3019,7 @@ properties can the behaviour of this goal:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.logDate</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Date format to use. See "<a href="#logging">Logging</a>" for available formats.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date format to use. See "<a href="#start-logging">Logging</a>" for available formats.</p></td>
 </tr>
 </tbody>
 </table>
@@ -3042,25 +3035,18 @@ properties can the behaviour of this goal:</p>
 <div class="sect2">
 <h3 id="docker:source">5.8. <strong>docker:source</strong></h3>
 <div class="paragraph">
-<p>The <code>docker:source</code> target can be used to attach a docker build
-archive containing the Dockerfile and all added files to the Maven
-project with a certain classifier. It reuses the configuration from
-<a href="docker-build.md">docker:build</a>.</p>
+<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven
+project with a certain classifier. It reuses the configuration from <a href="docker-build.md">docker:build</a>.</p>
 </div>
 <div class="paragraph">
-<p><code>docker:source</code> uses the image&#8217;s <a href="image-configuration.md">alias</a> as
-part of the classifier, so it is mandatory that the alias is set for
-this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</code> so
-when the alias is set to <code>service</code>, then the classifier is
-<code>docker-service</code>.</p>
+<p><code>docker:source</code> uses the image&#8217;s <a href="image-configuration.md">alias</a> as part of the classifier, so it is mandatory that the alias is set for
+this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</code> so when the alias is set to <code>service</code>, then the classifier is <code>docker-service</code>.</p>
 </div>
 <div class="paragraph">
-<p><code>docker:source</code> can be attached to a Maven execution phase, which is
-<code>generate-sources</code> by default.</p>
+<p><code>docker:source</code> can be attached to a Maven execution phase, which is <code>generate-sources</code> by default.</p>
 </div>
 <div class="paragraph">
-<p>For example, this configuration will attach the docker build archive
-to the artifacts to store in the repository:</p>
+<p>For example, this configuration will attach the docker build archive to the artifacts to store in the repository:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3079,8 +3065,7 @@ to the artifacts to store in the repository:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>If the plugin is not bound to an execute phase but called directly, it must be ensured that the package phase is
-called, too. That is required to find the artifacts created with this build when referenced from an assembly.</p>
+<p>If the plugin is not bound to an execute phase but called directly, it must be ensured that the package phase is called, too. That is required to find the artifacts created with this build when referenced from an assembly.</p>
 </div>
 </div>
 </div>
@@ -3109,7 +3094,7 @@ from such a external configuration are added to the <em>regular</em>
 <p>The available handlers are described in the following.</p>
 </div>
 <div class="sect2">
-<h3 id="property-config">6.1. Property based configuration</h3>
+<h3 id="property-configuration">6.1. Property based configuration</h3>
 <div class="paragraph">
 <p>For simple needs the image configuration can be completely defined via
 Maven properties which are defined outside of this plugin&#8217;s
@@ -3136,7 +3121,7 @@ up from the following properties, which correspond to corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. External properties</caption>
+<caption class="title">Table 22. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3805,7 +3790,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-11 10:29:24 UTC
+Last updated 2016-07-11 15:09:41 UTC
 </div>
 </div>
 </body>
