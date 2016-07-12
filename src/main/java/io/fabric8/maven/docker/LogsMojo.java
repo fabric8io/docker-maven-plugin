@@ -6,6 +6,8 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -27,6 +29,7 @@ import io.fabric8.maven.docker.service.QueryService;
  *
  */
 @Mojo(name = "logs")
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class LogsMojo extends AbstractDockerMojo {
 
     // Whether to log infinitely or to show only the logs happened until now.
