@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config.handler.property;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,6 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import static io.fabric8.maven.docker.assembly.DockerFileKeyword.WORKDIR;
 
 /**
  * Enum holding possible configuration keys

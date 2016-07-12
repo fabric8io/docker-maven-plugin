@@ -119,6 +119,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.skip", defaultValue = "false")
     private boolean skip;
 
+    // Max number of containers to fetch when stopping/removing
+    @Parameter(property = "docker.fetchLimit", defaultValue = "100")
+    protected int fetchLimit;
+
     /**
      * Whether the usage of docker machine should be skipped competely
      */
@@ -254,6 +258,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Customization hook for subclasses to influence the final configuration. This method is called
     // before initialization and validation of the configuration.
+    @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
         return imageConfigs;
     }
@@ -266,7 +271,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 String dockerUrl = dockerConnectionDetector.extractUrl(dockerHost);
                 String version =  minimalVersion != null ? minimalVersion : API_VERSION;
                 access = new DockerAccessWithHcClient("v" + version, dockerUrl,
-                                                      dockerConnectionDetector.getCertPath(certPath), maxConnections, log);
+                                                      dockerConnectionDetector.getCertPath(certPath),
+                                                      maxConnections,
+                                                      fetchLimit,
+                                                      log);
                 access.start();
                 setDockerHostAddressProperty(dockerUrl);
             }

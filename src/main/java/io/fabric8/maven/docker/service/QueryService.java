@@ -8,7 +8,6 @@ import java.util.Set;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -19,22 +18,15 @@ import org.apache.maven.plugin.MojoExecutionException;
  */
 public class QueryService {
 
-    // Default limit when listing containers
-    private static final int CONTAINER_LIMIT = 100;
-
     // Access to docker daemon & logger
     private DockerAccess docker;
-    private Logger log;
 
     /**
      * Constructor which gets its dependencies as args)
-     *
-     * @param docker remote access to docker daemon
-     * @param log logger
-     */
-    public QueryService(DockerAccess docker, Logger log) {
+     *  @param docker remote access to docker daemon
+     * */
+    public QueryService(DockerAccess docker) {
         this.docker = docker;
-        this.log = log;
     }
 
     /**
@@ -55,7 +47,7 @@ public class QueryService {
      * @throws DockerAccessException in case of an remote error
      */
     public Container getContainerByName(final String containerName) throws DockerAccessException {
-        for (Container el : docker.listContainers(CONTAINER_LIMIT)) {
+        for (Container el : docker.listContainers()) {
             if (containerName.equals(el.getName())) {
                 return el;
             }
@@ -99,14 +91,15 @@ public class QueryService {
     }
 
     /**
-     * Get all containers which are build from an image. Only the last 100 containers are considered
+     * Get all containers which are build from an image. By default only the last containers are considered but this
+     * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
      * @return list of <code>Container</code> objects
      * @throws DockerAccessException if the request fails
      */
     public List<Container> getContainersForImage(final String image) throws DockerAccessException {
-        List<Container> list = docker.listContainers(CONTAINER_LIMIT);
+        List<Container> list = docker.listContainers();
         List<Container> ret = new ArrayList<>();
         for (Container el : list) {
             if (image.equals(el.getImage())) {
@@ -118,7 +111,7 @@ public class QueryService {
 
     /**
      * Finds the id of an image.
-     * 
+     *
      * @param imageName name of the image.
      * @return the id of the image
      * @throws DockerAccessException if the request fails
@@ -126,7 +119,7 @@ public class QueryService {
     public String getImageId(String imageName) throws DockerAccessException {
         return docker.getImageId(imageName);
     }
-    
+
     /**
      * Get the id of the latest container started for an image
      *
@@ -162,7 +155,7 @@ public class QueryService {
     public boolean hasContainer(String containerName) throws DockerAccessException {
         return getContainerByName(containerName) != null;
     }
-    
+
     /**
      * Check whether a network with the given name exists
      *

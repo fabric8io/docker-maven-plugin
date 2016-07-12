@@ -110,14 +110,17 @@ public class RunImageConfiguration {
     private WaitConfiguration wait;
 
     @Parameter
+    private Integer fetchLimit;
+
+    @Parameter
     private LogConfiguration log;
-    
+
     @Parameter
     private RestartPolicy restartPolicy;
 
     @Parameter
     private boolean skip = false;
-    
+
     public RunImageConfiguration() { }
 
     public String initAndValidate() {
@@ -197,6 +200,10 @@ public class RunImageConfiguration {
         return wait;
     }
 
+    public Integer getFetchLimit() {
+        return fetchLimit;
+    }
+
     public LogConfiguration getLogConfiguration() {
         return log;
     }
@@ -224,7 +231,7 @@ public class RunImageConfiguration {
     public List<String> getExtraHosts() {
         return extraHosts;
     }
-    
+
     public VolumeConfiguration getVolumeConfiguration() {
         return volumes;
     }
@@ -248,7 +255,7 @@ public class RunImageConfiguration {
     public NamingStrategy getNamingStrategy() {
         return namingStrategy == null ? NamingStrategy.none : namingStrategy;
     }
-    
+
     public Boolean getPrivileged() {
         return privileged;
     }
@@ -260,7 +267,7 @@ public class RunImageConfiguration {
     public boolean skip() {
         return skip;
     }
-    
+
     // ======================================================================================
 
     public static class Builder {
@@ -387,11 +394,15 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder fetchLimit(Integer fetchLimit) {
+            config.fetchLimit = fetchLimit;
+            return this;
+        }
+
         public Builder log(LogConfiguration log) {
             config.log = log;
             return this;
         }
-
 
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?

@@ -48,11 +48,10 @@ public interface DockerAccess {
     /**
      * List containers
      * 
-     * @param limit limit of containers to list
      * @return list of <code>Container<code> objects
      * @throws DockerAccessException if the containers could not be listed
      */
-    List<Container> listContainers(int limit) throws DockerAccessException;
+    List<Container> listContainers() throws DockerAccessException;
 
     /**
      * Starts a previously set up exec instance id.

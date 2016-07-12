@@ -24,7 +24,7 @@ public class DockerConnectionDetectorTest {
     public void testGetUrlFromEnvironment() throws MojoExecutionException, IOException {
         String dockerHost = System.getenv("DOCKER_HOST");
         if (dockerHost != null) {
-            Assert.assertEquals(dockerHost, machine.extractUrl(null));
+            Assert.assertEquals(dockerHost.replaceFirst("^tcp:/",""), machine.extractUrl(null).replaceFirst("^https?:/",""));
         } else {
             try {
                 Assert.assertEquals("unix:///var/run/docker.sock", machine.extractUrl(null));

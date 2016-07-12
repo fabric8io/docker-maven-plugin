@@ -53,7 +53,7 @@ public class ServiceHub {
         archiveService = new ArchiveService(dockerAssemblyManager, logger);
 
         if (dockerAccess != null) {
-            queryService = new QueryService(dockerAccess, logger);
+            queryService = new QueryService(dockerAccess);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
         } else {

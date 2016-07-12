@@ -40,8 +40,8 @@ Example:
 </image>
 ----
 
-Given this example configuration a single image configuration is build
-up from the following properties, which correspond to corresponding
+Given this example configuration a single image configuration is built
+up from the following properties, which correspond to the corresponding
 values in the `<build>` and `<run>` sections.
 
 .External properties

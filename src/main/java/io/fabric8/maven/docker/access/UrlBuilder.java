@@ -53,7 +53,7 @@ public final class UrlBuilder {
                 .p("follow", follow)
                 .build();
     }
-    
+
     public String createContainer(String name) {
         return u("containers/create")
                 .p("name", name)
@@ -70,11 +70,15 @@ public final class UrlBuilder {
         return u("containers/%s/json", containerId)
                 .build();
     }
-    
+
     public String listContainers(int limit) {
-        return u("containers/json")
-                .p("limit", limit)
-                .build();
+        Builder builder = u("containers/json");
+        if (limit == 0) {
+            builder.p("all", 1);
+        } else {
+            builder.p("limit", limit);
+        }
+        return builder.build();
     }
 
     public String pullImage(ImageName name, String registry) {
