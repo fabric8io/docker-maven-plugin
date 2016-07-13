@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 import io.fabric8.maven.docker.util.ImageName;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public final class UrlBuilder {
@@ -75,12 +76,22 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String listContainers(int limit) {
+    public String listContainers(int limit, String ... filter) {
         Builder builder = u("containers/json");
-        if (limit == 0) {
-            builder.p("all", 1);
-        } else {
+        if (limit != 0) {
             builder.p("limit", limit);
+        }
+        if (filter.length > 0) {
+            if (filter.length % 2 != 0) {
+                throw new IllegalArgumentException("Filters must be given as key value pairs and not " +Arrays.asList(filter));
+            }
+            JSONObject filters = new JSONObject();
+            for (int i = 0; i < filter.length; i +=2) {
+                JSONArray value = new JSONArray();
+                value.put(filter[i+1]);
+                filters.put(filter[i],value);
+            }
+            builder.p("filters",filters.toString());
         }
         return builder.build();
     }

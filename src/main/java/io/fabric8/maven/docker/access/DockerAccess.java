@@ -54,12 +54,14 @@ public interface DockerAccess {
     String getImageId(String name) throws DockerAccessException;
 
     /**
-     * List containers
-     * 
-     * @return list of <code>Container<code> objects
-     * @throws DockerAccessException if the containers could not be listed
+     * Get all containers which are build from an image. By default only the last containers are considered but this
+     * can be tuned with a global parameters.
+     *
+     * @param image for which its container are looked up
+     * @return list of <code>Container</code> objects
+     * @throws DockerAccessException if the request fails
      */
-    List<Container> listContainers() throws DockerAccessException;
+    List<Container> getContainersForImage(String image) throws DockerAccessException;
 
     /**
      * Starts a previously set up exec instance id.

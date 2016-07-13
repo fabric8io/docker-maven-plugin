@@ -98,14 +98,7 @@ public class QueryService {
      * @throws DockerAccessException if the request fails
      */
     public List<Container> getContainersForImage(final String image) throws DockerAccessException {
-        List<Container> list = docker.listContainers();
-        List<Container> ret = new ArrayList<>();
-        for (Container el : list) {
-            if (image.equals(el.getImage())) {
-                ret.add(el);
-            }
-        }
-        return ret;
+        return docker.getContainersForImage(image);
     }
 
     /**

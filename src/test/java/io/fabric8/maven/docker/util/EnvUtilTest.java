@@ -87,16 +87,21 @@ public class EnvUtilTest {
     }
 
     @Test
-    public void minimalVersion() {
-        String[] data = {
-            null, null, null,
-            "1.10", null, "1.10",
-            null, "1.10", "1.10",
-            "1.22", "1.10", "1.22",
-            "1.10", "1.25", "1.25"
+    public void versionChecks() {
+        Object[] data = {
+            null, null, null, false,
+            "1.10", null, "1.10", true,
+            null, "1.10", "1.10", false,
+            "1.22", "1.10", "1.22", true,
+            "1.10", "1.25", "1.25", false,
+            "1.23", "1.23", "1.23", true,
+            "1.23.1", "1.23", "1.23.1", true,
+            "1.25", "1.25.1", "1.25.1", false,
+            "1.23.1", "2.0", "2.0", false
         };
-        for (int i = 0; i < data.length; i+=3) {
-            assertEquals(data[i+2],EnvUtil.extractLargerVersion(data[i],data[i+1]));
+        for (int i = 0; i < data.length; i+=4) {
+            assertEquals(data[i+2],EnvUtil.extractLargerVersion((String) data[i],(String) data[i+1]));
+            assertEquals(data[i+3],EnvUtil.greaterOrEqualsVersion((String) data[i],(String) data[i+1]));
         }
     }
 

@@ -21,9 +21,7 @@ import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ContainersListElement;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.model.NetworksListElement;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
@@ -258,18 +256,28 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public List<Container> listContainers() throws DockerAccessException {
-        String url = urlBuilder.listContainers(fetchLimit);
+    public List<Container> getContainersForImage(String image) throws DockerAccessException {
+        String url;
+        String serverApiVersion = getServerApiVersion();
+        if (EnvUtil.greaterOrEqualsVersion(serverApiVersion, "1.23")) {
+            // For Docker >= 1.11 we can use a new filter when listing containers
+            url = urlBuilder.listContainers(0,"ancestor",image);
+        } else {
+            // For older versions (< Docker 1.11) we need to iterate over the containers.
+            url = urlBuilder.listContainers(fetchLimit);
+        }
 
         try {
             String response = delegate.get(url, HTTP_OK);
             JSONArray array = new JSONArray(response);
-            List<Container> containers = new ArrayList<>(array.length());
+            List<Container> containers = new ArrayList<>();
 
             for (int i = 0; i < array.length(); i++) {
-                containers.add(new ContainersListElement(array.getJSONObject(i)));
+                JSONObject element = array.getJSONObject(i);
+                if (image.equals(element.getString("Image"))) {
+                    containers.add(new ContainersListElement(element));
+                }
             }
-
             return containers;
         } catch (IOException e) {
             throw new DockerAccessException(e.getMessage());

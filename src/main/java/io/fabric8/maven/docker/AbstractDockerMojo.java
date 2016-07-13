@@ -281,9 +281,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 access.start();
                 setDockerHostAddressProperty(dockerUrl);
                 serverVersion = access.getServerApiVersion();
-                if (EnvUtil.extractLargerVersion(version,serverVersion).equals(version)) {
+                if (!EnvUtil.greaterOrEqualsVersion(serverVersion,version)) {
                     throw new MojoExecutionException(
-                        String.format("Server API version %s is smaller than request API version %s",serverVersion,version));
+                        String.format("Server API version %s is smaller than request API version %s", serverVersion, version));
                 }
             }
             catch (IOException e) {

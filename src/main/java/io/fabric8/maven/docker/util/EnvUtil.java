@@ -59,7 +59,7 @@ public class EnvUtil {
     /**
      * Compare to version strings and return the larger version strings. This is used in calculating
      * the minimal required API version for this plugin. Version strings must be comparable as floating numbers.
-     * (and parse via {@link Float#parseFloat(String)}.
+     * The versions must be given in the format in a semantic version foramt (e.g. "1.23"
      *
      * If either version is <code>null</code>, the other version is returned (which can be null as well)
      *
@@ -71,12 +71,32 @@ public class EnvUtil {
         if (versionB == null || versionA == null) {
             return versionA == null ? versionB : versionA;
         } else {
-            return
-                Float.parseFloat(versionA) > Float.parseFloat(versionB) ?
-                    versionA : versionB;
+            String partsA[] = versionA.split("\\.");
+            String partsB[] = versionB.split("\\.");
+            for (int i = 0; i < (partsA.length < partsB.length ? partsA.length : partsB.length); i++) {
+                int pA = Integer.parseInt(partsA[i]);
+                int pB = Integer.parseInt(partsB[i]);
+                if (pA > pB) {
+                    return versionA;
+                } else if (pB > pA) {
+                    return versionB;
+                }
+            }
+            return partsA.length > partsB.length ? versionA : versionB;
         }
     }
 
+    /**
+     * Check whether the first given API version is larger or equals the second given version
+     *
+     * @param versionA first version to check against
+     * @param versionB the second version
+     * @return true if versionA is greater or equals versionB, false otherwise
+     */
+    public static boolean greaterOrEqualsVersion(String versionA, String versionB) {
+        String largerVersion = extractLargerVersion(versionA, versionB);
+        return largerVersion != null && largerVersion.equals(versionA);
+    }
 
     /**
      * Splits every element in the given list on the last colon in the name and returns a list with
@@ -331,4 +351,6 @@ public class EnvUtil {
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
+
+
 }
