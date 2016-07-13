@@ -32,27 +32,26 @@ public class QueryService {
     /**
      * Get container by id
      *
-     * @param containerId id
-     * @return container
-     * @throws DockerAccessException if an error occurs or no container with this id exists
+     * @param containerIdOrName container id or name
+     * @return container found
+     * @throws DockerAccessException if an error occurs or no container with this id or name exists
      */
-    public Container getContainer(String containerId) throws DockerAccessException {
-        return docker.inspectContainer(containerId);
+    public Container getMandatoryContainer(String containerIdOrName) throws DockerAccessException {
+        Container container = getContainer(containerIdOrName);
+        if (container == null) {
+            throw new DockerAccessException("Cannot find container %s", containerIdOrName);
+        }
+        return container;
     }
 
     /**
      * Get a container running for a given container name.
-     * @param containerName name of container to lookup
+     * @param containerIdOrName name of container to lookup
      * @return the container found or <code>null</code> if no container is available.
      * @throws DockerAccessException in case of an remote error
      */
-    public Container getContainerByName(final String containerName) throws DockerAccessException {
-        for (Container el : docker.listContainers()) {
-            if (containerName.equals(el.getName())) {
-                return el;
-            }
-        }
-        return null;
+    public Container getContainer(final String containerIdOrName) throws DockerAccessException {
+        return docker.inspectContainer(containerIdOrName);
     }
 
     /**
@@ -87,7 +86,7 @@ public class QueryService {
      * @throws DockerAccessException if access to the docker daemon fails
      */
     public String getContainerName(String containerId) throws DockerAccessException {
-        return getContainer(containerId).getName();
+        return getMandatoryContainer(containerId).getName();
     }
 
     /**
@@ -153,7 +152,7 @@ public class QueryService {
      * @throws DockerAccessException
      */
     public boolean hasContainer(String containerName) throws DockerAccessException {
-        return getContainerByName(containerName) != null;
+        return getContainer(containerName) != null;
     }
 
     /**

@@ -96,6 +96,18 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
+    /** {@inheritDoc} */
+    public String getServerApiVersion() throws DockerAccessException {
+        try {
+            String url = urlBuilder.version();
+            String response = delegate.get(url, 200);
+            JSONObject info = new JSONObject(response);
+            return info.getString("ApiVersion");
+        } catch (Exception e) {
+            throw new DockerAccessException(e, "Cannot extract API version from server %s", urlBuilder.getBaseUrl());
+        }
+    }
+
     @Override
     public void startExecContainer(String containerId, LogOutputSpec outputSpec) throws DockerAccessException {
         try {
@@ -235,13 +247,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public Container inspectContainer(String containerId) throws DockerAccessException {
+    public Container inspectContainer(String containerIdOrName) throws DockerAccessException {
         try {
-            String url = urlBuilder.inspectContainer(containerId);
+            String url = urlBuilder.inspectContainer(containerIdOrName);
             String response = delegate.get(url, HTTP_OK);
             return new ContainerDetails(new JSONObject(response));
         } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerId);
+            throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
         }
     }
 

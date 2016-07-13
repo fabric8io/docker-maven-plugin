@@ -21,13 +21,21 @@ import io.fabric8.maven.docker.model.Network;
 public interface DockerAccess {
 
     /**
+     * Get the API version of the running server
+     *
+     * @return api version in the form "1.24"
+     * @throws DockerAccessException
+     */
+    String getServerApiVersion() throws DockerAccessException;
+
+    /**
      * Inspect a container
      * 
-     * @param containerId container id
-     * @return <code>ContainerDetails<code> representing the container
+     * @param containerIdOrName container id or name
+     * @return <code>ContainerDetails<code> representing the container or null if none could be found
      * @throws DockerAccessException if the container could not be inspected
      */
-    Container inspectContainer(String containerId) throws DockerAccessException;
+    Container inspectContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
      * Check whether the given name exists as image at the docker daemon

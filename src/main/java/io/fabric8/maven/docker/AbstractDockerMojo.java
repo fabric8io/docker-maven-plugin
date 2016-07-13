@@ -168,6 +168,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected Logger log;
 
+    // API version as requested from the client
+    private String serverVersion;
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
      * {@link #executeInternal(ServiceHub)}
@@ -277,6 +280,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                                                       log);
                 access.start();
                 setDockerHostAddressProperty(dockerUrl);
+                serverVersion = access.getServerApiVersion();
+                if (EnvUtil.extractLargerVersion(version,serverVersion).equals(version)) {
+                    throw new MojoExecutionException(
+                        String.format("Server API version %s is smaller than request API version %s",serverVersion,version));
+                }
             }
             catch (IOException e) {
                 throw new MojoExecutionException("Cannot create docker access object ", e);

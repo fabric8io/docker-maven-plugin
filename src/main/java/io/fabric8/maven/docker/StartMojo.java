@@ -186,7 +186,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         if (wait.getTcp() != null) {
             try {
-                Container container = hub.getDockerAccess().inspectContainer(containerId);
+                Container container = hub.getQueryService().getMandatoryContainer(containerId);
                 checkers.add(getTcpWaitChecker(container, imageConfig.getDescription(), projectProperties, wait.getTcp(), logOut));
             } catch (DockerAccessException e) {
                 throw new MojoExecutionException("Unable to access container.", e);
@@ -360,7 +360,7 @@ public class StartMojo extends AbstractDockerMojo {
     private void exposeContainerProps(QueryService queryService, String containerId, String alias)
         throws DockerAccessException {
         if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(alias)) {
-            Container container = queryService.getContainer(containerId);
+            Container container = queryService.getMandatoryContainer(containerId);
             Properties props = project.getProperties();
             String prefix = addDot(exposeContainerProps) + addDot(alias);
             props.put(prefix + "id", containerId);

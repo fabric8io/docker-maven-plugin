@@ -60,6 +60,10 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String version() {
+        return String.format("%s/version", baseUrl);
+    }
+
     public String deleteImage(String name, boolean force) {
         return u("images/%s", name)
                 .p("force", force)
@@ -146,6 +150,10 @@ public final class UrlBuilder {
     public String removeNetwork(String id) {
         return u("networks/%s", id)
                 .build();
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
     }
 
     // ============================================================================

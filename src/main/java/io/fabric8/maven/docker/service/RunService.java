@@ -315,7 +315,7 @@ public class RunService {
         }
     }
 
-    List<String> findContainerIdsForLinks(List<String> links, boolean leaveUnresolvedIfNotFound) throws DockerAccessException {
+    private List<String> findContainerIdsForLinks(List<String> links, boolean leaveUnresolvedIfNotFound) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitOnLastColon(links)) {
             String id = findContainerId(link[0], false);
@@ -331,7 +331,7 @@ public class RunService {
     }
 
     // visible for testing
-    List<String> findVolumesFromContainers(List<String> images) throws DockerAccessException {
+    private List<String> findVolumesFromContainers(List<String> images) throws DockerAccessException {
         List<String> list = new ArrayList<>();
         if (images != null) {
             for (String image : images) {
@@ -363,7 +363,7 @@ public class RunService {
 
         // check for external container. The image name is interpreted as a *container name* for that case ...
         if (id == null) {
-            Container container = queryService.getContainerByName(imageNameOrAlias);
+            Container container = queryService.getContainer(imageNameOrAlias);
             if (container != null && (checkAllContainers || container.isRunning())) {
                 id = container.getId();
             }
@@ -378,7 +378,7 @@ public class RunService {
     }
 
     private void updateMappedPortsAndAddresses(String containerId, PortMapping mappedPorts) throws DockerAccessException {
-        Container container = queryService.getContainer(containerId);
+        Container container = queryService.getMandatoryContainer(containerId);
         if (container.isRunning()) {
             mappedPorts.updateProperties(container.getPortBindings());
         } else {

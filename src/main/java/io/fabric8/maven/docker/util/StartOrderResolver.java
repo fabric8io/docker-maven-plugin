@@ -122,7 +122,7 @@ public class StartOrderResolver {
         for (String dependency : dependencies) {
             // make sure the container exists, it's state will be verified elsewhere
             if (processedImages.contains(dependency) ||
-                // Check also whether a *container* with this name exists in which case it is interpredted
+                // Check also whether a *container* with this name exists in which case it is interpreted
                 // as an external dependency which is already running
                 queryService.hasContainer(dependency)) {
                 continue;

@@ -85,7 +85,7 @@ public class StopMojo extends AbstractDockerMojo {
         List<Container> containers;
         RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
         if (strategy == RunImageConfiguration.NamingStrategy.alias) {
-            Container container = queryService.getContainerByName(image.getAlias());
+            Container container = queryService.getContainer(image.getAlias());
             if (container !=  null) {
                 containers = Collections.singletonList(container);
             } else {
