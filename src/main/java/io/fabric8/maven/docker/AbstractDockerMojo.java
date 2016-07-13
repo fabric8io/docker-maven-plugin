@@ -6,6 +6,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import com.google.common.collect.Sets;
+
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -46,6 +48,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
+
+    // Key for the previously used image cache
+    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
 
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
@@ -408,7 +413,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                                           boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = hub.getQueryService();
-        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
+        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, getPreviouslyPulledImageCache())) {
             return;
         }
 
@@ -423,6 +428,19 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             // full name with the registry to the short name with no-registry.
             docker.tag(imageName.getFullName(registry), image, false);
         }
+    }
+
+    private synchronized Set<String> getPreviouslyPulledImageCache() {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        Set<String> cache = (Set) session.getUserProperties().get(CONTEXT_KEY_PREVIOUSLY_PULLED);
+        if (cache == null) {
+            System.out.println("creating new context");
+
+            cache = Sets.newConcurrentHashSet();
+            session.getUserProperties().put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache);
+        }
+
+        return cache;
     }
 
     // Fetch only latest if no tag is given
