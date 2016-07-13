@@ -110,9 +110,6 @@ public class RunImageConfiguration {
     private WaitConfiguration wait;
 
     @Parameter
-    private Integer fetchLimit;
-
-    @Parameter
     private LogConfiguration log;
 
     @Parameter
@@ -198,10 +195,6 @@ public class RunImageConfiguration {
 
     public WaitConfiguration getWaitConfiguration() {
         return wait;
-    }
-
-    public Integer getFetchLimit() {
-        return fetchLimit;
     }
 
     public LogConfiguration getLogConfiguration() {
@@ -391,11 +384,6 @@ public class RunImageConfiguration {
 
         public Builder wait(WaitConfiguration wait) {
             config.wait = wait;
-            return this;
-        }
-
-        public Builder fetchLimit(Integer fetchLimit) {
-            config.fetchLimit = fetchLimit;
             return this;
         }
 

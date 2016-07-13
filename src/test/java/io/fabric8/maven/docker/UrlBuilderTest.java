@@ -34,15 +34,12 @@ public class UrlBuilderTest {
     public void listContainers() throws MalformedURLException, UnsupportedEncodingException {
         UrlBuilder builder = new UrlBuilder("","1.0");
 
-        assertEquals("/1.0/containers/json?limit=100",builder.listContainers(100));
-        assertEquals("/1.0/containers/json",builder.listContainers(0));
+        assertEquals("/1.0/containers/json",builder.listContainers());
         assertEquals("/1.0/containers/json?filters=" + URLEncoder.encode("{\"ancestor\":[\"nginx\"]}","UTF8"),
-                     builder.listContainers(0, "ancestor", "nginx"));
-        assertEquals("/1.0/containers/json?limit=10&filters=" + URLEncoder.encode("{\"ancestor\":[\"nginx\"]}","UTF8"),
-                     builder.listContainers(10, "ancestor", "nginx"));
+                     builder.listContainers("ancestor", "nginx"));
 
         try {
-            builder.listContainers(10,"ancestor");
+            builder.listContainers("ancestor");
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("pair"));

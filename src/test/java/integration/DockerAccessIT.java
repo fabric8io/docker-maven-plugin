@@ -87,7 +87,7 @@ public class DockerAccessIT {
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             String certPath = createDockerConnectionDetector(logger).getCertPath(null);
-            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, 100, logger);
+            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             logger.error(e.getMessage());

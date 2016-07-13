@@ -57,9 +57,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
     private final ApacheHttpClientDelegate delegate;
     private final UrlBuilder urlBuilder;
 
-    // limit how many containers to fetch
-    private final int fetchLimit;
-
     /**
      * Create a new access for the given URL
      *
@@ -67,7 +64,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
      * @param certPath used to build up a keystore with the given keys and certificates found in this
      *                 directory
      * @param maxConnections maximum parallel connections allowed to docker daemon (if a pool is used)
-     * @param fetchLimit how many containers to fetch with a list operation
      * @param log      a log handler for printing out logging information
      * @paran usePool  whether to use a connection bool or not
      */
@@ -75,11 +71,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
                                     String baseUrl,
                                     String certPath,
                                     int maxConnections,
-                                    int fetchLimit,
                                     Logger log)
             throws IOException {
         this.log = log;
-        this.fetchLimit = fetchLimit;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
             throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix://");
@@ -261,10 +255,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
         String serverApiVersion = getServerApiVersion();
         if (EnvUtil.greaterOrEqualsVersion(serverApiVersion, "1.23")) {
             // For Docker >= 1.11 we can use a new filter when listing containers
-            url = urlBuilder.listContainers(0,"ancestor",image);
+            url = urlBuilder.listContainers("ancestor",image);
         } else {
             // For older versions (< Docker 1.11) we need to iterate over the containers.
-            url = urlBuilder.listContainers(fetchLimit);
+            url = urlBuilder.listContainers();
         }
 
         try {

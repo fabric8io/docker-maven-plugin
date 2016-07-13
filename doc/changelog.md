@@ -2,7 +2,8 @@
 
 * **0.15-SNAPSHOT**
   - Dont do redirect when waiting on an HTTP port (#499)
-
+  - Removed the container fetch limit of 100 and optimized getting containers by name and image (#513)
+  
 * **0.15.9** (2016-06-28)
   - Fixed issue when target directory does not exist yet ([#497](https://github.com/fabric8io/docker-maven-plugin/issues/497))
   

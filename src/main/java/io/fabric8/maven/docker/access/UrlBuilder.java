@@ -76,11 +76,8 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String listContainers(int limit, String ... filter) {
+    public String listContainers(String ... filter) {
         Builder builder = u("containers/json");
-        if (limit != 0) {
-            builder.p("limit", limit);
-        }
         if (filter.length > 0) {
             if (filter.length % 2 != 0) {
                 throw new IllegalArgumentException("Filters must be given as key value pairs and not " +Arrays.asList(filter));

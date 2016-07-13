@@ -61,10 +61,6 @@ the URL is:
 . `unix:///var/run/docker.sock` if it is a readable socket.
 | `docker.host`
 
-| *fetchLimit*
-| Number of running and stopped containers to return. A value of 0 returns all running and stopped containers. Default is 100.
-| `docker.fetchLimit`
-
 | *image*
 | In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
 | `docker.image`
