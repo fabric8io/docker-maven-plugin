@@ -28,7 +28,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     private boolean skipTag;
 
     @Parameter(property = "docker.skip.build", defaultValue = "false")
-    private boolean skipBuild;
+    protected boolean skipBuild;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
@@ -49,19 +49,20 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     }
 
-    // We ignore an already existing date file and always return the current date
-    @Override
-    protected Date getReferenceDate() throws MojoExecutionException {
-        return new Date();
-    }
-
-    private void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
+    protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
         buildImage(hub, imageConfig);
         if (!skipTag) {
             tagImage(imageConfig.getName(), imageConfig, hub.getDockerAccess());
         }
     }
+
+    // We ignore an already existing date file and always return the current date
+    @Override
+    protected Date getReferenceDate() throws MojoExecutionException {
+        return new Date();
+    }
+
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
         throws DockerAccessException, MojoExecutionException {
