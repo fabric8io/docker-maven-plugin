@@ -2360,6 +2360,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </tbody>
 </table>
 <div class="listingblock">
+<div class="title">Volumes example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;volumes&gt;</span>
   <span class="tag">&lt;bind&gt;</span>
@@ -2373,12 +2374,13 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In this example the container creates a new volume named  <code>/logs</code> on the container and mounts <code>/opt/host_export</code> from the host as <code>/opt/container_import</code> on the container. In addition all exported volumes from the container which has been created from the image <code>jolokia/docker-demo</code> are mounted directly into the container (with the same name as the exporting container exposes these directories). The image must be also configured for this plugin. Instead of the full image name, an alias name like <em>service</em> can be used, too.</p>
+<p>In this example the container creates a new volume named  <code>/logs</code> on the container and mounts <code>/opt/host_export</code> from the host as <code>/opt/container_import</code> on the container. In addition all exported volumes from the container which has been created from the image <code>jolokia/docker-demo</code> are mounted directly into the container (with the same directory names under which the exporting container exposes these directories). This image must be also configured for this plugin. Instead of the full image name, an alias name can be used, too.</p>
 </div>
 <div class="paragraph">
 <p>Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This should even work for boot2docker and docker-machine:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example with absolute paths</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;volumes&gt;</span>
   <span class="tag">&lt;bind&gt;</span>
@@ -3790,7 +3792,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-19 09:10:45 UTC
+Last updated 2016-07-19 17:14:14 UTC
 </div>
 </div>
 </body>
