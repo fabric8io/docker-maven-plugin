@@ -28,6 +28,9 @@ public class PushMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.skip.push", defaultValue = "false")
     private boolean skipPush;
 
+    @Parameter(property = "docker.push.retries", defaultValue = "0")
+    private int retryCount;
+
     /**
      * {@inheritDoc}
      */
@@ -46,12 +49,12 @@ public class PushMojo extends AbstractDockerMojo {
                 DockerAccess docker = hub.getDockerAccess();
 
                 long start = System.currentTimeMillis();
-                docker.pushImage(name, authConfig, configuredRegistry);
+                docker.pushImage(name, authConfig, configuredRegistry, retryCount);
                 log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {
-                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry);
+                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retryCount);
                     }
                 }
             }
