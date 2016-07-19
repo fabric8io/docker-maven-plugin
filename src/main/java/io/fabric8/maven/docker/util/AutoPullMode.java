@@ -45,7 +45,6 @@ public enum AutoPullMode {
 
     public boolean alwaysPull() {
         return (this == ONCE || this == ALWAYS);
-
     }
 
     static public AutoPullMode fromString(String val) {

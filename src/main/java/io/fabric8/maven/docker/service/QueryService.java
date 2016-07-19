@@ -177,7 +177,8 @@ public class QueryService {
      * @param mode the auto pull mode coming from the configuration
      * @param imageName name of the image to check
      * @param always whether to a alwaysPull mode would be active or is always ignored
-     * @return
+     * @return true if the image needs to be pulled, false otherwise
+     *
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
@@ -208,8 +209,6 @@ public class QueryService {
         if (autoPullMode == AutoPullMode.ONCE && previouslyPulled.contains(imageName)) {
             return false;
         }
-
-        previouslyPulled.add(imageName);
 
         return pullIfNotPresent(autoPullMode, imageName) || alwaysPull(autoPullMode, always);
     }

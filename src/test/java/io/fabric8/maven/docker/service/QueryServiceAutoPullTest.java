@@ -107,9 +107,15 @@ public class QueryServiceAutoPullTest {
         whenCheckIfImageRequiredAutoPull();
         thenImageRequiresPull();
 
+        givenPreviousPullHappened();
+
         givenAnImageExists();
         whenCheckIfImageRequiredAutoPull();
         thenImageDoesNotRequirePull();
+    }
+
+    private void givenPreviousPullHappened() {
+        previousImages.add(imageName);
     }
 
     private void givenAnImageDoesNotExist() throws DockerAccessException {

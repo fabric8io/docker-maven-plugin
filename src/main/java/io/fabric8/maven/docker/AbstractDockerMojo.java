@@ -413,7 +413,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                                           boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = hub.getQueryService();
-        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, getPreviouslyPulledImageCache())) {
+        Set<String> previouslyPulledCache = getPreviouslyPulledImageCache();
+        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, previouslyPulledCache)) {
             return;
         }
 
@@ -422,6 +423,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         long time = System.currentTimeMillis();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
+        previouslyPulledCache.add(image);
 
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
@@ -434,8 +436,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         @SuppressWarnings({ "rawtypes", "unchecked" })
         Set<String> cache = (Set) session.getUserProperties().get(CONTEXT_KEY_PREVIOUSLY_PULLED);
         if (cache == null) {
-            System.out.println("creating new context");
-
             cache = Sets.newConcurrentHashSet();
             session.getUserProperties().put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache);
         }
