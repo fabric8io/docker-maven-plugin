@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.service;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -292,6 +292,7 @@ public class RunService {
 
         addVolumeConfig(config, runConfig);
         addNetworkingConfig(config, runConfig);
+        addUlimitConfig(config, runConfig);
 
         return config;
     }
@@ -312,6 +313,13 @@ public class RunService {
         if (volConfig != null) {
             config.binds(volConfig.getBind())
                   .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
+        }
+    }
+
+    private void addUlimitConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
+        List<ULimitConfig> ulimitsConfig = runConfig.getUlimits();
+        if (ulimitsConfig != null) {
+            config.ulimits(ulimitsConfig);
         }
     }
 
@@ -420,7 +428,7 @@ public class RunService {
             // Remove the container
             access.removeContainer(containerId, removeVolumes);
         }
-        
+
         log.info("%s: Stop%s container %s",
                  descriptor.getDescription(),
                  (keepContainer ? "" : " and remove"),

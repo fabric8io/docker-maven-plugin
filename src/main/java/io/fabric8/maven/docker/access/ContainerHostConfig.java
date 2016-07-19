@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.ULimitConfig;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -85,6 +86,20 @@ public class ContainerHostConfig {
         return addAsArray("VolumesFrom", volumesFrom);
     }
 
+    public ContainerHostConfig ulimits(List<ULimitConfig> ulimitsConfig) {
+    	JSONArray ulimits = new JSONArray();
+    	for(ULimitConfig ulimit:ulimitsConfig){
+    		JSONObject ulimitConfigJson = new JSONObject();
+    		ulimitConfigJson.put("Name", ulimit.getName());
+    		ulimitConfigJson.put("Hard", ulimit.getHard());
+    		ulimitConfigJson.put("Soft", ulimit.getSoft());    		
+    		ulimits.put(ulimitConfigJson);
+    	}
+    	
+        startConfig.put("Ulimits", ulimits);
+        return this;
+    }
+    
     public ContainerHostConfig links(List<String> links) {
         return addAsArray("Links", links);
     }

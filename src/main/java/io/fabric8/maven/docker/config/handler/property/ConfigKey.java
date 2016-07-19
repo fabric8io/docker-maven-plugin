@@ -79,6 +79,7 @@ public enum ConfigKey {
     SKIP_BUILD("skip.build"),
     SKIP_RUN("skip.run"),
     TAGS,
+    ULIMITS,
     USER,
     VOLUMES,
     VOLUMES_FROM,
