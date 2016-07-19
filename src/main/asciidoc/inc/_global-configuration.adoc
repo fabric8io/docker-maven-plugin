@@ -42,7 +42,6 @@ a| Decide how to pull missing base images or images to start:
  * `always` : Pull images always even when they are already exist locally
  * `once` : For multi-module builds images are only checked once and pulled for the whole build.
 
- to `once` so the image is only checkedn and pulled once for the entire build.
 | `docker.autoPull`
 
 | *certPath*
