@@ -1,7 +1,7 @@
 # ChangeLog
 
-* **0.15-SNAPSHOT**
-  - Dont do redirect when waiting on an HTTP port (#499)
+* **0.15.10** (2016-07-19)
+  - Don't do redirect when waiting on an HTTP port (#499)
   - Removed the container fetch limit of 100 and optimized getting containers by name and image (#513)
   
 * **0.15.9** (2016-06-28)
