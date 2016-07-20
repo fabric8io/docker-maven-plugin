@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-07-19</span>
+<span id="revdate">2016-07-20</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -948,10 +948,25 @@ be specified by the certPath or machine configuration, or by the
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoPull</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">By default external images (base image for building or images to
-start) are downloaded automatically if they don&#8217;t exist locally.
-With this options this can be switched off by setting this value to <code>off</code>. Checking for a newer version of an image and downloading it if it
-exists can be forced by setting this value to <code>always</code>. This will force an image to be always pulled. This is true for any base image during build and for any image during run which has no <code>&lt;build&gt;</code> section. Valid values are <code>on</code>, <code>off</code> or <code>always</code>.</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Decide how to pull missing base images or images to start:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>on</code> : Automatic download any missing images (default)</p>
+</li>
+<li>
+<p><code>off</code> : Automatic pulling is switched off</p>
+</li>
+<li>
+<p><code>always</code> : Pull images always even when they are already exist locally</p>
+</li>
+<li>
+<p><code>once</code> : For multi-module builds images are only checked once and pulled for the whole build.</p>
+</li>
+</ul>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.autoPull</code></p></td>
 </tr>
 <tr>
@@ -1063,6 +1078,11 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>sourceDirectory</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default directory that contains the assembly descriptor(s) used by the plugin. The default value is <code>src/main/docker</code>. This option is only relevant for the <code>docker:build</code> goal.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.source.dir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is <code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.verbose</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1316,6 +1336,16 @@ to start a container for your application you typically have to build
 its image before. <code>docker:start</code> does <strong>not</strong> imply building the image
 so you should use it then in combination with <code>docker:build</code>.</p>
 </div>
+<div class="paragraph">
+<p>All goals fork the lifecycle phase to call the lifecycle up to the <strong>initialize</strong> phase. This means you can bind other plugins to the phases <strong>initialize</strong> or <strong>validate</strong> for customization. By default no action is bound to these phases. See <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a> for more details about phases and lifecycles.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>Note however that when you bind the goals about to lifecycle phases this will result in the <strong>initialize</strong> and <strong>validate</strong> phase called twice. You plugins should handle that.</p>
+</div>
+</div>
+</div>
 <div class="sect2">
 <h3 id="docker:build">5.1. <strong>docker:build</strong></h3>
 <div class="paragraph">
@@ -1478,6 +1508,28 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ulimits</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>ulimits for the container. This list contains <code>&lt;ulimit&gt;</code> elements which three sub elements:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;name&gt;</code> : The ulimit to set (e.g. <code>memlock</code>). Please refer to the Docker documentation for the possible values to set</p>
+</li>
+<li>
+<p><code>&lt;hard&gt;</code> : The hard limit</p>
+</li>
+<li>
+<p><code>&lt;soft&gt;</code> : The soft limit</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See below for an example.</p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User to which the Dockerfile should switch to the end (corresponds to the <code>USER</code> Dockerfile directive).</p></td>
 </tr>
@@ -1511,6 +1563,13 @@ remote API.</p>
   <span class="tag">&lt;ports&gt;</span>
     <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;/ports&gt;</span>
+  <span class="tag">&lt;ulimits&gt;</span>
+    <span class="tag">&lt;ulimit&gt;</span>
+       <span class="tag">&lt;name&gt;</span>memlock<span class="tag">&lt;/name&gt;</span>
+       <span class="tag">&lt;hard&gt;</span>-1<span class="tag">&lt;/hard&gt;</span>
+       <span class="tag">&lt;soft&gt;</span>-1<span class="tag">&lt;/soft&gt;</span>
+    <span class="tag">&lt;/ulimit&gt;</span>
+  <span class="tag">&lt;ulimits&gt;</span>
   <span class="tag">&lt;volumes&gt;</span>
     <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/volumes&gt;</span>
@@ -1531,6 +1590,9 @@ remote API.</p>
   <span class="tag">&lt;/assembly&gt;</span>
 <span class="tag">&lt;/build&gt;</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>In order to see the individual build steps you can switch on <code>verbose</code> mode either by setting the property <code>docker.verbose</code> or by using <code>&lt;verbose&gt;true&lt;/verbose&gt;</code> in the &lt;global-configuration,Global configuration&gt;&gt;</p>
 </div>
 </div>
 <div class="sect3">
@@ -2700,8 +2762,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <h3 id="docker:push">5.4. <strong>docker:push</strong></h3>
 <div class="paragraph">
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
-the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code>
-with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
+the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 18. Push options</caption>
@@ -2728,6 +2789,11 @@ with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <
 <td class="tableblock halign-left valign-top"><p class="tableblock">The registry to use when pushing the image. <a href="#registry">Registry Handling</a> for
 more details.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.registry</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>retries</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How often should a push be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.push.retries</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3318,6 +3384,10 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of tags to apply to a built image</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.ulimits.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ulimits for the container. Ulimit is specified with a soft and hard limit <code>&lt;type&gt;=&lt;soft limit&gt;[:&lt;hard limit&gt;]</code>. For example <code>docker.ulimits.1=memlock=-1:-1</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User to switch to at the end of a Dockerfile. Not to confuse with <code>docker.username</code> which is used for authentication when interacting with a Docker registry.</p></td>
 </tr>
@@ -3792,7 +3862,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-19 17:14:14 UTC
+Last updated 2016-07-20 12:35:58 UTC
 </div>
 </div>
 </body>
