@@ -18,6 +18,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -37,6 +38,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
  *
  */
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class StopMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.keepRunning", defaultValue = "false")
@@ -52,7 +54,7 @@ public class StopMojo extends AbstractDockerMojo {
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
-        
+
         PomLabel pomLabel = getPomLabel();
 
         if (!keepRunning) {

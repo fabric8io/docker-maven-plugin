@@ -9,6 +9,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -22,6 +23,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
  * @since 28.07.14
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class BuildMojo extends AbstractBuildSupportMojo {
 
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
