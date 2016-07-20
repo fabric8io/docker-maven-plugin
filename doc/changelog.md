@@ -1,13 +1,14 @@
 # ChangeLog
 
-* **0.15-SNAPSHOT** 
+* **0.15-SNAPSHOT**
   - Allow images to only be pulled once per build (useful for reactor projects) ([#504](https://github.com/fabric8io/docker-maven-plugin/issues/504))
+  - Allow retry of pushing a docker image in case of a 500 error ([#508](https://github.com/fabric8io/docker-maven-plugin/issues/508))
   - Add "ulimits" to run-configuration (#484)
-  
+
 * **0.15.10** (2016-07-19)
   - Don't do redirect when waiting on an HTTP port ([#499](https://github.com/fabric8io/docker-maven-plugin/issues/499))
   - Removed the container fetch limit of 100 and optimized getting containers by name and image ([#513](https://github.com/fabric8io/docker-maven-plugin/issues/513))
-  
+
 * **0.15.9** (2016-06-28)
   - Fixed issue when target directory does not exist yet ([#497](https://github.com/fabric8io/docker-maven-plugin/issues/497))
 
