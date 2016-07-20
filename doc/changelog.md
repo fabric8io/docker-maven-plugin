@@ -1,10 +1,10 @@
 # ChangeLog
 
-* **0.15-SNAPSHOT**
-  - Invoke the `initialize` phase before docker goals (#315)
+* **0.15.11** (2016-07-20)
+  - Invoke the `initialize` phase before docker goals ([#315](https://github.com/fabric8io/docker-maven-plugin/issues/315))
   - Allow images to only be pulled once per build (useful for reactor projects) ([#504](https://github.com/fabric8io/docker-maven-plugin/issues/504))
   - Allow retry of pushing a docker image in case of a 500 error ([#508](https://github.com/fabric8io/docker-maven-plugin/issues/508))
-  - Add "ulimits" to run-configuration (#484)
+  - Add "ulimits" to run-configuration ([#484](https://github.com/fabric8io/docker-maven-plugin/issues/484))
 
 * **0.15.10** (2016-07-19)
   - Don't do redirect when waiting on an HTTP port ([#499](https://github.com/fabric8io/docker-maven-plugin/issues/499))

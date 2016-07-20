@@ -3,7 +3,6 @@
 
 ## Preparation
 
-* Increase version number in doc/manual/installation.md example
 * Increase version numbers in the poms below samples/ (they are not automatically updated)
 
 ```
