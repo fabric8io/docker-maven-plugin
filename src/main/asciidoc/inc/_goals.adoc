@@ -41,5 +41,5 @@ so you should use it then in combination with `{plugin}:build`.
 All goals fork the lifecycle phase to call the lifecycle up to the *initialize* phase. This means you can bind other plugins to the phases *initialize* or *validate* for customization. By default no action is bound to these phases. See https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html[Introduction to the Build Lifecycle] for more details about phases and lifecycles.
 
 ****
-Note however that when you bind the goals about to lifecycle phases this will result in the *initialize* and *validate* phase called twice. You plugins should handle that.
+Note however that when you bind the goals about to lifecycle phases this will result in the *initialize* and *validate* phase called twice. Your bound plugins should be able to handle this.
 ****
