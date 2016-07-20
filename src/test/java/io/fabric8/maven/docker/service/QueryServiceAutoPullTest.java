@@ -7,7 +7,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.fabric8.maven.docker.util.ImagePullCache;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,13 +38,13 @@ public class QueryServiceAutoPullTest {
     @Mocked
     private Logger logger;
 
-    private Set<String> previousImages;
+    private ImagePullCache previousImages;
 
     private QueryService queryService;
 
     @Before
     public void setup() {
-        previousImages = new HashSet<>();
+        previousImages = new ImagePullCache();
         queryService = new QueryService(docker);
     }
 

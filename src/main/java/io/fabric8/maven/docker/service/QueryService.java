@@ -10,7 +10,9 @@ import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.util.AutoPullMode;
+import io.fabric8.maven.docker.util.ImagePullCache;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.json.JSONObject;
 
 /**
  * Query service for getting image and container information from the docker dameon
@@ -177,12 +179,14 @@ public class QueryService {
      * @param mode the auto pull mode coming from the configuration
      * @param imageName name of the image to check
      * @param always whether to a alwaysPull mode would be active or is always ignored
+     * @param previouslyPulled cache holding all previously pulled images
      * @return true if the image needs to be pulled, false otherwise
      *
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public boolean imageRequiresAutoPull(String mode, String imageName, boolean always, Set<String> previouslyPulled)
+    public boolean imageRequiresAutoPull(String mode, String imageName, boolean always, ImagePullCache
+        previouslyPulled)
         throws DockerAccessException, MojoExecutionException {
 
         // The logic here is like this (see also #96):
@@ -203,10 +207,10 @@ public class QueryService {
                         imageName, imageName, imageName));
     }
 
-    private boolean imageRequiresPull(AutoPullMode autoPullMode, String imageName, boolean always, Set<String> previouslyPulled)
+    private boolean imageRequiresPull(AutoPullMode autoPullMode, String imageName, boolean always, ImagePullCache previouslyPulled)
             throws DockerAccessException {
 
-        if (autoPullMode == AutoPullMode.ONCE && previouslyPulled.contains(imageName)) {
+        if (autoPullMode == AutoPullMode.ONCE && previouslyPulled.has(imageName)) {
             return false;
         }
 
