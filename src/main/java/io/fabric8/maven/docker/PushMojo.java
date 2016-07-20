@@ -7,6 +7,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -19,6 +20,7 @@ import io.fabric8.maven.docker.service.ServiceHub;
  * @author roland
  */
 @Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class PushMojo extends AbstractDockerMojo {
 
     // Registry to use for push operations if no registry is specified
@@ -27,6 +29,9 @@ public class PushMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.skip.push", defaultValue = "false")
     private boolean skipPush;
+
+    @Parameter(property = "docker.push.retries", defaultValue = "0")
+    private int retries;
 
     /**
      * {@inheritDoc}
@@ -46,12 +51,12 @@ public class PushMojo extends AbstractDockerMojo {
                 DockerAccess docker = hub.getDockerAccess();
 
                 long start = System.currentTimeMillis();
-                docker.pushImage(name, authConfig, configuredRegistry);
+                docker.pushImage(name, authConfig, configuredRegistry, retries);
                 log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {
-                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry);
+                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
                     }
                 }
             }

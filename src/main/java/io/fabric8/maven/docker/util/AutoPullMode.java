@@ -1,5 +1,6 @@
-package io.fabric8.maven.docker.util;/*
- * 
+package io.fabric8.maven.docker.util;
+/*-
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,20 +26,25 @@ import java.util.*;
  */
 public enum AutoPullMode {
 
-    ON(true,"on","true"),
-    OFF(false, "off","false"),
-    ALWAYS(true,"always");
+    ON(true, "on", "true"),
+    ONCE(true, "once"),
+    OFF(false, "off", "false"),
+    ALWAYS(true, "always");
 
     private Set<String> values = new HashSet<>();
     private boolean doPullIfNotPresent;
 
-    AutoPullMode(boolean doPullIfNotPresent, String ... vals) {
+    AutoPullMode(boolean doPullIfNotPresent, String... vals) {
         this.doPullIfNotPresent = doPullIfNotPresent;
         Collections.addAll(values, vals);
     }
 
     public boolean doPullIfNotPresent() {
         return doPullIfNotPresent;
+    }
+
+    public boolean alwaysPull() {
+        return (this == ONCE || this == ALWAYS);
     }
 
     static public AutoPullMode fromString(String val) {
@@ -48,6 +54,6 @@ public enum AutoPullMode {
                 return mode;
             }
         }
-        throw new IllegalArgumentException("Invalid auto-pull mode " + val + ". Please use 'on', 'off' or 'always'.");
+        throw new IllegalArgumentException("Invalid auto-pull mode " + val + ". Please use 'on', 'off', 'once' or 'always'.");
     }
 }

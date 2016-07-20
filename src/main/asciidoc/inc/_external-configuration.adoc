@@ -188,6 +188,9 @@ values in the `<build>` and `<run>` sections.
 | *docker.tags.idx*
 | defines a list of tags to apply to a built image
 
+| *docker.ulimits.idx*
+| Ulimits for the container. Ulimit is specified with a soft and hard limit `<type>=<soft limit>[:<hard limit>]`. For example `docker.ulimits.1=memlock=-1:-1`
+
 | *docker.user*
 | User to switch to at the end of a Dockerfile. Not to confuse with `docker.username` which is used for authentication when interacting with a Docker registry.
 

@@ -24,6 +24,7 @@ import io.fabric8.maven.docker.model.NetworksListElement;
 import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import io.fabric8.maven.docker.access.hc.http.HttpClientBuilder;
 import org.json.JSONArray;
@@ -79,16 +80,16 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix://");
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
-            this.delegate =
-                    new ApacheHttpClientDelegate(new UnixSocketClientBuilder(uri.getPath(), maxConnections));
+            this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
         } else {
-            this.delegate = new ApacheHttpClientDelegate(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
+            this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getServerApiVersion() throws DockerAccessException {
         try {
             String url = urlBuilder.version();
@@ -333,14 +334,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void pushImage(String image, AuthConfig authConfig, String registry)
+    public void pushImage(String image, AuthConfig authConfig, String registry, int retries)
             throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
         String temporaryImage = tagTemporaryImage(name, registry);
         try {
-            delegate.post(pushUrl, null, createAuthHeader(authConfig),
-                    createPullOrPushResponseHandler(), HTTP_OK);
+            doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         } finally {
@@ -444,6 +444,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void shutdown() {
     }
 
+    ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
+        return new ApacheHttpClientDelegate(builder);
+    }
+
     // visible for testing?
     private HcChunkedResponseHandlerWrapper createBuildResponseHandler() {
         return new HcChunkedResponseHandlerWrapper(new BuildJsonResponseHandler(log));
@@ -459,6 +463,28 @@ public class DockerAccessWithHcClient implements DockerAccess {
             authConfig = AuthConfig.EMPTY_AUTH_CONFIG;
         }
         return Collections.singletonMap("X-Registry-Auth", authConfig.toHeaderValue());
+    }
+
+    private boolean isRetryableErrorCode(int errorCode) {
+        // there eventually could be more then one of this
+        return errorCode == HTTP_INTERNAL_ERROR;
+    }
+
+    private void doPushImage(String url, Map<String, String> header, HcChunkedResponseHandlerWrapper handler, int status,
+                             int retries) throws IOException {
+        // 0: The original attemp, 1..retry: possible retries.
+        for (int i = 0; i <= retries; i++) {
+            try {
+                delegate.post(url, null, header, handler, HTTP_OK);
+                return;
+            } catch (HttpResponseException e) {
+                if (isRetryableErrorCode(e.getStatusCode()) && i != retries) {
+                    log.warn("failed to push image to [{}], retrying...", url);
+                } else {
+                    throw e;
+                }
+            }
+        }
     }
 
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {

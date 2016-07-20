@@ -6,6 +6,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import com.google.common.collect.Sets;
+
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -29,6 +31,7 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import org.json.JSONObject;
 
 /**
  * Base class for this plugin.
@@ -46,6 +49,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
+
+    // Key for the previously used image cache
+    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
 
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
@@ -408,7 +414,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                                           boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = hub.getQueryService();
-        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
+        ImagePullCache previouslyPulledCache = getPreviouslyPulledImageCache();
+        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, previouslyPulledCache)) {
             return;
         }
 
@@ -417,12 +424,30 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         long time = System.currentTimeMillis();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
+        updatePreviousPulledImageCache(image);
 
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
             // full name with the registry to the short name with no-registry.
             docker.tag(imageName.getFullName(registry), image, false);
         }
+    }
+
+    private void updatePreviousPulledImageCache(String image) {
+        ImagePullCache cache = getPreviouslyPulledImageCache();
+        cache.add(image);
+        session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+    }
+
+    private synchronized ImagePullCache getPreviouslyPulledImageCache() {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+            Properties userProperties = session.getUserProperties();
+        String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
+        ImagePullCache cache = new ImagePullCache(pullCacheJson);
+        if (pullCacheJson == null) {
+            userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+        }
+        return cache;
     }
 
     // Fetch only latest if no tag is given

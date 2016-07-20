@@ -62,6 +62,15 @@ described in <<build-buildargs,Build Args>>
 | *tags*
 | List of additional `tag` elements with which an image is to be tagged after the build.
 
+| *ulimits*
+a| ulimits for the container. This list contains `<ulimit>` elements which three sub elements:
+
+* `<name>` : The ulimit to set (e.g. `memlock`). Please refer to the Docker documentation for the possible values to set
+* `<hard>` : The hard limit
+* `<soft>` : The soft limit
+
+See below for an example.
+
 | *user*
 | User to which the Dockerfile should switch to the end (corresponds to the `USER` Dockerfile directive).
 
@@ -90,6 +99,13 @@ Here's an example:
   <ports>
     <port>8080</port>
   </ports>
+  <ulimits>
+    <ulimit>
+       <name>memlock</name>
+       <hard>-1</hard>
+       <soft>-1</soft>
+    </ulimit>
+  <ulimits>
   <volumes>
     <volume>/path/to/expose</volume>
   </volumes>
@@ -111,3 +127,4 @@ Here's an example:
 </build>
 ----
 
+In order to see the individual build steps you can switch on `verbose` mode either by setting the property `docker.verbose` or by using `<verbose>true</verbose>` in the <global-configuration,Global configuration>>

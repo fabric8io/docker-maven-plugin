@@ -59,7 +59,7 @@ public class RunServiceTest {
          * this is really two tests in one
          *  - verify the start dockerRunner calls all the methods to build the container configs
          *  - the container configs produce the correct json when all options are specified
-         *  
+         *
          * it didn't seem worth the effort to build a separate test to verify the json and then mock/verify all the calls here
          */
 
@@ -73,7 +73,7 @@ public class RunServiceTest {
         givenARunConfiguration();
         givenAnImageConfiguration("redis3", "db1", "redisContainer1");
         givenAnImageConfiguration("redis3", "db2", "redisContainer2");
-        
+
         givenAnImageConfiguration("parent", "parentName", "parentContainer");
         givenAnImageConfiguration("otherName", "other:ro", "otherContainer");
 
@@ -254,6 +254,7 @@ public class RunServiceTest {
                         .cmd("date")
                         .entrypoint("entrypoint")
                         .extraHosts(extraHosts())
+                        .ulimits(ulimits())
                         .workingDir("/foo")
                         .ports(ports())
                         .links(links())
@@ -309,6 +310,9 @@ public class RunServiceTest {
         env.put("foo", "bar");
 
         return env;
+    }
+    private List<UlimitConfig> ulimits(){
+        return Collections.singletonList(new UlimitConfig("memlock=1024:2048"));
     }
 
     private List<String> extraHosts() {

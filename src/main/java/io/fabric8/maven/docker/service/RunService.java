@@ -1,5 +1,7 @@
-package io.fabric8.maven.docker.service;/*
- * 
+package io.fabric8.maven.docker.service;
+
+/*
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -288,7 +290,8 @@ public class RunService {
                 .memory(runConfig.getMemory())
                 .memorySwap(runConfig.getMemorySwap())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
-                .logConfig(runConfig.getLogConfiguration());
+                .logConfig(runConfig.getLogConfiguration())
+                .ulimits(runConfig.getUlimits());
 
         addVolumeConfig(config, runConfig);
         addNetworkingConfig(config, runConfig);
@@ -420,7 +423,7 @@ public class RunService {
             // Remove the container
             access.removeContainer(containerId, removeVolumes);
         }
-        
+
         log.info("%s: Stop%s container %s",
                  descriptor.getDescription(),
                  (keepContainer ? "" : " and remove"),

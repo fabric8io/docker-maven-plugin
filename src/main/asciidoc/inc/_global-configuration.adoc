@@ -35,10 +35,13 @@ be specified by the certPath or machine configuration, or by the
 | `docker.autoCreate` `CustomNetworks`
 
 | *autoPull*
-| By default external images (base image for building or images to
-start) are downloaded automatically if they don't exist locally.
-With this options this can be switched off by setting this value to `off`. Checking for a newer version of an image and downloading it if it
-exists can be forced by setting this value to `always`. This will force an image to be always pulled. This is true for any base image during build and for any image during run which has no `<build>` section. Valid values are `on`, `off` or `always`.
+a| Decide how to pull missing base images or images to start:
+
+ * `on` : Automatic download any missing images (default)
+ * `off` : Automatic pulling is switched off
+ * `always` : Pull images always even when they are already exist locally
+ * `once` : For multi-module builds images are only checked once and pulled for the whole build.
+
 | `docker.autoPull`
 
 | *certPath*
@@ -120,6 +123,10 @@ the URL is:
 | *sourceDirectory*
 | Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `{plugin}:build` goal.
 | `docker.source.dir`
+
+| *verbose*
+| Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
+| `docker.verbose`
 |===
 
 Example:

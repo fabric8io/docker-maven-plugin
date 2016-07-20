@@ -24,13 +24,13 @@ public interface DockerAccess {
      * Get the API version of the running server
      *
      * @return api version in the form "1.24"
-     * @throws DockerAccessException
+     * @throws DockerAccessException if the api version could not be obtained
      */
     String getServerApiVersion() throws DockerAccessException;
 
     /**
      * Inspect a container
-     * 
+     *
      * @param containerIdOrName container id or name
      * @return <code>ContainerDetails<code> representing the container or null if none could be found
      * @throws DockerAccessException if the container could not be inspected
@@ -117,7 +117,7 @@ public interface DockerAccess {
      * @param containerId container to copy into
      * @param archive local archive to copy into
      * @param targetPath target path to use
-     * @throws DockerAccessException
+     * @throws DockerAccessException if the archive could not be copied
      */
     void copyArchive(String containerId, File archive, String targetPath)
             throws DockerAccessException;
@@ -169,9 +169,10 @@ public interface DockerAccess {
      * @param image image name to push
      * @param authConfig authentication configuration
      * @param registry optional registry to which the image should be pushed.
+     * @param retries optional number of times the push should be retried on a 500 error
      * @throws DockerAccessException in case pushing fails
      */
-    void pushImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
+    void pushImage(String image, AuthConfig authConfig, String registry, int retries) throws DockerAccessException;
 
     /**
      * Create an docker image from a given archive
