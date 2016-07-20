@@ -123,6 +123,10 @@ the URL is:
 | *sourceDirectory*
 | Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `{plugin}:build` goal.
 | `docker.source.dir`
+
+| *verbose*
+| Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
+| `docker.verbose`
 |===
 
 Example:

@@ -127,3 +127,4 @@ Here's an example:
 </build>
 ----
 
+In order to see the individual build steps you can switch on `verbose` mode either by setting the property `docker.verbose` or by using `<verbose>true</verbose>` in the <global-configuration,Global configuration>>
