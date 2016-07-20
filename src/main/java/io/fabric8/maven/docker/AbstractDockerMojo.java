@@ -31,6 +31,7 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import org.json.JSONObject;
 
 /**
  * Base class for this plugin.
@@ -413,7 +414,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                                           boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = hub.getQueryService();
-        Set<String> previouslyPulledCache = getPreviouslyPulledImageCache();
+        ImagePullCache previouslyPulledCache = getPreviouslyPulledImageCache();
         if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, previouslyPulledCache)) {
             return;
         }
@@ -423,7 +424,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         long time = System.currentTimeMillis();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
-        previouslyPulledCache.add(image);
+        updatePreviousPulledImageCache(image);
 
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
@@ -432,14 +433,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
-    private synchronized Set<String> getPreviouslyPulledImageCache() {
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        Set<String> cache = (Set) session.getUserProperties().get(CONTEXT_KEY_PREVIOUSLY_PULLED);
-        if (cache == null) {
-            cache = Sets.newConcurrentHashSet();
-            session.getUserProperties().put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache);
-        }
+    private void updatePreviousPulledImageCache(String image) {
+        ImagePullCache cache = getPreviouslyPulledImageCache();
+        cache.add(image);
+        session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+    }
 
+    private synchronized ImagePullCache getPreviouslyPulledImageCache() {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+            Properties userProperties = session.getUserProperties();
+        String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
+        ImagePullCache cache = new ImagePullCache(pullCacheJson);
+        if (pullCacheJson == null) {
+            userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+        }
         return cache;
     }
 

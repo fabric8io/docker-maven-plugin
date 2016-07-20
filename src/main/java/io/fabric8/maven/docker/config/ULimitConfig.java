@@ -5,122 +5,65 @@
  */
 package io.fabric8.maven.docker.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-
-import io.fabric8.maven.docker.config.VolumeConfiguration.Builder;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
+ * Configuration for ulimit
+ *
  * @since 0.15
  * @author Alexis Thaveau
  */
-public class ULimitConfig {
+public class UlimitConfig {
 
+    @Parameter
     private String name;
-    private int hard;
-    private int soft;
 
-    /**
-     * Accesseur de name
-     * 
-     * @return the name
-     */
+    @Parameter
+    private Integer hard;
+
+    @Parameter
+    private Integer soft;
+
+    public UlimitConfig(String name, Integer hard, Integer soft) {
+        this.name = name;
+        this.hard = hard;
+        this.soft = soft;
+    }
+
     public String getName() {
-	return name;
+		return name;
     }
 
-    /**
-     * Muttateur de name
-     * 
-     * @param pName
-     *            le name a affecter
-     */
-    public void setName(String pName) {
-	name = pName;
+	public Integer getHard() {
+		return hard;
     }
 
-    /**
-     * Accesseur de hard
-     * 
-     * @return the hard
-     */
-    public int getHard() {
-	return hard;
-    }
-
-    /**
-     * Muttateur de hard
-     * 
-     * @param pHard
-     *            le hard a affecter
-     */
-    public void setHard(int pHard) {
-	hard = pHard;
-    }
-
-    /**
-     * Accesseur de soft
-     * 
-     * @return the soft
-     */
-    public int getSoft() {
-	return soft;
-    }
-
-    /**
-     * Muttateur de soft
-     * 
-     * @param pSoft
-     *            le soft a affecter
-     */
-    public void setSoft(int pSoft) {
-	soft = pSoft;
-    }
-
-    public static class Builder {
-
-	private List<ULimitConfig> config = new ArrayList<>();
-
-	public Builder() {
-	    this.config = new ArrayList<>();
+	public Integer getSoft() {
+		return soft;
 	}
 
-	public List<ULimitConfig> build() {
-	    return config;
-	}
+    Pattern ULIMIT_PATTERN = Pattern.compile("^(?<name>[^=]+)=(?<hard>[^:]*):?(?<soft>[^:]*)$");
 
-	public Builder add(List<String> ulimits) {
-	    if (ulimits != null) {
+    public UlimitConfig() {}
 
-		for (String ulimit : ulimits) {
-		    String[] ulimitParsed = ulimit.split("=");
-		    String type = ulimitParsed[0];
-		    String values = ulimitParsed[1];
-		    String[] valuesParsed = values.split(":");
-		    String hard = valuesParsed[0];
-		    String soft = null;
-		    if (valuesParsed.length > 1) {
-			soft = valuesParsed[1];
-		    }
-		    config.add(ulimit(type, hard, soft));
-		}
-	    }
-	    return this;
-	}
-
-	private ULimitConfig ulimit(String name, String hard, String soft) {
-	    ULimitConfig uLimitConfig = new ULimitConfig();
-	    uLimitConfig.setName(name);
-	    if (!StringUtils.isEmpty(hard)) {
-		uLimitConfig.setHard(Integer.parseInt(hard));
-	    }
-	    if (!StringUtils.isEmpty(soft)) {
-		uLimitConfig.setSoft(Integer.parseInt(soft));
-	    }
-	    return uLimitConfig;
-	}
+    public UlimitConfig(String ulimit) {
+        Matcher matcher = ULIMIT_PATTERN.matcher(ulimit);
+        if (matcher.matches()) {
+            name = matcher.group("name");
+            hard = asInteger(matcher.group("hard"));
+            soft = asInteger(matcher.group("soft"));
+        } else {
+            throw new IllegalArgumentException("Invalid ulimit specification " + ulimit);
+        }
     }
 
+    private Integer asInteger(String number) {
+        if (number == null || number.length() == 0) {
+            return null;
+        }
+        return Integer.parseInt(number);
+    }
 }

@@ -217,14 +217,16 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private List<ULimitConfig> extractUlimits(String prefix, Properties properties) {
-
-	List<String> ulimits = listWithPrefix(prefix, ConfigKey.ULIMITS, properties);
-	if (ulimits == null) {
-	    return null;
-	}
-	return new ULimitConfig.Builder().add(ulimits).build();
-
+    private List<UlimitConfig> extractUlimits(String prefix, Properties properties) {
+        List<String> ulimits = listWithPrefix(prefix, ConfigKey.ULIMITS, properties);
+        if (ulimits == null) {
+            return null;
+        }
+        List<UlimitConfig> ret = new ArrayList<>();
+        for (String ulimit : ulimits) {
+            ret.add(new UlimitConfig(ulimit));
+        }
+        return ret;
     }
 
     private VolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {

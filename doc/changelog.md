@@ -2,7 +2,8 @@
 
 * **0.15-SNAPSHOT** 
   - Allow images to only be pulled once per build (useful for reactor projects) ([#504](https://github.com/fabric8io/docker-maven-plugin/issues/504))
-
+  - Add "ulimits" to run-configuration (#484)
+  
 * **0.15.10** (2016-07-19)
   - Don't do redirect when waiting on an HTTP port ([#499](https://github.com/fabric8io/docker-maven-plugin/issues/499))
   - Removed the container fetch limit of 100 and optimized getting containers by name and image ([#513](https://github.com/fabric8io/docker-maven-plugin/issues/513))

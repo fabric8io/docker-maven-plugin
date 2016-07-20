@@ -1,4 +1,6 @@
-package io.fabric8.maven.docker.service;/*
+package io.fabric8.maven.docker.service;
+
+/*
  *
  * Copyright 2014 Roland Huss
  *
@@ -288,11 +290,11 @@ public class RunService {
                 .memory(runConfig.getMemory())
                 .memorySwap(runConfig.getMemorySwap())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
-                .logConfig(runConfig.getLogConfiguration());
+                .logConfig(runConfig.getLogConfiguration())
+                .ulimits(runConfig.getUlimits());
 
         addVolumeConfig(config, runConfig);
         addNetworkingConfig(config, runConfig);
-        addUlimitConfig(config, runConfig);
 
         return config;
     }
@@ -313,13 +315,6 @@ public class RunService {
         if (volConfig != null) {
             config.binds(volConfig.getBind())
                   .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
-        }
-    }
-
-    private void addUlimitConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
-        List<ULimitConfig> ulimitsConfig = runConfig.getUlimits();
-        if (ulimitsConfig != null) {
-            config.ulimits(ulimitsConfig);
         }
     }
 

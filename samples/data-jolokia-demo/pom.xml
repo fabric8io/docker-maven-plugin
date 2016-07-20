@@ -134,6 +134,13 @@
                   <enabled>true</enabled>
                   <color>red</color>
                 </log>
+                <ulimits>
+                  <ulimit>
+                    <name>memlock</name>
+                    <hard>2048</hard>
+                    <soft>1024</soft>
+                  </ulimit>
+                </ulimits>
               </run>
               <watch>
                 <mode>none</mode>
