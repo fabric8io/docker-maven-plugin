@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import java.io.IOException;
 import java.util.Map;
 
+import mockit.StrictExpectations;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.junit.Before;
@@ -50,7 +51,7 @@ public class DockerAccessWithHcClientTest {
     @Test
     public void testPushFailes_noRetry() throws Exception {
         givenAnImageName("test");
-        givenThePushWillFail();
+        givenThePushWillFail(0,false);
         whenPushImage();
         thenImageWasNotPushed();
     }
@@ -59,9 +60,18 @@ public class DockerAccessWithHcClientTest {
     public void testRetryPush() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFail();
+        givenThePushWillFail(1, true);
         whenPushImage();
         thenImageWasPushed();
+    }
+
+    @Test
+    public void testRetriesExceeded() throws Exception {
+        givenAnImageName("test");
+        givenANumberOfRetries(1);
+        givenThePushWillFail(1, false);
+        whenPushImage();
+        thenImageWasNotPushed();
     }
 
     private void givenAnImageName(String imageName) {
@@ -73,10 +83,14 @@ public class DockerAccessWithHcClientTest {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void givenThePushWillFail() throws IOException {
-        new Expectations() {{
+    private void givenThePushWillFail(final int retries, final boolean suceedAtEnd) throws IOException {
+        new StrictExpectations() {{
+            int fail = retries + (suceedAtEnd ? 0 : 1);
             mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any, 200);
+            minTimes = fail; maxTimes = fail;
             result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
+            mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any, 200);
+            minTimes = suceedAtEnd ? 1 : 0; maxTimes = suceedAtEnd ? 1 :0;
         }};
     }
 

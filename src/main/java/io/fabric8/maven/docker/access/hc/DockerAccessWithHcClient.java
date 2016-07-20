@@ -340,7 +340,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         String pushUrl = urlBuilder.pushImage(name, registry);
         String temporaryImage = tagTemporaryImage(name, registry);
         try {
-            pushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
+            doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         } finally {
@@ -470,13 +470,15 @@ public class DockerAccessWithHcClient implements DockerAccess {
         return errorCode == HTTP_INTERNAL_ERROR;
     }
 
-    private void pushImage(String url, Map<String, String> header, HcChunkedResponseHandlerWrapper handler, int status,
-            int retries) throws IOException {
+    private void doPushImage(String url, Map<String, String> header, HcChunkedResponseHandlerWrapper handler, int status,
+                             int retries) throws IOException {
+        // 0: The original attemp, 1..retry: possible retries.
         for (int i = 0; i <= retries; i++) {
             try {
                 delegate.post(url, null, header, handler, HTTP_OK);
+                return;
             } catch (HttpResponseException e) {
-                if (isRetryableErrorCode(e.getStatusCode()) && retries > 0) {
+                if (isRetryableErrorCode(e.getStatusCode()) && i != retries) {
                     log.warn("failed to push image to [{}], retrying...", url);
                 } else {
                     throw e;
