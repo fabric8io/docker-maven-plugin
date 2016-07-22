@@ -6,6 +6,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.WaitUtil;
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -106,9 +107,9 @@ public class RunServiceTest {
     }
     @Test
     public void killafterAndShutdownWithoutKeepingContainers() throws Exception {
+        long start = System.currentTimeMillis();
         setupForKillWait();
 
-        long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, KILL_AFTER), false, false);
         assertTrue("Waited for at least " + (SHUTDOWN_WAIT + KILL_AFTER) + " ms",
                 System.currentTimeMillis() - start >= SHUTDOWN_WAIT + KILL_AFTER);
@@ -116,26 +117,35 @@ public class RunServiceTest {
 
     @Test
     public void killafterWithoutKeepingContainers() throws Exception {
+        long start = System.currentTimeMillis();
         setupForKillWait();
 
-        long start = System.currentTimeMillis();
         runService.stopContainer(container, createImageConfig(0, KILL_AFTER), false, false);
         assertTrue("Waited for at least " + (KILL_AFTER) + " ms",
                    System.currentTimeMillis() - start >= KILL_AFTER);
     }
 
     private void setupForKillWait() throws DockerAccessException {
+        // use this to simulate something happened - timers need to be started before this method gets invoked
+        docker = new MockUp<DockerAccess>() {
+            @Mock
+            public void stopContainer(String contaierId, int wait) {
+                WaitUtil.sleep(KILL_AFTER);
+            }
+        }.getMockInstance();
+
         new Expectations() {{
-            docker.stopContainer(container, (KILL_AFTER + 500) / 1000);
-            log.debug(anyString, (Object[]) any); minTimes = 1;
-            docker.removeContainer(container, false);
-            new LogInfoMatchingExpectations(container, true);
+                docker.stopContainer(container, (KILL_AFTER + 500) / 1000);
+                log.debug(anyString, (Object[]) any); minTimes = 1;
+                docker.removeContainer(container, false);
+                new LogInfoMatchingExpectations(container, true);
         }};
     }
 
     @Test
     public void shutdownWithoutKeepingContainersAndRemovingVolumes() throws Exception {
         new Expectations() {{
+
             docker.stopContainer(container, 0);
             log.debug(anyString, (Object[]) any); minTimes = 1;
             docker.removeContainer(container, true);
@@ -350,8 +360,10 @@ public class RunServiceTest {
         LogInfoMatchingExpectations(String container, boolean withRemove) {
             log.info(withSubstring("Stop"),
                      anyString,
-                     withRemove ? withSubstring("remove") : withNotEqual(" and remiver"),
-                     withSubstring(container.substring(0,12)));
+                     withRemove ? withSubstring("removed") : withNotEqual(" and removed"),
+                     withSubstring(container.substring(0,12)),
+                     anyLong);
         }
     }
+
 }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +24,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * @since 18.10.14
  */
 public class WaitUtil {
+
+    private static final int DEFAULT_DOCKER_TIMEOUT = 10;
 
     // how long to wait at max when doing a http ping
     private static final long DEFAULT_MAX_WAIT = 10 * 1000;
@@ -47,6 +49,24 @@ public class WaitUtil {
 
 
     private WaitUtil() {}
+
+    public static long wait(int wait, Callable<Void> callable) throws ExecutionException, WaitTimeoutException {
+        long now = System.currentTimeMillis();
+        wait = (wait == 0) ? DEFAULT_DOCKER_TIMEOUT : wait;
+
+        try {
+            FutureTask<Void> task = new FutureTask<>(callable);
+            task.run();
+
+            task.get(wait, TimeUnit.SECONDS);
+        } catch (@SuppressWarnings("unused") InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (@SuppressWarnings("unused") TimeoutException e) {
+            throw new WaitTimeoutException("timed out waiting for execution to complete", delta(now));
+        }
+
+        return delta(now);
+    }
 
     public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
         return wait(maxWait, Arrays.asList(checkers));
@@ -89,6 +109,7 @@ public class WaitUtil {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
             // ...
+            Thread.currentThread().interrupt();
         }
     }
 

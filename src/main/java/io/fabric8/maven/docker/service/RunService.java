@@ -18,6 +18,8 @@ package io.fabric8.maven.docker.service;
  */
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -25,7 +27,7 @@ import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.*;
-
+import io.fabric8.maven.docker.util.WaitUtil.WaitTimeoutException;
 
 /**
  * Service class for helping in running containers.
@@ -49,10 +51,10 @@ public class RunService {
     private final LogOutputSpecFactory logConfig;
 
     public RunService(DockerAccess docker,
-                      QueryService queryService,
-                      ContainerTracker tracker,
-                      LogOutputSpecFactory logConfig,
-                      Logger log) {
+            QueryService queryService,
+            ContainerTracker tracker,
+            LogOutputSpecFactory logConfig,
+            Logger log) {
         this.docker = docker;
         this.queryService = queryService;
         this.tracker = tracker;
@@ -70,7 +72,7 @@ public class RunService {
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String execInContainer(String containerId, String command, ImageConfiguration imageConfiguration)
-            throws DockerAccessException {
+        throws DockerAccessException {
         Arguments arguments = new Arguments();
         arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
         String execContainerId = docker.createExecContainer(containerId, arguments);
@@ -90,8 +92,8 @@ public class RunService {
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
-                                          PortMapping mappedPorts,
-                                          PomLabel pomLabel,
+            PortMapping mappedPorts,
+            PomLabel pomLabel,
                                           Properties mavenProps) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
@@ -116,13 +118,13 @@ public class RunService {
      * @param removeVolumes whether to remove volumes after stopping
      */
     public void stopContainer(String containerId,
-                              ImageConfiguration imageConfig,
-                              boolean keepContainer,
-                              boolean removeVolumes)
-            throws DockerAccessException {
+            ImageConfiguration imageConfig,
+            boolean keepContainer,
+            boolean removeVolumes)
+        throws DockerAccessException {
         ContainerTracker.ContainerShutdownDescriptor descriptor =
-                new ContainerTracker.ContainerShutdownDescriptor(imageConfig,containerId);
-        shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+                new ContainerTracker.ContainerShutdownDescriptor(imageConfig, containerId);
+        shutdown(descriptor, keepContainer, removeVolumes);
     }
 
     /**
@@ -135,12 +137,12 @@ public class RunService {
      * @throws DockerAccessException
      */
     public void stopPreviouslyStartedContainer(String containerId,
-                                               boolean keepContainer,
-                                               boolean removeVolumes)
-            throws DockerAccessException {
+            boolean keepContainer,
+            boolean removeVolumes)
+        throws DockerAccessException {
         ContainerTracker.ContainerShutdownDescriptor descriptor = tracker.removeContainer(containerId);
         if (descriptor != null) {
-            shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+            shutdown(descriptor, keepContainer, removeVolumes);
         }
     }
 
@@ -152,14 +154,14 @@ public class RunService {
      * @throws DockerAccessException if during stopping of a container sth fails
      */
     public void stopStartedContainers(boolean keepContainer,
-                                      boolean removeVolumes,
-                                      boolean removeCustomNetworks,
-                                      PomLabel pomLabel)
-            throws DockerAccessException {
+            boolean removeVolumes,
+            boolean removeCustomNetworks,
+            PomLabel pomLabel)
+        throws DockerAccessException {
         Set<Network> networksToRemove = new HashSet<>();
         for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(pomLabel)) {
             collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
-            shutdown(docker, descriptor, log, keepContainer, removeVolumes);
+            shutdown(descriptor, keepContainer, removeVolumes);
         }
         removeCustomNetworks(networksToRemove);
     }
@@ -167,7 +169,7 @@ public class RunService {
     private void collectCustomNetworks(Set<Network> networksToRemove, ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeCustomNetworks) throws DockerAccessException {
         final NetworkingMode networkingMode = descriptor.getImageConfiguration().getRunConfiguration().getNetworkingMode();
         if (removeCustomNetworks && networkingMode.isCustomNetwork()) {
-           networksToRemove.add(queryService.getNetworkByName(networkingMode.getCustomNetwork()));
+            networksToRemove.add(queryService.getNetworkByName(networkingMode.getCustomNetwork()));
         }
     }
 
@@ -235,8 +237,8 @@ public class RunService {
 
     // visible for testing
     ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
-                                                PomLabel pomLabel, Properties mavenProps)
-            throws DockerAccessException {
+            PomLabel pomLabel, Properties mavenProps)
+        throws DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
                     .hostname(runConfig.getHostname())
@@ -260,7 +262,7 @@ public class RunService {
     }
 
     private Map<String, String> mergeLabels(Map<String, String> labels, PomLabel runIdLabel) {
-        Map<String,String> ret = new HashMap<>();
+        Map<String, String> ret = new HashMap<>();
         if (labels != null) {
             ret.putAll(labels);
         }
@@ -271,11 +273,10 @@ public class RunService {
     }
 
     ContainerHostConfig createContainerHostConfig(RunImageConfiguration runConfig, PortMapping mappedPorts)
-            throws DockerAccessException {
+        throws DockerAccessException {
         RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
-
-        List<String> links = findContainerIdsForLinks(runConfig.getLinks(),runConfig.getNetworkingMode().isCustomNetwork());
+        List<String> links = findContainerIdsForLinks(runConfig.getLinks(), runConfig.getNetworkingMode().isCustomNetwork());
 
         ContainerHostConfig config = new ContainerHostConfig()
                 .extraHosts(runConfig.getExtraHosts())
@@ -314,7 +315,7 @@ public class RunService {
         VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             config.binds(volConfig.getBind())
-                  .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
+                    .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
         }
     }
 
@@ -349,7 +350,6 @@ public class RunService {
         return list;
     }
 
-
     private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
         if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
             return null;
@@ -375,7 +375,7 @@ public class RunService {
     }
 
     private void startContainer(ImageConfiguration imageConfig, String id, PomLabel pomLabel) throws DockerAccessException {
-        log.info("%s: Start container %s",imageConfig.getDescription(), id);
+        log.info("%s: Start container %s", imageConfig.getDescription(), id);
         docker.startContainer(id);
         tracker.registerContainer(id, imageConfig, pomLabel);
     }
@@ -385,16 +385,14 @@ public class RunService {
         if (container.isRunning()) {
             mappedPorts.updateProperties(container.getPortBindings());
         } else {
-            log.warn("Container %s is not running anymore, can not extract dynamic ports",containerId);
+            log.warn("Container %s is not running anymore, can not extract dynamic ports", containerId);
         }
     }
 
-    private void shutdown(DockerAccess access,
-                          ContainerTracker.ContainerShutdownDescriptor descriptor,
-                          Logger log, boolean keepContainer, boolean removeVolumes)
-            throws DockerAccessException {
+    private void shutdown(ContainerTracker.ContainerShutdownDescriptor descriptor, boolean keepContainer, boolean removeVolumes)
+        throws DockerAccessException {
 
-        String containerId = descriptor.getContainerId();
+        final String containerId = descriptor.getContainerId();
         if (descriptor.getPreStop() != null) {
             try {
                 execInContainer(containerId, descriptor.getPreStop(), descriptor.getImageConfiguration());
@@ -402,32 +400,20 @@ public class RunService {
                 log.error("%s", e.getMessage());
             }
         }
-        // Stop the container
-        int killGracePeriod = descriptor.getKillGracePeriod();
-        int killGracePeriodInSeconds = (killGracePeriod + 500) / 1000;
-        if (killGracePeriod != 0 && killGracePeriodInSeconds == 0) {
-            log.warn("A kill grace period of %d ms leads to no wait at all since its rounded to seconds. " +
-                     "Please use at least 500 as value for wait.kill",killGracePeriod);
-        }
-        access.stopContainer(containerId, killGracePeriodInSeconds);
-        if (killGracePeriod > 0) {
-            log.debug("Shutdown: Wait %d s after stopping and before killing container", killGracePeriodInSeconds);
-            WaitUtil.sleep(killGracePeriodInSeconds * 1000);
-        }
+
+        int killGracePeriod = adjustGracePeriod(descriptor.getKillGracePeriod());
+        log.debug("shutdown will wait max of %d seconds before removing container", killGracePeriod);
+
+        long waited = shutdownAndWait(containerId, killGracePeriod);
+
         if (!keepContainer) {
-            int shutdownGracePeriod = descriptor.getShutdownGracePeriod();
-            if (shutdownGracePeriod != 0) {
-                log.debug("Shutdown: Wait %d ms before removing container", shutdownGracePeriod);
-                WaitUtil.sleep(shutdownGracePeriod);
-            }
-            // Remove the container
-            access.removeContainer(containerId, removeVolumes);
+            removeContainer(descriptor, removeVolumes, containerId);
         }
 
-        log.info("%s: Stop%s container %s",
+        log.info("%s: Stop%s container %s after %s ms",
                  descriptor.getDescription(),
-                 (keepContainer ? "" : " and remove"),
-                 containerId.substring(0, 12));
+                 (keepContainer ? "" : " and removed"),
+                 containerId.substring(0, 12), waited);
     }
 
     public void createCustomNetworkIfNotExistant(String customNetwork) throws DockerAccessException {
@@ -442,5 +428,50 @@ public class RunService {
         for (Network network : networks) {
             docker.removeNetwork(network.getId());
         }
+    }
+
+    private int adjustGracePeriod(int gracePeriod) {
+        int killGracePeriodInSeconds = (gracePeriod + 500) / 1000;
+        if (gracePeriod != 0 && killGracePeriodInSeconds == 0) {
+            log.warn("A kill grace period of %d ms leads to no wait at all since its rounded to seconds. " +
+                    "Please use at least 500 as value for wait.kill", gracePeriod);
+        }
+
+        return killGracePeriodInSeconds;
+    }
+
+    private void removeContainer(ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeVolumes, String containerId)
+        throws DockerAccessException {
+        int shutdownGracePeriod = descriptor.getShutdownGracePeriod();
+        if (shutdownGracePeriod != 0) {
+            log.debug("Shutdown: Wait %d ms before removing container", shutdownGracePeriod);
+            WaitUtil.sleep(shutdownGracePeriod);
+        }
+        // Remove the container
+        docker.removeContainer(containerId, removeVolumes);
+    }
+
+    private long shutdownAndWait(final String containerId, final int killGracePeriodInSeconds) throws DockerAccessException {
+        long waited = 0;
+        try {
+            waited = WaitUtil.wait(killGracePeriodInSeconds, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    docker.stopContainer(containerId, killGracePeriodInSeconds);
+                    return null;
+                }
+            });
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof DockerAccessException) {
+                throw (DockerAccessException) e.getCause();
+            } else {
+                throw new DockerAccessException(e, "failed to stop container id [%s]", containerId);
+            }
+        } catch (WaitTimeoutException e) {
+            waited = e.getWaited();
+            log.warn("Stop container id [%s] timed out after %s ms", containerId, waited);
+        }
+
+        return waited;
     }
 }
