@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-07-22</span>
+<span id="revdate">2016-07-23</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -644,7 +644,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="example">1.4. Example</h3>
 <div class="paragraph">
-<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt;</a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which is specified in the <a href="#docker:build">&lt;build&gt;</a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynmically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
+<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt;</a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <a href="#docker:build">&lt;build&gt;</a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynamically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
 </div>
 <div class="paragraph">
 <p>Images can be specified in any order and the plugin will take care of the proper startup order (and will bail out if it detects circular dependencies).</p>
@@ -734,7 +734,7 @@ table.CodeRay td.code>pre{padding:0}
 </tr>
 <tr>
 <td><i class="conum" data-value="9"></i><b>9</b></td>
-<td><a href="#start-links">Network link</a> describes how this service container is linked to the database container</td>
+<td><a href="#start-links">Network link</a> describes how this service&#8217;s container is linked to the database container</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="10"></i><b>10</b></td>
@@ -798,6 +798,7 @@ pre- and post-integration phase as seen below. The configuration and
 available goals are described below.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
@@ -857,10 +858,10 @@ available goals are described below.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>These packaging definitions include the <em>jar</em> lifecycle methods so they are well suited simple Microservice style projects.
-For example:</p>
+<p>These packaging definitions include the <em>jar</em> lifecycle methods so they are well suited simple Microservice style projects.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;pom&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>demo<span class="tag">&lt;/artifactId&gt;</span>
@@ -1086,10 +1087,8 @@ the URL is:</p>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
    <span class="tag">&lt;dockerHost&gt;</span>https://localhost:2376<span class="tag">&lt;/dockerHost&gt;</span>
@@ -1139,10 +1138,8 @@ the URL is:</p>
 <div class="paragraph">
 <p>You can use the property <code>docker.skip.machine</code> if you want to override the internal detection mechanism to always disable docker machine support.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- Work with a docker-machine --&gt;</span>
 <span class="tag">&lt;configuration&gt;</span>
@@ -1256,10 +1253,8 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 <div class="paragraph">
 <p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in details in the corresponding goal sections.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
   ....
@@ -1404,6 +1399,7 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <code>src/main/docker/demo</code>:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
  <span class="tag">&lt;configuration&gt;</span>
@@ -1548,10 +1544,8 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 copies over the assembled files and calls the Docker daemon via its
 remote API.</p>
 </div>
-<div class="paragraph">
-<p>Here&#8217;s an example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
   <span class="tag">&lt;from&gt;</span>java:8u40<span class="tag">&lt;/from&gt;</span>
@@ -1768,10 +1762,8 @@ used for <code>descriptorRef</code>:</p>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>For example,</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;images&gt;</span>
   <span class="tag">&lt;image&gt;</span>
@@ -1792,6 +1784,7 @@ used for <code>descriptorRef</code>:</p>
 phase) or it must be ensured when called on the command line:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn package docker:build</code></pre>
 </div>
@@ -1808,6 +1801,7 @@ containing a single file <code>jolokia.war</code>. This volume is also exported
 automatically.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
   <span class="tag">&lt;dependencySets&gt;</span>
@@ -1833,6 +1827,7 @@ starting Tomcat.</p>
 possible to change the name of the final build artifact with the following:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
   <span class="tag">&lt;finalName&gt;</span>your-desired-final-name<span class="tag">&lt;/finalName&gt;</span>
@@ -1894,10 +1889,8 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="paragraph">
 <p>Either shell or params should be specified.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- shell form  --&gt;</span>
@@ -1909,6 +1902,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>or</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- exec form  --&gt;</span>
@@ -1924,6 +1918,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>This can be formulated also more dense with:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- shell form  --&gt;</span>
 <span class="tag">&lt;entryPoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
@@ -1933,6 +1928,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>or</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
   <span class="comment">&lt;!-- exec form  --&gt;</span>
@@ -1961,6 +1957,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </ul>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml">  <span class="tag">&lt;docker.buildArg.myBuildArg&gt;</span>myValue<span class="tag">&lt;/docker.buildArg.myBuildArg&gt;</span></code></pre>
 </div>
@@ -2169,10 +2166,8 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;run&gt;</span>
   <span class="tag">&lt;env&gt;</span>
@@ -2211,6 +2206,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>When creating a container one or more environment variables can be set via configuration with the <code>env</code> parameter</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;env&gt;</span>
   <span class="tag">&lt;JAVA_HOME&gt;</span>/opt/jdk8<span class="tag">&lt;/JAVA_HOME&gt;</span>
@@ -2228,6 +2224,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>Labels can be set inline the same way as environment variables:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;labels&gt;</span>
    <span class="tag">&lt;com.example.label-with-value&gt;</span>foo<span class="tag">&lt;/com.example.label-with-value&gt;</span>
@@ -2280,6 +2277,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>The following are examples of valid configuration entries:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
   <span class="tag">&lt;bind.host.ip&gt;</span>1.2.3.4<span class="tag">&lt;/bind.host.ip&gt;</span>
@@ -2320,6 +2318,7 @@ be linked to this container according to <a href="https://docs.docker.com/usergu
 <p>Example for linking to a container with name or alias <em>postgres</em> :</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;links&gt;</span>
   <span class="tag">&lt;link&gt;</span>postgres:db<span class="tag">&lt;/link&gt;</span>
@@ -2330,6 +2329,7 @@ be linked to this container according to <a href="https://docs.docker.com/usergu
 <p>This will create the following environment variables, given that the postgres image exposes TCP port 5432:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="bash">DB_NAME=/web2/db
 DB_PORT=tcp://172.17.0.5:5432
@@ -2552,10 +2552,8 @@ output of an container and blocks until the pattern is matched.</p></td>
 <div class="paragraph">
 <p>As soon as one condition is met the build continues. If you add a <code>&lt;time&gt;</code> constraint this works more or less as a timeout for other conditions. The build will abort if you wait on an url or log output and reach the timeout. If only a <code>&lt;time&gt;</code> is specified, the build will wait that amount of milliseconds and then continues.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;wait&gt;</span>
   <span class="tag">&lt;http&gt;</span>
@@ -2661,10 +2659,8 @@ logging.</p>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Example (values can be case insensitive, too) :</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;log&gt;</span>
   <span class="tag">&lt;prefix&gt;</span>TC<span class="tag">&lt;/prefix&gt;</span>
@@ -2749,10 +2745,8 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">$ mvn -Ddocker.keepRunning clean install</code></pre>
 </div>
@@ -2809,12 +2803,12 @@ more details.</p></td>
 <div class="ulist">
 <ul>
 <li>
-<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.
-For example:</p>
+<p><code>build</code> : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in <code>assembly.xml</code> but also for arbitrary dependencies.</p>
 </li>
 </ul>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">$ mvn package docker:build docker:watch -Ddocker.watchMode=build</code></pre>
 </div>
@@ -2824,6 +2818,7 @@ For example:</p>
 * <code>run</code> : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the <code>build</code> mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with <code>docker:start</code>.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">$ mvn docker:start docker:watch -Ddocker.watchMode=run</code></pre>
 </div>
@@ -2985,6 +2980,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Here is an example how the watch mode can be tuned:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
    <span class="comment">&lt;!-- Check every 10 seconds by default --&gt;</span>
@@ -3017,6 +3013,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>Given this configuration</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn package docker:build docker:start docker:watch</code></pre>
 </div>
@@ -3091,10 +3088,8 @@ properties can the behaviour of this goal:</p>
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">$ mvn docker:logs -Ddocker.follow -Ddocker.logDate=DEFAULT</code></pre>
 </div>
@@ -3117,6 +3112,7 @@ this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</c
 <p>For example, this configuration will attach the docker build archive to the artifacts to store in the repository:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
@@ -3170,10 +3166,8 @@ configuration. Such a property based configuration can be selected
 with an <code>&lt;type&gt;</code> of <code>props</code>. As extra configuration a prefix for the
 properties can be defined which by default is <code>docker</code>.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;image&gt;</span>
   <span class="tag">&lt;external&gt;</span>
@@ -3461,10 +3455,8 @@ configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.</p>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
   <span class="tag">&lt;docker.name&gt;</span>jolokia/demo<span class="tag">&lt;/docker.name&gt;</span>
@@ -3574,10 +3566,8 @@ control, separate registries for <em>pull</em> and <em>push</em> can be specifie
 </li>
 </ul>
 </div>
-<div class="paragraph">
-<p>Example:</p>
-</div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
   <span class="tag">&lt;registry&gt;</span>docker.jolokia.org:443<span class="tag">&lt;/registry&gt;</span>
@@ -3677,6 +3667,7 @@ using CI servers like Jenkins. You simply provide the credentials from
 the outside:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="sh">mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t docker:push</code></pre>
 </div>
@@ -3686,6 +3677,7 @@ the outside:</p>
 the Maven settings file <code>~/.m2/settings.xml</code>:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;servers&gt;</span>
   <span class="tag">&lt;server&gt;</span>
@@ -3723,6 +3715,7 @@ can be added. In the example below the credentials provider are only
 used for image push operations:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;configuration&gt;</span>
@@ -3804,6 +3797,7 @@ that you have setup a <em>master password</em> in
 passwords:</p>
 </div>
 <div class="listingblock">
+<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="bash">$ mvn --encrypt-password
 Password:
@@ -3862,7 +3856,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-22 10:22:14 UTC
+Last updated 2016-07-23 09:21:05 UTC
 </div>
 </div>
 </body>
