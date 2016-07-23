@@ -28,8 +28,7 @@ A entry point or command can be specified in two alternative formats:
 
 Either shell or params should be specified.
 
-Example:
-
+.Example
 [source,xml]
 ----
 <entryPoint>
@@ -40,6 +39,7 @@ Example:
 
 or
 
+.Example
 [source,xml]
 ----
 <entryPoint>
@@ -54,6 +54,7 @@ or
 
 This can be formulated also more dense with:
 
+.Example
 [source,xml]
 ----
 <!-- shell form  -->
@@ -62,6 +63,7 @@ This can be formulated also more dense with:
 
 or
 
+.Example
 [source,xml]
 ----
 <entryPoint>

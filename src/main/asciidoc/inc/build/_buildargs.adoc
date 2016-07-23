@@ -8,6 +8,7 @@ configuration within the plugin configuration you can also use properties to spe
 useful when using predefined Docker arguments for setting proxies transparently.
 * Set a project property within the `pom.xml`, eg.:
 
+.Example
 [source,xml]
 ----
   <docker.buildArg.myBuildArg>myValue</docker.buildArg.myBuildArg>

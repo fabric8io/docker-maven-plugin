@@ -129,8 +129,7 @@ the URL is:
 | `docker.verbose`
 |===
 
-Example:
-
+.Example
 [source,xml]
 ----
 <configuration>
@@ -167,8 +166,7 @@ In absent of a `<machine>` configuration section the Maven property `docker.mach
 
 You can use the property `docker.skip.machine` if you want to override the internal detection mechanism to always disable docker machine support.
 
-Example:
-
+.Example
 [source,xml]
 ----
 <!-- Work with a docker-machine -->

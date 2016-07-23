@@ -102,8 +102,7 @@ a| Network mode for the container:
 | Working directory for commands to run in
 |===
 
-Example:
-
+.Example
 [source,xml]
 ----
 <run>

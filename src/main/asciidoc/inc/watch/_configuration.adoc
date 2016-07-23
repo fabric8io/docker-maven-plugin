@@ -70,6 +70,7 @@ running container when `mode` is `copy`.
 
 Here is an example how the watch mode can be tuned:
 
+.Example
 [source,xml]
 ----
 <configuration>
@@ -101,6 +102,7 @@ Here is an example how the watch mode can be tuned:
 
 Given this configuration
 
+.Example
 [source,sh,subs="+attributes"]
 ----
 mvn package {plugin}:build {plugin}:start {plugin}:watch

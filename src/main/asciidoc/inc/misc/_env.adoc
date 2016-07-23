@@ -4,6 +4,7 @@
 
 When creating a container one or more environment variables can be set via configuration with the `env` parameter
 
+.Example
 [source,xml]
 ----
 <env>
@@ -18,6 +19,7 @@ It is also possible to set the environment variables from the outside of the plu
 
 Labels can be set inline the same way as environment variables:
 
+.Example
 [source,xml]
 ----
 <labels>

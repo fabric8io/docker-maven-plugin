@@ -31,6 +31,7 @@ For the future it is planned to introduce special keywords lile `DMP_ADD_ASSEMBL
 The following example uses a Dockerfile in the directory
 `src/main/docker/demo`:
 
+.Example
 [source,xml]
 ----
 <plugin>

@@ -40,8 +40,7 @@ http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.htm
 | Section which can specify a dedicated log driver to use. A `<name>` tag within this section depicts the logging driver with the options specified in `<opts>`. See the example below for how to use this.
 |===
 
-Example (values can be case insensitive, too) :
-
+.Example
 [source,xml]
 ----
 <log>

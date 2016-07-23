@@ -36,6 +36,7 @@ The system property provided credentials are a good compromise when
 using CI servers like Jenkins. You simply provide the credentials from
 the outside:
 
+.Example
 [source, sh, subs="+attributes"]
 ----
 mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t {plugin}:push
@@ -44,6 +45,7 @@ mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t {plugin}:push
 The most secure and also the most _mavenish_ way is to add a server to
 the Maven settings file `~/.m2/settings.xml`:
 
+.Example
 [source,xml]
 ----
 <servers>
@@ -77,6 +79,7 @@ In an `<authConfig>` section a sub-section `<pull>` and/or `<push>`
 can be added. In the example below the credentials provider are only
 used for image push operations:
 
+.Example
 [source,xml]
 ----
 <plugin>
@@ -148,6 +151,7 @@ that you have setup a _master password_ in
 `~/.m2/security-settings.xml` you can create easily encrypted
 passwords:
 
+.Example
 [source,bash]
 ----
 $ mvn --encrypt-password

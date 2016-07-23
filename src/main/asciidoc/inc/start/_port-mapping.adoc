@@ -26,6 +26,7 @@ A `port` stanza may take one of the following forms:
 
 The following are examples of valid configuration entries:
 
+.Example
 [source,xml]
 ----
 <properties>

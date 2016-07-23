@@ -45,8 +45,7 @@ control, separate registries for _pull_ and _push_ can be specified.
 * With the system properties `docker.pull.registry` and
 `docker.push.registry`, respectively.
 
-Example:
-
+.Example
 [source,xml]
 ----
 <configuration>

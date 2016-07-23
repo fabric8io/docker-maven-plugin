@@ -27,8 +27,7 @@ properties can the behaviour of this goal:
 | Date format to use. See "<<start-logging,Logging>>" for available formats.
 |===
 
-Example:
-
+.Example
 [source, sh, subs="+attributes"]
 ----
 $ mvn {plugin}:logs -Ddocker.follow -Ddocker.logDate=DEFAULT

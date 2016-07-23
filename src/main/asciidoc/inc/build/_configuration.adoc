@@ -85,8 +85,7 @@ From this configuration this Plugin creates an in-memory Dockerfile,
 copies over the assembled files and calls the Docker daemon via its
 remote API.
 
-Here's an example:
-
+.Example
 [source,xml]
 ----
 <build>

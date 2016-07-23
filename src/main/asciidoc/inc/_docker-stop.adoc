@@ -36,8 +36,7 @@ For tuning what should happen when stopping there are four global parameters whi
 | `docker.allContainers`
 |===
 
-Example:
-
+.Example
 [source,sh]
 ----
 $ mvn -Ddocker.keepRunning clean install

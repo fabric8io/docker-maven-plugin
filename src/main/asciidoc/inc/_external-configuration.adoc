@@ -28,8 +28,7 @@ configuration. Such a property based configuration can be selected
 with an `<type>` of `props`. As extra configuration a prefix for the
 properties can be defined which by default is `docker`.
 
-Example:
-
+.Example
 [source,xml]
 ----
 <image>
@@ -247,8 +246,7 @@ configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.
 
-Example:
-
+.Example
 [source,xml]
 ----
 <properties>

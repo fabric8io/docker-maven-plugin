@@ -60,8 +60,7 @@ When specifying the name you can use several placeholders which are replaced dur
 
 Either a `<build>` or `<run>` section must be present. These are explained in details in the corresponding goal sections.
 
-Example:
-
+.Example
 [source,xml]
 ----
 <configuration>

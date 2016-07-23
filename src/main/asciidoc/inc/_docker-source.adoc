@@ -12,6 +12,7 @@ this goal to work. The classifier is calculated as `docker-<alias>` so when the 
 
 For example, this configuration will attach the docker build archive to the artifacts to store in the repository:
 
+.Example
 [source,xml]
 ----
 <plugin>

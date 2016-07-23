@@ -7,6 +7,7 @@ be linked to this container according to https://docs.docker.com/userguide/docke
 
 Example for linking to a container with name or alias _postgres_ :
 
+.Example
 [source,xml]
 ----
 <links>
@@ -16,6 +17,7 @@ Example for linking to a container with name or alias _postgres_ :
 
 This will create the following environment variables, given that the postgres image exposes TCP port 5432:
 
+.Example
 [source,bash]
 ----
 DB_NAME=/web2/db

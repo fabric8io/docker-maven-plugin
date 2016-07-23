@@ -4,8 +4,8 @@ When developing and testing applications you will often have to rebuild Docker i
 `{plugin}:watch` is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:
 
 * `build` : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in `assembly.xml` but also for arbitrary dependencies.
-For example:
 
+.Example
 [source, sh, subs="+attributes"]
 ----
 $ mvn package {plugin}:build {plugin}:watch -Ddocker.watchMode=build
@@ -14,6 +14,7 @@ $ mvn package {plugin}:build {plugin}:watch -Ddocker.watchMode=build
 This mode works only when there is a `<build>` section in an image configuration. Otherwise no automatically build will be triggered for an image with only a `<run>` section. Note that you need the `package` phase to be executed before otherwise any artifact created by this build can not be included into the assembly. As described in the section about `{plugin}:start` this is a Maven limitation.
 * `run` : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the `build` mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with `{plugin}:start`.
 
+.Example
 [source, sh, subs="+attributes"]
 ----
 $ mvn {plugin}:start {plugin}:watch -Ddocker.watchMode=run
