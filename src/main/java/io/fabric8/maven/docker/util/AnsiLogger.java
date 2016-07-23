@@ -64,20 +64,8 @@ public class AnsiLogger implements Logger {
     }
 
     /** {@inheritDoc} */
-    public void debug(String msg) {
-        if (isDebugEnabled()) {
-            debug("%s", msg);
-        }
-    }
-
-    /** {@inheritDoc} */
     public void info(String message, Object ... params) {
         log.info(colored(message, COLOR_INFO, true, params));
-    }
-
-    /** {@inheritDoc} */
-    public void info(String message) {
-        info("%s", message);
     }
 
     /** {@inheritDoc} */
@@ -93,18 +81,8 @@ public class AnsiLogger implements Logger {
     }
 
     /** {@inheritDoc} */
-    public void warn(String message) {
-        warn("%s", message);
-    }
-
-    /** {@inheritDoc} */
     public void error(String message, Object ... params) {
         log.error(colored(message, COLOR_ERROR, true, params));
-    }
-
-    /** {@inheritDoc} */
-    public void error(String message) {
-        error("%s", message);
     }
 
     @Override
@@ -200,15 +178,15 @@ public class AnsiLogger implements Logger {
             }
         }
     }
-    
+
     private void flush() {
         System.out.flush();
     }
-    
+
     private void initializeColor(boolean useColor) {
         // sl4j simple logger used by Maven seems to escape ANSI escapes on Windows
         this.useAnsi = useColor && System.console() != null && !log.isDebugEnabled() && !isWindows();
-        
+
         if (useAnsi) {
             AnsiConsole.systemInstall();
             Ansi.setEnabled(true);
