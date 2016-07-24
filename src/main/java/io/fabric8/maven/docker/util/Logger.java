@@ -51,7 +51,7 @@ public interface Logger {
     void error(String format, Object ... params);
 
     /**
-     * Prepare the given message as an error message
+     * Prepare the given message as an error message to be used in exceptions.
      *
      * @param message message to prepare
      * @return prepared error message

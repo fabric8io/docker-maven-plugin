@@ -4,7 +4,7 @@ This goal creates and starts docker containers. This goals evaluates the configu
 
 Also you can specify `docker.follow` as system property so that the `{plugin}:start` will never return but block until CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).
 
-By default container specific properties are exposed as Maven properties. These properties have the format `docker.container.`_alias_`.`_prop_ where _alias_ is the name of the container (see below) and _prop_ is one of the following container properties:
+By default container specific properties are exposed as Maven properties. These properties have the format `docker.container.<alias>.<prop>` where `<alias>` is the name of the container (see below) and `<prop>` is one of the following container properties:
 
 .Properties provided
 [cols="1,5"]
