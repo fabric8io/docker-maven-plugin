@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-07-23</span>
+<span id="revdate">2016-07-25</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -1976,7 +1976,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).</p>
 </div>
 <div class="paragraph">
-<p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.`<em>alias</em></code>.`<em>prop</em> where <em>alias</em> is the name of the container (see below) and <em>prop</em> is one of the following container properties:</p>
+<p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.&lt;alias&gt;.&lt;prop&gt;</code> where <code>&lt;alias&gt;</code> is the name of the container (see below) and <code>&lt;prop&gt;</code> is one of the following container properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 10. Properties provided</caption>
@@ -3856,7 +3856,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-23 09:21:05 UTC
+Last updated 2016-07-25 09:36:45 UTC
 </div>
 </div>
 </body>
