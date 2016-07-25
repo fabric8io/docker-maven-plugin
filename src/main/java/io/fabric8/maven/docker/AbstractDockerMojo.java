@@ -243,7 +243,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // Resolve and customize image configuration
-    private String initImageConfiguration(Date buildTimeStamp) throws MojoExecutionException {
+    private String initImageConfiguration(Date buildTimeStamp)  {
         // Resolve images
         final Properties resolveProperties = project.getProperties();
         resolvedImages = ConfigHelper.resolveImages(
