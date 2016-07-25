@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.15.12** (2016-07-25)
+  - API and documentation updates
+
 * **0.15.11** (2016-07-20)
   - Invoke the `initialize` phase before docker goals ([#315](https://github.com/fabric8io/docker-maven-plugin/issues/315))
   - Allow images to only be pulled once per build (useful for reactor projects) ([#504](https://github.com/fabric8io/docker-maven-plugin/issues/504))
