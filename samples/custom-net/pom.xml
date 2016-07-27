@@ -1,0 +1,98 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for demonstrating the custom network mode
+
+  Call it with 'mvn install'.
+  It will automatically create the custom network "test-network" and create two automatically named containers that can
+  talk to each other via their netAlias names.
+  -->
+
+  <parent>
+    <groupId>io.fabric8</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.15.12</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-custom-net</artifactId>
+  <version>0.15.12</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
+          <watchInterval>500</watchInterval>
+          <logDate>default</logDate>
+          <verbose>true</verbose>
+          <autoPull>always</autoPull>
+          <images>
+            <image>
+              <alias>box1</alias>
+              <name>busybox</name>
+              <run>
+                <net>test-network</net>
+                <networkAlias>box1,box1-alternative</networkAlias>
+                <namingStrategy>none</namingStrategy>
+                <cmd>
+                  <exec>
+                    <args>sh</args>
+                    <args>-c</args>
+                    <args>tail -f /dev/null</args>
+                  </exec>
+                </cmd>
+                <log>
+                  <prefix>1</prefix> <color>cyan</color>
+                </log>
+              </run>
+            </image>
+            <image>
+              <alias>box2</alias>
+              <name>busybox</name>
+              <run>
+                <net>test-network</net>
+                <networkAlias>box2</networkAlias>
+                <namingStrategy>none</namingStrategy>
+                <cmd>
+                  <exec>
+                    <args>sh</args>
+                    <args>-c</args>
+                    <args>nslookup box1-alternative; tail -f /dev/null</args>
+                  </exec>
+                </cmd>
+                <wait>
+                  <log>box1.test-network</log>
+                </wait>
+                <log>
+                  <prefix>2</prefix> <color>blue</color>
+                </log>
+              </run>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
