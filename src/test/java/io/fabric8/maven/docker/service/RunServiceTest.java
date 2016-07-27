@@ -265,6 +265,8 @@ public class RunServiceTest {
                         .capAdd(capAdd())
                         .capDrop(capDrop())
                         .restartPolicy(restartPolicy())
+                        .net("custom_network")
+                        .netAlias(Collections.singletonList("net-alias"))
                         .build();
     }
 
@@ -275,6 +277,7 @@ public class RunServiceTest {
 
     private void thenStartConfigIsValid() throws IOException {
         String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
+        System.out.println(startConfig.toJson());
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }
 

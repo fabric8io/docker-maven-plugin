@@ -71,6 +71,9 @@ a| Network mode for the container:
 * *container:<alias or name>* : Connect to the network of the specified container
 * *<custom network>* : Use the specified custom network which must be created before with `docker network create`. Available for Docker 1.9 and newer. For more about the networking options please refer to the https://docs.docker.com/engine/userguide/networking/work-with-networks[Docker documentation].
 
+| *networkAlias*
+| List of `network-alias` names that provides a way for a container to be discovered by alternate names by any other container within the scope of a particular network. This configuration only has effect for a *custom network* configuration.
+
 | *portPropertyFile*
 | File path into which the mapped port properties are written. The format of this file and its purpose are also described in <<start-port-mapping,Port mapping>>
 
