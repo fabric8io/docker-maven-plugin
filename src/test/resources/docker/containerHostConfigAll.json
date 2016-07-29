@@ -13,6 +13,7 @@
     "SecurityOpt": [ "seccomp=unconfined" ],
     "Memory": 1,
     "MemorySwap": 1,
+    "NetworkMode": "custom_network",
     "RestartPolicy": { "Name": "on-failure", "MaximumRetryCount": 1 },
     "Ulimits":[
     	{

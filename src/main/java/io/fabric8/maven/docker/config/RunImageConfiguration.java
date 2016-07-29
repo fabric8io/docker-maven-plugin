@@ -72,6 +72,9 @@ public class RunImageConfiguration {
     private String net;
 
     @Parameter
+    private List<String> networkAlias;
+
+    @Parameter
     private List<String> dns;
 
     @Parameter
@@ -227,6 +230,10 @@ public class RunImageConfiguration {
         return new NetworkingMode(net);
     }
 
+    public List<String> getNetworkAlias() {
+        return networkAlias;
+    }
+
     public List<String> getDnsSearch() {
         return dnsSearch;
     }
@@ -372,6 +379,11 @@ public class RunImageConfiguration {
 
         public Builder net(String net) {
             config.net = net;
+            return this;
+        }
+
+        public Builder netAlias(List<String> netAlias) {
+            config.networkAlias = netAlias;
             return this;
         }
 
