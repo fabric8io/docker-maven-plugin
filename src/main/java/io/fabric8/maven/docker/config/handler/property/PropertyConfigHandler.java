@@ -90,6 +90,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new RunImageConfiguration.Builder()
                 .capAdd(listWithPrefix(prefix, CAP_ADD, properties))
                 .capDrop(listWithPrefix(prefix, CAP_DROP, properties))
+                .securityOpt(listWithPrefix(prefix, SECURITY_OPT, properties))
                 .cmd(withPrefix(prefix, CMD, properties))
                 .dns(listWithPrefix(prefix, DNS, properties))
                 .net(withPrefix(prefix, NET, properties))
