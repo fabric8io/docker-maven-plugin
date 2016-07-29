@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,6 +47,26 @@ public class WaitUtil {
 
 
     private WaitUtil() {}
+
+    public static void wait(int wait, Callable<Void> callable) throws ExecutionException {
+        try {
+            FutureTask<Void> task = new FutureTask<>(callable);
+            task.run();
+
+            /*
+             * pad the wait time so that the future will never time out but still complete - if pad == 0,
+             * set to default docker timeout
+             */
+            task.get(((wait == 0) ? 10 : wait) + 5, TimeUnit.SECONDS);
+        } catch (@SuppressWarnings("unused") InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (@SuppressWarnings("unused") TimeoutException e) {
+            /*
+             * this should not happen b/c the wait time has been padded such that if the docker daemon fails
+             * to kill the container in the alloted time, it will be booted out via the ExecutionException
+             */
+        }
+    }
 
     public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
         return wait(maxWait, Arrays.asList(checkers));
@@ -89,6 +109,7 @@ public class WaitUtil {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
             // ...
+            Thread.currentThread().interrupt();
         }
     }
 
