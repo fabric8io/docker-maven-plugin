@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.access.log;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class LogRequestor extends Thread implements LogGetHandle {
 
     // Patter for matching log entries
-    private static final Pattern LOG_LINE = Pattern.compile("^\\[?([^\\s\\]]*)]?\\s+(.*)\\s*$");
+    static final Pattern LOG_LINE = Pattern.compile("^\\[?([^\\s\\]]*)]?\\s+(.*)\\s*$", Pattern.DOTALL);
     private final HttpClient client;
 
     private final String containerId;
@@ -58,7 +58,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
     private HttpUriRequest request;
 
     private final UrlBuilder urlBuilder;
-    
+
     /**
      * Create a helper object for requesting log entries synchronously ({@link #fetchLogs()}) or asynchronously ({@link #start()}.
      *
@@ -70,7 +70,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
     public LogRequestor(HttpClient client, UrlBuilder urlBuilder, String containerId, LogCallback callback) {
         this.client = client;
         this.containerId = containerId;
-        
+
         this.urlBuilder = urlBuilder;
 
         this.callback = callback;
