@@ -83,6 +83,9 @@ a| Network mode for the container:
 | *restartPolicy*
 | <<start-restart,Restart Policy>>
 
+| *securityOpt*
+| List of `opt` elements to specify kernel security options to add to the container.
+
 | *shmSize*
 | Size of `/dev/shm` in bytes.
 

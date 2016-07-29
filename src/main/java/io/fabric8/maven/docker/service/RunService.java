@@ -287,6 +287,7 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
+                .securityOpt(runConfig.getSecurityOpt())
                 .memory(runConfig.getMemory())
                 .memorySwap(runConfig.getMemorySwap())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
