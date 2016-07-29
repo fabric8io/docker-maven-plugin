@@ -74,8 +74,8 @@ Images can be specified in any order and the plugin will take care of the proper
     <image>
       <alias>database</alias> <!--10-->
       <name>postgres:9</name>
-      <run> <!--11-->
-        <wait>
+      <run>
+        <wait> <!--11-->
           <log>database system is ready to accept connections</log>
           <time>20000</time>
         </wait>

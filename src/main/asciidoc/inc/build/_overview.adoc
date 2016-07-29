@@ -7,6 +7,7 @@ With an inline plugin configuration all information required to build the image 
 
 When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.
 
+[[external-dockerfile]]
 .External Dockerfile
 Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
 the `<build>` configuration section.
