@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-07-25</span>
+<span id="revdate">2016-07-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -687,8 +687,8 @@ table.CodeRay td.code>pre{padding:0}
     <span class="tag">&lt;image&gt;</span>
       <span class="tag">&lt;alias&gt;</span>database<span class="tag">&lt;/alias&gt;</span> <i class="conum" data-value="10"></i><b>(10)</b>
       <span class="tag">&lt;name&gt;</span>postgres:9<span class="tag">&lt;/name&gt;</span>
-      <span class="tag">&lt;run&gt;</span> <i class="conum" data-value="11"></i><b>(11)</b>
-        <span class="tag">&lt;wait&gt;</span>
+      <span class="tag">&lt;run&gt;</span>
+        <span class="tag">&lt;wait&gt;</span> <i class="conum" data-value="11"></i><b>(11)</b>
           <span class="tag">&lt;log&gt;</span>database system is ready to accept connections<span class="tag">&lt;/log&gt;</span>
           <span class="tag">&lt;time&gt;</span>20000<span class="tag">&lt;/time&gt;</span>
         <span class="tag">&lt;/wait&gt;</span>
@@ -1202,7 +1202,7 @@ linking images together or for specifying it with the global <strong>image</stro
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>run</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Eelement which describe how containers should be
+<td class="tableblock halign-left valign-top"><p class="tableblock">Element which describe how containers should be
 created and run when <a href="#docker:start"><strong>docker:start</strong></a> is called. If this image is only used a <em>data container</em> (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.</p></td>
 </tr>
 <tr>
@@ -1357,7 +1357,7 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <div class="paragraph">
 <p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
-<div class="paragraph">
+<div id="external-dockerfile" class="paragraph">
 <div class="title">External Dockerfile</div>
 <p>Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
 the <code>&lt;build&gt;</code> configuration section.</p>
@@ -3856,7 +3856,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-25 09:36:45 UTC
+Last updated 2016-07-29 08:52:43 UTC
 </div>
 </div>
 </body>
