@@ -430,7 +430,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             int status = delegate.delete(url, HTTP_OK, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
             return status == HTTP_OK || status == HTTP_NO_CONTENT;
         } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to remove container [%s]", networkId);
+            throw new DockerAccessException(e, "Unable to remove network [%s]", networkId);
         }
     }
 
