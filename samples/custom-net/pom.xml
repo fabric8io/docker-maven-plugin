@@ -13,12 +13,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.15.12</version>
+    <version>0.15.13</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-custom-net</artifactId>
-  <version>0.15.12</version>
+  <version>0.15.13</version>
 
   <build>
     <plugins>
