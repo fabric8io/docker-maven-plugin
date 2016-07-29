@@ -2,6 +2,7 @@
 
 * **0.15.13** (2016-07-29)
   - Add <securityOpts> for running containers in special security contexts (#524)
+  - Add support for multiples network aliases (#466)
 
 * **0.15.12** (2016-07-25)
   - API and documentation updates

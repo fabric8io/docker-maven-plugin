@@ -58,7 +58,7 @@ public class ContainerHostConfig {
         return addAsArray("Dns", dns);
     }
 
-    public ContainerHostConfig networkConfig(String net) {
+    public ContainerHostConfig networkMode(String net) {
         return add("NetworkMode",net);
     }
 

@@ -166,6 +166,15 @@ values in the `<build>` and `<run>` sections.
 | *docker.namingStrategy*
 | Container naming (either `none` or `alias`)
 
+| *docker.network.mode*
+| Network mode to use which can be `none`, `host`, `bridged`, `container` or `custom`
+
+| *docker.network.name*
+| Name of the custom network when mode is `custom`, or for mode `container` the image alias name used to create the container.
+
+| *docker.network.alias.idx*
+| One or more aliase for a custom network. Only used when the network mode is `custom`
+
 | *docker.optimise*
 | if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
 

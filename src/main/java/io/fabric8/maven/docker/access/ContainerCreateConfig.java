@@ -111,8 +111,8 @@ public class ContainerCreateConfig {
         return add("HostConfig", startConfig.toJsonObject());
     }
 
-    public ContainerCreateConfig networkingConfig(ContainerNetworkingConfig startConfig) {
-        return add("NetworkingConfig", startConfig.toJsonObject());
+    public ContainerCreateConfig networkingConfig(ContainerNetworkingConfig networkingConfig) {
+        return add("NetworkingConfig", networkingConfig.toJsonObject());
     }
 
     /**

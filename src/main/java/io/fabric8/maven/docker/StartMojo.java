@@ -117,9 +117,9 @@ public class StartMojo extends AbstractDockerMojo {
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
-                NetworkingMode networkMode = runConfig.getNetworkingMode();
-                if (autoCreateCustomNetworks && networkMode.isCustomNetwork()) {
-                    runService.createCustomNetworkIfNotExistant(runConfig.getNetworkingMode().getCustomNetwork());
+                NetworkConfig config = runConfig.getNetworkingConfig();
+                if (autoCreateCustomNetworks && config.isCustomNetwork()) {
+                    runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
                 }
 
                 String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties);

@@ -267,10 +267,15 @@ public class RunServiceTest {
                         .securityOpts(securityOpts())
                         .restartPolicy(restartPolicy())
                         .net("custom_network")
-                        .netAlias(Collections.singletonList("net-alias"))
+                        .network(networkConfiguration())
                         .build();
     }
 
+    private NetworkConfig networkConfiguration() {
+        NetworkConfig config = new NetworkConfig("custom_network");
+        config.addAlias("net-alias");
+        return config;
+    }
     private void thenContainerConfigIsValid() throws IOException {
         String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
         JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
@@ -278,7 +283,6 @@ public class RunServiceTest {
 
     private void thenStartConfigIsValid() throws IOException {
         String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
-        System.out.println(startConfig.toJson());
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }
 

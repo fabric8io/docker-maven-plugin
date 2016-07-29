@@ -94,6 +94,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .cmd(withPrefix(prefix, CMD, properties))
                 .dns(listWithPrefix(prefix, DNS, properties))
                 .net(withPrefix(prefix, NET, properties))
+                .network(extractNetworkConfig(prefix, properties))
                 .dnsSearch(listWithPrefix(prefix, DNS_SEARCH, properties))
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
                 .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
@@ -119,6 +120,14 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
                 .ulimits(extractUlimits(prefix, properties))
                 .build();
+    }
+
+    private NetworkConfig extractNetworkConfig(String prefix, Properties properties) {
+        return new NetworkConfig.Builder()
+            .mode(withPrefix(prefix, NETWORK_MODE, properties))
+            .name(withPrefix(prefix, NETWORK_NAME, properties))
+            .aliases(listWithPrefix(prefix,NETWORK_ALIAS, properties))
+            .build();
     }
 
     private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {

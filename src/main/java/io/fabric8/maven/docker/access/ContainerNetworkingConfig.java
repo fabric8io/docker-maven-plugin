@@ -1,50 +1,37 @@
 package io.fabric8.maven.docker.access;
 
+import java.util.List;
+
+import io.fabric8.maven.docker.config.NetworkConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.List;
-import java.util.Map;
-
 public class ContainerNetworkingConfig {
 
-    final JSONObject startConfig = new JSONObject();
-
-    public ContainerNetworkingConfig() {}
-
-    public ContainerNetworkingConfig endpointsConfig(Map<String, ContainerNetworkingEndpointsConfig> endpointsConfig) {
-        final JSONObject endpointConfigMap = new JSONObject();
-        for (Map.Entry<String, ContainerNetworkingEndpointsConfig> entry : endpointsConfig.entrySet()) {
-            endpointConfigMap.put(entry.getKey(), entry.getValue().toJsonObject());
-        }
-        return add("EndpointsConfig", endpointConfigMap);
-    }
+    private final JSONObject networkingConfig = new JSONObject();
 
     /**
-     * Get JSON which is used for <em>starting</em> a container
+     * Add networking aliases to a custom network
      *
-     * @return string representation for JSON representing the configuration for starting a container
+     * @param config network config as configured in the pom.xml
+     * @return this configuration
      */
+    public ContainerNetworkingConfig aliases(NetworkConfig config) {
+        JSONObject endPoints = new JSONObject();
+        endPoints.put("Aliases",new JSONArray(config.getAliases()));
+
+        JSONObject endpointConfigMap = new JSONObject();
+        endpointConfigMap.put(config.getCustomNetwork(), endPoints);
+
+        networkingConfig.put("EndpointsConfig", endpointConfigMap);
+        return this;
+    }
+
     public String toJson() {
-        return startConfig.toString();
+        return networkingConfig.toString();
     }
 
     public Object toJsonObject() {
-        return startConfig;
+        return networkingConfig;
     }
-
-    ContainerNetworkingConfig addAsArray(String propKey, List<String> props) {
-        if (props != null) {
-            startConfig.put(propKey, new JSONArray(props));
-        }
-        return this;
-    }
-
-    private ContainerNetworkingConfig add(String name, Object value) {
-        if (value != null) {
-            startConfig.put(name, value);
-        }
-        return this;
-    }
-
 }

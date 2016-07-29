@@ -165,9 +165,9 @@ public class RunService {
     }
 
     private void collectCustomNetworks(Set<Network> networksToRemove, ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeCustomNetworks) throws DockerAccessException {
-        final NetworkingMode networkingMode = descriptor.getImageConfiguration().getRunConfiguration().getNetworkingMode();
-        if (removeCustomNetworks && networkingMode.isCustomNetwork()) {
-           networksToRemove.add(queryService.getNetworkByName(networkingMode.getCustomNetwork()));
+        final NetworkConfig config = descriptor.getImageConfiguration().getRunConfiguration().getNetworkingConfig();
+        if (removeCustomNetworks && config.isCustomNetwork()) {
+           networksToRemove.add(queryService.getNetworkByName(config.getCustomNetwork()));
         }
     }
 
@@ -254,12 +254,11 @@ public class RunService {
                 config.binds(volumeConfig.getBind());
             }
 
-            if(runConfig.getNetworkingMode().isCustomNetwork() && runConfig.getNetworkAlias() != null && !runConfig.getNetworkAlias().isEmpty()) {
-                config.networkingConfig(new ContainerNetworkingConfig().endpointsConfig(
-                        Collections.singletonMap(
-                                runConfig.getNetworkingMode().getCustomNetwork(),
-                                new ContainerNetworkingEndpointsConfig()
-                                        .aliases(runConfig.getNetworkAlias()))));
+            NetworkConfig networkConfig = runConfig.getNetworkingConfig();
+            if(networkConfig.isCustomNetwork() && networkConfig.hasAliases()) {
+                ContainerNetworkingConfig networkingConfig =
+                    new ContainerNetworkingConfig().aliases(networkConfig);
+                config.networkingConfig(networkingConfig);
             }
 
             return config;
@@ -284,7 +283,8 @@ public class RunService {
         RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
 
-        List<String> links = findContainerIdsForLinks(runConfig.getLinks(),runConfig.getNetworkingMode().isCustomNetwork());
+        List<String> links = findContainerIdsForLinks(runConfig.getLinks(),
+                                                      runConfig.getNetworkingConfig().isCustomNetwork());
 
         ContainerHostConfig config = new ContainerHostConfig()
                 .extraHosts(runConfig.getExtraHosts())
@@ -310,13 +310,13 @@ public class RunService {
     }
 
     private void addNetworkingConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
-        NetworkingMode netMode = runConfig.getNetworkingMode();
-        if (netMode.isStandardMode()) {
-            String alias = netMode.getContainerAlias();
+        NetworkConfig networkConfig = runConfig.getNetworkingConfig();
+        if (networkConfig.isStandardNetwork()) {
+            String alias = networkConfig.getContainerAlias();
             String containerId = alias != null ? findContainerId(alias, false) : null;
-            config.networkConfig(netMode.getStandardMode(containerId));
-        } else if (netMode.isCustomNetwork()) {
-            config.networkConfig(netMode.getCustomNetwork());
+            config.networkMode(networkConfig.getStandardMode(containerId));
+        } else if (networkConfig.isCustomNetwork()) {
+            config.networkMode(networkConfig.getCustomNetwork());
         }
     }
 

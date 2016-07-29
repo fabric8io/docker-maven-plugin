@@ -33,7 +33,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     @Parameter
     private String registry;
-    
+
     // Used for injection
     public ImageConfiguration() {}
 
@@ -97,7 +97,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
         // Custom networks can have circular links, no need to be considered for the starting order.
-        if (runConfig.getLinks() != null && !runConfig.getNetworkingMode().isCustomNetwork()) {
+        if (runConfig.getLinks() != null && !runConfig.getNetworkingConfig().isCustomNetwork()) {
             for (String[] link : EnvUtil.splitOnLastColon(runConfig.getLinks())) {
                 ret.add(link[0]);
             }
@@ -105,8 +105,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     }
 
     private void addContainerNetwork(RunImageConfiguration runConfig, List<String> ret) {
-        NetworkingMode mode = runConfig.getNetworkingMode();
-        String alias = mode.getContainerAlias();
+        NetworkConfig config = runConfig.getNetworkingConfig();
+        String alias = config.getContainerAlias();
         if (alias != null) {
             ret.add(alias);
         }
@@ -118,7 +118,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         // is a data image or not on its own.
         return getRunConfiguration() == null;
     }
-    
+
     public String getDescription() {
         return String.format("[%s] %s", name, (alias != null ? "\"" + alias + "\"" : "")).trim();
     }
@@ -183,7 +183,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
             config.external = externalConfig;
             return this;
         }
-        
+
         public ImageConfiguration build() {
             return config;
         }

@@ -68,11 +68,12 @@ public class RunImageConfiguration {
     @Parameter
     private String portPropertyFile;
 
+    // For simple network setups. For complex stuff use "network"
     @Parameter
     private String net;
 
     @Parameter
-    private List<String> networkAlias;
+    private NetworkConfig network;
 
     @Parameter
     private List<String> dns;
@@ -138,8 +139,8 @@ public class RunImageConfiguration {
         }
 
         // Custom networks are available since API 1.21 (Docker 1.9)
-        NetworkingMode mode = getNetworkingMode();
-        if (mode.isCustomNetwork()) {
+        NetworkConfig config = getNetworkingConfig();
+        if (config != null && config.isCustomNetwork()) {
             return "1.21";
         }
 
@@ -226,12 +227,14 @@ public class RunImageConfiguration {
         return dns;
     }
 
-    public NetworkingMode getNetworkingMode() {
-        return new NetworkingMode(net);
-    }
-
-    public List<String> getNetworkAlias() {
-        return networkAlias;
+    public NetworkConfig getNetworkingConfig() {
+        if (network != null) {
+            return network;
+        } else if (net != null) {
+            return new NetworkConfig(net);
+        } else {
+            return new NetworkConfig();
+        }
     }
 
     public List<String> getDnsSearch() {
@@ -382,8 +385,8 @@ public class RunImageConfiguration {
             return this;
         }
 
-        public Builder netAlias(List<String> netAlias) {
-            config.networkAlias = netAlias;
+        public Builder network(NetworkConfig networkConfig) {
+            config.network = networkConfig;
             return this;
         }
 

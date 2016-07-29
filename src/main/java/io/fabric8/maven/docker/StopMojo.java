@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.fabric8.maven.docker.config.NetworkingMode;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
@@ -22,7 +21,6 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -133,9 +131,9 @@ public class StopMojo extends AbstractDockerMojo {
         Set<Network> networks = queryService.getNetworks();
 
         for (ImageConfiguration image : getResolvedImages()) {
-            final NetworkingMode networkingMode = image.getRunConfiguration().getNetworkingMode();
-            if (networkingMode.isCustomNetwork()) {
-                Network network = getNetworkByName(networks, networkingMode.getCustomNetwork());
+            final NetworkConfig config = image.getRunConfiguration().getNetworkingConfig();
+            if (config.isCustomNetwork()) {
+                Network network = getNetworkByName(networks, config.getCustomNetwork());
                 if (network != null) {
                     customNetworks.add(network);
                     for (Container container : getContainersToStop(queryService, image)) {

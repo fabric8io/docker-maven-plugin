@@ -254,7 +254,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("seccomp=unconfined"), runConfig.getSecurityOpts());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
-        assertEquals("host",runConfig.getNetworkingMode().getStandardMode(null));
+        assertEquals("host",runConfig.getNetworkingConfig().getStandardMode(null));
         assertEquals(a("example.com"), runConfig.getDnsSearch());
         assertEquals("domain.com", runConfig.getDomainname());
         assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());

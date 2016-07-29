@@ -1,6 +1,6 @@
 
 [[start-links]]
-=== Network Links
+=== Links
 
 The `<links>` configuration contains a list of containers that should
 be linked to this container according to https://docs.docker.com/userguide/dockerlinks[Docker Links]. Each link can have two parts where the optional right side is separated by a `:` and will be used as the name in the environment variables and the left side refers to the name of the container linking to. This is equivalent to the linking when using the Docker CLI `--link` option.
@@ -33,4 +33,3 @@ If you wish to link to existing containers not managed by the plugin, you may do
 Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as _legacy links_ and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container.
 
 For a more detailed documentation for the new link handling please refer to the https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks[Docker network documentation]
-

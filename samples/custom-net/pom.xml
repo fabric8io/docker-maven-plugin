@@ -36,8 +36,11 @@
               <alias>box1</alias>
               <name>busybox</name>
               <run>
-                <net>test-network</net>
-                <networkAlias>box1,box1-alternative</networkAlias>
+                <network>
+                  <name>test-network</name>
+                  <alias>box1</alias>
+                  <alias>box1-alternative</alias>
+                </network>
                 <namingStrategy>none</namingStrategy>
                 <cmd>
                   <exec>
@@ -55,8 +58,10 @@
               <alias>box2</alias>
               <name>busybox</name>
               <run>
-                <net>test-network</net>
-                <networkAlias>box2</networkAlias>
+                <network>
+                  <name>test-network</name>
+                  <alias>box2</alias>
+                </network>
                 <namingStrategy>none</namingStrategy>
                 <cmd>
                   <exec>
