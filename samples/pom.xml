@@ -46,6 +46,7 @@
 
   <modules>
    <module>net</module>
+   <module>custom-net</module>
    <module>properties</module>
    <module>dockerignore</module> 
    <module>data-jolokia-demo</module> 

@@ -253,6 +253,15 @@ public class RunService {
             if (volumeConfig != null) {
                 config.binds(volumeConfig.getBind());
             }
+
+            if(runConfig.getNetworkingMode().isCustomNetwork() && runConfig.getNetworkAlias() != null && !runConfig.getNetworkAlias().isEmpty()) {
+                config.networkingConfig(new ContainerNetworkingConfig().endpointsConfig(
+                        Collections.singletonMap(
+                                runConfig.getNetworkingMode().getCustomNetwork(),
+                                new ContainerNetworkingEndpointsConfig()
+                                        .aliases(runConfig.getNetworkAlias()))));
+            }
+
             return config;
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(String.format("Failed to create contained configuration for [%s]", imageName), e);
@@ -287,6 +296,7 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
+                .securityOpts(runConfig.getSecurityOpts())
                 .memory(runConfig.getMemory())
                 .memorySwap(runConfig.getMemorySwap())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())

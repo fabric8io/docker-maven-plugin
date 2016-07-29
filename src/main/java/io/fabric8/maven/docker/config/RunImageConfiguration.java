@@ -72,6 +72,9 @@ public class RunImageConfiguration {
     private String net;
 
     @Parameter
+    private List<String> networkAlias;
+
+    @Parameter
     private List<String> dns;
 
     @Parameter
@@ -82,6 +85,9 @@ public class RunImageConfiguration {
 
     @Parameter
     private List<String> capDrop;
+
+    @Parameter
+    private List<String> securityOpts;
 
     @Parameter
     private Boolean privileged;
@@ -212,12 +218,20 @@ public class RunImageConfiguration {
         return capDrop;
     }
 
+    public List<String> getSecurityOpts() {
+        return securityOpts;
+    }
+
     public List<String> getDns() {
         return dns;
     }
 
     public NetworkingMode getNetworkingMode() {
         return new NetworkingMode(net);
+    }
+
+    public List<String> getNetworkAlias() {
+        return networkAlias;
     }
 
     public List<String> getDnsSearch() {
@@ -358,8 +372,18 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder securityOpts(List<String> securityOpts) {
+            config.securityOpts = securityOpts;
+            return this;
+        }
+
         public Builder net(String net) {
             config.net = net;
+            return this;
+        }
+
+        public Builder netAlias(List<String> netAlias) {
+            config.networkAlias = netAlias;
             return this;
         }
 

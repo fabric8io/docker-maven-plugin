@@ -42,6 +42,10 @@ public class ContainerHostConfig {
         return addAsArray("CapDrop", capDrop);
     }
 
+    public ContainerHostConfig securityOpts(List<String> securityOpt) {
+        return addAsArray("SecurityOpt", securityOpt);
+    }
+
     public ContainerHostConfig memory(Long memory) {
         return add("Memory", memory);
     }

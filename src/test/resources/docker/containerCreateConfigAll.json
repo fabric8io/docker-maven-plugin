@@ -13,6 +13,7 @@
     },
     "Dns": ["8.8.8.8"],
     "CapDrop": ["MKNOD"],
+    "SecurityOpt": [ "seccomp=unconfined" ],
     "Links": ["db1:db1", "db2:db2"],
     "DnsSearch": ["domain.com"],
     "ShmSize": 1024,
@@ -27,6 +28,7 @@
     "CapAdd": ["NET_ADMIN"],
     "Memory": 1,
     "MemorySwap": 1,
+    "NetworkMode": "custom_network",
     "Binds": ["/host_tmp:/container_tmp"],
     "ExtraHosts": ["localhost:127.0.0.1"],
     "VolumesFrom": [
@@ -40,6 +42,13 @@
           "HostPort": "11022"
         }
       ]
+    }
+  },
+  "NetworkingConfig": {
+    "EndpointsConfig": {
+      "custom_network": {
+        "Aliases": ["net-alias"]
+      }
     }
   },
   "WorkingDir": "/foo",
