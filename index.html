@@ -548,11 +548,12 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#start-configuration">5.2.1. Configuration</a></li>
 <li><a href="#misc-env">5.2.2. Environment and Labels</a></li>
 <li><a href="#start-port-mapping">5.2.3. Port Mapping</a></li>
-<li><a href="#start-links">5.2.4. Network Links</a></li>
-<li><a href="#start-restart">5.2.5. Restart Policy</a></li>
-<li><a href="#start-volumes">5.2.6. Volumes</a></li>
-<li><a href="#start-wait">5.2.7. Wait</a></li>
-<li><a href="#start-logging">5.2.8. Logging</a></li>
+<li><a href="#start-links">5.2.4. Links</a></li>
+<li><a href="#network-configuration">5.2.5. Network</a></li>
+<li><a href="#start-restart">5.2.6. Restart Policy</a></li>
+<li><a href="#start-volumes">5.2.7. Volumes</a></li>
+<li><a href="#start-wait">5.2.8. Wait</a></li>
+<li><a href="#start-logging">5.2.9. Logging</a></li>
 </ul>
 </li>
 <li><a href="#docker:stop">5.3. <strong>docker:stop</strong></a></li>
@@ -1504,28 +1505,6 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ulimits</strong></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>ulimits for the container. This list contains <code>&lt;ulimit&gt;</code> elements which three sub elements:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>&lt;name&gt;</code> : The ulimit to set (e.g. <code>memlock</code>). Please refer to the Docker documentation for the possible values to set</p>
-</li>
-<li>
-<p><code>&lt;hard&gt;</code> : The hard limit</p>
-</li>
-<li>
-<p><code>&lt;soft&gt;</code> : The soft limit</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>See below for an example.</p>
-</div></div></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User to which the Dockerfile should switch to the end (corresponds to the <code>USER</code> Dockerfile directive).</p></td>
 </tr>
@@ -1557,13 +1536,6 @@ remote API.</p>
   <span class="tag">&lt;ports&gt;</span>
     <span class="tag">&lt;port&gt;</span>8080<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;/ports&gt;</span>
-  <span class="tag">&lt;ulimits&gt;</span>
-    <span class="tag">&lt;ulimit&gt;</span>
-       <span class="tag">&lt;name&gt;</span>memlock<span class="tag">&lt;/name&gt;</span>
-       <span class="tag">&lt;hard&gt;</span>-1<span class="tag">&lt;/hard&gt;</span>
-       <span class="tag">&lt;soft&gt;</span>-1<span class="tag">&lt;/soft&gt;</span>
-    <span class="tag">&lt;/ulimit&gt;</span>
-  <span class="tag">&lt;ulimits&gt;</span>
   <span class="tag">&lt;volumes&gt;</span>
     <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/volumes&gt;</span>
@@ -2103,26 +2075,8 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div></div></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>net</strong></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Network mode for the container:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>bridge</strong> : Bridged mode with the default Docker bridge (default)</p>
-</li>
-<li>
-<p><strong>host</strong> : Share the Docker host network interfaces</p>
-</li>
-<li>
-<p><strong>container:&lt;alias or name&gt;</strong> : Connect to the network of the specified container</p>
-</li>
-<li>
-<p><strong>&lt;custom network&gt;</strong> : Use the specified custom network which must be created before with <code>docker network create</code>. Available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
-</li>
-</ul>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>network</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#network-configuration">Network configuration</a> for your container.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>portPropertyFile</strong></p></td>
@@ -2141,12 +2095,38 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-restart">Restart Policy</a></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>securityOpts</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>&lt;opt&gt;</code> elements to specify kernel security options to add to the container. See below for an example.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shmSize</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Size of <code>/dev/shm</code> in bytes.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ulimits</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>ulimits for the container. This list contains <code>&lt;ulimit&gt;</code> elements which three sub elements:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;name&gt;</code> : The ulimit to set (e.g. <code>memlock</code>). Please refer to the Docker documentation for the possible values to set</p>
+</li>
+<li>
+<p><code>&lt;hard&gt;</code> : The hard limit</p>
+</li>
+<li>
+<p><code>&lt;soft&gt;</code> : The soft limit</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See below for an example.</p>
+</div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
@@ -2181,6 +2161,16 @@ useful when using predefined Docker arguments for setting proxies transparently.
   <span class="tag">&lt;ports&gt;</span>
     <span class="tag">&lt;port&gt;</span>jolokia.port:8080<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;/ports&gt;</span>
+  <span class="tag">&lt;ulimits&gt;</span>
+    <span class="tag">&lt;ulimit&gt;</span>
+       <span class="tag">&lt;name&gt;</span>memlock<span class="tag">&lt;/name&gt;</span>
+       <span class="tag">&lt;hard&gt;</span>-1<span class="tag">&lt;/hard&gt;</span>
+       <span class="tag">&lt;soft&gt;</span>-1<span class="tag">&lt;/soft&gt;</span>
+    <span class="tag">&lt;/ulimit&gt;</span>
+  <span class="tag">&lt;ulimits&gt;</span>
+  <span class="tag">&lt;securityOpts&gt;</span>
+    <span class="tag">&lt;opt&gt;</span>seccomp=unconfined<span class="tag">&lt;/opt&gt;</span>
+  <span class="tag">&lt;/securityOpts&gt;</span>
   <span class="tag">&lt;links&gt;</span>
     <span class="tag">&lt;link&gt;</span>db<span class="tag">&lt;/db&gt;</span>
   <span class="tag">&lt;/links&gt;</span>
@@ -2309,7 +2299,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-links">5.2.4. Network Links</h4>
+<h4 id="start-links">5.2.4. Links</h4>
 <div class="paragraph">
 <p>The <code>&lt;links&gt;</code> configuration contains a list of containers that should
 be linked to this container according to <a href="https://docs.docker.com/userguide/dockerlinks">Docker Links</a>. Each link can have two parts where the optional right side is separated by a <code>:</code> and will be used as the name in the environment variables and the left side refers to the name of the container linking to. This is equivalent to the linking when using the Docker CLI <code>--link</code> option.</p>
@@ -2350,12 +2340,89 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-restart">5.2.5. Restart Policy</h4>
+<h4 id="network-configuration">5.2.5. Network</h4>
+<div class="paragraph">
+<p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt;</a> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 13. Network configuration</caption>
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 87.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>The network mode, which can be one of the following values:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>bridge</strong> : Bridged mode with the default Docker bridge (default)</p>
+</li>
+<li>
+<p><strong>host</strong> : Share the Docker host network interfaces</p>
+</li>
+<li>
+<p><strong>container</strong> : Connect to the network of the specified container. The name of the container is taken from the <code>&lt;name&gt;</code> element.</p>
+</li>
+<li>
+<p><strong>custom</strong> : Use a custom network which must be created before with <code>docker network create</code>. This is available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
+</li>
+<li>
+<p><strong>none</strong> : No network will be setup.</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">For mode <code>container</code> this is the container name, which is this image alias. For Mode <code>custom</code> this is the name of the custom network.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>alias</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One or more alias element can be provided which gives a way for a container to be discovered by alternate names by any other container within the scope of a particular network. This configuration only has effect for when the network mode is <code>custom</code>. More than one alias can be given by providing multiple entries.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If no <code>mode</code> is given but a <code>name</code>, then a <code>custom</code> network mode is assumed. For the simple modes which does not take an argument (<code>none</code>, <code>bridge</code> or <code>host</code>) a single <code>&lt;net&gt;</code> <em>mode</em> <code>&lt;/net&gt;</code> can be used as alternative to using <code>&lt;network&gt;</code> with a <code>&lt;mode&gt;</code> subelement.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example &lt;network&gt;</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;network&gt;</span>
+   <span class="tag">&lt;mode&gt;</span>custom<span class="tag">&lt;/mode&gt;</span>
+   <span class="tag">&lt;name&gt;</span>my-network<span class="tag">&lt;/name&gt;</span>
+   <span class="tag">&lt;alias&gt;</span>box1<span class="tag">&lt;/alias&gt;</span>
+   <span class="tag">&lt;alias&gt;</span>box2<span class="tag">&lt;/alias&gt;</span>
+<span class="tag">&lt;/network&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or for a simple <code>host</code> network:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example &lt;net&gt;</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;net&gt;</span>host<span class="tag">&lt;/net&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="start-restart">5.2.6. Restart Policy</h4>
 <div class="paragraph">
 <p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Restart Policy configuration</caption>
+<caption class="title">Table 14. Restart Policy configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2394,12 +2461,12 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-volumes">5.2.6. Volumes</h4>
+<h4 id="start-volumes">5.2.7. Volumes</h4>
 <div class="paragraph">
 <p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Volume configuration</caption>
+<caption class="title">Table 15. Volume configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2457,14 +2524,14 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-wait">5.2.7. Wait</h4>
+<h4 id="start-wait">5.2.8. Wait</h4>
 <div class="paragraph">
 <p>While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
 <code>&lt;wait&gt;</code> section which the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Wait configuration</caption>
+<caption class="title">Table 16. Wait configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2586,12 +2653,12 @@ output of an container and blocks until the pattern is matched.</p></td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-logging">5.2.8. Logging</h4>
+<h4 id="start-logging">5.2.9. Logging</h4>
 <div class="paragraph">
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Logging configuration</caption>
+<caption class="title">Table 17. Logging configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2709,7 +2776,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Stop configuration</caption>
+<caption class="title">Table 18. Stop configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2759,7 +2826,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Push options</caption>
+<caption class="title">Table 19. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2864,7 +2931,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Watch configuration</caption>
+<caption class="title">Table 20. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2945,7 +3012,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Watch configuration for a single image</caption>
+<caption class="title">Table 21. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3058,7 +3125,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Logging options</caption>
+<caption class="title">Table 22. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3183,7 +3250,7 @@ up from the following properties, which correspond to the corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. External properties</caption>
+<caption class="title">Table 23. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3350,6 +3417,18 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container naming (either <code>none</code> or <code>alias</code>)</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.network.mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Network mode to use which can be <code>none</code>, <code>host</code>, <code>bridged</code>, <code>container</code> or <code>custom</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.network.name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the custom network when mode is <code>custom</code>, or for mode <code>container</code> the image alias name used to create the container.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.network.alias.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One or more aliase for a custom network. Only used when the network mode is <code>custom</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.optimise</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only one image layer is created.</p></td>
 </tr>
@@ -3372,6 +3451,10 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.restartPolicy.retry</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Max restrart retries if <code>on-failure</code> used</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.securityOpts.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>opt</code> elements to specify kernel security options to add to the container. For example <code>docker.securityOpt.1=seccomp=unconfined</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tags.idx</strong></p></td>
@@ -3856,7 +3939,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-07-29 08:52:43 UTC
+Last updated 2016-07-29 15:24:20 UTC
 </div>
 </div>
 </body>
