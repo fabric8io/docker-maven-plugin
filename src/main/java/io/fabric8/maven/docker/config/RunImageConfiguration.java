@@ -84,7 +84,7 @@ public class RunImageConfiguration {
     private List<String> capDrop;
 
     @Parameter
-    private List<String> securityOpt;
+    private List<String> securityOpts;
 
     @Parameter
     private Boolean privileged;
@@ -215,8 +215,8 @@ public class RunImageConfiguration {
         return capDrop;
     }
 
-    public List<String> getSecurityOpt() {
-        return securityOpt;
+    public List<String> getSecurityOpts() {
+        return securityOpts;
     }
 
     public List<String> getDns() {
@@ -365,8 +365,8 @@ public class RunImageConfiguration {
             return this;
         }
 
-        public Builder securityOpt(List<String> securityOpt) {
-            config.securityOpt = securityOpt;
+        public Builder securityOpts(List<String> securityOpts) {
+            config.securityOpts = securityOpts;
             return this;
         }
 

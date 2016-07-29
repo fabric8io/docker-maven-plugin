@@ -251,7 +251,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
-        assertEquals(a("seccomp=unconfined"), runConfig.getSecurityOpt());
+        assertEquals(a("seccomp=unconfined"), runConfig.getSecurityOpts());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
         assertEquals("host",runConfig.getNetworkingMode().getStandardMode(null));
@@ -339,7 +339,7 @@ public class PropertyConfigHandlerTest {
             k(ConfigKey.BIND) + ".2", "/tmp:/tmp",
             k(ConfigKey.CAP_ADD) + ".1", "CAP",
             k(ConfigKey.CAP_DROP) + ".1", "CAP",
-            k(ConfigKey.SECURITY_OPT) + ".1", "seccomp=unconfined",
+            k(ConfigKey.SECURITY_OPTS) + ".1", "seccomp=unconfined",
             k(ConfigKey.CMD), "command.sh",
             k(ConfigKey.DNS) + ".1", "8.8.8.8",
             k(ConfigKey.NET), "host",

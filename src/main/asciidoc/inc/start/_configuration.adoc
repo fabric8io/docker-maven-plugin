@@ -83,14 +83,23 @@ a| Network mode for the container:
 | *restartPolicy*
 | <<start-restart,Restart Policy>>
 
-| *securityOpt*
-| List of `opt` elements to specify kernel security options to add to the container.
+| *securityOpts*
+| List of `<opt>` elements to specify kernel security options to add to the container. See below for an example.
 
 | *shmSize*
 | Size of `/dev/shm` in bytes.
 
 | *skip*
 | If `true` disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.
+
+| *ulimits*
+a| ulimits for the container. This list contains `<ulimit>` elements which three sub elements:
+
+* `<name>` : The ulimit to set (e.g. `memlock`). Please refer to the Docker documentation for the possible values to set
+* `<hard>` : The hard limit
+* `<soft>` : The soft limit
+
+See below for an example.
 
 | *user*
 | User used inside the container
@@ -120,6 +129,16 @@ a| Network mode for the container:
   <ports>
     <port>jolokia.port:8080</port>
   </ports>
+  <ulimits>
+    <ulimit>
+       <name>memlock</name>
+       <hard>-1</hard>
+       <soft>-1</soft>
+    </ulimit>
+  <ulimits>
+  <securityOpts>
+    <opt>seccomp=unconfined</opt>
+  </securityOpts>
   <links>
     <link>db</db>
   </links>

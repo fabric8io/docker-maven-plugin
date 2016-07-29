@@ -264,7 +264,7 @@ public class RunServiceTest {
                         .privileged(true)
                         .capAdd(capAdd())
                         .capDrop(capDrop())
-                        .securityOpt(securityOpt())
+                        .securityOpts(securityOpts())
                         .restartPolicy(restartPolicy())
                         .build();
     }
@@ -298,7 +298,7 @@ public class RunServiceTest {
         return Collections.singletonList("MKNOD");
     }
 
-    private List<String> securityOpt() {
+    private List<String> securityOpts() {
         return Collections.singletonList("seccomp=unconfined");
     }
 

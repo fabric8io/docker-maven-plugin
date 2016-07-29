@@ -42,7 +42,7 @@ public class ContainerHostConfig {
         return addAsArray("CapDrop", capDrop);
     }
 
-    public ContainerHostConfig securityOpt(List<String> securityOpt) {
+    public ContainerHostConfig securityOpts(List<String> securityOpt) {
         return addAsArray("SecurityOpt", securityOpt);
     }
 

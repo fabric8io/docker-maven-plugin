@@ -75,7 +75,7 @@ public enum ConfigKey {
     RESTART_POLICY_NAME("restartPolicy.name"),
     RESTART_POLICY_RETRY("restartPolicy.retry"),
     RUN,
-    SECURITY_OPT,
+    SECURITY_OPTS,
     SHMSIZE,
     SKIP_BUILD("skip.build"),
     SKIP_RUN("skip.run"),
