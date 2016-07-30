@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.15.14**
+  - Run 'stopContainer' in a Future to short circuit extra waiting ([#518](https://github.com/fabric8io/docker-maven-plugin/issues/518))
+
 * **0.15.13** (2016-07-29)
   - Add <securityOpts> for running containers in special security contexts (#524)
   - Add support for multiples network aliases (#466)
