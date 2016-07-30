@@ -75,13 +75,17 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     }
 
     private Map<String, String> addBuildArgsFromProperties(Properties properties) {
-        String argPrefix  = "docker.buildArg.";
+        String argPrefix = "docker.buildArg.";
         Map<String, String> buildArgs = new HashMap<>();
-        for(Object keyObj : properties.keySet()){
-            String key = (String)keyObj;
-            if (key.startsWith(argPrefix)){
+        for (Object keyObj : properties.keySet()) {
+            String key = (String) keyObj;
+            if (key.startsWith(argPrefix)) {
                 String argKey = key.replaceFirst(argPrefix, "");
-                buildArgs.put(argKey, properties.getProperty(key));
+                String value = properties.getProperty(key);
+
+                if (!isEmpty(value)) {
+                    buildArgs.put(argKey, value);
+                }
             }
         }
         log.debug("Build args set %s", buildArgs);
@@ -140,4 +144,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         }
     }
 
+    private boolean isEmpty(String str) {
+        return str == null || str.isEmpty();
+    }
 }
