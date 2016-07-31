@@ -81,6 +81,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
             addVolumes(runConfig, ret);
             addLinks(runConfig, ret);
             addContainerNetwork(runConfig, ret);
+            addDependsOn(runConfig, ret);
         }
         return ret;
     }
@@ -109,6 +110,15 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         String alias = config.getContainerAlias();
         if (alias != null) {
             ret.add(alias);
+        }
+    }
+
+    private void addDependsOn(RunImageConfiguration runConfig, List<String> ret) {
+        // Only used in required networks.
+        if (runConfig.getDependsOn() != null && runConfig.getNetworkingConfig().isCustomNetwork()) {
+            for (String[] link : EnvUtil.splitOnLastColon(runConfig.getDependsOn())) {
+                ret.add(link[0]);
+            }
         }
     }
 
