@@ -119,10 +119,10 @@ public class RunService {
      * @param removeVolumes whether to remove volumes after stopping
      */
     public void stopContainer(String containerId,
-            ImageConfiguration imageConfig,
-            boolean keepContainer,
-            boolean removeVolumes)
-        throws DockerAccessException {
+                              ImageConfiguration imageConfig,
+                              boolean keepContainer,
+                              boolean removeVolumes)
+            throws DockerAccessException {
         ContainerTracker.ContainerShutdownDescriptor descriptor =
                 new ContainerTracker.ContainerShutdownDescriptor(imageConfig, containerId);
         shutdown(descriptor, keepContainer, removeVolumes);
@@ -417,8 +417,13 @@ public class RunService {
         int killGracePeriod = adjustGracePeriod(descriptor.getKillGracePeriod());
         log.debug("shutdown will wait max of %d seconds before removing container", killGracePeriod);
 
-        long waited = shutdownAndWait(containerId, killGracePeriod);
-
+        long waited;
+        if (killGracePeriod == 0) {
+            docker.stopContainer(containerId, 0);
+            waited = 0;
+        } else {
+            waited = shutdownAndWait(containerId, killGracePeriod);
+        }
         if (!keepContainer) {
             removeContainer(descriptor, removeVolumes, containerId);
         }
@@ -447,7 +452,7 @@ public class RunService {
         int killGracePeriodInSeconds = (gracePeriod + 500) / 1000;
         if (gracePeriod != 0 && killGracePeriodInSeconds == 0) {
             log.warn("A kill grace period of %d ms leads to no wait at all since its rounded to seconds. " +
-                    "Please use at least 500 as value for wait.kill", gracePeriod);
+                     "Please use at least 500 as value for wait.kill", gracePeriod);
         }
 
         return killGracePeriodInSeconds;
@@ -465,7 +470,7 @@ public class RunService {
     }
 
     private long shutdownAndWait(final String containerId, final int killGracePeriodInSeconds) throws DockerAccessException {
-        long waited = 0;
+        long waited;
         try {
             waited = WaitUtil.wait(killGracePeriodInSeconds, new Callable<Void>() {
                 @Override
