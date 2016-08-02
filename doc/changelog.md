@@ -1,8 +1,11 @@
 # ChangeLog
 
+* **0.15.15**
+  - Run 'stopContainer' in a Future to short circuit extra waiting ([#518](https://github.com/fabric8io/docker-maven-plugin/issues/518))
+  - Don't pass `docker.buildArg` values that are empty ([#529](https://github.com/fabric8io/docker-maven-plugin/issues/529))
+
 * **0.15.14** (2016-07-29)
   - Pattern match fix for multiline log output. Related to ([#259](https://github.com/fabric8io/docker-maven-plugin/issues/259))
-  - Don't pass `docker.buildArg` values that are empty ([#529](https://github.com/fabric8io/docker-maven-plugin/issues/529))
 
 * **0.15.13** (2016-07-29)
   - Add <securityOpts> for running containers in special security contexts ([#524](https://github.com/fabric8io/docker-maven-plugin/issues/524))
