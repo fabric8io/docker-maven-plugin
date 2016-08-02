@@ -47,6 +47,12 @@ public interface Container {
      */
     String getIPAddress();
 
+    /**
+     * Return IP Addresses of custom networks, mapped to the network name as the key.
+     * @return The mapping of network names to IP addresses, or null it none provided.
+     */
+    Map<String, String> getCustomIPAddresses();
+
     class PortBinding {
         private final String hostIp;
         private final Integer hostPort;
