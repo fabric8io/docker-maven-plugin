@@ -375,7 +375,7 @@ public class StartMojo extends AbstractDockerMojo {
                 props.put(prefix + "ip", ip);
             }
 
-            Map<String, String> nets = container.getCustomIPAddresses();
+            Map<String, String> nets = container.getCustomNetworkIpAddresses();
             if (nets != null) {
                 for (Map.Entry<String, String> entry : nets.entrySet()) {
                     props.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());

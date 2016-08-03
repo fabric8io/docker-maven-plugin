@@ -25,7 +25,7 @@ public class ContainerDetails implements Container {
     static final String STATE = "State";
 
     private static final String RUNNING = "Running";
-    
+
     private final JSONObject json;
 
     public ContainerDetails(JSONObject json) {
@@ -81,7 +81,7 @@ public class ContainerDetails implements Container {
     }
 
     @Override
-    public Map<String, String> getCustomIPAddresses() {
+    public Map<String, String> getCustomNetworkIpAddresses() {
         if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
             JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
             if (networkSettings.has(NETWORKS) && !networkSettings.isNull(NETWORKS)) {

@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.model;
 /*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ public interface Container {
     String getImage();
 
     Map<String, String> getLabels();
-    
+
     String getName();
 
     Map<String, PortBinding> getPortBindings();
@@ -51,7 +51,7 @@ public interface Container {
      * Return IP Addresses of custom networks, mapped to the network name as the key.
      * @return The mapping of network names to IP addresses, or null it none provided.
      */
-    Map<String, String> getCustomIPAddresses();
+    Map<String, String> getCustomNetworkIpAddresses();
 
     class PortBinding {
         private final String hostIp;
