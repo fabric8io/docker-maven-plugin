@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.15.15** (2016-08-03)
+* **0.15.16** (2016-08-03)
   - Run 'stopContainer' in a Future to short circuit extra waiting ([#518](https://github.com/fabric8io/docker-maven-plugin/issues/518))
   - Don't pass `docker.buildArg` values that are empty ([#529](https://github.com/fabric8io/docker-maven-plugin/issues/529))
   - Add new implicit generated properties `docker.container.<alias>.net.<name>.ip` when custom networks are used ([#533](https://github.com/fabric8io/docker-maven-plugin/issues/533))
