@@ -35,7 +35,7 @@ described in <<build-buildargs,Build Args>>
 | [[build-config-from]]*from*
 | The base image which should be used for this image. If not given this default to `busybox:latest` and is suitable for a pure data image.
 ifeval::["{plugin}" == "fabric8"]
-In case of an <<build-openshift,S2I Binary build>>this parameter specifies the S2I Builder Image to use, which by default is `fabric8/s2i-java:latest`.
+In case of an <<build-openshift,S2I Binary build>> this parameter specifies the S2I Builder Image to use, which by default is `fabric8/s2i-java:latest`.
 
 endif::[]
 | *labels*
