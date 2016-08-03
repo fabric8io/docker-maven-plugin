@@ -1,10 +1,10 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.xml.bind.DatatypeConverter;
-
-import org.json.JSONObject;
+import java.util.*;
 
 
 public class ContainerDetails implements Container {
@@ -19,6 +19,7 @@ public class ContainerDetails implements Container {
     static final String NAME = "Name";
     static final String IP = "IPAddress";
     static final String NETWORK_SETTINGS = "NetworkSettings";
+    static final String NETWORKS = "Networks";
     static final String PORTS = "Ports";
     static final String SLASH = "/";
     static final String STATE = "State";
@@ -74,6 +75,29 @@ public class ContainerDetails implements Container {
             JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
             if (!networkSettings.isNull(IP)) {
                 return networkSettings.getString(IP);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getCustomIPAddresses() {
+        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
+            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
+            if (networkSettings.has(NETWORKS) && !networkSettings.isNull(NETWORKS)) {
+                JSONObject networks = networkSettings.getJSONObject(NETWORKS);
+                JSONArray keys = networks.names();
+
+                Map<String, String> results = new HashMap<>();
+                for (int i = 0; i < keys.length(); i++) {
+                    String key = keys.getString(i);
+                    JSONObject net = networks.getJSONObject(key);
+                    if (net.has(IP) && !net.isNull(IP)) {
+                        results.put(key, net.getString(IP));
+                    }
+                }
+
+                return results;
             }
         }
         return null;
