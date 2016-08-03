@@ -1,6 +1,4 @@
 
-[[start-configuration]]
-=== Configuration
 
 The `<run>` configuration element knows the following sub elements:
 

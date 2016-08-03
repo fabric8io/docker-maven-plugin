@@ -1,5 +1,3 @@
-[[build-assembly]]
-=== Assembly
 
 The `<assembly>` element within `<build>` is has an XML struture and defines how build artifacts and other files can enter the Docker image.
 

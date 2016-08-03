@@ -7,10 +7,23 @@ This goal will build all images which have a `<build>` configuration section, or
 
 include::build/_overview.adoc[]
 
+
+[[build-configuration]]
+=== Configuration
+
 include::build/_configuration.adoc[]
+
+[[build-assembly]]
+=== Assembly
 
 include::build/_assembly.adoc[]
 
+[[misc-startup]]
+=== Startup Arguments
+
 include::misc/_startup.adoc[]
+
+[[build-buildargs]]
+=== Build Args
 
 include::build/_buildargs.adoc[]

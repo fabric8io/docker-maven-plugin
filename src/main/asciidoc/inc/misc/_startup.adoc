@@ -1,6 +1,4 @@
 
-[[misc-startup]]
-=== Startup Arguments
 
 Using `entryPoint` and `cmd` it is possible to specify the https://docs.docker.com/reference/builder/#entrypoint[entry point]
 or https://docs.docker.com/reference/builder/#cmd[cmd] for a container.

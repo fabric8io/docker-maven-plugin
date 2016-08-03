@@ -1,7 +1,4 @@
 
-[[start-volumes]]
-=== Volumes
-
 A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a `<volumes>` section of the run configuration. It can contain the following sub elements:
 
 .Volume configuration

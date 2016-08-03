@@ -1,5 +1,3 @@
-[[build-buildargs]]
-=== Build Args
 
 As described in section <<build-configuration,Configuration>> for external Dockerfiles https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build arg] can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:

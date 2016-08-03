@@ -1,7 +1,4 @@
 
-[[start-wait]]
-=== Wait
-
 While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
 `<wait>` section which the following sub-elements:

@@ -1,6 +1,6 @@
 
 [[build-overview]]
-Images can be build in two different ways:
+There are two different modes how Images can be built:
 
 .Inline plugin configuration
 With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <<external-configuration,External configuration>>. The XML configuration syntax is recommended because of its more structured and typed nature.

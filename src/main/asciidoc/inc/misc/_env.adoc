@@ -1,6 +1,4 @@
 
-[[misc-env]]
-=== Environment and Labels
 
 When creating a container one or more environment variables can be set via configuration with the `env` parameter
 

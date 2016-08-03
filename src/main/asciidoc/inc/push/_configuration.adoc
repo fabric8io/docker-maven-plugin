@@ -10,7 +10,7 @@
 | `docker.skip.push`
 
 | *pushRegistry*
-| The registry to use when pushing the image. <<registry,Registry Handling>> for
+| The registry to use when pushing the image. See <<registry,Registry Handling>> for
 more details.
 | `docker.push.registry`
 

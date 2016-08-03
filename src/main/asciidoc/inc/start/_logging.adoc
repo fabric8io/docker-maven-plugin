@@ -1,7 +1,4 @@
 
-[[start-logging]]
-=== Logging
-
 When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:
 
 .Logging configuration
