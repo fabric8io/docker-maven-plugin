@@ -22,8 +22,15 @@ public class ApacheHttpClientDelegate {
     private final CloseableHttpClient httpClient;
 
     public ApacheHttpClientDelegate(ClientBuilder clientBuilder) throws IOException {
+    	this(clientBuilder, true);
+    }
+    
+    public ApacheHttpClientDelegate(ClientBuilder clientBuilder, boolean pooled) throws IOException {
         this.clientBuilder = clientBuilder;
-        this.httpClient = clientBuilder.buildPooledClient();
+        if(pooled)
+        	this.httpClient = clientBuilder.buildPooledClient();
+        else
+        	this.httpClient = clientBuilder.buildBasicClient();
     }
 
     public CloseableHttpClient createBasicClient()  {

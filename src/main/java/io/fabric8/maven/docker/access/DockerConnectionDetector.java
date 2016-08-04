@@ -47,8 +47,12 @@ public class DockerConnectionDetector {
         File unixSocket = new File("/var/run/docker.sock");
         if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
             return "unix:///var/run/docker.sock";
-        } 
-        throw new IllegalArgumentException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock'");
+        }        
+        File windowsPipe = new File("//./pipe/docker_engine");
+        if(windowsPipe.exists()) {
+        	return "npipe:////./pipe/docker_engine";
+        }        
+        throw new IllegalArgumentException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock' or '//./pipe/docker_engine'");
     }
     
     /**
