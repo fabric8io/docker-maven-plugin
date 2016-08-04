@@ -8,14 +8,14 @@ of an image configuration. In addition to `<dockerFileDir>` and
 |===
 | Element | Description
 
-| *args*
+| *assembly*
+| specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
+
+| *buildArgs*
 | Map specifying the value of https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build args]
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or `labels` or `env`).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
 described in <<build-buildargs,Build Args>>
-
-| *assembly*
-| specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
 
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.

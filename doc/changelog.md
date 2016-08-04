@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.15.17**
+  - Fixed naming of 'buildArgs' for `docker:build` (was `args` formerly)
+
 * **0.15.16** (2016-08-03)
   - Run 'stopContainer' in a Future to short circuit extra waiting ([#518](https://github.com/fabric8io/docker-maven-plugin/issues/518))
   - Don't pass `docker.buildArg` values that are empty ([#529](https://github.com/fabric8io/docker-maven-plugin/issues/529))
