@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-08-03</span>
+<span id="revdate">2016-08-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -1438,15 +1438,15 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>args</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>assembly</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildArgs</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the value of <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build args</a>
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
 described in <a href="#build-buildargs">Build Args</a></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>assembly</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -3944,7 +3944,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-08-03 16:58:28 UTC
+Last updated 2016-08-04 06:20:53 UTC
 </div>
 </div>
 </body>
