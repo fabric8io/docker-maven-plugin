@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.log;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,8 +55,9 @@ public class DefaultLogCallback implements LogCallback {
         if (spec == null) {
             spec = LogOutputSpec.DEFAULT;
         }
-
-        ps.println(spec.getPrompt(spec.isUseColor(),logEntry.getTimestamp()) + logEntry.getText());
+        String text = logEntry.getText();
+        text = text.replaceFirst("\\n$","");
+        ps.println(spec.getPrompt(spec.isUseColor(),logEntry.getTimestamp()) + text);
     }
 
         // A single log-entry
