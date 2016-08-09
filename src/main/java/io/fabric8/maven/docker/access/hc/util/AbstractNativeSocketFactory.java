@@ -44,6 +44,5 @@ abstract public class AbstractNativeSocketFactory implements ConnectionSocketFac
     }
 
     protected abstract SocketAddress createSocketAddress(String path);
-
     public abstract Socket createSocket(HttpContext context) throws IOException;
 }

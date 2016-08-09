@@ -12,13 +12,13 @@ import org.apache.http.protocol.HttpContext;
 
 import io.fabric8.maven.docker.util.Logger;
 
-final class WindowsConnectionSocketFactory extends AbstractNativeSocketFactory {
+final class NpipeConnectionSocketFactory extends AbstractNativeSocketFactory {
 
 	// Logging
     private final Logger log;
 
-    WindowsConnectionSocketFactory(String unixSocketPath, Logger log) {
-        super(unixSocketPath);
+    NpipeConnectionSocketFactory(String npipePath, Logger log) {
+        super(npipePath);
         this.log = log;
     }
 

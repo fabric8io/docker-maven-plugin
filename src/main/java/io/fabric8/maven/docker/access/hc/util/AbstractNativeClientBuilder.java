@@ -46,12 +46,12 @@ abstract public class AbstractNativeClientBuilder implements ClientBuilder {
     private final DnsResolver dnsResolver;
     private final int maxConnections;
 
-    public AbstractNativeClientBuilder(String socketPath, int maxConnections, Logger logger) {
+    public AbstractNativeClientBuilder(String path, int maxConnections, Logger logger) {
         this.maxConnections = maxConnections;
         this.log = logger;
-        this.path = socketPath;
+        this.path = path;
         dnsResolver = nullDnsResolver();
-        registry = buildRegistry(socketPath);
+        registry = buildRegistry(path);
     }
 
     protected abstract ConnectionSocketFactory getConnectionSocketFactory();
@@ -66,6 +66,14 @@ abstract public class AbstractNativeClientBuilder implements ClientBuilder {
         return httpBuilder.build();
     }
 
+    @Override
+    public CloseableHttpClient buildBasicClient() throws IOException {
+        BasicHttpClientConnectionManager manager = new BasicHttpClientConnectionManager(registry, null, null, dnsResolver);
+        return HttpClients.custom().setConnectionManager(manager).build();
+    }
+
+    // =========================================================================================================
+
     private Registry<ConnectionSocketFactory> buildRegistry(String path) {
         final RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.create();
         registryBuilder.register(getProtocol(), getConnectionSocketFactory());
@@ -79,11 +87,5 @@ abstract public class AbstractNativeClientBuilder implements ClientBuilder {
                 return new InetAddress[] {null};
             }
         };
-    }
-
-    @Override
-    public CloseableHttpClient buildBasicClient() throws IOException {
-        BasicHttpClientConnectionManager manager = new BasicHttpClientConnectionManager(registry, null, null, dnsResolver);
-        return HttpClients.custom().setConnectionManager(manager).build();
     }
 }

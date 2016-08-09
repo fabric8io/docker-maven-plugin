@@ -74,10 +74,10 @@ import io.fabric8.maven.docker.util.Timestamp;
 public class DockerAccessWithHcClient implements DockerAccess {
 
     // Base URL which is given through when using UnixSocket communication but is not really used
-    private static final String DUMMY_BASE_URL = "unix://127.0.0.1:1/";
+    private static final String UNIX_URL = "unix://127.0.0.1:1/";
 
     // Base URL which is given through when using NamedPipe communication but is not really used
-    private static final String DUMMY_NPIPE_URL = "npipe://127.0.0.1:1/";
+    private static final String NPIPE_URL = "npipe://127.0.0.1:1/";
 
     // Logging
     private final Logger log;
@@ -103,14 +103,14 @@ public class DockerAccessWithHcClient implements DockerAccess {
         this.log = log;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
-            throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix:// or npipe://");
+            throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp://, unix:// or npipe://");
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections, log));
-            this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
+            this.urlBuilder = new UrlBuilder(UNIX_URL, apiVersion);
         } else if (uri.getScheme().equalsIgnoreCase("npipe")) {
         	this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
-            this.urlBuilder = new UrlBuilder(DUMMY_NPIPE_URL, apiVersion);
+            this.urlBuilder = new UrlBuilder(NPIPE_URL, apiVersion);
         } else {
             this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);

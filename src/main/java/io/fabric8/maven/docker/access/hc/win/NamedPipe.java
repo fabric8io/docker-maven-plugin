@@ -33,7 +33,7 @@ final class NamedPipe extends Socket {
 
     private FileChannel channel;
 
-    public NamedPipe(Logger log) throws IOException {
+    NamedPipe(Logger log) throws IOException {
     	this.log = log;
     }
 
@@ -248,9 +248,12 @@ final class NamedPipe extends Socket {
 
     @Override
     public void close() throws IOException {
-    	if(isClosed())
-    		return;
-        channel.close();
+        if (isClosed()) {
+            return;
+        }
+        if (channel != null) {
+            channel.close();
+        }
         inputShutdown = true;
         outputShutdown = true;
     }

@@ -164,7 +164,7 @@ public class DockerAssemblyManager {
         buildDirs.createDirs();
         return buildDirs;
     }
-    
+
     private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
         return assemblyConfig != null &&
                 (assemblyConfig.getInline() != null ||

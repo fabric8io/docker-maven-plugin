@@ -345,7 +345,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             final String host;
             try {
                 URI uri = new URI(dockerUrl);
-                if (uri.getHost() == null && uri.getScheme().equals("unix")) {
+                if (uri.getHost() == null && (uri.getScheme().equals("unix") || uri.getScheme().equals("npipe"))) {
                     host = "localhost";
                 } else {
                     host = uri.getHost();
