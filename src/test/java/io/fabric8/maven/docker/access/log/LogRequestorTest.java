@@ -23,7 +23,9 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -37,7 +39,7 @@ public class LogRequestorTest {
     final RequestUtil unused = null;
 
     @Mocked
-    HttpResponse httpResponse;
+    CloseableHttpResponse httpResponse;
 
     @Mocked
     UrlBuilder urlBuilder;
@@ -55,7 +57,7 @@ public class LogRequestorTest {
     LogCallback callback;
 
     @Mocked
-    HttpClient client;
+    CloseableHttpClient client;
 
     @Test
     public void testEmptyMessage() throws Exception {
