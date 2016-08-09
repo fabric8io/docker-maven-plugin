@@ -95,15 +95,15 @@ public class StopMojo extends AbstractDockerMojo {
         //Do not fail if container is not found
         try {
             
-	        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
+            if (strategy == RunImageConfiguration.NamingStrategy.alias) {
                 Container container = queryService.getContainer(image.getAlias());
-		        if (container !=  null) {
-	                containers = Collections.singletonList(container);
-		        }
-	        } else {
-	            containers = queryService.getContainersForImage(image.getName());
-	        }
-	        
+                if (container !=  null) {
+                    containers = Collections.singletonList(container);
+                }
+            } else {
+                containers = queryService.getContainersForImage(image.getName());
+            }
+            
             if(containers == null) {
                 containers = Collections.emptyList();
             }
