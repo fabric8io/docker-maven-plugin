@@ -4,21 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 
+import io.fabric8.maven.docker.access.hc.util.AbstractNativeSocketFactory;
 import org.apache.http.HttpHost;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.protocol.HttpContext;
 
 import io.fabric8.maven.docker.util.Logger;
 
-final class WindowsConnectionSocketFactory implements ConnectionSocketFactory {
+final class WindowsConnectionSocketFactory extends AbstractNativeSocketFactory {
 
 	// Logging
     private final Logger log;
-    private final File windowsPipeFile;
 
-    public WindowsConnectionSocketFactory(String unixSocketPath, Logger log) {
-        this.windowsPipeFile = new File(unixSocketPath);
+    WindowsConnectionSocketFactory(String unixSocketPath, Logger log) {
+        super(unixSocketPath);
         this.log = log;
     }
 
@@ -28,10 +28,7 @@ final class WindowsConnectionSocketFactory implements ConnectionSocketFactory {
     }
 
     @Override
-    public Socket connectSocket(int connectTimeout, Socket sock, HttpHost host, InetSocketAddress remoteAddress,
-            InetSocketAddress localAddress, HttpContext context)
-            throws IOException {
-        sock.connect(new NpipeSocketAddress(windowsPipeFile), connectTimeout);
-        return sock;
+    protected SocketAddress createSocketAddress(String path) {
+        return new NpipeSocketAddress(new File(path));
     }
 }

@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.access.hc.http;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import java.security.KeyStore;
 
 import javax.net.ssl.SSLContext;
 
-import io.fabric8.maven.docker.access.hc.ClientBuilder;
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.HttpClientConnectionManager;

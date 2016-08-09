@@ -23,7 +23,7 @@ final class NamedPipe extends Socket {
     private final Logger log;
 	//for development purposes
 	private final static boolean DEBUG = false;
-	
+
     private final Object connectLock = new Object();
     private volatile boolean inputShutdown, outputShutdown;
 
@@ -32,7 +32,7 @@ final class NamedPipe extends Socket {
     private RandomAccessFile namedPipe;
 
     private FileChannel channel;
-        
+
     public NamedPipe(Logger log) throws IOException {
     	this.log = log;
     }
@@ -112,15 +112,14 @@ final class NamedPipe extends Socket {
         }
 
         return new FilterInputStream(Channels.newInputStream(channel)) {
-        	
+
         	@Override
         	public int read(byte[] b, int off, int len) throws IOException {
         		int readed = super.read(b, off, len);
-        		if(DEBUG)
-            		log.info("RESPONSE %s", new String(b, off, len, Charset.forName("UTF-8")));
-        		return readed;
+                log.debug("RESPONSE %s", new String(b, off, len, Charset.forName("UTF-8")));
+                return readed;
         	}
-        	
+
             @Override
             public void close() throws IOException {
                 shutdownInput();
@@ -141,8 +140,7 @@ final class NamedPipe extends Socket {
         return new FilterOutputStream(Channels.newOutputStream(channel)) {
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
-            	if(DEBUG)
-            		log.info("REQUEST %s", new String(b, off, len, Charset.forName("UTF-8")));
+                log.debug("REQUEST %s", new String(b, off, len, Charset.forName("UTF-8")));
                 out.write(b, off, len);
             }
 

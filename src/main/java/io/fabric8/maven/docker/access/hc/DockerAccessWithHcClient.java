@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -77,7 +78,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     // Base URL which is given through when using NamedPipe communication but is not really used
     private static final String DUMMY_NPIPE_URL = "npipe://127.0.0.1:1/";
-    
+
     // Logging
     private final Logger log;
 
@@ -98,17 +99,16 @@ public class DockerAccessWithHcClient implements DockerAccess {
                                     String baseUrl,
                                     String certPath,
                                     int maxConnections,
-                                    Logger log)
-            throws IOException {
+                                    Logger log) throws IOException {
         this.log = log;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
             throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix:// or npipe://");
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
-            this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections));
+            this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections, log));
             this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
-        } else if(uri.getScheme().equalsIgnoreCase("npipe")) {
+        } else if (uri.getScheme().equalsIgnoreCase("npipe")) {
         	this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
             this.urlBuilder = new UrlBuilder(DUMMY_NPIPE_URL, apiVersion);
         } else {
@@ -236,7 +236,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void buildImage(String image, File dockerArchive, String dockerfileName, boolean forceRemove, boolean noCache,
             Map<String, String> buildArgs) throws DockerAccessException {
         try {
-            String url = urlBuilder.buildImage(image, dockerfileName, forceRemove, noCache, buildArgs);            
+            String url = urlBuilder.buildImage(image, dockerfileName, forceRemove, noCache, buildArgs);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to build image [%s]", image);
@@ -476,7 +476,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
     	return createHttpClient(builder, true);
     }
-    
+
     ApacheHttpClientDelegate createHttpClient(ClientBuilder builder, boolean pooled) throws IOException {
         return new ApacheHttpClientDelegate(builder, pooled);
     }

@@ -1,6 +1,6 @@
-package io.fabric8.maven.docker.access.hc;
+package io.fabric8.maven.docker.access.hc.util;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,5 @@ public interface ClientBuilder {
      * @throws IOException
      */
     CloseableHttpClient buildBasicClient() throws IOException;
-
 
 }

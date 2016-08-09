@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import java.io.IOException;
 import java.util.Map;
 
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import mockit.StrictExpectations;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -15,7 +16,6 @@ import org.junit.Test;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
-import mockit.Expectations;
 import mockit.Mocked;
 
 public class DockerAccessWithHcClientTest {

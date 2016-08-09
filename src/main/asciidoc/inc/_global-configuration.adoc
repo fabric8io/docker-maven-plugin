@@ -59,9 +59,10 @@ The discovery sequence used by the docker-maven-plugin to determine
 the URL is:
 
 . value of *dockerHost* (`docker.host`)
-. the Docker host associated with the docker-machine named in `<machine>`, i.e. the `DOCKER_HOST` from `docker-machine env`. See <<docker-machine,below>> for more information about Docker machine support.
+. the Docker host associated with the docker-machine named in `<machine>`, i.e. the `DOCKER_HOST` from `docker-machine env`. See <<docker-machine,below>> for more information about Docker machine support. If `<machine>` is not set, then no docker-machine detection is used.
 . the value of the environment variable `DOCKER_HOST`.
-. `unix:///var/run/docker.sock` if it is a readable socket.
+. `/var/run/docker.sock` if it is a readable socket (Unix & OS X).
+. `//./pipe/docker_engine` if it is a readable named pipe (Windows)
 | `docker.host`
 
 | *image*
