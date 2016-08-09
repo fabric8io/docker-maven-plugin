@@ -22,10 +22,6 @@ public class ApacheHttpClientDelegate {
     private final ClientBuilder clientBuilder;
     private final CloseableHttpClient httpClient;
 
-    public ApacheHttpClientDelegate(ClientBuilder clientBuilder) throws IOException {
-    	this(clientBuilder, true);
-    }
-
     public ApacheHttpClientDelegate(ClientBuilder clientBuilder, boolean pooled) throws IOException {
         this.clientBuilder = clientBuilder;
         this.httpClient = pooled ? clientBuilder.buildPooledClient() : clientBuilder.buildBasicClient();
@@ -41,6 +37,10 @@ public class ApacheHttpClientDelegate {
 
     public CloseableHttpClient getHttpClient() {
         return httpClient;
+    }
+
+    public void close() throws IOException {
+        httpClient.close();
     }
 
     public int delete(String url, int... statusCodes) throws IOException {

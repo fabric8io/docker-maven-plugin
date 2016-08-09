@@ -471,6 +471,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void shutdown() {
+        try {
+            delegate.close();
+        } catch (IOException exp) {
+            log.error("Error while closing HTTP client: " + exp,exp);
+        }
     }
 
     ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
