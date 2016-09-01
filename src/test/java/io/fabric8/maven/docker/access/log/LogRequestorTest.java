@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class LogRequestorTest {
@@ -209,8 +210,11 @@ public class LogRequestorTest {
     public void checkMutlilinePattern() {
         String line = "2016-07-15T20:34:06.024029849Z remote: Compressing objects:   4% (1/23)           \n" +
                       "remote: Compressing objects:   8% (2/23)           \n";
+        String matched = "remote: Compressing objects:   4% (1/23)           \n" +
+                      "remote: Compressing objects:   8% (2/23)";
         Matcher matcher = LogRequestor.LOG_LINE.matcher(line);;
         assertTrue(matcher.matches());
+        assertEquals(matched, matcher.group("entry"));
     }
     private void setupMocks(final InputStream inputStream) throws Exception {
         new Expectations() {{

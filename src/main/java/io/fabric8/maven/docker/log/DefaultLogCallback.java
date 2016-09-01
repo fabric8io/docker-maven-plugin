@@ -56,7 +56,6 @@ public class DefaultLogCallback implements LogCallback {
             spec = LogOutputSpec.DEFAULT;
         }
         String text = logEntry.getText();
-        text = text.replaceFirst("\\n$","");
         ps.println(spec.getPrompt(spec.isUseColor(),logEntry.getTimestamp()) + text);
     }
 

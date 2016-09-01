@@ -45,7 +45,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 public class LogRequestor extends Thread implements LogGetHandle {
 
     // Patter for matching log entries
-    static final Pattern LOG_LINE = Pattern.compile("^\\[?([^\\s\\]]*)]?\\s+(.*)\\s*$", Pattern.DOTALL);
+    static final Pattern LOG_LINE = Pattern.compile("^\\[?(?<timestamp>[^\\s\\]]*)]?\\s+(?<entry>.*?)\\s*$", Pattern.DOTALL);
     private final CloseableHttpClient client;
 
     private final String containerId;
@@ -200,8 +200,8 @@ public class LogRequestor extends Thread implements LogGetHandle {
                                          txt,(int) (txt.toCharArray())[0],(int) (txt.toCharArray())[1]));
             throw new LogCallback.DoneException();
         }
-        Timestamp ts = new Timestamp(matcher.group(1));
-        String logTxt = matcher.group(2);
+        Timestamp ts = new Timestamp(matcher.group("timestamp"));
+        String logTxt = matcher.group("entry");
         callback.log(type, ts, logTxt);
     }
 
