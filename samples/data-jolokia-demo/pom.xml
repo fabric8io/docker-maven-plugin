@@ -155,13 +155,6 @@
                   <tag>${project.version}</tag>
                   <tag>latest</tag>
                 </tags>
-                <labels>
-                  <Built-By>jbochenski</Built-By>
-                  <Built-On>09/01/2016 13:03:08</Built-On>
-                  <Source-Revision>${buildNumber}</Source-Revision>
-                  <Source-Branch>${scmBranch}</Source-Branch>
-                  <Maven-Artifact>com.acme.acme.cloudapp:acme-main:1.5.0-SNAPSHOT</Maven-Artifact>
-                </labels>
                 <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
                    container which will be made available to the specified container. The startup script in the
                    container (jolokia/tomcat-7.0) should check for files in this directory and use them
