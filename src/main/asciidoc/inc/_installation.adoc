@@ -80,7 +80,7 @@ These packaging definitions include the _jar_ lifecycle methods so they are well
       </plugin>
     </plugins>
     ....
-  <build>
+  </build>
 </pom>
 ----
 
