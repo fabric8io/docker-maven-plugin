@@ -31,6 +31,7 @@
           <logDate>default</logDate>
           <verbose>true</verbose>
           <autoPull>always</autoPull>
+          <startParallel>true</startParallel>
           <images>
             <image>
               <alias>box1</alias>
@@ -62,6 +63,9 @@
                   <name>test-network</name>
                   <alias>box2</alias>
                 </network>
+                <dependsOn>
+                  <dependsOn>box1</dependsOn>
+                </dependsOn>
                 <namingStrategy>none</namingStrategy>
                 <cmd>
                   <exec>

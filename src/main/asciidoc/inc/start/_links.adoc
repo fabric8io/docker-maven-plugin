@@ -27,6 +27,6 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5
 
 If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name obtained via `docker ps` in the configuration.
 
-Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as _legacy links_ and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container.
+Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as _legacy links_ and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container. To express start order dependencies using custom networks refer to the <<start-depends-on,dependsOn>> configuration.
 
 For a more detailed documentation for the new link handling please refer to the https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks[Docker network documentation]
