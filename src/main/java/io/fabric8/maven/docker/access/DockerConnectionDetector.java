@@ -2,6 +2,8 @@ package io.fabric8.maven.docker.access;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.util.*;
@@ -14,16 +16,24 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
  */
 public class DockerConnectionDetector {
 
-    private final Logger log;
-    private final DockerMachineConfiguration machineConfig;
+    private final List<DockerEnvProvider> envProviders;
 
-    // Environment from a docker machine
-    private Map<String, String> dockerMachineEnv;
-    private DockerMachine dockerMachine;
+    public DockerConnectionDetector(List<DockerEnvProvider> envProviders) {
+        this.envProviders = envProviders != null ? envProviders : Collections.EMPTY_LIST;
+    }
 
-    public DockerConnectionDetector(Logger log, DockerMachineConfiguration machineConfig) {
-        this.log = log;
-        this.machineConfig = machineConfig;
+    /**
+     * Provider of environment variables like 'DOCKER_HOST'
+     */
+    public interface DockerEnvProvider {
+        /**
+         * Get value of an environment variable for this provider or <code>null</code> if
+         * no such environment variable exists.
+         *
+         * @param envVar the variable to lookup
+         * @return the value or null
+         */
+        String getEnvVar(String envVar) throws IOException;
     }
 
     /**
@@ -99,18 +109,12 @@ public class DockerConnectionDetector {
         if (value != null) {
 			return value;
 		}
-        if (machineConfig != null) {
-            // Startup docker machine
-            if (dockerMachine == null) {
-                dockerMachine = new DockerMachine(log, machineConfig);
+		for (DockerEnvProvider envProvider : envProviders) {
+            value = envProvider.getEnvVar(envVar);
+            if (value != null) {
+                return value;
             }
-            // Get env and cache
-            if (dockerMachineEnv == null) {
-                dockerMachineEnv = dockerMachine.getEnvironment();
-            }
-            return dockerMachineEnv.get(envVar);
-        } else {
-            return null;
         }
+        return null;
     }
 }

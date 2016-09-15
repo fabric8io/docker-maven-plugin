@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
+import io.fabric8.maven.docker.access.*;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -20,11 +21,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import io.fabric8.maven.docker.AbstractDockerMojo;
-import io.fabric8.maven.docker.access.ContainerCreateConfig;
-import io.fabric8.maven.docker.access.ContainerHostConfig;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.DockerConnectionDetector;
-import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.model.Container.PortBinding;
@@ -33,7 +29,7 @@ import io.fabric8.maven.docker.util.Logger;
 
 /*
  * if run from your ide, this test assumes you have configured the runner w/ the appropriate env variables
- * 
+ *
  * it also assumes that 'removeImage' does what it's supposed to do as it's used in test setup.
  */
 @Ignore
@@ -55,7 +51,8 @@ public class DockerAccessWinIT {
     }
 
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
-        return new DockerConnectionDetector(logger, null);
+        return new DockerConnectionDetector(
+            Collections.<DockerConnectionDetector.DockerEnvProvider>singletonList(new DockerMachine(logger, null)));
     }
 
     @Before

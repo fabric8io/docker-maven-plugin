@@ -13,7 +13,6 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,7 +22,7 @@ import static org.junit.Assert.*;
 
 /*
  * if run from your ide, this test assumes you have configured the runner w/ the appropriate env variables
- * 
+ *
  * it also assumes that 'removeImage' does what it's supposed to do as it's used in test setup.
  */
 @Ignore
@@ -46,7 +45,8 @@ public class DockerAccessIT {
 
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
         DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false");
-        return new DockerConnectionDetector(logger, machine);
+        return new DockerConnectionDetector(
+            Collections.<DockerConnectionDetector.DockerEnvProvider>singletonList(new DockerMachine(logger, machine)));
     }
 
     @Before
@@ -67,7 +67,7 @@ public class DockerAccessIT {
     }
 
     @Test
-    public void testPullStartStopRemove() throws DockerAccessException {
+    public void testPullStartStopRemove() throws DockerAccessException, InterruptedException {
         testDoesNotHave();
 
         try {
@@ -78,6 +78,7 @@ public class DockerAccessIT {
             testExecContainer();
             testQueryPortMapping();
             testStopContainer();
+            Thread.sleep(2000);
             testRemoveContainer();
         } finally {
             testRemoveImage(IMAGE);

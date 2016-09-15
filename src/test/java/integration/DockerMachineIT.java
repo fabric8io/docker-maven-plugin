@@ -23,7 +23,6 @@ public class DockerMachineIT {
     public void testLaunchDockerMachine() throws Exception {
         DockerMachineConfiguration mc = new DockerMachineConfiguration("default","true");
         DockerMachine de = new DockerMachine(new AnsiLogger(new SystemStreamLog(), true, true), mc);
-        Map<String, String> environment = de.getEnvironment();
-        Assert.assertTrue(environment.get("DOCKER_HOST") != null);
+        Assert.assertTrue(de.getEnvVar("DOCKER_HOST") != null);
     }
 }

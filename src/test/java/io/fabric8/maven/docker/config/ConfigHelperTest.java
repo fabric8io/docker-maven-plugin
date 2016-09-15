@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.config;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import io.fabric8.maven.docker.util.AnsiLogger;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +46,7 @@ public class ConfigHelperTest {
     public void noName() throws Exception {
         try {
             List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().build());
-            ConfigHelper.resolveImages(configs, createResolver(), null, createCustomizer());
+            ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("name"));
@@ -55,7 +57,7 @@ public class ConfigHelperTest {
     @Test
     public void simple() throws Exception {
         List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
-        List<ImageConfiguration> result = ConfigHelper.resolveImages(configs, createResolver(), null, createCustomizer());
+        List<ImageConfiguration> result = ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
         assertEquals(1,result.size());
         assertTrue(resolverCalled);
         assertTrue(customizerCalled);
@@ -64,10 +66,15 @@ public class ConfigHelperTest {
     @Test
     public void filter() throws Exception {
         List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
-        List<ImageConfiguration> result = ConfigHelper.resolveImages(configs, createResolver(), "bla", createCustomizer());
+        CatchingLog logCatcher = new CatchingLog();
+        List<ImageConfiguration> result = ConfigHelper.resolveImages(
+            new AnsiLogger(logCatcher, true, true),
+            configs, createResolver(), "bla", createCustomizer());
         assertEquals(0,result.size());
         assertTrue(resolverCalled);
         assertTrue(customizerCalled);
+        assertTrue(logCatcher.getWarnMessage().contains("test"));
+        assertTrue(logCatcher.getWarnMessage().contains("bla"));
     }
 
     @Test
@@ -96,4 +103,23 @@ public class ConfigHelperTest {
             }
         };
     }
+
+        private class CatchingLog extends SystemStreamLog {
+        private String warnMessage;
+
+        @Override
+        public void warn(CharSequence content) {
+            this.warnMessage = content.toString();
+            super.warn(content);
+        }
+
+        void reset() {
+            warnMessage = null;
+        }
+
+        public String getWarnMessage() {
+            return warnMessage;
+        }
+    }
+
 }
