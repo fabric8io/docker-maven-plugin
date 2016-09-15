@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.15-SNAPSHOT,</span>
-<span id="revdate">2016-08-04</span>
+<span id="revdate">2016-09-15</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -859,7 +859,7 @@ available goals are described below.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>These packaging definitions include the <em>jar</em> lifecycle methods so they are well suited simple Microservice style projects.</p>
+<p>These packaging definitions include the <em>jar</em> lifecycle methods so they are well suited for simple Microservice style projects.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example</div>
@@ -885,7 +885,7 @@ available goals are described below.</p>
       <span class="tag">&lt;/plugin&gt;</span>
     <span class="tag">&lt;/plugins&gt;</span>
     ....
-  <span class="tag">&lt;build&gt;</span>
+  <span class="tag">&lt;/build&gt;</span>
 <span class="tag">&lt;/pom&gt;</span></code></pre>
 </div>
 </div>
@@ -994,13 +994,16 @@ the URL is:</p>
 <p>value of <strong>dockerHost</strong> (<code>docker.host</code>)</p>
 </li>
 <li>
-<p>the Docker host associated with the docker-machine named in <code>&lt;machine&gt;</code>, i.e. the <code>DOCKER_HOST</code> from <code>docker-machine env</code>. See <a href="#docker-machine">below</a> for more information about Docker machine support.</p>
+<p>the Docker host associated with the docker-machine named in <code>&lt;machine&gt;</code>, i.e. the <code>DOCKER_HOST</code> from <code>docker-machine env</code>. See <a href="#docker-machine">below</a> for more information about Docker machine support. If <code>&lt;machine&gt;</code> is not set, then no docker-machine detection is used.</p>
 </li>
 <li>
 <p>the value of the environment variable <code>DOCKER_HOST</code>.</p>
 </li>
 <li>
-<p><code>unix:///var/run/docker.sock</code> if it is a readable socket.</p>
+<p><code>/var/run/docker.sock</code> if it is a readable socket (Unix &amp; OS X).</p>
+</li>
+<li>
+<p><code>//./pipe/docker_engine</code> if it is a readable named pipe (Windows)</p>
 </li>
 </ol>
 </div></div></td>
@@ -1212,7 +1215,7 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
+<div id="image-name-placeholders" class="paragraph">
 <div class="title">Name placeholders</div>
 <p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
@@ -3944,7 +3947,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.15-SNAPSHOT<br>
-Last updated 2016-08-04 19:59:31 UTC
+Last updated 2016-09-15 18:27:33 UTC
 </div>
 </div>
 </body>
