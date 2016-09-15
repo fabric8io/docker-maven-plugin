@@ -2,7 +2,7 @@
 
 * **0.15-SNAPSHOT**
   - Fixed naming of 'buildArgs' for `docker:build` (was `args` formerly)
-  - Support for 'Docker for Windows' (#523)
+  - Experimental Support for 'Docker for Windows' (#523)
   - Remove versions from custom lifecycle deps (#539)
   - Fix extra new line in logoutput (#538) 
 
