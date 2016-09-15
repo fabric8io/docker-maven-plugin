@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.16.1** (2016-09-15)
+* **0.16.2** (2016-09-15)
   - Fixed naming of 'buildArgs' for `docker:build` (was `args` formerly)
   - Experimental Support for 'Docker for Windows' ([#523](https://github.com/fabric8io/docker-maven-plugin/issues/523))
   - Remove versions from custom lifecycle deps ([#539](https://github.com/fabric8io/docker-maven-plugin/issues/539))
