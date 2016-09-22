@@ -59,7 +59,7 @@ public interface DockerAccess {
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
-     * @return list of <code>Container</code> objects
+     * @return list of <code>Container</code> objects or an empty list if none is found
      * @throws DockerAccessException if the request fails
      */
     List<Container> getContainersForImage(String image) throws DockerAccessException;

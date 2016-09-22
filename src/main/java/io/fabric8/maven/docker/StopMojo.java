@@ -47,13 +47,13 @@ public class StopMojo extends AbstractDockerMojo {
      */
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
     protected boolean autoCreateCustomNetworks;
-    
+
     @Parameter( property = "docker.allContainers", defaultValue = "false" )
     private boolean allContainers;
-    
+
     @Parameter( property = "docker.sledgeHammer", defaultValue = "false" )
     private boolean sledgeHammer;
-    
+
 
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
@@ -89,52 +89,30 @@ public class StopMojo extends AbstractDockerMojo {
 
     // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
     private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
-        List<Container> containers = Collections.emptyList();
+        List<Container> containers;
         RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
-        
-        //Do not fail if container is not found
-        try {
-            
-            if (strategy == RunImageConfiguration.NamingStrategy.alias) {
-                Container container = queryService.getContainer(image.getAlias());
-                if (container !=  null) {
-                    containers = Collections.singletonList(container);
-                }
-            } else {
-                containers = queryService.getContainersForImage(image.getName());
-            }
-            
-            if(containers == null) {
-                containers = Collections.emptyList();
-            }
-        } catch (Exception ex) {
-            log.warn("%s", ex.getMessage());
-            containers = Collections.emptyList();
+
+        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
+            Container container = queryService.getContainer(image.getAlias());
+            return container != null ? Collections.singletonList(container) : Collections.<Container>emptyList();
+        } else {
+            return queryService.getContainersForImage(image.getName());
         }
-        return containers;
     }
 
     private boolean shouldStopContainer(Container container, PomLabel pomLabel, ImageConfiguration image) {
         if (isStopAllContainers()) {
             return true;
         }
-        
+
         RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
-        
         if (RunImageConfiguration.NamingStrategy.alias.equals(strategy)) {
-            if(container.getName().equals(image.getAlias())) {
-                return true;
-            }
-            return false;
-            
-        } else {
-
-            String key = pomLabel.getKey();
-            Map<String, String> labels = container.getLabels();
-
-            return labels.containsKey(key) && pomLabel.equals(new PomLabel(labels.get(key)));
+            return container.getName().equals(image.getAlias());
         }
-        
+
+        String key = pomLabel.getKey();
+        Map<String, String> labels = container.getLabels();
+        return labels.containsKey(key) && pomLabel.equals(new PomLabel(labels.get(key)));
     }
 
     private boolean isStopAllContainers() {
