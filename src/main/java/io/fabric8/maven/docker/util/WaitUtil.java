@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -131,7 +132,7 @@ public class WaitUtil {
         private int statusMin, statusMax;
         private String url;
         private String method;
-        private boolean ignoreCertificates;
+        private boolean allowAllHosts;
 
         /**
          * Ping the given URL
@@ -166,9 +167,9 @@ public class WaitUtil {
             this(waitUrl, null, null);
         }
 
-        public HttpPingChecker(String url, String method, String status, boolean ignoreCertificates) {
+        public HttpPingChecker(String url, String method, String status, boolean allowAllHosts) {
             this(url, method, status);
-            this.ignoreCertificates = ignoreCertificates;
+            this.allowAllHosts = allowAllHosts;
         }
 
         @Override
@@ -190,11 +191,11 @@ public class WaitUtil {
                             .build();
 
             CloseableHttpClient httpClient = null;
-            if (ignoreCertificates) {
+            if (allowAllHosts) {
                 SSLContextBuilder builder = new SSLContextBuilder();
                 try {
                     builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-                    SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(builder.build(), SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+                    SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
                     httpClient = HttpClientBuilder.create()
                             .setDefaultRequestConfig(requestConfig)
                             .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))

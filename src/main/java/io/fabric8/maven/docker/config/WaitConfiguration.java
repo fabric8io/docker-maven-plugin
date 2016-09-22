@@ -202,7 +202,7 @@ public class WaitConfiguration {
         private String status;
 
         @Parameter
-        private boolean ignoreCertificates;
+        private boolean allowAllHosts;
 
         public HttpConfiguration() {}
 
@@ -223,8 +223,8 @@ public class WaitConfiguration {
             return status;
         }
 
-        public boolean isIgnoreCertificates() {
-            return ignoreCertificates;
+        public boolean isAllowAllHosts() {
+            return allowAllHosts;
         }
     }
 
