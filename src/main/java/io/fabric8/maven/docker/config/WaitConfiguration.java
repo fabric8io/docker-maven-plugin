@@ -201,6 +201,9 @@ public class WaitConfiguration {
         @Parameter
         private String status;
 
+        @Parameter
+        private boolean ignoreCertificates;
+
         public HttpConfiguration() {}
 
         private HttpConfiguration(String url, String method, String status) {
@@ -218,6 +221,10 @@ public class WaitConfiguration {
 
         public String getStatus() {
             return status;
+        }
+
+        public boolean isIgnoreCertificates() {
+            return ignoreCertificates;
         }
     }
 
