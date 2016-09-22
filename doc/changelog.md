@@ -4,7 +4,8 @@
   - Add 'allowAllHosts' to ping wait checker (#559)
   - Allow 'stopAllContainers' also as Maven properties (#536)
   - Use alias for stopping containers when naming strategy "alias" is used (#536)
-
+  - New option 'startParallel' for docker:start to speedup execution (#531)
+  
 * **0.16.2** (2016-09-15)
   - Fixed naming of 'buildArgs' for `docker:build` (was `args` formerly)
   - Experimental Support for 'Docker for Windows' ([#523](https://github.com/fabric8io/docker-maven-plugin/issues/523))
