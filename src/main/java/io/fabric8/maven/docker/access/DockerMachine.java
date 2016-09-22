@@ -11,7 +11,7 @@ import io.fabric8.maven.docker.util.Logger;
 /**
  * launch docker-machine to obtain environment settings
  */
-public class DockerMachine implements DockerConnectionDetector.DockerEnvProvider {
+public class DockerMachine implements DockerConnectionDetector.DockerHostProvider {
 
     private final Logger log;
     private final DockerMachineConfiguration machine;
@@ -27,19 +27,24 @@ public class DockerMachine implements DockerConnectionDetector.DockerEnvProvider
         DoesNotExist, Running, Stopped
     }
 
-    @Override
-    public synchronized String getEnvVar(String envVar) throws IOException {
+    public synchronized String getDockerHost() throws IOException {
         if (machine == null) {
             return null;
         }
         if (envMap == null) {
             envMap = getEnvironment();
         }
-        String value = envMap.get(envVar);
+        String value = envMap.get("DOCKER_HOST");
         if (value != null) {
-            log.info("Environment variable from docker-machine \"%s\" : %s=%s",machine.getName(),envVar,value);
+            log.info("DOCKER_HOST from docker-machine \"%s\" : %s",machine.getName(),value);
         }
         return value;
+    }
+
+    @Override
+    public int getPriority() {
+        // Just after environment variable priority-wise
+        return 90;
     }
 
     private Map<String, String> getEnvironment() throws IOException {

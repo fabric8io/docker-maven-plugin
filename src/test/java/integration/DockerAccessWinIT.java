@@ -52,7 +52,7 @@ public class DockerAccessWinIT {
 
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
         return new DockerConnectionDetector(
-            Collections.<DockerConnectionDetector.DockerEnvProvider>singletonList(new DockerMachine(logger, null)));
+            Collections.<DockerConnectionDetector.DockerHostProvider>singletonList(new DockerMachine(logger, null)));
     }
 
     @Before

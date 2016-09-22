@@ -5,6 +5,7 @@
   - Allow 'stopAllContainers' also as Maven properties (#536)
   - Use alias for stopping containers when naming strategy "alias" is used (#536)
   - New option 'startParallel' for docker:start to speedup execution (#531)
+  - Tuned detection of docker host connection parameters to be more extensible
   
 * **0.16.2** (2016-09-15)
   - Fixed naming of 'buildArgs' for `docker:build` (was `args` formerly)

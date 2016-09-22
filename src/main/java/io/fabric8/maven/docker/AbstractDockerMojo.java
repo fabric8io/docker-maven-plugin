@@ -6,8 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import com.google.common.collect.Sets;
-
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -31,7 +29,6 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import org.json.JSONObject;
 
 /**
  * Base class for this plugin.
@@ -296,7 +293,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private DockerConnectionDetector createDockerConnectionDetector() {
-        return new DockerConnectionDetector(getDockerEnvProviders());
+        return new DockerConnectionDetector(getDockerHostProviders());
     }
 
     /**
@@ -306,7 +303,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      *
      * @return list of providers or <code>null</code> if none are applicable
      */
-    protected List<DockerConnectionDetector.DockerEnvProvider> getDockerEnvProviders() {
+    protected List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
         DockerMachineConfiguration config = machine;
         if (config == null) {
             Properties projectProps = project.getProperties();
@@ -319,7 +316,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             }
         }
 
-        List<DockerConnectionDetector.DockerEnvProvider> ret = new ArrayList<>();
+        List<DockerConnectionDetector.DockerHostProvider> ret = new ArrayList<>();
         ret.add(new DockerMachine(log, config));
         return ret;
     }
