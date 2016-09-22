@@ -550,10 +550,11 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#start-port-mapping">5.2.3. Port Mapping</a></li>
 <li><a href="#start-links">5.2.4. Links</a></li>
 <li><a href="#network-configuration">5.2.5. Network</a></li>
-<li><a href="#start-restart">5.2.6. Restart Policy</a></li>
-<li><a href="#start-volumes">5.2.7. Volumes</a></li>
-<li><a href="#start-wait">5.2.8. Wait</a></li>
-<li><a href="#start-logging">5.2.9. Logging</a></li>
+<li><a href="#start-depends-on">5.2.6. Depends-On</a></li>
+<li><a href="#start-restart">5.2.7. Restart Policy</a></li>
+<li><a href="#start-volumes">5.2.8. Volumes</a></li>
+<li><a href="#start-wait">5.2.9. Wait</a></li>
+<li><a href="#start-logging">5.2.10. Logging</a></li>
 </ul>
 </li>
 <li><a href="#docker:stop">5.3. <strong>docker:stop</strong></a></li>
@@ -1945,7 +1946,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect2">
 <h3 id="docker:start">5.2. <strong>docker:start</strong></h3>
 <div id="start-overview" class="paragraph">
-<p>This goal creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images). In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list. This is probably most useful when used from the command line as system property <code>docker.showLogs</code>.</p>
+<p>This goal creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images).</p>
 </div>
 <div class="paragraph">
 <p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).</p>
@@ -1987,10 +1988,42 @@ r</code>.</p>
 <div class="sect3">
 <h4 id="start-configuration">5.2.1. Configuration</h4>
 <div class="paragraph">
+<p>In addition to the <a href="#global-configuration">Global configuration</a>, this goal supports the following global configuration options.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 11. Start options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>showLogs</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard
+ output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
+ This is probably most useful when used from the command line as system property <code>docker.showLogs</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.showLogs</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>startParallel</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Starts docker images in parallel while dependencies expressed as <a href="#start-links">Link</a> or <a href="#start-depends-on">dependsOn</a> are respected. This option can significantly reduce the startup time because independent containers do not need to wait for each other.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.startParallel</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Run configuration</caption>
+<caption class="title">Table 12. Run configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2241,7 +2274,7 @@ r</code>.</p>
 <p>A <code>port</code> stanza may take one of the following forms:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Port mapping format</caption>
+<caption class="title">Table 13. Port mapping format</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2341,7 +2374,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name obtained via <code>docker ps</code> in the configuration.</p>
 </div>
 <div class="paragraph">
-<p>Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container.</p>
+<p>Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as <em>legacy links</em> and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container. To express start order dependencies using custom networks refer to the <a href="#start-depends-on">dependsOn</a> configuration.</p>
 </div>
 <div class="paragraph">
 <p>For a more detailed documentation for the new link handling please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks/#linking-containers-in-user-defined-networks">Docker network documentation</a></p>
@@ -2353,7 +2386,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt;</a> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Network configuration</caption>
+<caption class="title">Table 14. Network configuration</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 87.5%;">
@@ -2425,12 +2458,33 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-restart">5.2.6. Restart Policy</h4>
+<h4 id="start-depends-on">5.2.6. Depends-On</h4>
+<div class="paragraph">
+<p>Custom networks do not provide a mechanism like <code>&lt;links&gt;</code> to express strong links between containers. They are normally not required because docker ensures that all containers within the same custom network can eventually resolve each other via DNS.</p>
+</div>
+<div class="paragraph">
+<p>Your containers should preferably be able to deal with temporarily unresolvable dependencies but in some cases it is helpful to be able to rely the availability of other infrastructure containers.</p>
+</div>
+<div class="paragraph">
+<p>The <code>&lt;dependsOn&gt;</code> configuration can be used to expresses custom network dependencies between your containers. <code>docker:start</code> will ensure that all dependencies a container depends on are completely started (fulfilling all <code>&lt;wait&gt;</code> conditions) before the depending container is started.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependsOn&gt;</span>
+    <span class="tag">&lt;dependsOn&gt;</span>postgres<span class="tag">&lt;/dependsOn&gt;</span>
+    <span class="tag">&lt;dependsOn&gt;</span>logstash<span class="tag">&lt;/dependsOn&gt;</span>
+<span class="tag">&lt;/dependsOn&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="start-restart">5.2.7. Restart Policy</h4>
 <div class="paragraph">
 <p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Restart Policy configuration</caption>
+<caption class="title">Table 15. Restart Policy configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2469,12 +2523,12 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-volumes">5.2.7. Volumes</h4>
+<h4 id="start-volumes">5.2.8. Volumes</h4>
 <div class="paragraph">
 <p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Volume configuration</caption>
+<caption class="title">Table 16. Volume configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2532,14 +2586,14 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-wait">5.2.8. Wait</h4>
+<h4 id="start-wait">5.2.9. Wait</h4>
 <div class="paragraph">
 <p>While starting a container is it possible to block the execution until
 some condition is met. These conditions can be specified within a
 <code>&lt;wait&gt;</code> section which the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Wait configuration</caption>
+<caption class="title">Table 17. Wait configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2566,6 +2620,9 @@ some condition is met. These conditions can be specified within a
 </li>
 <li>
 <p><strong>status</strong> Status code which if returned is considered to be a successful ping. This code can be given either as a single number (200) or as a range (200..399). The default is <code>200..399</code></p>
+</li>
+<li>
+<p><strong>allowAllHosts</strong> If <code>url</code> is an HTTPS url and this option is set, then server certificates are not validated. By default they are checked for a proper CA signature.</p>
 </li>
 </ul>
 </div></div></td>
@@ -2661,12 +2718,12 @@ output of an container and blocks until the pattern is matched.</p></td>
 </div>
 </div>
 <div class="sect3">
-<h4 id="start-logging">5.2.9. Logging</h4>
+<h4 id="start-logging">5.2.10. Logging</h4>
 <div class="paragraph">
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Logging configuration</caption>
+<caption class="title">Table 18. Logging configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2778,13 +2835,13 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>In case the naming strategy for an image is <code>alias</code> (i.e. the container name is set to the given alias), then only the container with this alias is stopped. Other containers originating from the same image are not touched.</p>
 </div>
 <div class="paragraph">
-<p>It should be noted that any containers created prior to version <code>0.13.7</code> of the plugin may not be stopped correctly by the plugin because the label needed to tie the container to the project may not exist. Should this happen, you will need to use the Docker CLI to clean up the containers and/or use the <code>docker.sledgehammer</code> option listed below.</p>
+<p>It should be noted that any containers created prior to version <code>0.13.7</code> of the plugin may not be stopped correctly by the plugin because the label needed to tie the container to the project may not exist. Should this happen, you will need to use the Docker CLI to clean up the containers and/or use the <code>docker.allContainers</code> option listed below.</p>
 </div>
 <div class="paragraph">
 <p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Stop configuration</caption>
+<caption class="title">Table 19. Stop configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2834,7 +2891,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Push options</caption>
+<caption class="title">Table 20. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2939,7 +2996,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Watch configuration</caption>
+<caption class="title">Table 21. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3020,7 +3077,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Watch configuration for a single image</caption>
+<caption class="title">Table 22. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3133,7 +3190,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Logging options</caption>
+<caption class="title">Table 23. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3258,7 +3315,7 @@ up from the following properties, which correspond to the corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. External properties</caption>
+<caption class="title">Table 24. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3947,7 +4004,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-09-22 12:24:38 UTC
+Last updated 2016-09-22 17:18:09 UTC
 </div>
 </div>
 </body>
