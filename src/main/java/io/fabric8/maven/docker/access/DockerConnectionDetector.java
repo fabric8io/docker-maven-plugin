@@ -62,7 +62,13 @@ public class DockerConnectionDetector {
         if (windowsPipe.exists()) {
         	return "npipe:////./pipe/docker_engine";
         }
-        throw new IllegalArgumentException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock' or '//./pipe/docker_engine'");
+        for (DockerEnvProvider envProvider : envProviders) {
+            String value = envProvider.getEnvVar("DOCKER_HOST");
+            if (value != null) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("No <dockerHost> given, no DOCKER_HOST environment variable, no read/writable '/var/run/docker.sock' or '//./pipe/docker_engine' and no external provider like Docker machine configured");
     }
 
     /**
@@ -105,16 +111,6 @@ public class DockerConnectionDetector {
         if (value != null) {
             return value;
         }
-        value = System.getenv(envVar);
-        if (value != null) {
-			return value;
-		}
-		for (DockerEnvProvider envProvider : envProviders) {
-            value = envProvider.getEnvVar(envVar);
-            if (value != null) {
-                return value;
-            }
-        }
-        return null;
+        return System.getenv(envVar);
     }
 }

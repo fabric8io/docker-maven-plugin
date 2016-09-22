@@ -345,8 +345,8 @@ public class DockerAssemblyManager {
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, ASSEMBLY_NAME, buildMode.getExtension(), source, false);
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
-            throw new MojoExecutionException( "Failed to create assembly for docker image: " + e.getMessage() +
-                                              " with mode " + buildMode, e );
+            throw new MojoExecutionException( "Failed to create assembly for docker image " +
+                                              " (with mode '" + buildMode + "'): " + e.getMessage(), e );
         } catch (InvalidAssemblerConfigurationException e) {
             throw new MojoExecutionException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
                                             "Assembly: " + assembly.getId() + " is not configured correctly: "
