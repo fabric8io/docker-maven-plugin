@@ -10,6 +10,7 @@ In addition to the <<global-configuration>>, this goal supports the following gl
  output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
  This is probably most useful when used from the command line as system property `docker.showLogs`.
 | `docker.showLogs`
+
 | *startParallel*
 | Starts docker images in parallel while dependencies expressed as <<start-links,Link>> or <<start-depends-on,dependsOn>> are respected. This option can significantly reduce the startup time because independent containers do not need to wait for each other.
 | `docker.startParallel`
