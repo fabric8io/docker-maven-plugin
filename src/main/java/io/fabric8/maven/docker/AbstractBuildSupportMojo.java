@@ -104,7 +104,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         } else {
             fromImage = extractBaseFromConfiguration(buildConfig);
         }
-        if (fromImage != null) {
+        if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
             String pullRegistry =
                 EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), this.pullRegistry, registry);
             checkImageWithAutoPull(hub, fromImage, pullRegistry, true);
