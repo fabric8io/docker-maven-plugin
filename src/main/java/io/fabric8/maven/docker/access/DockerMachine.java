@@ -6,6 +6,7 @@ import java.util.*;
 import io.fabric8.maven.docker.access.util.EnvCommand;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -35,10 +36,13 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
             envMap = getEnvironment();
         }
         String value = envMap.get("DOCKER_HOST");
-        if (value != null) {
-            log.info("DOCKER_HOST from docker-machine \"%s\" : %s",machine.getName(),value);
+        if (value == null) {
+            return null;
         }
-        return value;
+
+        String url  = EnvUtil.convertDockerHostToUrl(value);
+        log.info("DOCKER_HOST from docker-machine \"%s\" : %s", machine.getName(), url);
+        return url;
     }
 
     @Override

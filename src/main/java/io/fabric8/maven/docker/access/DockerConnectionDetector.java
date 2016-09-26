@@ -119,12 +119,7 @@ public class DockerConnectionDetector {
         @Override
         public String getDockerHost() throws IOException {
             String connect = System.getenv("DOCKER_HOST");
-            if (connect != null) {
-                String protocol = connect.contains(":" + EnvUtil.DOCKER_HTTPS_PORT) ? "https:" : "http:";
-                return connect.replaceFirst("^tcp:", protocol);
-            } else {
-                return null;
-            }
+            return connect != null ? EnvUtil.convertDockerHostToUrl(connect) : null;
         }
 
         @Override

@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.16.4** (2016-09-26)
+  - Fix issue with DOCKER_HOST coming from Docker Machine
+  
 * **0.16.3** (2016-09-22)
   - Add 'allowAllHosts' to ping wait checker ([#559](https://github.com/fabric8io/docker-maven-plugin/issues/559))
   - Allow 'stopAllContainers' also as Maven properties ([#536](https://github.com/fabric8io/docker-maven-plugin/issues/536))
