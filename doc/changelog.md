@@ -2,8 +2,8 @@
 
 * **0.16.4** (2016-09-26)
   - Fix issue with DOCKER_HOST coming from Docker Machine
-  - Don't pull a 'scratch' base image (#565)
-  - Fix handling when looking up non-existing containers (#566)
+  - Don't pull a 'scratch' base image ([#565](https://github.com/fabric8io/docker-maven-plugin/issues/565))
+  - Fix handling when looking up non-existing containers ([#566](https://github.com/fabric8io/docker-maven-plugin/issues/566))
   
 * **0.16.3** (2016-09-22)
   - Add 'allowAllHosts' to ping wait checker ([#559](https://github.com/fabric8io/docker-maven-plugin/issues/559))
