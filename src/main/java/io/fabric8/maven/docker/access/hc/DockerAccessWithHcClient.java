@@ -272,8 +272,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public Container inspectContainer(String containerIdOrName) throws DockerAccessException {
         try {
             String url = urlBuilder.inspectContainer(containerIdOrName);
-            String response = delegate.get(url, HTTP_OK);
-            return new ContainerDetails(new JSONObject(response));
+            String response = delegate.get(url, HTTP_OK, HTTP_NOT_FOUND);
+            return response != null ? new ContainerDetails(new JSONObject(response)) : null;
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
         }
