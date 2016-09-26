@@ -53,7 +53,7 @@ public class QueryService {
      * @throws DockerAccessException in case of an remote error
      */
     public Container getContainer(final String containerIdOrName) throws DockerAccessException {
-        return docker.inspectContainer(containerIdOrName);
+        return docker.getContainer(containerIdOrName);
     }
 
     /**

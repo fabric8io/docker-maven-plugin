@@ -104,7 +104,7 @@ public class DockerAccessIT {
         containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
         assertNotNull(containerId);
 
-        String name = dockerClient.inspectContainer(containerId).getName();
+        String name = dockerClient.getContainer(containerId).getName();
         assertEquals(CONTAINER_NAME, name);
     }
 
@@ -118,7 +118,7 @@ public class DockerAccessIT {
     }
 
     private void testQueryPortMapping() throws DockerAccessException {
-        Map<String, PortBinding> portMap = dockerClient.inspectContainer(containerId).getPortBindings();
+        Map<String, PortBinding> portMap = dockerClient.getContainer(containerId).getPortBindings();
         assertEquals(5677, portMap.values().iterator().next().getHostPort().intValue());
     }
 
@@ -133,7 +133,7 @@ public class DockerAccessIT {
 
     private void testStartContainer() throws DockerAccessException {
         dockerClient.startContainer(containerId);
-        assertTrue(dockerClient.inspectContainer(containerId).isRunning());
+        assertTrue(dockerClient.getContainer(containerId).isRunning());
     }
 
     private void testExecContainer() throws DockerAccessException {
@@ -145,7 +145,7 @@ public class DockerAccessIT {
 
     private void testStopContainer() throws DockerAccessException {
         dockerClient.stopContainer(containerId, 0);
-        assertFalse(dockerClient.inspectContainer(containerId).isRunning());
+        assertFalse(dockerClient.getContainer(containerId).isRunning());
     }
 
     private void testTagImage() throws DockerAccessException {

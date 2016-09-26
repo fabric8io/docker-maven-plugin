@@ -30,13 +30,13 @@ public interface DockerAccess {
     String getServerApiVersion() throws DockerAccessException;
 
     /**
-     * Inspect a container
+     * Get a container
      *
      * @param containerIdOrName container id or name
      * @return <code>ContainerDetails<code> representing the container or null if none could be found
      * @throws DockerAccessException if the container could not be inspected
      */
-    Container inspectContainer(String containerIdOrName) throws DockerAccessException;
+    Container getContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
      * Check whether the given name exists as image at the docker daemon

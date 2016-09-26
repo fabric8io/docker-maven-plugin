@@ -269,17 +269,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public Container inspectContainer(String containerIdOrName) throws DockerAccessException {
-        try {
-            String url = urlBuilder.inspectContainer(containerIdOrName);
-            String response = delegate.get(url, HTTP_OK, HTTP_NOT_FOUND);
-            return response != null ? new ContainerDetails(new JSONObject(response)) : null;
-        } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
-        }
-    }
-
-    @Override
     public List<Container> getContainersForImage(String image) throws DockerAccessException {
         String url;
         String serverApiVersion = getServerApiVersion();
@@ -305,6 +294,25 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return containers;
         } catch (IOException e) {
             throw new DockerAccessException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Container getContainer(String containerIdOrName) throws DockerAccessException {
+        HttpBodyAndStatus response = inspectContainer(containerIdOrName);
+        if (response.getStatusCode() == HTTP_NOT_FOUND) {
+            return null;
+        } else {
+            return new ContainerDetails(new JSONObject(response.getBody()));
+        }
+    }
+
+    private HttpBodyAndStatus inspectContainer(String containerIdOrName) throws DockerAccessException {
+        try {
+            String url = urlBuilder.inspectContainer(containerIdOrName);
+            return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
         }
     }
 
