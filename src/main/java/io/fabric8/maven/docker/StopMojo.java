@@ -89,7 +89,6 @@ public class StopMojo extends AbstractDockerMojo {
 
     // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
     private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
-        List<Container> containers;
         RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
 
         if (strategy == RunImageConfiguration.NamingStrategy.alias) {
