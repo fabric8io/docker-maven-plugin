@@ -164,12 +164,9 @@ public class DockerConnectionDetector {
          * @param certPath the configured certification path which is used directly if set
          */
         private void initCertPath(String certPath) throws IOException {
-            if (certPath != null) {
-                this.certPath = certPath;
-            }
-            String path = System.getenv("DOCKER_CERT_PATH");
-            // Final fallback
-            if (path == null) {
+            this.certPath = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
+            // Try default locations as last resort
+            if (this.certPath == null) {
                 File dockerHome = new File(System.getProperty("user.home") + "/.docker");
                 if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
                     this.certPath = dockerHome.getAbsolutePath();
