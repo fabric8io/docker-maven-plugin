@@ -39,6 +39,11 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
+    private Properties fromExt;
+
+    /**
+     * @parameter
+     */
     private String registry;
 
     /**
@@ -151,7 +156,14 @@ public class BuildImageConfiguration {
     }
 
     public String getFrom() {
+        if (from == null && getFromExt() != null) {
+            return getFromExt().getProperty("name");
+        }
         return from;
+    }
+
+    public Properties getFromExt() {
+        return fromExt;
     }
 
     public String getRegistry() {
@@ -254,6 +266,11 @@ public class BuildImageConfiguration {
 
         public Builder from(String from) {
             config.from = from;
+            return this;
+        }
+
+        public Builder fromExt(Properties fromExt) {
+            config.fromExt = fromExt;
             return this;
         }
 
