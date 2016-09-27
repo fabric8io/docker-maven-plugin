@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.16.5** (2016-09-27)
+  - Refactored Docker connection parameter detection
+  
 * **0.16.4** (2016-09-26)
   - Fix issue with DOCKER_HOST coming from Docker Machine
   - Don't pull a 'scratch' base image ([#565](https://github.com/fabric8io/docker-maven-plugin/issues/565))

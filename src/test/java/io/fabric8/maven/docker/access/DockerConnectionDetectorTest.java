@@ -2,11 +2,8 @@ package io.fabric8.maven.docker.access;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.PriorityQueue;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -17,22 +14,24 @@ public class DockerConnectionDetectorTest {
 
     @Test
     public void testGetUrlFromHostConfig() throws MojoExecutionException, IOException {
-        assertEquals("hostconfig", detector.extractUrl("hostconfig"));
+        DockerConnectionDetector.ConnectionParameter param = detector.detectConnectionParameter("hostconfig", "certpath");
+        assertEquals("hostconfig", param.getUrl());
+        assertEquals("certpath", param.getCertPath());
     }
 
     @Test
     public void testGetUrlFromEnvironment() throws MojoExecutionException, IOException {
         String dockerHost = System.getenv("DOCKER_HOST");
         if (dockerHost != null) {
-            assertEquals(dockerHost.replaceFirst("^tcp:/",""), detector.extractUrl(null).replaceFirst("^https?:/", ""));
+            assertEquals(dockerHost.replaceFirst("^tcp:/",""), detector.detectConnectionParameter(null, null).getUrl().replaceFirst("^https?:/", ""));
         } else if (System.getProperty("os.name").equalsIgnoreCase("Windows 10")) {
         	try {
-                assertEquals("npipe:////./pipe/docker_engine", detector.extractUrl(null));
+                assertEquals("npipe:////./pipe/docker_engine", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
             }
         } else {
             try {
-                assertEquals("unix:///var/run/docker.sock", detector.extractUrl(null));
+                assertEquals("unix:///var/run/docker.sock", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
             }
         }
@@ -53,17 +52,13 @@ public class DockerConnectionDetectorTest {
     }
 
     @Test
-    public void testGetCertPathFromCertConfig() throws MojoExecutionException, IOException {
-        assertEquals("certconfig", detector.getCertPath("certconfig"));
-    }
-
-    @Test
     public void testGetCertPathFromEnvironment() throws MojoExecutionException, IOException {
         String certPath = System.getenv("DOCKER_CERT_PATH");
+        DockerConnectionDetector.ConnectionParameter param = detector.detectConnectionParameter(null, null);
         if (certPath != null) {
-            assertEquals(certPath, detector.getCertPath(null));
+            assertEquals(certPath, param.getCertPath());
         } else {
-            String maybeUserDocker = detector.getCertPath(null);
+            String maybeUserDocker = param.getCertPath();
             if (maybeUserDocker != null) {
                 assertEquals(new File(System.getProperty("user.home"), ".docker").getAbsolutePath(),
                         maybeUserDocker);

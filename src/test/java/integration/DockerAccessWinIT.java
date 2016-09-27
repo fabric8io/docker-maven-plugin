@@ -46,7 +46,7 @@ public class DockerAccessWinIT {
 
     public DockerAccessWinIT() throws IOException {
         AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
-        String url = createDockerConnectionDetector(logger).extractUrl(null);
+        String url = createDockerConnectionDetector(logger).detectConnectionParameter(null, null).getUrl();
         this.dockerClient = createClient(url, logger);
     }
 
@@ -92,7 +92,7 @@ public class DockerAccessWinIT {
 
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
-            String certPath = createDockerConnectionDetector(logger).getCertPath(null);
+            String certPath = createDockerConnectionDetector(logger).detectConnectionParameter(null, null).getCertPath();
             return new DockerAccessWithHcClient("v" + AbstractDockerMojo.API_VERSION, baseUrl, certPath, 1, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen

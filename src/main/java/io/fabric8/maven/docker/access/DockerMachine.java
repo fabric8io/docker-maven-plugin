@@ -6,7 +6,6 @@ import java.util.*;
 import io.fabric8.maven.docker.access.util.EnvCommand;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -28,7 +27,7 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
         DoesNotExist, Running, Stopped
     }
 
-    public synchronized String getDockerHost() throws IOException {
+    public synchronized DockerConnectionDetector.ConnectionParameter getConnectionParameter(String certPath) throws IOException {
         if (machine == null) {
             return null;
         }
@@ -39,10 +38,8 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
         if (value == null) {
             return null;
         }
-
-        String url  = EnvUtil.convertDockerHostToUrl(value);
-        log.info("DOCKER_HOST from docker-machine \"%s\" : %s", machine.getName(), url);
-        return url;
+        log.info("DOCKER_HOST from docker-machine \"%s\" : %s", machine.getName(), value);
+        return new DockerConnectionDetector.ConnectionParameter(value, certPath != null ? certPath : envMap.get("DOCKER_CERT_PATH"));
     }
 
     @Override
