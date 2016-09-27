@@ -52,6 +52,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return name;
     }
 
+    /**
+     * Change the name which can be useful in long running runs e.g. for updating
+     * images when doing updates. Use with caution and only for those circumstances.
+     *
+     * @param name image name to set.
+     */
     public void setName(String name) {
         this.name = name;
     }

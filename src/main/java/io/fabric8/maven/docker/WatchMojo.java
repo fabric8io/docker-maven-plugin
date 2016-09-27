@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -107,7 +107,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 ImageWatcher watcher = new ImageWatcher(imageConfig, imageId, containerId);
                 long interval = watcher.getInterval();
 
-                log.info("Watching " + imageConfig.getName() + " using " + watcher.getWatchMode(imageConfig));
+                WatchMode watchMode = watcher.getWatchMode(imageConfig);
+                log.info("Watching " + imageConfig.getName() + (watchMode != null ? " using " + watchMode.getDescription() : ""));
 
                 ArrayList<String> tasks = new ArrayList<>();
 
