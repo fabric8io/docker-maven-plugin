@@ -2,7 +2,7 @@
 
 * **0.16.5** (2016-09-27)
   - Refactored Docker connection parameter detection
-  - Added a <fromExt> for extended definition of base images (#572)
+  - Added a <fromExt> for extended definition of base images ([#572](https://github.com/fabric8io/docker-maven-plugin/issues/572))
   
 * **0.16.4** (2016-09-26)
   - Fix issue with DOCKER_HOST coming from Docker Machine
