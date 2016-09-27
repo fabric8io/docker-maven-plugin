@@ -53,18 +53,22 @@ public class DockerConnectionDetectorTest {
 
     @Test
     public void testGetCertPathFromEnvironment() throws MojoExecutionException, IOException {
-        String certPath = System.getenv("DOCKER_CERT_PATH");
-        DockerConnectionDetector.ConnectionParameter param = detector.detectConnectionParameter(null, null);
-        if (certPath != null) {
-            assertEquals(certPath, param.getCertPath());
-        } else {
-            String maybeUserDocker = param.getCertPath();
-            if (maybeUserDocker != null) {
-                assertEquals(new File(System.getProperty("user.home"), ".docker").getAbsolutePath(),
-                        maybeUserDocker);
+        try {
+            DockerConnectionDetector.ConnectionParameter param = detector.detectConnectionParameter(null, null);
+            String certPath = System.getenv("DOCKER_CERT_PATH");
+            if (certPath != null) {
+                assertEquals(certPath, param.getCertPath());
+            } else {
+                String maybeUserDocker = param.getCertPath();
+                if (maybeUserDocker != null) {
+                    assertEquals(new File(System.getProperty("user.home"), ".docker").getAbsolutePath(),
+                                 maybeUserDocker);
+                }
             }
+        } catch (IllegalArgumentException exp) {
+            // Can happen if there is now docker connection configured in the environment
         }
     }
 
-    // any further testing requires a 'docker-machine' on the build host
+    // any further testing requires a 'docker-machine' on the build host ...
 }
