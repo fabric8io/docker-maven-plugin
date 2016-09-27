@@ -6,6 +6,8 @@ import java.util.*;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 /**
  * @author roland
@@ -34,7 +36,7 @@ public class BuildImageConfiguration {
     /**
      * @parameter
      */
-    private String from;
+    private Xpp3Dom from;
 
     /**
      * @parameter
@@ -151,6 +153,13 @@ public class BuildImageConfiguration {
     }
 
     public String getFrom() {
+        if( from==null ) {
+            return null;
+        }
+        return from.getValue();
+    }
+
+    public Xpp3Dom getFromDom() {
         return from;
     }
 
@@ -253,6 +262,16 @@ public class BuildImageConfiguration {
         }
 
         public Builder from(String from) {
+            if (from == null) {
+                config.from = null;
+            } else {
+                config.from = new Xpp3Dom("from");
+                config.from.setValue(from);
+            }
+            return this;
+        }
+
+        public Builder from(Xpp3Dom from) {
             config.from = from;
             return this;
         }
