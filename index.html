@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.16-SNAPSHOT,</span>
-<span id="revdate">2016-09-26</span>
+<span id="revdate">2016-09-27</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -1475,6 +1475,22 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from"></a><strong>from</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The base image which should be used for this image. If not given this default to <code>busybox:latest</code> and is suitable for a pure data image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from-ext"></a><strong>fromExt</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Extended definition for a base image. This field holds a map of defined in <code>&lt;key&gt;value&lt;/key&gt;</code> format. The known keys are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;name&gt;</code> : Name of the base image</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>A provided <code>&lt;from&gt;</code> takes precedence over the name given here. This tag is useful for extensions of this plugin like the <a href="https://maven.fabric8.io">fabric8-maven-plugin</a> which can evaluate the additional information given here.</p>
+</div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
@@ -4004,7 +4020,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-09-26 10:31:46 UTC
+Last updated 2016-09-27 17:37:29 UTC
 </div>
 </div>
 </body>
