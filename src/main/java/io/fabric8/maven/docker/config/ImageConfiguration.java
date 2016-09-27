@@ -52,6 +52,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
 	public String getAlias() {
         return alias;

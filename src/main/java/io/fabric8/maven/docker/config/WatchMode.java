@@ -57,6 +57,15 @@ public enum WatchMode {
         this.doCopy = doCopy;
     }
 
+    @Override
+    public String toString() {
+        return "WatchMode{" +
+                "doRun=" + doRun +
+                ", doBuild=" + doBuild +
+                ", doCopy=" + doCopy +
+                '}';
+    }
+
     public boolean isRun() {
         return doRun;
     }
