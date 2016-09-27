@@ -1,29 +1,61 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
+import io.fabric8.maven.docker.access.util.LocalSocketUtil;
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugin.MojoExecutionException;
-
-import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 
 /**
  * Detector for determining the Docker access mechanism
  */
 public class DockerConnectionDetector {
 
-    private final Logger log;
-    private final DockerMachineConfiguration machineConfig;
+    final List<DockerHostProvider> dockerHostProviders;
 
-    // Environment from a docker machine
-    private Map<String, String> dockerMachineEnv;
-    private DockerMachine dockerMachine;
+    public DockerConnectionDetector(List<DockerHostProvider> externalProviders) {
+        dockerHostProviders = new ArrayList<>();
+        dockerHostProviders.addAll(getDefaultEnvProviders());
+        if (externalProviders != null) {
+            dockerHostProviders.addAll(externalProviders);
+        }
+        Collections.sort(dockerHostProviders,new DockerHostProvider.Comparator());
+    }
 
-    public DockerConnectionDetector(Logger log, DockerMachineConfiguration machineConfig) {
-        this.log = log;
-        this.machineConfig = machineConfig;
+    private Collection<? extends DockerHostProvider> getDefaultEnvProviders() {
+        return Arrays.asList(new EnvDockerHostProvider(),
+                             new UnixSocketDockerHostProvider(),
+                             new WindowsPipeDockerHostProvider());
+    }
+
+
+    /**
+     * Provider of environment variables like 'DOCKER_HOST'
+     */
+    public interface DockerHostProvider {
+        /**
+         * Get value of the docker host as detected by this provider. Return null if it couldn't be detected.
+         *
+         * @return the docker host parameter or null
+         */
+        String getDockerHost() throws IOException;
+
+        /**
+         * Get the priority of the env provider. A priority of -1 means, this is a 'fallback' called
+         * as last resort.
+         *
+         * @return priority, the higher, the earlier the provider is called.
+         * The highest priority of internal providers are not larger than 100.
+         */
+        int getPriority();
+
+        class Comparator implements java.util.Comparator<DockerHostProvider> {
+            @Override
+            public int compare(DockerHostProvider o1, DockerHostProvider o2) {
+                return o2.getPriority() - o1.getPriority();
+            }
+        }
     }
 
     /**
@@ -36,21 +68,23 @@ public class DockerConnectionDetector {
      * </ol>
      * @param dockerHost The dockerHost configuration setting
      * @return The docker host url
-     * @throws MojoExecutionException
+     * @throws IOException when URL handling fails
      */
     public String extractUrl(String dockerHost) throws IOException {
-        String connect = getValueWithFallback(dockerHost, "DOCKER_HOST");
-        if (connect != null) {
-            String protocol = connect.contains(":" + EnvUtil.DOCKER_HTTPS_PORT) ? "https:" : "http:";
-            return connect.replaceFirst("^tcp:", protocol);
+        if (dockerHost != null) {
+            return dockerHost;
         }
-        File unixSocket = new File("/var/run/docker.sock");
-        if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
-            return "unix:///var/run/docker.sock";
-        } 
-        throw new IllegalArgumentException("No <dockerHost> or <machine> given, no DOCKER_HOST environment variable, and no read/writable '/var/run/docker.sock'");
+        for (DockerHostProvider provider : dockerHostProviders) {
+            String value = provider.getDockerHost();
+            if (value != null) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("No <dockerHost> given, no DOCKER_HOST environment variable, " +
+                                           "no read/writable '/var/run/docker.sock' or '//./pipe/docker_engine' " +
+                                           "and no external provider like Docker machine configured");
     }
-    
+
     /**
      * Get the docker certificate location
      * <ol>
@@ -64,7 +98,10 @@ public class DockerConnectionDetector {
      * @throws MojoExecutionException
      */
     public String getCertPath(String certPath) throws IOException {
-        String path = getValueWithFallback(certPath, "DOCKER_CERT_PATH");
+        if (certPath != null) {
+            return certPath;
+        }
+        String path = System.getenv("DOCKER_CERT_PATH");
         // Final fallback
         if (path == null) {
             File dockerHome = new File(System.getProperty("user.home") + "/.docker");
@@ -77,36 +114,53 @@ public class DockerConnectionDetector {
 
     // ====================================================================================================
 
-    /**
-     * Use the given value if non-null or lookup from environment. First the
-     * system environment is checked, then the environment from a docker machine (if given)
-     *
-     * A docker machine can be automatically started / created lazily if the configuration given
-     * in the constructo allows this.
-     *
-     * @param value to check
-     * @param envVar the env var to use as fallback
-     */
-    private String getValueWithFallback(String value, String envVar) throws IOException {
-        if (value != null) {
-            return value;
+    // Lookup from the enviroment
+    class EnvDockerHostProvider implements DockerHostProvider {
+        @Override
+        public String getDockerHost() throws IOException {
+            String connect = System.getenv("DOCKER_HOST");
+            return connect != null ? EnvUtil.convertDockerHostToUrl(connect) : null;
         }
-        value = System.getenv(envVar);
-        if (value != null) {
-			return value;
-		}
-        if (machineConfig != null) {
-            // Startup docker machine
-            if (dockerMachine == null) {
-                dockerMachine = new DockerMachine(log, machineConfig);
+
+        @Override
+        public int getPriority() {
+            return 100;
+        }
+    }
+
+    // Check for a unix socket
+    class UnixSocketDockerHostProvider implements DockerHostProvider {
+        @Override
+        public String getDockerHost() throws IOException {
+            File unixSocket = new File("/var/run/docker.sock");
+            if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite() && LocalSocketUtil.canConnectUnixSocket(unixSocket)) {
+                return "unix:///var/run/docker.sock";
+            } else {
+                return null;
             }
-            // Get env and cache
-            if (dockerMachineEnv == null) {
-                dockerMachineEnv = dockerMachine.getEnvironment();
+        }
+
+        @Override
+        public int getPriority() {
+            return 55;
+        }
+    }
+
+    // Check for a windows pipe
+    class WindowsPipeDockerHostProvider implements DockerHostProvider {
+        @Override
+        public String getDockerHost() throws IOException {
+            File windowsPipe = new File("//./pipe/docker_engine");
+            if (windowsPipe.exists()) {
+                return "npipe:////./pipe/docker_engine";
+            } else {
+                return null;
             }
-            return dockerMachineEnv.get(envVar);
-        } else {
-            return null;
+        }
+
+        @Override
+        public int getPriority() {
+            return 50;
         }
     }
 }

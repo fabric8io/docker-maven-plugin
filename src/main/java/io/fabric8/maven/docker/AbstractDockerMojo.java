@@ -6,8 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import com.google.common.collect.Sets;
-
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -31,7 +29,6 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import org.json.JSONObject;
 
 /**
  * Base class for this plugin.
@@ -247,6 +244,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         // Resolve images
         final Properties resolveProperties = project.getProperties();
         resolvedImages = ConfigHelper.resolveImages(
+            log,
             images,                  // Unresolved images
             new ConfigHelper.Resolver() {
                     @Override
@@ -295,17 +293,32 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private DockerConnectionDetector createDockerConnectionDetector() {
-        if (machine == null) {
+        return new DockerConnectionDetector(getDockerHostProviders());
+    }
+
+    /**
+     * Return a list of providers which could delive connection parameters from
+     * calling external commands. For this plugin this is docker-machine, but can be overridden
+     * to add other config options, too.
+     *
+     * @return list of providers or <code>null</code> if none are applicable
+     */
+    protected List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
+        DockerMachineConfiguration config = machine;
+        if (config == null) {
             Properties projectProps = project.getProperties();
             if (!skipMachine) {
                 if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
-                    machine = new DockerMachineConfiguration(
+                    config = new DockerMachineConfiguration(
                         projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
                         projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
                 }
             }
         }
-        return new DockerConnectionDetector(log, machine);
+
+        List<DockerConnectionDetector.DockerHostProvider> ret = new ArrayList<>();
+        ret.add(new DockerMachine(log, config));
+        return ret;
     }
 
     /**
@@ -345,7 +358,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             final String host;
             try {
                 URI uri = new URI(dockerUrl);
-                if (uri.getHost() == null && uri.getScheme().equals("unix")) {
+                if (uri.getHost() == null && (uri.getScheme().equals("unix") || uri.getScheme().equals("npipe"))) {
                     host = "localhost";
                 } else {
                     host = uri.getHost();

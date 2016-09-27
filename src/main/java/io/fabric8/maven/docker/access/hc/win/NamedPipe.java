@@ -1,31 +1,40 @@
-package io.fabric8.maven.docker.access.hc.unix;
+package io.fabric8.maven.docker.access.hc.win;
 
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
-
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 
-import jnr.unixsocket.UnixSocketAddress;
-import jnr.unixsocket.UnixSocketChannel;
+import io.fabric8.maven.docker.util.Logger;
 
-final class UnixSocket extends Socket {
+final class NamedPipe extends Socket {
+
+	// Logging
+    private final Logger log;
+	//for development purposes
+	private final static boolean DEBUG = false;
 
     private final Object connectLock = new Object();
     private volatile boolean inputShutdown, outputShutdown;
 
-    private final UnixSocketChannel channel;
+    private String socketPath;
+    private volatile SocketAddress socketAddress;
+    private RandomAccessFile namedPipe;
 
-    UnixSocket() throws IOException {
-        channel = UnixSocketChannel.open();
+    private FileChannel channel;
+
+    NamedPipe(Logger log) throws IOException {
+    	this.log = log;
     }
 
     @Override
@@ -39,12 +48,16 @@ final class UnixSocket extends Socket {
             throw new IllegalArgumentException("Timeout may not be negative: " + timeout);
         }
 
-        if (!(endpoint instanceof UnixSocketAddress)) {
+        if (!(endpoint instanceof NpipeSocketAddress)) {
             throw new IllegalArgumentException("Unsupported address type: " + endpoint.getClass().getName());
         }
 
+        this.socketAddress = endpoint;
+        this.socketPath = ((NpipeSocketAddress) endpoint).path();
+
         synchronized (connectLock) {
-            channel.connect((UnixSocketAddress) endpoint);
+        	this.namedPipe = new RandomAccessFile(socketPath, "rw");
+        	this.channel = this.namedPipe.getChannel();
         }
     }
 
@@ -75,16 +88,12 @@ final class UnixSocket extends Socket {
 
     @Override
     public SocketAddress getRemoteSocketAddress() {
-        synchronized (connectLock) {
-            return channel.getRemoteSocketAddress();
-        }
+        return socketAddress;
     }
 
     @Override
     public SocketAddress getLocalSocketAddress() {
-        synchronized (connectLock) {
-            return channel.getLocalSocketAddress();
-        }
+        return null;
     }
 
     @Override
@@ -98,15 +107,19 @@ final class UnixSocket extends Socket {
             throw new SocketException("Socket is closed");
         }
 
-        if (!channel.isConnected()) {
-            throw new SocketException("Socket is not connected");
-        }
-
         if (inputShutdown) {
             throw new SocketException("Socket input is shutdown");
         }
 
         return new FilterInputStream(Channels.newInputStream(channel)) {
+
+        	@Override
+        	public int read(byte[] b, int off, int len) throws IOException {
+        		int readed = super.read(b, off, len);
+                log.debug("RESPONSE %s", new String(b, off, len, Charset.forName("UTF-8")));
+                return readed;
+        	}
+
             @Override
             public void close() throws IOException {
                 shutdownInput();
@@ -120,10 +133,6 @@ final class UnixSocket extends Socket {
             throw new SocketException("Socket is closed");
         }
 
-        if (!channel.isConnected()) {
-            throw new SocketException("Socket is not connected");
-        }
-
         if (outputShutdown) {
             throw new SocketException("Socket output is shutdown");
         }
@@ -131,6 +140,7 @@ final class UnixSocket extends Socket {
         return new FilterOutputStream(Channels.newOutputStream(channel)) {
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
+                log.debug("REQUEST %s", new String(b, off, len, Charset.forName("UTF-8")));
                 out.write(b, off, len);
             }
 
@@ -148,12 +158,11 @@ final class UnixSocket extends Socket {
 
     @Override
     public void setSoTimeout(int timeout) {
-        channel.setSoTimeout(timeout);
     }
 
     @Override
     public int getSoTimeout() throws SocketException {
-        return channel.getSoTimeout();
+    	return 0;
     }
 
     @Override
@@ -202,12 +211,11 @@ final class UnixSocket extends Socket {
 
     @Override
     public void setKeepAlive(boolean on) throws SocketException {
-        channel.setKeepAlive(on);
     }
 
     @Override
     public boolean getKeepAlive() throws SocketException {
-        return channel.getKeepAlive();
+    	return true;
     }
 
     @Override
@@ -230,10 +238,6 @@ final class UnixSocket extends Socket {
 
     @Override
     public void setReuseAddress(boolean on) throws SocketException {
-        if (isClosed()) {
-            throw new SocketException("Socket is closed");
-        }
-
         // just ignore
     }
 
@@ -244,35 +248,38 @@ final class UnixSocket extends Socket {
 
     @Override
     public void close() throws IOException {
-        channel.close();
+        if (isClosed()) {
+            return;
+        }
+        if (channel != null) {
+            channel.close();
+        }
         inputShutdown = true;
         outputShutdown = true;
     }
 
     @Override
     public void shutdownInput() throws IOException {
-        channel.shutdownInput();
         inputShutdown = true;
     }
 
     @Override
     public void shutdownOutput() throws IOException {
-        channel.shutdownOutput();
         outputShutdown = true;
     }
 
     @Override
     public String toString() {
         if (isConnected()) {
-            return "UnixSocket[addr=" + channel.getRemoteSocketAddress() + ']';
+            return "WindowsPipe[addr=" + this.socketPath + ']';
         }
 
-        return "UnixSocket[unconnected]";
+        return "WindowsPipe[unconnected]";
     }
 
     @Override
     public boolean isConnected() {
-        return channel.isConnected();
+        return !isClosed();
     }
 
     @Override
@@ -282,7 +289,7 @@ final class UnixSocket extends Socket {
 
     @Override
     public boolean isClosed() {
-        return !channel.isOpen();
+        return channel != null && !channel.isOpen();
     }
 
     @Override

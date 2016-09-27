@@ -8,6 +8,12 @@ package io.fabric8.maven.docker;
  * the License.
  */
 
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.regex.Pattern;
+
+import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
@@ -19,24 +25,11 @@ import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.PomLabel;
-import io.fabric8.maven.docker.util.StartOrderResolver;
-import io.fabric8.maven.docker.util.Timestamp;
-import io.fabric8.maven.docker.util.WaitUtil;
+import io.fabric8.maven.docker.util.*;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.*;
 import org.codehaus.plexus.util.StringUtils;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.regex.Pattern;
 
 
 /**
@@ -56,6 +49,9 @@ public class StartMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.skip.run", defaultValue = "false")
     private boolean skipRun;
+
+    @Parameter(property = "docker.startParallel", defaultValue = "false")
+    private boolean startParallel;
 
     // whether to block during to start. Set it via System property docker.follow
     private boolean follow;
@@ -86,6 +82,16 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter
     protected String portPropertyFile;
 
+    private static final class StartedContainerImage {
+        public final ImageConfiguration imageConfig;
+        public final String containerId;
+
+        private StartedContainerImage(ImageConfiguration imageConfig, String containerId) {
+            this.imageConfig = imageConfig;
+            this.containerId = containerId;
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -97,18 +103,22 @@ public class StartMojo extends AbstractDockerMojo {
         }
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
-        Properties projProperties = project.getProperties();
+        final Properties projProperties = project.getProperties();
         this.follow = Boolean.valueOf(System.getProperty("docker.follow", "false"));
 
         QueryService queryService = hub.getQueryService();
-        RunService runService = hub.getRunService();
+        final RunService runService = hub.getRunService();
 
-        LogDispatcher dispatcher = getLogDispatcher(hub);
+        final LogDispatcher dispatcher = getLogDispatcher(hub);
         PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
 
         boolean success = false;
-        PomLabel pomLabel = getPomLabel();
+        final PomLabel pomLabel = getPomLabel();
+
         try {
+
+            final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
+
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
 
@@ -117,34 +127,111 @@ public class StartMojo extends AbstractDockerMojo {
 
                 String imageName = imageConfig.getName();
                 checkImageWithAutoPull(hub, imageName,
-                                       getConfiguredRegistry(imageConfig,pullRegistry),imageConfig.getBuildConfiguration() == null);
+                        getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-                PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
                 NetworkConfig config = runConfig.getNetworkingConfig();
                 if (autoCreateCustomNetworks && config.isCustomNetwork()) {
                     runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
                 }
-
-                String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties);
-
-                if (showLogs(imageConfig)) {
-                    dispatcher.trackContainerLog(containerId,
-                                                 serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, imageConfig));
-                }
-
-                portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
-
-                // Wait if requested
-                waitIfRequested(hub,imageConfig, projProperties, containerId);
-                WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
-                if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
-                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), imageConfig);
-                }
-
-                // Expose container info as properties
-                exposeContainerProps(hub.getQueryService(), containerId,imageConfig.getAlias());
+                imagesWaitingToStart.add(imageConfig);
             }
+
+            final Set<String> startedContainers = new HashSet<>();
+
+            final ExecutorService executorService;
+            if (startParallel) {
+                executorService = Executors.newCachedThreadPool();
+            } else {
+                executorService = MoreExecutors.newDirectExecutorService();
+            }
+            final ExecutorCompletionService<StartedContainerImage> startingContainers = new ExecutorCompletionService<>(executorService);
+
+            while (!imagesWaitingToStart.isEmpty()) {
+                final List<ImageConfiguration> startableImages = new ArrayList<>();
+
+                for (ImageConfiguration imageWaitingToStart : imagesWaitingToStart) {
+                    if (startedContainers.containsAll(imageWaitingToStart.getDependencies())) {
+                        startableImages.add(imageWaitingToStart);
+                    }
+                }
+
+                for (final ImageConfiguration startableImage : startableImages) {
+
+                    final RunImageConfiguration runConfig = startableImage.getRunConfiguration();
+                    final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
+
+                    startingContainers.submit(new Callable<StartedContainerImage>() {
+                        @Override
+                        public StartedContainerImage call() throws Exception {
+                            final String containerId = runService.createAndStartContainer(startableImage, portMapping, pomLabel, projProperties);
+
+                            if (showLogs(startableImage)) {
+                                dispatcher.trackContainerLog(containerId,
+                                        serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, startableImage));
+                            }
+
+                            // Wait if requested
+                            waitIfRequested(hub,startableImage, projProperties, containerId);
+                            WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
+                            if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
+                                runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), startableImage);
+                            }
+
+                            return new StartedContainerImage(startableImage, containerId);
+                        }
+                    });
+                    imagesWaitingToStart.remove(startableImage);
+                }
+
+
+                final Future<StartedContainerImage> imageStartResult = startingContainers.take();
+                try {
+                    final StartedContainerImage startedContainerImage = imageStartResult.get();
+                    final String containerId = startedContainerImage.containerId;
+                    final ImageConfiguration imageConfig = startedContainerImage.imageConfig;
+                    final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+                    final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
+
+
+                    startedContainers.add(startedContainerImage.imageConfig.getAlias());
+
+                    portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
+                    // Expose container info as properties
+                    exposeContainerProps(hub.getQueryService(), containerId, imageConfig.getAlias());
+
+                } catch (ExecutionException e) {
+                    try {
+                        if (e.getCause() instanceof RuntimeException) {
+                            throw (RuntimeException)e.getCause();
+                        } else if (e.getCause() instanceof IOException) {
+                            throw (IOException)e.getCause();
+                        } else if (e.getCause() instanceof InterruptedException) {
+                            throw (InterruptedException)e.getCause();
+                        } else {
+                            throw new RuntimeException("Start-Job failed with unexpected exception: "+e.getCause().getMessage(), e.getCause());
+                        }
+                    } finally {
+                        executorService.shutdown();
+                        try {
+                            executorService.awaitTermination(10, TimeUnit.SECONDS);
+                        } catch (InterruptedException ie) {
+                            log.warn("ExecutorService did not shutdown correctly. Enforcing shutdown now!");
+                            executorService.shutdownNow();
+                        }
+                    }
+                }
+            }
+
+            if (!executorService.isShutdown()) {
+                executorService.shutdown();
+                try {
+                    executorService.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    log.warn("ExecutorService did not shutdown normally.");
+                }
+            }
+
             if (follow) {
                 runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
                 wait();
@@ -227,7 +314,7 @@ public class StartMojo extends AbstractDockerMojo {
         WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
         WaitUtil.HttpPingChecker checker;
         if (httpConfig != null) {
-            checker = new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
+            checker = new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus(), httpConfig.isAllowAllHosts());
             log.info("%s: Waiting on url %s with method %s for status %s.",
                     imageConfigDesc, waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
         } else {

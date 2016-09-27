@@ -1,15 +1,45 @@
 package io.fabric8.maven.docker.access.hc;
 
-import java.io.*;
-import java.net.URI;
-import java.util.*;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
 
-import io.fabric8.maven.docker.access.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.ResponseHandler;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.NetworkCreateConfig;
+import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
 import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
 import io.fabric8.maven.docker.access.chunked.PullOrPushResponseJsonHandler;
 import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.BodyAndStatusResponseHandler;
 import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.HttpBodyAndStatus;
+import io.fabric8.maven.docker.access.hc.http.HttpClientBuilder;
+import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
+import io.fabric8.maven.docker.access.hc.win.NamedPipeClientBuilder;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.access.log.LogRequestor;
@@ -21,16 +51,10 @@ import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ContainersListElement;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.model.NetworksListElement;
-import io.fabric8.maven.docker.util.*;
-import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ResponseHandler;
-import io.fabric8.maven.docker.access.hc.http.HttpClientBuilder;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import static java.net.HttpURLConnection.*;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.Timestamp;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a> for accessing
@@ -50,7 +74,10 @@ import static java.net.HttpURLConnection.*;
 public class DockerAccessWithHcClient implements DockerAccess {
 
     // Base URL which is given through when using UnixSocket communication but is not really used
-    private static final String DUMMY_BASE_URL = "unix://127.0.0.1:1/";
+    private static final String UNIX_URL = "unix://127.0.0.1:1/";
+
+    // Base URL which is given through when using NamedPipe communication but is not really used
+    private static final String NPIPE_URL = "npipe://127.0.0.1:1/";
 
     // Logging
     private final Logger log;
@@ -72,16 +99,18 @@ public class DockerAccessWithHcClient implements DockerAccess {
                                     String baseUrl,
                                     String certPath,
                                     int maxConnections,
-                                    Logger log)
-            throws IOException {
+                                    Logger log) throws IOException {
         this.log = log;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
-            throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp:// or unix://");
+            throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp://, unix:// or npipe://");
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
-            this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections));
-            this.urlBuilder = new UrlBuilder(DUMMY_BASE_URL, apiVersion);
+            this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections, log));
+            this.urlBuilder = new UrlBuilder(UNIX_URL, apiVersion);
+        } else if (uri.getScheme().equalsIgnoreCase("npipe")) {
+        	this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
+            this.urlBuilder = new UrlBuilder(NPIPE_URL, apiVersion);
         } else {
             this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
@@ -243,8 +272,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public Container inspectContainer(String containerIdOrName) throws DockerAccessException {
         try {
             String url = urlBuilder.inspectContainer(containerIdOrName);
-            String response = delegate.get(url, HTTP_OK);
-            return new ContainerDetails(new JSONObject(response));
+            String response = delegate.get(url, HTTP_OK, HTTP_NOT_FOUND);
+            return response != null ? new ContainerDetails(new JSONObject(response)) : null;
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
         }
@@ -442,10 +471,19 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public void shutdown() {
+        try {
+            delegate.close();
+        } catch (IOException exp) {
+            log.error("Error while closing HTTP client: " + exp,exp);
+        }
     }
 
     ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
-        return new ApacheHttpClientDelegate(builder);
+    	return createHttpClient(builder, true);
+    }
+
+    ApacheHttpClientDelegate createHttpClient(ClientBuilder builder, boolean pooled) throws IOException {
+        return new ApacheHttpClientDelegate(builder, pooled);
     }
 
     // visible for testing?

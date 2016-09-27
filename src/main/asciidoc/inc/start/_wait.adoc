@@ -14,6 +14,7 @@ a| HTTP ping check which periodically polls an URL. It knows the following sub-e
 * *url* holds an URL and is mandatory
 * *method* Optional HTTP method to use.
 * *status* Status code which if returned is considered to be a successful ping. This code can be given either as a single number (200) or as a range (200..399). The default is `200..399`
+* *allowAllHosts* If `url` is an HTTPS url and this option is set, then server certificates are not validated. By default they are checked for a proper CA signature.
 
 | *log*
 | Regular expression which is applied against the log

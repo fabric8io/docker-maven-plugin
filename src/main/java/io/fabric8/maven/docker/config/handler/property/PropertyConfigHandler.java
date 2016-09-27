@@ -93,6 +93,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .securityOpts(listWithPrefix(prefix, SECURITY_OPTS, properties))
                 .cmd(withPrefix(prefix, CMD, properties))
                 .dns(listWithPrefix(prefix, DNS, properties))
+                .dependsOn(listWithPrefix(prefix, DEPENDS_ON, properties))
                 .net(withPrefix(prefix, NET, properties))
                 .network(extractNetworkConfig(prefix, properties))
                 .dnsSearch(listWithPrefix(prefix, DNS_SEARCH, properties))

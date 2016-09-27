@@ -34,6 +34,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
 
 /**
  * Extractor for parsing the response of a log request
@@ -44,8 +45,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class LogRequestor extends Thread implements LogGetHandle {
 
     // Patter for matching log entries
-    static final Pattern LOG_LINE = Pattern.compile("^\\[?([^\\s\\]]*)]?\\s+(.*)\\s*$", Pattern.DOTALL);
-    private final HttpClient client;
+    static final Pattern LOG_LINE = Pattern.compile("^\\[?(?<timestamp>[^\\s\\]]*)]?\\s+(?<entry>.*?)\\s*$", Pattern.DOTALL);
+    private final CloseableHttpClient client;
 
     private final String containerId;
 
@@ -67,7 +68,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
      * @param containerId container for which to fetch the host
      * @param callback callback to call for each line received
      */
-    public LogRequestor(HttpClient client, UrlBuilder urlBuilder, String containerId, LogCallback callback) {
+    public LogRequestor(CloseableHttpClient client, UrlBuilder urlBuilder, String containerId, LogCallback callback) {
         this.client = client;
         this.containerId = containerId;
 
@@ -100,6 +101,12 @@ public class LogRequestor extends Thread implements LogGetHandle {
             parseResponse(response);
         } catch (IOException exp) {
             callback.error("IO Error while requesting logs: " + exp);
+        } finally {
+            try {
+                client.close();
+            } catch (IOException exp) {
+                callback.error("Error while closing client: " + exp);
+            }
         }
     }
 
@@ -193,8 +200,8 @@ public class LogRequestor extends Thread implements LogGetHandle {
                                          txt,(int) (txt.toCharArray())[0],(int) (txt.toCharArray())[1]));
             throw new LogCallback.DoneException();
         }
-        Timestamp ts = new Timestamp(matcher.group(1));
-        String logTxt = matcher.group(2);
+        Timestamp ts = new Timestamp(matcher.group("timestamp"));
+        String logTxt = matcher.group("entry");
         callback.log(type, ts, logTxt);
     }
 

@@ -210,7 +210,7 @@ public class DockerFileBuilder {
         }
     }
 
-    public void addOptimisation() {
+    private void addOptimisation() {
         if (runCmds != null && !runCmds.isEmpty() && shouldOptimise) {
             String optimisedRunCmd = StringUtils.join(runCmds.iterator(), " && ");
             runCmds.clear();

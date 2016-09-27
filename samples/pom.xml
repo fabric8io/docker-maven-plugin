@@ -21,13 +21,13 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>dmp-sample-parent</artifactId>
-  <version>0.15.15</version>
+  <version>0.16.4</version>
   <packaging>pom</packaging>
 
   <url>http://www.jolokia.org</url>
 
   <properties>
-    <docker.maven.plugin.version>0.15-SNAPSHOT</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.16-SNAPSHOT</docker.maven.plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>

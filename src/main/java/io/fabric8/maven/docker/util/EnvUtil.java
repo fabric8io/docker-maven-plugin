@@ -30,30 +30,10 @@ public class EnvUtil {
 
     private EnvUtil() {}
 
-    // Check both, url and env DOCKER_HOST (first takes precedence)
-    public static String extractUrl(String dockerHost) {
-        String connect = dockerHost != null ? dockerHost : System.getenv("DOCKER_HOST");
-        if (connect == null) {
-            File unixSocket = new File("/var/run/docker.sock");
-            if (unixSocket.exists() && unixSocket.canRead() && unixSocket.canWrite()) {
-                connect = "unix:///var/run/docker.sock";
-            } else {
-                throw new IllegalArgumentException("No url given, no DOCKER_HOST environment variable and no read/writable '/var/run/docker.sock'");
-            }
-        }
+    // Convert docker host URL to an http URL
+    public static String convertDockerHostToUrl(String connect) {
         String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
         return connect.replaceFirst("^tcp:", protocol);
-    }
-    
-    public static String getCertPath(String certPath) {
-        String path = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
-        if (path == null) {
-            File dockerHome = new File(System.getProperty("user.home") + "/.docker");
-            if (dockerHome.isDirectory() && dockerHome.list(SuffixFileFilter.PEM_FILTER).length > 0) {
-                return dockerHome.getAbsolutePath();
-            }
-        }
-        return path;
     }
 
     /**
@@ -351,6 +331,5 @@ public class EnvUtil {
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
-
 
 }

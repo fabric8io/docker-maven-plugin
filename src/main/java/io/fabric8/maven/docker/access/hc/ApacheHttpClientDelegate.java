@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import com.google.common.net.MediaType;
 import io.fabric8.maven.docker.access.hc.http.HttpRequestException;
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import org.apache.http.*;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.*;
@@ -21,9 +22,9 @@ public class ApacheHttpClientDelegate {
     private final ClientBuilder clientBuilder;
     private final CloseableHttpClient httpClient;
 
-    public ApacheHttpClientDelegate(ClientBuilder clientBuilder) throws IOException {
+    public ApacheHttpClientDelegate(ClientBuilder clientBuilder, boolean pooled) throws IOException {
         this.clientBuilder = clientBuilder;
-        this.httpClient = clientBuilder.buildPooledClient();
+        this.httpClient = pooled ? clientBuilder.buildPooledClient() : clientBuilder.buildBasicClient();
     }
 
     public CloseableHttpClient createBasicClient()  {
@@ -34,17 +35,25 @@ public class ApacheHttpClientDelegate {
         }
     }
 
+    public CloseableHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public void close() throws IOException {
+        httpClient.close();
+    }
+
     public int delete(String url, int... statusCodes) throws IOException {
         return delete(url, new StatusCodeResponseHandler(), statusCodes);
     }
 
     public static class StatusCodeResponseHandler implements ResponseHandler<Integer> {
-
         @Override
         public Integer handleResponse(HttpResponse response)
             throws IOException {
             return response.getStatusLine().getStatusCode();
         }
+
     }
 
     public <T> T delete(String url, ResponseHandler<T> responseHandler, int... statusCodes)
@@ -64,13 +73,13 @@ public class ApacheHttpClientDelegate {
         return httpClient
             .execute(newGet(url), new StatusCodeCheckerResponseHandler<>(responseHandler, statusCodes));
     }
-
     public static class BodyResponseHandler implements ResponseHandler<String> {
         @Override
         public String handleResponse(HttpResponse response)
             throws IOException {
             return getResponseMessage(response);
         }
+
     }
 
     private static String getResponseMessage(HttpResponse response) throws IOException {
@@ -102,10 +111,6 @@ public class ApacheHttpClientDelegate {
     public int put(String url, Object body, int... statusCodes) throws IOException {
         return httpClient.execute(newPut(url, body),
                                   new StatusCodeCheckerResponseHandler<>(new StatusCodeResponseHandler(), statusCodes));
-    }
-
-    public CloseableHttpClient getHttpClient() {
-        return httpClient;
     }
 
     // =========================================================================================

@@ -1,7 +1,22 @@
 # ChangeLog
 
-* **0.15.17**
+* **0.16.4** (2016-09-26)
+  - Fix issue with DOCKER_HOST coming from Docker Machine
+  - Don't pull a 'scratch' base image ([#565](https://github.com/fabric8io/docker-maven-plugin/issues/565))
+  - Fix handling when looking up non-existing containers ([#566](https://github.com/fabric8io/docker-maven-plugin/issues/566))
+  
+* **0.16.3** (2016-09-22)
+  - Add 'allowAllHosts' to ping wait checker ([#559](https://github.com/fabric8io/docker-maven-plugin/issues/559))
+  - Allow 'stopAllContainers' also as Maven properties ([#536](https://github.com/fabric8io/docker-maven-plugin/issues/536))
+  - Use alias for stopping containers when naming strategy "alias" is used ([#536](https://github.com/fabric8io/docker-maven-plugin/issues/536))
+  - New option 'startParallel' for docker:start to speedup execution ([#531](https://github.com/fabric8io/docker-maven-plugin/issues/531))
+  - Tuned detection of docker host connection parameters to be more extensible
+  
+* **0.16.2** (2016-09-15)
   - Fixed naming of 'buildArgs' for `docker:build` (was `args` formerly)
+  - Experimental Support for 'Docker for Windows' ([#523](https://github.com/fabric8io/docker-maven-plugin/issues/523))
+  - Remove versions from custom lifecycle deps ([#539](https://github.com/fabric8io/docker-maven-plugin/issues/539))
+  - Fix extra new line in logoutput ([#538](https://github.com/fabric8io/docker-maven-plugin/issues/538)) 
 
 * **0.15.16** (2016-08-03)
   - Run 'stopContainer' in a Future to short circuit extra waiting ([#518](https://github.com/fabric8io/docker-maven-plugin/issues/518))

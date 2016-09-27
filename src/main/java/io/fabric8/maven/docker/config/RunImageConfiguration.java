@@ -36,6 +36,10 @@ public class RunImageConfiguration {
     @Parameter
     private String domainname;
 
+    // container domain name
+    @Parameter
+    private List<String> dependsOn;
+
     // container entry point
     @Parameter
     private Arguments entrypoint;
@@ -169,6 +173,10 @@ public class RunImageConfiguration {
 
     public String getDomainname() {
         return domainname;
+    }
+
+    public List<String> getDependsOn() {
+        return dependsOn;
     }
 
     public String getUser() {
@@ -387,6 +395,11 @@ public class RunImageConfiguration {
 
         public Builder network(NetworkConfig networkConfig) {
             config.network = networkConfig;
+            return this;
+        }
+
+        public Builder dependsOn(List<String> dependsOn) {
+            config.dependsOn = dependsOn;
             return this;
         }
 

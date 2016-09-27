@@ -2,21 +2,17 @@ package io.fabric8.maven.docker.access.hc.unix;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 
+import io.fabric8.maven.docker.access.hc.util.AbstractNativeSocketFactory;
 import jnr.unixsocket.UnixSocketAddress;
-
-import org.apache.http.HttpHost;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.protocol.HttpContext;
 
-final class UnixConnectionSocketFactory implements ConnectionSocketFactory {
+final class UnixConnectionSocketFactory extends AbstractNativeSocketFactory {
 
-    private final File unixSocketFile;
-
-    public UnixConnectionSocketFactory(String unixSocketPath) {
-        this.unixSocketFile = new File(unixSocketPath);
+    UnixConnectionSocketFactory(String unixSocketPath) {
+        super(unixSocketPath);
     }
 
     @Override
@@ -25,10 +21,8 @@ final class UnixConnectionSocketFactory implements ConnectionSocketFactory {
     }
 
     @Override
-    public Socket connectSocket(int connectTimeout, Socket sock, HttpHost host, InetSocketAddress remoteAddress,
-            InetSocketAddress localAddress, HttpContext context)
-            throws IOException {
-        sock.connect(new UnixSocketAddress(unixSocketFile), connectTimeout);
-        return sock;
+    protected SocketAddress createSocketAddress(String path) {
+        return new UnixSocketAddress(new File(path));
     }
+
 }

@@ -1,6 +1,6 @@
-package io.fabric8.maven.docker.access.hc;
+package io.fabric8.maven.docker.access.util;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,34 +16,29 @@ package io.fabric8.maven.docker.access.hc;
  * limitations under the License.
  */
 
+import java.io.File;
 import java.io.IOException;
 
-import org.apache.http.impl.client.CloseableHttpClient;
+import jnr.unixsocket.UnixSocketAddress;
+import jnr.unixsocket.UnixSocketChannel;
 
 /**
- * A client builder know how to build HTTP clients
+ * Utilities around socket connections
  *
  * @author roland
- * @since 03/05/16
+ * @since 22/09/16
  */
-public interface ClientBuilder {
+public class LocalSocketUtil {
 
     /**
-     * Create a pooled client
+     * Check whether we can connect to a local Unix socket
      *
-     * @return an HTTP client
-     * @throws IOException
      */
-    CloseableHttpClient buildPooledClient() throws IOException;
-
-    /**
-     * Create a basic client with a single connection. This is the client which should be used
-     * in long running threads
-     *
-     * @return an HTTP client
-     * @throws IOException
-     */
-    CloseableHttpClient buildBasicClient() throws IOException;
-
-
+    public static boolean canConnectUnixSocket(File path) {
+        try (UnixSocketChannel channel = UnixSocketChannel.open()) {
+            return channel.connect(new UnixSocketAddress(path));
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }

@@ -11,7 +11,7 @@ mvn versions:set -DgenerateBackupPoms=false -DnewVersion=0.15.4
 ```
 
 * Run "update_issue_links.sh" in "doc/"
-* Check into Git
+* Check into Git and push
 
 ## Building and deploying
 
