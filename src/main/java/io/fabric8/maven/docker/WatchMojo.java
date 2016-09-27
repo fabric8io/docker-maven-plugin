@@ -107,6 +107,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 ImageWatcher watcher = new ImageWatcher(imageConfig, imageId, containerId);
                 long interval = watcher.getInterval();
 
+                log.info("Watching " + imageConfig.getName() + " using " + watcher.getWatchMode(imageConfig));
+
                 ArrayList<String> tasks = new ArrayList<>();
 
                 if (imageConfig.getBuildConfiguration() != null &&
@@ -239,7 +241,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         };
     }
 
-    private void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
+    protected void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
         // Stop old one
         RunService runService = hub.getRunService();
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
@@ -277,7 +279,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     // ===============================================================================================================
 
     // Helper class for holding state and parameter when watching images
-    private class ImageWatcher {
+    public class ImageWatcher {
 
         private final WatchMode mode;
         private final AtomicReference<String> imageIdRef, containerIdRef;
