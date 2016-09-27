@@ -212,6 +212,7 @@ public class PropertyConfigHandlerTest {
         assertEquals(CleanupMode.TRY_TO_REMOVE, buildConfig.cleanupMode());
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
+        assertEquals("image-ext", buildConfig.getFromExt().get("name"));
         assertEquals(a("8080"), buildConfig.getPorts());
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
@@ -352,6 +353,8 @@ public class PropertyConfigHandlerTest {
             k(ConfigKey.ENV_PROPERTY_FILE), "/tmp/envProps.txt",
             k(ConfigKey.EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
             k(ConfigKey.FROM), "image",
+            k(ConfigKey.FROM_EXT) + ".name", "image-ext",
+            k(ConfigKey.FROM_EXT) + ".kind", "kind",
             k(ConfigKey.HOSTNAME), "subdomain",
             k(ConfigKey.LINKS) + ".1", "redis",
             k(ConfigKey.MAINTAINER), "fabric8io@redhat.com",

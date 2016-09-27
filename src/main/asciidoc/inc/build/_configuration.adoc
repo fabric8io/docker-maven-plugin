@@ -35,9 +35,22 @@ described in <<build-buildargs,Build Args>>
 | [[build-config-from]]*from*
 | The base image which should be used for this image. If not given this default to `busybox:latest` and is suitable for a pure data image.
 ifeval::["{plugin}" == "fabric8"]
-In case of an <<build-openshift,S2I Binary build>> this parameter specifies the S2I Builder Image to use, which by default is `fabric8/s2i-java:latest`.
+In case of an <<build-openshift,S2I Binary build>> this parameter specifies the S2I Builder Image to use, which by default is `fabric8/s2i-java:latest`. See also <<build-config-from-ext,from-ext>> how to add additional properties for the base image.
 
 endif::[]
+
+| [[build-config-from-ext]]**fromExt**
+a| Extended definition for a base image. This field holds a map of defined in `<key>value</key>` format. The known keys are:
+
+* `<name>` : Name of the base image
+ifeval::["{plugin}" == "fabric8"]
+* `<kind>` : Kind of the reference to the builder image when in S2I build mode. By default its `ImageStreamTag` but can be also `ImageStream`. An alternative would be `DockerImage`
+* `<namespace>` : Namespace where this builder image lives.
+
+endif::[]
+
+A provided `<from>` takes precedence over the name given here. This tag is useful for extensions of this plugin like the https://maven.fabric8.io[fabric8-maven-plugin] which can evaluate the additional information given here.
+
 | *labels*
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.
 

@@ -52,6 +52,7 @@ public enum ConfigKey {
     ENV_PROPERTY_FILE,
     EXTRA_HOSTS,
     FROM,
+    FROM_EXT,
     HOSTNAME,
     LABELS,
     LINKS,

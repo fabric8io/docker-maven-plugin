@@ -36,10 +36,11 @@ public class BuildImageConfiguration {
      */
     private String from;
 
+    // Extended version for <from>
     /**
      * @parameter
      */
-    private Properties fromExt;
+    private Map<String, String> fromExt;
 
     /**
      * @parameter
@@ -86,7 +87,7 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private List<String> tags;
-    
+
     /**
      * @parameter
      */
@@ -157,12 +158,12 @@ public class BuildImageConfiguration {
 
     public String getFrom() {
         if (from == null && getFromExt() != null) {
-            return getFromExt().getProperty("name");
+            return getFromExt().get("name");
         }
         return from;
     }
 
-    public Properties getFromExt() {
+    public Map<String, String> getFromExt() {
         return fromExt;
     }
 
@@ -210,7 +211,7 @@ public class BuildImageConfiguration {
     public String getCommand() {
         return command;
     }
-    
+
     public CleanupMode cleanupMode() {
         return CleanupMode.parse(cleanup);
     }
@@ -269,7 +270,7 @@ public class BuildImageConfiguration {
             return this;
         }
 
-        public Builder fromExt(Properties fromExt) {
+        public Builder fromExt(Map<String, String> fromExt) {
             config.fromExt = fromExt;
             return this;
         }
@@ -293,7 +294,7 @@ public class BuildImageConfiguration {
             config.assembly = assembly;
             return this;
         }
-        
+
         public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;
@@ -307,12 +308,12 @@ public class BuildImageConfiguration {
             	config.runCmds = theCmds;
             return this;
         }
-        
+
         public Builder volumes(List<String> volumes) {
             config.volumes = volumes;
             return this;
         }
-        
+
         public Builder tags(List<String> tags) {
             config.tags = tags;
             return this;
@@ -339,8 +340,8 @@ public class BuildImageConfiguration {
             }
             return this;
         }
-        
-        public Builder cleanup(String cleanup) { 
+
+        public Builder cleanup(String cleanup) {
             config.cleanup = cleanup;
             return this;
         }

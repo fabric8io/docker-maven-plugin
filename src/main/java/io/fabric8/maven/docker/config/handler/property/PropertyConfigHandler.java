@@ -73,6 +73,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .ports(extractPortValues(prefix, properties))
                 .runCmds(extractRunCommands(prefix,properties))
                 .from(withPrefix(prefix, FROM, properties))
+                .fromExt(mapWithPrefix(prefix,FROM_EXT,properties))
                 .registry(withPrefix(prefix, REGISTRY, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES, properties))
                 .tags(listWithPrefix(prefix, TAGS, properties))
