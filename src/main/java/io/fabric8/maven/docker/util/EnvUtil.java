@@ -31,7 +31,7 @@ public class EnvUtil {
     private EnvUtil() {}
 
     // Convert docker host URL to an http URL
-    public static String convertDockerHostToUrl(String connect) {
+    public static String convertTcpToHttpUrl(String connect) {
         String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
         return connect.replaceFirst("^tcp:", protocol);
     }

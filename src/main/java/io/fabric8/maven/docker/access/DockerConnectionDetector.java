@@ -142,7 +142,7 @@ public class DockerConnectionDetector {
         private String certPath;
 
         public ConnectionParameter(String url, String certPath) throws IOException {
-            this.url = url;
+            this.url = url != null ? EnvUtil.convertTcpToHttpUrl(url) : null;
             initCertPath(certPath);
         }
 
