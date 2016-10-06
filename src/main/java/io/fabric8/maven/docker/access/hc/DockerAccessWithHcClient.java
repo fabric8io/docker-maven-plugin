@@ -413,7 +413,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
             return response.getStatusCode() == HTTP_OK;
         } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to remove image [%s]", image);
+            log.warn( "Unable to remove image [%s]", image);
+            return false;
         }
     }
 
