@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.16.6** (2016-10-06)
+  - Fix concurrency issues when doing a watch on logs (#574)
+  
 * **0.16.5** (2016-09-27)
   - Refactored Docker connection parameter detection
   - Added a <fromExt> for extended definition of base images ([#572](https://github.com/fabric8io/docker-maven-plugin/issues/572))
