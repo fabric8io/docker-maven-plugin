@@ -60,6 +60,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     private final UrlBuilder urlBuilder;
 
+    // Lock for synchronizing closing of requests
+    private final Object lock = new Object();
+
     /**
      * Create a helper object for requesting log entries synchronously ({@link #fetchLogs()}) or asynchronously ({@link #start()}.
      *
@@ -103,7 +106,10 @@ public class LogRequestor extends Thread implements LogGetHandle {
             callback.error("IO Error while requesting logs: " + exp);
         } finally {
             try {
-                client.close();
+                synchronized (lock) {
+                    client.close();
+                    request = null;
+                }
             } catch (IOException exp) {
                 callback.error("Error while closing client: " + exp);
             }
@@ -212,7 +218,11 @@ public class LogRequestor extends Thread implements LogGetHandle {
     @Override
     public void finish() {
         if (request != null) {
-            request.abort();
+            synchronized (lock) {
+                if (request != null) {
+                    request.abort();
+                }
+            }
         }
     }
 
