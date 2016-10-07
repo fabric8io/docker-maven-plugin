@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.16.7** (2016-10-07)
+  - Even better logging
+  
 * **0.16.6** (2016-10-07)
   - Fix concurrency issues when doing a watch on logs ([#574](https://github.com/fabric8io/docker-maven-plugin/issues/574))
   - Break push with dedicated registry if temporary image tag already exists ([#575](https://github.com/fabric8io/docker-maven-plugin/issues/575))

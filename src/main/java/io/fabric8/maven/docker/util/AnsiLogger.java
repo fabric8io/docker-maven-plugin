@@ -220,11 +220,8 @@ public class AnsiLogger implements Logger {
 
     private String colored(String message, Ansi.Color color, boolean addPrefix, Object ... params) {
         Ansi ansi = ansi().fg(color);
-        if (addPrefix) {
-            ansi.a(prefix);
-        }
-
-        return ansi.a(String.format(evaluateEmphasis(message, color), params)).reset().toString();
+        String msgToPrint = addPrefix ? prefix + message : message;
+        return ansi.a(String.format(evaluateEmphasis(msgToPrint, color), params)).reset().toString();
     }
 
     // Emphasize parts encloses in "[[*]]" tags
@@ -248,22 +245,30 @@ public class AnsiLogger implements Logger {
         return ret.toString();
     }
 
-    private static final Map<String, Ansi.Color> EMPHASIS_COLOR_MAP = new HashMap<>();
+    private static final Map<String, Ansi.Color> COLOR_MAP = new HashMap<>();
 
     static {
-        EMPHASIS_COLOR_MAP.put("*",COLOR_EMPHASIS);
-        EMPHASIS_COLOR_MAP.put("B",BLUE);
-        EMPHASIS_COLOR_MAP.put("C",CYAN);
-        EMPHASIS_COLOR_MAP.put("Y",YELLOW);
-        EMPHASIS_COLOR_MAP.put("G",GREEN);
-        EMPHASIS_COLOR_MAP.put("M",MAGENTA);
-        EMPHASIS_COLOR_MAP.put("R",RED);
-        EMPHASIS_COLOR_MAP.put("W",WHITE);
-        EMPHASIS_COLOR_MAP.put("D",DEFAULT);
+        COLOR_MAP.put("*", COLOR_EMPHASIS);
+        COLOR_MAP.put("B", BLUE);
+        COLOR_MAP.put("C", CYAN);
+        COLOR_MAP.put("Y", YELLOW);
+        COLOR_MAP.put("G", GREEN);
+        COLOR_MAP.put("M", MAGENTA);
+        COLOR_MAP.put("R", RED);
+        COLOR_MAP.put("W", WHITE);
+        COLOR_MAP.put("S", BLACK);
+        COLOR_MAP.put("D", DEFAULT);
     }
 
     private String getEmphasisColor(String id) {
-        Ansi.Color color = EMPHASIS_COLOR_MAP.get(id);
-        return color != null ? ansi().fg(color).toString() : "";
+        Ansi.Color color = COLOR_MAP.get(id.toUpperCase());
+        if (color != null) {
+            return id.toLowerCase().equals(id) ?
+                // lower case letter means bright color ...
+                ansi().fgBright(color).toString() :
+                ansi().fg(color).toString();
+        } else {
+            return "";
+        }
     }
 }
