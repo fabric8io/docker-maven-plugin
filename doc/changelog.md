@@ -1,7 +1,8 @@
 # ChangeLog
 
-* **0.16.6** (2016-10-06)
+* **0.16.6** (2016-10-07)
   - Fix concurrency issues when doing a watch on logs (#574)
+  - Break push with dedicated registry if temporary image tag already exists (#575)
   
 * **0.16.5** (2016-09-27)
   - Refactored Docker connection parameter detection
