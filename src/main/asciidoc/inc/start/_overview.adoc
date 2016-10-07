@@ -21,5 +21,6 @@ By default container specific properties are exposed as Maven properties. These 
 | Internal IP address of the container in the specified custom network. This works only for custom networks.
 |===
 
-For example the Maven property `docker.container.tomcat.ip` would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration *exposeContainerInfo* to an empty string to not expose container information that way or to a string for an other prefix than `docker.containe
-r`.
+Instead of the `<alias>` a fixed property key can be configured in the image's <<start-run-configuration, <run> >> configuration with the option `exposedPropertyKey`.
+
+For example the Maven property `docker.container.tomcat.ip` would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration *exposeContainerInfo* to an empty string to not expose container information that way or to a string for an other prefix than `docker.container`.

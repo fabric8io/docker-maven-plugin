@@ -6,6 +6,7 @@
   - Reduce log output for the non color case when pulling images (#568)
   - Add possibility to change colors in log messages
   - Don't print a progressbar when in batch mode (mvn -B) (#564)
+  - Add `exposedProperty` key to change the alias part of the exposed container properties (#557)
   
 * **0.16.5** (2016-09-27)
   - Refactored Docker connection parameter detection

@@ -108,6 +108,12 @@ public class RunImageConfiguration {
     @Parameter
     private NamingStrategy namingStrategy;
 
+    /**
+     * Property key part used to expose the container ip when running.
+     */
+    @Parameter
+    private String exposedPropertyKey;
+
     // Mount volumes from the given image's started containers
     @Parameter
     private VolumeConfiguration volumes;
@@ -285,6 +291,10 @@ public class RunImageConfiguration {
         return namingStrategy == null ? NamingStrategy.none : namingStrategy;
     }
 
+    public String getExposedPropertyKey() {
+        return exposedPropertyKey;
+    }
+
     public Boolean getPrivileged() {
         return privileged;
     }
@@ -452,6 +462,11 @@ public class RunImageConfiguration {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
                     NamingStrategy.valueOf(namingStrategy.toLowerCase());
+            return this;
+        }
+
+        public Builder exposedPropertyKey(String key) {
+            config.exposedPropertyKey = key;
             return this;
         }
 

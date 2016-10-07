@@ -109,6 +109,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .memory(longWithPrefix(prefix, MEMORY, properties))
                 .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
                 .namingStrategy(withPrefix(prefix, NAMING_STRATEGY, properties))
+                .exposedPropertyKey(withPrefix(prefix, EXPOSED_PROPERTY_KEY, properties))
                 .portPropertyFile(withPrefix(prefix, PORT_PROPERTY_FILE, properties))
                 .ports(listWithPrefix(prefix, PORTS, properties))
                 .shmSize(longWithPrefix(prefix, SHMSIZE, properties))

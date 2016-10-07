@@ -19,6 +19,7 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 
 The `<run>` configuration element knows the following sub elements:
 
+[[start-run-configuration]]
 .Run configuration
 [cols="1,5"]
 |===
@@ -53,6 +54,9 @@ The `<run>` configuration element knows the following sub elements:
 
 | *extraHosts*
 | List of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved at container startup.
+
+| *exposedPropertyKey*
+| Set the property part for the exposed container properties as described <<start-overview,above>>. This will take precedence of the image's `alias` which is the default value. For example, when this property is set to `jboss`, then for this container its IP address is exposed in Maven property `docker.container.jboss.ip` regardless how the image is named.
 
 | *hostname*
 | Hostname of the container

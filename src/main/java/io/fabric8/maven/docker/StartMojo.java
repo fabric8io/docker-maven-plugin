@@ -198,7 +198,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                     portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
                     // Expose container info as properties
-                    exposeContainerProps(hub.getQueryService(), containerId, imageConfig.getAlias());
+                    exposeContainerProps(hub.getQueryService(), containerId, imageConfig);
 
                 } catch (ExecutionException e) {
                     try {
@@ -450,12 +450,13 @@ public class StartMojo extends AbstractDockerMojo {
         return false;
     }
 
-    private void exposeContainerProps(QueryService queryService, String containerId, String alias)
+    private void exposeContainerProps(QueryService queryService, String containerId, ImageConfiguration image)
         throws DockerAccessException {
-        if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(alias)) {
+        String propKey = getExposedPropertyKeyPart(image);
+        if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
             Container container = queryService.getMandatoryContainer(containerId);
             Properties props = project.getProperties();
-            String prefix = addDot(exposeContainerProps) + addDot(alias);
+            String prefix = addDot(exposeContainerProps) + addDot(propKey);
             props.put(prefix + "id", containerId);
             String ip = container.getIPAddress();
             if (StringUtils.isNotEmpty(ip)) {
@@ -469,6 +470,14 @@ public class StartMojo extends AbstractDockerMojo {
                 }
             }
         }
+    }
+
+    private String getExposedPropertyKeyPart(ImageConfiguration image) {
+        String propKey = image.getRunConfiguration() != null ? image.getRunConfiguration().getExposedPropertyKey() : null;
+        if (StringUtils.isEmpty(propKey)) {
+            propKey = image.getAlias();
+        }
+        return propKey;
     }
 
     private String addDot(String part) {

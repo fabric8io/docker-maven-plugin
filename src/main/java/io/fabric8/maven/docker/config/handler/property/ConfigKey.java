@@ -50,6 +50,7 @@ public enum ConfigKey {
     ENTRYPOINT,
     ENV,
     ENV_PROPERTY_FILE,
+    EXPOSED_PROPERTY_KEY,
     EXTRA_HOSTS,
     FROM,
     FROM_EXT,
