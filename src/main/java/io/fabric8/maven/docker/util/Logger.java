@@ -17,7 +17,6 @@ public interface Logger {
      */
     void debug(String format, Object ... params);
 
-
     /**
      * Informational message
      *

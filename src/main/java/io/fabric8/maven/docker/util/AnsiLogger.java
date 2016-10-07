@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
@@ -21,6 +22,7 @@ public class AnsiLogger implements Logger {
 
     // prefix used for console output
     public static final String DEFAULT_LOG_PREFIX = "DOCKER> ";
+    private static final int NON_ANSI_UPDATE_PERIOD = 80;
 
     private final Log log;
     private final String prefix;
@@ -37,7 +39,8 @@ public class AnsiLogger implements Logger {
             COLOR_PROGRESS_BAR = CYAN;
 
     // Map remembering lines
-    private ThreadLocal<Map<String, Integer>> imageLines = new ThreadLocal<Map<String,Integer>>();
+    private ThreadLocal<Map<String, Integer>> imageLines = new ThreadLocal<>();
+    private ThreadLocal<AtomicInteger> updateCount = new ThreadLocal<>();
 
     // Old image id when used in non ansi mode
     private String oldImageId;
@@ -104,7 +107,9 @@ public class AnsiLogger implements Logger {
         // A progress indicator is always written out to standard out if a tty is enabled.
         if (log.isInfoEnabled()) {
             imageLines.remove();
+            updateCount.remove();
             imageLines.set(new HashMap<String, Integer>());
+            updateCount.set(new AtomicInteger());
             oldImageId = null;
         }
     }
@@ -157,11 +162,13 @@ public class AnsiLogger implements Logger {
     }
 
     private void updateNonAnsiProgress(String imageId) {
-        if (!imageId.equals(oldImageId)) {
-            print("\n" + imageId + ": .");
-            oldImageId = imageId;
-        } else {
-            print(".");
+        AtomicInteger count = updateCount.get();
+        int nr = count.getAndIncrement();
+        if (nr % NON_ANSI_UPDATE_PERIOD == 0) {
+            print("#");
+        }
+        if (nr > 0 && nr % (80 * NON_ANSI_UPDATE_PERIOD) == 0) {
+            print("\n");
         }
     }
 
