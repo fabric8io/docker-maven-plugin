@@ -48,7 +48,7 @@ public class DockerFileBuilder {
     private List<AddEntry> addEntries = new ArrayList<>();
 
     // list of ports to expose and environments to use
-    private List<Integer> ports = new ArrayList<>();
+    private List<String> ports = new ArrayList<>();
 
     // list of RUN Commands to run along with image build see issue #191 on github
     private List<String> runCmds = new ArrayList<>();
@@ -201,11 +201,7 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            String[] portsS = new String[ports.size()];
-            int i = 0;
-            for (Integer port : ports) {
-                portsS[i++] = port.toString();
-            }
+            String[] portsS = ports.toArray(new String[]{});
             DockerFileKeyword.EXPOSE.addTo(b, portsS);
         }
     }
@@ -305,11 +301,7 @@ public class DockerFileBuilder {
         if (ports != null) {
             for (String port : ports) {
                 if (port != null) {
-                    try {
-                        this.ports.add(Integer.parseInt(port));
-                    } catch (NumberFormatException exp) {
-                        throw new IllegalArgumentException("Non numeric port " + port + " specified in port mapping",exp);
-                    }
+                    this.ports.add(port);
                 }
             }
         }
