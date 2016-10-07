@@ -31,7 +31,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasize() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
         Ansi ansi = Ansi.ansi();
         logger.info("Yet another [[*]]Test[[*]] %s","emphasis");
         assertEquals(ansi.a("T>")

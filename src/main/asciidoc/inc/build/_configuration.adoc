@@ -20,11 +20,11 @@ described in <<build-buildargs,Build Args>>
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
 
-| *nocache*
-| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache` when running Maven.
-
 | *cmd*
 | A command to execute by default (i.e. if no command is provided when a container for this image is started). See <<misc-startup,Startup Arguments>> for details.
+
+| *compression*
+| The compression mode how the build archive is transmitted to the docker daemon (`{plugin}:build`) and how docker build archives are attached to this build as sources (`{plugin}:source`). The value can be `none` (default), `gzip` or `bzip2`.
 
 | *entryPoint*
 | An entrypoint allows you to configure a container that will run as an executable. See <<misc-startup,Startup Arguments>> for details.
@@ -57,17 +57,17 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 | *maintainer*
 | The author (`MAINTAINER`) field for the generated image
 
+| *nocache*
+| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache` when running Maven.
+
+| *optimise*
+| if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
+
 | *ports*
 | The exposed ports which is a list of `<port>` elements, one for each port to expose.
 
 | *runCmds*
 | Commands to be run during the build process. It contains *run* elements which are passed to the shell. The run commands are inserted right after the assembly and after *workdir* in to the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
-
-| *optimise*
-| if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
-
-| *compression*
-| The compression mode how the build archive is transmitted to the docker daemon (`{plugin}:build`) and how docker build archives are attached to this build as sources (`{plugin}:source`). The value can be `none` (default), `gzip` or `bzip2`.
 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property

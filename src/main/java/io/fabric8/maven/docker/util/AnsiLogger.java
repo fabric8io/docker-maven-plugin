@@ -26,6 +26,7 @@ public class AnsiLogger implements Logger {
 
     private final Log log;
     private final String prefix;
+    private final boolean batchMode;
 
     private boolean verbose;
 
@@ -48,13 +49,18 @@ public class AnsiLogger implements Logger {
     private boolean useAnsi;
 
     public AnsiLogger(Log log, boolean useColor, boolean verbose) {
-        this(log, useColor, verbose, DEFAULT_LOG_PREFIX);
+        this(log, useColor, verbose, false);
     }
 
-    public AnsiLogger(Log log, boolean useColor, boolean verbose, String prefix) {
+    public AnsiLogger(Log log, boolean useColor, boolean verbose, boolean batchMode) {
+        this(log, useColor, verbose, batchMode, DEFAULT_LOG_PREFIX);
+    }
+
+    public AnsiLogger(Log log, boolean useColor, boolean verbose, boolean batchMode, String prefix) {
         this.log = log;
         this.verbose = verbose;
         this.prefix = prefix;
+        this.batchMode = batchMode;
         initializeColor(useColor);
     }
 
@@ -104,7 +110,7 @@ public class AnsiLogger implements Logger {
      */
     public void progressStart() {
         // A progress indicator is always written out to standard out if a tty is enabled.
-        if (log.isInfoEnabled()) {
+        if (!batchMode && log.isInfoEnabled()) {
             imageLines.remove();
             updateCount.remove();
             imageLines.set(new HashMap<String, Integer>());
@@ -116,7 +122,7 @@ public class AnsiLogger implements Logger {
      * Update the progress
      */
     public void progressUpdate(String layerId, String status, String progressMessage) {
-        if (log.isInfoEnabled() && StringUtils.isNotEmpty(layerId)) {
+        if (!batchMode && log.isInfoEnabled() && StringUtils.isNotEmpty(layerId)) {
             if (useAnsi) {
                 updateAnsiProgress(layerId, status, progressMessage);
             } else {
@@ -174,7 +180,7 @@ public class AnsiLogger implements Logger {
      * Finis progress meter. Must be always called if {@link #progressStart()} has been used.
      */
     public void progressFinished() {
-        if (log.isInfoEnabled()) {
+        if (!batchMode && log.isInfoEnabled()) {
             imageLines.remove();
             print(ansi().reset().toString());
             if (!useAnsi) {
