@@ -2006,8 +2006,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tbody>
 </table>
 <div class="paragraph">
-<p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container information that way or to a string for an other prefix than <code>docker.containe
-r</code>.</p>
+<p>Instead of the <code>&lt;alias&gt;</code> a fixed property key can be configured in the image&#8217;s <a href="#start-run-configuration">&lt;run&gt;</a> configuration with the option <code>exposedPropertyKey</code>.</p>
+</div>
+<div class="paragraph">
+<p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container information that way or to a string for an other prefix than <code>docker.container</code>.</p>
 </div>
 <div class="sect3">
 <h4 id="start-configuration">5.2.1. Configuration</h4>
@@ -2046,7 +2048,7 @@ r</code>.</p>
 <div class="paragraph">
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table id="start-run-configuration" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 12. Run configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
@@ -2098,6 +2100,10 @@ r</code>.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>extraHosts</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host</code> elements in the form <code>host:ip</code> to add to the container&#8217;s <code>/etc/hosts</code> file. Additionally, you may specify a <code>host</code> element in the form <code>host:host</code> to have the right side host ip address resolved at container startup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exposedPropertyKey</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the property part for the exposed container properties as described <a href="#start-overview">above</a>. This will take precedence of the image&#8217;s <code>alias</code> which is the default value. For example, when this property is set to <code>jboss</code>, then for this container its IP address is exposed in Maven property <code>docker.container.jboss.ip</code> regardless how the image is named.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>hostname</strong></p></td>
@@ -3433,6 +3439,10 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container entry point</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.exposedPropertyKey</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Property part for the exposed container properties like internal IP addresses as described in <a href="#start-overview">docker:start</a>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.workdir</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container working directory</p></td>
 </tr>
@@ -4031,7 +4041,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-10-07 08:05:09 UTC
+Last updated 2016-10-07 08:37:08 UTC
 </div>
 </div>
 </body>
