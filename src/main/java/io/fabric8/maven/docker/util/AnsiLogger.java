@@ -30,20 +30,19 @@ public class AnsiLogger implements Logger {
     private boolean verbose;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
-    private static Ansi.Color
+    static Ansi.Color
             COLOR_ERROR = RED,
             COLOR_INFO = GREEN,
             COLOR_WARNING = YELLOW,
             COLOR_PROGRESS_ID = YELLOW,
             COLOR_PROGRESS_STATUS = GREEN,
-            COLOR_PROGRESS_BAR = CYAN;
+            COLOR_PROGRESS_BAR = CYAN,
+            COLOR_EMPHASIS = BLUE;
+
 
     // Map remembering lines
     private ThreadLocal<Map<String, Integer>> imageLines = new ThreadLocal<>();
     private ThreadLocal<AtomicInteger> updateCount = new ThreadLocal<>();
-
-    // Old image id when used in non ansi mode
-    private String oldImageId;
 
     // Whether to use ANSI codes
     private boolean useAnsi;
@@ -110,7 +109,6 @@ public class AnsiLogger implements Logger {
             updateCount.remove();
             imageLines.set(new HashMap<String, Integer>());
             updateCount.set(new AtomicInteger());
-            oldImageId = null;
         }
     }
 
@@ -178,7 +176,6 @@ public class AnsiLogger implements Logger {
     public void progressFinished() {
         if (log.isInfoEnabled()) {
             imageLines.remove();
-            oldImageId = null;
             print(ansi().reset().toString());
             if (!useAnsi) {
                 println("");
@@ -193,7 +190,6 @@ public class AnsiLogger implements Logger {
     private void initializeColor(boolean useColor) {
         // sl4j simple logger used by Maven seems to escape ANSI escapes on Windows
         this.useAnsi = useColor && System.console() != null && !log.isDebugEnabled() && !isWindows();
-
         if (useAnsi) {
             AnsiConsole.systemInstall();
             Ansi.setEnabled(true);
@@ -221,6 +217,47 @@ public class AnsiLogger implements Logger {
         if (addPrefix) {
             ansi.a(prefix);
         }
-        return ansi.a(String.format(message,params)).reset().toString();
+
+        return ansi.a(String.format(evaluateEmphasis(message, color), params)).reset().toString();
+    }
+
+    // Emphasize parts encloses in "[[*]]" tags
+    private String evaluateEmphasis(String message, Ansi.Color msgColor) {
+        // Split with delimiters [[.]]. See also http://stackoverflow.com/a/2206545/207604
+        String prepared = message.replaceAll("\\[\\[(.)\\]\\]","[[]]$1[[]]");
+        String[] parts = prepared.split("\\[\\[\\]\\]");
+        if (parts.length == 1) {
+            return message;
+        }
+        String msgColorS = ansi().fg(msgColor).toString();
+        StringBuilder ret = new StringBuilder(parts[0]);
+        boolean colorOpen = true;
+        for (int i = 1; i < parts.length; i+=2) {
+            ret.append(colorOpen ? getEmphasisColor(parts[i]) : msgColorS);
+            colorOpen = !colorOpen;
+            if (i+1 < parts.length) {
+                ret.append(parts[i+1]);
+            }
+        }
+        return ret.toString();
+    }
+
+    private static final Map<String, Ansi.Color> EMPHASIS_COLOR_MAP = new HashMap<>();
+
+    static {
+        EMPHASIS_COLOR_MAP.put("*",COLOR_EMPHASIS);
+        EMPHASIS_COLOR_MAP.put("B",BLUE);
+        EMPHASIS_COLOR_MAP.put("C",CYAN);
+        EMPHASIS_COLOR_MAP.put("Y",YELLOW);
+        EMPHASIS_COLOR_MAP.put("G",GREEN);
+        EMPHASIS_COLOR_MAP.put("M",MAGENTA);
+        EMPHASIS_COLOR_MAP.put("R",RED);
+        EMPHASIS_COLOR_MAP.put("W",WHITE);
+        EMPHASIS_COLOR_MAP.put("D",DEFAULT);
+    }
+
+    private String getEmphasisColor(String id) {
+        Ansi.Color color = EMPHASIS_COLOR_MAP.get(id);
+        return color != null ? ansi().fg(color).toString() : "";
     }
 }

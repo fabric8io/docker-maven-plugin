@@ -104,7 +104,7 @@ public class ConfigHelperTest {
         };
     }
 
-        private class CatchingLog extends SystemStreamLog {
+    private class CatchingLog extends SystemStreamLog {
         private String warnMessage;
 
         @Override

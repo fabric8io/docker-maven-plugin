@@ -4,6 +4,7 @@
   - Fix concurrency issues when doing a watch on logs (#574)
   - Break push with dedicated registry if temporary image tag already exists (#575)
   - Reduce log output for the non color case when pulling images (#568)
+  - Add possibility to change colors in log messages
   
 * **0.16.5** (2016-09-27)
   - Refactored Docker connection parameter detection
