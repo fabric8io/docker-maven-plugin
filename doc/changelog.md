@@ -1,12 +1,12 @@
 # ChangeLog
 
 * **0.16.6** (2016-10-07)
-  - Fix concurrency issues when doing a watch on logs (#574)
-  - Break push with dedicated registry if temporary image tag already exists (#575)
-  - Reduce log output for the non color case when pulling images (#568)
+  - Fix concurrency issues when doing a watch on logs ([#574](https://github.com/fabric8io/docker-maven-plugin/issues/574))
+  - Break push with dedicated registry if temporary image tag already exists ([#575](https://github.com/fabric8io/docker-maven-plugin/issues/575))
+  - Reduce log output for the non color case when pulling images ([#568](https://github.com/fabric8io/docker-maven-plugin/issues/568))
   - Add possibility to change colors in log messages
-  - Don't print a progressbar when in batch mode (mvn -B) (#564)
-  - Add `exposedProperty` key to change the alias part of the exposed container properties (#557)
+  - Don't print a progressbar when in batch mode (mvn -B) ([#564](https://github.com/fabric8io/docker-maven-plugin/issues/564))
+  - Add `exposedProperty` key to change the alias part of the exposed container properties ([#557](https://github.com/fabric8io/docker-maven-plugin/issues/557))
   
 * **0.16.5** (2016-09-27)
   - Refactored Docker connection parameter detection
