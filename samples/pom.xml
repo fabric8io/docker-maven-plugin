@@ -45,11 +45,12 @@
   </build>
 
   <modules>
-   <module>net</module>
-   <module>custom-net</module>
-   <module>properties</module>
-   <module>dockerignore</module> 
-   <module>data-jolokia-demo</module> 
-   <!-- module>cargo-jolokia-demo</module --> 
+    <module>net</module>
+    <module>custom-net</module>
+    <module>properties</module>
+    <module>dockerignore</module>
+    <module>data-jolokia-demo</module>
+    <module>multi-wait</module>
+   <!-- module>cargo-jolokia-demo</module -->
   </modules>
 </project>
