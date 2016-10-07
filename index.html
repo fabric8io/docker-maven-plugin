@@ -969,6 +969,9 @@ be specified by the certPath or machine configuration, or by the
 <p><code>once</code> : For multi-module builds images are only checked once and pulled for the whole build.</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.autoPull</code></p></td>
 </tr>
@@ -1084,6 +1087,11 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>sourceDirectory</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default directory that contains the assembly descriptor(s) used by the plugin. The default value is <code>src/main/docker</code>. This option is only relevant for the <code>docker:build</code> goal.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.source.dir</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>useColor</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether to use colored log output. By default this is switched on when running on a console, off otherwise.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.useColor</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
@@ -1457,12 +1465,12 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail the build and <code>none</code> if no cleanup is requested.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A command to execute by default (i.e. if no command is provided when a container for this image is started). See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>compression</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>docker:build</code>) and how docker build archives are attached to this build as sources (<code>docker:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entryPoint</strong></p></td>
@@ -1501,20 +1509,20 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The author (<code>MAINTAINER</code>) field for the generated image</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>optimise</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to true then it will compress all the <code>runCmds</code> into a single <code>RUN</code> directive so that only one image layer is created.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>compression</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>docker:build</code>) and how docker build archives are attached to this build as sources (<code>docker:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -2906,6 +2914,9 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
 the global option <code>image</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
+<div class="paragraph">
+<p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
+</div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 20. Push options</caption>
 <colgroup>
@@ -4020,7 +4031,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-10-07 04:30:19 UTC
+Last updated 2016-10-07 08:05:09 UTC
 </div>
 </div>
 </body>
