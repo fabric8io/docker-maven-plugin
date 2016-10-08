@@ -57,6 +57,7 @@ public enum ConfigKey {
     HOSTNAME,
     LABELS,
     LINKS,
+    LINKS_LIST,
     LOG_ENABLED("log.enabled"),
     LOG_PREFIX("log.prefix"),
     LOG_DATE("log.date"),

@@ -23,6 +23,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Iterables;
+
 import static org.junit.Assert.*;
 
 /**
@@ -261,7 +263,7 @@ public class PropertyConfigHandlerTest {
         assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
         assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
         assertEquals("subdomain", runConfig.getHostname());
-        assertEquals(a("redis"), runConfig.getLinks());
+        assertTrue(Iterables.elementsEqual(a("redis"), runConfig.getLinks()));
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
         Assert.assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());

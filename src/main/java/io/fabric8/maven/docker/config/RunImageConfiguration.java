@@ -6,6 +6,10 @@ import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
+import com.google.common.collect.Iterables;
+
+import io.fabric8.maven.docker.util.EnvUtil;
+
 
 /**
  * @author roland
@@ -121,6 +125,10 @@ public class RunImageConfiguration {
     // Links to other container started
     @Parameter
     private List<String> links;
+
+    // Comma separated Links to other container started 
+    @Parameter
+    private String linksList;
 
     // Configuration for how to wait during startup of the container
     @Parameter
@@ -263,16 +271,13 @@ public class RunImageConfiguration {
         return volumes;
     }
 
-    public List<String> getLinks() {
-        return links;
+    public Iterable<String> getLinks() {
+        Iterable<String> split = EnvUtil.splitAtCommasAndTrim(linksList);
+        return links != null ? Iterables.concat(links, split) : split;
     }
 
     public List<UlimitConfig> getUlimits() {
         return ulimits;
-    }
-
-    public void setUlimits(List<UlimitConfig> pUlimits) {
-        ulimits = pUlimits;
     }
 
     // Naming scheme for how to name container
@@ -445,6 +450,11 @@ public class RunImageConfiguration {
 
         public Builder links(List<String> links) {
             config.links = links;
+            return this;
+        }
+
+        public Builder linksList(String linksList) {
+            config.linksList = linksList;
             return this;
         }
 
