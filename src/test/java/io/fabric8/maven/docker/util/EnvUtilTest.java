@@ -15,19 +15,19 @@ public class EnvUtilTest {
 
     @Test
     public void splitPath() {
-        List<String[]> res = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db"));
-        assertEquals(3,res.size());
+        Iterator<String[]> it = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db")).iterator();
         String[][] expected = new String[][] {
                 { "db", "db"},
                 { "postgres:9","db"},
                 { "postgres", "db"}
         };
-        for (int i = 0; i < res.size(); i++) {
-            String[] got = res.get(i);
+        for (int i = 0; i < expected.length; i++) {
+            String[] got = it.next();
             assertEquals(2,got.length);
             assertEquals(expected[i][0],got[0]);
             assertEquals(expected[i][1],got[1]);
         }
+        assertFalse(it.hasNext());
     }
 
     @Test

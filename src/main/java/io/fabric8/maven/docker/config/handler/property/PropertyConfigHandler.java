@@ -20,6 +20,11 @@ import java.util.*;
 import io.fabric8.maven.docker.config.*;
 
 import org.codehaus.plexus.component.annotations.Component;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
 
@@ -106,6 +111,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
                 .hostname(withPrefix(prefix, HOSTNAME, properties))
                 .links(listWithPrefix(prefix, LINKS, properties))
+                .linksList(withPrefix(prefix, LINKS_LIST, properties))
                 .memory(longWithPrefix(prefix, MEMORY, properties))
                 .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
                 .namingStrategy(withPrefix(prefix, NAMING_STRATEGY, properties))
@@ -155,20 +161,22 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return name;
     }
 
+    private static final Function<String[], String> EXTRACT_SECOND = new Function<String[], String>() {
+        @Override
+        public String apply(String[] p) {
+            return p[1];
+        }
+    };
+
     // Extract only the values of the port mapping
     private List<String> extractPortValues(String prefix, Properties properties) {
-        List<String> ret = new ArrayList<>();
         List<String> ports = listWithPrefix(prefix, PORTS, properties);
         if (ports == null) {
             return null;
         }
-        List<String[]> parsedPorts = EnvUtil.splitOnLastColon(ports);
-        for (String[] port : parsedPorts) {
-            ret.add(port[1]);
-        }
-        return ret;
+        Iterable<String[]> parsedPorts = EnvUtil.splitOnLastColon(ports);
+        return Lists.newArrayList(Iterables.transform(parsedPorts, EXTRACT_SECOND));
     }
-
 
     private List<String> extractRunCommands(String prefix, Properties properties) {
         List<String> ret = new ArrayList<>();
