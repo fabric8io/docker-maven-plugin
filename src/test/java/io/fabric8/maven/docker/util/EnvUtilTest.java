@@ -18,11 +18,12 @@ public class EnvUtilTest {
 
     @Test
     public void splitPath() {
-        Iterator<String[]> it = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db")).iterator();
+        Iterator<String[]> it = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db", "atlast:")).iterator();
         String[][] expected = new String[][] {
                 { "db", "db"},
                 { "postgres:9","db"},
-                { "postgres", "db"}
+                { "postgres", "db"},
+                { "atlast", ""}
         };
         for (int i = 0; i < expected.length; i++) {
             String[] got = it.next();
