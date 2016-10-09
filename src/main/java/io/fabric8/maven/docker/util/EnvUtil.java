@@ -10,7 +10,11 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.io.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
+
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import static java.util.concurrent.TimeUnit.*;
 
@@ -78,32 +82,52 @@ public class EnvUtil {
         return largerVersion != null && largerVersion.equals(versionA);
     }
 
+    private static final Function<String, String[]> SPLIT_ON_LAST_COLON = new Function<String, String[]>() {
+        @Override
+        public String[] apply(String element) {
+          int colon = element.lastIndexOf(':');
+          if (colon < 0) {
+              return new String[] {element, element};
+          } else {
+              return new String[] {element.substring(0, colon), element.substring(colon + 1)};
+          }
+        }
+    };
+
     /**
      * Splits every element in the given list on the last colon in the name and returns a list with
-     * two elements: The left part before the colon and the right part after the colon. If the string doesnt contain
-     * a colon, the value is used for both elements in the returned arrays.
+     * two elements: The left part before the colon and the right part after the colon. If the string
+     * doesn't contain a colon, the value is used for both elements in the returned arrays.
      *
      * @param listToSplit list of strings to split
      * @return return list of 2-element arrays or an empty list if the given list is empty or null
      */
     public static List<String[]> splitOnLastColon(List<String> listToSplit) {
         if (listToSplit != null) {
-            List<String[]> ret = new ArrayList<>();
-
-            for (String element : listToSplit) {
-                String[] p = element.split(":");
-                String rightValue = p[p.length - 1];
-                String[] nameParts = Arrays.copyOfRange(p, 0, p.length - 1);
-                String leftValue = StringUtils.join(nameParts, ":");
-                if (leftValue.length() == 0) {
-                    leftValue = rightValue;
-                }
-                ret.add(new String[]{leftValue, rightValue});
-            }
-
-            return ret;
+          return Lists.transform(listToSplit, SPLIT_ON_LAST_COLON);
         }
         return Collections.emptyList();
+    }
+
+    private static final Function<String, Iterable<String>> COMMA_SPLITTER = new Function<String, Iterable<String>>() {
+        private Splitter COMMA_SPLIT = Splitter.on(",").trimResults().omitEmptyStrings();
+
+        @Override
+        public Iterable<String> apply(String input) {
+            return COMMA_SPLIT.split(input);
+        }
+    };
+
+    /**
+     * Split each element of an Iterable<String> at commas.
+     * @param An Iterable over strings.
+     * @return An Iterable over string which breaks down each input element at comma boundaries
+     */
+    public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
+        if(input==null) {
+            return Collections.emptyList();
+        }
+        return Lists.newArrayList(Iterables.concat(Iterables.transform(input, COMMA_SPLITTER)));
     }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {

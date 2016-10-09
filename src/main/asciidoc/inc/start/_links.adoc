@@ -25,6 +25,16 @@ DB_PORT_5432_TCP_PORT=5432
 DB_PORT_5432_TCP_ADDR=172.17.0.5
 ----
 
+Additionally, each `<link>` element can specify a comma separated set of links.  Comma (and whitespace) can be used to separate links since valid docker link names/aliases contain only characters, digits, underscores, periods and dashes.
+
+.Example
+[source,xml]
+----
+<links>
+  <link>postgres:db, search, saml:identity</link>
+</links>
+----
+
 If you wish to link to existing containers not managed by the plugin, you may do so by specifying the container name obtained via `docker ps` in the configuration.
 
 Please note that the link behaviour also depends on the network mode selected. Links as described are referred to by Docker as _legacy links_ and might vanish in the future. For custom networks no environments variables are set and links create merely network aliases for the linked container. To express start order dependencies using custom networks refer to the <<start-depends-on,dependsOn>> configuration.

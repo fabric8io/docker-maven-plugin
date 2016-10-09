@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
+import io.fabric8.maven.docker.util.EnvUtil;
 
 /**
  * @author roland
@@ -264,15 +265,11 @@ public class RunImageConfiguration {
     }
 
     public List<String> getLinks() {
-        return links;
+        return EnvUtil.splitAtCommasAndTrim(links);
     }
 
     public List<UlimitConfig> getUlimits() {
         return ulimits;
-    }
-
-    public void setUlimits(List<UlimitConfig> pUlimits) {
-        ulimits = pUlimits;
     }
 
     // Naming scheme for how to name container

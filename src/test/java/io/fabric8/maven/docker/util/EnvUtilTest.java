@@ -4,6 +4,9 @@ import java.util.*;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import static org.junit.Assert.*;
 
 /**
@@ -15,19 +18,27 @@ public class EnvUtilTest {
 
     @Test
     public void splitPath() {
-        List<String[]> res = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db"));
-        assertEquals(3,res.size());
+        Iterator<String[]> it = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db", "atlast:")).iterator();
         String[][] expected = new String[][] {
                 { "db", "db"},
                 { "postgres:9","db"},
-                { "postgres", "db"}
+                { "postgres", "db"},
+                { "atlast", ""}
         };
-        for (int i = 0; i < res.size(); i++) {
-            String[] got = res.get(i);
+        for (int i = 0; i < expected.length; i++) {
+            String[] got = it.next();
             assertEquals(2,got.length);
             assertEquals(expected[i][0],got[0]);
             assertEquals(expected[i][1],got[1]);
         }
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void splitAtCommas() {
+        Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
+        Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");
+        assertTrue(Iterables.elementsEqual(it, expected));
     }
 
     @Test
