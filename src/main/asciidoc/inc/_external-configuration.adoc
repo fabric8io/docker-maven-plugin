@@ -154,9 +154,6 @@ values in the `<build>` and `<run>` sections.
 | *docker.links.idx*
 | defines a list of links to other containers when starting a container. _idx_ can be any suffix which is not use except when _idx_ is numeric it specifies the order within the list (i.e. the list contains first a entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example `<docker.links.1>db</docker.links.1>` specifies a link to the image with alias 'db'.
 
-| *docker.linksList*
-| A comma separated list of links to other containers when starting a container. For example `<docker.linksLists>redis:db, saml:identity</docker.linksLists>` specifies a link using alias 'db' to the image named 'redis', and a link using alias 'identity' to the image named 'identity'
-
 | *docker.maintainer*
 | defines the maintainer's email as used when building an image
 

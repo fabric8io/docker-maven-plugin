@@ -111,7 +111,6 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
                 .hostname(withPrefix(prefix, HOSTNAME, properties))
                 .links(listWithPrefix(prefix, LINKS, properties))
-                .linksList(withPrefix(prefix, LINKS_LIST, properties))
                 .memory(longWithPrefix(prefix, MEMORY, properties))
                 .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
                 .namingStrategy(withPrefix(prefix, NAMING_STRATEGY, properties))

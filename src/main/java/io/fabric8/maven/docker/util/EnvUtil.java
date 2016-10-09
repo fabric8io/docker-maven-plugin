@@ -14,7 +14,6 @@ import org.apache.maven.shared.utils.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import static java.util.concurrent.TimeUnit.*;
 
@@ -82,14 +81,6 @@ public class EnvUtil {
         return largerVersion != null && largerVersion.equals(versionA);
     }
 
-    /**
-     * Split an element on the last colon in the name and returns an array with two elements: 
-     * The left part before the colon and the right part after the colon. If the string doesn't 
-     * contain a colon, the value is used for both elements.
-     *
-     * @param element the string to split
-     * @return return a 2-element array
-     */
     private static final Function<String, String[]> SPLIT_ON_LAST_COLON = new Function<String, String[]>() {
         @Override
         public String[] apply(String element) {
@@ -105,7 +96,7 @@ public class EnvUtil {
     /**
      * Splits every element in the given list on the last colon in the name and returns a list with
      * two elements: The left part before the colon and the right part after the colon. If the string
-     *  doesn't contain a colon, the value is used for both elements in the returned arrays.
+     * doesn't contain a colon, the value is used for both elements in the returned arrays.
      *
      * @param listToSplit list of strings to split
      * @return return list of 2-element arrays or an empty list if the given list is empty or null
@@ -117,16 +108,25 @@ public class EnvUtil {
         return Collections.emptyList();
     }
 
-    private static final Splitter COMMA_SPLIT = Splitter.on(",").trimResults().omitEmptyStrings();
+    private static final Function<String, Iterable<String>> COMMA_SPLITTER = new Function<String, Iterable<String>>() {
+        private Splitter COMMA_SPLIT = Splitter.on(",").trimResults().omitEmptyStrings();
+
+        @Override
+        public Iterable<String> apply(String input) {
+            return COMMA_SPLIT.split(input);
+        }
+    };
 
     /**
-     * Split String at commas
+     * Split each element of an Iterable<String> at commas.
+     * @param An Iterable over strings.
+     * @return An Iterable over string which breaks down each input element at comma boundaries
      */
-    public static Iterable<String> splitAtCommasAndTrim(String input) {
-        if (input == null) {
+    public static Iterable<String> splitAtCommasAndTrim(Iterable<String> input) {
+        if(input==null) {
             return Collections.emptyList();
         }
-        return COMMA_SPLIT.splitToList(input);
+        return Iterables.concat(Iterables.transform(input, COMMA_SPLITTER));
     }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
