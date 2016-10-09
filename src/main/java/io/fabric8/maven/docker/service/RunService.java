@@ -331,7 +331,7 @@ public class RunService {
         }
     }
 
-    private List<String> findContainerIdsForLinks(Iterable<String> links, boolean leaveUnresolvedIfNotFound) throws DockerAccessException {
+    private List<String> findContainerIdsForLinks(List<String> links, boolean leaveUnresolvedIfNotFound) throws DockerAccessException {
         List<String> ret = new ArrayList<>();
         for (String[] link : EnvUtil.splitOnLastColon(links)) {
             String id = findContainerId(link[0], false);

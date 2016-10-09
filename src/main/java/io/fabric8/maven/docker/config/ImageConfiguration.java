@@ -108,7 +108,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
         // Custom networks can have circular links, no need to be considered for the starting order.
-        if (!runConfig.getNetworkingConfig().isCustomNetwork()) {
+        if (runConfig.getLinks() != null && !runConfig.getNetworkingConfig().isCustomNetwork()) {
             for (String[] link : EnvUtil.splitOnLastColon(runConfig.getLinks())) {
                 ret.add(link[0]);
             }

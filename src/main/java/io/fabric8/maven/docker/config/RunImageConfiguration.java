@@ -264,7 +264,7 @@ public class RunImageConfiguration {
         return volumes;
     }
 
-    public Iterable<String> getLinks() {
+    public List<String> getLinks() {
         return EnvUtil.splitAtCommasAndTrim(links);
     }
 

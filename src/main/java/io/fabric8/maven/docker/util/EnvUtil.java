@@ -14,6 +14,7 @@ import org.apache.maven.shared.utils.io.FileUtils;
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import static java.util.concurrent.TimeUnit.*;
 
@@ -101,9 +102,9 @@ public class EnvUtil {
      * @param listToSplit list of strings to split
      * @return return list of 2-element arrays or an empty list if the given list is empty or null
      */
-    public static Iterable<String[]> splitOnLastColon(Iterable<String> listToSplit) {
+    public static List<String[]> splitOnLastColon(List<String> listToSplit) {
         if (listToSplit != null) {
-          return Iterables.transform(listToSplit, SPLIT_ON_LAST_COLON);
+          return Lists.transform(listToSplit, SPLIT_ON_LAST_COLON);
         }
         return Collections.emptyList();
     }
@@ -122,11 +123,11 @@ public class EnvUtil {
      * @param An Iterable over strings.
      * @return An Iterable over string which breaks down each input element at comma boundaries
      */
-    public static Iterable<String> splitAtCommasAndTrim(Iterable<String> input) {
+    public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
         if(input==null) {
             return Collections.emptyList();
         }
-        return Iterables.concat(Iterables.transform(input, COMMA_SPLITTER));
+        return Lists.newArrayList(Iterables.concat(Iterables.transform(input, COMMA_SPLITTER)));
     }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
@@ -354,6 +355,5 @@ public class EnvUtil {
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
-
 
 }
