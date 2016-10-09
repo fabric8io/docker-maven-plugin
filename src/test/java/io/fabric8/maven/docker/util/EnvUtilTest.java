@@ -4,6 +4,9 @@ import java.util.*;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import static org.junit.Assert.*;
 
 /**
@@ -28,6 +31,13 @@ public class EnvUtilTest {
             assertEquals(expected[i][1],got[1]);
         }
         assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void splitAtCommas() {
+        Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
+        Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");
+        assertTrue(Iterables.elementsEqual(it, expected));
     }
 
     @Test
