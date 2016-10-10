@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.16.8**
+  - Allow multiple network links per `<link>` element (#558)
+  
 * **0.16.7** (2016-10-07)
   - Even better logging
   
