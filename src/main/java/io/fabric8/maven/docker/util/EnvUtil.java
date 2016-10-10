@@ -120,7 +120,7 @@ public class EnvUtil {
 
     /**
      * Split each element of an Iterable<String> at commas.
-     * @param An Iterable over strings.
+     * @param input Iterable over strings.
      * @return An Iterable over string which breaks down each input element at comma boundaries
      */
     public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
