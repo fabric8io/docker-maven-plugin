@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-sample-multi-wait</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.16-SNAPSHOT</version>
   <!-- Sample exhibiting connection error described in https://github.com/fabric8io/docker-maven-plugin/issues/574 -->
  <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.16.7</version>
+    <version>0.16-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <build>
@@ -16,7 +16,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>0.16.6</version>
+        <version>${project.version}</version>
         <configuration>
           <logDate>none</logDate>
           <images>
@@ -33,11 +33,23 @@
               </run>
             </image>
             <image>
+              <alias>db2</alias>
+              <name>postgres:9.6.0</name>
+              <run>
+                <env>
+                  <POSTGRES_PASSWORD>password</POSTGRES_PASSWORD>
+                </env>
+                <wait>
+                  <log>database system is ready to accept connections</log>
+                </wait>
+              </run>
+            </image>
+            <image>
               <alias>web</alias>
               <name>jboss/wildfly:9.0.2.Final</name>
               <run>
                 <links>
-                  <link>db</link>
+                  <link>db,db2</link>
                 </links>
                 <ports>
                   <port>web.port:8080</port>
