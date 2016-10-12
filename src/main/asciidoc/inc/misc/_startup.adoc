@@ -10,7 +10,7 @@ The difference is, that an `entrypoint` is the command that always be executed, 
 See this http://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile[stackoverflow question] for a detailed explanation.
 ****
 
-A entry point or command can be specified in two alternative formats:
+An entry point or command can be specified in two alternative formats:
 
 .Entrypoint and Command Configuration
 [cols="1,5"]

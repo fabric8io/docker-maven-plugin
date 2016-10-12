@@ -15,7 +15,7 @@ the `<build>` configuration section.
 * *dockerFileDir* specifies a directory containing a `Dockerfile` that will be used to create the image.
 * *dockerFile* specifies a specific Dockerfile. The `dockerFileDir` is set to the directory containing the file.
 
-If `dockerFileDir` is a relative path looked up in `${project.basedir}/src/main/docker`. You can make easily an absolute path by prefixing with `${project.basedir}`.
+If `dockerFileDir` is a relative path it is looked up in `${project.basedir}/src/main/docker`. You can make easily an absolute path by prefixing with `${project.basedir}`.
 
 Any additional files located in the `dockerFileDir` directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert `ADD` or `COPY` directives yourself into the Dockerfile.
 
