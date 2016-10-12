@@ -43,9 +43,9 @@ or
 <entryPoint>
    <!-- exec form  -->
    <exec>
-     <args>java</args>
-     <args>-jar</args>
-     <args>/opt/demo/server.jar</args>
+     <arg>java</arg>
+     <arg>-jar</arg>
+     <arg>/opt/demo/server.jar</arg>
    </exec>
 </entryPoint>
 ----
