@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.16-SNAPSHOT,</span>
-<span id="revdate">2016-10-07</span>
+<span id="revdate">2016-10-12</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -1060,7 +1060,7 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipBuild</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set not images will be build (which implies also <em>skip.tag</em>) with <code>docker:build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set no images will be build (which implies also <em>skip.tag</em>) with <code>docker:build</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.build</code></p></td>
 </tr>
 <tr>
@@ -1146,7 +1146,7 @@ the URL is:</p>
 <p>When no Docker host is configured or available as environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but <code>autoCreate</code> is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine which has been created because of <code>autoCreate</code> gets never deleted by docker-maven-plugin. This needs to be done manually if required.</p>
 </div>
 <div class="paragraph">
-<p>In absent of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide the name of a Docker machine. Similarly the property <code>docker.machine.autoCreate</code> can be set to true for creating a Docker machine, too.</p>
+<p>In absence of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide the name of a Docker machine. Similarly the property <code>docker.machine.autoCreate</code> can be set to true for creating a Docker machine, too.</p>
 </div>
 <div class="paragraph">
 <p>You can use the property <code>docker.skip.machine</code> if you want to override the internal detection mechanism to always disable docker machine support.</p>
@@ -1386,7 +1386,7 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>If <code>dockerFileDir</code> is a relative path looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
+<p>If <code>dockerFileDir</code> is a relative path it is looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
 </div>
 <div class="paragraph">
 <p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
@@ -1861,7 +1861,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 </div>
 <div class="paragraph">
-<p>A entry point or command can be specified in two alternative formats:</p>
+<p>An entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 9. Entrypoint and Command Configuration</caption>
@@ -4041,7 +4041,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-10-07 15:03:47 UTC
+Last updated 2016-10-12 09:19:21 UTC
 </div>
 </div>
 </body>
