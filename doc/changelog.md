@@ -1,7 +1,8 @@
 # ChangeLog
 
-* **0.16.8**
-  - Allow multiple network links per `<link>` element (#558)
+* **0.16.8** (2016-10-14)
+  - Allow multiple network links per `<link>` element ([#558](https://github.com/fabric8io/docker-maven-plugin/issues/558))
+  - Fix startup of dependent containers when using links with specific container ids ([#586](https://github.com/fabric8io/docker-maven-plugin/issues/586)) 
   
 * **0.16.7** (2016-10-07)
   - Even better logging
