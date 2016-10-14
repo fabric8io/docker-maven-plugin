@@ -116,8 +116,10 @@ public class StartMojo extends AbstractDockerMojo {
         final PomLabel pomLabel = getPomLabel();
 
         try {
-
+            // Queu of images to start
             final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
+            // All aliases which are provided in the image configuration:
+            final Set<String> imageAliases = new HashSet<>();
 
             for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
                 final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
@@ -127,7 +129,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                 String imageName = imageConfig.getName();
                 checkImageWithAutoPull(hub, imageName,
-                        getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
+                                       getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
 
                 RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                 NetworkConfig config = runConfig.getNetworkingConfig();
@@ -135,23 +137,24 @@ public class StartMojo extends AbstractDockerMojo {
                     runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
                 }
                 imagesWaitingToStart.add(imageConfig);
+                if (imageConfig.getAlias() != null) {
+                    imageAliases.add(imageConfig.getAlias());
+                }
             }
 
             final Set<String> startedContainers = new HashSet<>();
 
-            final ExecutorService executorService;
-            if (startParallel) {
-                executorService = Executors.newCachedThreadPool();
-            } else {
-                executorService = MoreExecutors.newDirectExecutorService();
-            }
+            final ExecutorService executorService = getExecutorService();
             final ExecutorCompletionService<StartedContainerImage> startingContainers = new ExecutorCompletionService<>(executorService);
 
             while (!imagesWaitingToStart.isEmpty()) {
                 final List<ImageConfiguration> startableImages = new ArrayList<>();
 
+                // Check for all images which can be already started
                 for (ImageConfiguration imageWaitingToStart : imagesWaitingToStart) {
-                    if (startedContainers.containsAll(imageWaitingToStart.getDependencies())) {
+                    List<String> allDependencies = imageWaitingToStart.getDependencies();
+                    List<String> aliasDependencies = filterOutNonAliases(imageAliases, allDependencies);
+                    if (startedContainers.containsAll(aliasDependencies)) {
                         startableImages.add(imageWaitingToStart);
                     }
                 }
@@ -188,18 +191,23 @@ public class StartMojo extends AbstractDockerMojo {
                 final Future<StartedContainerImage> imageStartResult = startingContainers.take();
                 try {
                     final StartedContainerImage startedContainerImage = imageStartResult.get();
+
                     final String containerId = startedContainerImage.containerId;
                     final ImageConfiguration imageConfig = startedContainerImage.imageConfig;
+
+                    // Add the alias to the list of started containers when it is set. When it's
+                    // not set it cant be used in the dependency resolution anyway, so we are ignoring
+                    // it here.
+                    if (imageConfig.getAlias() != null) {
+                        startedContainers.add(imageConfig.getAlias());
+                    }
+
                     final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
                     final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
 
-
-                    startedContainers.add(startedContainerImage.imageConfig.getAlias());
-
+                    // Write out properties and expose them as project properties, too
                     portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
-                    // Expose container info as properties
                     exposeContainerProps(hub.getQueryService(), containerId, imageConfig);
-
                 } catch (ExecutionException e) {
                     try {
                         if (e.getCause() instanceof RuntimeException) {
@@ -251,6 +259,26 @@ public class StartMojo extends AbstractDockerMojo {
                 runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, pomLabel);
             }
         }
+    }
+
+    private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {
+        List<String> ret = new ArrayList<>();
+        for (String alias : dependencies) {
+            if (imageAliases.contains(alias)) {
+                ret.add(alias);
+            }
+        }
+        return ret;
+    }
+
+    private ExecutorService getExecutorService() {
+        final ExecutorService executorService;
+        if (startParallel) {
+            executorService = Executors.newCachedThreadPool();
+        } else {
+            executorService = MoreExecutors.newDirectExecutorService();
+        }
+        return executorService;
     }
 
     // ========================================================================================================

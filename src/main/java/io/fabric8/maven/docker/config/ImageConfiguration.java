@@ -124,10 +124,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     }
 
     private void addDependsOn(RunImageConfiguration runConfig, List<String> ret) {
-        // Only used in required networks.
+        // Only used in custom networks.
         if (runConfig.getDependsOn() != null && runConfig.getNetworkingConfig().isCustomNetwork()) {
-            for (String[] link : EnvUtil.splitOnLastColon(runConfig.getDependsOn())) {
-                ret.add(link[0]);
+            for (String link : runConfig.getDependsOn()) {
+                ret.add(link);
             }
         }
     }

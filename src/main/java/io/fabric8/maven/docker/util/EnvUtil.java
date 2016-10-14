@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
 import static java.util.concurrent.TimeUnit.*;
 
 /**
- * Utility class for various (loosely) environment related tasks.
+ * Utility class for various (loosely related) environment related tasks.
  *
  * @author roland
  * @since 04.04.14
