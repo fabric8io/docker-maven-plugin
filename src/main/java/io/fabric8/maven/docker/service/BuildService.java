@@ -72,7 +72,7 @@ public class BuildService {
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
             try {
                 docker.removeImage(oldImageId, true);
-                log.info("%s: Removed image ", imageConfig.getDescription(), oldImageId);
+                log.info("%s: Removed old image %s", imageConfig.getDescription(), oldImageId);
             } catch (DockerAccessException exp) {
                 if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
                     log.warn("%s: %s (old image)%s", imageConfig.getDescription(), exp.getMessage(),
