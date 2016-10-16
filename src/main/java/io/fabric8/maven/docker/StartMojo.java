@@ -116,8 +116,9 @@ public class StartMojo extends AbstractDockerMojo {
         final PomLabel pomLabel = getPomLabel();
 
         try {
-            // Queu of images to start
+            // Queue of images to start
             final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
+            final Queue<ImageConfiguration> startingImages = new ArrayDeque<>();
             // All aliases which are provided in the image configuration:
             final Set<String> imageAliases = new HashSet<>();
 
@@ -147,7 +148,7 @@ public class StartMojo extends AbstractDockerMojo {
             final ExecutorService executorService = getExecutorService();
             final ExecutorCompletionService<StartedContainerImage> startingContainers = new ExecutorCompletionService<>(executorService);
 
-            while (!imagesWaitingToStart.isEmpty()) {
+            while (!imagesWaitingToStart.isEmpty() || !startingImages.isEmpty()) {
                 final List<ImageConfiguration> startableImages = new ArrayList<>();
 
                 // Check for all images which can be already started
@@ -164,6 +165,7 @@ public class StartMojo extends AbstractDockerMojo {
                     final RunImageConfiguration runConfig = startableImage.getRunConfiguration();
                     final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
 
+                    startingImages.add(startableImage);
                     startingContainers.submit(new Callable<StartedContainerImage>() {
                         @Override
                         public StartedContainerImage call() throws Exception {
@@ -208,6 +210,7 @@ public class StartMojo extends AbstractDockerMojo {
                     // Write out properties and expose them as project properties, too
                     portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
                     exposeContainerProps(hub.getQueryService(), containerId, imageConfig);
+                    startingImages.remove(imageConfig);
                 } catch (ExecutionException e) {
                     try {
                         if (e.getCause() instanceof RuntimeException) {
