@@ -466,12 +466,12 @@ public class StartMojo extends AbstractDockerMojo {
     private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String  containerId) {
         return new WaitUtil.WaitChecker() {
 
-            boolean first = true;
-            LogGetHandle logHandle;
-            boolean detected = false;
+            private boolean first = true;
+            private LogGetHandle logHandle;
+            private volatile boolean detected = false;
 
             @Override
-            public synchronized boolean check() {
+            public boolean check() {
                 if (first) {
                     final Pattern pattern = Pattern.compile(logPattern);
                     log.debug("LogWaitChecker: Pattern to match '%s'",logPattern);
