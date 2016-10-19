@@ -55,6 +55,11 @@ public class AssemblyConfiguration {
     private String user;
 
     /**
+     * @parameter
+     */
+    private String tarLongFileMode;
+
+    /**
      * @parameter default-value="keep"
      */
     private PermissionMode permissions;
@@ -89,6 +94,10 @@ public class AssemblyConfiguration {
 
     public AssemblyMode getMode() {
         return mode != null ? mode : AssemblyMode.dir;
+    }
+
+    public String getTarLongFileMode() {
+        return tarLongFileMode;
     }
 
     public Boolean isIgnorePermissions() {
@@ -165,6 +174,11 @@ public class AssemblyConfiguration {
                 config.mode = AssemblyMode.valueOf(mode.toLowerCase());
                 isEmpty = false;
             }
+            return this;
+        }
+
+        public Builder tarLongFileMode(String tarLongFileMode) {
+            config.tarLongFileMode = set(tarLongFileMode);
             return this;
         }
 

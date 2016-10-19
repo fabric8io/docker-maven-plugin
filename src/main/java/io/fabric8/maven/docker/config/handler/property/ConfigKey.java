@@ -34,6 +34,7 @@ public enum ConfigKey {
     ASSEMBLY_DOCKER_FILE_DIR("assembly.dockerFileDir"),
     ASSEMBLY_USER("assembly.user"),
     ASSEMBLY_MODE("assembly.mode"),
+    ASSEMBLY_TARLONGFILEMODE("assembly.tarLongFileMode"),
     BIND,
     CAP_ADD,
     CAP_DROP,
