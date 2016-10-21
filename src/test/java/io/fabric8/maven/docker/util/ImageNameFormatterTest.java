@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.util;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ public class ImageNameFormatterTest {
 
     @Injectable
     private Date now = new Date();
-    
+
     @Tested
     private ImageNameFormatter formatter;
 
@@ -87,13 +87,6 @@ public class ImageNameFormatterTest {
         }};
 
         assertThat(formatter.format("--> %a <--"),equalTo("--> docker.maven.plugin <--"));
-    }
-
-    @Test
-    public void artifactWithProperty() throws Exception {
-        new PropertyLookupExpectations("docker.image.name","blubber");
-        assertThat(formatter.format("%a"),equalTo("blubber"));
-        new FullVerifications() {{ }};
     }
 
     @Test
