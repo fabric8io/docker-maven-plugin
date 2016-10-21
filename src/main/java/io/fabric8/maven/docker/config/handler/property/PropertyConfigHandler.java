@@ -83,6 +83,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
                 .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
                 .user(withPrefix(prefix, USER, properties))
+                .healthCheck(extractHealthCheck(prefix, properties))
                 .build();
     }
 
@@ -145,6 +146,21 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .user(withPrefix(prefix, ASSEMBLY_USER, properties))
                 .mode(withPrefix(prefix, ASSEMBLY_MODE, properties))
                 .build();
+    }
+
+    private HealthCheckConfiguration extractHealthCheck(String prefix, Properties properties) {
+        Map<String, String> healthCheckProperties = mapWithPrefix(prefix, HEALTHCHECK, properties);
+        if (healthCheckProperties != null && healthCheckProperties.size() > 0) {
+            return new HealthCheckConfiguration.Builder()
+                    .interval(withPrefix(prefix, HEALTHCHECK_INTERVAL, properties))
+                    .timeout(withPrefix(prefix, HEALTHCHECK_TIMEOUT, properties))
+                    .retries(intWithPrefix(prefix, HEALTHCHECK_RETRIES, properties))
+                    .mode(withPrefix(prefix, HEALTHCHECK_MODE, properties))
+                    .cmd(withPrefix(prefix, HEALTHCHECK_CMD, properties))
+                    .build();
+        }
+
+        return null;
     }
 
     private String extractName(String prefix, Properties properties) throws IllegalArgumentException {
@@ -277,6 +293,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private String withPrefix(String prefix, ConfigKey key, Properties properties) {
         return properties.getProperty(key.asPropertyKey(prefix));
+    }
+
+    private Integer intWithPrefix(String prefix, ConfigKey key, Properties properties) {
+        String prop = withPrefix(prefix, key, properties);
+        return prop == null ? null : Integer.valueOf(prop);
     }
 
     private Long longWithPrefix(String prefix, ConfigKey key, Properties properties) {

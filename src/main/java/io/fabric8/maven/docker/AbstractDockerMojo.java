@@ -283,7 +283,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 serverVersion = access.getServerApiVersion();
                 if (!EnvUtil.greaterOrEqualsVersion(serverVersion,version)) {
                     throw new MojoExecutionException(
-                        String.format("Server API version %s is smaller than request API version %s", serverVersion, version));
+                        String.format("Server API version %s is smaller than required API version %s", serverVersion, version));
                 }
             }
             catch (IOException e) {

@@ -127,6 +127,9 @@ public class BuildImageConfiguration {
     /** @parameter */
     private String user;
 
+    /** @parameter */
+    private HealthCheckConfiguration healthCheck;
+
     /**
      * @parameter
      */
@@ -242,6 +245,10 @@ public class BuildImageConfiguration {
 
     public String getUser() {
       return user;
+    }
+
+    public HealthCheckConfiguration getHealthCheck() {
+        return healthCheck;
     }
 
     public Map<String, String> getArgs() {
@@ -372,6 +379,11 @@ public class BuildImageConfiguration {
             return this;
         }
 
+        public Builder healthCheck(HealthCheckConfiguration healthCheck) {
+            config.healthCheck = healthCheck;
+            return this;
+        }
+
         public Builder skip(String skip) {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);
@@ -391,6 +403,9 @@ public class BuildImageConfiguration {
         if (cmd != null) {
             cmd.validate();
         }
+        if (healthCheck != null) {
+            healthCheck.validate();
+        }
 
         if (command != null) {
             log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
@@ -408,7 +423,10 @@ public class BuildImageConfiguration {
 
         initDockerFileFile(log);
 
-        if (args != null) {
+        if (healthCheck != null) {
+            // HEALTHCHECK support added later
+            return "1.24";
+        } else if (args != null) {
             // ARG support came in later
             return "1.21";
         } else {
