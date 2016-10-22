@@ -1,4 +1,15 @@
-# Contributing
+You want to contribute ? Awesome ! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
+
+Here some things to check out when doing a PR:
+
+* Please sign-off your commits as described below.
+* If adding a new feature please [update the documentation](https://github.com/fabric8io/docker-maven-plugin/blob/master/src/main/asciidoc/), too.
+* Don't forget the unit tests.
+* If adding a new configuration option, don't forget to add this to the [PropertyHandler](https://github.com/fabric8io/docker-maven-plugin/blob/master/src/main/java/io/fabric8/maven/docker/config/handler/property/PropertyConfigHandler.java), too.
+
+However, if you can't do some of the points above, please still consider contributing. Simply ask us on `#fabric8` at Freenode or via an GitHub [issue](https://github.com/fabric8io/docker-maven-plugin/issues). We are not dogmatic.
+
+# Signing of your commits
 
 Pull requests are highly appreciated and most of them get applied. However, you
 must sign-off your code so that you certify that your  contributions is compatible with the
@@ -72,4 +83,3 @@ with an interactive rebase before sending the pull request. Also, your pull requ
 rebased to the current branch `integration`. All this is nicely explained [here](https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request).
 
 Said all this, don't hesitate to ask when there are any problems or you have an issue with this process.
-

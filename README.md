@@ -32,7 +32,7 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 * [Examples](doc/examples.md) are below `samples/` and contain example
   setups which you can use as blueprints for your own projects.
 * [ChangeLog](doc/changelog.md) has the release history of this plugin.
-* [Contributing](doc/contributing.md) explains how you can contribute to this project. Pull requests are highly appreciated!
+* [Contributing](CONTRIBUTING.md) explains how you can contribute to this project. Pull requests are highly appreciated!
 
 
 #### Docker API Support
