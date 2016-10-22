@@ -6,6 +6,9 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckMode;
+
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -83,6 +86,20 @@ public class DockerFileBuilderTest {
         Arguments a = Arguments.Builder.get().withParam("java").withParam("-jar").withParam("/my-app-1.1.1.jar").withParam("server").build();
         String dockerfileContent = new DockerFileBuilder().entryPoint(a).content();
         assertThat(dockerfileToMap(dockerfileContent), hasEntry("ENTRYPOINT", "[\"java\",\"-jar\",\"/my-app-1.1.1.jar\",\"server\"]"));
+    }
+
+    @Test
+    public void testHealthCheckCmdParams() {
+        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd("echo hello").interval("5s").timeout("3s").retries(4).build();
+        String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --retries=4 CMD echo hello"));
+    }
+
+    @Test
+    public void testHealthCheckNone() {
+        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().mode(HealthCheckMode.none).build();
+        String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "NONE"));
     }
 
     @Test

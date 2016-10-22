@@ -318,6 +318,10 @@ public class DockerAssemblyManager {
 
         builder.baseImage(buildConfig.getFrom());
 
+        if (buildConfig.getHealthCheck() != null) {
+            builder.healthCheck(buildConfig.getHealthCheck());
+        }
+
         if (buildConfig.getCmd() != null){
             builder.cmd(buildConfig.getCmd());
         } else if (buildConfig.getCommand() != null) {
