@@ -82,11 +82,11 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter
     protected String portPropertyFile;
 
-    private static final class StartedContainerImage {
+    private static final class StartedContainer {
         public final ImageConfiguration imageConfig;
         public final String containerId;
 
-        private StartedContainerImage(ImageConfiguration imageConfig, String containerId) {
+        private StartedContainer(ImageConfiguration imageConfig, String containerId) {
             this.imageConfig = imageConfig;
             this.containerId = containerId;
         }
@@ -103,152 +103,70 @@ public class StartMojo extends AbstractDockerMojo {
         }
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
-        final Properties projProperties = project.getProperties();
         this.follow = Boolean.valueOf(System.getProperty("docker.follow", "false"));
 
         QueryService queryService = hub.getQueryService();
         final RunService runService = hub.getRunService();
 
-        final LogDispatcher dispatcher = getLogDispatcher(hub);
-        PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
+        PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper =
+            new PortMapping.PropertyWriteHelper(portPropertyFile);
 
         boolean success = false;
-        final PomLabel pomLabel = getPomLabel();
+
+        final ExecutorService executorService = getExecutorService();
+        final ExecutorCompletionService<StartedContainer> containerStartupService = new ExecutorCompletionService<>(executorService);
 
         try {
-            // Queue of images to start
-            final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
-            final Queue<ImageConfiguration> startingImages = new ArrayDeque<>();
             // All aliases which are provided in the image configuration:
             final Set<String> imageAliases = new HashSet<>();
 
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
-                final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+            // All images to to start
+            Queue<ImageConfiguration> imagesWaitingToStart = prepareStart(hub, queryService, runService, imageAliases);
 
-                // Still to check: How to work with linking, volumes, etc ....
-                //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
+            final Set<String> startedContainerAliases = new HashSet<>();
 
-                String imageName = imageConfig.getName();
-                checkImageWithAutoPull(hub, imageName,
-                                       getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
+            // Queue of images to start as containers
+            final Queue<ImageConfiguration> imagesStarting = new ArrayDeque<>();
 
-                RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-                NetworkConfig config = runConfig.getNetworkingConfig();
-                if (autoCreateCustomNetworks && config.isCustomNetwork()) {
-                    runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
-                }
-                imagesWaitingToStart.add(imageConfig);
-                if (imageConfig.getAlias() != null) {
-                    imageAliases.add(imageConfig.getAlias());
-                }
-            }
+            // Loop until every image has been started and the start of all images has been completed
+            while (!hasBeenAllImagesStarted(imagesWaitingToStart, imagesStarting)) {
 
-            final Set<String> startedContainers = new HashSet<>();
+                final List<ImageConfiguration> imagesReadyToStart =
+                    getImagesWhoseDependenciesHasStarted(imagesWaitingToStart, startedContainerAliases, imageAliases);
 
-            final ExecutorService executorService = getExecutorService();
-            final ExecutorCompletionService<StartedContainerImage> startingContainers = new ExecutorCompletionService<>(executorService);
+                for (final ImageConfiguration image : imagesReadyToStart) {
 
-            while (!imagesWaitingToStart.isEmpty() || !startingImages.isEmpty()) {
-                final List<ImageConfiguration> startableImages = new ArrayList<>();
+                    startImage(image, hub, containerStartupService);
 
-                // Check for all images which can be already started
-                for (ImageConfiguration imageWaitingToStart : imagesWaitingToStart) {
-                    List<String> allDependencies = imageWaitingToStart.getDependencies();
-                    List<String> aliasDependencies = filterOutNonAliases(imageAliases, allDependencies);
-                    if (startedContainers.containsAll(aliasDependencies)) {
-                        startableImages.add(imageWaitingToStart);
-                    }
+                    // Move from waiting to starting status
+                    imagesStarting.add(image);
+                    imagesWaitingToStart.remove(image);
                 }
 
-                for (final ImageConfiguration startableImage : startableImages) {
-
-                    final RunImageConfiguration runConfig = startableImage.getRunConfiguration();
-                    final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
-
-                    startingImages.add(startableImage);
-                    startingContainers.submit(new Callable<StartedContainerImage>() {
-                        @Override
-                        public StartedContainerImage call() throws Exception {
-                            final String containerId = runService.createAndStartContainer(startableImage, portMapping, pomLabel, projProperties);
-
-                            if (showLogs(startableImage)) {
-                                dispatcher.trackContainerLog(containerId,
-                                        serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, startableImage));
-                            }
-
-                            // Wait if requested
-                            waitIfRequested(hub,startableImage, projProperties, containerId);
-                            WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
-                            if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
-                                runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), startableImage);
-                            }
-
-                            return new StartedContainerImage(startableImage, containerId);
-                        }
-                    });
-                    imagesWaitingToStart.remove(startableImage);
-                }
-
-
-                final Future<StartedContainerImage> imageStartResult = startingContainers.take();
+                // Wait for the next container to finish startup
+                final Future<StartedContainer> startedContainerFuture = containerStartupService.take();
                 try {
-                    final StartedContainerImage startedContainerImage = imageStartResult.get();
+                    final StartedContainer startedContainer = startedContainerFuture.get();
+                    final ImageConfiguration image = startedContainer.imageConfig;
 
-                    final String containerId = startedContainerImage.containerId;
-                    final ImageConfiguration imageConfig = startedContainerImage.imageConfig;
+                    updateAliasesSet(startedContainerAliases, image.getAlias());
+                    // Add ports to save them for a property file and exposed them as project properties
+                    handleMappedPorts(startedContainer, hub, portMappingPropertyWriteHelper);
 
-                    // Add the alias to the list of started containers when it is set. When it's
-                    // not set it cant be used in the dependency resolution anyway, so we are ignoring
-                    // it here.
-                    if (imageConfig.getAlias() != null) {
-                        startedContainers.add(imageConfig.getAlias());
-                    }
-
-                    final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-                    final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
-
-                    // Write out properties and expose them as project properties, too
-                    portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
-                    exposeContainerProps(hub.getQueryService(), containerId, imageConfig);
-                    startingImages.remove(imageConfig);
+                    // All done with this image
+                    imagesStarting.remove(image);
                 } catch (ExecutionException e) {
-                    try {
-                        if (e.getCause() instanceof RuntimeException) {
-                            throw (RuntimeException)e.getCause();
-                        } else if (e.getCause() instanceof IOException) {
-                            throw (IOException)e.getCause();
-                        } else if (e.getCause() instanceof InterruptedException) {
-                            throw (InterruptedException)e.getCause();
-                        } else {
-                            throw new RuntimeException("Start-Job failed with unexpected exception: "+e.getCause().getMessage(), e.getCause());
-                        }
-                    } finally {
-                        executorService.shutdown();
-                        try {
-                            executorService.awaitTermination(10, TimeUnit.SECONDS);
-                        } catch (InterruptedException ie) {
-                            log.warn("ExecutorService did not shutdown correctly. Enforcing shutdown now!");
-                            executorService.shutdownNow();
-                        }
-                    }
+                    rethrowCause(e);
                 }
             }
 
-            if (!executorService.isShutdown()) {
-                executorService.shutdown();
-                try {
-                    executorService.awaitTermination(10, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    log.warn("ExecutorService did not shutdown normally.");
-                }
-            }
+            portMappingPropertyWriteHelper.write();
 
             if (follow) {
                 runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
                 wait();
             }
 
-            portMappingPropertyWriteHelper.write();
             success = true;
         } catch (InterruptedException e) {
             log.warn("Interrupted");
@@ -257,11 +175,142 @@ public class StartMojo extends AbstractDockerMojo {
         } catch (IOException e) {
             throw new MojoExecutionException("I/O Error",e);
         } finally {
+            shutdownExecutorService(executorService);
+
+            // Rollback if not all could be started
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, pomLabel);
+                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getPomLabel());
             }
         }
+    }
+
+    // Check if we are done
+    private boolean hasBeenAllImagesStarted(Queue<ImageConfiguration> imagesWaitingToStart, Queue<ImageConfiguration> imagesStarting) {
+        return imagesWaitingToStart.isEmpty() && imagesStarting.isEmpty();
+    }
+
+    private void shutdownExecutorService(ExecutorService executorService) {
+        if (!executorService.isShutdown()) {
+            executorService.shutdown();
+            try {
+                executorService.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                log.warn("ExecutorService did not shutdown normally.");
+                executorService.shutdownNow();
+            }
+        }
+    }
+
+    private void rethrowCause(ExecutionException e) throws IOException, InterruptedException {
+        Throwable cause = e.getCause();
+        if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+        } else if (cause instanceof IOException) {
+            throw (IOException) cause;
+        } else if (cause instanceof InterruptedException) {
+                throw (InterruptedException) cause;
+        } else {
+            throw new RuntimeException("Start-Job failed with unexpected exception: " + e.getCause().getMessage(),
+                                       e.getCause());
+        }
+    }
+
+    private void updateAliasesSet(Set<String> aliasesSet, String alias) {
+        // Add the alias to the set only when it is set. When it's
+        // not set it cant be used in the dependency resolution anyway, so we are ignoring
+        // it hence.
+        if (alias != null) {
+            aliasesSet.add(alias);
+        }
+    }
+
+    private void handleMappedPorts(StartedContainer startedContainer,
+                                   ServiceHub hub,
+                                   PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) throws DockerAccessException {
+        final String containerId = startedContainer.containerId;
+        final ImageConfiguration imageConfig = startedContainer.imageConfig;
+        final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        final PortMapping portMapping = hub.getRunService().getPortMapping(runConfig, project.getProperties());
+
+        // Write out properties and expose them as project properties, too
+        portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
+        exposeContainerProps(hub.getQueryService(), containerId, imageConfig);
+    }
+
+    private void startImage(final ImageConfiguration image,
+                            final ServiceHub hub,
+                            ExecutorCompletionService<StartedContainer> startingContainers) {
+
+        final RunService runService = hub.getRunService();
+        final Properties projProperties = project.getProperties();
+        final RunImageConfiguration runConfig = image.getRunConfiguration();
+        final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
+        final LogDispatcher dispatcher = getLogDispatcher(hub);
+
+        startingContainers.submit(new Callable<StartedContainer>() {
+            @Override
+            public StartedContainer call() throws Exception {
+                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties);
+
+                if (showLogs(image)) {
+                    dispatcher.trackContainerLog(containerId,
+                            serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, image));
+                }
+
+                // Wait if requested
+                waitIfRequested(hub,image, projProperties, containerId);
+                WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
+                if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
+                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), image);
+                }
+
+                return new StartedContainer(image, containerId);
+            }
+        });
+    }
+
+    // Pick out all images who can be started right now because all their dependencies has been started
+    private List<ImageConfiguration> getImagesWhoseDependenciesHasStarted(Queue<ImageConfiguration> imagesRemaining,
+                                                                          Set<String> containersStarted,
+                                                                          Set<String> aliases) {
+        final List<ImageConfiguration> ret = new ArrayList<>();
+
+        // Check for all images which can be already started
+        for (ImageConfiguration imageWaitingToStart : imagesRemaining) {
+            List<String> allDependencies = imageWaitingToStart.getDependencies();
+            List<String> aliasDependencies = filterOutNonAliases(aliases, allDependencies);
+            if (containersStarted.containsAll(aliasDependencies)) {
+                ret.add(imageWaitingToStart);
+            }
+        }
+        return ret;
+    }
+
+    // Prepare start like creating custom networks, auto pull images, map aliases and return the list of images
+    // to start in the correct order
+    private Queue<ImageConfiguration> prepareStart(ServiceHub hub, QueryService queryService, RunService runService, Set<String> imageAliases)
+        throws DockerAccessException, MojoExecutionException {
+        final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
+        for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
+            final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+
+            // Still to check: How to work with linking, volumes, etc ....
+            //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
+
+            String imageName = imageConfig.getName();
+            checkImageWithAutoPull(hub, imageName,
+                                   getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
+
+            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            NetworkConfig config = runConfig.getNetworkingConfig();
+            if (autoCreateCustomNetworks && config.isCustomNetwork()) {
+                runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
+            }
+            imagesWaitingToStart.add(imageConfig);
+            updateAliasesSet(imageAliases, imageConfig.getAlias());
+        }
+        return imagesWaitingToStart;
     }
 
     private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {
