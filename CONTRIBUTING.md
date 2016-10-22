@@ -1,3 +1,5 @@
+## Contributing 
+
 You want to contribute ? Awesome ! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
 
 Here some things to check out when doing a PR:
@@ -9,7 +11,7 @@ Here some things to check out when doing a PR:
 
 However, if you can't do some of the points above, please still consider contributing. Simply ask us on `#fabric8` at Freenode or via an GitHub [issue](https://github.com/fabric8io/docker-maven-plugin/issues). We are not dogmatic.
 
-### Signing of your commits
+### Signing off your commits
 
 Pull requests are highly appreciated and most of them get applied. However, you
 must sign-off your code so that you certify that your  contributions is compatible with the
