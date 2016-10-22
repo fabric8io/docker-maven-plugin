@@ -468,6 +468,7 @@ public class StartMojo extends AbstractDockerMojo {
 
             private boolean first = true;
             private LogGetHandle logHandle;
+            // Flag updated from a different thread, hence volatile (see also #595)
             private volatile boolean detected = false;
 
             @Override
