@@ -1,4 +1,4 @@
-You want to contribute ? Awesome ! We LOVE contributions ;-)
+You want to contribute ? Awesome ! We **♥︎♥︎ LOVE ♥︎♥︎** contributions ;-)
 
 Here some things to check out when doing a PR:
 
