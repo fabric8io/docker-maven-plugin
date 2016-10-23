@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.16-SNAPSHOT,</span>
-<span id="revdate">2016-10-22</span>
+<span id="revdate">2016-10-23</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -541,6 +541,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#build-assembly">5.1.2. Assembly</a></li>
 <li><a href="#misc-startup">5.1.3. Startup Arguments</a></li>
 <li><a href="#build-buildargs">5.1.4. Build Args</a></li>
+<li><a href="#build-healthcheck">5.1.5. Healthcheck</a></li>
 </ul>
 </li>
 <li><a href="#docker:start">5.2. <strong>docker:start</strong></a>
@@ -1501,6 +1502,12 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </div></div></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>healthCheck</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Definition of a health check as described in <a href="#build-healthcheck">Healthcheck</a></p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
@@ -1966,6 +1973,68 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>Please note that the system property setting will always override the project property. Also note that for all properties which are not Docker <a href="https://docs.docker.com/engine/reference/builder/#arg">predefined</a> properties, the external Dockerfile must contain an <code>ARGS</code> instruction.</p>
 </div>
 </div>
+<div class="sect3">
+<h4 id="build-healthcheck">5.1.5. Healthcheck</h4>
+<div class="paragraph">
+<p>Healthchecks has been introduced since Docker 1.12 and are a way to tell Docker how to test a container to check that it&#8217;s still working. With a health check you specify a command which is periodically executed and checked for its return value. If the healtcheck return with an exit 0 the container is considered to be healthy, if it returns with 1 then the container is not working correctly.</p>
+</div>
+<div class="paragraph">
+<p>The healtcheck configuration can have the following options</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 10. Healthcheck Configuration</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cmd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute, which can be given in an shell or exec format as described in <a href="#misc-startup">Startup Arguments</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>interval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interval for how often to run the healthcheck. The time is specified in seconds, but a time unit can be appended to change this.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mode of the healthcheck. This can be <code>cmd</code> which is the default and specifies that the health check should be executed. Or <code>none</code> to disable a health check from the base image. Only use this option with <code>none</code> for disabling some healthcheck from the base image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>retries</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">How many retries should be performed before the container is to be considered unhealthy.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>timeout</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout after which healthckeck should be stopped and considered to have failed. Given in seconds, but another time unit can be appended.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The following example queries an URL every 10s as an healthcheck:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;healthCheck&gt;</span>
+  <span class="comment">&lt;!-- Check every 5 minutes --&gt;</span>
+  <span class="tag">&lt;interval&gt;</span>5m<span class="tag">&lt;/interval&gt;</span>
+  <span class="comment">&lt;!-- Fail if no response after 3 seconds --&gt;</span>
+  <span class="tag">&lt;timeout&gt;</span>3s<span class="tag">&lt;/timeout&gt;</span>
+  <span class="comment">&lt;!-- Fail 3 times until the container is considerd unhealthy --&gt;</span>
+  <span class="tag">&lt;retries&gt;</span>3<span class="tag">&lt;/retries&gt;</span>
+  <span class="comment">&lt;!-- Command to execute in shell form --&gt;</span>
+  <span class="tag">&lt;cmd&gt;</span>curl -f http://localhost/ || exit 1<span class="tag">&lt;/cmd&gt;</span>
+<span class="tag">&lt;/healthCheck&gt;</span></code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="docker:start">5.2. <strong>docker:start</strong></h3>
@@ -1979,7 +2048,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.&lt;alias&gt;.&lt;prop&gt;</code> where <code>&lt;alias&gt;</code> is the name of the container (see below) and <code>&lt;prop&gt;</code> is one of the following container properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Properties provided</caption>
+<caption class="title">Table 11. Properties provided</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2017,7 +2086,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>In addition to the <a href="#global-configuration">Global configuration</a>, this goal supports the following global configuration options.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Start options</caption>
+<caption class="title">Table 12. Start options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2049,7 +2118,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
 <table id="start-run-configuration" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Run configuration</caption>
+<caption class="title">Table 13. Run configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2304,7 +2373,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>A <code>port</code> stanza may take one of the following forms:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Port mapping format</caption>
+<caption class="title">Table 14. Port mapping format</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2427,7 +2496,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt;</a> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Network configuration</caption>
+<caption class="title">Table 15. Network configuration</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 87.5%;">
@@ -2525,7 +2594,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Restart Policy configuration</caption>
+<caption class="title">Table 16. Restart Policy configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2569,7 +2638,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Volume configuration</caption>
+<caption class="title">Table 17. Volume configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2634,7 +2703,7 @@ some condition is met. These conditions can be specified within a
 <code>&lt;wait&gt;</code> section which the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Wait configuration</caption>
+<caption class="title">Table 18. Wait configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2764,7 +2833,7 @@ output of an container and blocks until the pattern is matched.</p></td>
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Logging configuration</caption>
+<caption class="title">Table 19. Logging configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2882,7 +2951,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Stop configuration</caption>
+<caption class="title">Table 20. Stop configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2935,7 +3004,7 @@ the global option <code>image</code> (see <a href="#global-configuration">Global
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Push options</caption>
+<caption class="title">Table 21. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3040,7 +3109,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Watch configuration</caption>
+<caption class="title">Table 22. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3121,7 +3190,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Watch configuration for a single image</caption>
+<caption class="title">Table 23. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3234,7 +3303,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Logging options</caption>
+<caption class="title">Table 24. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3359,7 +3428,7 @@ up from the following properties, which correspond to the corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. External properties</caption>
+<caption class="title">Table 25. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3474,6 +3543,30 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.fromExt.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image (extended format)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.cmd</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Command to use for a healthcheck</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.interval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interval for how often to run a healthcheck (in seconds or with a given time unit)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.mode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If se to <code>none</code> disable a healthcheck from a base image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.retries</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of retries for how often to retry a healthcheck until it is considered to have failed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.timeout</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout after which a healthcheck command is considered to be failed (in seconds or with a given time unit)</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.hostname</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container hostname</p></td>
 </tr>
@@ -3502,7 +3595,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">Name of an alternative log driver</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.dirver.opts.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.driver.opts.VARIABLE</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Logging driver options (specified similar as in <code>docker.env.VARIABLE</code>)</p></td>
 </tr>
 <tr>
@@ -4052,7 +4145,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-10-22 09:47:28 UTC
+Last updated 2016-10-23 20:42:00 UTC
 </div>
 </div>
 </body>
