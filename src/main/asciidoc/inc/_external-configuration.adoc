@@ -127,6 +127,24 @@ values in the `<build>` and `<run>` sections.
 | *docker.from*
 | Base image for building an image
 
+| *docker.fromExt.VARIABLE*
+| Base image for building an image (extended format)
+
+| *docker.healthcheck.cmd*
+| Command to use for a healthcheck
+
+| *docker.healthcheck.interval*
+| Interval for how often to run a healthcheck (in seconds or with a given time unit)
+
+| *docker.healthcheck.mode*
+| If se to `none` disable a healthcheck from a base image
+
+| *docker.healthcheck.retries*
+| Number of retries for how often to retry a healthcheck until it is considered to have failed
+
+| *docker.healthcheck.timeout*
+| Timeout after which a healthcheck command is considered to be failed (in seconds or with a given time unit)
+
 | *docker.hostname*
 | Container hostname
 
@@ -148,7 +166,7 @@ values in the `<build>` and `<run>` sections.
 | *docker.log.driver.name*
 | Name of an alternative log driver
 
-| *docker.log.dirver.opts.VARIABLE*
+| *docker.log.driver.opts.VARIABLE*
 | Logging driver options (specified similar as in `docker.env.VARIABLE`)
 
 | *docker.links.idx*

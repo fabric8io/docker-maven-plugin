@@ -15,15 +15,19 @@ public class HealthCheckConfiguration {
 
     private Arguments cmd;
 
-    public HealthCheckConfiguration() {
-    }
+    public HealthCheckConfiguration() {}
 
     public String getInterval() {
-        return interval;
+        return prepareTimeValue(interval);
     }
 
     public String getTimeout() {
-        return timeout;
+        return prepareTimeValue(timeout);
+    }
+
+    private String prepareTimeValue(String timeout) {
+        // Seconds as default
+        return timeout.matches("^\\d+$") ? timeout + "s" : timeout;
     }
 
     public Arguments getCmd() {

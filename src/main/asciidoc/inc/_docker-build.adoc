@@ -27,3 +27,8 @@ include::misc/_startup.adoc[]
 === Build Args
 
 include::build/_buildargs.adoc[]
+
+[[build-healthcheck]]
+=== Healthcheck
+
+include::build/_healthcheck.adoc[]
