@@ -246,7 +246,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         // Stop old one
         RunService runService = hub.getRunService();
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        PortMapping mappedPorts = runService.getPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
+        PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
         String id = watcher.getContainerId();
 
         String optionalPreStop = getPreStopCommand(imageConfig);

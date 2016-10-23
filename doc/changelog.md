@@ -5,7 +5,8 @@
   - Fixed exposing of all property and port mappings (#583)
   - Fix concurrency issue on log wait (#596)
   - Add Dockerfile HEALTHCHECK support (#594)
-
+  - Fix writing empty property files (#592)
+  
 * **0.16.8** (2016-10-14)
   - Allow multiple network links per `<link>` element ([#558](https://github.com/fabric8io/docker-maven-plugin/issues/558))
   - Fix startup of dependent containers when using links with specific container ids ([#586](https://github.com/fabric8io/docker-maven-plugin/issues/586)) 

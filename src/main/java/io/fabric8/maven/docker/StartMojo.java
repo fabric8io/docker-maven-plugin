@@ -108,8 +108,7 @@ public class StartMojo extends AbstractDockerMojo {
         QueryService queryService = hub.getQueryService();
         final RunService runService = hub.getRunService();
 
-        PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper =
-            new PortMapping.PropertyWriteHelper(portPropertyFile);
+        PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper = new PortMapping.PropertyWriteHelper(portPropertyFile);
 
         boolean success = false;
 
@@ -119,11 +118,11 @@ public class StartMojo extends AbstractDockerMojo {
         try {
             // All aliases which are provided in the image configuration:
             final Set<String> imageAliases = new HashSet<>();
+            // Remember all aliases which has been started
+            final Set<String> startedContainerAliases = new HashSet<>();
 
             // All images to to start
             Queue<ImageConfiguration> imagesWaitingToStart = prepareStart(hub, queryService, runService, imageAliases);
-
-            final Set<String> startedContainerAliases = new HashSet<>();
 
             // Queue of images to start as containers
             final Queue<ImageConfiguration> imagesStarting = new ArrayDeque<>();
@@ -136,7 +135,7 @@ public class StartMojo extends AbstractDockerMojo {
 
                 for (final ImageConfiguration image : imagesReadyToStart) {
 
-                    startImage(image, hub, containerStartupService);
+                    startImage(image, hub, containerStartupService, portMappingPropertyWriteHelper);
 
                     // Move from waiting to starting status
                     imagesStarting.add(image);
@@ -147,14 +146,13 @@ public class StartMojo extends AbstractDockerMojo {
                 final Future<StartedContainer> startedContainerFuture = containerStartupService.take();
                 try {
                     final StartedContainer startedContainer = startedContainerFuture.get();
-                    final ImageConfiguration image = startedContainer.imageConfig;
+                    final ImageConfiguration imageConfig = startedContainer.imageConfig;
 
-                    updateAliasesSet(startedContainerAliases, image.getAlias());
-                    // Add ports to save them for a property file and exposed them as project properties
-                    handleMappedPorts(startedContainer, hub, portMappingPropertyWriteHelper);
+                    updateAliasesSet(startedContainerAliases, imageConfig.getAlias());
+                    exposeContainerProps(hub.getQueryService(), startedContainer);
 
                     // All done with this image
-                    imagesStarting.remove(image);
+                    imagesStarting.remove(imageConfig);
                 } catch (ExecutionException e) {
                     rethrowCause(e);
                 }
@@ -225,33 +223,24 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private void handleMappedPorts(StartedContainer startedContainer,
-                                   ServiceHub hub,
-                                   PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) throws DockerAccessException {
-        final String containerId = startedContainer.containerId;
-        final ImageConfiguration imageConfig = startedContainer.imageConfig;
-        final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-        final PortMapping portMapping = hub.getRunService().getPortMapping(runConfig, project.getProperties());
-
-        // Write out properties and expose them as project properties, too
-        portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
-        exposeContainerProps(hub.getQueryService(), containerId, imageConfig);
-    }
-
     private void startImage(final ImageConfiguration image,
                             final ServiceHub hub,
-                            ExecutorCompletionService<StartedContainer> startingContainers) {
+                            final ExecutorCompletionService<StartedContainer> startingContainers,
+                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) {
 
         final RunService runService = hub.getRunService();
         final Properties projProperties = project.getProperties();
         final RunImageConfiguration runConfig = image.getRunConfiguration();
-        final PortMapping portMapping = runService.getPortMapping(runConfig, projProperties);
+        final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         startingContainers.submit(new Callable<StartedContainer>() {
             @Override
             public StartedContainer call() throws Exception {
                 final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties);
+
+                // Update port-mapping writer
+                portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
                 if (showLogs(image)) {
                     dispatcher.trackContainerLog(containerId,
@@ -531,14 +520,15 @@ public class StartMojo extends AbstractDockerMojo {
         return false;
     }
 
-    private void exposeContainerProps(QueryService queryService, String containerId, ImageConfiguration image)
+    // Expose ports as project properties
+    private void exposeContainerProps(QueryService queryService, StartedContainer startedContainer)
         throws DockerAccessException {
-        String propKey = getExposedPropertyKeyPart(image);
+        String propKey = getExposedPropertyKeyPart(startedContainer.imageConfig);
         if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
-            Container container = queryService.getMandatoryContainer(containerId);
+            Container container = queryService.getMandatoryContainer(startedContainer.containerId);
             Properties props = project.getProperties();
             String prefix = addDot(exposeContainerProps) + addDot(propKey);
-            props.put(prefix + "id", containerId);
+            props.put(prefix + "id", startedContainer.containerId);
             String ip = container.getIPAddress();
             if (StringUtils.isNotEmpty(ip)) {
                 props.put(prefix + "ip", ip);

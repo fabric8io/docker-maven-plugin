@@ -84,7 +84,7 @@ public class RunService {
     /**
      * Create and start a container with the given image configuration.
      * @param imageConfig image configuration holding the run information and the image name
-     * @param mappedPorts container port mapping
+     * @param portMapping container port mapping
      * @param mavenProps properties to fill in with dynamically assigned ports
      * @param pomLabel label to tag the started container with
      *
@@ -93,19 +93,19 @@ public class RunService {
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
-                                          PortMapping mappedPorts,
+                                          PortMapping portMapping,
                                           PomLabel pomLabel,
                                           Properties mavenProps) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
         String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, mappedPorts, pomLabel, mavenProps);
+        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps);
 
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id, pomLabel);
 
-        if (mappedPorts.needsPropertiesUpdate()) {
-            updateMappedPortsAndAddresses(id, mappedPorts);
+        if (portMapping.needsPropertiesUpdate()) {
+            updateMappedPortsAndAddresses(id, portMapping);
         }
 
         return id;
@@ -200,7 +200,7 @@ public class RunService {
      * @param properties properties to lookup variables
      * @return the portmapping
      */
-    public PortMapping getPortMapping(RunImageConfiguration runConfig, Properties properties) {
+    public PortMapping createPortMapping(RunImageConfiguration runConfig, Properties properties) {
         try {
             return new PortMapping(runConfig.getPorts(), properties);
         } catch (IllegalArgumentException exp) {

@@ -297,7 +297,7 @@ public class RunServiceTest {
     }
 
     private void whenCreateContainerConfig(String imageName) throws DockerAccessException {
-        PortMapping portMapping = runService.getPortMapping(runConfig, properties);
+        PortMapping portMapping = runService.createPortMapping(runConfig, properties);
 
         containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, null, properties);
         startConfig = runService.createContainerHostConfig(runConfig, portMapping);
