@@ -38,7 +38,6 @@ import org.codehaus.plexus.util.StringUtils;
  * @author roland
  */
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class StartMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.showLogs")
