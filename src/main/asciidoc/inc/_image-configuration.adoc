@@ -1,0 +1,14 @@
+[[image-configuration]]
+= Image configuration
+
+The plugin's configuration is centered around _images_. These are
+specified for each image within the `<images>` element of the
+configuration with one `<image>` element per image to use.
+
+The `<image>` element can contain the following sub elements:
+
+include::image/_configuration.adoc[]
+
+Either a `<build>` or `<run>` section must be present. These are explained in details in the corresponding goal sections.
+
+include::image/_example.adoc[]

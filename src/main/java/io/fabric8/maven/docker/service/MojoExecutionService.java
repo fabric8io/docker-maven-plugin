@@ -1,7 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 /*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -143,10 +143,5 @@ public class MojoExecutionService {
         }
         return result;
     }
-
-    private interface PluginDescriptorLoader {
-        PluginDescriptor load(MavenProject project, Plugin plugin);
-    }
-
 
 }

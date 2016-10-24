@@ -1,0 +1,20 @@
+
+Specify the behavior to apply when the container exits. These values can be specified withing a `<restartPolicy>` section with the following sub-elements:
+
+.Restart Policy configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+| *name*
+a| Restart policy name, choose from:
+
+* `always` (_v1.15_) always restart
+* `on-failure` (_v1.15_) restart on container non-exit code of zero
+
+| *retry*
+| If `on-failure` is used, controls max number of attempts to restart before giving up.
+|===
+
+The behavior to apply when the container exits. The value is an object with a name property of either "always" to always restart or "on-failure" to restart only when the container exit code is non-zero. If on-failure is used, MaximumRetryCount controls the number of times to retry before giving up. The default is not to restart. (optional)
+

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,6 +42,10 @@ public class ContainerHostConfig {
         return addAsArray("CapDrop", capDrop);
     }
 
+    public ContainerHostConfig securityOpts(List<String> securityOpt) {
+        return addAsArray("SecurityOpt", securityOpt);
+    }
+
     public ContainerHostConfig memory(Long memory) {
         return add("Memory", memory);
     }
@@ -53,7 +58,7 @@ public class ContainerHostConfig {
         return addAsArray("Dns", dns);
     }
 
-    public ContainerHostConfig networkConfig(String net) {
+    public ContainerHostConfig networkMode(String net) {
         return add("NetworkMode",net);
     }
 
@@ -83,6 +88,28 @@ public class ContainerHostConfig {
 
     public ContainerHostConfig volumesFrom(List<String> volumesFrom) {
         return addAsArray("VolumesFrom", volumesFrom);
+    }
+
+    public ContainerHostConfig ulimits(List<UlimitConfig> ulimitsConfig) {
+    	if (ulimitsConfig != null && ulimitsConfig.size() > 0) {
+            JSONArray ulimits = new JSONArray();
+            for (UlimitConfig ulimit : ulimitsConfig) {
+                JSONObject ulimitConfigJson = new JSONObject();
+                ulimitConfigJson.put("Name", ulimit.getName());
+                addIfNotNull(ulimitConfigJson, "Hard", ulimit.getHard());
+                addIfNotNull(ulimitConfigJson, "Soft", ulimit.getSoft());
+                ulimits.put(ulimitConfigJson);
+            }
+
+            startConfig.put("Ulimits", ulimits);
+        }
+        return this;
+    }
+
+    private void addIfNotNull(JSONObject json, String key, Integer value) {
+        if (value != null) {
+            json.put(key, value);
+        }
     }
 
     public ContainerHostConfig links(List<String> links) {
@@ -138,7 +165,7 @@ public class ContainerHostConfig {
         }
         return this;
     }
-    
+
     /**
      * Get JSON which is used for <em>starting</em> a container
      *

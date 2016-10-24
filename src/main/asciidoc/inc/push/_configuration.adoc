@@ -1,0 +1,20 @@
+
+
+.Push options
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *skipPush*
+| If set to `true` the plugin won't push any images that have been built.
+| `docker.skip.push`
+
+| *pushRegistry*
+| The registry to use when pushing the image. See <<registry,Registry Handling>> for
+more details.
+| `docker.push.registry`
+
+| *retries*
+| How often should a push be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
+| `docker.push.retries`
+|===

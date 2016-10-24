@@ -4,6 +4,9 @@ import java.util.*;
 
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import static org.junit.Assert.*;
 
 /**
@@ -15,19 +18,27 @@ public class EnvUtilTest {
 
     @Test
     public void splitPath() {
-        List<String[]> res = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db"));
-        assertEquals(3,res.size());
+        Iterator<String[]> it = EnvUtil.splitOnLastColon(Arrays.asList("db", "postgres:9:db", "postgres:db", "atlast:")).iterator();
         String[][] expected = new String[][] {
                 { "db", "db"},
                 { "postgres:9","db"},
-                { "postgres", "db"}
+                { "postgres", "db"},
+                { "atlast", ""}
         };
-        for (int i = 0; i < res.size(); i++) {
-            String[] got = res.get(i);
+        for (int i = 0; i < expected.length; i++) {
+            String[] got = it.next();
             assertEquals(2,got.length);
             assertEquals(expected[i][0],got[0]);
             assertEquals(expected[i][1],got[1]);
         }
+        assertFalse(it.hasNext());
+    }
+
+    @Test
+    public void splitAtCommas() {
+        Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
+        Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");
+        assertTrue(Iterables.elementsEqual(it, expected));
     }
 
     @Test
@@ -87,16 +98,21 @@ public class EnvUtilTest {
     }
 
     @Test
-    public void minimalVersion() {
-        String[] data = {
-            null, null, null,
-            "1.10", null, "1.10",
-            null, "1.10", "1.10",
-            "1.22", "1.10", "1.22",
-            "1.10", "1.25", "1.25"
+    public void versionChecks() {
+        Object[] data = {
+            null, null, null, false,
+            "1.10", null, "1.10", true,
+            null, "1.10", "1.10", false,
+            "1.22", "1.10", "1.22", true,
+            "1.10", "1.25", "1.25", false,
+            "1.23", "1.23", "1.23", true,
+            "1.23.1", "1.23", "1.23.1", true,
+            "1.25", "1.25.1", "1.25.1", false,
+            "1.23.1", "2.0", "2.0", false
         };
-        for (int i = 0; i < data.length; i+=3) {
-            assertEquals(data[i+2],EnvUtil.extractLargerVersion(data[i],data[i+1]));
+        for (int i = 0; i < data.length; i+=4) {
+            assertEquals(data[i+2],EnvUtil.extractLargerVersion((String) data[i],(String) data[i+1]));
+            assertEquals(data[i+3],EnvUtil.greaterOrEqualsVersion((String) data[i],(String) data[i+1]));
         }
     }
 

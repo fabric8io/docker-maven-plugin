@@ -1,0 +1,56 @@
+
+.Image Configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+| *name*
+| Each `<image>` configuration has a mandatory, unique docker
+repository _name_. This can include registry and tag parts, but also placeholder parameters. See below for a detailed explanation.
+
+| *alias*
+| Shortcut name for an image which can be used for
+identifying the image within this configuration. This is used when
+linking images together or for specifying it with the global *image* configuration element.
+
+| *registry*
+| Registry to use for this image. If the `name` already contains a registry this takes precedence. See <<registry,Registry handling>> for more details.
+
+| *build*
+| Element which contains all the configuration aspects when doing a <<{plugin}:build>>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.
+
+ifeval::["{plugin}" == "docker"]
+| *run*
+| Element which describe how containers should be
+created and run when <<{plugin}:start>> is called. If this image is only used a _data container_ (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.
+
+| *external*
+| Specification of external configuration as an alternative to this XML based configuration with `<run>` and `<build>`. It contains a `<type>` element specifying the handler for getting the configuration. See <<external-configuration,External configuration>> for details.
+endif::[]
+|===
+
+[[image-name-placeholders]]
+.Name placeholders
+When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.
+
+.Placeholders
+[cols="1,5"]
+|===
+| Placeholder | Description
+
+| *%g*
+| The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id `io.fabric8` this placeholder would insert `fabric8`
+
+| *%a*
+| A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker)
+
+| *%v*
+| The project version. Synonym to `${project.version}`
+
+| *%l*
+| If the project version ends with `-SNAPSHOT` then this placeholder is `latest`, otherwise its the full version (same as `%v`)
+
+| *%t*
+| If the project version ends with `-SNAPSHOT` this placeholder resolves to `snapshot-<timestamp>` where timestamp has the date format `yyMMdd-HHmmss-SSSS` (eg `snapshot-`). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.
+|===
+

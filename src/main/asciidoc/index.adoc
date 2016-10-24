@@ -1,0 +1,44 @@
+= fabric8io/docker-maven-plugin
+Roland Huß;
+:revnumber: {version}
+:revdate: {localdate}
+:toc: macro
+:toclevels: 3
+:toc-title: docker-maven-plugin
+:doctype: book
+:icons: font
+:plugin: docker
+
+ifndef::ebook-format[:leveloffset: 1]
+
+(C) 2015 - 2016 The original authors.
+
+ifdef::basebackend-html[toc::[]]
+
+:numbered:
+
+include::inc/_introduction.adoc[]
+
+include::inc/_installation.adoc[]
+
+include::inc/_global-configuration.adoc[]
+
+include::inc/_image-configuration.adoc[]
+
+include::inc/_goals.adoc[]
+include::inc/_docker-build.adoc[]
+include::inc/_docker-start.adoc[]
+include::inc/_docker-stop.adoc[]
+include::inc/_docker-push.adoc[]
+include::inc/_docker-watch.adoc[]
+include::inc/_docker-remove.adoc[]
+include::inc/_docker-logs.adoc[]
+include::inc/_docker-source.adoc[]
+
+include::inc/_external-configuration.adoc[]
+
+include::inc/_registry.adoc[]
+
+include::inc/_authentication.adoc[]
+
+include::inc/_links.adoc[]

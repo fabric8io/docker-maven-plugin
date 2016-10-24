@@ -13,35 +13,35 @@ public class ImageNameTest {
         Object[] data = {
                 "jolokia/jolokia_demo",
                 r().repository("jolokia/jolokia_demo")
-                        .fullName("jolokia/jolokia_demo").fullNameWithTag("jolokia/jolokia_demo:latest"),
+                   .fullName("jolokia/jolokia_demo").fullNameWithTag("jolokia/jolokia_demo:latest").simpleName("jolokia_demo"),
 
                 "jolokia/jolokia_demo:0.9.6",
                 r().repository("jolokia/jolokia_demo").tag("0.9.6")
-                        .fullName("jolokia/jolokia_demo").fullNameWithTag("jolokia/jolokia_demo:0.9.6"),
+                        .fullName("jolokia/jolokia_demo").fullNameWithTag("jolokia/jolokia_demo:0.9.6").simpleName("jolokia_demo"),
 
                 "test.org/jolokia/jolokia_demo:0.9.6",
                 r().registry("test.org").repository("jolokia/jolokia_demo").tag("0.9.6")
-                        .fullName("test.org/jolokia/jolokia_demo").fullNameWithTag("test.org/jolokia/jolokia_demo:0.9.6"),
+                        .fullName("test.org/jolokia/jolokia_demo").fullNameWithTag("test.org/jolokia/jolokia_demo:0.9.6").simpleName("jolokia_demo"),
 
                 "test.org/jolokia/jolokia_demo",
                 r().registry("test.org").repository("jolokia/jolokia_demo")
-                        .fullName("test.org/jolokia/jolokia_demo").fullNameWithTag("test.org/jolokia/jolokia_demo:latest"),
+                        .fullName("test.org/jolokia/jolokia_demo").fullNameWithTag("test.org/jolokia/jolokia_demo:latest").simpleName("jolokia_demo"),
 
                 "test.org:8000/jolokia/jolokia_demo:8.0",
                 r().registry("test.org:8000").repository("jolokia/jolokia_demo").tag("8.0")
-                        .fullName("test.org:8000/jolokia/jolokia_demo").fullNameWithTag("test.org:8000/jolokia/jolokia_demo:8.0"),
+                        .fullName("test.org:8000/jolokia/jolokia_demo").fullNameWithTag("test.org:8000/jolokia/jolokia_demo:8.0").simpleName("jolokia_demo"),
 
                 "jolokia_demo",
                 r().repository("jolokia_demo")
-                        .fullName("jolokia_demo").fullNameWithTag("jolokia_demo:latest"),
+                        .fullName("jolokia_demo").fullNameWithTag("jolokia_demo:latest").simpleName("jolokia_demo"),
 
                 "jolokia_demo:0.9.6",
                 r().repository("jolokia_demo").tag("0.9.6")
-                        .fullName("jolokia_demo").fullNameWithTag("jolokia_demo:0.9.6"),
+                        .fullName("jolokia_demo").fullNameWithTag("jolokia_demo:0.9.6").simpleName("jolokia_demo"),
 
                 "consol/tomcat-8.0:8.0.9",
                 r().repository("consol/tomcat-8.0").tag("8.0.9")
-                        .fullName("consol/tomcat-8.0").fullNameWithTag("consol/tomcat-8.0:8.0.9")
+                        .fullName("consol/tomcat-8.0").fullNameWithTag("consol/tomcat-8.0:8.0.9").simpleName("tomcat-8.0")
         };
 
         verifyData(data);
@@ -52,31 +52,30 @@ public class ImageNameTest {
         Object[] data = {
                 "org/jolokia/jolokia_demo",
                 r().repository("org/jolokia/jolokia_demo")
-                        .fullName("org/jolokia/jolokia_demo").fullNameWithTag("org/jolokia/jolokia_demo:latest"),
+                        .fullName("org/jolokia/jolokia_demo").fullNameWithTag("org/jolokia/jolokia_demo:latest").simpleName("jolokia/jolokia_demo"),
 
                 "org/jolokia/jolokia_demo:0.9.6",
                 r().repository("org/jolokia/jolokia_demo").tag("0.9.6")
-                        .fullName("org/jolokia/jolokia_demo").fullNameWithTag("org/jolokia/jolokia_demo:0.9.6"),
+                        .fullName("org/jolokia/jolokia_demo").fullNameWithTag("org/jolokia/jolokia_demo:0.9.6").simpleName("jolokia/jolokia_demo"),
 
                 "repo.example.com/org/jolokia/jolokia_demo:0.9.6",
                 r().registry("repo.example.com").repository("org/jolokia/jolokia_demo").tag("0.9.6")
-                        .fullName("repo.example.com/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com/org/jolokia/jolokia_demo:0.9.6"),
+                        .fullName("repo.example.com/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com/org/jolokia/jolokia_demo:0.9.6").simpleName("jolokia/jolokia_demo"),
 
                 "repo.example.com/org/jolokia/jolokia_demo",
                 r().registry("repo.example.com").repository("org/jolokia/jolokia_demo")
-                        .fullName("repo.example.com/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com/org/jolokia/jolokia_demo:latest"),
+                        .fullName("repo.example.com/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com/org/jolokia/jolokia_demo:latest").simpleName("jolokia/jolokia_demo"),
 
                 "repo.example.com:8000/org/jolokia/jolokia_demo:8.0",
                 r().registry("repo.example.com:8000").repository("org/jolokia/jolokia_demo").tag("8.0")
-                        .fullName("repo.example.com:8000/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com:8000/org/jolokia/jolokia_demo:8.0"),
-
+                        .fullName("repo.example.com:8000/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com:8000/org/jolokia/jolokia_demo:8.0").simpleName("jolokia/jolokia_demo"),
                 "org/jolokia_demo",
                 r().repository("org/jolokia_demo")
-                        .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:latest"),
+                        .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:latest").simpleName("jolokia_demo"),
 
                 "org/jolokia_demo:0.9.6",
                 r().repository("org/jolokia_demo").tag("0.9.6")
-                        .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:0.9.6"),
+                        .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:0.9.6").simpleName("jolokia_demo"),
         };
 
         verifyData(data);
@@ -90,7 +89,8 @@ public class ImageNameTest {
             assertEquals("Repository " + i,res.repository,name.getRepository());
             assertEquals("Tag " + i,res.tag,name.getTag());
             assertEquals("RepoWithRegistry " + i,res.fullName, name.getNameWithoutTag(null));
-            assertEquals("FullName " + i,res.fullNameWithTag,name.getFullName(null));
+            assertEquals("FullName " + i,res.fullNameWithTag, name.getFullName(null));
+            assertEquals("Simple Name " + i,res.simpleName, name.getSimpleName());
         }
     }
 
@@ -164,7 +164,7 @@ public class ImageNameTest {
     }
 
     private static class Res {
-        private String registry,repository,tag, fullName, fullNameWithTag;
+        private String registry,repository,tag, fullName, fullNameWithTag, simpleName;
         boolean hasRegistry = false;
 
         Res registry(String registry) {
@@ -190,6 +190,11 @@ public class ImageNameTest {
 
         Res fullNameWithTag(String fullNameWithTag) {
             this.fullNameWithTag = fullNameWithTag;
+            return this;
+        }
+
+        Res simpleName(String simpleName) {
+            this.simpleName = simpleName;
             return this;
         }
     }

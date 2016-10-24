@@ -189,6 +189,16 @@ public class ImageName {
     }
 
     /**
+     * Get the simple name of the image, which is the repository sans the user parts.
+     *
+     * @return simple name of the image
+     */
+    public String getSimpleName() {
+        String prefix = user + "/";
+        return repository.startsWith(prefix) ? repository.substring(prefix.length()) : repository;
+    }
+
+    /**
      * Check whether the given name validates agains the Docker rules for names
      *
      * @param image image name to validate

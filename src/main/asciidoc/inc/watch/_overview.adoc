@@ -1,0 +1,41 @@
+
+When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing `{plugin}:build` and `{plugin}:start` all the time is cumbersome. With `{plugin}:watch` you can enable automatic rebuilding of images and restarting of containers in case of updates.
+
+`{plugin}:watch` is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:
+
+* `build` : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in `assembly.xml` but also for arbitrary dependencies.
+
+.Example
+[source, sh, subs="+attributes"]
+----
+$ mvn package {plugin}:build {plugin}:watch -Ddocker.watchMode=build
+----
+
+This mode works only when there is a `<build>` section in an image configuration. Otherwise no automatically build will be triggered for an image with only a `<run>` section. Note that you need the `package` phase to be executed before otherwise any artifact created by this build can not be included into the assembly. As described in the section about `{plugin}:start` this is a Maven limitation.
+* `run` : Automatically restart container when their associated images changes. This is useful if you pull a new version of an image externally or especially in combination with the `build` mode to restart containers when their image has been automatically rebuilt. This mode works reliably only when used together with `{plugin}:start`.
+
+.Example
+[source, sh, subs="+attributes"]
+----
+$ mvn {plugin}:start {plugin}:watch -Ddocker.watchMode=run
+----
+
+* `both` : Enables both `build` and `run`. This is the default.
+* `none` : Image is completely ignored for watching.
+* `copy` : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deply, too so that it makes sense. Most application servers like Tomcat supports this.
+
+The mode can also be `both` or `none` to select both or none of these variants, respectively. The default is `both`.
+
+`{plugin}:watch` will run forever until it is interrupted with `CTRL-C` after which it will stop all containers. Depending on the configuration parameters `keepContainer` and `removeVolumes` the stopped containers with their volumes will be removed, too.
+
+When an image is removed while watching it, error messages will be printed out periodically.  So don't do that ;-)
+
+Dynamically assigned ports stay stable in that they won't change after a container has been stopped and a new container is created and started. The new container will try to allocate the same ports as the previous container.
+
+If containers are linked together network or volume wise, and you update a container which other containers dependent on, the dependant containers are not restarted for now. E.g. when you have a "service" container accessing a "db" container and the "db" container is updated, then you "service" container will fail until it is restarted, too.
+
+****
+A future version of this plugin will take care of restarting
+these containers, too (in the right order), but for now you would have
+to do this manually.
+****

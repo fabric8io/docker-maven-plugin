@@ -22,13 +22,13 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.15-SNAPSHOT</version>
+    <version>0.16-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.15-SNAPSHOT</version>
+  <version>0.16-SNAPSHOT</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
@@ -134,6 +134,13 @@
                   <enabled>true</enabled>
                   <color>red</color>
                 </log>
+                <ulimits>
+                  <ulimit>
+                    <name>memlock</name>
+                    <hard>2048</hard>
+                    <soft>1024</soft>
+                  </ulimit>
+                </ulimits>
               </run>
               <watch>
                 <mode>none</mode>
@@ -142,11 +149,10 @@
             <image>
               <alias>data</alias>
               <!-- Artifact Image-->
-              <name>fabric8/${project.artifactId}:%t</name>
+              <name>fabric8/${project.artifactId}:latest</name>
               <build>
                 <tags>
                   <tag>${project.version}</tag>
-                  <tag>latest</tag>
                 </tags>
                 <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
                    container which will be made available to the specified container. The startup script in the

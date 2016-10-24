@@ -2,9 +2,7 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -41,6 +39,9 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Component
     private MavenReaderFilter mavenFilterReader;
 
+    @Parameter
+    private Map<String, String> buildArgs;
+
     @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
@@ -49,9 +50,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
-
-    @Parameter(property = "docker.build.args", defaultValue = "")
-    private String buildArgs;
 
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
@@ -71,17 +69,25 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     private Map<String, String> addBuildArgs() {
         Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(project.getProperties());
         Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
-        return ImmutableMap.<String, String>builder().putAll(buildArgsFromProject).putAll(buildArgsFromSystem).build();
+        return ImmutableMap.<String, String>builder()
+            .putAll(buildArgs != null ? buildArgs : Collections.<String, String>emptyMap())
+            .putAll(buildArgsFromProject)
+            .putAll(buildArgsFromSystem)
+            .build();
     }
 
     private Map<String, String> addBuildArgsFromProperties(Properties properties) {
-        String argPrefix  = "docker.buildArg.";
+        String argPrefix = "docker.buildArg.";
         Map<String, String> buildArgs = new HashMap<>();
-        for(Object keyObj : properties.keySet()){
-            String key = (String)keyObj;
-            if (key.startsWith(argPrefix)){
+        for (Object keyObj : properties.keySet()) {
+            String key = (String) keyObj;
+            if (key.startsWith(argPrefix)) {
                 String argKey = key.replaceFirst(argPrefix, "");
-                buildArgs.put(argKey, properties.getProperty(key));
+                String value = properties.getProperty(key);
+
+                if (!isEmpty(value)) {
+                    buildArgs.put(argKey, value);
+                }
             }
         }
         log.debug("Build args set %s", buildArgs);
@@ -98,7 +104,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         } else {
             fromImage = extractBaseFromConfiguration(buildConfig);
         }
-        if (fromImage != null) {
+        if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
             String pullRegistry =
                 EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), this.pullRegistry, registry);
             checkImageWithAutoPull(hub, fromImage, pullRegistry, true);
@@ -140,4 +146,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         }
     }
 
+    private boolean isEmpty(String str) {
+        return str == null || str.isEmpty();
+    }
 }

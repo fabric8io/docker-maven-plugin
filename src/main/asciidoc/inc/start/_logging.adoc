@@ -1,0 +1,64 @@
+
+When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:
+
+.Logging configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+| *enabled*
+| If set to `false` log output is disabled. This is useful if you want to disable log output by default but want to use the other configuration options when log output is switched on on the command line with `-Ddocker.showLogs`. Logging is enabled by default if a `<log>` section is given.
+
+| *prefix*
+| Prefix to use for the log output in order to identify the container. By default the image `alias` is used or alternatively the container `id`.
+
+| *date*
+a| Dateformat to use for log timestamps. If `<date>` is not given no timestamp will be shown. The date specification can be either a constant or a date format. The recognized constants are:
+
+* `NONE` Switch off timestamp output. Useful on the command line
+(`-Ddocker.logDate=NONE`) for switching off otherwise enabled
+logging.
+* `DEFAULT` A default format in the form `HH:mm:ss.SSS`
+* `MEDIUM` Joda medium date time format
+* `SHORT` Joda short date time format
+* `LONG` Joda long date time format
+* `ISO8601` Full ISO-8601 formatted date time with milli seconds
+
+As an alternative a date-time format string as recognized by
+http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[JodaTime] is possible. In order to set a consistent date format the global configuration parameter `logDate` can be used.
+
+| *color*
+| Color used for coloring the prefix when coloring is enabeld (i.e. if running in a console and `useColor` is set). The available colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If coloring is enabled and now color is provided a color is picked for you.
+
+| *file*
+| Path to a file to which the log output is written. This file is overwritten for every run and colors are switched off.
+
+| *driver*
+| Section which can specify a dedicated log driver to use. A `<name>` tag within this section depicts the logging driver with the options specified in `<opts>`. See the example below for how to use this.
+|===
+
+.Example
+[source,xml]
+----
+<log>
+  <prefix>TC</prefix>
+  <date>default</date>
+  <color>cyan</color>
+</log>
+----
+
+The following example switches on the `gelf` https://docs.docker.com/engine/admin/logging/overview[logging driver] .
+This is equivalent to the options `--log-driver=gelf --log-opt gelf-address=udp://localhost:12201` when using `docker run`.
+
+[source,xml]
+----
+<log>
+  ...
+  <driver>
+    <name>gelf</name>
+    <opts>
+      <gelf-address>udp://localhost:12201</gelf-address>
+    </opts>
+  </driver>
+</log>
+----

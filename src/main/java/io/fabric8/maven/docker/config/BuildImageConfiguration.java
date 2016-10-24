@@ -36,6 +36,12 @@ public class BuildImageConfiguration {
      */
     private String from;
 
+    // Extended version for <from>
+    /**
+     * @parameter
+     */
+    private Map<String, String> fromExt;
+
     /**
      * @parameter
      */
@@ -81,7 +87,7 @@ public class BuildImageConfiguration {
      * @parameter
      */
     private List<String> tags;
-    
+
     /**
      * @parameter
      */
@@ -121,6 +127,9 @@ public class BuildImageConfiguration {
     /** @parameter */
     private String user;
 
+    /** @parameter */
+    private HealthCheckConfiguration healthCheck;
+
     /**
      * @parameter
      */
@@ -151,7 +160,14 @@ public class BuildImageConfiguration {
     }
 
     public String getFrom() {
+        if (from == null && getFromExt() != null) {
+            return getFromExt().get("name");
+        }
         return from;
+    }
+
+    public Map<String, String> getFromExt() {
+        return fromExt;
     }
 
     public String getRegistry() {
@@ -198,7 +214,7 @@ public class BuildImageConfiguration {
     public String getCommand() {
         return command;
     }
-    
+
     public CleanupMode cleanupMode() {
         return CleanupMode.parse(cleanup);
     }
@@ -231,6 +247,10 @@ public class BuildImageConfiguration {
       return user;
     }
 
+    public HealthCheckConfiguration getHealthCheck() {
+        return healthCheck;
+    }
+
     public Map<String, String> getArgs() {
         return args;
     }
@@ -257,6 +277,11 @@ public class BuildImageConfiguration {
             return this;
         }
 
+        public Builder fromExt(Map<String, String> fromExt) {
+            config.fromExt = fromExt;
+            return this;
+        }
+
         public Builder registry(String registry) {
             config.registry = registry;
             return this;
@@ -276,7 +301,7 @@ public class BuildImageConfiguration {
             config.assembly = assembly;
             return this;
         }
-        
+
         public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;
@@ -290,12 +315,12 @@ public class BuildImageConfiguration {
             	config.runCmds = theCmds;
             return this;
         }
-        
+
         public Builder volumes(List<String> volumes) {
             config.volumes = volumes;
             return this;
         }
-        
+
         public Builder tags(List<String> tags) {
             config.tags = tags;
             return this;
@@ -322,8 +347,8 @@ public class BuildImageConfiguration {
             }
             return this;
         }
-        
-        public Builder cleanup(String cleanup) { 
+
+        public Builder cleanup(String cleanup) {
             config.cleanup = cleanup;
             return this;
         }
@@ -363,6 +388,11 @@ public class BuildImageConfiguration {
             return this;
         }
 
+        public Builder healthCheck(HealthCheckConfiguration healthCheck) {
+            config.healthCheck = healthCheck;
+            return this;
+        }
+
         public Builder skip(String skip) {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);
@@ -382,6 +412,9 @@ public class BuildImageConfiguration {
         if (cmd != null) {
             cmd.validate();
         }
+        if (healthCheck != null) {
+            healthCheck.validate();
+        }
 
         if (command != null) {
             log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
@@ -399,7 +432,10 @@ public class BuildImageConfiguration {
 
         initDockerFileFile(log);
 
-        if (args != null) {
+        if (healthCheck != null) {
+            // HEALTHCHECK support added later
+            return "1.24";
+        } else if (args != null) {
             // ARG support came in later
             return "1.21";
         } else {

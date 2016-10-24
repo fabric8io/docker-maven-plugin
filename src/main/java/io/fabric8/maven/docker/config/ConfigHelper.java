@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.config;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.shared.utils.StringUtils;
 
 /**
  * Utility class which helps in resolving, customizing, initializing and validating
@@ -41,13 +42,23 @@ public class ConfigHelper {
      * @param imageCustomizer final customization hook for mangling the configuration
      * @return a list of resolved and customized image configuration.
      */
-    public static List<ImageConfiguration> resolveImages(List<ImageConfiguration> images,
+    public static List<ImageConfiguration> resolveImages(Logger logger,
+                                                         List<ImageConfiguration> images,
                                                          Resolver imageResolver,
                                                          String imageNameFilter,
                                                          Customizer imageCustomizer) {
         List<ImageConfiguration> ret = resolveConfiguration(imageResolver, images);
         ret = imageCustomizer.customizeConfig(ret);
-        return filterImages(imageNameFilter,ret);
+        List<ImageConfiguration> filtered =  filterImages(imageNameFilter,ret);
+        if (ret.size() > 0 && filtered.size() == 0 && imageNameFilter != null) {
+            List<String> imageNames = new ArrayList<>();
+            for (ImageConfiguration image : ret) {
+                imageNames.add(image.getName());
+            }
+            logger.warn("None of the resolved images [%s] match the docker.image filter '%s",
+                        StringUtils.join(imageNames.iterator(), ","), imageNameFilter);
+        }
+        return filtered;
     }
 
     /**

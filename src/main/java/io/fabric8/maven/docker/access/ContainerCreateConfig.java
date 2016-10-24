@@ -111,6 +111,10 @@ public class ContainerCreateConfig {
         return add("HostConfig", startConfig.toJsonObject());
     }
 
+    public ContainerCreateConfig networkingConfig(ContainerNetworkingConfig networkingConfig) {
+        return add("NetworkingConfig", networkingConfig.toJsonObject());
+    }
+
     /**
      * Get JSON which is used for <em>creating</em> a container
      *

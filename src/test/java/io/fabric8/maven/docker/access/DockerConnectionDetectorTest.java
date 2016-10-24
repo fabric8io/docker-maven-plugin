@@ -3,54 +3,72 @@ package io.fabric8.maven.docker.access;
 import java.io.File;
 import java.io.IOException;
 
-import io.fabric8.maven.docker.access.DockerConnectionDetector;
-import io.fabric8.maven.docker.util.AnsiLogger;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class DockerConnectionDetectorTest {
 
-    AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
-    DockerConnectionDetector machine = new DockerConnectionDetector(logger, null);
+    DockerConnectionDetector detector = new DockerConnectionDetector(null);
 
     @Test
     public void testGetUrlFromHostConfig() throws MojoExecutionException, IOException {
-        Assert.assertEquals("hostconfig", machine.extractUrl("hostconfig"));
+        DockerConnectionDetector.ConnectionParameter param = detector.detectConnectionParameter("hostconfig", "certpath");
+        assertEquals("hostconfig", param.getUrl());
+        assertEquals("certpath", param.getCertPath());
     }
 
     @Test
     public void testGetUrlFromEnvironment() throws MojoExecutionException, IOException {
         String dockerHost = System.getenv("DOCKER_HOST");
         if (dockerHost != null) {
-            Assert.assertEquals(dockerHost, machine.extractUrl(null));
+            assertEquals(dockerHost.replaceFirst("^tcp:/",""), detector.detectConnectionParameter(null, null).getUrl().replaceFirst("^https?:/", ""));
+        } else if (System.getProperty("os.name").equalsIgnoreCase("Windows 10")) {
+        	try {
+                assertEquals("npipe:////./pipe/docker_engine", detector.detectConnectionParameter(null, null).getUrl());
+            } catch (IllegalArgumentException expectedIfNoUnixSocket) {
+            }
         } else {
             try {
-                Assert.assertEquals("unix:///var/run/docker.sock", machine.extractUrl(null));
+                assertEquals("unix:///var/run/docker.sock", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
             }
         }
     }
 
     @Test
-    public void testGetCertPathFromCertConfig() throws MojoExecutionException, IOException {
-        Assert.assertEquals("certconfig", machine.getCertPath("certconfig"));
+    public void testOrderDefaultDockerHostProviders() {
+        Class[] expectedProviders = new Class[] {
+            DockerConnectionDetector.EnvDockerHostProvider.class,
+            DockerConnectionDetector.UnixSocketDockerHostProvider.class,
+            DockerConnectionDetector.WindowsPipeDockerHostProvider.class
+        };
+
+        int i = 0;
+        for (DockerConnectionDetector.DockerHostProvider provider : detector.dockerHostProviders) {
+            assertEquals(expectedProviders[i++], provider.getClass());
+        }
     }
 
     @Test
     public void testGetCertPathFromEnvironment() throws MojoExecutionException, IOException {
-        String certPath = System.getenv("DOCKER_CERT_PATH");
-        if (certPath != null) {
-            Assert.assertEquals(certPath, machine.getCertPath(null));
-        } else {
-            String maybeUserDocker = machine.getCertPath(null);
-            if (maybeUserDocker != null) {
-                Assert.assertEquals(new File(System.getProperty("user.home"), ".docker").getAbsolutePath(),
-                        maybeUserDocker);
+        try {
+            DockerConnectionDetector.ConnectionParameter param = detector.detectConnectionParameter(null, null);
+            String certPath = System.getenv("DOCKER_CERT_PATH");
+            if (certPath != null) {
+                assertEquals(certPath, param.getCertPath());
+            } else {
+                String maybeUserDocker = param.getCertPath();
+                if (maybeUserDocker != null) {
+                    assertEquals(new File(System.getProperty("user.home"), ".docker").getAbsolutePath(),
+                                 maybeUserDocker);
+                }
             }
+        } catch (IllegalArgumentException exp) {
+            // Can happen if there is now docker connection configured in the environment
         }
     }
 
-    // any further testing requires a 'docker-machine' on the build host
+    // any further testing requires a 'docker-machine' on the build host ...
 }

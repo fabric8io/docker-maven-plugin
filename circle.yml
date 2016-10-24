@@ -21,7 +21,7 @@ deployment:
     branch: master
     owner: fabric8io
     commands:
-      - git config --global user.email "circleci@mail.com"
+      - git config --global user.email "circleci@fabric8.io"
       - git config --global user.name "CircleCI"
-      - ./doc/guide/ci-docs.sh
+      - ./doc/ci-docs.sh
 

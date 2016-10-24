@@ -3,20 +3,27 @@ package io.fabric8.maven.docker.util;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
 
 
 /**
@@ -47,6 +54,23 @@ public class WaitUtil {
 
 
     private WaitUtil() {}
+
+    public static long wait(int wait, Callable<Void> callable) throws ExecutionException, WaitTimeoutException {
+        long now = System.currentTimeMillis();
+        if (wait > 0) {
+            try {
+                FutureTask<Void> task = new FutureTask<>(callable);
+                task.run();
+
+                task.get(wait, TimeUnit.SECONDS);
+            } catch (@SuppressWarnings("unused") InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (@SuppressWarnings("unused") TimeoutException e) {
+                throw new WaitTimeoutException("timed out waiting for execution to complete", delta(now));
+            }
+        }
+        return delta(now);
+    }
 
     public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
         return wait(maxWait, Arrays.asList(checkers));
@@ -89,6 +113,7 @@ public class WaitUtil {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
             // ...
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -107,6 +132,7 @@ public class WaitUtil {
         private int statusMin, statusMax;
         private String url;
         private String method;
+        private boolean allowAllHosts;
 
         /**
          * Ping the given URL
@@ -141,6 +167,11 @@ public class WaitUtil {
             this(waitUrl, null, null);
         }
 
+        public HttpPingChecker(String url, String method, String status, boolean allowAllHosts) {
+            this(url, method, status);
+            this.allowAllHosts = allowAllHosts;
+        }
+
         @Override
         public boolean check() {
             try {
@@ -158,10 +189,28 @@ public class WaitUtil {
                             .setConnectionRequestTimeout(HTTP_PING_TIMEOUT)
                             .setRedirectsEnabled(false)
                             .build();
-            CloseableHttpClient httpClient = HttpClientBuilder.create()
-                    .setDefaultRequestConfig(requestConfig)
-                    .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))
-                    .build();
+
+            CloseableHttpClient httpClient = null;
+            if (allowAllHosts) {
+                SSLContextBuilder builder = new SSLContextBuilder();
+                try {
+                    builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+                    SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
+                    httpClient = HttpClientBuilder.create()
+                            .setDefaultRequestConfig(requestConfig)
+                            .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))
+                            .setSSLSocketFactory(socketFactory)
+                            .build();
+                } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+                    throw new RuntimeException("Unable to set self signed strategy on http wait", e);
+                }
+            } else {
+                httpClient = HttpClientBuilder.create()
+                        .setDefaultRequestConfig(requestConfig)
+                        .setRetryHandler(new DefaultHttpRequestRetryHandler(HTTP_CLIENT_RETRIES, false))
+                        .build();
+            }
+
             try {
                 CloseableHttpResponse response = httpClient.execute(RequestBuilder.create(method.toUpperCase()).setUri(url).build());
                 try {

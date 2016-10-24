@@ -1,0 +1,7 @@
+
+[[docker:watch]]
+== *docker:watch*
+
+include::watch/_overview.adoc[]
+
+include::watch/_configuration.adoc[]

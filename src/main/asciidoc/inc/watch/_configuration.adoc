@@ -1,0 +1,111 @@
+
+
+This maven goal can be configured with the following top-level parameters:
+
+.Watch configuration
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *watchMode*
+a| Watch mode specifies what should be watched
+
+* `build` : Watch changes in the assembly and rebuild the image in
+case
+* `run` : Watch a container's image whether it changes and restart
+the container in case
+* `copy` : Changed files are copied into the container. The container can be either running or might be already exited (when used as a _data container_ linked into a _platform container_). Requires Docker >= 1.8.
+* `both` : `build` and `run` combined
+* `none` : Neither watching for builds nor images. This is useful if
+you use prefactored images which won't be changed and hence don't
+need any watching. `none` is best used on an per image level, see
+below how this can be specified.
+| `docker.watchMode`
+
+| *watchInterval*
+| Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.
+| `docker.watchInterval`
+
+| *watchPostGoal*
+| A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by `<postGoal>` in a `<watch>` configuration.
+|
+
+| *watchPostExec*
+| A command which is executed within the container after files are copied into this container when `watchMode` is `copy`. Note that this container must be running.
+|
+
+| *keepRunning*
+| If set to `true` all container will be kept running after `{plugin}:watch` has been stopped. By default this is set to `false`.
+| `docker.keepRunning`
+
+| *keepContainer*
+| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `true`.
+| `docker.keepContainer`
+
+| *removeVolumes*
+| if set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are `true`.
+| `docker.removeVolumes`
+|===
+
+Image specific watch configuration goes into an extra image-level `<watch>` section (i.e. `+<image><watch>...</watch></image>+`). The following parameters are recognized:
+
+.Watch configuration for a single image
+[cols="1,5"]
+|===
+| Element | Description
+
+| *mode*
+| Each image can be configured for having individual watch mode. These take precedence of the global watch mode. The mode specified in this configuration takes precedence over the globally specified mode.
+
+| *interval*
+| Watch interval can be specified in milliseconds on image level. If given this will override the global watch interval.
+
+| *postGoal*
+| Post Maven plugin goal after a rebuild or restart. The value here must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` (e.g. `io.fabric8:fabric8:delete-pods`)
+
+| *postExec*
+| Command to execute after files are copied into a
+running container when `mode` is `copy`.
+|===
+
+Here is an example how the watch mode can be tuned:
+
+.Example
+[source,xml]
+----
+<configuration>
+   <!-- Check every 10 seconds by default -->
+   <watchInterval>10000</watchInterval>
+   <!-- Watch for doing rebuilds and restarts -->
+   <watchMode>both</watch>
+   <images>
+      <image>
+         <!-- Service checks every 5 seconds -->
+         <alias>service</alias>
+         ....
+         <watch>
+            <interval>5000</interval>
+         </watch>
+      </image>
+      <image>
+         <!-- Database needs no watching -->
+         <alias>db<alias>
+         ....
+         <watch>
+            <mode>none</mode>
+         </watch>
+      </image>
+      ....
+   </images>
+</configuration>
+----
+
+Given this configuration
+
+.Example
+[source,sh,subs="+attributes"]
+----
+mvn package {plugin}:build {plugin}:start {plugin}:watch
+----
+
+You can build the service image, start up all containers and go into a watch loop. Again, you need the `package` phase in order that the assembly can find the artifact build by this project. This is a Maven limitation. The `db` image will never be watch since it assumed to not change while watching.

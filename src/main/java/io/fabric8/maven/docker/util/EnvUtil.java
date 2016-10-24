@@ -8,15 +8,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.io.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
+
+import com.google.common.base.Function;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import static java.util.concurrent.TimeUnit.*;
 
 /**
- * Utility class for various (loosely) environment related tasks.
+ * Utility class for various (loosely related) environment related tasks.
  *
  * @author roland
  * @since 04.04.14
@@ -31,10 +34,16 @@ public class EnvUtil {
 
     private EnvUtil() {}
 
+    // Convert docker host URL to an http URL
+    public static String convertTcpToHttpUrl(String connect) {
+        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        return connect.replaceFirst("^tcp:", protocol);
+    }
+
     /**
      * Compare to version strings and return the larger version strings. This is used in calculating
      * the minimal required API version for this plugin. Version strings must be comparable as floating numbers.
-     * (and parse via {@link Float#parseFloat(String)}.
+     * The versions must be given in the format in a semantic version foramt (e.g. "1.23"
      *
      * If either version is <code>null</code>, the other version is returned (which can be null as well)
      *
@@ -46,39 +55,79 @@ public class EnvUtil {
         if (versionB == null || versionA == null) {
             return versionA == null ? versionB : versionA;
         } else {
-            return
-                Float.parseFloat(versionA) > Float.parseFloat(versionB) ?
-                    versionA : versionB;
+            String partsA[] = versionA.split("\\.");
+            String partsB[] = versionB.split("\\.");
+            for (int i = 0; i < (partsA.length < partsB.length ? partsA.length : partsB.length); i++) {
+                int pA = Integer.parseInt(partsA[i]);
+                int pB = Integer.parseInt(partsB[i]);
+                if (pA > pB) {
+                    return versionA;
+                } else if (pB > pA) {
+                    return versionB;
+                }
+            }
+            return partsA.length > partsB.length ? versionA : versionB;
         }
     }
 
+    /**
+     * Check whether the first given API version is larger or equals the second given version
+     *
+     * @param versionA first version to check against
+     * @param versionB the second version
+     * @return true if versionA is greater or equals versionB, false otherwise
+     */
+    public static boolean greaterOrEqualsVersion(String versionA, String versionB) {
+        String largerVersion = extractLargerVersion(versionA, versionB);
+        return largerVersion != null && largerVersion.equals(versionA);
+    }
+
+    private static final Function<String, String[]> SPLIT_ON_LAST_COLON = new Function<String, String[]>() {
+        @Override
+        public String[] apply(String element) {
+          int colon = element.lastIndexOf(':');
+          if (colon < 0) {
+              return new String[] {element, element};
+          } else {
+              return new String[] {element.substring(0, colon), element.substring(colon + 1)};
+          }
+        }
+    };
 
     /**
      * Splits every element in the given list on the last colon in the name and returns a list with
-     * two elements: The left part before the colon and the right part after the colon. If the string doesnt contain
-     * a colon, the value is used for both elements in the returned arrays.
+     * two elements: The left part before the colon and the right part after the colon. If the string
+     * doesn't contain a colon, the value is used for both elements in the returned arrays.
      *
      * @param listToSplit list of strings to split
      * @return return list of 2-element arrays or an empty list if the given list is empty or null
      */
     public static List<String[]> splitOnLastColon(List<String> listToSplit) {
         if (listToSplit != null) {
-            List<String[]> ret = new ArrayList<>();
-
-            for (String element : listToSplit) {
-                String[] p = element.split(":");
-                String rightValue = p[p.length - 1];
-                String[] nameParts = Arrays.copyOfRange(p, 0, p.length - 1);
-                String leftValue = StringUtils.join(nameParts, ":");
-                if (leftValue.length() == 0) {
-                    leftValue = rightValue;
-                }
-                ret.add(new String[]{leftValue, rightValue});
-            }
-
-            return ret;
+          return Lists.transform(listToSplit, SPLIT_ON_LAST_COLON);
         }
         return Collections.emptyList();
+    }
+
+    private static final Function<String, Iterable<String>> COMMA_SPLITTER = new Function<String, Iterable<String>>() {
+        private Splitter COMMA_SPLIT = Splitter.on(",").trimResults().omitEmptyStrings();
+
+        @Override
+        public Iterable<String> apply(String input) {
+            return COMMA_SPLIT.split(input);
+        }
+    };
+
+    /**
+     * Split each element of an Iterable<String> at commas.
+     * @param input Iterable over strings.
+     * @return An Iterable over string which breaks down each input element at comma boundaries
+     */
+    public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
+        if(input==null) {
+            return Collections.emptyList();
+        }
+        return Lists.newArrayList(Iterables.concat(Iterables.transform(input, COMMA_SPLITTER)));
     }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
@@ -306,4 +355,5 @@ public class EnvUtil {
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
+
 }

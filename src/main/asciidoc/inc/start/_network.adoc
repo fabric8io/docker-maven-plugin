@@ -1,0 +1,44 @@
+
+The `<network>` element in the <<start-configuration, <run> >> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:
+
+.Network configuration
+[cols="1,7"]
+|===
+| Element | Description
+
+| *mode*
+a| The network mode, which can be one of the following values:
+
+* *bridge* : Bridged mode with the default Docker bridge (default)
+* *host* : Share the Docker host network interfaces
+* *container* : Connect to the network of the specified container. The name of the container is taken from the `<name>` element.
+* *custom* : Use a custom network which must be created before with `docker network create`. This is available for Docker 1.9 and newer. For more about the networking options please refer to the https://docs.docker.com/engine/userguide/networking/work-with-networks[Docker documentation].
+* *none* : No network will be setup.
+
+| *name*
+| For mode `container` this is the container name, which is this image alias. For Mode `custom` this is the name of the custom network.
+
+| *alias*
+| One or more alias element can be provided which gives a way for a container to be discovered by alternate names by any other container within the scope of a particular network. This configuration only has effect for when the network mode is `custom`. More than one alias can be given by providing multiple entries.
+|===
+
+If no `mode` is given but a `name`, then a `custom` network mode is assumed. For the simple modes which does not take an argument (`none`, `bridge` or `host`) a single `<net>` _mode_ `</net>` can be used as alternative to using `<network>` with a `<mode>` subelement.
+
+.Example <network>
+[source,xml]
+----
+<network>
+   <mode>custom</mode>
+   <name>my-network</name>
+   <alias>box1</alias>
+   <alias>box2</alias>
+</network>
+----
+
+or for a simple `host` network:
+
+.Example <net>
+[source, xml]
+----
+<net>host</net>
+----

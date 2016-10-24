@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.access;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,13 +22,21 @@ import io.fabric8.maven.docker.model.Network;
 public interface DockerAccess {
 
     /**
-     * Inspect a container
-     * 
-     * @param containerId container id
-     * @return <code>ContainerDetails<code> representing the container
+     * Get the API version of the running server
+     *
+     * @return api version in the form "1.24"
+     * @throws DockerAccessException if the api version could not be obtained
+     */
+    String getServerApiVersion() throws DockerAccessException;
+
+    /**
+     * Get a container
+     *
+     * @param containerIdOrName container id or name
+     * @return <code>ContainerDetails<code> representing the container or null if none could be found
      * @throws DockerAccessException if the container could not be inspected
      */
-    Container inspectContainer(String containerId) throws DockerAccessException;
+    Container getContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
      * Check whether the given name exists as image at the docker daemon
@@ -46,13 +55,14 @@ public interface DockerAccess {
     String getImageId(String name) throws DockerAccessException;
 
     /**
-     * List containers
-     * 
-     * @param limit limit of containers to list
-     * @return list of <code>Container<code> objects
-     * @throws DockerAccessException if the containers could not be listed
+     * Get all containers which are build from an image. By default only the last containers are considered but this
+     * can be tuned with a global parameters.
+     *
+     * @param image for which its container are looked up
+     * @return list of <code>Container</code> objects or an empty list if none is found
+     * @throws DockerAccessException if the request fails
      */
-    List<Container> listContainers(int limit) throws DockerAccessException;
+    List<Container> getContainersForImage(String image) throws DockerAccessException;
 
     /**
      * Starts a previously set up exec instance id.
@@ -108,7 +118,7 @@ public interface DockerAccess {
      * @param containerId container to copy into
      * @param archive local archive to copy into
      * @param targetPath target path to use
-     * @throws DockerAccessException
+     * @throws DockerAccessException if the archive could not be copied
      */
     void copyArchive(String containerId, File archive, String targetPath)
             throws DockerAccessException;
@@ -160,9 +170,10 @@ public interface DockerAccess {
      * @param image image name to push
      * @param authConfig authentication configuration
      * @param registry optional registry to which the image should be pushed.
+     * @param retries optional number of times the push should be retried on a 500 error
      * @throws DockerAccessException in case pushing fails
      */
-    void pushImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
+    void pushImage(String image, AuthConfig authConfig, String registry, int retries) throws DockerAccessException;
 
     /**
      * Create an docker image from a given archive

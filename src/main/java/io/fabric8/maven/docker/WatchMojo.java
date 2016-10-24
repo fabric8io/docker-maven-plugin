@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,8 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
@@ -54,6 +56,7 @@ import org.codehaus.plexus.util.StringUtils;
  * @since 16/06/15
  */
 @Mojo(name = "watch")
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class WatchMojo extends AbstractBuildSupportMojo {
 
     /**
@@ -103,6 +106,9 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
                 ImageWatcher watcher = new ImageWatcher(imageConfig, imageId, containerId);
                 long interval = watcher.getInterval();
+
+                WatchMode watchMode = watcher.getWatchMode(imageConfig);
+                log.info("Watching " + imageConfig.getName() + (watchMode != null ? " using " + watchMode.getDescription() : ""));
 
                 ArrayList<String> tasks = new ArrayList<>();
 
@@ -236,11 +242,11 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         };
     }
 
-    private void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException {
+    protected void restartContainer(ServiceHub hub, ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
         // Stop old one
         RunService runService = hub.getRunService();
         ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        PortMapping mappedPorts = runService.getPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
+        PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), project.getProperties());
         String id = watcher.getContainerId();
 
         String optionalPreStop = getPreStopCommand(imageConfig);
@@ -274,7 +280,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     // ===============================================================================================================
 
     // Helper class for holding state and parameter when watching images
-    private class ImageWatcher {
+    public class ImageWatcher {
 
         private final WatchMode mode;
         private final AtomicReference<String> imageIdRef, containerIdRef;

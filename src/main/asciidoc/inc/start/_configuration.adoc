@@ -1,0 +1,172 @@
+In addition to the <<global-configuration>>, this goal supports the following global configuration options.
+
+.Start options
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *showLogs*
+| In order to switch on globally the logs *showLogs* can be used as global configuration (i.e. outside of `<images>`). If set it will print out all standard
+ output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
+ This is probably most useful when used from the command line as system property `docker.showLogs`.
+| `docker.showLogs`
+
+| *startParallel*
+| Starts docker images in parallel while dependencies expressed as <<start-links,Link>> or <<start-depends-on,dependsOn>> are respected. This option can significantly reduce the startup time because independent containers do not need to wait for each other.
+| `docker.startParallel`
+
+|===
+
+The `<run>` configuration element knows the following sub elements:
+
+[[start-run-configuration]]
+.Run configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+| *capAdd*
+| List of `add` elements to specify kernel parameters to add to the container.
+
+| *capDrop*
+| List of `drop` elements to specify kernel parameters to remove from the container.
+
+| *cmd*
+| Command which should be executed at the end of the container's startup. If not given, the image's default command is used. See <<misc-startup, Startup Arguments>> for details.
+
+| *domainname*
+| Domain name for the container
+
+| *dns*
+| List of `host` elements specifying dns servers for the container to use
+
+| *dnsSearch*
+| List of `host` elements specifying dns search domains
+
+| *entrypoint*
+| Entry point for the container. See <<misc-startup, Startup Arguments] for details.
+
+| *env*
+| Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <<misc-env,Environment and Labels>>.
+
+| *envPropertyFile*
+| Path to a property file holding environment variables. If given, the variables specified in this property file overrides the environment variables specified in the configuration.
+
+| *extraHosts*
+| List of `host` elements in the form `host:ip` to add to the container's `/etc/hosts` file. Additionally, you may specify a `host` element in the form `host:host` to have the right side host ip address resolved at container startup.
+
+| *exposedPropertyKey*
+| Set the property part for the exposed container properties as described <<start-overview,above>>. This will take precedence of the image's `alias` which is the default value. For example, when this property is set to `jboss`, then for this container its IP address is exposed in Maven property `docker.container.jboss.ip` regardless how the image is named.
+
+| *hostname*
+| Hostname of the container
+
+| *labels*
+| Labels which should be attached to the  container. They are specified in the typical maven property format as described in <<misc-env,Environment and Labels>>.
+
+| *links*
+| Network links for connecting containers together as described in  <<start-links, Network Links>>.
+
+| *log*
+| Log configuration for whether and how log messages from the running containers should be printed. This also can configure the https://docs.docker.com/engine/admin/logging/overview[log driver] to use. See <<start-logging,Logging>> for a detailed description.
+
+| *memory*
+| Memory limit in bytes
+
+| *memorySwap*
+| Total memory usage (memory + swap); use -1 to disable swap.
+
+| *namingStrategy*
+a| Naming strategy for how the container name is created:
+
+* *none* : uses randomly assigned names from docker (default)
+* *alias* : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists with this name.
+
+| *network*
+| <<network-configuration, Network configuration>> for your container.
+
+| *portPropertyFile*
+| File path into which the mapped port properties are written. The format of this file and its purpose are also described in <<start-port-mapping,Port mapping>>
+
+| *ports*
+| <<start-port-mapping,Port mappings>> for exposing container ports to host ports.
+
+| *privileged*
+| If `true` give container full access to host
+
+| *restartPolicy*
+| <<start-restart,Restart Policy>>
+
+| *securityOpts*
+| List of `<opt>` elements to specify kernel security options to add to the container. See below for an example.
+
+| *shmSize*
+| Size of `/dev/shm` in bytes.
+
+| *skip*
+| If `true` disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.
+
+| *ulimits*
+a| ulimits for the container. This list contains `<ulimit>` elements which three sub elements:
+
+* `<name>` : The ulimit to set (e.g. `memlock`). Please refer to the Docker documentation for the possible values to set
+* `<hard>` : The hard limit
+* `<soft>` : The soft limit
+
+See below for an example.
+
+| *user*
+| User used inside the container
+
+| *volumes*
+| Volume configuration for binding to host directories and from other containers. See <<start-volumes,Volumes>> for details.
+
+| *wait*
+| Condition which must be fulfilled for the startup to complete. See <<start-wait,Wait>> for all possible ways to wait for a startup condition.
+
+| *workingDir*
+| Working directory for commands to run in
+|===
+
+.Example
+[source,xml]
+----
+<run>
+  <env>
+    <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
+    <JOLOKIA_OFF/>
+  </env>
+  <labels>
+    <environment>development</environment>
+    <version>${project.version}</version>
+  </labels>
+  <ports>
+    <port>jolokia.port:8080</port>
+  </ports>
+  <ulimits>
+    <ulimit>
+       <name>memlock</name>
+       <hard>-1</hard>
+       <soft>-1</soft>
+    </ulimit>
+  <ulimits>
+  <securityOpts>
+    <opt>seccomp=unconfined</opt>
+  </securityOpts>
+  <links>
+    <link>db</db>
+  </links>
+  <wait>
+    <http>
+      <url>http://localhost:${jolokia.port}/jolokia</url>
+    </http>
+    <time>10000</time>
+  </wait>
+  <log>
+    <prefix>DEMO</prefix>
+    <date>ISO8601</date>
+    <color>blue</color>
+  </log>
+  <cmd>java -jar /maven/docker-demo.jar</cmd>
+</run>
+----

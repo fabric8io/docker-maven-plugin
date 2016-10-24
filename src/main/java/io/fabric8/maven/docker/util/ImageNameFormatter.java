@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.util;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,7 +122,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
         private DefaultUserLookup(MavenProject project) {
             super(project);
         }
-        
+
         public String lookup() {
             String user = getProperty(DOCKER_IMAGE_USER);
             if (user != null) {
@@ -138,22 +138,12 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
     }
 
     private static class DefaultNameLookup extends AbstractLookup {
-        /**
-         * Property to lookup for image name which overwrites the calculated default (artifact)
-         * Used with format modifier %a
-         */
-        private static final String DOCKER_IMAGE_NAME = "docker.image.name";
-
 
         private DefaultNameLookup(MavenProject project) {
             super(project);
         }
 
         public String lookup() {
-            String tag = getProperty(DOCKER_IMAGE_NAME);
-            if (!Strings.isNullOrEmpty(tag)) {
-                return tag;
-            }
             return sanitizeName(project.getArtifactId());
         }
     }

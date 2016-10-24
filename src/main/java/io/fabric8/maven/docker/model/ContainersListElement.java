@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ContainersListElement implements Container {
-        
+
     static final String CREATED = "Created";
     static final String ID = "Id";
     static final String IMAGE = "Image";
@@ -49,7 +49,7 @@ public class ContainersListElement implements Container {
        if (json.isNull(LABELS)) {
            return Collections.emptyMap();
        }
-        
+
         return mapLabels(json.getJSONObject(LABELS));
     }
 
@@ -89,6 +89,12 @@ public class ContainersListElement implements Container {
     }
 
     @Override
+    public Map<String, String> getCustomNetworkIpAddresses() {
+        // IP address is not provided by container list action.
+        return null;
+    }
+
+    @Override
     public boolean isRunning() {
         String status = json.getString(STATUS);
         return status.toLowerCase().contains(UP);
@@ -111,16 +117,16 @@ public class ContainersListElement implements Container {
     private Map<String, String> mapLabels(JSONObject labels) {
         int length = labels.length();
         Map<String, String> mapped = new HashMap<>(length);
-        
+
         Iterator<String> iterator = labels.keys();
         while (iterator.hasNext()) {
             String key = iterator.next();
             mapped.put(key, labels.get(key).toString());
         }
-                
+
         return mapped;
     }
-    
+
     private Map<String, PortBinding> mapPortBindings(JSONArray ports) {
         int length = ports.length();
         Map<String, PortBinding> portBindings = new HashMap<>(length);

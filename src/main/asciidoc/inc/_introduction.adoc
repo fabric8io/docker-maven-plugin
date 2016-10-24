@@ -1,0 +1,112 @@
+
+= Introduction
+
+This is a Maven plugin for managing Docker images and containers. It focuses on two major aspects for a Docker build integration:
+
+== Building Images
+
+One purpose of this plugin is to create Docker images holding the actual application. This is done with the <<{plugin}:build>> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (`/maven` by default). Images that are built with this plugin can be pushed to public or private Docker registries with <<{plugin}:push>>.
+
+== Running Containers
+
+With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties to your integration test code.
+
+Multiple containers can be managed at once, which can be linked together or share data via volumes. Containers are created and started with the <<{plugin}:start>> goal and stopped and destroyed with the <<{plugin}:stop>> goal. For integration tests both goals are typically bound to the the pre-integration-test and post-integration-test phase, respectively. It is recommended to use the maven-failsafe-plugin for integration testing in order to stop the docker container even when the tests fail.
+
+For proper isolation, container exposed ports can be dynamically and flexibly mapped to local host ports. It is easy to specify a Maven property which will be filled in with a dynamically assigned port after a container has been started. This can then be used as parameter for integration tests to connect to the application.
+
+== Configuration
+
+The plugin configuration contains a global part and a list of image-specific configuration within a `<images>` list, where each image is defined within a `<image>` tag. See <<example,below>> for an example.
+
+The <<global-configuration,global part>> contains configuration applicable to all images like the Docker URL or the path to the SSL certificates for communication with the Docker Host.
+
+Then, each specific image configuration has three parts:
+
+* A general image part containing the image name and alias.
+* A <<{plugin}:build,<build> >> configuration specifying how images are built
+* A <<{plugin}:start,<run> >> configuration describing how containers should be created and started.
+
+The `<build>` and `<run>` parts are optional and can be omitted.
+
+[[example]]
+== Example
+
+In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <<{plugin}:start,<run> >> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <<{plugin}:build,<build> >> section. It creates an image which has artifacts and dependencies in the `/maven` directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the `<run>` section this port is mapped to a dynamically chosen port, and then assigned to the Maven property `${tomcat.port}`. This property could be used, for example, by an integration test to access this microservice. An important part is the `<links>` section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with `DB_`).
+
+Images can be specified in any order and the plugin will take care of the proper startup order (and will bail out if it detects circular dependencies).
+
+[source,xml,indent=0,subs="verbatim,quotes"]
+.Example plugin configuration
+----
+<configuration>
+  <images>
+    <image>
+      <alias>service</alias> <!--1-->
+      <name>fabric8/docker-demo:${project.version}</name>
+
+      <build> <!--2-->
+         <from>java:8</from> <!--3-->
+         <assembly>
+           <descriptor>docker-assembly.xml</descriptor> <!--4-->
+         </assembly>
+         <cmd> <!--5-->
+            <shell>java -jar /maven/service.jar</shell>
+         </cmd>
+      </build>
+
+      <run> <!--6-->
+         <ports> <!--7-->
+           <port>tomcat.port:8080</port>
+         </ports>
+         <wait> <!--8-->
+           <http>
+              <url>http://localhost:${tomcat.port}/access</url>
+           </http>
+           <time>10000</time>
+         </wait>
+         <links> <!--9-->
+           <link>database:db</link>
+         </links>
+       </run>
+    </image>
+
+    <image>
+      <alias>database</alias> <!--10-->
+      <name>postgres:9</name>
+      <run>
+        <wait> <!--11-->
+          <log>database system is ready to accept connections</log>
+          <time>20000</time>
+        </wait>
+      </run>
+    </image>
+  </images>
+</configuration>
+----
+<1> Image configuration for a Java service with alias "service" and name `fabric8/docker-demo:${project.version}`
+<2> <<{plugin}:build,build configuration>> defines how a Docker image should be created
+<3> Base image, in this case `java:8`
+<4> Content of the image can be specified with an <<build-assembly,assembly descriptor>>
+<5> <<misc-startup,Default command>> to run when a container is created.
+<6> <<{plugin}:run,Run configuration>> defines how a container should be created from this image
+<7> <<start-port-mapping,Port mapping>> defines how container ports should be mapped to host ports
+<8> <<start-wait,Wait>> section which is a readiness check when starting the service
+<9> <<start-links,Network link>> describes how this service's container is linked to the database container
+<10> Second image is a plain database image which is only needed for running (hence there is no `<build>` section). The alias is used in the network link section above
+<11> Wait until the corresponding output appears on stdout when starting the Docker container.
+
+== Features
+
+Some other highlights, in random order:
+
+* Auto pulling of images with a progress indicator
+* Waiting for a container to startup based on time, the reachability of an URL, or a pattern in the log output
+* Support for SSL <<authentication>> and OpenShift credentials
+* Docker machine support
+* Flexible registry handling (i.e. registries can be specified as meta data)
+* Specification of <<password-encryption,encrypted>> registry passwords for push and pull in ~/.m2/settings.xml (i.e., outside the pom.xml)
+* Color output
+* <<{plugin}:watch,Watching>> on project changes and automatic recreation of image
+* <<property-configuration,Properties>> as alternative to the XML configuration
+* Support for Docker daemons accepting http or https request via TCP and for Unix sockets

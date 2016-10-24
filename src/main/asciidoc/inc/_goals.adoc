@@ -1,0 +1,45 @@
+= Maven Goals
+
+This plugin supports the following goals which are explained in detail
+in the next sections.
+
+.Plugin Goals
+[cols="1,3"]
+|===
+|Goal | Description
+
+|**<<{plugin}:build>>**
+|Build images
+
+|**<<{plugin}:start>>** or **<<{plugin}:start,{plugin}:run>>**
+|Create and start containers
+
+|**<<{plugin}:stop>>**
+|Stop and destroy containers
+
+|**<<{plugin}:push>>**
+|Push images to a registry
+
+|**<<{plugin}:watch>>**
+|Watch for doing rebuilds and restarts
+
+|**<<{plugin}:remove>>**
+|Remove images from local docker host
+
+|**<<{plugin}:logs>>**
+|Show container logs
+
+|**<<{plugin}:source>>**
+|Attach docker build archive to Maven project
+|===
+
+Note that all goals are orthogonal to each other. For example in order
+to start a container for your application you typically have to build
+its image before. `{plugin}:start` does *not* imply building the image
+so you should use it then in combination with `{plugin}:build`.
+
+All goals fork the lifecycle phase to call the lifecycle up to the *initialize* phase. This means you can bind other plugins to the phases *initialize* or *validate* for customization. By default no action is bound to these phases. See https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html[Introduction to the Build Lifecycle] for more details about phases and lifecycles.
+
+****
+Note however that when you bind the goals about to lifecycle phases this will result in the *initialize* and *validate* phase called twice. Your bound plugins should be able to handle this.
+****

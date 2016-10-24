@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config.handler.property;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,12 +40,12 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         configHandler = new PropertyConfigHandler();
         imageConfiguration = buildAnUnresolvedImage();
     }
-    
+
     @Test
     public void testSkipBuild() {
         assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, false)).getBuildConfiguration().skip());
         assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, true)).getBuildConfiguration().skip());
-        
+
         assertFalse(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image"}).getBuildConfiguration().skip());
     }
 
@@ -53,10 +53,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testSkipRun() {
         assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, false)).getRunConfiguration().skip());
         assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, true)).getRunConfiguration().skip());
-        
+
         assertFalse(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image"}).getRunConfiguration().skip());
-    }    
-    
+    }
+
     @Test
     public void testType() throws Exception {
         assertNotNull(configHandler.getType());
@@ -132,15 +132,15 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     @Test
     public void testNamingScheme() throws Exception  {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NAMING_STRATEGY), RunImageConfiguration.NamingStrategy.alias.toString() };
-        
+
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(RunImageConfiguration.NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());
     }
-    
+
     @Test
     public void testNoCleanup() throws Exception {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CLEANUP), "none" };
-        
+
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(CleanupMode.NONE, config.getBuildConfiguration().cleanupMode());
     }
@@ -186,7 +186,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         //AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
         //assertNull(config);
     }
-    
+
     @Test
     public void testResolve() {
         ImageConfiguration resolved = resolveExternalImageConfig(getTestData());
@@ -226,7 +226,13 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private ImageConfiguration resolveExternalImageConfig(String[] testData) {
-        List<ImageConfiguration> resolvedImageConfigs = resolveImage(imageConfiguration, props(testData));
+        Map<String, String> external = new HashMap<>();
+        external.put("type", "props");
+
+        ImageConfiguration config = new ImageConfiguration.Builder().name("image").alias("alias").externalConfig(external).build();
+        PropertyConfigHandler handler = new PropertyConfigHandler();
+
+        List<ImageConfiguration> resolvedImageConfigs = resolveImage(config, props(testData));
         assertEquals(1, resolvedImageConfigs.size());
 
         return resolvedImageConfigs.get(0);
@@ -236,6 +242,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(CleanupMode.TRY_TO_REMOVE, buildConfig.cleanupMode());
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
+        assertEquals("image-ext", buildConfig.getFromExt().get("name"));
         assertEquals(a("8080"), buildConfig.getPorts());
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
@@ -270,9 +277,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
+        assertEquals(a("seccomp=unconfined"), runConfig.getSecurityOpts());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
-        assertEquals("host",runConfig.getNetworkingMode().getStandardMode(null));
+        assertEquals("host",runConfig.getNetworkingConfig().getStandardMode(null));
         assertEquals(a("example.com"), runConfig.getDnsSearch());
         assertEquals("domain.com", runConfig.getDomainname());
         assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
@@ -289,6 +297,13 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("tomcat", runConfig.getUser());
         assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
         assertEquals("foo", runConfig.getWorkingDir());
+        assertNotNull( runConfig.getUlimits());
+        assertEquals(4, runConfig.getUlimits().size());
+        assertUlimitEquals(ulimit("memlock",10,10),runConfig.getUlimits().get(0));
+        assertUlimitEquals(ulimit("memlock",null,-1),runConfig.getUlimits().get(1));
+        assertUlimitEquals(ulimit("memlock",1024,null),runConfig.getUlimits().get(2));
+        assertUlimitEquals(ulimit("memlock",2048,null),runConfig.getUlimits().get(3));
+
 
         validateEnv(runConfig.getEnv());
 
@@ -315,6 +330,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("10", config.getDriver().getOpts().get("max-file"));
     }
 
+    private UlimitConfig ulimit(String name, Integer hard, Integer soft) {
+        return new UlimitConfig(name, hard, soft);
+    }
+    
     private Properties props(String ... args) {
         Properties ret = new Properties();
         for (int i = 0; i < args.length; i += 2) {
@@ -333,7 +352,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.NAME), "image",
             };
     }
-    
+
     private String[] getTestData() {
         return new String[] {
             k(ConfigKey.ALIAS), "alias",
@@ -342,6 +361,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.BIND) + ".2", "/tmp:/tmp",
             k(ConfigKey.CAP_ADD) + ".1", "CAP",
             k(ConfigKey.CAP_DROP) + ".1", "CAP",
+            k(ConfigKey.SECURITY_OPTS) + ".1", "seccomp=unconfined",
             k(ConfigKey.CMD), "command.sh",
             k(ConfigKey.DNS) + ".1", "8.8.8.8",
             k(ConfigKey.NET), "host",
@@ -354,6 +374,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.ENV_PROPERTY_FILE), "/tmp/envProps.txt",
             k(ConfigKey.EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
             k(ConfigKey.FROM), "image",
+            k(ConfigKey.FROM_EXT) + ".name", "image-ext",
+            k(ConfigKey.FROM_EXT) + ".kind", "kind",
             k(ConfigKey.HOSTNAME), "subdomain",
             k(ConfigKey.LINKS) + ".1", "redis",
             k(ConfigKey.MAINTAINER), "fabric8io@redhat.com",
@@ -367,6 +389,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.RESTART_POLICY_NAME), "on-failure",
             k(ConfigKey.RESTART_POLICY_RETRY), "1",
             k(ConfigKey.USER), "tomcat",
+            k(ConfigKey.ULIMITS)+".1", "memlock=10:10",
+            k(ConfigKey.ULIMITS)+".2", "memlock=:-1",
+            k(ConfigKey.ULIMITS)+".3", "memlock=1024:",
+            k(ConfigKey.ULIMITS)+".4", "memlock=2048",
             k(ConfigKey.VOLUMES) + ".1", "/foo",
             k(ConfigKey.VOLUMES_FROM) + ".1", "from",
             k(ConfigKey.PRE_STOP), "pre_stop_command",
@@ -384,12 +410,17 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.WORKING_DIR), "foo"
         };
     }
-    
+
     private String[] getSkipTestData(ConfigKey key, boolean value) {
         return new String[] {k(ConfigKey.NAME), "image", k(key), String.valueOf(value) };
     }
 
     private String k(ConfigKey from) {
         return from.asPropertyKey();
+    }
+    private void assertUlimitEquals(UlimitConfig expected, UlimitConfig actual){
+    	assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getSoft(), actual.getSoft());
+        assertEquals(expected.getHard(), actual.getHard());
     }
 }

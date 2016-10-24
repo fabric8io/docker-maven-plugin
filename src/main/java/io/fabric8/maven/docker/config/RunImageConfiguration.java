@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
+import io.fabric8.maven.docker.util.EnvUtil;
 
 /**
  * @author roland
@@ -35,6 +36,10 @@ public class RunImageConfiguration {
     // container domain name
     @Parameter
     private String domainname;
+
+    // container domain name
+    @Parameter
+    private List<String> dependsOn;
 
     // container entry point
     @Parameter
@@ -68,8 +73,12 @@ public class RunImageConfiguration {
     @Parameter
     private String portPropertyFile;
 
+    // For simple network setups. For complex stuff use "network"
     @Parameter
     private String net;
+
+    @Parameter
+    private NetworkConfig network;
 
     @Parameter
     private List<String> dns;
@@ -82,6 +91,9 @@ public class RunImageConfiguration {
 
     @Parameter
     private List<String> capDrop;
+
+    @Parameter
+    private List<String> securityOpts;
 
     @Parameter
     private Boolean privileged;
@@ -97,6 +109,12 @@ public class RunImageConfiguration {
     @Parameter
     private NamingStrategy namingStrategy;
 
+    /**
+     * Property key part used to expose the container ip when running.
+     */
+    @Parameter
+    private String exposedPropertyKey;
+
     // Mount volumes from the given image's started containers
     @Parameter
     private VolumeConfiguration volumes;
@@ -111,13 +129,16 @@ public class RunImageConfiguration {
 
     @Parameter
     private LogConfiguration log;
-    
+
     @Parameter
     private RestartPolicy restartPolicy;
 
     @Parameter
+    private List<UlimitConfig> ulimits;
+
+    @Parameter
     private boolean skip = false;
-    
+
     public RunImageConfiguration() { }
 
     public String initAndValidate() {
@@ -129,8 +150,8 @@ public class RunImageConfiguration {
         }
 
         // Custom networks are available since API 1.21 (Docker 1.9)
-        NetworkingMode mode = getNetworkingMode();
-        if (mode.isCustomNetwork()) {
+        NetworkConfig config = getNetworkingConfig();
+        if (config != null && config.isCustomNetwork()) {
             return "1.21";
         }
 
@@ -159,6 +180,10 @@ public class RunImageConfiguration {
 
     public String getDomainname() {
         return domainname;
+    }
+
+    public List<String> getDependsOn() {
+        return dependsOn;
     }
 
     public String getUser() {
@@ -209,12 +234,22 @@ public class RunImageConfiguration {
         return capDrop;
     }
 
+    public List<String> getSecurityOpts() {
+        return securityOpts;
+    }
+
     public List<String> getDns() {
         return dns;
     }
 
-    public NetworkingMode getNetworkingMode() {
-        return new NetworkingMode(net);
+    public NetworkConfig getNetworkingConfig() {
+        if (network != null) {
+            return network;
+        } else if (net != null) {
+            return new NetworkConfig(net);
+        } else {
+            return new NetworkConfig();
+        }
     }
 
     public List<String> getDnsSearch() {
@@ -224,13 +259,17 @@ public class RunImageConfiguration {
     public List<String> getExtraHosts() {
         return extraHosts;
     }
-    
+
     public VolumeConfiguration getVolumeConfiguration() {
         return volumes;
     }
 
     public List<String> getLinks() {
-        return links;
+        return EnvUtil.splitAtCommasAndTrim(links);
+    }
+
+    public List<UlimitConfig> getUlimits() {
+        return ulimits;
     }
 
     // Naming scheme for how to name container
@@ -248,7 +287,11 @@ public class RunImageConfiguration {
     public NamingStrategy getNamingStrategy() {
         return namingStrategy == null ? NamingStrategy.none : namingStrategy;
     }
-    
+
+    public String getExposedPropertyKey() {
+        return exposedPropertyKey;
+    }
+
     public Boolean getPrivileged() {
         return privileged;
     }
@@ -260,7 +303,7 @@ public class RunImageConfiguration {
     public boolean skip() {
         return skip;
     }
-    
+
     // ======================================================================================
 
     public static class Builder {
@@ -347,8 +390,23 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder securityOpts(List<String> securityOpts) {
+            config.securityOpts = securityOpts;
+            return this;
+        }
+
         public Builder net(String net) {
             config.net = net;
+            return this;
+        }
+
+        public Builder network(NetworkConfig networkConfig) {
+            config.network = networkConfig;
+            return this;
+        }
+
+        public Builder dependsOn(List<String> dependsOn) {
+            config.dependsOn = dependsOn;
             return this;
         }
 
@@ -364,6 +422,11 @@ public class RunImageConfiguration {
 
         public Builder extraHosts(List<String> extraHosts) {
             config.extraHosts = extraHosts;
+            return this;
+        }
+
+        public Builder ulimits(List<UlimitConfig> ulimits) {
+            config.ulimits = ulimits;
             return this;
         }
 
@@ -392,11 +455,15 @@ public class RunImageConfiguration {
             return this;
         }
 
-
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
                     NamingStrategy.valueOf(namingStrategy.toLowerCase());
+            return this;
+        }
+
+        public Builder exposedPropertyKey(String key) {
+            config.exposedPropertyKey = key;
             return this;
         }
 

@@ -1,0 +1,74 @@
+
+
+Using `entryPoint` and `cmd` it is possible to specify the https://docs.docker.com/reference/builder/#entrypoint[entry point]
+or https://docs.docker.com/reference/builder/#cmd[cmd] for a container.
+
+The difference is, that an `entrypoint` is the command that always be executed, with the `cmd` as argument. If no `entryPoint` is provided, it defaults to `/bin/sh -c` so any `cmd` given is executed with a shell. The arguments given to `docker run` are always given as arguments to the
+`entrypoint`, overriding any given `cmd` option. On the other hand if no extra arguments are given to `docker run` the default `cmd` is used as argument to `entrypoint`.
+
+****
+See this http://stackoverflow.com/questions/21553353/what-is-the-difference-between-cmd-and-entrypoint-in-a-dockerfile[stackoverflow question] for a detailed explanation.
+****
+
+An entry point or command can be specified in two alternative formats:
+
+.Entrypoint and Command Configuration
+[cols="1,5"]
+|===
+| Mode | Description
+
+| *shell*
+| Shell form in which the whole line is given to `shell -c` for interpretation.
+
+| *exec*
+| List of arguments (with inner `<args>`) arguments which will be given to the `exec` call directly without any shell interpretation.
+|===
+
+Either shell or params should be specified.
+
+.Example
+[source,xml]
+----
+<entryPoint>
+   <!-- shell form  -->
+   <shell>java -jar $HOME/server.jar</shell>
+</entryPoint>
+----
+
+or
+
+.Example
+[source,xml]
+----
+<entryPoint>
+   <!-- exec form  -->
+   <exec>
+     <arg>java</arg>
+     <arg>-jar</arg>
+     <arg>/opt/demo/server.jar</arg>
+   </exec>
+</entryPoint>
+----
+
+This can be formulated also more dense with:
+
+.Example
+[source,xml]
+----
+<!-- shell form  -->
+<entryPoint>java -jar $HOME/server.jar</entryPoint>
+----
+
+or
+
+.Example
+[source,xml]
+----
+<entryPoint>
+  <!-- exec form  -->
+  <arg>java</arg>
+  <arg>-jar</arg>
+  <arg>/opt/demo/server.jar</arg>
+</entryPoint>
+----
+

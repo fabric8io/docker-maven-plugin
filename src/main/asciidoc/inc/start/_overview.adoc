@@ -1,0 +1,26 @@
+
+[[start-overview]]
+This goal creates and starts docker containers. This goals evaluates the configuration's `<run>` section of all given (and enabled images).
+
+Also you can specify `docker.follow` as system property so that the `{plugin}:start` will never return but block until CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).
+
+By default container specific properties are exposed as Maven properties. These properties have the format `docker.container.<alias>.<prop>` where `<alias>` is the name of the container (see below) and `<prop>` is one of the following container properties:
+
+.Properties provided
+[cols="1,5"]
+|===
+| Property | Description
+
+| *ip*
+| Internal IP address of the container.
+
+| *id*
+| Container id
+
+| *net*._<network>_.*ip*
+| Internal IP address of the container in the specified custom network. This works only for custom networks.
+|===
+
+Instead of the `<alias>` a fixed property key can be configured in the image's <<start-run-configuration, <run> >> configuration with the option `exposedPropertyKey`.
+
+For example the Maven property `docker.container.tomcat.ip` would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration *exposeContainerInfo* to an empty string to not expose container information that way or to a string for an other prefix than `docker.container`.

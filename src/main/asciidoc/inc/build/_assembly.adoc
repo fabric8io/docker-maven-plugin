@@ -1,0 +1,175 @@
+
+The `<assembly>` element within `<build>` is has an XML struture and defines how build artifacts and other files can enter the Docker image.
+
+.Assembly Configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+| *basedir*
+| Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/maven`.
+
+| *inline*
+| Inlined assembly descriptor as described in <<build-assembly-descriptor,Assembly Descriptor>> below.
+
+| *descriptor*
+| Path to an assembly descriptor file, whose format is described  <<build-assembly-descriptor,Assembly Descriptor>> below.
+
+| *descriptorRef*
+| Alias to a predefined assembly descriptor. The available aliases are also described in <<build-assembly-descriptor,Assembly Descriptor>> below.
+
+| *dockerFileDir*
+| Directory containing an external Dockerfile. _This option is deprecated, please use <dockerfiledir> directly in the <build> section.
+
+| *exportBasedir*
+| Specification whether the `basedir` should be exported as a volume.  This value is `true` by default except in the case the `basedir` is set to the container root (`/`). It is also `false` by default when a base image is used with `from` since exporting makes no sense in this case and will waste disk space unnecessarily.
+
+| *ignorePermissions*
+| Specification if existing file permissions should be ignored
+when creating the assembly archive with a mode `dir`. This value is `false` by default. _This property is deprecated, use a `permissionMode` of `ignore` instead._
+
+| *mode*
+a| Mode how the how the assembled files should be collected:
+
+* `dir` : Files are simply copied (default),
+* `tar` : Transfer via tar archive
+* `tgz` : Transfer via compressed tar archive
+* `zip` : Transfer via ZIP archive
+
+The archive formats have the advantage that file permission can be preserved better (since the copying is independent from the underlying files systems), but might triggers internal bugs from the Maven assembler (as it has been reported in https://github.com/fabric8io/docker-maven-plugin/issues/171[#171])
+
+| *permissions*
+a| Permission of the files to add:
+
+* `ignore` to use the permission as found on files regardless on any
+assembly configuration
+* `keep` to respect the assembly provided permissions, `exec` for setting the executable bit on all files (required for Windows when using an assembly mode `dir`)
+* `auto` to let the plugin select `exec` on Windows and `keep` on others.
+
+`keep` is the default value.
+
+| *user*
+| User and/or group under which the files should be added. The user must already exist in the base image.
+
+It has the general format `user[:group[:run-user]]`. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
+
+If a third part is given, then the build changes to user `root` before changing the ownerships, changes the ownerships and then change to user `run-user` which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a `chown` from root to this user would fail.
+
+For example, the image `jboss/wildfly` use a "jboss" user under which all commands are executed. Adding files in Docker always happens under the UID root. These files can only be changed to "jboss" is the `chown` command is executed as root. For the following commands to be run again as "jboss" (like the final `standalone.sh`), the plugin switches back to user `jboss` (this is this "run-user") after changing the file ownership. For this example a specification of
+`jboss:jboss:jboss` would be required.
+|===
+
+In the event you do not need to include any artifacts with the image, you may safely omit this element from the configuration.
+
+[[build-assembly-descriptor]]
+==== Assembly Descriptor
+
+With using the `inline`, `descriptor` or `descriptorRef` option
+it is possible to bring local files, artifacts and dependencies into
+the running Docker container. A `descriptor` points to a file
+describing the data to put into an image to build. It has the same
+http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html[format] as for creating assemblies with the
+http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin] with following exceptions:
+
+* `<formats>` are ignored, the assembly will allways use a directory
+when preparing the data container (i.e. the format is fixed to
+`dir`)
+* The `<id>` is ignored since only a single assembly descriptor is
+used (no need to distinguish multiple descriptors)
+
+Also you can inline the assembly description with a `inline` description
+directly into the pom file. Adding the proper namespace even allows for
+IDE autocompletion. As an example, refer to the profile `inline` in
+the `data-jolokia-demo`'s pom.xml.
+
+Alternatively `descriptorRef` can be used with the name of a
+predefined assembly descriptor. The following symbolic names can be
+used for `descriptorRef`:
+
+.Predefined Assembly Descriptors
+[cols="1,3"]
+|===
+| Assembly Reference | Description
+
+| *artifact-with-dependencies*
+| Attaches project's artifact and all its dependencies. Also, when a `classpath` file exists in the target directory, this will be added to.
+
+| *artifact*
+| Attaches only the project's artifact but no dependencies.
+
+| *project*
+| Attaches the whole Maven project but with out the `target/` directory.
+
+| *rootWar*
+| Copies the artifact as `ROOT.war` to the exposed directory. I.e. Tomcat will then deploy the war under the root context.
+|===
+
+.Example
+[source,xml]
+----
+<images>
+  <image>
+    <build>
+      <assembly>
+         <descriptorRef>artifact-with-dependencies</descriptorRef>
+         .....
+----
+
+will add the created artifact with the name `${project.build.finalName}.${artifact.extension}` and all jar dependencies in the the `baseDir` (which is `/maven` by default).
+
+All declared files end up in the configured `basedir` (or `/maven` by default) in the created image.
+
+If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. This happens either automatically when the `{plugin}:build` target is called as part of a binding (e.g. is `{plugin}:build` is bound to the `pre-integration-test`
+phase) or it must be ensured when called on the command line:
+
+.Example
+[source,sh,subs="+attributes"]
+----
+mvn package {plugin}:build
+----
+
+This is a general restriction of the Maven lifecycle which applies also
+for the `maven-assembly-plugin` itself.
+
+In the following example a dependency from the pom.xml is included and
+mapped to the name `jolokia.war`. With this configuration you will end
+up with an image, based on `busybox` which has a directory `/maven`
+containing a single file `jolokia.war`. This volume is also exported
+automatically.
+
+.Example
+[source,xml]
+----
+<assembly>
+  <dependencySets>
+    <dependencySet>
+      <includes>
+        <include>org.jolokia:jolokia-war</include>
+      </includes>
+      <outputDirectory>.</outputDirectory>
+      <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+    </dependencySet>
+  </dependencySets>
+</assembly>
+----
+
+Another container can now connect to the volume an 'mount' the
+`/maven` directory. A container  from `consol/tomcat-7.0` will look
+into `/maven` and copy over everything to `/opt/tomcat/webapps` before
+starting Tomcat.
+
+If you are using the `artifact` or `artifact-with-dependencies` descriptor, it is
+possible to change the name of the final build artifact with the following:
+
+.Example
+[source,xml]
+----
+<build>
+  <finalName>your-desired-final-name</finalName>
+  ...
+</build>
+----
+
+Please note, based upon the following documentation listed http://maven.apache.org/pom.html#BaseBuild_Element[here], there is no guarantee the plugin creating your artifact will honor it in which case you will need to use a custom descriptor like above to achieve the desired naming.
+
+Currently the `jar` and `war` plugins properly honor the usage of `finalName`.

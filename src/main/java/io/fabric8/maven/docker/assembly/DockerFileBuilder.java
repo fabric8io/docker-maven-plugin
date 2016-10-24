@@ -6,6 +6,8 @@ import java.util.*;
 
 import com.google.common.base.Joiner;
 import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -41,6 +43,8 @@ public class DockerFileBuilder {
 
     // User to run as
     private String user;
+
+    private HealthCheckConfiguration healthCheck;
 
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
@@ -103,6 +107,8 @@ public class DockerFileBuilder {
         addRun(b);
         addVolumes(b);
 
+        addHealthCheck(b);
+
         addCmd(b);
         addEntryPoint(b);
 
@@ -117,6 +123,28 @@ public class DockerFileBuilder {
         }
     }
 
+    private void addHealthCheck(StringBuilder b) {
+        if (healthCheck != null) {
+            StringBuilder healthString = new StringBuilder();
+
+            switch (healthCheck.getMode()) {
+            case cmd:
+                buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
+                buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
+                buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
+                buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
+                break;
+            case none:
+                DockerFileKeyword.NONE.addTo(healthString, false);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported health check mode: " + healthCheck.getMode());
+            }
+
+            DockerFileKeyword.HEALTHCHECK.addTo(b, healthString.toString());
+        }
+    }
+
     private void addWorkdir(StringBuilder b) {
         if (workdir != null) {
             DockerFileKeyword.WORKDIR.addTo(b, workdir);
@@ -125,24 +153,30 @@ public class DockerFileBuilder {
 
     private void addEntryPoint(StringBuilder b){
         if (entryPoint != null) {
-            buildArguments(b, DockerFileKeyword.ENTRYPOINT, entryPoint);
+            buildArguments(b, DockerFileKeyword.ENTRYPOINT, true, entryPoint);
         }
     }
 
     private void addCmd(StringBuilder b){
         if (cmd != null) {
-            buildArguments(b, DockerFileKeyword.CMD, cmd);
+            buildArguments(b, DockerFileKeyword.CMD, true, cmd);
         }
     }
 
-    private static void buildArguments(StringBuilder b, DockerFileKeyword key, Arguments arguments) {
+    private static void buildArguments(StringBuilder b, DockerFileKeyword key, boolean newline, Arguments arguments) {
         String arg;
         if (arguments.getShell() != null) {
             arg = arguments.getShell();
         } else {
             arg = "[\""  + JOIN_ON_COMMA.join(arguments.getExec()) + "\"]";
         }
-        key.addTo(b, arg);
+        key.addTo(b, newline, arg);
+    }
+
+    private static void buildOption(StringBuilder b, DockerFileOption option, Object value) {
+        if (value != null) {
+            option.addTo(b, value);
+        }
     }
 
     private void addEntries(StringBuilder b) {
@@ -210,7 +244,7 @@ public class DockerFileBuilder {
         }
     }
 
-    public void addOptimisation() {
+    private void addOptimisation() {
         if (runCmds != null && !runCmds.isEmpty() && shouldOptimise) {
             String optimisedRunCmd = StringUtils.join(runCmds.iterator(), " && ");
             runCmds.clear();
@@ -293,6 +327,11 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder user(String user) {
         this.user = user;
+        return this;
+    }
+
+    public DockerFileBuilder healthCheck(HealthCheckConfiguration healthCheck) {
+        this.healthCheck = healthCheck;
         return this;
     }
 

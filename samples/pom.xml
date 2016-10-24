@@ -21,13 +21,13 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>dmp-sample-parent</artifactId>
-  <version>0.15-SNAPSHOT</version>
+  <version>0.16-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <url>http://www.jolokia.org</url>
 
   <properties>
-    <docker.maven.plugin.version>0.15-SNAPSHOT</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.16-SNAPSHOT</docker.maven.plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -45,10 +45,12 @@
   </build>
 
   <modules>
-   <module>net</module>
-   <module>properties</module>
-   <module>dockerignore</module> 
-   <module>data-jolokia-demo</module> 
-   <!-- module>cargo-jolokia-demo</module --> 
+    <module>net</module>
+    <module>custom-net</module>
+    <module>properties</module>
+    <module>dockerignore</module>
+    <module>data-jolokia-demo</module>
+    <module>multi-wait</module>
+   <!-- module>cargo-jolokia-demo</module -->
   </modules>
 </project>

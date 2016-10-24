@@ -1,0 +1,15 @@
+
+As described in section <<build-configuration,Configuration>> for external Dockerfiles https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build arg] can be used. In addition to the
+configuration within the plugin configuration you can also use properties to specify them:
+
+* Set a system property when running Maven, eg.: `-Ddocker.buildArg.http_proxy=http://proxy:8001`. This is especially
+useful when using predefined Docker arguments for setting proxies transparently.
+* Set a project property within the `pom.xml`, eg.:
+
+.Example
+[source,xml]
+----
+  <docker.buildArg.myBuildArg>myValue</docker.buildArg.myBuildArg>
+----
+
+Please note that the system property setting will always override the project property. Also note that for all properties which are not Docker https://docs.docker.com/engine/reference/builder/#arg[predefined] properties, the external Dockerfile must contain an `ARGS` instruction.

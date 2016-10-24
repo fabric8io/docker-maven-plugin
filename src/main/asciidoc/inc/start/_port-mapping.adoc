@@ -1,0 +1,53 @@
+
+The `<ports>` configuration contains a list of port mappings. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option `-p`.
+
+A `port` stanza may take one of the following forms:
+
+.Port mapping format
+[cols="1,5"]
+|===
+| Format | Description
+
+| *18080:8080*
+| Tuple consisting of two numeric values separated by a `:`. This form will result in an explicit mapping between the docker host and the corresponding port inside the container. In the above example, port 18080 would be exposed on the docker host and mapped to port 8080 in the running container.
+
+| *_host.port_:80*
+| Tuple consisting of a string and a numeric value separated by a `:`. In this form, the string portion of the tuple will correspond to a Maven property. If the property is undefined when the `start` task executes, a port will be dynamically selected by Docker in the ephemeral port range and assigned to the property which may then be used later in the same POM file. The ephemeral port range is configured by the `/proc/sys/net/ipv4/ip_local_port_range` kernel parameter, which typically ranges from 32678 to 61000.  If the property exists and has numeric value, that value will be used as the exposed port on the docker host as in the previous form. In the above example, the docker service will elect a new port and assign the value to the property `host.port` which may then later be used in a property expression similar to `<value>${host.port}</value>`. This can be used to pin a port from the outside when doing some initial testing similar to `mvn -Dhost.port=10080 {plugin}:start`
+
+| *bindTo:_host.port_:80*
+| Tuple consisting of two strings and a numeric value separated by a `:`. In this form, `bindTo` is an ip address on the host the container should bind to. As a convenience, a hostname pointing to the docker host may also be specified. The container will fail to start if the hostname can not be resolved.
+
+| *+host.ip:_host.port_:80*
+| Tuple consisting of two strings and a numeric value separated by a `:`. In this form, the host ip of the container will be placed into a Maven property name `host.ip`. If docker reports that value to be `0.0.0.0`, the value of `docker.host.address` will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (`host.ip` in this example) containing the value to use. `host:port` works in the same way as described above.
+|===
+
+The following are examples of valid configuration entries:
+
+.Example
+[source,xml]
+----
+<properties>
+  <bind.host.ip>1.2.3.4</bind.host.ip>
+  <bind.host.name>some.host.pvt</bind.host.name>
+<properties>
+
+...
+
+<ports>
+  <port>18080:8080</port>
+  <port>host.port:80</port>
+  <port>127.0.0.1:80:80</port>
+  <port>localhost:host.port:80</port>
+  <port>+container.ip.property:host.port:5678</port>
+  <port>+bind.host.ip:host.port:5678</port>
+  <port>+bind.host.name:5678:5678</port>
+<ports>
+----
+
+Another useful configuration option is `portPropertyFile` which can be used to to write out the container's host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.
+
+This property file might be useful with tests or with other maven plugins that will be unable to use the resolved properties because they can only be updated after the container has started and plugins resolve their properties in an earlier lifecycle phase.
+
+If you don't need to write out such a property file and thus don't need to preserve the property names, you can use normal maven properties as well. E.g. `${host.var}:${port.var}:8080` instead of
+`+host.var:port.var:8080`.
+

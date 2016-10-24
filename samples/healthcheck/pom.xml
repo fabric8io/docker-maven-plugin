@@ -1,0 +1,118 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for demonstrating the health check feature
+
+  Call it with 'mvn install'.
+
+  -->
+
+  <parent>
+    <groupId>io.fabric8</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.16.8</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-sample-healthcheck</artifactId>
+  <version>0.16.8</version>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <watchInterval>500</watchInterval>
+          <logDate>default</logDate>
+          <verbose>true</verbose>
+          <autoPull>always</autoPull>
+          <images>
+            <image>
+              <alias>healthybox1</alias>
+              <name>busybox</name>
+              <build>
+                <healthCheck>
+                  <cmd>curl -f http://localhost/ || exit 1</cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>healthybox2</alias>
+              <name>busybox</name>
+              <build>
+                <healthCheck>
+                  <interval>5m</interval>
+                  <timeout>3s</timeout>
+                  <retries>3</retries>
+                  <cmd>curl -f http://localhost/ || exit 1</cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>healthybox3</alias>
+              <name>busybox</name>
+              <build>
+                <healthCheck>
+                  <interval>5m</interval>
+                  <retries>3</retries>
+                  <cmd>
+                    <shell>curl -f http://localhost/ || exit 1</shell>
+                  </cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>healthybox4</alias>
+              <name>busybox</name>
+              <build>
+                <healthCheck>
+                  <mode>cmd</mode>
+                  <interval>5m</interval>
+                  <cmd>
+                    <exec>
+                      <args>curl</args>
+                      <args>-f</args>
+                      <args>http://localhost/</args>
+                      <args>||</args>
+                      <args>exit 1</args>
+                    </exec>
+                  </cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>unhealthybox5</alias>
+              <name>busybox</name>
+              <build>
+                <healthCheck>
+                  <mode>none</mode>
+                </healthCheck>
+              </build>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

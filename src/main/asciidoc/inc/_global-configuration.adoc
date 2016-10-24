@@ -1,0 +1,191 @@
+
+[[global-configuration]]
+= Global configuration
+
+Global configuration parameters specify overall behavior like the
+connection to the Docker host. The corresponding system properties
+which can be used to set it from the outside are given in
+parentheses.
+
+The docker-maven-plugin uses the Docker remote API so the URL of your
+Docker Daemon must somehow be specified. The URL can be specified by
+the dockerHost or machine configuration, or by the `DOCKER_HOST`
+environment variable.
+
+The Docker remote API supports communication via SSL and
+authentication with certificates.  The path to the certificates can
+be specified by the certPath or machine configuration, or by the
+`DOCKER_CERT_PATH` environment variable.
+
+.Global Configuration
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *apiVersion*
+| Use this variable if you are using an older version of docker not compatible with the current default use to communicate with the server.
+| `docker.apiVersion`
+
+| *authConfig*
+| Authentication information when pulling from or pushing to Docker registry. There is a dedicated section <<authentication, Authentication>> for how doing security.
+|
+
+| *autoCreate CustomNetworks*
+| Create automatically Docker networks during `{plugin}:start` and remove it during `{plugin}:stop` if you provide a custom network in the run configuration of an image. The default is `false`.
+| `docker.autoCreate` `CustomNetworks`
+
+| *autoPull*
+a| Decide how to pull missing base images or images to start:
+
+ * `on` : Automatic download any missing images (default)
+ * `off` : Automatic pulling is switched off
+ * `always` : Pull images always even when they are already exist locally
+ * `once` : For multi-module builds images are only checked once and pulled for the whole build.
+
+By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option `-B`). A very simplified progress meter is provided when using no color output (i.e. with `-Ddocker.useColor=false`).
+
+| `docker.autoPull`
+
+| *certPath*
+| Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
+| `docker.certPath`
+
+| *dockerHost*
+a| The URL of the Docker Daemon. If this configuration option is not given, then the optional `<machine>` configuration section is consulted. The scheme of the URL can be either given directly as `http` or `https`
+depending on whether plain HTTP communication is enabled or SSL should
+be used. Alternatively the scheme could be `tcp` in which case the
+protocol is determined via the IANA assigned port: 2375 for `http`
+and 2376 for `https`. Finally, Unix sockets are supported by using
+the scheme `unix` together with the filesystem path to the unix socket.
+The discovery sequence used by the docker-maven-plugin to determine
+the URL is:
+
+. value of *dockerHost* (`docker.host`)
+. the Docker host associated with the docker-machine named in `<machine>`, i.e. the `DOCKER_HOST` from `docker-machine env`. See <<docker-machine,below>> for more information about Docker machine support. If `<machine>` is not set, then no docker-machine detection is used.
+. the value of the environment variable `DOCKER_HOST`.
+. `/var/run/docker.sock` if it is a readable socket (Unix & OS X).
+. `//./pipe/docker_engine` if it is a readable named pipe (Windows)
+| `docker.host`
+
+| *image*
+| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
+| `docker.image`
+
+| *logDate*
+| Date format which is used for printing out container logs. This configuration can be overwritten by individual run configurations and described below. The format is described in <<loggging,Logging>>.
+| `docker.logDate`
+
+| *logStdout*
+| For all container logging to standard output if set to `true`, regardless whether a `file` for log output is specified. See also <<start-logging,Logging>>
+| `docker.logStdout`
+
+| *machine*
+| Docker machine configuration. See <<docker-machine, Docker Machine>> for possible values
+|
+
+| *maxConnections*
+| Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
+| `docker.maxConnections`
+
+| *outputDirectory*
+| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
+| `docker.target.dir`
+
+| *portPropertyFile*
+| Global property file into which the mapped properties should be written to. The format of this file and its purpose are also described in <<start-port-mapping,Port Mapping>>.
+|
+
+| *registry*
+| Specify globally a registry to use for pulling and pushing images. See <<registry,Registry handling>> for details.
+| `docker.registry`
+
+| *skip*
+| With this parameter the execution of this plugin can be skipped completely.
+| `docker.skip`
+
+| *skipBuild*
+| If set no images will be build (which implies also _skip.tag_) with `{plugin}:build`
+| `docker.skip.build`
+
+| *skipPush*
+| If set dont push any images even when `{plugin}:push` is called.
+| `docker.skip.push`
+
+| *skipRun*
+| If set dont create and start any containers with `{plugin}:start` or `{plugin}:run`
+| `docker.skip.run`
+
+| *skipTag*
+| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
+| `docker.skip.tag`
+
+| *skipMachine*
+| Skip using docker machine in any case
+| `docker.skip.machine`
+
+| *sourceDirectory*
+| Default directory that contains the assembly descriptor(s) used by the plugin. The default value is `src/main/docker`. This option is only relevant for the `{plugin}:build` goal.
+| `docker.source.dir`
+
+| *useColor*
+| Whether to use colored log output. By default this is switched on when running on a console, off otherwise.
+| `docker.useColor`
+
+| *verbose*
+| Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
+| `docker.verbose`
+|===
+
+.Example
+[source,xml]
+----
+<configuration>
+   <dockerHost>https://localhost:2376</dockerHost>
+   <certPath>src/main/dockerCerts</certPath>
+   <useColor>true</useColor>
+   .....
+</configuration>
+----
+
+[[docker-machine]]
+.Docker Machine
+This plugin supports also Docker machine (which must be installed locally, of course). A Docker machine configuration can be provided with a top-level `<machine>` configuration section. This configuration section knows the following options:
+
+.Docker Machine Options
+[cols="1,4"]
+|===
+| Element | Description
+
+| *name*
+| Docker machine's name. Default is `default`
+
+| *autoCreate*
+| if set to `true` then a Docker machine will automatically created. Default is `false`.
+
+| *createOptions*
+| Map with options for Docker machine when auto-creating a machine. See the docker machine documentation for possible options.
+|===
+
+
+When no Docker host is configured or available as environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but `autoCreate` is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine which has been created because of `autoCreate` gets never deleted by docker-maven-plugin. This needs to be done manually if required.
+
+In absence of a `<machine>` configuration section the Maven property `docker.machine.name` can be used to provide the name of a Docker machine. Similarly the property `docker.machine.autoCreate` can be set to true for creating a Docker machine, too.
+
+You can use the property `docker.skip.machine` if you want to override the internal detection mechanism to always disable docker machine support.
+
+.Example
+[source,xml]
+----
+<!-- Work with a docker-machine -->
+<configuration>
+  <machine>
+    <name>maven</name>
+    <autoCreate>true</autoCreate>
+    <createOptions>
+      <driver>virtualbox</driver>
+      <virtualbox-cpu-count>2</virtualbox-cpu-count>
+    </createOptions>
+  </machine>
+   .....
+</configuration>
+----

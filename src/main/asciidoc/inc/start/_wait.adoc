@@ -1,0 +1,77 @@
+
+While starting a container is it possible to block the execution until
+some condition is met. These conditions can be specified within a
+`<wait>` section which the following sub-elements:
+
+.Wait configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+| *http*
+a| HTTP ping check which periodically polls an URL. It knows the following sub-elements:
+
+* *url* holds an URL and is mandatory
+* *method* Optional HTTP method to use.
+* *status* Status code which if returned is considered to be a successful ping. This code can be given either as a single number (200) or as a range (200..399). The default is `200..399`
+* *allowAllHosts* If `url` is an HTTPS url and this option is set, then server certificates are not validated. By default they are checked for a proper CA signature.
+
+| *log*
+| Regular expression which is applied against the log
+output of an container and blocks until the pattern is matched.
+
+| *time*
+| Time in milliseconds to block.
+
+| *kill*
+| Time in milliseconds between sending `SIGTERM` and `SIGKILL` when stopping a container. Since docker itself uses second granularity, you should use at least 1000 milliseconds.
+
+| *shutdown*
+| Time to wait in milliseconds between stopping a container and removing it. This might be helpful in situation where a Docker croaks with an error when trying to remove a container to fast after it has been stopped.
+
+| *exec*
+a| Commands to execute during specified lifecycle of the container. It knows the following sub-elements:
+
+* *postStart* Command to run after the above wait criteria has been met
+* *preStop* Command to run before the container is stopped.
+
+| *tcp*
+a| TCP port check which periodically polls given tcp ports. It knows the following sub-elements:
+
+* *mode* can be either `mapped` which uses the mapped ports or `direct` in which case the container ports are addressed directly. In the later case the host field should be left empty in order to select the container ip (which must be routed which is only the case when running on the Docker daemon's host directly). Default is `direct` when host is _localhost_, `mapped` otherwise. The direct mode might help when a so called _user-proxy_ is enabled on the Docker daemon which makes the mapped ports directly available even when the container is not ready yet.
+* *host* is the hostname or the IP address. It defaults to `${docker.host.address}` for a mapped mode and the container ip address for the direct mode.
+* *ports* is a list of TCP ports to check. These are supposed to be the container internal ports.
+|===
+
+As soon as one condition is met the build continues. If you add a `<time>` constraint this works more or less as a timeout for other conditions. The build will abort if you wait on an url or log output and reach the timeout. If only a `<time>` is specified, the build will wait that amount of milliseconds and then continues.
+
+.Example
+[source,xml]
+----
+<wait>
+  <http>
+    <url>http://localhost:${host.port}</url>
+    <method>GET</method>
+    <status>200..399</status>
+  </http>
+  <time>10000</time>
+  <kill>1000</kill>
+  <shutdown>500</shutdown>
+  <exec>
+     <postStart>/opt/init_db.sh</postStart>
+     <preStop>/opt/notify_end.sh</preStop>
+  </exec>
+  <tcp>
+     <host>192.168.99.100</host>
+     <ports>
+        <port>3306</port>
+        <port>9999</port>
+     </ports>
+  </tcp>
+</wait>
+----
+
+This setup will wait for the given URL to be reachable but ten seconds at most. Additionally, it will be waited for the TCP ports 3306 and 9999. Also, when stopping the container after an integration tests, the build wait for 500 ms before it tries to remove the container (if not `keepContainer` or `keepRunning` is used). You can use maven properties in each condition, too. In the example, the `${host.port}` property is probably set before within a port mapping section.
+
+The property `${docker.host.address}` is set implicitly to the address of the Docker host. This host will be taken from the `docker.host` configuration if HTTP or HTTPS is used. If a Unix socket is used for communication with the docker daemon, then `localhost` is assumed. You can override this property always by setting this Maven property explicitly.
+

@@ -28,7 +28,7 @@ public class ContainerListElementTest {
         thenMapContainsSpecAndBinding("80/tcp", 32771, "0.0.0.0");
         thenMapContainsSpecAndBinding("52/udp", 32772, "1.2.3.4");
     }
-    
+
     @Test
     public void testContaierWithPorts() {
         givenAContaierWithPorts();
@@ -37,7 +37,7 @@ public class ContainerListElementTest {
         thenMapContainsPortSpecOnly("80/tcp");
         thenMapContainsPortSpecOnly("52/udp");
     }
-    
+
     @Test
     public void testContainerWithLabels() {
         givenAContainerWithLabels();
@@ -46,21 +46,21 @@ public class ContainerListElementTest {
         thenLabelsContains("key1", "value1");
         thenLabelsContains("key2", "value2");
     }
-    
+
     @Test
     public void testContainerWithoutLabels() {
         givenContainerData();
         whenCreateContainer();
         thenLabelsSizeIs(0);
     }
-    
+
     @Test
     public void testContainerWithoutPorts() {
         givenAContainerWithoutPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(0);
     }
-    
+
     @Test
     public void testCreateContainer() throws Exception {
         givenContainerData();
@@ -84,24 +84,24 @@ public class ContainerListElementTest {
 
         return ports;
     }
-    
+
     private void givenAContaierWithPorts() {
         json.append(ContainersListElement.PORTS, createPortData(80, "tcp"));
         json.append(ContainersListElement.PORTS, createPortData(52, "udp"));
     }
 
-    
+
     private void givenAContainerWithLabels() {
         JSONObject labels = new JSONObject();
         labels.put("key1", "value1");
         labels.put("key2", "value2");
-        
+
         json.put(ContainerDetails.LABELS, labels);
     }
-    
+
     private void givenAContainerWithMappedPorts() {
         givenAContaierWithPorts();
-        
+
         JSONArray array = json.getJSONArray(ContainersListElement.PORTS);
 
         addToArray(array, 0, ContainersListElement.IP, "0.0.0.0");
@@ -110,7 +110,7 @@ public class ContainerListElementTest {
         addToArray(array, 1, ContainersListElement.IP, "1.2.3.4");
         addToArray(array, 1, ContainersListElement.PUBLIC_PORT, 32772);
     }
-    
+
     private void givenAContainerWithoutPorts() {
         json.put("Ports", Collections.emptyList());
     }
@@ -131,12 +131,12 @@ public class ContainerListElementTest {
     private void thenLabelsSizeIs(int size) {
         assertEquals(size, container.getLabels().size());
     }
-    
+
     private void thenMapContainsPortSpecOnly(String key) {
         assertTrue(container.getPortBindings().containsKey(key));
         assertNull(container.getPortBindings().get(key));
     }
-    
+
     private void thenMapContainsSpecAndBinding(String key, int port, String ip) {
         assertTrue(container.getPortBindings().containsKey(key));
         assertNotNull(container.getPortBindings().get(key));
@@ -144,7 +144,7 @@ public class ContainerListElementTest {
         assertEquals(ip, container.getPortBindings().get(key).getHostIp());
         assertEquals(port, container.getPortBindings().get(key).getHostPort().intValue());
     }
-    
+
     private void thenPortBindingSizeIs(int size) {
         assertEquals(size, container.getPortBindings().size());
     }

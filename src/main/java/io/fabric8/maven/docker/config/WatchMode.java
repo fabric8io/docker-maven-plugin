@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,36 +25,38 @@ public enum WatchMode {
     /**
      * Copy watched artefacts into contaienr
      */
-    copy(false,false,true),
+    copy(false, false, true, "build"),
 
     /**
      * Build only images
      */
-    build(true, false, false),
+    build(true, false, false, "build"),
 
     /**
      * Run images
      */
-    run(false, true, false),
+    run(false, true, false, "run"),
 
     /**
      * Build and run images
      */
-    both(true, true, false),
+    both(true, true, false, "build and run"),
 
     /**
      * Neither build nor run
      */
-    none(false, false, false);
+    none(false, false, false, "no build and no run");
 
     private final boolean doRun;
     private final boolean doBuild;
     private final boolean doCopy;
+    private final String description;
 
-    WatchMode(boolean doBuild, boolean doRun, boolean doCopy) {
+    WatchMode(boolean doBuild, boolean doRun, boolean doCopy, String description) {
         this.doBuild = doBuild;
         this.doRun = doRun;
         this.doCopy = doCopy;
+        this.description = description;
     }
 
     public boolean isRun() {
@@ -67,5 +69,9 @@ public enum WatchMode {
 
     public boolean isCopy() {
         return doCopy;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }

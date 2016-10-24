@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@ package io.fabric8.maven.docker;
  * limitations under the License.
  */
 
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
@@ -25,4 +26,5 @@ import org.apache.maven.plugins.annotations.Mojo;
  * @since 26/04/16
  */
 @Mojo(name = "run", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class RunMojo extends StartMojo { }

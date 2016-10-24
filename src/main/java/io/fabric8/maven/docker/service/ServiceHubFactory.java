@@ -18,7 +18,7 @@ public class ServiceHubFactory {
 
     // Track started containers
     private final ContainerTracker containerTracker = new ContainerTracker();
-    
+
     @Requirement
     protected BuildPluginManager pluginManager;
 

@@ -1,0 +1,12 @@
+
+[[docker:remove]]
+== *docker:remove*
+
+This goal can be used to clean up images and containers. By default all so called _data images_ are removed with its containers. A data image is an image without a run configuration. This can be tuned by providing the properties `removeAll` which indicates to remove all images managed by this build. As with the other goals, the configuration `image` can be used to tune the images to remove. All containers belonging to the images are removed as well.
+
+Considering three images 'db','tomcat' and 'data' where 'data' is the only data images this example demonstrates the effect of this goal:
+
+* `mvn {plugin}:remove` will remove 'data'
+* `mvn -Ddocker.removeAll {plugin}:remove` will remove all three images
+* `mvn -Ddocker.image=data,tomcat {plugin}:remove` will remove 'data'
+* `mvn -Ddocker.image=data,tomcat -Ddocker.removeAll {plugin}:remove` will remove 'data' and 'tomcat'

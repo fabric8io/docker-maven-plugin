@@ -1,0 +1,28 @@
+
+
+When creating a container one or more environment variables can be set via configuration with the `env` parameter
+
+.Example
+[source,xml]
+----
+<env>
+  <JAVA_HOME>/opt/jdk8</JAVA_HOME>
+  <CATALINA_OPTS>-Djava.security.egd=file:/dev/./urandom</CATALINA_OPTS>
+</env>
+----
+
+If you put this configuration into profiles you can easily create various test variants with a single image (e.g. by switching the JDK or whatever).
+
+It is also possible to set the environment variables from the outside of the plugin's configuration with the parameter `envPropertyFile`. If given, this property file is used to set the environment variables where the keys and values specify the environment variable. Environment variables specified in this file override any environment variables specified in the configuration.
+
+Labels can be set inline the same way as environment variables:
+
+.Example
+[source,xml]
+----
+<labels>
+   <com.example.label-with-value>foo</com.example.label-with-value>
+   <version>${project.version}</version>
+   <artifactId>${project.artifactId}</artifactId>
+</labels>
+----

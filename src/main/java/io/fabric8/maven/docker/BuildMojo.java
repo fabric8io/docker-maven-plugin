@@ -9,6 +9,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -22,13 +23,14 @@ import io.fabric8.maven.docker.util.EnvUtil;
  * @since 28.07.14
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class BuildMojo extends AbstractBuildSupportMojo {
 
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;
 
     @Parameter(property = "docker.skip.build", defaultValue = "false")
-    private boolean skipBuild;
+    protected boolean skipBuild;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
@@ -49,19 +51,20 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     }
 
-    // We ignore an already existing date file and always return the current date
-    @Override
-    protected Date getReferenceDate() throws MojoExecutionException {
-        return new Date();
-    }
-
-    private void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
+    protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
         buildImage(hub, imageConfig);
         if (!skipTag) {
             tagImage(imageConfig.getName(), imageConfig, hub.getDockerAccess());
         }
     }
+
+    // We ignore an already existing date file and always return the current date
+    @Override
+    protected Date getReferenceDate() throws MojoExecutionException {
+        return new Date();
+    }
+
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
         throws DockerAccessException, MojoExecutionException {

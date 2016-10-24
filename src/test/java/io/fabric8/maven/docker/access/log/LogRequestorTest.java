@@ -9,6 +9,7 @@ import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
 
 import com.google.common.base.Charsets;
 import io.fabric8.maven.docker.access.UrlBuilder;
@@ -22,11 +23,15 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class LogRequestorTest {
     private static final String containerId = RandomStringUtils.randomAlphabetic(64);
@@ -35,7 +40,7 @@ public class LogRequestorTest {
     final RequestUtil unused = null;
 
     @Mocked
-    HttpResponse httpResponse;
+    CloseableHttpResponse httpResponse;
 
     @Mocked
     UrlBuilder urlBuilder;
@@ -53,7 +58,7 @@ public class LogRequestorTest {
     LogCallback callback;
 
     @Mocked
-    HttpClient client;
+    CloseableHttpClient client;
 
     @Test
     public void testEmptyMessage() throws Exception {
@@ -201,6 +206,16 @@ public class LogRequestorTest {
         }};
     }
 
+    @Test
+    public void checkMutlilinePattern() {
+        String line = "2016-07-15T20:34:06.024029849Z remote: Compressing objects:   4% (1/23)           \n" +
+                      "remote: Compressing objects:   8% (2/23)           \n";
+        String matched = "remote: Compressing objects:   4% (1/23)           \n" +
+                      "remote: Compressing objects:   8% (2/23)";
+        Matcher matcher = LogRequestor.LOG_LINE.matcher(line);;
+        assertTrue(matcher.matches());
+        assertEquals(matched, matcher.group("entry"));
+    }
     private void setupMocks(final InputStream inputStream) throws Exception {
         new Expectations() {{
             RequestUtil.newGet(anyString);
@@ -291,4 +306,6 @@ public class LogRequestorTest {
     private static String logMessage(String message) {
         return String.format("[2015-08-05T12:34:56Z] %s", message);
     }
+
+
 }

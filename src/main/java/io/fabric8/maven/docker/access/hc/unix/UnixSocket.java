@@ -24,7 +24,7 @@ final class UnixSocket extends Socket {
 
     private final UnixSocketChannel channel;
 
-    public UnixSocket() throws IOException {
+    UnixSocket() throws IOException {
         channel = UnixSocketChannel.open();
     }
 
@@ -35,10 +35,6 @@ final class UnixSocket extends Socket {
 
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
-        if (endpoint == null) {
-            throw new NullPointerException();
-        }
-
         if (timeout < 0) {
             throw new IllegalArgumentException("Timeout may not be negative: " + timeout);
         }

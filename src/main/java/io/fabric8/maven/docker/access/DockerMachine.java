@@ -2,208 +2,101 @@ package io.fabric8.maven.docker.access;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
 
+import io.fabric8.maven.docker.access.util.EnvCommand;
+import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
  * launch docker-machine to obtain environment settings
  */
-public class DockerMachine {
+public class DockerMachine implements DockerConnectionDetector.DockerHostProvider {
 
     private final Logger log;
     private final DockerMachineConfiguration machine;
+    private boolean initialized = false;
+    private Map<String, String> envMap;
 
-    public DockerMachine(Logger log, DockerMachineConfiguration machine) throws IOException {
+    public DockerMachine(Logger log, DockerMachineConfiguration machine) {
         this.log = log;
         this.machine = machine;
-
-        Status status = new StatusCommand().getStatus();
-        switch (status) {
-            case DoesNotExist:
-                if (Boolean.TRUE == machine.getAutoCreate()) {
-                    new CreateCommand().execute();
-                } else {
-                    throw new IllegalStateException(machine.getName() + " does not exist and docker.machine.autoCreate is false");
-                }
-                break;
-            case Running:
-                break;
-            case Stopped:
-                new StartCommand().execute();
-                break;
-        }
     }
 
     enum Status {
         DoesNotExist, Running, Stopped
     }
 
-    public Map<String, String> getEnvironment() throws IOException {
-        return new EnvCommand().getEnvironment();
+    public synchronized DockerConnectionDetector.ConnectionParameter getConnectionParameter(String certPath) throws IOException {
+        if (machine == null) {
+            return null;
+        }
+        if (envMap == null) {
+            envMap = getEnvironment();
+        }
+        String value = envMap.get("DOCKER_HOST");
+        if (value == null) {
+            return null;
+        }
+        log.info("DOCKER_HOST from docker-machine \"%s\" : %s", machine.getName(), value);
+        return new DockerConnectionDetector.ConnectionParameter(value, certPath != null ? certPath : envMap.get("DOCKER_CERT_PATH"));
     }
 
-    abstract class DockerCommand {
-        private final ExecutorService executor = Executors.newFixedThreadPool(2);
-        int statusCode;
-
-        void execute() throws IOException {
-            final Process process = startDockerMachineProcess();
-            start();
-            try {
-                closeOutputStream(process.getOutputStream());
-                Future<IOException> stderrFuture = startStreamPump(process.getErrorStream());
-                outputStreamPump(process.getInputStream());
-
-                stopStreamPump(stderrFuture);
-                checkProcessExit(process);
-            } catch (IOException e) {
-                process.destroy();
-                throw e;
-            } finally {
-                end();
-            }
-            if (statusCode != 0) {
-                throw new IOException("docker-machine exited with status " + statusCode);
-            }
-
-        }
-
-        // Hooks for logging ...
-        protected void start() {}
-        protected void end() {}
-
-
-        private void checkProcessExit(Process process) {
-            try {
-                executor.shutdown();
-                executor.awaitTermination(10, TimeUnit.SECONDS);
-                statusCode = process.exitValue();
-            } catch (IllegalThreadStateException | InterruptedException e) {
-                process.destroy();
-                statusCode = -1;
-            }
-        }
-
-        private void closeOutputStream(OutputStream outputStream) {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                log.info("failed to close docker-machine output stream: " + e.getMessage());
-            }
-        }
-
-        private Process startDockerMachineProcess(String... args) throws IOException {
-            try {
-                return Runtime.getRuntime().exec(getArgs());
-            } catch (IOException e) {
-                throw new IOException("failed to start docker-machine", e);
-            }
-        }
-
-        protected abstract String[] getArgs();
-
-        private void outputStreamPump(final InputStream inputStream) throws IOException {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));) {
-                for (; ; ) {
-                    String line = reader.readLine();
-                    if (line == null) {
-                        break;
-                    }
-                    processLine(line);
-                }
-            } catch (IOException e) {
-                throw new IOException("failed to read docker-machine output", e);
-            }
-        }
-
-        protected void processLine(String line) {
-            log.verbose(line);
-        }
-
-        private Future<IOException> startStreamPump(final InputStream errorStream) {
-            return executor.submit(new Callable<IOException>() {
-                @Override
-                public IOException call() {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream));) {
-                        for (; ; ) {
-                            String line = reader.readLine();
-                            if (line == null) {
-                                break;
-                            }
-                            synchronized (log) {
-                                log.warn(line);
-                            }
-                        }
-                        return null;
-                    } catch (IOException e) {
-                        return e;
-                    }
-                }
-            });
-        }
-
-        private void stopStreamPump(Future<IOException> future) throws IOException {
-            try {
-                IOException e = future.get(2, TimeUnit.SECONDS);
-                if (e != null) {
-                    throw new IOException("failed to read docker-machine error stream", e);
-                }
-            } catch (InterruptedException ignore) {
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException | TimeoutException e) {
-                throw new IOException("failed to stop docker-machine error stream", e);
-            }
-        }
+    @Override
+    public int getPriority() {
+        // Just after environment variable priority-wise
+        return 90;
     }
 
-    private static final String SET_PREFIX = "SET ";
-    private static final int SET_PREFIX_LEN = SET_PREFIX.length();
+    private Map<String, String> getEnvironment() throws IOException {
+        lazyInit();
+        return new MachineEnvCommand().getEnvironment();
+    }
+
+    private synchronized void lazyInit() throws IOException {
+        if (!initialized) {
+            Status status = new StatusCommand().getStatus();
+            switch (status) {
+                case DoesNotExist:
+                    if (Boolean.TRUE == machine.getAutoCreate()) {
+                        new CreateCommand().execute();
+                    } else {
+                        throw new IllegalStateException(machine.getName() + " does not exist and docker.machine.autoCreate is false");
+                    }
+                    break;
+                case Running:
+                    break;
+                case Stopped:
+                    new StartCommand().execute();
+                    break;
+            }
+        }
+        initialized = true;
+    }
 
     // docker-machine env <name>
-    private class EnvCommand extends DockerCommand {
+    private class MachineEnvCommand extends EnvCommand {
 
-        private final Map<String, String> env = new HashMap<>();
+        MachineEnvCommand() {
+            super(DockerMachine.this.log, "SET ");
+        }
 
         @Override
         protected String[] getArgs() {
+            // use windows style with "SET "
             return new String[]{"docker-machine", "env", machine.getName(), "--shell", "cmd"};
-        }
-
-        @Override
-        protected void processLine(String line) {
-            if (log.isDebugEnabled()) {
-                log.verbose("%s", line);
-            }
-            if (line.startsWith(SET_PREFIX)) {
-                setEnvironmentVariable(line.substring(SET_PREFIX_LEN));
-            }
-        }
-
-        // parse line like SET DOCKER_HOST=tcp://192.168.99.100:2376
-        private void setEnvironmentVariable(String line) {
-            int equals = line.indexOf('=');
-            if (equals < 0) {
-                return;
-            }
-            String name = line.substring(0, equals);
-            String value = line.substring(equals + 1);
-            log.debug(name + "=" + value);
-            env.put(name, value);
-        }
-
-        public Map<String, String> getEnvironment() throws IOException {
-            execute();
-            return env;
         }
     }
 
     // docker-machine status <name>
-    private class StatusCommand extends DockerCommand {
+    private class StatusCommand extends ExternalCommand {
 
         private Status status;
         private String message;
+
+        StatusCommand() {
+            super(DockerMachine.this.log);
+        }
 
         @Override
         protected String[] getArgs() {
@@ -226,7 +119,7 @@ public class DockerMachine {
             try {
                 execute();
             } catch (IOException ex) {
-                if (statusCode == 1) {
+                if (getStatusCode() == 1) {
                     status = Status.DoesNotExist;
                 } else {
                     throw ex;
@@ -240,9 +133,13 @@ public class DockerMachine {
     }
 
     // docker-machine create --driver virtualbox <name>
-    private class CreateCommand extends DockerCommand {
+    private class CreateCommand extends ExternalCommand {
 
         private long start;
+
+        CreateCommand() {
+            super(DockerMachine.this.log);
+        }
 
         @Override
         protected String[] getArgs() {
@@ -278,9 +175,13 @@ public class DockerMachine {
     }
 
     // docker-machine start <name>
-    private class StartCommand extends DockerCommand {
+    private class StartCommand extends ExternalCommand {
 
         private long start;
+
+        StartCommand() {
+            super(DockerMachine.this.log);
+        }
 
         @Override
         protected String[] getArgs() {

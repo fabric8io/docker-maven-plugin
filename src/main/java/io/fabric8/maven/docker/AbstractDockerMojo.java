@@ -47,6 +47,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
 
+    // Key for the previously used image cache
+    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
+
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
 
@@ -164,6 +167,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected Logger log;
 
+    // API version as requested from the client
+    private String serverVersion;
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
      * {@link #executeInternal(ServiceHub)}
@@ -175,7 +181,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
-            log = new AnsiLogger(getLog(), useColor, verbose, getLogPrefix());
+            log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)
@@ -234,9 +240,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     // Resolve and customize image configuration
-    private String initImageConfiguration(Date buildTimeStamp) throws MojoExecutionException {
+    private String initImageConfiguration(Date buildTimeStamp)  {
         // Resolve images
         resolvedImages = ConfigHelper.resolveImages(
+            log,
             images,                  // Unresolved images
             new ConfigHelper.Resolver() {
                     @Override
@@ -253,6 +260,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Customization hook for subclasses to influence the final configuration. This method is called
     // before initialization and validation of the configuration.
+    @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
         return imageConfigs;
     }
@@ -262,12 +270,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         if (isDockerAccessRequired()) {
             try {
                 DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector();
-                String dockerUrl = dockerConnectionDetector.extractUrl(dockerHost);
+                DockerConnectionDetector.ConnectionParameter connectionParam =
+                    dockerConnectionDetector.detectConnectionParameter(dockerHost, certPath);
                 String version =  minimalVersion != null ? minimalVersion : API_VERSION;
-                access = new DockerAccessWithHcClient("v" + version, dockerUrl,
-                                                      dockerConnectionDetector.getCertPath(certPath), maxConnections, log);
+                access = new DockerAccessWithHcClient("v" + version, connectionParam.getUrl(),
+                                                      connectionParam.getCertPath(),
+                                                      maxConnections,
+                                                      log);
                 access.start();
-                setDockerHostAddressProperty(dockerUrl);
+                setDockerHostAddressProperty(connectionParam.getUrl());
+                serverVersion = access.getServerApiVersion();
+                if (!EnvUtil.greaterOrEqualsVersion(serverVersion,version)) {
+                    throw new MojoExecutionException(
+                        String.format("Server API version %s is smaller than required API version %s", serverVersion, version));
+                }
             }
             catch (IOException e) {
                 throw new MojoExecutionException("Cannot create docker access object ", e);
@@ -277,17 +293,32 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private DockerConnectionDetector createDockerConnectionDetector() {
-        if (machine == null) {
+        return new DockerConnectionDetector(getDockerHostProviders());
+    }
+
+    /**
+     * Return a list of providers which could delive connection parameters from
+     * calling external commands. For this plugin this is docker-machine, but can be overridden
+     * to add other config options, too.
+     *
+     * @return list of providers or <code>null</code> if none are applicable
+     */
+    protected List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
+        DockerMachineConfiguration config = machine;
+        if (config == null) {
             Properties projectProps = project.getProperties();
             if (!skipMachine) {
                 if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
-                    machine = new DockerMachineConfiguration(
+                    config = new DockerMachineConfiguration(
                         projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
                         projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
                 }
             }
         }
-        return new DockerConnectionDetector(log, machine);
+
+        List<DockerConnectionDetector.DockerHostProvider> ret = new ArrayList<>();
+        ret.add(new DockerMachine(log, config));
+        return ret;
     }
 
     /**
@@ -327,7 +358,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             final String host;
             try {
                 URI uri = new URI(dockerUrl);
-                if (uri.getHost() == null && uri.getScheme().equals("unix")) {
+                if (uri.getHost() == null && (uri.getScheme().equals("unix") || uri.getScheme().equals("npipe"))) {
                     host = "localhost";
                 } else {
                     host = uri.getHost();
@@ -396,7 +427,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                                           boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
         QueryService queryService = hub.getQueryService();
-        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed)) {
+        ImagePullCache previouslyPulledCache = getPreviouslyPulledImageCache();
+        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, previouslyPulledCache)) {
             return;
         }
 
@@ -405,12 +437,30 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         long time = System.currentTimeMillis();
         docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
+        updatePreviousPulledImageCache(image);
 
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
             // full name with the registry to the short name with no-registry.
             docker.tag(imageName.getFullName(registry), image, false);
         }
+    }
+
+    private void updatePreviousPulledImageCache(String image) {
+        ImagePullCache cache = getPreviouslyPulledImageCache();
+        cache.add(image);
+        session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+    }
+
+    private synchronized ImagePullCache getPreviouslyPulledImageCache() {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+            Properties userProperties = session.getUserProperties();
+        String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
+        ImagePullCache cache = new ImagePullCache(pullCacheJson);
+        if (pullCacheJson == null) {
+            userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+        }
+        return cache;
     }
 
     // Fetch only latest if no tag is given

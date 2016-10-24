@@ -1,0 +1,43 @@
+
+Healthchecks has been introduced since Docker 1.12 and are a way to tell Docker how to test a container to check that it's still working. With a health check you specify a command which is periodically executed and checked for its return value. If the healtcheck return with an exit 0 the container is considered to be healthy, if it returns with 1 then the container is not working correctly.
+
+The healtcheck configuration can have the following options
+
+.Healthcheck Configuration
+[cols="1,5"]
+|===
+| Element | Description
+
+
+| *cmd*
+| Command to execute, which can be given in an shell or exec format as described in <<misc-startup, Startup Arguments>>.
+
+| *interval*
+| Interval for how often to run the healthcheck. The time is specified in seconds, but a time unit can be appended to change this.
+
+| *mode*
+| Mode of the healthcheck. This can be `cmd` which is the default and specifies that the health check should be executed. Or `none` to disable a health check from the base image. Only use this option with `none` for disabling some healthcheck from the base image.
+
+| *retries*
+| How many retries should be performed before the container is to be considered unhealthy.
+
+| *timeout*
+| Timeout after which healthckeck should be stopped and considered to have failed. Given in seconds, but another time unit can be appended.
+|===
+
+The following example queries an URL every 10s as an healthcheck:
+
+.Example
+[source,xml]
+----
+<healthCheck>
+  <!-- Check every 5 minutes -->
+  <interval>5m</interval>
+  <!-- Fail if no response after 3 seconds -->
+  <timeout>3s</timeout>
+  <!-- Fail 3 times until the container is considerd unhealthy -->
+  <retries>3</retries>
+  <!-- Command to execute in shell form -->
+  <cmd>curl -f http://localhost/ || exit 1</cmd>
+</healthCheck>
+----

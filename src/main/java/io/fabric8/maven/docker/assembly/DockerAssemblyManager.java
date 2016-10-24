@@ -43,6 +43,7 @@ import java.util.List;
 public class DockerAssemblyManager {
 
     public static final String DEFAULT_DATA_BASE_IMAGE = "busybox:latest";
+    public static final String SCRATCH_IMAGE = "scratch";
 
     // Assembly name used also as build directory within outputBuildDir
     public static final String ASSEMBLY_NAME = "maven";
@@ -164,7 +165,7 @@ public class DockerAssemblyManager {
         buildDirs.createDirs();
         return buildDirs;
     }
-    
+
     private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
         return assemblyConfig != null &&
                 (assemblyConfig.getInline() != null ||
@@ -317,6 +318,10 @@ public class DockerAssemblyManager {
 
         builder.baseImage(buildConfig.getFrom());
 
+        if (buildConfig.getHealthCheck() != null) {
+            builder.healthCheck(buildConfig.getHealthCheck());
+        }
+
         if (buildConfig.getCmd() != null){
             builder.cmd(buildConfig.getCmd());
         } else if (buildConfig.getCommand() != null) {
@@ -345,8 +350,8 @@ public class DockerAssemblyManager {
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, ASSEMBLY_NAME, buildMode.getExtension(), source, false);
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
-            throw new MojoExecutionException( "Failed to create assembly for docker image: " + e.getMessage() +
-                                              " with mode " + buildMode, e );
+            throw new MojoExecutionException( "Failed to create assembly for docker image " +
+                                              " (with mode '" + buildMode + "'): " + e.getMessage(), e );
         } catch (InvalidAssemblerConfigurationException e) {
             throw new MojoExecutionException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
                                             "Assembly: " + assembly.getId() + " is not configured correctly: "

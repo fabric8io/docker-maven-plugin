@@ -20,7 +20,9 @@ public enum DockerFileKeyword
     ARG,
     LABEL,
     COPY,
-    VOLUME;
+    VOLUME,
+    HEALTHCHECK,
+    NONE;
 
     /**
      * Append this keyword + optionally some args to a {@link StringBuilder} plus a trailing newline.
@@ -29,10 +31,23 @@ public enum DockerFileKeyword
      * @param args args added (space separated)
      */
     public void addTo(StringBuilder sb, String ... args) {
+        addTo(sb, true, args);
+    }
+
+    /**
+     * Append this keyword + optionally some args to a {@link StringBuilder} and a optional trailing newline.
+     *
+     * @param sb stringbuilder to add to
+     * @param newline flag indicating whether a new line should be added
+     * @param args args added (space separated)
+     */
+    public void addTo(StringBuilder sb, boolean newline, String ... args) {
         sb.append(name());
         for (String arg : args) {
             sb.append(" ").append(arg);
         }
-        sb.append("\n");
+        if (newline) {
+            sb.append("\n");
+        }
     }
 }

@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.service;/*
- * 
+ *
  * Copyright 2015 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,8 +34,6 @@ public class ServiceHub {
 
     private final DockerAccess dockerAccess;
 
-    private final LogOutputSpecFactory logSpecFactory;
-
     private final QueryService queryService;
     private final RunService runService;
     private final BuildService buildService;
@@ -47,13 +45,12 @@ public class ServiceHub {
                Logger logger, LogOutputSpecFactory logSpecFactory) {
 
         this.dockerAccess = dockerAccess;
-        this.logSpecFactory = logSpecFactory;
 
         mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
         archiveService = new ArchiveService(dockerAssemblyManager, logger);
 
         if (dockerAccess != null) {
-            queryService = new QueryService(dockerAccess, logger);
+            queryService = new QueryService(dockerAccess);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
         } else {

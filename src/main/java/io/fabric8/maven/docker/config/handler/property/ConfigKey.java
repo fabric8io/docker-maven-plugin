@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config.handler.property;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,6 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import static io.fabric8.maven.docker.assembly.DockerFileKeyword.WORKDIR;
 
 /**
  * Enum holding possible configuration keys
@@ -43,6 +41,7 @@ public enum ConfigKey {
     NOCACHE,
     OPTIMISE,
     CMD,
+    DEPENDS_ON,
     DOMAINNAME,
     DNS,
     DNS_SEARCH,
@@ -51,8 +50,16 @@ public enum ConfigKey {
     ENTRYPOINT,
     ENV,
     ENV_PROPERTY_FILE,
+    EXPOSED_PROPERTY_KEY,
     EXTRA_HOSTS,
     FROM,
+    FROM_EXT,
+    HEALTHCHECK,
+    HEALTHCHECK_MODE("healthcheck.mode"),
+    HEALTHCHECK_INTERVAL("healthcheck.interval"),
+    HEALTHCHECK_TIMEOUT("healthcheck.timeout"),
+    HEALTHCHECK_RETRIES("healthcheck.retries"),
+    HEALTHCHECK_CMD("healthcheck.cmd"),
     HOSTNAME,
     LABELS,
     LINKS,
@@ -68,6 +75,9 @@ public enum ConfigKey {
     NAME,
     NAMING_STRATEGY,
     NET,
+    NETWORK_MODE("network.mode"),
+    NETWORK_NAME("network.name"),
+    NETWORK_ALIAS("network.alias"),
     PORT_PROPERTY_FILE,
     PORTS,
     POST_START("wait.exec.postStart"),
@@ -77,10 +87,12 @@ public enum ConfigKey {
     RESTART_POLICY_NAME("restartPolicy.name"),
     RESTART_POLICY_RETRY("restartPolicy.retry"),
     RUN,
+    SECURITY_OPTS,
     SHMSIZE,
     SKIP_BUILD("skip.build"),
     SKIP_RUN("skip.run"),
     TAGS,
+    ULIMITS,
     USER,
     VOLUMES,
     VOLUMES_FROM,

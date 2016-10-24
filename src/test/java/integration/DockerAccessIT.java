@@ -13,7 +13,6 @@ import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,7 +22,7 @@ import static org.junit.Assert.*;
 
 /*
  * if run from your ide, this test assumes you have configured the runner w/ the appropriate env variables
- * 
+ *
  * it also assumes that 'removeImage' does what it's supposed to do as it's used in test setup.
  */
 @Ignore
@@ -40,13 +39,14 @@ public class DockerAccessIT {
 
     public DockerAccessIT() throws IOException {
         AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
-        String url = createDockerConnectionDetector(logger).extractUrl(null);
+        String url = createDockerConnectionDetector(logger).detectConnectionParameter(null,null).getUrl();
         this.dockerClient = createClient(url, logger);
     }
 
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
         DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false");
-        return new DockerConnectionDetector(logger, machine);
+        return new DockerConnectionDetector(
+            Collections.<DockerConnectionDetector.DockerHostProvider>singletonList(new DockerMachine(logger, machine)));
     }
 
     @Before
@@ -67,7 +67,7 @@ public class DockerAccessIT {
     }
 
     @Test
-    public void testPullStartStopRemove() throws DockerAccessException {
+    public void testPullStartStopRemove() throws DockerAccessException, InterruptedException {
         testDoesNotHave();
 
         try {
@@ -78,6 +78,7 @@ public class DockerAccessIT {
             testExecContainer();
             testQueryPortMapping();
             testStopContainer();
+            Thread.sleep(2000);
             testRemoveContainer();
         } finally {
             testRemoveImage(IMAGE);
@@ -86,8 +87,8 @@ public class DockerAccessIT {
 
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
-            String certPath = createDockerConnectionDetector(logger).getCertPath(null);
-            return new DockerAccessWithHcClient(AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, logger);
+            String certPath = createDockerConnectionDetector(logger).detectConnectionParameter(null,null).getCertPath();
+            return new DockerAccessWithHcClient("v" + AbstractDockerMojo.API_VERSION, baseUrl, certPath, 20, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             logger.error(e.getMessage());
@@ -103,7 +104,7 @@ public class DockerAccessIT {
         containerId = dockerClient.createContainer(createConfig, CONTAINER_NAME);
         assertNotNull(containerId);
 
-        String name = dockerClient.inspectContainer(containerId).getName();
+        String name = dockerClient.getContainer(containerId).getName();
         assertEquals(CONTAINER_NAME, name);
     }
 
@@ -117,7 +118,7 @@ public class DockerAccessIT {
     }
 
     private void testQueryPortMapping() throws DockerAccessException {
-        Map<String, PortBinding> portMap = dockerClient.inspectContainer(containerId).getPortBindings();
+        Map<String, PortBinding> portMap = dockerClient.getContainer(containerId).getPortBindings();
         assertEquals(5677, portMap.values().iterator().next().getHostPort().intValue());
     }
 
@@ -132,7 +133,7 @@ public class DockerAccessIT {
 
     private void testStartContainer() throws DockerAccessException {
         dockerClient.startContainer(containerId);
-        assertTrue(dockerClient.inspectContainer(containerId).isRunning());
+        assertTrue(dockerClient.getContainer(containerId).isRunning());
     }
 
     private void testExecContainer() throws DockerAccessException {
@@ -144,7 +145,7 @@ public class DockerAccessIT {
 
     private void testStopContainer() throws DockerAccessException {
         dockerClient.stopContainer(containerId, 0);
-        assertFalse(dockerClient.inspectContainer(containerId).isRunning());
+        assertFalse(dockerClient.getContainer(containerId).isRunning());
     }
 
     private void testTagImage() throws DockerAccessException {
