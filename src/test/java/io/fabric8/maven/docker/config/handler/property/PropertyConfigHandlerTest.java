@@ -333,7 +333,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     private UlimitConfig ulimit(String name, Integer hard, Integer soft) {
         return new UlimitConfig(name, hard, soft);
     }
-    
+
     private Properties props(String ... args) {
         Properties ret = new Properties();
         for (int i = 0; i < args.length; i += 2) {

@@ -13,31 +13,10 @@ public class DockerComposeConfiguration {
     }
 
     public String getBasedir() {
-        // the @parameter tags above don't actually do anything, so we need to handle the default here :(
-        return (basedir == null) ? "src/main/docker" : basedir;
+        return basedir;
     }
 
     public String getComposeFile() {
         return composeFile;
     }
-
-    public static class Builder {
-
-        private Map<String,String> config = new HashMap<>();
-
-        public Builder composeFile(String composeFile) {
-            config.put("composeFile", composeFile);
-            return this;
-        }
-
-        public Builder basedir(String basedir) {
-            config.put("basedir", basedir);
-            return this;
-        }
-
-        public DockerComposeConfiguration build() {
-            return new DockerComposeConfiguration(config);
-        }
-    }
-
 }

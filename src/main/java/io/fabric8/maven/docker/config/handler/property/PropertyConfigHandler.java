@@ -31,7 +31,8 @@ import static io.fabric8.maven.docker.util.EnvUtil.*;
  * @author roland
  * @since 18/11/14
  */
-@Component(role = ExternalConfigHandler.class)
+// Moved temporarily to resources/META-INF/plexus/components.xml because of https://github.com/codehaus-plexus/plexus-containers/issues/4
+// @Component(role = ExternalConfigHandler.class)
 public class PropertyConfigHandler implements ExternalConfigHandler {
 
     @Override

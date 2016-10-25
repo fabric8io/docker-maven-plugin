@@ -130,15 +130,13 @@ public class NetworkConfig {
 
     // ==============================================================================
 
-    // Mode used for determing the network
+    // Mode used for determining the network
     public enum Mode {
-
         none,
         bridge,
         host,
         container,
         custom;
-
     }
 
     public static class Builder {

@@ -103,7 +103,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
 
-        this.follow = Boolean.valueOf(System.getProperty("docker.follow", "false"));
+        this.follow = followLogs();
 
         QueryService queryService = hub.getQueryService();
         final RunService runService = hub.getRunService();
@@ -181,6 +181,10 @@ public class StartMojo extends AbstractDockerMojo {
                 runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getPomLabel());
             }
         }
+    }
+
+    protected Boolean followLogs() {
+        return Boolean.valueOf(System.getProperty("docker.follow", "false"));
     }
 
     // Check if we are done

@@ -333,6 +333,11 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder cmd(Arguments args) {
+            config.cmd = args;
+            return this;
+        }
+
         public Builder domainname(String domainname) {
             config.domainname = domainname;
             return this;
@@ -342,6 +347,11 @@ public class RunImageConfiguration {
             if (entrypoint != null) {
                 config.entrypoint = new Arguments(entrypoint);
             }
+            return this;
+        }
+
+        public Builder entrypoint(Arguments args) {
+            config.entrypoint = args;
             return this;
         }
 
@@ -459,6 +469,11 @@ public class RunImageConfiguration {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
                     NamingStrategy.valueOf(namingStrategy.toLowerCase());
+            return this;
+        }
+
+        public Builder namingStrategy(NamingStrategy namingStrategy) {
+            config.namingStrategy = namingStrategy;
             return this;
         }
 

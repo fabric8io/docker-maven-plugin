@@ -49,6 +49,7 @@
     <module>custom-net</module>
     <module>properties</module>
     <module>dockerignore</module>
+    <module>docker-compose-demo</module>
     <module>data-jolokia-demo</module>
     <module>multi-wait</module>
    <!-- module>cargo-jolokia-demo</module -->

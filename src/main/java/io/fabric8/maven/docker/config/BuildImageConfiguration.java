@@ -353,7 +353,7 @@ public class BuildImageConfiguration {
             return this;
         }
 
-        public Builder compression(String compression) { 
+        public Builder compression(String compression) {
             if (compression == null) {
                 config.compression = BuildTarArchiveCompression.none;
             } else {
@@ -361,7 +361,7 @@ public class BuildImageConfiguration {
             }
             return this;
         }
-        
+
         public Builder nocache(String nocache) {
             if (nocache != null) {
                 config.nocache = Boolean.valueOf(nocache);

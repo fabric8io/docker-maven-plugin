@@ -38,13 +38,13 @@ public class Arguments {
      */
     private List<String> execInlined = new ArrayList<>();
 
-    public Arguments() {
-        this(null);
-    }
+    public Arguments() { }
 
     public Arguments(String shell) {
         this.shell = shell;
     }
+
+    public Arguments(List<String> exec) { this.exec = exec; }
 
     /**
      * Used to support shell specified as a default parameter, e.g.

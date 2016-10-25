@@ -7,54 +7,55 @@
 # - dns (list)
 # - dns_search (list)
 #
-service:
-  cap_add:
-    - CAP
-  cap_drop:
-    - CAP
-  command: command.sh
-  cgroup_parent: cgroup_parent
-  cpu_shares: 73
-  cpu_set: 0,1
-  devices:
-  - "/dev/device:/dev/device"
-  dns: 8.8.8.8
-  dns_search: example.com
-  domainname: domain.com
-  entrypoint: entrypoint.sh
-# env_file: 
-  environment:
-    NAME: name
-    BOOL: "true"
-#   SECRET:
-  external_links:
-    - link1
-  extra_hosts:
-    - "localhost:127.0.0.1"
-  hostname: subdomain
-  image: image
-  labels:
-    - "label1=label"
-  links:
-    - redis
-# log_driver: json-file
-# log_opt:
-#   key: value
-  mem_limit: 1
-  memswap_limit: 1
-# net: "host"
-# pid: "host"
-  ports: 
-    - "8081:8080"
-  privileged: true
-# security_opt:
-#   - label:user:USER
-# ulimits
-  restart: on-failure:1
-  user: tomcat  
-  volumes:
-    - /foo
-    - /tmp:/tmp
-  volumes_from:
-    - from
-  working_dir: foo  
+services:
+  service:
+    cap_add:
+      - CAP
+    cap_drop:
+      - CAP
+    command: command.sh
+    cgroup_parent: cgroup_parent
+    cpu_shares: 73
+    cpu_set: 0,1
+    devices:
+    - "/dev/device:/dev/device"
+    dns: 8.8.8.8
+    dns_search: example.com
+    domainname: domain.com
+    entrypoint: entrypoint.sh
+  # env_file:
+    environment:
+      NAME: name
+      BOOL: "true"
+  #   SECRET:
+    external_links:
+      - link1
+    extra_hosts:
+      - "localhost:127.0.0.1"
+    hostname: subdomain
+    image: image
+    labels:
+      - "label1=label"
+    links:
+      - redis
+  # log_driver: json-file
+  # log_opt:
+  #   key: value
+    mem_limit: 1
+    memswap_limit: 1
+  # net: "host"
+  # pid: "host"
+    ports:
+      - "8081:8080"
+    privileged: true
+  # security_opt:
+  #   - label:user:USER
+  # ulimits
+    restart: on-failure:1
+    user: tomcat
+    volumes:
+      - /foo
+      - /tmp:/tmp
+    volumes_from:
+      - from
+    working_dir: foo

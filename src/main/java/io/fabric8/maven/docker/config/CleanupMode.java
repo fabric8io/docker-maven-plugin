@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.config;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,14 +23,16 @@ package io.fabric8.maven.docker.config;
  * @since 01/03/16
  */
 public enum CleanupMode {
-    NONE(false),
-    TRY_TO_REMOVE(true),
-    REMOVE(true);
+    NONE(false, "none"),
+    TRY_TO_REMOVE(true, "try"),
+    REMOVE(true, "remove");
 
     private final boolean remove;
+    private final String parameter;
 
-    CleanupMode(boolean remove) {
+    CleanupMode(boolean remove, String parameter) {
         this.remove = remove;
+        this.parameter = parameter;
     }
 
     public static CleanupMode parse(String param) {
@@ -47,5 +49,9 @@ public enum CleanupMode {
 
     public boolean isRemove() {
         return remove;
+    }
+
+    public String toParameter() {
+        return parameter;
     }
 }
