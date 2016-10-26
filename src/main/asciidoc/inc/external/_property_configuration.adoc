@@ -1,0 +1,291 @@
+
+For simple needs the image configuration can be completely defined via
+Maven properties which are defined outside of this plugin's
+configuration. Such a property based configuration can be selected
+with an `<type>` of `props`. As extra configuration a prefix for the
+properties can be defined which by default is `docker`.
+
+.Example
+[source,xml]
+----
+<image>
+  <external>
+     <type>props</type>
+     <prefix>docker</prefix> <!-- this is the default -->
+  </external>
+</image>
+----
+
+Given this example configuration a single image configuration is built
+up from the following properties, which correspond to the corresponding
+values in the `<build>` and `<run>` sections.
+
+.External properties
+[cols="1,5"]
+|===
+| *docker.alias*
+| Alias name
+
+| *docker.args.BUILDVAR*
+| Set the value of a build variable. The syntax is the same as for specifying environment variables (see below).
+
+| *docker.assembly.baseDir*
+| Directory name for the exported artifacts as described in an assembly (which is `/maven` by default).
+
+| *docker.assembly.descriptor*
+| Path to the assembly descriptor when building an image
+
+| *docker.assembly.descriptorRef*
+| Name of a predefined assembly to use.
+
+| *docker.assembly.exportBaseDir*
+| If `true` export base directory
+
+| *docker.assembly.ignorePermissions*
+| If set to `true` existing file permissions are ignored when creating the assembly archive. Deprecated, use a permission mode of `ignore` instead.
+
+| *docker.assembly.permissions*
+| can be `ignore` to use the permission as found on files regardless on any assembly configuration, `keep` to respect the assembly provided permissions, `exec` for setting the executable bit on all files (required for Windows when using an assembly mode `dir`) or `auto` to let the plugin select `exec` on Windows and `keep` on others. `keep` is the default value.
+
+| *docker.assembly.dockerFileDir*
+| specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated p ease use `docker.dockerFileDir` or `docker.dockerFile` instead.
+
+| *docker.nocache*
+| Don't use Docker's build cache.This can be overwritten by setting a system property `docker.nocache` when running Maven.
+
+| *docker.bind.idx*
+| Sets a list of paths to bind/expose in the container
+
+| *docker.capAdd.idx*
+| List of kernel capabilities to add to the container
+
+| *docker.capDrop.idx*
+| List of kernel capabilities to remove from the container
+
+| *docker.cleanup*
+| Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` (which wont fail the build if removing fails), other possible values are `none` (no cleanup) or `remove` (remove but fail if unsuccessful)
+
+| *docker.cmd*
+| Command to execute. This is used both when running a container and as default command when creating an image.
+
+| *docker.domainname*
+| Container domain name
+
+| *docker.dns.idx*
+| List of dns servers to use
+
+| *docker.dnsSearch.idx*
+| List of dns search domains
+
+| *docker.dockerFile*
+| specifies a Dockerfile to use. This property must point to the Dockerfile itself.
+
+| *docker.dockerFileDir*
+| specifies a directory containing an external dockerfile that will be used to create the image. The dockerfile must be name `Dockerfile`
+
+| *docker.entrypoint*
+| Container entry point
+
+| *docker.exposedPropertyKey*
+| Property part for the exposed container properties like internal IP addresses as described in <<start-overview, docker:start>>.
+
+| *docker.workdir*
+| Container working directory
+
+| *docker.env.VARIABLE*
+| Sets an environment variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created
+
+| *docker.envPropertyFile*
+| specifies the path to a property file whose properties are used as environment variables. The environment variables takes precedence over any other environment variables specified.
+
+| *docker.extraHosts.idx*
+| List of `host:ip` to add to `/etc/hosts`
+
+| *docker.from*
+| Base image for building an image
+
+| *docker.fromExt.VARIABLE*
+| Base image for building an image (extended format)
+
+| *docker.healthcheck.cmd*
+| Command to use for a healthcheck
+
+| *docker.healthcheck.interval*
+| Interval for how often to run a healthcheck (in seconds or with a given time unit)
+
+| *docker.healthcheck.mode*
+| If se to `none` disable a healthcheck from a base image
+
+| *docker.healthcheck.retries*
+| Number of retries for how often to retry a healthcheck until it is considered to have failed
+
+| *docker.healthcheck.timeout*
+| Timeout after which a healthcheck command is considered to be failed (in seconds or with a given time unit)
+
+| *docker.hostname*
+| Container hostname
+
+| *docker.labels.LABEL*
+| Sets a label which works similarly like setting environment variables.
+
+| *docker.log.enabled*
+| Use logging (default: `true`)
+
+| *docker.log.prefix*
+| Output prefix
+
+| *docker.log.color*
+| ANSI color to use for the prefix
+
+| *docker.log.date*
+| Date format for printing the timestamp
+
+| *docker.log.driver.name*
+| Name of an alternative log driver
+
+| *docker.log.driver.opts.VARIABLE*
+| Logging driver options (specified similar as in `docker.env.VARIABLE`)
+
+| *docker.links.idx*
+| defines a list of links to other containers when starting a container. _idx_ can be any suffix which is not use except when _idx_ is numeric it specifies the order within the list (i.e. the list contains first a entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example `<docker.links.1>db</docker.links.1>` specifies a link to the image with alias 'db'.
+
+| *docker.maintainer*
+| defines the maintainer's email as used when building an image
+
+| *docker.memory*
+| Container memory (in bytes)
+
+| *docker.memorySwap*
+| Total memory (swap + memory) `-1` to disable swap
+
+| *docker.name*
+| Image name
+
+| *docker.namingStrategy*
+| Container naming (either `none` or `alias`)
+
+| *docker.network.mode*
+| Network mode to use which can be `none`, `host`, `bridged`, `container` or `custom`
+
+| *docker.network.name*
+| Name of the custom network when mode is `custom`, or for mode `container` the image alias name used to create the container.
+
+| *docker.network.alias.idx*
+| One or more aliase for a custom network. Only used when the network mode is `custom`
+
+| *docker.optimise*
+| if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
+
+| *docker.portPropertyFile*
+| specifies a path to a port mapping used when starting a container.
+
+| *docker.ports.idx*
+| Sets a port mapping. For example `<docker.ports.1>jolokia.ports:8080<docker.ports.1>` maps the container port 8080 dynamically to a host port and assigns this host port to the Maven property `${jolokia.port}`. See <<_port-mapping,Port mapping>> for possible mapping options. When creating images images only the right most port is used for exposing the port. For providing multiple port mappings, the index should be count up.
+
+| *docker.registry*
+| Registry to use for pushing images.
+
+| *docker.restartPolicy.name*
+| Container restart policy
+
+| *docker.restartPolicy.retry*
+| Max restrart retries if `on-failure` used
+
+| *docker.securityOpts.idx*
+| List of `opt` elements to specify kernel security options to add to the container. For example `docker.securityOpt.1=seccomp=unconfined`
+
+| *docker.tags.idx*
+| defines a list of tags to apply to a built image
+
+| *docker.ulimits.idx*
+| Ulimits for the container. Ulimit is specified with a soft and hard limit `<type>=<soft limit>[:<hard limit>]`. For example `docker.ulimits.1=memlock=-1:-1`
+
+| *docker.user*
+| User to switch to at the end of a Dockerfile. Not to confuse with `docker.username` which is used for authentication when interacting with a Docker registry.
+
+| *docker.volumes.idx*
+| defines a list of volumes to expose when building an image
+
+| *docker.volumesFrom.idx*
+| defines a list of image aliases from which the volumes should be mounted of the container. The list semantics is the same as for links (see above). For examples `<docker.volumesFrom.1>data</docker.volumesFrom.1>` will mount all volumes exported by the `data` image.
+
+| *docker.wait.http.url*
+| URL to wait for during startup of a container
+
+| *docker.wait.http.method*
+| HTTP method to use for ping check
+
+| *docker.wait.http.status*
+| Status code to wait for when doing HTTP ping check
+
+| *docker.wait.time*
+| Amount of time to wait during startup of a container (in ms)
+
+| *docker.wait.log*
+| Wait for a log output to appear.
+
+| *docker.wait.exec.postStart*
+| Command to execute after the container has start up.
+
+| *docker.wait.exec.preStop*
+| Command to execute before command stops.
+
+| *docker.wait.shutdown*
+| Time in milliseconds to wait between stopping a container and removing it.
+
+| *docker.wait.tcp.mode*
+| Either `mapped` or `direct` when waiting on TCP connections
+
+| *docker.wait.tcp.host*
+| Hostname to use for a TCP wait checks
+
+| *docker.wait.tcp.port.idx*
+| List of ports to use for a TCP check.
+
+| *docker.wait.kill*
+| Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.
+
+| *docker.workingDir*
+| Working dir for commands to run in
+|===
+
+Any other `<run>` or `<build>` sections are ignored when this handler
+is used. Multiple property configuration handlers can be used if they
+use different prefixes. As stated above the environment and ports
+configuration are both used for running container and building
+images. If you need a separate configuration you should use explicit
+run and build configuration sections.
+
+.Example
+[source,xml]
+----
+<properties>
+  <docker.name>jolokia/demo</docker.name>
+  <docker.alias>service</docker.alias>
+  <docker.from>consol/tomcat:7.0</docker.from>
+  <docker.assembly.descriptor>src/main/docker-assembly.xml</docker.assembly.descriptor>
+  <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
+  <docker.label.version>${project.version}</docker.label.version>
+  <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
+  <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
+</properties>
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <external>
+              <type>props</type>
+              <prefix>docker</prefix>
+            </external>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----

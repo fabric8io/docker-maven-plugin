@@ -1,0 +1,37 @@
+
+This plugin supports als configuration via a  https://docs.docker.com/compose/[docker-compose] file, especially for running containers specified in `docker-compose.yml`. Docker Compose handling is available also as an external configuration provider.
+
+.Example
+[source,xml]
+----
+<image>
+  <build> <!--1-->
+    <cleanup>try</cleanup>
+  </build>
+  <run> <!--2-->
+    <namingStrategy>alias</namingStrategy>
+    <portPropertyFile>mapped-ports.properties</portPropertyFile>
+  </run>
+  <external>
+     <type>compose</type> <!--3-->
+     <basedir>src/main/docker</prefix> <!--4-->
+     <composeFile>docker-compose.yml</composeFile>
+  </external>
+</image>
+----
+<1> Plugin specific `<build>`` configuration for all servics with a build part
+<2> Plugin specific `<run>` configuration for all services.
+<3> The type for the external configuration provider must be set to **compose**
+<4> Additional configuration where to find the compose file
+
+Not all features from Docker Compose are currently supported (but most), and Docker Compose does not support all feature of this plugin.
+
+=== Extra build configuration
+
+The following options can be used in a `<build>` configuration section in addition to the build information found in the `Dokerfile` which is referenced from the `docker-compose` file. Please note, that these are applied to all Docker Compose services
+
+
+
+
+=== Extra run configuration
+===
