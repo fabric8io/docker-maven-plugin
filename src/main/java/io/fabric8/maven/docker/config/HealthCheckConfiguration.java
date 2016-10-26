@@ -27,6 +27,9 @@ public class HealthCheckConfiguration {
 
     private String prepareTimeValue(String timeout) {
         // Seconds as default
+        if (timeout == null) {
+            return null;
+        }
         return timeout.matches("^\\d+$") ? timeout + "s" : timeout;
     }
 
