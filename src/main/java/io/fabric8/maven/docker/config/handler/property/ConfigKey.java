@@ -93,6 +93,7 @@ public enum ConfigKey {
     SKIP_BUILD("skip.build"),
     SKIP_RUN("skip.run"),
     TAGS,
+    TMPFS,
     ULIMITS,
     USER,
     VOLUMES,

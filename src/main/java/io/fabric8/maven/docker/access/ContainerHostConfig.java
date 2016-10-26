@@ -128,10 +128,25 @@ public class ContainerHostConfig {
         return add("Privileged", privileged);
     }
 
+    public ContainerHostConfig tmpfs(List<String> mounts) {
+        if (mounts != null && mounts.size() > 0) {
+            JSONObject tmpfs = new JSONObject();
+            for (String mount : mounts) {
+                int idx = mount.indexOf(':');
+                if (idx > -1) {
+                    tmpfs.put(mount.substring(0,idx),mount.substring(idx+1));
+                } else {
+                    tmpfs.put(mount, "");
+                }
+            }
+            startConfig.put("Tmpfs", tmpfs);
+        }
+        return this;
+    }
+
     public ContainerHostConfig shmSize(Long shmSize) {
         return add("ShmSize", shmSize);
     }
-
 
     public ContainerHostConfig restartPolicy(String name, int retry) {
         if (name != null) {

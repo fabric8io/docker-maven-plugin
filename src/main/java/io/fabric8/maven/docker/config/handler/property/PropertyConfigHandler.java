@@ -128,6 +128,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .volumes(extractVolumeConfig(prefix, properties))
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
                 .ulimits(extractUlimits(prefix, properties))
+                .tmpfs(listWithPrefix(prefix, TMPFS, properties))
                 .build();
     }
 

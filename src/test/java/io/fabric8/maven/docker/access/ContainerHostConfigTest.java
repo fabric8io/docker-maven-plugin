@@ -77,6 +77,19 @@ public class ContainerHostConfigTest {
         }
     }
 
+    @Test
+    public void testTmpfs() throws Exception {
+        String[] data = {
+            "/var/lib/mysql", "{Tmpfs: {'/var/lib/mysql': ''}}",
+            "/var/lib/mysql:ro", "{Tmpfs: {'/var/lib/mysql': 'ro'}}"
+        };
+        for (int i = 0; i < data.length; i +=2) {
+            ContainerHostConfig hc = new ContainerHostConfig();
+            JSONObject result = (JSONObject) hc.tmpfs(Arrays.asList(data[i])).toJsonObject();
+            JSONObject expected = (JSONObject) JSONParser.parseJSON(data[i+1]);
+            JSONAssert.assertEquals(expected, result, false);
+        }
+    }
 
     @Test
     public void testLogConfig() throws Exception {

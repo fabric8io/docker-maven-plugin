@@ -21,6 +21,9 @@ services:
     - "/dev/device:/dev/device"
     dns: 8.8.8.8
     dns_search: example.com
+    tmpfs:
+    - "/var/lib/mysql:10m"
+    - "/var/lib/data"
     domainname: domain.com
     entrypoint: entrypoint.sh
   # env_file:

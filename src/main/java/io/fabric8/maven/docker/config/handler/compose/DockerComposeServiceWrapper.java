@@ -102,6 +102,10 @@ class DockerComposeServiceWrapper {
         return asList("dns_search");
     }
 
+    List<String> getTmpfs() {
+        return asList("tmpfs");
+    }
+
     Arguments getEntrypoint() {
         Object entrypoint = asObject("entrypoint");
         return entrypoint != null ? asArguments(entrypoint, "entrypoint") : null;

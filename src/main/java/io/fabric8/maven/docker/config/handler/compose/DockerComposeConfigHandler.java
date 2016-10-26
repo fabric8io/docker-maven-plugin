@@ -139,7 +139,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .dependsOn(wrapper.getDependsOn()) // depends_on relies that no container_name is set
                 .dns(wrapper.getDns())
                 .dnsSearch(wrapper.getDnsSearch())
-                // tmpfs not supported
+                .tmpfs(wrapper.getTmpfs())
                 .entrypoint(wrapper.getEntrypoint())
                 // env_file not supported
                 .env(wrapper.getEnvironment())

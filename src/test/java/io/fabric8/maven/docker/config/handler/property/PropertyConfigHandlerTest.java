@@ -20,7 +20,12 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.integration.junit4.JMockit;
+import org.apache.maven.project.MavenProject;
 import org.junit.*;
+import org.junit.runner.RunWith;
 
 import static org.junit.Assert.*;
 
@@ -28,11 +33,14 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 05/12/14
  */
-@Ignore
+@RunWith(JMockit.class)
 public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private PropertyConfigHandler configHandler;
     private ImageConfiguration imageConfiguration;
+
+    @Mocked
+    private MavenProject project;
 
     @Before
     public void setUp() throws Exception {
@@ -217,11 +225,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .build();
     }
 
-    private List<ImageConfiguration> resolveImage(ImageConfiguration image, Properties properties) {
+    private List<ImageConfiguration> resolveImage(ImageConfiguration image, final Properties properties) {
         //MavenProject project = mock(MavenProject.class);
         //when(project.getProperties()).thenReturn(properties);
+        new Expectations() {{
+            project.getProperties(); result = properties;
+        }};
 
-        return configHandler.resolve(imageConfiguration, null, null);
+        return configHandler.resolve(imageConfiguration, project, null);
     }
 
     private ImageConfiguration resolveExternalImageConfig(String[] testData) {
@@ -302,6 +313,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertUlimitEquals(ulimit("memlock",null,-1),runConfig.getUlimits().get(1));
         assertUlimitEquals(ulimit("memlock",1024,null),runConfig.getUlimits().get(2));
         assertUlimitEquals(ulimit("memlock",2048,null),runConfig.getUlimits().get(3));
+        assertEquals("/var/lib/mysql:10m", runConfig.getTmpfs().get(0));
+        assertEquals(1, runConfig.getTmpfs().size());
 
 
         validateEnv(runConfig.getEnv());
@@ -406,7 +419,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.LOG_DRIVER_NAME), "json",
             k(ConfigKey.LOG_DRIVER_OPTS) + ".max-size", "1024",
             k(ConfigKey.LOG_DRIVER_OPTS) + ".max-file", "10",
-            k(ConfigKey.WORKING_DIR), "foo"
+            k(ConfigKey.WORKING_DIR), "foo",
+            k(ConfigKey.TMPFS) + ".1", "/var/lib/mysql:10m"
         };
     }
 

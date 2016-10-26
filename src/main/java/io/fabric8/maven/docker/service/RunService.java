@@ -304,6 +304,7 @@ public class RunService {
                 .memorySwap(runConfig.getMemorySwap())
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
                 .logConfig(runConfig.getLogConfiguration())
+                .tmpfs(runConfig.getTmpfs())
                 .ulimits(runConfig.getUlimits());
 
         addVolumeConfig(config, runConfig);

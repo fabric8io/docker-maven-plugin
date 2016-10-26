@@ -195,7 +195,10 @@ values in the `<build>` and `<run>` sections.
 | List of `opt` elements to specify kernel security options to add to the container. For example `docker.securityOpt.1=seccomp=unconfined`
 
 | *docker.tags.idx*
-| defines a list of tags to apply to a built image
+| List of tags to apply to a built image
+
+| *docker.tmpfs.idx*
+| One or more mount points for a *tmpfs*. Add mount options after a `:`
 
 | *docker.ulimits.idx*
 | Ulimits for the container. Ulimit is specified with a soft and hard limit `<type>=<soft limit>[:<hard limit>]`. For example `docker.ulimits.1=memlock=-1:-1`

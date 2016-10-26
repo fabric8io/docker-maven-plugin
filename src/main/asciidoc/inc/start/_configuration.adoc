@@ -106,6 +106,9 @@ a| Naming strategy for how the container name is created:
 | *skip*
 | If `true` disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.
 
+| *tmpfs*
+a| List countaintin `<mount>` elements for directories to mount with a temporary filesystem. Optionally, mount options can be appended after a ':'. See below for an example.
+
 | *ulimits*
 a| ulimits for the container. This list contains `<ulimit>` elements which three sub elements:
 
@@ -150,6 +153,10 @@ See below for an example.
        <soft>-1</soft>
     </ulimit>
   <ulimits>
+  <tmpfs>
+    <mount>/var/lib/mysql:size=10m</mount>
+    <mount>/opt/mydata</mount>
+  </tmpfs>
   <securityOpts>
     <opt>seccomp=unconfined</opt>
   </securityOpts>

@@ -129,6 +129,10 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private WaitConfiguration wait;
 
+    // Mountpath for tmps
+    @Parameter
+    private List<String> tmpfs;
+
     @Parameter
     private LogConfiguration log;
 
@@ -140,6 +144,7 @@ public class RunImageConfiguration implements Serializable {
 
     @Parameter
     private boolean skip = false;
+
 
     public RunImageConfiguration() { }
 
@@ -272,6 +277,10 @@ public class RunImageConfiguration implements Serializable {
 
     public List<UlimitConfig> getUlimits() {
         return ulimits;
+    }
+
+    public List<String> getTmpfs() {
+        return tmpfs;
     }
 
     // Naming scheme for how to name container
@@ -466,6 +475,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder links(List<String> links) {
             config.links = links;
+            return this;
+        }
+
+        public Builder tmpfs(List<String> tmpfs) {
+            config.tmpfs = tmpfs;
             return this;
         }
 
