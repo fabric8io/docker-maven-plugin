@@ -12,7 +12,8 @@ a| The network mode, which can be one of the following values:
 * *bridge* : Bridged mode with the default Docker bridge (default)
 * *host* : Share the Docker host network interfaces
 * *container* : Connect to the network of the specified container. The name of the container is taken from the `<name>` element.
-* *custom* : Use a custom network which must be created before with `docker network create`. This is available for Docker 1.9 and newer. For more about the networking options please refer to the https://docs.docker.com/engine/userguide/networking/work-with-networks[Docker documentation].
+* *custom* : Use a custom network, which must be created before using `docker network create`. Alternatively you can set the ```docker.autoCreateCustomNetworks``` <<global-configuration, global configuration>> parameter to ```true``` to automatically create custom networks. Custom networks are available for Docker 1.9 and newer. For more about the networking options please refer to the https://docs.docker.com/engine/userguide/networking/work-with-networks[Docker documentation].
+
 * *none* : No network will be setup.
 
 | *name*
