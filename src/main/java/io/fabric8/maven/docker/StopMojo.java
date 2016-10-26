@@ -17,7 +17,6 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -36,7 +35,6 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  */
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class StopMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.keepRunning", defaultValue = "false")

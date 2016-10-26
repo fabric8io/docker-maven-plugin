@@ -7,7 +7,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -20,7 +19,6 @@ import io.fabric8.maven.docker.service.ServiceHub;
  * @author roland
  */
 @Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class PushMojo extends AbstractDockerMojo {
 
     // Registry to use for push operations if no registry is specified
