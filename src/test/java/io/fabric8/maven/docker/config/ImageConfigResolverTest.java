@@ -24,6 +24,7 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationExce
 import org.codehaus.plexus.util.ReflectionUtils;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +40,7 @@ public class ImageConfigResolverTest {
     @Before
     public void setUp() throws Exception {
         resolver = new ImageConfigResolver();
-        ReflectionUtils.setVariableValueInObject(resolver, "handlers", Collections.singletonList(new TestHandler(3)));
+        ReflectionUtils.setVariableValueInObject(resolver, "propertyConfigHandler", new TestHandler(3));
         resolver.initialize();
     }
 

@@ -28,7 +28,7 @@
           <images>
             <image>
               <external>
-                <type>props</type>
+                <type>properties</type>
                 <prefix>postgres.docker</prefix>
               </external>
             </image>
