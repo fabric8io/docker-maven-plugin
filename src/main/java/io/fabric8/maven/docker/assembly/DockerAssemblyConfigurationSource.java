@@ -245,7 +245,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     // X
     @Override
     public String getTarLongFileMode() {
-        return "warn";
+        return assemblyConfig.getTarLongFileMode() == null ? "warn" : assemblyConfig.getTarLongFileMode();
     }
 
     // X

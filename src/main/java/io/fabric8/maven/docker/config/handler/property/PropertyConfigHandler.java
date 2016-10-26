@@ -150,6 +150,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .permissions(withPrefix(prefix, ASSEMBLY_PERMISSIONS, properties))
                 .user(withPrefix(prefix, ASSEMBLY_USER, properties))
                 .mode(withPrefix(prefix, ASSEMBLY_MODE, properties))
+                .tarLongFileMode(withPrefix(prefix, ASSEMBLY_TARLONGFILEMODE, properties))
                 .build();
     }
 

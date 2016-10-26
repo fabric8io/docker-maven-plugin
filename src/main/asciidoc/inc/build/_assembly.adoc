@@ -48,6 +48,9 @@ assembly configuration
 
 `keep` is the default value.
 
+| *tarLongFileMode*
+| Sets the TarArchiver behaviour on file paths with more than 100 characters length. Valid values are: "warn"(default), "fail", "truncate", "gnu", "posix", "posix_warn" or "omit"
+
 | *user*
 | User and/or group under which the files should be added. The user must already exist in the base image.
 
