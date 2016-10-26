@@ -48,7 +48,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 Map<String, Object> serviceDefinition = (Map<String, Object>) entry.getValue();
 
                 DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig);
-                resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile()));
+                resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile(), unresolvedConfig));
             }
         }
 
@@ -76,11 +76,11 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         }
     }
 
-    private ImageConfiguration buildImageConfiguration(DockerComposeServiceWrapper mapper, File composeParent) {
+    private ImageConfiguration buildImageConfiguration(DockerComposeServiceWrapper mapper, File composeParent, ImageConfiguration imageConfig) {
         return new ImageConfiguration.Builder()
                 .name(mapper.getImage())
                 .alias(mapper.getAlias())
-                .buildConfig(createBuildImageConfiguration(mapper, composeParent))
+                .buildConfig(createBuildImageConfiguration(mapper, composeParent, imageConfig.getBuildConfiguration()))
                 .runConfig(createRunConfiguration(mapper))
                 .build();
     }
@@ -96,19 +96,23 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         }
     }
 
-    private BuildImageConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper, File composeParent) {
+    private BuildImageConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper,
+                                                                  File composeParent,
+                                                                  BuildImageConfiguration buildConfig) {
         if (!mapper.requiresBuild()) {
-            return null;
+            // Reuse build config
+            return buildConfig;
         }
 
-        // TODO: Think about assembly
-        return new BuildImageConfiguration.Builder()
+        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder()
                 .dockerFile(extractDockerFilePath(mapper, composeParent))
-                .args(mapper.getBuildArgs())
-                .cleanup(mapper.getCleanup().toParameter())
-                .compression(mapper.getCompression().name())
-                .skip(mapper.getSkipBuild())
-                .build();
+                .args(mapper.getBuildArgs());
+        if (buildConfig != null) {
+            builder.cleanup(buildConfig.cleanupMode().toParameter())
+                   .compression(buildConfig.getCompression().name())
+                   .skip(Boolean.toString(buildConfig.skip()));
+        }
+        return builder.build();
     }
 
     private RunImageConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper) {

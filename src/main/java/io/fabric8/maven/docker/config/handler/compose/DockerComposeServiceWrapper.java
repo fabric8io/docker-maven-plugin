@@ -75,7 +75,7 @@ class DockerComposeServiceWrapper {
     }
 
     // ===================================================================================
-    // Takend from the enclosing build config
+    // Taken from the enclosing build config
 
     CleanupMode getCleanup() {
         BuildImageConfiguration buildConfig = enclosingImageConfig.getBuildConfiguration();

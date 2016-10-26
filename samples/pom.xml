@@ -51,6 +51,7 @@
     <module>dockerignore</module>
     <module>docker-compose-demo</module>
     <module>data-jolokia-demo</module>
+    <module>healthcheck</module>
     <module>multi-wait</module>
    <!-- module>cargo-jolokia-demo</module -->
   </modules>
