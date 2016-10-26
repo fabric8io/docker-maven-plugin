@@ -248,7 +248,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             new ConfigHelper.Resolver() {
                     @Override
                     public List<ImageConfiguration> resolve(ImageConfiguration image) {
-                        return imageConfigResolver.resolve(image, project);
+                        return imageConfigResolver.resolve(image, project, session);
                     }
                 },
             image,                   // A filter which image to process

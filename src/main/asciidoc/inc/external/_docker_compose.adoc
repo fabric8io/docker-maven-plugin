@@ -5,33 +5,38 @@ This plugin supports als configuration via a  https://docs.docker.com/compose/[d
 [source,xml]
 ----
 <image>
-  <build> <!--1-->
-    <cleanup>try</cleanup>
-  </build>
-  <run> <!--2-->
-    <namingStrategy>alias</namingStrategy>
-    <portPropertyFile>mapped-ports.properties</portPropertyFile>
-  </run>
   <external>
-     <type>compose</type> <!--3-->
-     <basedir>src/main/docker</prefix> <!--4-->
+     <type>compose</type> <!--1-->
+     <basedir>src/main/docker</prefix> <!--2-->
      <composeFile>docker-compose.yml</composeFile>
   </external>
 </image>
 ----
-<1> Plugin specific `<build>`` configuration for all servics with a build part
-<2> Plugin specific `<run>` configuration for all services.
-<3> The type for the external configuration provider must be set to **compose**
-<4> Additional configuration where to find the compose file
+<1> The type for the external configuration provider must be set to **compose**
+<2> Additional configuration where to find the compose file
 
-Not all features from Docker Compose are currently supported (but most), and Docker Compose does not support all feature of this plugin.
+The following options can be provided:
 
-=== Extra build configuration
+.Docker compose configuration
+[cols="1,5,1"]
+|===
+| *basedir*
+| Basedir where to find the compose file and which is also used as the current directory when examing the compose file
+| `${basedir}/src/main/docker`
 
-The following options can be used in a `<build>` configuration section in addition to the build information found in the `Dokerfile` which is referenced from the `docker-compose` file. Please note, that these are applied to all Docker Compose services
+| *composeFile*
+| Name of the compose file to use
+| `docker-compose.yml`
+|===
 
+The Docker Compose file can containe variables as described in the https://docs.docker.com/compose/compose-file/#/variable-substitution[Docker Compose documentation]. These are substituted with Maven project properties. Please note, when the `docker-compose.yml` with variables is to be used with the `docker-compose` CLI command, that these variables must also be valid environment variables (i.e. must not contain a `.`).
 
+In addition to the `docker-compose.yml` you can add all known options for <<build-configuration,<build> >>, <<start-configuration,<run> >> and <<watch-configuration,<watch> >> configuration elements which are then used as defaults and are overwritten by the configuration defined in the `docker-compose.yml` file.
 
+=== Limitations
 
-=== Extra run configuration
-===
+The following Docker Compose file keywords are not yet supported:
+
+* `cgroup_parent`, `devices`, `tmpfs`, `env_file`, `expose`, `pid`, `security_opt`, `stop_signal`, `cpu_share`, `cpu_quota`, `cpuset`, `ipc`, `mac_address`, `read_only` are not yet supported (but might be in a future version).
+* `extend` for including other Docker Compose files is not yet implemented.
+* Only **services** are currently evaluated, there is no supported yet for **volumes** and **networks**.

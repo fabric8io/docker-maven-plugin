@@ -75,24 +75,6 @@ class DockerComposeServiceWrapper {
     }
 
     // ===================================================================================
-    // Taken from the enclosing build config
-
-    CleanupMode getCleanup() {
-        BuildImageConfiguration buildConfig = enclosingImageConfig.getBuildConfiguration();
-        return buildConfig != null ? buildConfig.cleanupMode() : CleanupMode.TRY_TO_REMOVE;
-    }
-
-    BuildTarArchiveCompression getCompression() {
-        BuildImageConfiguration buildConfig = enclosingImageConfig.getBuildConfiguration();
-        return buildConfig != null ? buildConfig.getCompression() : BuildTarArchiveCompression.none;
-    }
-
-    String getSkipBuild() {
-        BuildImageConfiguration buildConfig = enclosingImageConfig.getBuildConfiguration();
-        return buildConfig != null ? Boolean.toString(buildConfig.skip()) : "false";
-    }
-
-    // ===================================================================================
     // Run config:
 
     List<String> getCapAdd() {
@@ -315,25 +297,6 @@ class DockerComposeServiceWrapper {
     String getWorkingDir() {
         return asString("working_dir");
     }
-
-    // ================================================================
-    // Config taken from an enclosing run configuration
-
-    RunImageConfiguration.NamingStrategy getNamingStrategy() {
-        RunImageConfiguration runConfig = enclosingImageConfig.getRunConfiguration();
-        return runConfig != null ? runConfig.getNamingStrategy() : RunImageConfiguration.NamingStrategy.alias;
-    }
-
-    String getPortPropertyFile() {
-        RunImageConfiguration runConfig = enclosingImageConfig.getRunConfiguration();
-        return runConfig != null ? runConfig.getPortPropertyFile() : null;
-    }
-
-    String getSkipRun() {
-        RunImageConfiguration runConfig = enclosingImageConfig.getRunConfiguration();
-        return runConfig != null ? Boolean.toString(runConfig.skip()) : "false";
-    }
-
 
     // ================================================================
     // Not used yet:

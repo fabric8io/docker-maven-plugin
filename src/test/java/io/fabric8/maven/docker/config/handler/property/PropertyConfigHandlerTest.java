@@ -20,7 +20,6 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
-import org.apache.maven.project.MavenProject;
 import org.junit.*;
 
 import static org.junit.Assert.*;
@@ -222,7 +221,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         //MavenProject project = mock(MavenProject.class);
         //when(project.getProperties()).thenReturn(properties);
 
-        return configHandler.resolve(imageConfiguration, null);
+        return configHandler.resolve(imageConfiguration, null, null);
     }
 
     private ImageConfiguration resolveExternalImageConfig(String[] testData) {

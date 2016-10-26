@@ -1,25 +1,24 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
+import io.fabric8.maven.docker.util.DeepCopy;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.annotations.Component;
+import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.filtering.MavenReaderFilter;
+import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
+import org.codehaus.plexus.component.annotations.Requirement;
 import org.yaml.snakeyaml.Yaml;
 
 
 /**
- * Features not possible:
- * - wait
- * - watch
- * - detailed log config (color, extra file, ...)
+ * Docker Compose handler for allowing a docker-compose file to be used
+ * to specify the docker images.
  */
 
 // Moved temporarily to resources/META-INF/plexus/components.xml because of https://github.com/codehaus-plexus/plexus-containers/issues/4
@@ -31,15 +30,19 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         return "compose";
     }
 
+    // Enable later when issue above is fixed. In the meantime its declared in the components.xml, too
+    // @Requirement(role = MavenReaderFilter.class)
+    private MavenReaderFilter readerFilter;
+
     @Override
     @SuppressWarnings("unchecked")
-    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) {
+    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project, MavenSession session) {
         List<ImageConfiguration> resolved = new ArrayList<>();
 
         DockerComposeConfiguration config = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
         File composeFile = resolveComposeFile(config.getBasedir(), config.getComposeFile(), project);
 
-        for (Object composeO : getComposeConfigurations(composeFile)) {
+        for (Object composeO : getComposeConfigurations(composeFile, project, session)) {
             Map<String, Object> compose = (Map<String, Object>) composeO;
             validateVersion(compose, composeFile);
             Map<String, Object> services = (Map<String, Object>) compose.get("services");
@@ -76,24 +79,39 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         }
     }
 
-    private ImageConfiguration buildImageConfiguration(DockerComposeServiceWrapper mapper, File composeParent, ImageConfiguration imageConfig) {
+    private ImageConfiguration buildImageConfiguration(DockerComposeServiceWrapper mapper, File composeParent, ImageConfiguration unresolvedConfig) {
         return new ImageConfiguration.Builder()
                 .name(mapper.getImage())
                 .alias(mapper.getAlias())
-                .buildConfig(createBuildImageConfiguration(mapper, composeParent, imageConfig.getBuildConfiguration()))
-                .runConfig(createRunConfiguration(mapper))
+                .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig.getBuildConfiguration()))
+                .runConfig(createRunConfiguration(mapper, unresolvedConfig.getRunConfiguration()))
+                .watchConfig(DeepCopy.copy(unresolvedConfig.getWatchConfiguration()))
                 .build();
     }
 
-    private Iterable<Object> getComposeConfigurations(File composePath) {
+    private Iterable<Object> getComposeConfigurations(File composePath, MavenProject project, MavenSession session) {
         try {
-            FileInputStream stream = new FileInputStream(composePath);
             Yaml yaml = new Yaml();
-            return yaml.loadAll(stream);
+            return yaml.loadAll(getFilteredReader(composePath, project, session));
         }
-        catch (FileNotFoundException e) {
+        catch (FileNotFoundException | MavenFilteringException e) {
             throw new ExternalConfigHandlerException("failed to load external configuration: " + composePath, e);
         }
+    }
+
+    private Reader getFilteredReader(File path, MavenProject project, MavenSession session) throws FileNotFoundException, MavenFilteringException {
+        MavenReaderFilterRequest request =
+            new MavenReaderFilterRequest(
+                new FileReader(path),
+                true,
+                project,
+                Collections.<String>emptyList(),
+                false,
+                null,
+                session,
+                null);
+        //request.setEscapeString("$");
+        return readerFilter.filter(request);
     }
 
     private BuildImageConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper,
@@ -104,19 +122,14 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
             return buildConfig;
         }
 
-        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder()
+        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder(buildConfig)
                 .dockerFile(extractDockerFilePath(mapper, composeParent))
                 .args(mapper.getBuildArgs());
-        if (buildConfig != null) {
-            builder.cleanup(buildConfig.cleanupMode().toParameter())
-                   .compression(buildConfig.getCompression().name())
-                   .skip(Boolean.toString(buildConfig.skip()));
-        }
         return builder.build();
     }
 
-    private RunImageConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper) {
-        return new RunImageConfiguration.Builder()
+    private RunImageConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper, RunImageConfiguration runConfig) {
+        return new RunImageConfiguration.Builder(runConfig)
                 .capAdd(wrapper.getCapAdd())
                 .capDrop(wrapper.getCapDrop())
                 .cmd(wrapper.getCommand())
@@ -161,11 +174,6 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 // tty n.s.
                 .user(wrapper.getUser())
                 .workingDir(wrapper.getWorkingDir())
-                // =============================================
-                // d-m-p properties:
-                .namingStrategy(wrapper.getNamingStrategy())
-                .portPropertyFile(wrapper.getPortPropertyFile())
-                .skip(wrapper.getSkipRun())
                 .build();
     }
 

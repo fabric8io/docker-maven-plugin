@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config.handler;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package io.fabric8.maven.docker.config.handler;/*
 import java.util.List;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -43,8 +44,10 @@ public interface ExternalConfigHandler {
      *
      * @param unresolvedConfig the original, unresolved config
      * @param project maven project
+     * @param session maven session
      * @return list of image configuration. Must not be null but can be empty.
      * @throws ExternalConfigHandlerException if there is a problem resolving the image configuration
      */
-    List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project) throws ExternalConfigHandlerException;
+    List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project, MavenSession session)
+        throws ExternalConfigHandlerException;
 }

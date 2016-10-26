@@ -16,6 +16,7 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @since 29/07/16
  */
 
-public class NetworkConfig {
+public class NetworkConfig implements Serializable {
 
     @Parameter
     private String name;

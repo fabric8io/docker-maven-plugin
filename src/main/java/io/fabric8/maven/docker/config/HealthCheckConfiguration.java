@@ -1,9 +1,11 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
+
 /**
  * Build configuration for health checks.
  */
-public class HealthCheckConfiguration {
+public class HealthCheckConfiguration implements Serializable {
 
     private HealthCheckMode mode = HealthCheckMode.cmd;
 

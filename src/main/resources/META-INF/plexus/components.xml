@@ -80,6 +80,12 @@
       <role-hint>default</role-hint>
       <implementation>io.fabric8.maven.docker.config.handler.compose.DockerComposeConfigHandler</implementation>
       <description></description>
+      <requirements>
+        <requirement>
+          <role>org.apache.maven.shared.filtering.MavenReaderFilter</role>
+          <field-name>readerFilter</field-name>
+        </requirement>
+      </requirements>
       <isolated-realm>false</isolated-realm>
     </component>
     <component>

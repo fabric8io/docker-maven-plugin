@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.maven.plugins.annotations.Parameter;
@@ -8,7 +9,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 12.10.14
  */
-public class WaitConfiguration {
+public class WaitConfiguration implements Serializable {
 
     @Parameter
     private int time;
@@ -167,7 +168,7 @@ public class WaitConfiguration {
         }
     }
 
-    public static class ExecConfiguration {
+    public static class ExecConfiguration implements Serializable {
         @Parameter
         private String postStart;
 
@@ -190,7 +191,7 @@ public class WaitConfiguration {
         }
     }
 
-    public static class HttpConfiguration {
+    public static class HttpConfiguration implements Serializable {
 
         @Parameter
         private String url;
@@ -235,8 +236,7 @@ public class WaitConfiguration {
         direct,
     }
 
-    public static class TcpConfiguration
-    {
+    public static class TcpConfiguration implements Serializable {
         @Parameter
         private String host;
 

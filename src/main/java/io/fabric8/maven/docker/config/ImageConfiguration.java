@@ -1,17 +1,16 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
 import java.util.*;
 
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
  * @since 02.09.14
  */
-public class ImageConfiguration implements StartOrderResolver.Resolvable {
+public class ImageConfiguration implements StartOrderResolver.Resolvable, Serializable {
 
     @Parameter(required = true)
     private String name;
@@ -36,16 +35,6 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
 
     // Used for injection
     public ImageConfiguration() {}
-
-    public ImageConfiguration(ImageConfiguration that) {
-        this.name = that.name;
-        this.alias = that.alias;
-        this.run = that.run;
-        this.build = that.build;
-        this.watch = that.watch;
-        this.external = that.external;
-        this.registry = that.registry;
-    }
 
     @Override
     public String getName() {
@@ -170,13 +159,17 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable {
     public static class Builder {
         private final ImageConfiguration config;
 
-        public Builder() {
-            this.config = new ImageConfiguration();
+        public Builder()  {
+            this(null);
         }
 
 
         public Builder(ImageConfiguration that) {
-            this.config = new ImageConfiguration(that);
+            if (that == null) {
+                this.config = new ImageConfiguration();
+            } else {
+                this.config = DeepCopy.copy(that);
+            }
         }
 
         public Builder name(String name) {

@@ -11,7 +11,6 @@ import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
-import mockit.Mock;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,15 +26,15 @@ public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private String composeBuildDir;
     private String dockerFileDir;
-    
+
     //@Mock
     //private DockerComposeValueProvider provider;
-    
-    
+
+
     @Before
     public void setup() {
         //MockitoAnnotations.initMocks(this);
-        
+
         this.handler = new DockerComposeConfigHandler();
     }
 
@@ -53,19 +52,19 @@ public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
 //        whenBuildDockerFile();
 //
 //    }
-    
+
     private void givenBuildDirIsDot()
     {
         composeBuildDir = ".";
         //when(provider.getBuildDir()).thenReturn(composeBuildDir);
     }
-    
+
     private void whenBuildDockerFile()
     {
         //dockerFileDir = handler.buildDockerFileDir(provider, composeBuildDir);
     }
 
-    
+
     @Override
     protected String getEnvPropertyFile() {
         // this predates compose support and doesn't work the same way
@@ -94,9 +93,9 @@ public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private void thenBuildImageIsCorrect() {
-        
+
     }
-    
+
     private void thenResolvedImageIsCorrect() {
         ImageConfiguration config = resolved.get(0);
 
@@ -112,7 +111,7 @@ public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private void whenResolveImages() {
-        resolved = handler.resolve(unresolved, null);
+        resolved = handler.resolve(unresolved, null, null);
     }
 
     class ServiceImageBuilder {
@@ -151,22 +150,22 @@ public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
             buildBuilder.nocache(toStr(noCache));
             return this;
         }
-        
+
         public ServiceImageBuilder portPropertyFile(String portPropertyFile) {
             runBuilder.portPropertyFile(portPropertyFile);
             return this;
         }
-        
+
         public ServiceImageBuilder skipBuild(boolean skip) {
             buildBuilder.skip(toStr(skip));
             return this;
         }
-        
+
         public ServiceImageBuilder skipRun(boolean skip) {
             runBuilder.skip(toStr(skip));
             return this;
         }
-        
+
         private String toStr(boolean bool) {
             return String.valueOf(bool);
         }

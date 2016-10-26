@@ -3,9 +3,10 @@ services:
   data:
     build:
       context: .
-    image: "fabric8/docker-compose-demo:latest"
+    image: "${project.groupId}/${project.artifactId}:latest"
     labels:
       "dmp.type": "example"
+      "dmp.value": "100$$"
   tomcat:
     image: "fabric8/tomcat-7:latest"
     ports:

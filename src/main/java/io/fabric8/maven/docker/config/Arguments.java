@@ -3,9 +3,10 @@ package io.fabric8.maven.docker.config;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class Arguments {
+public class Arguments implements Serializable {
 
     @Parameter
     private String shell;

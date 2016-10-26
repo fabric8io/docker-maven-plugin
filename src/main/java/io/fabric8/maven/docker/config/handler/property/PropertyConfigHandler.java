@@ -18,9 +18,9 @@ package io.fabric8.maven.docker.config.handler.property;/*
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 
-import org.codehaus.plexus.component.annotations.Component;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
 
@@ -41,7 +41,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     @Override
-    public List<ImageConfiguration> resolve(ImageConfiguration config, MavenProject project) throws IllegalArgumentException {
+    public List<ImageConfiguration> resolve(ImageConfiguration config, MavenProject project, MavenSession session)
+        throws IllegalArgumentException {
         String prefix = getPrefix(config);
         Properties properties = project.getProperties();
 
