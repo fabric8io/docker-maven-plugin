@@ -26,7 +26,7 @@ If this directory contains a `.maven-dockerinclude` file, then it is used for in
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 
 ****
-For the future it is planned to introduce special keywords lile `DMP_ADD_ASSEMBLY` which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.
+For the future it is planned to introduce special keywords like `DMP_ADD_ASSEMBLY` which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.
 ****
 
 The following example uses a Dockerfile in the directory
@@ -49,3 +49,7 @@ The following example uses a Dockerfile in the directory
  ...
 </plugin>
 ----
+
+Please note that `docker:build` fork the Maven lifecycle and calls all phases up to and including `package`. The reason for this is that for the assembly to be able to reference an artifact which is part of the build it needs to be included with this `package` phase. This is a general restriction of the Maven lifecycle which applies also to the `maven-assembly-plugin` itself.
+
+When you want to bind the build to an `<execution>` in the plugin configuration to bind it to a phase, please use the goal `build-nofork` which does not fork the lifecycle and avoids calling goals twice.

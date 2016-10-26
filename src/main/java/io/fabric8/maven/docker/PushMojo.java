@@ -20,7 +20,6 @@ import io.fabric8.maven.docker.service.ServiceHub;
  * @author roland
  */
 @Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class PushMojo extends AbstractDockerMojo {
 
     // Registry to use for push operations if no registry is specified

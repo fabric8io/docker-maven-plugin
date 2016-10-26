@@ -56,7 +56,6 @@ import org.codehaus.plexus.util.StringUtils;
  * @since 16/06/15
  */
 @Mojo(name = "watch")
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class WatchMojo extends AbstractBuildSupportMojo {
 
     /**

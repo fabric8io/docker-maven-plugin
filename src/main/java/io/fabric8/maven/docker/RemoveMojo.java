@@ -40,7 +40,6 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  */
 @Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class RemoveMojo extends AbstractDockerMojo {
 
     // Should all configured images should be removed?

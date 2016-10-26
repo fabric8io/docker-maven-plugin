@@ -29,7 +29,6 @@ import io.fabric8.maven.docker.service.QueryService;
  *
  */
 @Mojo(name = "logs")
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class LogsMojo extends AbstractDockerMojo {
 
     // Whether to log infinitely or to show only the logs happened until now.

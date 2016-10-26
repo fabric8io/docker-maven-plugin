@@ -1,5 +1,13 @@
 # ChangeLog
 
+* **0.17.1** 
+  - Add initial Docker compose support (#384)
+  - Made `docker:run` running in the foreground
+  - Add lifecycle fork to package for `docker:build` and `docker:source` for ease of use. Introducher `docker:build-nofork` and `docker:source-nofork`
+  - Removed lifecycle forks for all other Mojos (#567) (#599)
+
+For 0.17 the lifecycle handling of the plugins has changed slightly. All forks to the _initialize_ phase have been removed since they collide with certain setups. Instead a fork to the _package_ phase has been introduced for `docker:build` and `docker:source` to make it easier for them to be consumed on the commandline (because otherwise at least `package` has to be added as goal so that the assembly could be constructed from the artifacts built). If you have these goals bound to an `<execution>` please use `build-nofork` and `source-nofork` instead, otherwise the package phase will be called twice.
+
 * **0.16.9** (2016-10-23)
   - Removed (undocumented) property `docker.image.name` which could be used to be inserted as a `%a` specifier part in an image name.
   - Fixed exposing of all property and port mappings ([#583](https://github.com/fabric8io/docker-maven-plugin/issues/583))

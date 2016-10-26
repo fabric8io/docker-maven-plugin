@@ -36,7 +36,6 @@ import org.apache.maven.plugins.annotations.Parameter;
  *
  */
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class StopMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.keepRunning", defaultValue = "false")

@@ -26,7 +26,6 @@ import org.apache.maven.plugins.annotations.Mojo;
  * @since 26/04/16
  */
 @Mojo(name = "run", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
-@Execute(phase = LifecyclePhase.INITIALIZE)
 public class RunMojo extends StartMojo {
 
     @Override

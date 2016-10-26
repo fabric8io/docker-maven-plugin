@@ -2,8 +2,7 @@
 [[docker:source]]
 == *docker:source*
 
-The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven
-project with a certain classifier. It reuses the configuration from link:docker-build.md[{plugin}:build].
+The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <<docker:build,<<{plugin}:build> >>.
 
 `{plugin}:source` uses the image's link:image-configuration.md[alias] as part of the classifier, so it is mandatory that the alias is set for
 this goal to work. The classifier is calculated as `docker-<alias>` so when the alias is set to `service`, then the classifier is `docker-service`.
@@ -29,4 +28,6 @@ For example, this configuration will attach the docker build archive to the arti
 </plugin>
 ----
 
-If the plugin is not bound to an execute phase but called directly, it must be ensured that the package phase is called, too. That is required to find the artifacts created with this build when referenced from an assembly.
+`docker:source` forks the Maven lifecycle and calls all phases up to and including `package`. The reason for this is that for the assembly to be able to reference an artifact which is part of source archuve it needs to be included with this `package` phase. This is a general restriction of the Maven lifecycle which applies also to the `maven-assembly-plugin` itself.
+
+When you want to bind the build to an `<execution>` in the plugin configuration to bind it to a phase, please use the goal `source-nofork` which does not fork the lifecycle and avoids calling goals twice.
