@@ -22,12 +22,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.16-SNAPSHOT</version>
+    <version>0.17-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>docker-jolokia-demo</artifactId>
-  <version>0.16-SNAPSHOT</version>
+  <version>0.17-SNAPSHOT</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
@@ -140,6 +140,9 @@
                     <soft>1024</soft>
                   </ulimit>
                 </ulimits>
+                <tmpfs>
+                  <mount>/var/lib/temp:size=10m</mount>
+                </tmpfs>
               </run>
               <watch>
                 <mode>none</mode>

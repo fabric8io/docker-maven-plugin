@@ -3,12 +3,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-sample-multi-wait</artifactId>
-  <version>0.16-SNAPSHOT</version>
+  <version>0.17-SNAPSHOT</version>
   <!-- Sample exhibiting connection error described in https://github.com/fabric8io/docker-maven-plugin/issues/574 -->
  <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.16-SNAPSHOT</version>
+    <version>0.17-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <build>
