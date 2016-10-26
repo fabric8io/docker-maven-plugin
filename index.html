@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.16-SNAPSHOT,</span>
-<span id="revdate">2016-10-24</span>
+<span id="revdate">2016-10-26</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -2525,7 +2525,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p><strong>container</strong> : Connect to the network of the specified container. The name of the container is taken from the <code>&lt;name&gt;</code> element.</p>
 </li>
 <li>
-<p><strong>custom</strong> : Use a custom network which must be created before with <code>docker network create</code>. This is available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
+<p><strong>custom</strong> : Use a custom network, which must be created before using <code>docker network create</code>. Alternatively you can set the <code><code>docker.autoCreateCustomNetworks</code></code> <a href="#global-configuration">global configuration</a> parameter to <code><code>true</code></code> to automatically create custom networks. Custom networks are available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
 </li>
 <li>
 <p><strong>none</strong> : No network will be setup.</p>
@@ -4145,7 +4145,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.16-SNAPSHOT<br>
-Last updated 2016-10-24 18:00:26 UTC
+Last updated 2016-10-26 10:25:17 UTC
 </div>
 </div>
 </body>
