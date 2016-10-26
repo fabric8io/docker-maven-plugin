@@ -242,14 +242,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Resolve and customize image configuration
     private String initImageConfiguration(Date buildTimeStamp)  {
         // Resolve images
-        final Properties resolveProperties = project.getProperties();
         resolvedImages = ConfigHelper.resolveImages(
             log,
             images,                  // Unresolved images
             new ConfigHelper.Resolver() {
                     @Override
                     public List<ImageConfiguration> resolve(ImageConfiguration image) {
-                        return imageConfigResolver.resolve(image, resolveProperties);
+                        return imageConfigResolver.resolve(image, project, session);
                     }
                 },
             image,                   // A filter which image to process

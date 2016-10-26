@@ -5,6 +5,7 @@
  */
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,7 +17,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @since 0.15
  * @author Alexis Thaveau
  */
-public class UlimitConfig {
+public class UlimitConfig implements Serializable {
 
     @Parameter
     private String name;

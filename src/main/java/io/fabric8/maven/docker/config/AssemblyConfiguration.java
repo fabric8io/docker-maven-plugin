@@ -1,12 +1,14 @@
 package io.fabric8.maven.docker.config;
 
 
+import java.io.Serializable;
+
 import org.apache.maven.plugin.assembly.model.Assembly;
 
-public class AssemblyConfiguration {
+public class AssemblyConfiguration implements Serializable {
 
     private static final String DEFAULT_BASE_DIR = "/maven";
-    
+
     /**
      * @parameter
      */
@@ -136,7 +138,7 @@ public class AssemblyConfiguration {
             config.dockerFileDir = set(dockerFileDir);
             return this;
         }
-        
+
         public Builder exportBasedir(Boolean export) {
             config.exportBasedir = set(export);
             return this;

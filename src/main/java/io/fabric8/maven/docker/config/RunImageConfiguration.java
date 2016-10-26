@@ -1,9 +1,11 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.docker.util.DeepCopy;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -12,7 +14,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
  * @author roland
  * @since 02.09.14
  */
-public class RunImageConfiguration {
+public class RunImageConfiguration implements Serializable {
 
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
 
@@ -308,7 +310,19 @@ public class RunImageConfiguration {
 
     public static class Builder {
 
-        private RunImageConfiguration config = new RunImageConfiguration();
+        public Builder(RunImageConfiguration config) {
+            if (config == null) {
+                this.config = new RunImageConfiguration();
+            } else {
+                this.config = DeepCopy.copy(config);
+            }
+        }
+
+        public Builder() {
+            this(null);
+        }
+
+        private RunImageConfiguration config;
 
         public Builder env(Map<String, String> env) {
             config.env = env;
@@ -333,6 +347,11 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder cmd(Arguments args) {
+            config.cmd = args;
+            return this;
+        }
+
         public Builder domainname(String domainname) {
             config.domainname = domainname;
             return this;
@@ -342,6 +361,11 @@ public class RunImageConfiguration {
             if (entrypoint != null) {
                 config.entrypoint = new Arguments(entrypoint);
             }
+            return this;
+        }
+
+        public Builder entrypoint(Arguments args) {
+            config.entrypoint = args;
             return this;
         }
 
@@ -462,6 +486,11 @@ public class RunImageConfiguration {
             return this;
         }
 
+        public Builder namingStrategy(NamingStrategy namingStrategy) {
+            config.namingStrategy = namingStrategy;
+            return this;
+        }
+
         public Builder exposedPropertyKey(String key) {
             config.exposedPropertyKey = key;
             return this;
@@ -488,5 +517,4 @@ public class RunImageConfiguration {
             return config;
         }
     }
-
 }

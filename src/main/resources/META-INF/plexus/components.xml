@@ -72,5 +72,28 @@
         </lifecycles>
       </configuration>
     </component>
+
+    <!-- Components typically detected by annotations, but moved here because of
+         https://github.com/codehaus-plexus/plexus-containers/issues/4 -->
+    <component>
+      <role>io.fabric8.maven.docker.config.handler.ExternalConfigHandler</role>
+      <role-hint>default</role-hint>
+      <implementation>io.fabric8.maven.docker.config.handler.compose.DockerComposeConfigHandler</implementation>
+      <description></description>
+      <requirements>
+        <requirement>
+          <role>org.apache.maven.shared.filtering.MavenReaderFilter</role>
+          <field-name>readerFilter</field-name>
+        </requirement>
+      </requirements>
+      <isolated-realm>false</isolated-realm>
+    </component>
+    <component>
+      <role>io.fabric8.maven.docker.config.handler.ExternalConfigHandler</role>
+      <role-hint>default</role-hint>
+      <implementation>io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler</implementation>
+      <description></description>
+      <isolated-realm>false</isolated-realm>
+    </component>
   </components>
 </component-set>

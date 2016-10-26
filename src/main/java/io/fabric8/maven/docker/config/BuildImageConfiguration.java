@@ -1,17 +1,16 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.*;
 
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.util.*;
 
 /**
  * @author roland
  * @since 02.09.14
  */
-public class BuildImageConfiguration {
+public class BuildImageConfiguration implements Serializable {
 
     /**
      * Directory holding an external Dockerfile which is used to build the
@@ -151,6 +150,7 @@ public class BuildImageConfiguration {
 
     public BuildImageConfiguration() {}
 
+
     public boolean isDockerFileMode() {
         return dockerFileMode;
     }
@@ -260,7 +260,19 @@ public class BuildImageConfiguration {
     }
 
     public static class Builder {
-        private final BuildImageConfiguration config = new BuildImageConfiguration();
+        private final BuildImageConfiguration config;
+
+        public Builder() {
+            this(null);
+        }
+
+        public Builder(BuildImageConfiguration that) {
+            if (that == null) {
+                this.config = new BuildImageConfiguration();
+            } else {
+                this.config = DeepCopy.copy(that);
+            }
+        }
 
         public Builder dockerFileDir(String dir) {
             config.dockerFileDir = dir;
@@ -350,6 +362,15 @@ public class BuildImageConfiguration {
 
         public Builder cleanup(String cleanup) {
             config.cleanup = cleanup;
+            return this;
+        }
+
+        public Builder compression(String compression) {
+            if (compression == null) {
+                config.compression = BuildTarArchiveCompression.none;
+            } else {
+                config.compression = BuildTarArchiveCompression.valueOf(compression);
+            }
             return this;
         }
 

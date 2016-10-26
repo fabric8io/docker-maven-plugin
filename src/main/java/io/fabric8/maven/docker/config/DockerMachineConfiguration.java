@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.maven.plugin.PluginParameterExpressionEvaluator;
@@ -8,7 +9,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Configuration;
 
-public class DockerMachineConfiguration {
+public class DockerMachineConfiguration implements Serializable {
 
     public static final String DOCKER_MACHINE_NAME_PROP = "docker.machine.name";
     public static final String DOCKER_MACHINE_AUTO_CREATE_PROP = "docker.machine.autoCreate";

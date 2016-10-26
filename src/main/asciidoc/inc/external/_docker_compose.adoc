@@ -1,0 +1,42 @@
+
+This plugin supports als configuration via a  https://docs.docker.com/compose/[docker-compose] file, especially for running containers specified in `docker-compose.yml`. Docker Compose handling is available also as an external configuration provider.
+
+.Example
+[source,xml]
+----
+<image>
+  <external>
+     <type>compose</type> <!--1-->
+     <basedir>src/main/docker</prefix> <!--2-->
+     <composeFile>docker-compose.yml</composeFile>
+  </external>
+</image>
+----
+<1> The type for the external configuration provider must be set to **compose**
+<2> Additional configuration where to find the compose file
+
+The following options can be provided:
+
+.Docker compose configuration
+[cols="1,5,1"]
+|===
+| *basedir*
+| Basedir where to find the compose file and which is also used as the current directory when examing the compose file
+| `${basedir}/src/main/docker`
+
+| *composeFile*
+| Name of the compose file to use
+| `docker-compose.yml`
+|===
+
+The Docker Compose file can containe variables as described in the https://docs.docker.com/compose/compose-file/#/variable-substitution[Docker Compose documentation]. These are substituted with Maven project properties. Please note, when the `docker-compose.yml` with variables is to be used with the `docker-compose` CLI command, that these variables must also be valid environment variables (i.e. must not contain a `.`).
+
+In addition to the `docker-compose.yml` you can add all known options for <<build-configuration,<build> >>, <<start-configuration,<run> >> and <<watch-configuration,<watch> >> configuration elements which are then used as defaults and are overwritten by the configuration defined in the `docker-compose.yml` file.
+
+=== Limitations
+
+The following Docker Compose file keywords are not yet supported:
+
+* `cgroup_parent`, `devices`, `tmpfs`, `env_file`, `expose`, `pid`, `security_opt`, `stop_signal`, `cpu_share`, `cpu_quota`, `cpuset`, `ipc`, `mac_address`, `read_only` are not yet supported (but might be in a future version).
+* `extend` for including other Docker Compose files is not yet implemented.
+* Only **services** are currently evaluated, there is no supported yet for **volumes** and **networks**.

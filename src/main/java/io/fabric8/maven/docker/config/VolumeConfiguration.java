@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@ package io.fabric8.maven.docker.config;/*
  * limitations under the License.
  */
 
+import java.io.Serializable;
 import java.util.*;
 
 import org.apache.maven.plugins.annotations.Parameter;
@@ -25,7 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 08/12/14
  */
-public class VolumeConfiguration {
+public class VolumeConfiguration implements Serializable {
 
     /**
      * List of images names from where volumes are mounted

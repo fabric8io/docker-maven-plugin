@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
@@ -8,7 +9,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 12.10.14
  */
-public class LogConfiguration {
+public class LogConfiguration implements Serializable {
 
     public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null, null);
 
@@ -67,7 +68,7 @@ public class LogConfiguration {
 
     // =======================================================================================
 
-    public static class LogDriver {
+    public static class LogDriver implements Serializable {
 
         /** @parameter */
         private String name;

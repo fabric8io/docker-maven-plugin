@@ -27,4 +27,12 @@ import org.apache.maven.plugins.annotations.Mojo;
  */
 @Mojo(name = "run", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 @Execute(phase = LifecyclePhase.INITIALIZE)
-public class RunMojo extends StartMojo { }
+public class RunMojo extends StartMojo {
+
+    @Override
+    protected Boolean followLogs() {
+        // Follow logs by default
+        return Boolean.valueOf(System.getProperty("docker.follow", "true"));
+    }
+}
+

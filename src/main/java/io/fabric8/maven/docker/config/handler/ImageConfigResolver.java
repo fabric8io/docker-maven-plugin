@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.config.handler;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@ package io.fabric8.maven.docker.config.handler;/*
 import java.util.*;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Initializable;
@@ -56,12 +58,13 @@ public class ImageConfigResolver implements Initializable {
      * is returned directly.
      *
      * @param unresolvedConfig the configuration to resolve
-     * @param properties extra properties used for resolving
+     * @param project project used for resolving
+     * @param session
      * @return list of resolved image configurations
      * @throws IllegalArgumentException if no type is given when an external reference configuration is provided
      * or when the type is not known (i.e. no handler is registered for this type).
      */
-    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, Properties properties) {
+    public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project, MavenSession session) {
         Map<String,String> referenceConfig = unresolvedConfig.getExternalConfig();
         if (referenceConfig != null) {
             String type = referenceConfig.get("type");
@@ -72,7 +75,7 @@ public class ImageConfigResolver implements Initializable {
             if (handler == null) {
                 throw new IllegalArgumentException(unresolvedConfig.getDescription() + ": No handler for type " + type + " given");
             }
-            return handler.resolve(unresolvedConfig,properties);
+            return handler.resolve(unresolvedConfig, project, session);
         } else {
             return Collections.singletonList(unresolvedConfig);
         }
