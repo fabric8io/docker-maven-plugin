@@ -2,16 +2,14 @@ package io.fabric8.maven.docker.util;
 
 import java.util.*;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import org.junit.runner.RunWith;
 
-import static junitparams.JUnitParamsRunner.$;
 import static org.junit.Assert.*;
 
 /**
@@ -117,7 +115,7 @@ public class EnvUtilTest {
 
     private Object parametersForVersionChecks() {
         return $(
-            $( null, null, null, false),
+            $(null, null, null, false),
             $("1.10", null, "1.10", true),
             $(null, "1.10", "1.10", false),
             $("1.22", "1.10", "1.22", true),
@@ -126,7 +124,7 @@ public class EnvUtilTest {
             $("1.23.1", "1.23", "1.23.1", true),
             $("1.25", "1.25.1", "1.25.1", false),
             $("1.23.1", "2.0", "2.0", false)
-         );
+                );
     }
 
 
@@ -153,7 +151,5 @@ public class EnvUtilTest {
         return ret;
     }
 
-
-
-
+    private Object $(Object ... o) { return o; }
 }
