@@ -7,8 +7,11 @@
   - Removed lifecycle forks for all other Mojos (#567) (#599)
   - Add new option `tarLongFileMode` for the assembly configuration to avoid warning for too long files (#591)
   - Add new option `tmpfs` for `<run>` to add mount pathes for temorary file systems (#455)
+  - Changed `docker.image` to `docker.filte` and `<image>` to `<filter>`. 
   
 For 0.17 the lifecycle handling of the plugins has changed slightly. All forks to the _initialize_ phase have been removed since they collide with certain setups. Instead a fork to the _package_ phase has been introduced for `docker:build` and `docker:source` to make it easier for them to be consumed on the commandline (because otherwise at least `package` has to be added as goal so that the assembly could be constructed from the artifacts built). If you have these goals bound to an `<execution>` please use `build-nofork` and `source-nofork` instead, otherwise the package phase will be called twice.
+
+Also the treatment of the Maven property `docker.image` has changed. This was supposed to be used as a filter which caused a lot of confusion if people accidentally put their Docker image names into this property. Now the property has no special meaning anymore, and you can use `docker.filter` now for filtering out a specific images to build. For the same reason the top-level configuration element `<image>` has been renamed to `<filter>`. 
 
 * **0.16.9** (2016-10-23)
   - Removed (undocumented) property `docker.image.name` which could be used to be inserted as a `%a` specifier part in an image name.

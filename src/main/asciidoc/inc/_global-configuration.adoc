@@ -67,9 +67,9 @@ the URL is:
 . `//./pipe/docker_engine` if it is a readable named pipe (Windows)
 | `docker.host`
 
-| *image*
-| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.image` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
-| `docker.image`
+| *filter*
+| In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.filter` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
+| `docker.filter`
 
 | *logDate*
 | Date format which is used for printing out container logs. This configuration can be overwritten by individual run configurations and described below. The format is described in <<loggging,Logging>>.

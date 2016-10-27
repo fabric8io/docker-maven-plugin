@@ -131,10 +131,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /**
      * Whether to restrict operation to a single image. This can be either
      * the image or an alias name. It can also be comma separated list.
-     * This parameter is typically set via the command line.
+     * This parameter has to be set via the command line s system property.
      */
-    @Parameter(property = "docker.image")
-    private String image;
+    @Parameter(property = "docker.filter")
+    private String filter;
 
     // Default registry to use if no registry is specified
     @Parameter(property = "docker.registry")
@@ -251,7 +251,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                         return imageConfigResolver.resolve(image, project, session);
                     }
                 },
-            image,                   // A filter which image to process
+           filter,                   // A filter which image to process
             this);                     // customizer (can be overwritten by a subclass)
 
         // Initialize configuration and detect minimal API version
