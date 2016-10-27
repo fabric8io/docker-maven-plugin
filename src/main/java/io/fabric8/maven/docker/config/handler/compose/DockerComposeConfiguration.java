@@ -4,19 +4,24 @@ import java.util.*;
 
 public class DockerComposeConfiguration {
 
-    private String basedir;
-    private String composeFile;
-
+    private final String basedir;
+    private final String composeFile;
+    private final boolean ignoreBuild;
     public DockerComposeConfiguration(Map<String, String> config) {
         basedir = config.containsKey("basedir") ? config.get("basedir") : "src/main/docker";
         composeFile = config.containsKey("composeFile") ? config.get("composeFile") : "docker-compose.yml";
+        ignoreBuild = config.containsKey("ignoreBuild") ? Boolean.parseBoolean(config.get("ignoreBuilder")) : false;
     }
 
-    public String getBasedir() {
+    String getBasedir() {
         return basedir;
     }
 
-    public String getComposeFile() {
+    String getComposeFile() {
         return composeFile;
+    }
+
+    public boolean isIgnoreBuild() {
+        return ignoreBuild;
     }
 }

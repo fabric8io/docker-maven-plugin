@@ -12,7 +12,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
-import org.codehaus.plexus.component.annotations.Requirement;
 import org.yaml.snakeyaml.Yaml;
 
 
@@ -39,8 +38,8 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
     public List<ImageConfiguration> resolve(ImageConfiguration unresolvedConfig, MavenProject project, MavenSession session) {
         List<ImageConfiguration> resolved = new ArrayList<>();
 
-        DockerComposeConfiguration config = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
-        File composeFile = resolveComposeFile(config.getBasedir(), config.getComposeFile(), project);
+        DockerComposeConfiguration handlerConfig = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
+        File composeFile = resolveComposeFile(handlerConfig.getBasedir(), handlerConfig.getComposeFile(), project);
 
         for (Object composeO : getComposeConfigurations(composeFile, project, session)) {
             Map<String, Object> compose = (Map<String, Object>) composeO;
@@ -51,7 +50,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 Map<String, Object> serviceDefinition = (Map<String, Object>) entry.getValue();
 
                 DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig);
-                resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile(), unresolvedConfig));
+                resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile(), unresolvedConfig, handlerConfig));
             }
         }
 
@@ -79,11 +78,14 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         }
     }
 
-    private ImageConfiguration buildImageConfiguration(DockerComposeServiceWrapper mapper, File composeParent, ImageConfiguration unresolvedConfig) {
+    private ImageConfiguration buildImageConfiguration(DockerComposeServiceWrapper mapper,
+                                                       File composeParent,
+                                                       ImageConfiguration unresolvedConfig,
+                                                       DockerComposeConfiguration handlerConfig) {
         return new ImageConfiguration.Builder()
                 .name(mapper.getImage())
                 .alias(mapper.getAlias())
-                .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig.getBuildConfiguration()))
+                .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig.getBuildConfiguration(), handlerConfig))
                 .runConfig(createRunConfiguration(mapper, unresolvedConfig.getRunConfiguration()))
                 .watchConfig(DeepCopy.copy(unresolvedConfig.getWatchConfiguration()))
                 .build();
@@ -116,8 +118,9 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private BuildImageConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper,
                                                                   File composeParent,
-                                                                  BuildImageConfiguration buildConfig) {
-        if (!mapper.requiresBuild()) {
+                                                                  BuildImageConfiguration buildConfig,
+                                                                  DockerComposeConfiguration handlerConfig) {
+        if (handlerConfig.isIgnoreBuild() || !mapper.requiresBuild()) {
             // Reuse build config
             return buildConfig;
         }
