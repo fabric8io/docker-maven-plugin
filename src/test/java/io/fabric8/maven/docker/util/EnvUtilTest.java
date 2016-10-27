@@ -2,17 +2,23 @@ package io.fabric8.maven.docker.util;
 
 import java.util.*;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.naming.TestCaseName;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import org.junit.runner.RunWith;
 
+import static junitparams.JUnitParamsRunner.$;
 import static org.junit.Assert.*;
 
 /**
  * @author roland
  * @since 14.10.14
  */
+@RunWith(JUnitParamsRunner.class)
 public class EnvUtilTest {
 
 
@@ -42,20 +48,22 @@ public class EnvUtilTest {
     }
 
     @Test
-    public void splitOnSpace() {
-        Object[] data = new Object[] {
-                "bla blub", new String[] { "bla", "blub"},
-                "bla\\ blub", new String[] {"bla blub"},
-                "bla blub\\ blubber", new String[] { "bla", "blub blubber"}
-        };
-        for (int i = 0; i < data.length; i += 2) {
-            String[] result = EnvUtil.splitOnSpaceWithEscape((String) data[i]);
-            String[] expected = (String[]) data[i+1];
-            assertEquals(expected.length, result.length);
-            for (int j = 0; j < expected.length; j++) {
-                assertEquals(expected[j],result[j]);
-            }
+    @TestCaseName("{method}: input \"{0}\" splits to {1}")
+    @Parameters
+    public void splitOnSpace(String input, String[] expected) {
+        String[] result = EnvUtil.splitOnSpaceWithEscape(input);
+        assertEquals(expected.length, result.length);
+        for (int j = 0; j < expected.length; j++) {
+            assertEquals(expected[j],result[j]);
         }
+    }
+
+    private Object parametersForSplitOnSpace() {
+        return $(
+            $("bla blub", new String[] { "bla", "blub"}),
+            $("bla\\ blub", new String[] {"bla blub"}),
+            $("bla blub\\ blubber", new String[] { "bla", "blub blubber"})
+                );
     }
 
     @Test
@@ -83,38 +91,44 @@ public class EnvUtilTest {
     }
 
     @Test
-    public void mavenPropertyExtract() {
-        String[] data = {
-                "${var1}", "var1",
-                "${  var2}", "var2",
-                " ${ var3}  ", "var3",
-                "nonvar", null,
-                "${nonvar", null
-        };
-        for (int i = 0; i < data.length; i +=2) {
-            assertEquals(data[i+1],EnvUtil.extractMavenPropertyName(data[i]));
-        }
+    @TestCaseName("{method}: expression {0} => variable {1}")
+    @Parameters
+    public void mavenPropertyExtract(String expression, String varName) {
+        assertEquals(varName,EnvUtil.extractMavenPropertyName(expression));
+    }
 
+    private Object parametersForMavenPropertyExtract() {
+        return $(
+            $("${var1}", "var1"),
+            $("${  var2}", "var2"),
+            $(" ${ var3}  ", "var3"),
+            $("nonvar", null),
+            $("${nonvar", null)
+                );
     }
 
     @Test
-    public void versionChecks() {
-        Object[] data = {
-            null, null, null, false,
-            "1.10", null, "1.10", true,
-            null, "1.10", "1.10", false,
-            "1.22", "1.10", "1.22", true,
-            "1.10", "1.25", "1.25", false,
-            "1.23", "1.23", "1.23", true,
-            "1.23.1", "1.23", "1.23.1", true,
-            "1.25", "1.25.1", "1.25.1", false,
-            "1.23.1", "2.0", "2.0", false
-        };
-        for (int i = 0; i < data.length; i+=4) {
-            assertEquals(data[i+2],EnvUtil.extractLargerVersion((String) data[i],(String) data[i+1]));
-            assertEquals(data[i+3],EnvUtil.greaterOrEqualsVersion((String) data[i],(String) data[i+1]));
-        }
+    @TestCaseName("{method}: max({0},{1}) = {2}, {0} >= {1} ? {3}")
+    @Parameters
+    public void versionChecks(String versionA, String versionB, String largerVersion, boolean isGreaterOrEquals) {
+        assertEquals(largerVersion,EnvUtil.extractLargerVersion(versionA,versionB));
+        assertEquals(isGreaterOrEquals, EnvUtil.greaterOrEqualsVersion(versionA,versionB));
     }
+
+    private Object parametersForVersionChecks() {
+        return $(
+            $( null, null, null, false),
+            $("1.10", null, "1.10", true),
+            $(null, "1.10", "1.10", false),
+            $("1.22", "1.10", "1.22", true),
+            $("1.10", "1.25", "1.25", false),
+            $("1.23", "1.23", "1.23", true),
+            $("1.23.1", "1.23", "1.23.1", true),
+            $("1.25", "1.25.1", "1.25.1", false),
+            $("1.23.1", "2.0", "2.0", false)
+         );
+    }
+
 
     @Test
     public void fixupPath() throws Exception {
