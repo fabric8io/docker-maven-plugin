@@ -1,13 +1,13 @@
 # ChangeLog
 
 * **0.17.1** (2016-10-28)
-  - Add initial Docker compose support ([#384](https://github.com/fabric8io/docker-maven-plugin/issues/384))
+  - Add initial [Docker compose](https://dmp.fabric8.io/#docker-compose) support ([#384](https://github.com/fabric8io/docker-maven-plugin/issues/384))
   - Made `docker:run` running in the foreground
   - Add lifecycle fork to package for `docker:build` and `docker:source` for ease of use. Introducher `docker:build-nofork` and `docker:source-nofork`
   - Removed lifecycle forks for all other Mojos ([#567](https://github.com/fabric8io/docker-maven-plugin/issues/567)) ([#599](https://github.com/fabric8io/docker-maven-plugin/issues/599))
   - Add new option `tarLongFileMode` for the assembly configuration to avoid warning for too long files ([#591](https://github.com/fabric8io/docker-maven-plugin/issues/591))
   - Add new option `tmpfs` for `<run>` to add mount pathes for temorary file systems ([#455](https://github.com/fabric8io/docker-maven-plugin/issues/455))
-  - Changed `docker.image` to `docker.filte` and `<image>` to `<filter>`. 
+  - Changed `docker.image` to `docker.filter` and `<image>` to `<filter>`. 
   
 For 0.17 the lifecycle handling of the plugins has changed slightly. All forks to the _initialize_ phase have been removed since they collide with certain setups. Instead a fork to the _package_ phase has been introduced for `docker:build` and `docker:source` to make it easier for them to be consumed on the commandline (because otherwise at least `package` has to be added as goal so that the assembly could be constructed from the artifacts built). If you have these goals bound to an `<execution>` please use `build-nofork` and `source-nofork` instead, otherwise the package phase will be called twice.
 
