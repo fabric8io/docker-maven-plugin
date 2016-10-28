@@ -82,13 +82,15 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                                                        File composeParent,
                                                        ImageConfiguration unresolvedConfig,
                                                        DockerComposeConfiguration handlerConfig) {
-        return new ImageConfiguration.Builder()
+        ImageConfiguration.Builder builder = new ImageConfiguration.Builder()
                 .name(getImageName(mapper, unresolvedConfig))
                 .alias(mapper.getAlias())
                 .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig, handlerConfig))
-                .runConfig(createRunConfiguration(mapper, unresolvedConfig.getRunConfiguration()))
-                .watchConfig(DeepCopy.copy(unresolvedConfig.getWatchConfiguration()))
-                .build();
+                .runConfig(createRunConfiguration(mapper, unresolvedConfig));
+        if (serviceMatchesAlias(mapper, unresolvedConfig)) {
+            builder.watchConfig(DeepCopy.copy(unresolvedConfig.getWatchConfiguration()));
+        }
+        return builder.build();
     }
 
     private String getImageName(DockerComposeServiceWrapper mapper, ImageConfiguration unresolvedConfig) {
@@ -133,7 +135,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                                                                   DockerComposeConfiguration handlerConfig) {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         if (handlerConfig.isIgnoreBuild() || !mapper.requiresBuild()) {
-            if (mapper.getAlias() != null && mapper.getAlias().equals(imageConfig.getAlias())) {
+            if (serviceMatchesAlias(mapper, imageConfig)) {
                 // Only when the specified image name maps to the current docker-compose service
                 return buildConfig;
             } else {
@@ -148,8 +150,16 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         return builder.build();
     }
 
-    private RunImageConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper, RunImageConfiguration runConfig) {
-        return new RunImageConfiguration.Builder(runConfig)
+    private boolean serviceMatchesAlias(DockerComposeServiceWrapper mapper, ImageConfiguration imageConfig) {
+        return mapper.getAlias() != null && mapper.getAlias().equals(imageConfig.getAlias());
+    }
+
+    private RunImageConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper, ImageConfiguration imageConfig) {
+        RunImageConfiguration.Builder builder =
+            serviceMatchesAlias(wrapper, imageConfig) ?
+                new RunImageConfiguration.Builder(imageConfig.getRunConfiguration()) :
+                new RunImageConfiguration.Builder();
+        return builder
                 .capAdd(wrapper.getCapAdd())
                 .capDrop(wrapper.getCapDrop())
                 .cmd(wrapper.getCommand())
