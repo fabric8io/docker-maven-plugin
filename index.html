@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.16-SNAPSHOT,</span>
-<span id="revdate">2016-10-26</span>
+<span id="revnumber">version 0.17-SNAPSHOT,</span>
+<span id="revdate">2016-10-28</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -568,7 +568,12 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
 <ul class="sectlevel2">
-<li><a href="#property-configuration">6.1. Property based configuration</a></li>
+<li><a href="#property-configuration">6.1. Properties</a></li>
+<li><a href="#docker-compose">6.2. Docker Compose</a>
+<ul class="sectlevel3">
+<li><a href="#limitations">6.2.1. Limitations</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#registry">7. Registry handling</a></li>
@@ -806,7 +811,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.16-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.17-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1015,9 +1020,9 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.host</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>image</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property <code>docker.image</code> when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn&#8217;t refer an image in the configuration will be ignored.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.image</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>filter</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property <code>docker.filter</code> when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn&#8217;t refer an image in the configuration will be ignored.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.filter</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>logDate</strong></p></td>
@@ -1404,7 +1409,7 @@ the <code>&lt;build&gt;</code> configuration section.</p>
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
-<p>For the future it is planned to introduce special keywords lile <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
+<p>For the future it is planned to introduce special keywords like <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
 </div>
 </div>
 </div>
@@ -1429,6 +1434,12 @@ the <code>&lt;build&gt;</code> configuration section.</p>
  ...
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>Please note that <code>docker:build</code> fork the Maven lifecycle and calls all phases up to and including <code>package</code>. The reason for this is that for the assembly to be able to reference an artifact which is part of the build it needs to be included with this <code>package</code> phase. This is a general restriction of the Maven lifecycle which applies also to the <code>maven-assembly-plugin</code> itself.</p>
+</div>
+<div class="paragraph">
+<p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>build-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
 </div>
 <div class="sect3">
 <h4 id="build-configuration">5.1.1. Configuration</h4>
@@ -1692,6 +1703,10 @@ assembly configuration</p>
 </div></div></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tarLongFileMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets the TarArchiver behaviour on file paths with more than 100 characters length. Valid values are: "warn"(default), "fail", "truncate", "gnu", "posix", "posix_warn" or "omit"</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.
 </p><p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
@@ -1787,18 +1802,8 @@ used for <code>descriptorRef</code>:</p>
 <p>All declared files end up in the configured <code>basedir</code> (or <code>/maven</code> by default) in the created image.</p>
 </div>
 <div class="paragraph">
-<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>docker:build</code> target is called as part of a binding (e.g. is <code>docker:build</code> is bound to the <code>pre-integration-test</code>
-phase) or it must be ensured when called on the command line:</p>
-</div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="sh">mvn package docker:build</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This is a general restriction of the Maven lifecycle which applies also
-for the <code>maven-assembly-plugin</code> itself.</p>
+<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>docker:build</code> target is called, or when <code>docker:build-nofork</code> is bound to an execution phase in the plugin configuration. By default <code>docker:build-nofork</code> is bound to the <code>install</code>
+phase).</p>
 </div>
 <div class="paragraph">
 <p>In the following example a dependency from the pom.xml is included and
@@ -2042,7 +2047,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>This goal creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images).</p>
 </div>
 <div class="paragraph">
-<p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis).</p>
+<p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis). <code>docker:run</code> is an alias for <code>docker:start</code> with <code>docker.follow</code> enabled.</p>
 </div>
 <div class="paragraph">
 <p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.&lt;alias&gt;.&lt;prop&gt;</code> where <code>&lt;alias&gt;</code> is the name of the container (see below) and <code>&lt;prop&gt;</code> is one of the following container properties:</p>
@@ -2247,6 +2252,12 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tmpfs</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>List countaintin <code>&lt;mount&gt;</code> elements for directories to mount with a temporary filesystem. Optionally, mount options can be appended after a ':'. See below for an example.</p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ulimits</strong></p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
 <p>ulimits for the container. This list contains <code>&lt;ulimit&gt;</code> elements which three sub elements:</p>
@@ -2308,6 +2319,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
        <span class="tag">&lt;soft&gt;</span>-1<span class="tag">&lt;/soft&gt;</span>
     <span class="tag">&lt;/ulimit&gt;</span>
   <span class="tag">&lt;ulimits&gt;</span>
+  <span class="tag">&lt;tmpfs&gt;</span>
+    <span class="tag">&lt;mount&gt;</span>/var/lib/mysql:size=10m<span class="tag">&lt;/mount&gt;</span>
+    <span class="tag">&lt;mount&gt;</span>/opt/mydata<span class="tag">&lt;/mount&gt;</span>
+  <span class="tag">&lt;/tmpfs&gt;</span>
   <span class="tag">&lt;securityOpts&gt;</span>
     <span class="tag">&lt;opt&gt;</span>seccomp=unconfined<span class="tag">&lt;/opt&gt;</span>
   <span class="tag">&lt;/securityOpts&gt;</span>
@@ -2390,15 +2405,15 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two numeric values separated by a <code>:</code>. This form will result in an explicit mapping between the docker host and the corresponding port inside the container. In the above example, port 18080 would be exposed on the docker host and mapped to port 8080 in the running container.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><em>host.port</em>:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>&lt;host.port&gt;:80</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of a string and a numeric value separated by a <code>:</code>. In this form, the string portion of the tuple will correspond to a Maven property. If the property is undefined when the <code>start</code> task executes, a port will be dynamically selected by Docker in the ephemeral port range and assigned to the property which may then be used later in the same POM file. The ephemeral port range is configured by the <code>/proc/sys/net/ipv4/ip_local_port_range</code> kernel parameter, which typically ranges from 32678 to 61000.  If the property exists and has numeric value, that value will be used as the exposed port on the docker host as in the previous form. In the above example, the docker service will elect a new port and assign the value to the property <code>host.port</code> which may then later be used in a property expression similar to <code>&lt;value&gt;${host.port}&lt;/value&gt;</code>. This can be used to pin a port from the outside when doing some initial testing similar to <code>mvn -Dhost.port=10080 docker:start</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>bindTo:_host.port_:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>bindTo:&lt;host.port&gt;:80</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two strings and a numeric value separated by a <code>:</code>. In this form, <code>bindTo</code> is an ip address on the host the container should bind to. As a convenience, a hostname pointing to the docker host may also be specified. The container will fail to start if the hostname can not be resolved.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>+host.ip:_host.port_:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>+host.ip:&lt;host.port&gt;:80</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two strings and a numeric value separated by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property name <code>host.ip</code>. If docker reports that value to be <code>0.0.0.0</code>, the value of <code>docker.host.address</code> will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example) containing the value to use. <code>host:port</code> works in the same way as described above.</p></td>
 </tr>
 </tbody>
@@ -3105,7 +3120,7 @@ to do this manually.</p>
 </div>
 </div>
 </div>
-<div class="paragraph">
+<div id="watch-configuration" class="paragraph">
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
@@ -3343,8 +3358,7 @@ properties can the behaviour of this goal:</p>
 <div class="sect2">
 <h3 id="docker:source">5.8. <strong>docker:source</strong></h3>
 <div class="paragraph">
-<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven
-project with a certain classifier. It reuses the configuration from <a href="docker-build.md">docker:build</a>.</p>
+<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build">&lt;&lt;docker:build&gt;</a>.</p>
 </div>
 <div class="paragraph">
 <p><code>docker:source</code> uses the image&#8217;s <a href="image-configuration.md">alias</a> as part of the classifier, so it is mandatory that the alias is set for
@@ -3374,7 +3388,10 @@ this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</c
 </div>
 </div>
 <div class="paragraph">
-<p>If the plugin is not bound to an execute phase but called directly, it must be ensured that the package phase is called, too. That is required to find the artifacts created with this build when referenced from an assembly.</p>
+<p><code>docker:source</code> forks the Maven lifecycle and calls all phases up to and including <code>package</code>. The reason for this is that for the assembly to be able to reference an artifact which is part of source archuve it needs to be included with this <code>package</code> phase. This is a general restriction of the Maven lifecycle which applies also to the <code>maven-assembly-plugin</code> itself.</p>
+</div>
+<div class="paragraph">
+<p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>source-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
 </div>
 </div>
 </div>
@@ -3403,7 +3420,7 @@ from such a external configuration are added to the <em>regular</em>
 <p>The available handlers are described in the following.</p>
 </div>
 <div class="sect2">
-<h3 id="property-configuration">6.1. Property based configuration</h3>
+<h3 id="property-configuration">6.1. Properties</h3>
 <div class="paragraph">
 <p>For simple needs the image configuration can be completely defined via
 Maven properties which are defined outside of this plugin&#8217;s
@@ -3664,7 +3681,11 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tags.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of tags to apply to a built image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of tags to apply to a built image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tmpfs.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One or more mount points for a <strong>tmpfs</strong>. Add mount options after a <code>:</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.ulimits.idx</strong></p></td>
@@ -3776,6 +3797,96 @@ run and build configuration sections.</p>
     <span class="tag">&lt;/plugin&gt;</span>
   <span class="tag">&lt;/plugins&gt;</span>
 <span class="tag">&lt;/build&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="docker-compose">6.2. Docker Compose</h3>
+<div class="paragraph">
+<p>This plugin supports als configuration via a  <a href="https://docs.docker.com/compose/">docker-compose</a> file, especially for running containers specified in <code>docker-compose.yml</code>. Docker Compose handling is available also as an external configuration provider.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;image&gt;</span>
+  <span class="tag">&lt;external&gt;</span>
+     <span class="tag">&lt;type&gt;</span>compose<span class="tag">&lt;/type&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+     <span class="tag">&lt;basedir&gt;</span>src/main/docker<span class="tag">&lt;/prefix&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+     <span class="tag">&lt;composeFile&gt;</span>docker-compose.yml<span class="tag">&lt;/composeFile&gt;</span>
+  <span class="tag">&lt;/external&gt;</span>
+<span class="tag">&lt;/image&gt;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The type for the external configuration provider must be set to <strong>compose</strong></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Additional configuration where to find the compose file</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following options can be provided:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 26. Docker compose configuration</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>basedir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Basedir where to find the compose file and which is also used as the current directory when examing the compose file</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>${basedir}/src/main/docker</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>composeFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the compose file to use</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker-compose.yml</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ignoreBuild</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ignore the compos file&#8217;s <code>build:</code> section and use the plugin&#8217;s build configuration exclusively.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The Docker Compose file can contain variables as described in the <a href="https://docs.docker.com/compose/compose-file/#/variable-substitution">Docker Compose documentation</a>. These are substituted with Maven project properties. Please note, when the <code>docker-compose.yml</code> with variables is to be used with the <code>docker-compose</code> CLI command, that these variables must also be valid environment variables (i.e. must not contain a <code>.</code>).</p>
+</div>
+<div class="paragraph">
+<p>In addition to the <code>docker-compose.yml</code> you can add all known options for <a href="#build-configuration">&lt;build&gt;</a>, <a href="#start-configuration">&lt;run&gt;</a> and <a href="#watch-configuration">&lt;watch&gt;</a> configuration elements which are then used as defaults and are overwritten by the configuration defined in the <code>docker-compose.yml</code> file.</p>
+</div>
+<div class="sect3">
+<h4 id="limitations">6.2.1. Limitations</h4>
+<div class="paragraph">
+<p>The following Docker Compose file keywords are not yet supported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>cgroup_parent</code>, <code>devices</code>, <code>env_file</code>, <code>expose</code>, <code>pid</code>, <code>security_opt</code>, <code>stop_signal</code>, <code>cpu_share</code>, <code>cpu_quota</code>, <code>cpuset</code>, <code>ipc</code>, <code>mac_address</code>, <code>read_only</code> are not yet supported (but might be in a future version).</p>
+</li>
+<li>
+<p><code>extend</code> for including other Docker Compose files is not yet implemented.</p>
+</li>
+<li>
+<p>Only <strong>services</strong> are currently evaluated, there is no supported yet for <strong>volumes</strong> and <strong>networks</strong>.</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -4144,8 +4255,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.16-SNAPSHOT<br>
-Last updated 2016-10-26 10:25:17 UTC
+Version 0.17-SNAPSHOT<br>
+Last updated 2016-10-28 16:31:34 UTC
 </div>
 </div>
 </body>
