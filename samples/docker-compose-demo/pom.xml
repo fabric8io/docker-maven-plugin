@@ -28,27 +28,51 @@
 
   <artifactId>docker-compose-demo</artifactId>
   <version>0.17-SNAPSHOT</version>
-  <!-- add custom lifecycle -->
-  <packaging>docker</packaging>
 
   <url>http://www.jolokia.org</url>
 
   <properties>
     <server.version>7</server.version>
     <server.name>tomcat</server.name>
-    <image>fabric8/${server.name}-${server.version}:latest</image>
   </properties>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.jolokia</groupId>
+      <artifactId>jolokia-war</artifactId>
+      <version>1.3.5</version>
+      <type>war</type>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <extensions>true</extensions> <!-- enables using 'docker' packaging above -->
         <configuration>
           <images>
-            <!-- Use docker-compose -->
             <image>
+            <alias>jolokia-war</alias>
+              <!-- Data image containing jolokia.war -->
+              <name>${project.groupId}/${project.artifactId}:latest</name>
+              <!-- <build> the image-->
+              <build>
+                <assembly>
+                  <inline>
+                    <id>jolokia</id>
+                    <dependencySets>
+                      <dependencySet>
+                        <includes>
+                          <include>org.jolokia:jolokia-war</include>
+                        </includes>
+                        <outputDirectory>.</outputDirectory>
+                        <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+                      </dependencySet>
+                    </dependencySets>
+                  </inline>
+                </assembly>
+              </build>
+              <!-- The <run> part is taken from compose -->
               <external>
                 <type>compose</type>
               </external>

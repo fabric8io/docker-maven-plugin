@@ -1,9 +1,6 @@
 version: "2"
 services:
-  data:
-    build:
-      context: .
-    image: "${project.groupId}/${project.artifactId}:latest"
+  jolokia-war:
     labels:
       "dmp.type": "example"
       "dmp.value": "100$$"
@@ -19,4 +16,4 @@ services:
         hard: 2048
         soft: 1024
     volumes_from:
-      - data
+      - jolokia-war

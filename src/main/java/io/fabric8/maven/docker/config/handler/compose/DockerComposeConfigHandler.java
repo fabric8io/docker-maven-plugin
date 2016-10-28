@@ -83,12 +83,23 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                                                        ImageConfiguration unresolvedConfig,
                                                        DockerComposeConfiguration handlerConfig) {
         return new ImageConfiguration.Builder()
-                .name(mapper.getImage())
+                .name(getImageName(mapper, unresolvedConfig))
                 .alias(mapper.getAlias())
-                .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig.getBuildConfiguration(), handlerConfig))
+                .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig, handlerConfig))
                 .runConfig(createRunConfiguration(mapper, unresolvedConfig.getRunConfiguration()))
                 .watchConfig(DeepCopy.copy(unresolvedConfig.getWatchConfiguration()))
                 .build();
+    }
+
+    private String getImageName(DockerComposeServiceWrapper mapper, ImageConfiguration unresolvedConfig) {
+        String name = mapper.getImage();
+        if (name != null) {
+            return name;
+        } else if (unresolvedConfig.getAlias() != null && unresolvedConfig.getAlias().equals(mapper.getAlias())) {
+            return unresolvedConfig.getName();
+        } else {
+            return null;
+        }
     }
 
     private Iterable<Object> getComposeConfigurations(File composePath, MavenProject project, MavenSession session) {
@@ -118,13 +129,19 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private BuildImageConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper,
                                                                   File composeParent,
-                                                                  BuildImageConfiguration buildConfig,
+                                                                  ImageConfiguration imageConfig,
                                                                   DockerComposeConfiguration handlerConfig) {
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
         if (handlerConfig.isIgnoreBuild() || !mapper.requiresBuild()) {
-            // Reuse build config
-            return buildConfig;
+            if (mapper.getAlias() != null && mapper.getAlias().equals(imageConfig.getAlias())) {
+                // Only when the specified image name maps to the current docker-compose service
+                return buildConfig;
+            } else {
+                return null;
+            }
         }
 
+        // Build from the specification as given in the docker-compose file
         BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder(buildConfig)
                 .dockerFile(extractDockerFilePath(mapper, composeParent))
                 .args(mapper.getBuildArgs());
