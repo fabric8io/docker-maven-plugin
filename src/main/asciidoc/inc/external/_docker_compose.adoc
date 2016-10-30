@@ -5,15 +5,27 @@ This plugin supports als configuration via a  https://docs.docker.com/compose/[d
 [source,xml]
 ----
 <image>
-  <external>
-     <type>compose</type> <!--1-->
-     <basedir>src/main/docker</prefix> <!--2-->
+  <alias>webapp</alias> <!--1-->
+  <name>fabric8/compose-demo:latest</name>
+
+  <external> <!--2-->
+     <type>compose</type> <!--3-->
+     <basedir>src/main/docker</prefix> <!--4-->
      <composeFile>docker-compose.yml</composeFile>
   </external>
+
+  <build> <!--5-->
+    <assembly>....</assembly>
+  </build>
+  <run>...</run>
+  <watch>...</watch>
 </image>
 ----
-<1> The type for the external configuration provider must be set to **compose**
-<2> Additional configuration where to find the compose file
+<1> The alias of the image is used as correlation key mapping to a service in the Docker Compose file
+<2> An `<external>` configuration handler needs to be used for Docker Compose support
+<3> The type for the external configuration provider must be set to **compose**
+<4> Additional configuration for the handler where to find the compose file
+<5> Extra `<build>`, `<run>` and `<watch>` configuration can be provided which are used as default configuration for the Docker compose service `webapp` (as specified with the alias)
 
 The following options can be provided:
 
@@ -31,13 +43,13 @@ The following options can be provided:
 | `docker-compose.yml`
 
 | *ignoreBuild*
-| Ignore the compos file's `build:` section and use the plugin's build configuration exclusively.
+| Ignore the compose file's `build:` section and use the plugin's build configuration exclusively.
 | `false`
 |===
 
 The Docker Compose file can contain variables as described in the https://docs.docker.com/compose/compose-file/#/variable-substitution[Docker Compose documentation]. These are substituted with Maven project properties. Please note, when the `docker-compose.yml` with variables is to be used with the `docker-compose` CLI command, that these variables must also be valid environment variables (i.e. must not contain a `.`).
 
-In addition to the `docker-compose.yml` you can add all known options for <<build-configuration,<build> >>, <<start-configuration,<run> >> and <<watch-configuration,<watch> >> configuration elements which are then used as defaults and are overwritten by the configuration defined in the `docker-compose.yml` file.
+In addition to the `docker-compose.yml` you can add all known options for <<build-configuration,<build> >>, <<start-configuration,<run> >> and <<watch-configuration,<watch> >> configuration elements which are then used as defaults and are overwritten by the configuration defined in the `docker-compose.yml` file. The merging between the XML configuration and the information found in `docker-compose.yml` is correlated via the `<alias>` name. E.g. if the XML image configuration is aliased with `webapp` then its is used as a default configuration for a Docker Compose _service_ name `webapp`. All other services defined in the compose file are left untouched.
 
 === Limitations
 
