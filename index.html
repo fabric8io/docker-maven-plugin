@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.17-SNAPSHOT,</span>
-<span id="revdate">2016-10-28</span>
+<span id="revdate">2016-10-30</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -3809,11 +3809,20 @@ run and build configuration sections.</p>
 <div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;image&gt;</span>
-  <span class="tag">&lt;external&gt;</span>
-     <span class="tag">&lt;type&gt;</span>compose<span class="tag">&lt;/type&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
-     <span class="tag">&lt;basedir&gt;</span>src/main/docker<span class="tag">&lt;/prefix&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+  <span class="tag">&lt;alias&gt;</span>webapp<span class="tag">&lt;/alias&gt;</span> <i class="conum" data-value="1"></i><b>(1)</b>
+  <span class="tag">&lt;name&gt;</span>fabric8/compose-demo:latest<span class="tag">&lt;/name&gt;</span>
+
+  <span class="tag">&lt;external&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
+     <span class="tag">&lt;type&gt;</span>compose<span class="tag">&lt;/type&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+     <span class="tag">&lt;basedir&gt;</span>src/main/docker<span class="tag">&lt;/prefix&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
      <span class="tag">&lt;composeFile&gt;</span>docker-compose.yml<span class="tag">&lt;/composeFile&gt;</span>
   <span class="tag">&lt;/external&gt;</span>
+
+  <span class="tag">&lt;build&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
+    <span class="tag">&lt;assembly&gt;</span>....<span class="tag">&lt;/assembly&gt;</span>
+  <span class="tag">&lt;/build&gt;</span>
+  <span class="tag">&lt;run&gt;</span>...<span class="tag">&lt;/run&gt;</span>
+  <span class="tag">&lt;watch&gt;</span>...<span class="tag">&lt;/watch&gt;</span>
 <span class="tag">&lt;/image&gt;</span></code></pre>
 </div>
 </div>
@@ -3821,11 +3830,23 @@ run and build configuration sections.</p>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The type for the external configuration provider must be set to <strong>compose</strong></td>
+<td>The alias of the image is used as correlation key mapping to a service in the Docker Compose file</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Additional configuration where to find the compose file</td>
+<td>An <code>&lt;external&gt;</code> configuration handler needs to be used for Docker Compose support</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The type for the external configuration provider must be set to <strong>compose</strong></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Additional configuration for the handler where to find the compose file</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Extra <code>&lt;build&gt;</code>, <code>&lt;run&gt;</code> and <code>&lt;watch&gt;</code> configuration can be provided which are used as default configuration for the Docker compose service <code>webapp</code> (as specified with the alias)</td>
 </tr>
 </table>
 </div>
@@ -3868,7 +3889,7 @@ run and build configuration sections.</p>
 <p>The Docker Compose file can contain variables as described in the <a href="https://docs.docker.com/compose/compose-file/#/variable-substitution">Docker Compose documentation</a>. These are substituted with Maven project properties. Please note, when the <code>docker-compose.yml</code> with variables is to be used with the <code>docker-compose</code> CLI command, that these variables must also be valid environment variables (i.e. must not contain a <code>.</code>).</p>
 </div>
 <div class="paragraph">
-<p>In addition to the <code>docker-compose.yml</code> you can add all known options for <a href="#build-configuration">&lt;build&gt;</a>, <a href="#start-configuration">&lt;run&gt;</a> and <a href="#watch-configuration">&lt;watch&gt;</a> configuration elements which are then used as defaults and are overwritten by the configuration defined in the <code>docker-compose.yml</code> file.</p>
+<p>In addition to the <code>docker-compose.yml</code> you can add all known options for <a href="#build-configuration">&lt;build&gt;</a>, <a href="#start-configuration">&lt;run&gt;</a> and <a href="#watch-configuration">&lt;watch&gt;</a> configuration elements which are then used as defaults and are overwritten by the configuration defined in the <code>docker-compose.yml</code> file. The merging between the XML configuration and the information found in <code>docker-compose.yml</code> is correlated via the <code>&lt;alias&gt;</code> name. E.g. if the XML image configuration is aliased with <code>webapp</code> then its is used as a default configuration for a Docker Compose <em>service</em> name <code>webapp</code>. All other services defined in the compose file are left untouched.</p>
 </div>
 <div class="sect3">
 <h4 id="limitations">6.2.1. Limitations</h4>
@@ -4256,7 +4277,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.17-SNAPSHOT<br>
-Last updated 2016-10-28 17:06:22 UTC
+Last updated 2016-10-30 07:15:28 UTC
 </div>
 </div>
 </body>
