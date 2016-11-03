@@ -12,12 +12,12 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.17.1</version>
+    <version>0.17.2</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-healthcheck</artifactId>
-  <version>0.17.1</version>
+  <version>0.17.2</version>
 
 
   <build>
