@@ -36,6 +36,74 @@ public class DockerFileBuilderTest {
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
+    
+    @Test
+    public void testBuildDockerFileUDPPort() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .basedir("/export")
+                .expose(Collections.singletonList("8080/udp"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .volumes(Collections.singletonList("/vol1"))
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
+        String expected = loadFile("docker/Dockerfile_udp.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
+    public void testBuildDockerFileExplicitTCPPort() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .basedir("/export")
+                .expose(Collections.singletonList("8080/tcp"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .volumes(Collections.singletonList("/vol1"))
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
+        String expected = loadFile("docker/Dockerfile_tcp.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testBuildDockerFileBadPort() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080aaa/udp"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                .volumes(Collections.singletonList("/vol1"))
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
+    }    
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testBuildDockerFileBadProtocol() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080/bogusdatagram"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                .volumes(Collections.singletonList("/vol1"))
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
+    }      
 
     @Test
     public void testDockerFileOptimisation() throws Exception {

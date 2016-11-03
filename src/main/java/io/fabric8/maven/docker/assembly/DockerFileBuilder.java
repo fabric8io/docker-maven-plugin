@@ -3,6 +3,8 @@ package io.fabric8.maven.docker.assembly;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
 import io.fabric8.maven.docker.config.Arguments;
@@ -52,7 +54,7 @@ public class DockerFileBuilder {
     private List<AddEntry> addEntries = new ArrayList<>();
 
     // list of ports to expose and environments to use
-    private List<Integer> ports = new ArrayList<>();
+    private List<String> ports = new ArrayList<>();
 
     // list of RUN Commands to run along with image build see issue #191 on github
     private List<String> runCmds = new ArrayList<>();
@@ -235,14 +237,48 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            String[] portsS = new String[ports.size()];
-            int i = 0;
-            for (Integer port : ports) {
-                portsS[i++] = port.toString();
+            String[] portsS = ports.toArray(new String[]{});
+            for(String port : portsS) {
+            	validatePortMapping(port);
             }
             DockerFileKeyword.EXPOSE.addTo(b, portsS);
         }
     }
+    
+    // Pattern for splitting of the protocol part of the port.  
+    private static final Pattern PROTOCOL_SPLIT_PATTERN = Pattern.compile("(.*?)(?:/(tcp|udp))?$");
+    private void validatePortMapping(String input) throws IllegalArgumentException {
+        try {
+            Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(input);
+            // Matches always.  If there is a tcp/udp protocol, should end up in the second group
+            // and get factored out.  If it's something invalid, it should get stuck to the first group.  
+            matcher.matches();
+            
+            // First group is the port mapping.  
+            // It may be split with a : in a variety of ways.  
+            String mapping = matcher.group(1);
+            String[] mappingParts = mapping.split(":", 3);
+            if(mappingParts.length == 1) {
+            	// Single port should be an integer.  
+            	Integer.valueOf(mappingParts[0]);
+            } else if (mappingParts.length == 2) {
+            	// Map of port to external port.  Both should be integers.  
+            	Integer.valueOf(mappingParts[0]);
+            	Integer.valueOf(mappingParts[1]);
+            } else {
+            	// If length is 3, then our first chunk is a hostname or IP address.  
+            	// Can't really validate that, but the 2nd and 3rd parts should be ports and therefore integers.  
+            	Integer.valueOf(mappingParts[1]);
+            	Integer.valueOf(mappingParts[2]);
+            }
+            
+            
+        } catch (NumberFormatException exp) {
+            throw new IllegalArgumentException("\nInvalid port mapping '" + input + "'\n" +
+                    "Required format: '<hostIP>:<hostPort>:<containerPort>(/tcp|udp)'\n" +
+                    "See the reference manual for more details");
+        }
+    }    
 
     private void addOptimisation() {
         if (runCmds != null && !runCmds.isEmpty() && shouldOptimise) {
@@ -342,15 +378,7 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder expose(List<String> ports) {
         if (ports != null) {
-            for (String port : ports) {
-                if (port != null) {
-                    try {
-                        this.ports.add(Integer.parseInt(port));
-                    } catch (NumberFormatException exp) {
-                        throw new IllegalArgumentException("Non numeric port " + port + " specified in port mapping",exp);
-                    }
-                }
-            }
+            this.ports.addAll(ports);
         }
         return this;
     }
