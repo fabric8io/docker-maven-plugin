@@ -314,7 +314,7 @@ public class AuthConfigFactory {
 
     private Reader getFileReaderFromHomeDir(String path) {
         File file = new File(getHomeDir(),path);
-        if (file.exists()) {
+        if (file.exists() && file.length() != 0) {
             try {
                 return new FileReader(file);
             } catch (FileNotFoundException e) {
