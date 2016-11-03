@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.17.2** (2016-11-3)
+  - Fix issues with an empty Docker config file
+
 * **0.17.1** (2016-10-28)
   - Add initial [Docker compose](https://dmp.fabric8.io/#docker-compose) support ([#384](https://github.com/fabric8io/docker-maven-plugin/issues/384))
   - Made `docker:run` running in the foreground
