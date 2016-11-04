@@ -7,7 +7,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.16.9</version>
+  <version>0.16.9.redhat-000002</version>
   <packaging>maven-plugin</packaging>
 
   <name>docker-maven-plugin</name>
