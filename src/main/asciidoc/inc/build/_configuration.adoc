@@ -3,15 +3,16 @@ All build relevant configuration is contained in the `<build>` section
 of an image configuration. In addition to `<dockerFileDir>` and
 `<dockerFile>` the following configuration options are available:
 
-.Build configuration
+[[config-image-build]]
+.Build configuration (<<config-image, <image> >>)
 [cols="1,5"]
 |===
 | Element | Description
 
-| *assembly*
+| <<config-image-build-assembly, *assembly*>>
 | specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
 
-| *buildArgs*
+| <<config-image-build-buildargs, *buildArgs*>>
 | Map specifying the value of https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build args]
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or `labels` or `env`).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
@@ -20,16 +21,16 @@ described in <<build-buildargs,Build Args>>
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
 
-| *cmd*
+| <<misc-startup, *cmd*>>
 | A command to execute by default (i.e. if no command is provided when a container for this image is started). See <<misc-startup,Startup Arguments>> for details.
 
 | *compression*
 | The compression mode how the build archive is transmitted to the docker daemon (`{plugin}:build`) and how docker build archives are attached to this build as sources (`{plugin}:source`). The value can be `none` (default), `gzip` or `bzip2`.
 
-| *entryPoint*
+| <<misc-startup, *entryPoint*>>
 | An entrypoint allows you to configure a container that will run as an executable. See <<misc-startup,Startup Arguments>> for details.
 
-| *env*
+| <<misc-env, *env*>>
 | The environments as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | [[build-config-from]]*from*
@@ -51,10 +52,10 @@ endif::[]
 
 A provided `<from>` takes precedence over the name given here. This tag is useful for extensions of this plugin like the https://maven.fabric8.io[fabric8-maven-plugin] which can evaluate the additional information given here.
 
-| *healthCheck*
+| <<build-healthcheck, *healthCheck*>>
 a| Definition of a health check as described in <<build-healthcheck, Healthcheck>>
 
-| *labels*
+| <<misc-env, *labels*>>
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *maintainer*
