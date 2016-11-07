@@ -76,21 +76,29 @@ public class AssemblyConfiguration implements Serializable {
     private String tarLongFileMode;
 
     public Boolean exportTargetDir() {
-        return
-            exportBasedir != null ? exportBasedir :
-                (exportTargetDir != null ? exportTargetDir : Boolean.TRUE);
+        if (exportTargetDir != null) {
+            return exportTargetDir;
+        } else if (exportBasedir != null) {
+            return exportBasedir;
+        } else {
+            return Boolean.TRUE;
+        }
+    }
+
+    public String getTargetDir() {
+        if (targetDir != null) {
+            return targetDir;
+        } else if (basedir != null) {
+            return basedir;
+        } else {
+            return DEFAULT_BASE_DIR;
+        }
     }
 
     /**
      * @parameter default-value="keep"
      */
     private PermissionMode permissions;
-
-    public String getTargetDir() {
-        return
-            basedir != null ? basedir :
-                (targetDir != null ? targetDir : DEFAULT_BASE_DIR);
-    }
 
     public Assembly getInline() {
         return inline;
