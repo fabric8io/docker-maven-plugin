@@ -81,7 +81,7 @@ public class AssemblyConfiguration implements Serializable {
         } else if (exportBasedir != null) {
             return exportBasedir;
         } else {
-            return Boolean.TRUE;
+            return null;
         }
     }
 

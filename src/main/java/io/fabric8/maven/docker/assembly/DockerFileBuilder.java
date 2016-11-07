@@ -36,7 +36,7 @@ public class DockerFileBuilder {
     private Arguments entryPoint;
     private Arguments cmd;
 
-    private Boolean exportBasedir = null;
+    private Boolean exportTargetDir = null;
 
     // User under which the files should be added
     private String assemblyUser;
@@ -259,7 +259,7 @@ public class DockerFileBuilder {
 	}
 
     private void addVolumes(StringBuilder b) {
-        if (exportBasedir != null ? exportBasedir : baseImage == null) {
+        if (exportTargetDir != null ? exportTargetDir : baseImage == null) {
             addVolume(b, basedir);
         }
 
@@ -371,8 +371,8 @@ public class DockerFileBuilder {
         return this;
     }
 
-    public DockerFileBuilder exportBasedir(Boolean exportBasedir) {
-        this.exportBasedir = exportBasedir;
+    public DockerFileBuilder exportTargetDir(Boolean exportTargetDir) {
+        this.exportTargetDir = exportTargetDir;
         return this;
     }
 
