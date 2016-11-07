@@ -4,6 +4,7 @@ package io.fabric8.maven.docker.config;
 import java.io.Serializable;
 
 import org.apache.maven.plugin.assembly.model.Assembly;
+import org.apache.maven.plugins.annotations.Parameter;
 
 public class AssemblyConfiguration implements Serializable {
 
@@ -12,7 +13,14 @@ public class AssemblyConfiguration implements Serializable {
     /**
      * @parameter
      */
+    @Deprecated
     private String basedir;
+
+    /**
+     * New replacement for base directory which better reflects its
+     * purpose
+     */
+    private String targetDir;
 
     /**
      * @parameter
@@ -35,10 +43,16 @@ public class AssemblyConfiguration implements Serializable {
      */
     private String dockerFileDir;
 
-    /**
-     * @parameter default-value="true"
-     */
+    @Deprecated
     private Boolean exportBasedir;
+
+    /**
+     * Whether the target directory should be
+     * exported.
+     *
+     */
+    @Parameter
+    private Boolean exportTargetDir;
 
     /**
      * @paramter default-value="false"
@@ -61,17 +75,21 @@ public class AssemblyConfiguration implements Serializable {
      */
     private String tarLongFileMode;
 
+    public Boolean exportTargetDir() {
+        return
+            exportBasedir != null ? exportBasedir :
+                (exportTargetDir != null ? exportTargetDir : Boolean.TRUE);
+    }
+
     /**
      * @parameter default-value="keep"
      */
     private PermissionMode permissions;
 
-    public Boolean exportBasedir() {
-        return exportBasedir;
-    }
-
-    public String getBasedir() {
-        return basedir != null ? basedir : DEFAULT_BASE_DIR;
+    public String getTargetDir() {
+        return
+            basedir != null ? basedir :
+                (targetDir != null ? targetDir : DEFAULT_BASE_DIR);
     }
 
     public Assembly getInline() {

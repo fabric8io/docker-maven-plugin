@@ -10,7 +10,7 @@ This plugin supports als configuration via a  https://docs.docker.com/compose/[d
 
   <external> <!--2-->
      <type>compose</type> <!--3-->
-     <basedir>src/main/docker</prefix> <!--4-->
+     <basedir>src/main/docker</basedir> <!--4-->
      <composeFile>docker-compose.yml</composeFile>
   </external>
 

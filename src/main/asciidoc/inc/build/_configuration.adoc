@@ -121,7 +121,7 @@ remote API.
 
   <assembly>
     <mode>dir</mode>
-    <basedir>/opt/demo</basedir>
+    <targetDir>/opt/demo</targetDir>
     <descriptor>assembly.xml</descriptor>
   </assembly>
 </build>
