@@ -136,8 +136,8 @@ public class DockerFileBuilderTest {
     public void testExportBaseDir() {
         assertTrue(new DockerFileBuilder().basedir("/export").content().contains("/export"));
         assertFalse(new DockerFileBuilder().baseImage("java").basedir("/export").content().contains("/export"));
-        assertTrue(new DockerFileBuilder().baseImage("java").exportBasedir(true).basedir("/export").content().contains("/export"));
-        assertFalse(new DockerFileBuilder().baseImage("java").exportBasedir(false).basedir("/export").content().contains("/export"));
+        assertTrue(new DockerFileBuilder().baseImage("java").exportTargetDir(true).basedir("/export").content().contains("/export"));
+        assertFalse(new DockerFileBuilder().baseImage("java").exportTargetDir(false).basedir("/export").content().contains("/export"));
     }
 
     @Test
