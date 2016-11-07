@@ -1,7 +1,8 @@
 
 The `<assembly>` element within `<build>` is has an XML struture and defines how build artifacts and other files can enter the Docker image.
 
-.Assembly Configuration
+[[config-image-build-assembly]]
+.Assembly Configuration (<<config-image, <image> >> : <<config-image-build, <build> >>)
 [cols="1,5"]
 |===
 | Element | Description
@@ -9,17 +10,17 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 | *basedir*
 | Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/maven`.
 
-| *inline*
+| <<build-assembly-descriptor, *inline*>>
 | Inlined assembly descriptor as described in <<build-assembly-descriptor,Assembly Descriptor>> below.
 
-| *descriptor*
+| <<build-assembly-descriptor, *descriptor*>>
 | Path to an assembly descriptor file, whose format is described  <<build-assembly-descriptor,Assembly Descriptor>> below.
 
-| *descriptorRef*
+| <<build-assembly-descriptor-refs, *descriptorRef*>>
 | Alias to a predefined assembly descriptor. The available aliases are also described in <<build-assembly-descriptor,Assembly Descriptor>> below.
 
 | *dockerFileDir*
-| Directory containing an external Dockerfile. _This option is deprecated, please use <dockerfiledir> directly in the <build> section.
+| Directory containing an external Dockerfile. _This option is deprecated, please use <dockerfiledir> directly in the <build> section_.
 
 | *exportBasedir*
 | Specification whether the `basedir` should be exported as a volume.  This value is `true` by default except in the case the `basedir` is set to the container root (`/`). It is also `false` by default when a base image is used with `from` since exporting makes no sense in this case and will waste disk space unnecessarily.
@@ -83,12 +84,13 @@ used (no need to distinguish multiple descriptors)
 Also you can inline the assembly description with a `inline` description
 directly into the pom file. Adding the proper namespace even allows for
 IDE autocompletion. As an example, refer to the profile `inline` in
-the `data-jolokia-demo`'s pom.xml.
+the `data-jolokia-demo` 's pom.xml.
 
 Alternatively `descriptorRef` can be used with the name of a
 predefined assembly descriptor. The following symbolic names can be
 used for `descriptorRef`:
 
+[[build-assembly-descriptor-refs]]
 .Predefined Assembly Descriptors
 [cols="1,3"]
 |===

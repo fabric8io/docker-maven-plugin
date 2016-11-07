@@ -19,8 +19,8 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 
 The `<run>` configuration element knows the following sub elements:
 
-[[start-run-configuration]]
-.Run configuration
+[[config-image-run]]
+.Run configuration (<<config-image, <image> >>)
 [cols="1,5"]
 |===
 | Element | Description
@@ -31,7 +31,7 @@ The `<run>` configuration element knows the following sub elements:
 | *capDrop*
 | List of `drop` elements to specify kernel parameters to remove from the container.
 
-| *cmd*
+| <<misc-startup, *cmd*>>
 | Command which should be executed at the end of the container's startup. If not given, the image's default command is used. See <<misc-startup, Startup Arguments>> for details.
 
 | *domainname*
@@ -46,7 +46,7 @@ The `<run>` configuration element knows the following sub elements:
 | *entrypoint*
 | Entry point for the container. See <<misc-startup, Startup Arguments] for details.
 
-| *env*
+| <<misc-env, *env*>>
 | Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <<misc-env,Environment and Labels>>.
 
 | *envPropertyFile*
@@ -61,13 +61,13 @@ The `<run>` configuration element knows the following sub elements:
 | *hostname*
 | Hostname of the container
 
-| *labels*
+| <<misc-env, *labels*>>
 | Labels which should be attached to the  container. They are specified in the typical maven property format as described in <<misc-env,Environment and Labels>>.
 
-| *links*
+| <<start-links, *links*>>
 | Network links for connecting containers together as described in  <<start-links, Network Links>>.
 
-| *log*
+| <<start-logging, *log*>>
 | Log configuration for whether and how log messages from the running containers should be printed. This also can configure the https://docs.docker.com/engine/admin/logging/overview[log driver] to use. See <<start-logging,Logging>> for a detailed description.
 
 | *memory*
@@ -82,20 +82,20 @@ a| Naming strategy for how the container name is created:
 * *none* : uses randomly assigned names from docker (default)
 * *alias* : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists with this name.
 
-| *network*
-| <<network-configuration, Network configuration>> for your container.
+| <<network-configuration, *network*>>
+| Network configuration for your container.
 
-| *portPropertyFile*
+| <<start-port-mapping *portPropertyFile*>>
 | File path into which the mapped port properties are written. The format of this file and its purpose are also described in <<start-port-mapping,Port mapping>>
 
-| *ports*
+| <<start-port-mapping, *ports*>>
 | <<start-port-mapping,Port mappings>> for exposing container ports to host ports.
 
 | *privileged*
 | If `true` give container full access to host
 
-| *restartPolicy*
-| <<start-restart,Restart Policy>>
+| <<start-restart, *restartPolicy*>>
+| Restart Policy
 
 | *securityOpts*
 | List of `<opt>` elements to specify kernel security options to add to the container. See below for an example.
@@ -121,10 +121,10 @@ See below for an example.
 | *user*
 | User used inside the container
 
-| *volumes*
-| Volume configuration for binding to host directories and from other containers. See <<start-volumes,Volumes>> for details.
+| <<start-volumes, *volumes*>>
+| Volume configuration for binding to host directories and from other containers. See Volumes for details.
 
-| *wait*
+| <<start-wait, *wait*>>
 | Condition which must be fulfilled for the startup to complete. See <<start-wait,Wait>> for all possible ways to wait for a startup condition.
 
 | *workingDir*
