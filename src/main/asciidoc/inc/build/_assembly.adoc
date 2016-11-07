@@ -7,7 +7,7 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 |===
 | Element | Description
 
-| *basedir*
+| *targetDir*
 | Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/maven`.
 
 | <<build-assembly-descriptor, *inline*>>
@@ -22,8 +22,8 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 | *dockerFileDir*
 | Directory containing an external Dockerfile. _This option is deprecated, please use <dockerfiledir> directly in the <build> section_.
 
-| *exportBasedir*
-| Specification whether the `basedir` should be exported as a volume.  This value is `true` by default except in the case the `basedir` is set to the container root (`/`). It is also `false` by default when a base image is used with `from` since exporting makes no sense in this case and will waste disk space unnecessarily.
+| *exportTargetDir*
+| Specification whether the `targetDir` should be exported as a volume.  This value is `true` by default except in the case the `targetDir` is set to the container root (`/`). It is also `false` by default when a base image is used with `from` since exporting makes no sense in this case and will waste disk space unnecessarily.
 
 | *ignorePermissions*
 | Specification if existing file permissions should be ignored
@@ -120,9 +120,9 @@ used for `descriptorRef`:
          .....
 ----
 
-will add the created artifact with the name `${project.build.finalName}.${artifact.extension}` and all jar dependencies in the the `baseDir` (which is `/maven` by default).
+will add the created artifact with the name `${project.build.finalName}.${artifact.extension}` and all jar dependencies in the the `targetDir` (which is `/maven` by default).
 
-All declared files end up in the configured `basedir` (or `/maven` by default) in the created image.
+All declared files end up in the configured `targetDir` (or `/maven` by default) in the created image.
 
 If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. This happens either automatically when the `{plugin}:build` target is called, or when `{plugin}:build-nofork` is bound to an execution phase in the plugin configuration. By default `{plugin}:build-nofork` is bound to the `install`
 phase).

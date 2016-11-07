@@ -309,9 +309,9 @@ public class DockerAssemblyManager {
         }
         if (assemblyConfig != null) {
             builder.add(ASSEMBLY_NAME, "")
-                   .basedir(assemblyConfig.getBasedir())
+                   .basedir(assemblyConfig.getTargetDir())
                    .assemblyUser(assemblyConfig.getUser())
-                   .exportBasedir(assemblyConfig.exportBasedir());
+                   .exportBasedir(assemblyConfig.exportTargetDir());
         } else {
             builder.exportBasedir(false);
         }

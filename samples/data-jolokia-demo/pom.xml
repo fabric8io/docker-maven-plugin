@@ -444,7 +444,7 @@
                     <from>jboss/wildfly:8.2.0.Final</from>
                     <assembly>
                       <user>jboss:jboss:jboss</user>
-                      <basedir>/opt/jboss/wildfly/standalone/deployments</basedir>
+                      <targetDir>/opt/jboss/wildfly/standalone/deployments</targetDir>
                       <descriptor>assembly.xml</descriptor>
                     </assembly>
                   </build>

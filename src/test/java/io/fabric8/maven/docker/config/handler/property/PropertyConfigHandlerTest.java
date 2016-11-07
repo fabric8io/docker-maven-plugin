@@ -132,7 +132,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
         assertEquals("user", config.getUser());
         assertEquals("project", config.getDescriptorRef());
-        assertFalse(config.exportBasedir());
+        assertFalse(config.exportTargetDir());
         assertTrue(config.isIgnorePermissions());
     }
 
@@ -268,10 +268,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
          */
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
 
-        assertEquals("/maven", assemblyConfig.getBasedir());
+        assertEquals("/maven", assemblyConfig.getTargetDir());
         assertEquals("assembly.xml", assemblyConfig.getDescriptor());
         assertNull(assemblyConfig.getUser());
-        assertNull(assemblyConfig.exportBasedir());
+        assertNull(assemblyConfig.exportTargetDir());
         assertFalse(assemblyConfig.isIgnorePermissions());
     }
 
