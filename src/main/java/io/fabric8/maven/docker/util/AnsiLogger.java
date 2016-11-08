@@ -67,7 +67,7 @@ public class AnsiLogger implements Logger {
     /** {@inheritDoc} */
     public void debug(String message, Object ... params) {
         if (isDebugEnabled()) {
-            log.debug(prefix + String.format(message, params));
+            log.debug(prefix + format(message, params));
         }
     }
 
@@ -79,7 +79,7 @@ public class AnsiLogger implements Logger {
     /** {@inheritDoc} */
     public void verbose(String message, Object ... params) {
         if (verbose) {
-            log.info(ansi().fgBright(BLACK).a(prefix).a(String.format(message,params)).reset().toString());
+            log.info(ansi().fgBright(BLACK).a(prefix).a(format(message, params)).reset().toString());
         }
     }
 
@@ -221,7 +221,20 @@ public class AnsiLogger implements Logger {
     private String colored(String message, Ansi.Color color, boolean addPrefix, Object ... params) {
         Ansi ansi = ansi().fg(color);
         String msgToPrint = addPrefix ? prefix + message : message;
-        return ansi.a(String.format(evaluateEmphasis(msgToPrint, color), params)).reset().toString();
+        return ansi.a(format(evaluateEmphasis(msgToPrint, color), params)).reset().toString();
+    }
+
+    // Use parameters when given, otherwise we use the string directly
+    private String format(String message, Object[] params) {
+        if (params.length == 0) {
+            return message;
+        } else if (params.length == 1 && params[0] instanceof Throwable) {
+            // We print only the message here since breaking exception will bubble up
+            // anyway
+            return message + ": " + params[0].toString();
+        } else {
+            return String.format(message, params);
+        }
     }
 
     // Emphasize parts encloses in "[[*]]" tags

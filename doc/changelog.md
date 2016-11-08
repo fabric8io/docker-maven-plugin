@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.16.10** (2016-11-8)
+  - Fix issue with log statements which use a single argument form
+  
 * **0.16.9** (2016-10-23)
   - Removed (undocumented) property `docker.image.name` which could be used to be inserted as a `%a` specifier part in an image name.
   - Fixed exposing of all property and port mappings ([#583](https://github.com/fabric8io/docker-maven-plugin/issues/583))
