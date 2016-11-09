@@ -10,6 +10,7 @@
   <version>0.18-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
+
   <name>docker-maven-plugin</name>
   <description>Docker Maven Plugin</description>
 
