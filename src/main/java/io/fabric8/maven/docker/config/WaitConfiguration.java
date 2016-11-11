@@ -210,6 +210,7 @@ public class WaitConfiguration implements Serializable {
         private HttpConfiguration(String url, String method, String status) {
             this.url = url;
             this.method = method;
+            this.status = status;
         }
 
         public String getUrl() {
