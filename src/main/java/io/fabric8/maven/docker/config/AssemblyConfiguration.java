@@ -12,6 +12,7 @@ public class AssemblyConfiguration implements Serializable {
 
     /**
      * @parameter
+     * @deprecated Use {@link #targetDir} instead.
      */
     @Deprecated
     private String basedir;
@@ -20,6 +21,7 @@ public class AssemblyConfiguration implements Serializable {
      * New replacement for base directory which better reflects its
      * purpose
      */
+    @Parameter
     private String targetDir;
 
     /**
