@@ -142,7 +142,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {
         return new AssemblyConfiguration.Builder()
-                .basedir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))
+                .targetDir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))
                 .descriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
                 .descriptorRef(withPrefix(prefix, ASSEMBLY_DESCRIPTOR_REF, properties))
                 .dockerFileDir(withPrefix(prefix, ASSEMBLY_DOCKER_FILE_DIR, properties))
