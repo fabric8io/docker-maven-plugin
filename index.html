@@ -516,7 +516,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.18-SNAPSHOT,</span>
-<span id="revdate">2016-11-11</span>
+<span id="revdate">2016-11-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -1536,7 +1536,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp"),</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
@@ -1707,7 +1707,7 @@ assembly configuration</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Sets the TarArchiver behaviour on file paths with more than 100 characters length. Valid values are: "warn"(default), "fail", "truncate", "gnu", "posix", "posix_warn" or "omit"</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="config-image-build-assembly-user"></a> <strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.
 </p><p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
 </p><p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.
@@ -4277,7 +4277,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.18-SNAPSHOT<br>
-Last updated 2016-11-11 18:34:54 UTC
+Last updated 2016-11-17 07:06:46 UTC
 </div>
 </div>
 </body>
