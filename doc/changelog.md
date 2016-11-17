@@ -5,6 +5,14 @@
   - Fix issue with log statements which use a single argument form
   - Fix bug in HTTP wait configuration when using an external property handler (#613)
   - Fix NPE for "docker:log" when the container to log has already been stopped (#612)
+  - Allow a protocol (tcp/udp) for the specification of a port (#610) 
+
+The following variables in the assembly configuration has been renamed for consistencies sake:
+ 
+ * `basedir` --> `targetDir`
+ * `expoetBasedir` --> `exportTargetDir`
+
+The old variable names are still accepted but will be removed for release 1.0
 
 * **0.17.2** (2016-11-3)
   - Fix issues with an empty Docker config file

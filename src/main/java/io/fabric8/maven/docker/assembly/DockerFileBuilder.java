@@ -237,48 +237,29 @@ public class DockerFileBuilder {
 
     private void addPorts(StringBuilder b) {
         if (ports.size() > 0) {
-            String[] portsS = ports.toArray(new String[]{});
+            String[] portsS = new String[ports.size()];
+            int i = 0;
             for(String port : portsS) {
-            	validatePortMapping(port);
+            	portsS[i++] = validatePortExposure(port);
             }
             DockerFileKeyword.EXPOSE.addTo(b, portsS);
         }
     }
-    
-    // Pattern for splitting of the protocol part of the port.  
-    private static final Pattern PROTOCOL_SPLIT_PATTERN = Pattern.compile("(.*?)(?:/(tcp|udp))?$");
-    private void validatePortMapping(String input) throws IllegalArgumentException {
+
+    private String validatePortExposure(String input) throws IllegalArgumentException {
         try {
-            Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(input);
+            Matcher matcher = Pattern.compile("(.*?)(?:/(tcp|udp))?$", Pattern.CASE_INSENSITIVE).matcher(input);
             // Matches always.  If there is a tcp/udp protocol, should end up in the second group
-            // and get factored out.  If it's something invalid, it should get stuck to the first group.  
+            // and get factored out.  If it's something invalid, it should get stuck to the first group.
             matcher.matches();
-            
-            // First group is the port mapping.  
-            // It may be split with a : in a variety of ways.  
-            String mapping = matcher.group(1);
-            String[] mappingParts = mapping.split(":", 3);
-            if(mappingParts.length == 1) {
-            	// Single port should be an integer.  
-            	Integer.valueOf(mappingParts[0]);
-            } else if (mappingParts.length == 2) {
-            	// Map of port to external port.  Both should be integers.  
-            	Integer.valueOf(mappingParts[0]);
-            	Integer.valueOf(mappingParts[1]);
-            } else {
-            	// If length is 3, then our first chunk is a hostname or IP address.  
-            	// Can't really validate that, but the 2nd and 3rd parts should be ports and therefore integers.  
-            	Integer.valueOf(mappingParts[1]);
-            	Integer.valueOf(mappingParts[2]);
-            }
-            
-            
+            Integer.valueOf(matcher.group(1));
+            return input.toLowerCase();
         } catch (NumberFormatException exp) {
             throw new IllegalArgumentException("\nInvalid port mapping '" + input + "'\n" +
-                    "Required format: '<hostIP>:<hostPort>:<containerPort>(/tcp|udp)'\n" +
+                    "Required format: '<hostIP>(/tcp|udp)'\n" +
                     "See the reference manual for more details");
         }
-    }    
+    }
 
     private void addOptimisation() {
         if (runCmds != null && !runCmds.isEmpty() && shouldOptimise) {
