@@ -52,7 +52,7 @@ assembly configuration
 | *tarLongFileMode*
 | Sets the TarArchiver behaviour on file paths with more than 100 characters length. Valid values are: "warn"(default), "fail", "truncate", "gnu", "posix", "posix_warn" or "omit"
 
-| *user*
+| [[config-image-build-assembly-user]] *user*
 | User and/or group under which the files should be added. The user must already exist in the base image.
 
 It has the general format `user[:group[:run-user]]`. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
