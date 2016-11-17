@@ -239,7 +239,7 @@ public class DockerFileBuilder {
         if (ports.size() > 0) {
             String[] portsS = new String[ports.size()];
             int i = 0;
-            for(String port : portsS) {
+            for(String port : ports) {
             	portsS[i++] = validatePortExposure(port);
             }
             DockerFileKeyword.EXPOSE.addTo(b, portsS);
