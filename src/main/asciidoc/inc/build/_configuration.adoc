@@ -68,7 +68,7 @@ a| Definition of a health check as described in <<build-healthcheck, Healthcheck
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
 
 | *ports*
-| The exposed ports which is a list of `<port>` elements, one for each port to expose.
+| The exposed ports which is a list of `<port>` elements, one for each port to expose. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp"),
 
 | *runCmds*
 | Commands to be run during the build process. It contains *run* elements which are passed to the shell. The run commands are inserted right after the assembly and after *workdir* in to the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
