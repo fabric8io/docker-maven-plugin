@@ -11,7 +11,7 @@ public class AssemblyConfiguration implements Serializable {
     private static final String DEFAULT_BASE_DIR = "/maven";
 
     /**
-     * @parameter
+     * @deprecated Use 'targetDir' instead
      */
     @Deprecated
     private String basedir;
@@ -20,29 +20,26 @@ public class AssemblyConfiguration implements Serializable {
      * New replacement for base directory which better reflects its
      * purpose
      */
+    @Parameter
     private String targetDir;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String descriptor;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private Assembly inline;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String descriptorRef;
 
     /**
-     * @parameter
      * @deprecated Use {@link BuildImageConfiguration#dockerFileDir} instead
      */
+    @Parameter
+    @Deprecated
     private String dockerFileDir;
 
+    // use 'exportTargetDir' instead
     @Deprecated
     private Boolean exportBasedir;
 
@@ -55,24 +52,18 @@ public class AssemblyConfiguration implements Serializable {
     private Boolean exportTargetDir;
 
     /**
-     * @paramter default-value="false"
      * @deprecated use permissionMode == ignore instead.
      */
+    @Parameter
     private Boolean ignorePermissions;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private AssemblyMode mode;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String user;
 
-    /**
-     * @parameter
-     */
+    @Parameter
     private String tarLongFileMode;
 
     public Boolean exportTargetDir() {
@@ -149,8 +140,8 @@ public class AssemblyConfiguration implements Serializable {
             return isEmpty ? null : config;
         }
 
-        public Builder basedir(String baseDir) {
-            config.basedir = set(baseDir);
+        public Builder targetDir(String targetDir) {
+            config.targetDir = set(targetDir);
             return this;
         }
 
@@ -239,5 +230,5 @@ public class AssemblyConfiguration implements Serializable {
          * Ignore permission when using an assembly mode of "dir"
          */
         ignore
-        }
+    }
 }
