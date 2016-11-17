@@ -10,7 +10,7 @@
 The following variables in the assembly configuration has been renamed for consistencies sake:
  
  * `basedir` --> `targetDir`
- * `expoetBasedir` --> `exportTargetDir`
+ * `exportBasedir` --> `exportTargetDir`
 
 The old variable names are still accepted but will be removed for release 1.0
 
