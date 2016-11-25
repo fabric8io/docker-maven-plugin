@@ -85,7 +85,7 @@ a| Naming strategy for how the container name is created:
 | <<network-configuration, *network*>>
 | Network configuration for your container.
 
-| <<start-port-mapping *portPropertyFile*>>
+| <<start-port-mapping, *portPropertyFile*>>
 | File path into which the mapped port properties are written. The format of this file and its purpose are also described in <<start-port-mapping,Port mapping>>
 
 | <<start-port-mapping, *ports*>>
