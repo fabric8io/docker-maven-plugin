@@ -65,6 +65,26 @@ public class BuildImageConfigurationTest {
     }
 
     @Test
+    public void DockerfileDirAndDockerfileAlsoSet() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerFileDir("/tmp/").
+                dockerFile("Dockerfile").build();
+        config.initAndValidate(logger);
+        assertTrue(config.isDockerFileMode());
+        assertEquals(config.getDockerFile(),new File("/tmp/Dockerfile"));
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void DockerfileDirAndDockerfileAlsoSetButDockerfileIsAbsoluteExceptionThrown() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerFileDir("/tmp/").
+                dockerFile("/Dockerfile").build();
+        config.initAndValidate(logger);
+    }
+
+    @Test
     public void deprecatedDockerfileDir() {
         AssemblyConfiguration assemblyConfig = new AssemblyConfiguration.Builder().dockerFileDir("src/docker").build();
         BuildImageConfiguration config =
