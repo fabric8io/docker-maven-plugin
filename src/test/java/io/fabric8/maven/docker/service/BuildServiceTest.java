@@ -117,7 +117,7 @@ public class BuildServiceTest {
             docker.buildImage(withEqual(imageConfig.getName()),
                               withEqual(new File("docker-build.tar")),
                               (String) withNull(),
-                              anyBoolean, anyBoolean, (Map) any);
+                              anyBoolean, anyBoolean, (Map) any, (Map) any);
         }};
     }
 
@@ -135,7 +135,7 @@ public class BuildServiceTest {
 
     private void whenBuildImage(boolean cleanup, boolean nocache) throws DockerAccessException, MojoExecutionException {
         new Expectations() {{
-            docker.buildImage(withEqual(imageConfig.getName()), (File) any, (String) withNull(), anyBoolean, anyBoolean, (Map) any);
+            docker.buildImage(withEqual(imageConfig.getName()), (File) any, (String) withNull(), anyBoolean, anyBoolean, (Map) any, (Map) any);
         }};
         if (cleanup) {
             new Expectations() {{

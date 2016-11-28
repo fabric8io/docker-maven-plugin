@@ -36,6 +36,7 @@ public enum ConfigKey {
     ASSEMBLY_MODE("assembly.mode"),
     ASSEMBLY_TARLONGFILEMODE("assembly.tarLongFileMode"),
     BIND,
+    BUILD_OPTIONS,
     CAP_ADD,
     CAP_DROP,
     CLEANUP,

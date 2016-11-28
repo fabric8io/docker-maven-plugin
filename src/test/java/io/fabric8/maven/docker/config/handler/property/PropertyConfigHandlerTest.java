@@ -262,6 +262,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         validateEnv(buildConfig.getEnv());
         validateLabels(buildConfig.getLabels());
         validateArgs(buildConfig.getArgs());
+        validateBuildOptions(buildConfig.getBuildOptions());
         /*
          * validate only the descriptor is required and defaults are all used, 'testAssembly' validates
          * all options can be set
@@ -281,6 +282,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private void validateLabels(Map<String, String> labels) {
         assertEquals("Hello\"World",labels.get("com.acme.label"));
+    }
+
+    private void validateBuildOptions(Map<String,String> buildOptions) {
+        assertEquals("2147483648", buildOptions.get("shmsize"));
     }
 
     protected void validateRunConfiguration(RunImageConfiguration runConfig) {
@@ -383,6 +388,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.ENV) + ".HOME", "/Users/roland",
             k(ConfigKey.ARGS) + ".PROXY", "http://proxy",
             k(ConfigKey.LABELS) + ".com.acme.label", "Hello\"World",
+            k(ConfigKey.BUILD_OPTIONS) + ".shmsize", "2147483648",
             k(ConfigKey.ENV_PROPERTY_FILE), "/tmp/envProps.txt",
             k(ConfigKey.EXTRA_HOSTS) + ".1", "localhost:127.0.0.1",
             k(ConfigKey.FROM), "image",
