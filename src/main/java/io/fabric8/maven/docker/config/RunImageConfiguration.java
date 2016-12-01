@@ -1,13 +1,14 @@
 package io.fabric8.maven.docker.config;
 
-import io.fabric8.maven.docker.util.DeepCopy;
-import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.maven.plugins.annotations.Parameter;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import io.fabric8.maven.docker.util.DeepCopy;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import io.fabric8.maven.docker.util.EnvUtil;
 
 /**
  * @author roland
@@ -24,7 +25,7 @@ public class RunImageConfiguration implements Serializable {
     private Map<String, String> env;
 
     @Parameter
-    private Map<String, String> labels;
+    private Map<String,String> labels;
 
     // Path to a property file holding environment variables
     @Parameter
@@ -59,9 +60,7 @@ public class RunImageConfiguration implements Serializable {
     private String workingDir;
 
     // Size of /dev/shm in bytes
-    /**
-     * @parameter
-     */
+    /** @parameter */
     private Long shmSize;
 
     // memory in bytes
@@ -149,8 +148,7 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private boolean keepEnvs = false;
 
-    public RunImageConfiguration() {
-    }
+    public RunImageConfiguration() { }
 
     public String initAndValidate() {
         if (entrypoint != null) {
@@ -161,7 +159,7 @@ public class RunImageConfiguration implements Serializable {
         }
 
         // Custom networks are available since API 1.21 (Docker 1.9)
-        final NetworkConfig config = getNetworkingConfig();
+        NetworkConfig config = getNetworkingConfig();
         if (config != null && config.isCustomNetwork()) {
             return "1.21";
         }
@@ -326,7 +324,7 @@ public class RunImageConfiguration implements Serializable {
 
     public static class Builder {
 
-        public Builder(final RunImageConfiguration config) {
+        public Builder(RunImageConfiguration config) {
             if (config == null) {
                 this.config = new RunImageConfiguration();
             } else {
@@ -338,196 +336,196 @@ public class RunImageConfiguration implements Serializable {
             this(null);
         }
 
-        private final RunImageConfiguration config;
+        private RunImageConfiguration config;
 
-        public Builder env(final Map<String, String> env) {
+        public Builder env(Map<String, String> env) {
             config.env = env;
             return this;
         }
 
-        public Builder labels(final Map<String, String> labels) {
+        public Builder labels(Map<String, String> labels) {
             config.labels = labels;
             return this;
         }
 
 
-        public Builder envPropertyFile(final String envPropertyFile) {
+        public Builder envPropertyFile(String envPropertyFile) {
             config.envPropertyFile = envPropertyFile;
             return this;
         }
 
-        public Builder cmd(final String cmd) {
+        public Builder cmd(String cmd) {
             if (cmd != null) {
                 config.cmd = new Arguments(cmd);
             }
             return this;
         }
 
-        public Builder cmd(final Arguments args) {
+        public Builder cmd(Arguments args) {
             config.cmd = args;
             return this;
         }
 
-        public Builder domainname(final String domainname) {
+        public Builder domainname(String domainname) {
             config.domainname = domainname;
             return this;
         }
 
-        public Builder entrypoint(final String entrypoint) {
+        public Builder entrypoint(String entrypoint) {
             if (entrypoint != null) {
                 config.entrypoint = new Arguments(entrypoint);
             }
             return this;
         }
 
-        public Builder entrypoint(final Arguments args) {
+        public Builder entrypoint(Arguments args) {
             config.entrypoint = args;
             return this;
         }
 
-        public Builder hostname(final String hostname) {
+        public Builder hostname(String hostname) {
             config.hostname = hostname;
             return this;
         }
 
-        public Builder portPropertyFile(final String portPropertyFile) {
+        public Builder portPropertyFile(String portPropertyFile) {
             config.portPropertyFile = portPropertyFile;
             return this;
         }
 
-        public Builder workingDir(final String workingDir) {
+        public Builder workingDir(String workingDir) {
             config.workingDir = workingDir;
             return this;
         }
 
-        public Builder user(final String user) {
+        public Builder user(String user) {
             config.user = user;
             return this;
         }
 
-        public Builder shmSize(final Long shmSize) {
+        public Builder shmSize(Long shmSize) {
             config.shmSize = shmSize;
             return this;
         }
 
-        public Builder memory(final Long memory) {
+        public Builder memory(Long memory) {
             config.memory = memory;
             return this;
         }
 
-        public Builder memorySwap(final Long memorySwap) {
+        public Builder memorySwap(Long memorySwap) {
             config.memorySwap = memorySwap;
             return this;
         }
 
-        public Builder capAdd(final List<String> capAdd) {
+        public Builder capAdd(List<String> capAdd) {
             config.capAdd = capAdd;
             return this;
         }
 
-        public Builder capDrop(final List<String> capDrop) {
+        public Builder capDrop(List<String> capDrop) {
             config.capDrop = capDrop;
             return this;
         }
 
-        public Builder securityOpts(final List<String> securityOpts) {
+        public Builder securityOpts(List<String> securityOpts) {
             config.securityOpts = securityOpts;
             return this;
         }
 
-        public Builder net(final String net) {
+        public Builder net(String net) {
             config.net = net;
             return this;
         }
 
-        public Builder network(final NetworkConfig networkConfig) {
+        public Builder network(NetworkConfig networkConfig) {
             config.network = networkConfig;
             return this;
         }
 
-        public Builder dependsOn(final List<String> dependsOn) {
+        public Builder dependsOn(List<String> dependsOn) {
             config.dependsOn = dependsOn;
             return this;
         }
 
-        public Builder dns(final List<String> dns) {
+        public Builder dns(List<String> dns) {
             config.dns = dns;
             return this;
         }
 
-        public Builder dnsSearch(final List<String> dnsSearch) {
+        public Builder dnsSearch(List<String> dnsSearch) {
             config.dnsSearch = dnsSearch;
             return this;
         }
 
-        public Builder extraHosts(final List<String> extraHosts) {
+        public Builder extraHosts(List<String> extraHosts) {
             config.extraHosts = extraHosts;
             return this;
         }
 
-        public Builder ulimits(final List<UlimitConfig> ulimits) {
+        public Builder ulimits(List<UlimitConfig> ulimits) {
             config.ulimits = ulimits;
             return this;
         }
 
-        public Builder ports(final List<String> ports) {
+        public Builder ports(List<String> ports) {
             config.ports = ports;
             return this;
         }
 
-        public Builder volumes(final VolumeConfiguration volumes) {
+        public Builder volumes(VolumeConfiguration volumes) {
             config.volumes = volumes;
             return this;
         }
 
-        public Builder links(final List<String> links) {
+        public Builder links(List<String> links) {
             config.links = links;
             return this;
         }
 
-        public Builder tmpfs(final List<String> tmpfs) {
+        public Builder tmpfs(List<String> tmpfs) {
             config.tmpfs = tmpfs;
             return this;
         }
 
-        public Builder wait(final WaitConfiguration wait) {
+        public Builder wait(WaitConfiguration wait) {
             config.wait = wait;
             return this;
         }
 
-        public Builder log(final LogConfiguration log) {
+        public Builder log(LogConfiguration log) {
             config.log = log;
             return this;
         }
 
-        public Builder namingStrategy(final String namingStrategy) {
+        public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
                     NamingStrategy.valueOf(namingStrategy.toLowerCase());
             return this;
         }
 
-        public Builder namingStrategy(final NamingStrategy namingStrategy) {
+        public Builder namingStrategy(NamingStrategy namingStrategy) {
             config.namingStrategy = namingStrategy;
             return this;
         }
 
-        public Builder exposedPropertyKey(final String key) {
+        public Builder exposedPropertyKey(String key) {
             config.exposedPropertyKey = key;
             return this;
         }
 
-        public Builder privileged(final Boolean privileged) {
+        public Builder privileged(Boolean privileged) {
             config.privileged = privileged;
             return this;
         }
 
-        public Builder restartPolicy(final RestartPolicy restartPolicy) {
+        public Builder restartPolicy(RestartPolicy restartPolicy) {
             config.restartPolicy = restartPolicy;
             return this;
         }
 
-        public Builder skip(final String skip) {
+        public Builder skip(String skip) {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);
             }
