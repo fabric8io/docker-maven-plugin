@@ -120,26 +120,26 @@ public enum ConfigKey {
         this.key = toVarName(name());
     }
 
-    ConfigKey(final String key) {
+    ConfigKey(String key) {
         this.key = key;
     }
 
-    private final String key;
+    private String key;
 
     public static String DEFAULT_PREFIX = "docker";
 
     // Convert to camle case
-    private String toVarName(final String s) {
-        final String[] parts = s.split("_");
+    private String toVarName(String s) {
+        String[] parts = s.split("_");
         String var = parts[0].toLowerCase();
         for (int i = 1; i < parts.length; i++) {
             var = var + parts[i].substring(0, 1).toUpperCase() +
-                    parts[i].substring(1).toLowerCase();
+                  parts[i].substring(1).toLowerCase();
         }
         return var;
     }
 
-    public String asPropertyKey(final String prefix) {
+    public String asPropertyKey(String prefix) {
         return prefix + "." + key;
     }
 
