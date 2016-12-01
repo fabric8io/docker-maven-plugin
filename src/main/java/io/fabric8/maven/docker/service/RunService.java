@@ -248,7 +248,7 @@ public class RunService {
                     .workingDir(runConfig.getWorkingDir())
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
-                    .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
+                    .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), runConfig.keepEnvs(), mavenProps)
                     .labels(mergeLabels(runConfig.getLabels(), pomLabel))
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(runConfig, mappedPorts));
