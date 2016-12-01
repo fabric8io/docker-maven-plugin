@@ -15,17 +15,17 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
-import java.util.*;
-
 import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
+import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 
-import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
-import io.fabric8.maven.docker.util.EnvUtil;
+import java.util.*;
 
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
-import static io.fabric8.maven.docker.util.EnvUtil.*;
+import static io.fabric8.maven.docker.util.EnvUtil.extractFromPropertiesAsList;
+import static io.fabric8.maven.docker.util.EnvUtil.extractFromPropertiesAsMap;
 
 /**
  * @author roland
@@ -41,18 +41,18 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     @Override
-    public List<ImageConfiguration> resolve(ImageConfiguration config, MavenProject project, MavenSession session)
-        throws IllegalArgumentException {
-        String prefix = getPrefix(config);
-        Properties properties = project.getProperties();
+    public List<ImageConfiguration> resolve(final ImageConfiguration config, final MavenProject project, final MavenSession session)
+            throws IllegalArgumentException {
+        final String prefix = getPrefix(config);
+        final Properties properties = project.getProperties();
 
 
-        RunImageConfiguration run = extractRunConfiguration(prefix,properties);
-        BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
-        WatchImageConfiguration watch = extractWatchConfig(prefix, properties);
+        final RunImageConfiguration run = extractRunConfiguration(prefix, properties);
+        final BuildImageConfiguration build = extractBuildConfiguration(prefix, properties);
+        final WatchImageConfiguration watch = extractWatchConfig(prefix, properties);
 
-        String name = extractName(prefix, properties);
-        String alias = withPrefix(prefix, ALIAS, properties);
+        final String name = extractName(prefix, properties);
+        final String alias = withPrefix(prefix, ALIAS, properties);
 
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
@@ -64,7 +64,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .build());
     }
 
-    private BuildImageConfiguration extractBuildConfiguration(String prefix, Properties properties) {
+    private BuildImageConfiguration extractBuildConfiguration(final String prefix, final Properties properties) {
         return new BuildImageConfiguration.Builder()
                 .cmd(withPrefix(prefix, CMD, properties))
                 .cleanup(withPrefix(prefix, CLEANUP, properties))
@@ -74,11 +74,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .assembly(extractAssembly(prefix, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
                 .args(mapWithPrefix(prefix, ARGS, properties))
-                .labels(mapWithPrefix(prefix,LABELS,properties))
+                .labels(mapWithPrefix(prefix, LABELS, properties))
                 .ports(extractPortValues(prefix, properties))
-                .runCmds(extractRunCommands(prefix,properties))
+                .runCmds(extractRunCommands(prefix, properties))
                 .from(withPrefix(prefix, FROM, properties))
-                .fromExt(mapWithPrefix(prefix,FROM_EXT,properties))
+                .fromExt(mapWithPrefix(prefix, FROM_EXT, properties))
                 .registry(withPrefix(prefix, REGISTRY, properties))
                 .volumes(listWithPrefix(prefix, VOLUMES, properties))
                 .tags(listWithPrefix(prefix, TAGS, properties))
@@ -92,7 +92,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private RunImageConfiguration extractRunConfiguration(String prefix, Properties properties) {
+    private RunImageConfiguration extractRunConfiguration(final String prefix, final Properties properties) {
 
         return new RunImageConfiguration.Builder()
                 .capAdd(listWithPrefix(prefix, CAP_ADD, properties))
@@ -107,7 +107,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
                 .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .env(mapWithPrefix(prefix, ENV, properties))
-                .labels(mapWithPrefix(prefix,LABELS,properties))
+                .labels(mapWithPrefix(prefix, LABELS, properties))
                 .envPropertyFile(withPrefix(prefix, ENV_PROPERTY_FILE, properties))
                 .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
                 .hostname(withPrefix(prefix, HOSTNAME, properties))
@@ -123,24 +123,25 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .restartPolicy(extractRestartPolicy(prefix, properties))
                 .user(withPrefix(prefix, USER, properties))
                 .workingDir(withPrefix(prefix, WORKING_DIR, properties))
-                .log(extractLogConfig(prefix,properties))
+                .log(extractLogConfig(prefix, properties))
                 .wait(extractWaitConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
                 .ulimits(extractUlimits(prefix, properties))
                 .tmpfs(listWithPrefix(prefix, TMPFS, properties))
+                .keepEnvs(withPrefix(prefix, KEEP_ENVS, properties))
                 .build();
     }
 
-    private NetworkConfig extractNetworkConfig(String prefix, Properties properties) {
+    private NetworkConfig extractNetworkConfig(final String prefix, final Properties properties) {
         return new NetworkConfig.Builder()
-            .mode(withPrefix(prefix, NETWORK_MODE, properties))
-            .name(withPrefix(prefix, NETWORK_NAME, properties))
-            .aliases(listWithPrefix(prefix,NETWORK_ALIAS, properties))
-            .build();
+                .mode(withPrefix(prefix, NETWORK_MODE, properties))
+                .name(withPrefix(prefix, NETWORK_NAME, properties))
+                .aliases(listWithPrefix(prefix, NETWORK_ALIAS, properties))
+                .build();
     }
 
-    private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {
+    private AssemblyConfiguration extractAssembly(final String prefix, final Properties properties) {
         return new AssemblyConfiguration.Builder()
                 .targetDir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))
                 .descriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
@@ -155,8 +156,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private HealthCheckConfiguration extractHealthCheck(String prefix, Properties properties) {
-        Map<String, String> healthCheckProperties = mapWithPrefix(prefix, HEALTHCHECK, properties);
+    private HealthCheckConfiguration extractHealthCheck(final String prefix, final Properties properties) {
+        final Map<String, String> healthCheckProperties = mapWithPrefix(prefix, HEALTHCHECK, properties);
         if (healthCheckProperties != null && healthCheckProperties.size() > 0) {
             return new HealthCheckConfiguration.Builder()
                     .interval(withPrefix(prefix, HEALTHCHECK_INTERVAL, properties))
@@ -170,8 +171,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return null;
     }
 
-    private String extractName(String prefix, Properties properties) throws IllegalArgumentException {
-        String name = withPrefix(prefix, NAME, properties);
+    private String extractName(final String prefix, final Properties properties) throws IllegalArgumentException {
+        final String name = withPrefix(prefix, NAME, properties);
         if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
         }
@@ -179,58 +180,58 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     // Extract only the values of the port mapping
-    private List<String> extractPortValues(String prefix, Properties properties) {
-        List<String> ret = new ArrayList<>();
-        List<String> ports = listWithPrefix(prefix, PORTS, properties);
+    private List<String> extractPortValues(final String prefix, final Properties properties) {
+        final List<String> ret = new ArrayList<>();
+        final List<String> ports = listWithPrefix(prefix, PORTS, properties);
         if (ports == null) {
             return null;
         }
-        List<String[]> parsedPorts = EnvUtil.splitOnLastColon(ports);
-        for (String[] port : parsedPorts) {
+        final List<String[]> parsedPorts = EnvUtil.splitOnLastColon(ports);
+        for (final String[] port : parsedPorts) {
             ret.add(port[1]);
         }
         return ret;
     }
 
 
-    private List<String> extractRunCommands(String prefix, Properties properties) {
-        List<String> ret = new ArrayList<>();
-        List<String> cmds = listWithPrefix(prefix, RUN, properties);
+    private List<String> extractRunCommands(final String prefix, final Properties properties) {
+        final List<String> ret = new ArrayList<>();
+        final List<String> cmds = listWithPrefix(prefix, RUN, properties);
         if (cmds == null) {
             return null;
         }
         return ret;
     }
 
-    private RestartPolicy extractRestartPolicy(String prefix, Properties properties) {
+    private RestartPolicy extractRestartPolicy(final String prefix, final Properties properties) {
         return new RestartPolicy.Builder()
                 .name(withPrefix(prefix, RESTART_POLICY_NAME, properties))
                 .retry(asInt(withPrefix(prefix, RESTART_POLICY_RETRY, properties)))
                 .build();
     }
 
-    private LogConfiguration extractLogConfig(String prefix, Properties properties) {
-        LogConfiguration.Builder builder = new LogConfiguration.Builder()
-            .color(withPrefix(prefix, LOG_COLOR, properties))
-            .date(withPrefix(prefix, LOG_DATE, properties))
-            .prefix(withPrefix(prefix, LOG_PREFIX, properties))
-            .logDriverName(withPrefix(prefix, LOG_DRIVER_NAME, properties))
-            .logDriverOpts(mapWithPrefix(prefix, LOG_DRIVER_OPTS, properties));
-        Boolean enabled = booleanWithPrefix(prefix, LOG_ENABLED, properties);
+    private LogConfiguration extractLogConfig(final String prefix, final Properties properties) {
+        final LogConfiguration.Builder builder = new LogConfiguration.Builder()
+                .color(withPrefix(prefix, LOG_COLOR, properties))
+                .date(withPrefix(prefix, LOG_DATE, properties))
+                .prefix(withPrefix(prefix, LOG_PREFIX, properties))
+                .logDriverName(withPrefix(prefix, LOG_DRIVER_NAME, properties))
+                .logDriverOpts(mapWithPrefix(prefix, LOG_DRIVER_OPTS, properties));
+        final Boolean enabled = booleanWithPrefix(prefix, LOG_ENABLED, properties);
         if (enabled != null) {
             builder.enabled(enabled);
         }
         return builder.build();
     }
 
-    private WaitConfiguration extractWaitConfig(String prefix, Properties properties) {
-        String url = withPrefix(prefix,WAIT_HTTP_URL,properties);
+    private WaitConfiguration extractWaitConfig(final String prefix, final Properties properties) {
+        String url = withPrefix(prefix, WAIT_HTTP_URL, properties);
         if (url == null) {
             // Fallback to deprecated old URL
-            url = withPrefix(prefix,WAIT_URL,properties);
+            url = withPrefix(prefix, WAIT_URL, properties);
         }
         return new WaitConfiguration.Builder()
-                .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
+                .time(asInt(withPrefix(prefix, WAIT_TIME, properties)))
                 .url(url)
                 .preStop(withPrefix(prefix, PRE_STOP, properties))
                 .postStart(withPrefix(prefix, POST_START, properties))
@@ -245,7 +246,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private WatchImageConfiguration extractWatchConfig(String prefix, Properties properties) {
+    private WatchImageConfiguration extractWatchConfig(final String prefix, final Properties properties) {
         return new WatchImageConfiguration.Builder()
                 .interval(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
                 .postGoal(withPrefix(prefix, WATCH_POSTGOAL, properties))
@@ -253,36 +254,36 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private List<UlimitConfig> extractUlimits(String prefix, Properties properties) {
-        List<String> ulimits = listWithPrefix(prefix, ConfigKey.ULIMITS, properties);
+    private List<UlimitConfig> extractUlimits(final String prefix, final Properties properties) {
+        final List<String> ulimits = listWithPrefix(prefix, ConfigKey.ULIMITS, properties);
         if (ulimits == null) {
             return null;
         }
-        List<UlimitConfig> ret = new ArrayList<>();
-        for (String ulimit : ulimits) {
+        final List<UlimitConfig> ret = new ArrayList<>();
+        for (final String ulimit : ulimits) {
             ret.add(new UlimitConfig(ulimit));
         }
         return ret;
     }
 
-    private VolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {
+    private VolumeConfiguration extractVolumeConfig(final String prefix, final Properties properties) {
         return new VolumeConfiguration.Builder()
                 .bind(listWithPrefix(prefix, BIND, properties))
                 .from(listWithPrefix(prefix, VOLUMES_FROM, properties))
                 .build();
     }
 
-    private int asInt(String s) {
+    private int asInt(final String s) {
         return s != null ? Integer.parseInt(s) : 0;
     }
 
-    private List<Integer> asIntList(List<String> strings) {
+    private List<Integer> asIntList(final List<String> strings) {
         if (strings == null) {
             return null;
         }
 
-        List<Integer> ints = new ArrayList<>();
-        for (String s : strings) {
+        final List<Integer> ints = new ArrayList<>();
+        for (final String s : strings) {
             ints.add(asInt(s));
         }
 
@@ -290,34 +291,34 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     }
 
-    private List<String> listWithPrefix(String prefix, ConfigKey key, Properties properties) {
+    private List<String> listWithPrefix(final String prefix, final ConfigKey key, final Properties properties) {
         return extractFromPropertiesAsList(key.asPropertyKey(prefix), properties);
     }
 
-    private Map<String, String> mapWithPrefix(String prefix, ConfigKey key, Properties properties) {
+    private Map<String, String> mapWithPrefix(final String prefix, final ConfigKey key, final Properties properties) {
         return extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties);
     }
 
-    private String withPrefix(String prefix, ConfigKey key, Properties properties) {
+    private String withPrefix(final String prefix, final ConfigKey key, final Properties properties) {
         return properties.getProperty(key.asPropertyKey(prefix));
     }
 
-    private Integer intWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        String prop = withPrefix(prefix, key, properties);
+    private Integer intWithPrefix(final String prefix, final ConfigKey key, final Properties properties) {
+        final String prop = withPrefix(prefix, key, properties);
         return prop == null ? null : Integer.valueOf(prop);
     }
 
-    private Long longWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        String prop = withPrefix(prefix, key, properties);
+    private Long longWithPrefix(final String prefix, final ConfigKey key, final Properties properties) {
+        final String prop = withPrefix(prefix, key, properties);
         return prop == null ? null : Long.valueOf(prop);
     }
 
-    private Boolean booleanWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        String prop = withPrefix(prefix,key,properties);
+    private Boolean booleanWithPrefix(final String prefix, final ConfigKey key, final Properties properties) {
+        final String prop = withPrefix(prefix, key, properties);
         return prop == null ? null : Boolean.valueOf(prop);
     }
 
-    private String getPrefix(ImageConfiguration config) {
+    private String getPrefix(final ImageConfiguration config) {
         String prefix = config.getExternalConfig().get("prefix");
         if (prefix == null) {
             prefix = "docker";
