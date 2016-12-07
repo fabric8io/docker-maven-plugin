@@ -22,7 +22,7 @@ $ mvn {plugin}:start {plugin}:watch -Ddocker.watchMode=run
 
 * `both` : Enables both `build` and `run`. This is the default.
 * `none` : Image is completely ignored for watching.
-* `copy` : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deply, too so that it makes sense. Most application servers like Tomcat supports this.
+* `copy` : Copy changed files into the running container. This is the fast way to update a container, however the target container must support hot deploy, too so that it makes sense. Most application servers like Tomcat supports this.
 
 The mode can also be `both` or `none` to select both or none of these variants, respectively. The default is `both`.
 
