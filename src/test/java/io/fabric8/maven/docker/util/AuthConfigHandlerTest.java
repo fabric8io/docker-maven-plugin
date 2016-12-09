@@ -126,7 +126,7 @@ public class AuthConfigHandlerTest {
     private void checkDockerLogin(File homeDir,String configRegistry, String lookupRegistry)
             throws IOException, MojoExecutionException {
         createDockerConfig(homeDir, "roland", "secret", "roland@jolokia.org", configRegistry);
-        AuthConfig config = factory.createAuthConfig(isPush, null, settings, "roland", lookupRegistry);
+        AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", lookupRegistry);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
 

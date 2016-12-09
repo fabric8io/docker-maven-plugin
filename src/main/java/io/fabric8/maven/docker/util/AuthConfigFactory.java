@@ -65,6 +65,62 @@ public class AuthConfigFactory {
      * <ul>
      *    <li>From system properties</li>
      *    <li>From the provided map which can contain key-value pairs</li>
+     *    <li>From the openshift settings in ~/.config/kube</li>
+     *    <li>From the Maven settings stored typically in ~/.m2/settings.xml</li>
+     *    <li>From the Docker settings stored in ~/.docker/config.json</li>
+     * </ul>
+     *
+     * The following properties (prefix with 'docker.') and config key are evaluated:
+     *
+     * <ul>
+     *     <li>username: User to authenticate</li>
+     *     <li>password: Password to authenticate. Can be encrypted</li>
+     *     <li>email: Optional EMail address which is send to the registry, too</li>
+     * </ul>
+     *
+     *  IF the repository is in an aws ecr registry and skipExchange is not true, if found 
+     *  credentials are not from docker settings, they will be interpreted as iam credentials
+     *  and exchanged for ecr credentials.
+     *
+     * @param isPush if true this authconfig is created for a push, if false its for a pull
+     * @param skipExchange if false, do not exchange aws iam credentials for ecr token
+     * @param authConfigMap String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
+     *                   which case the settings are consulted.
+     * @param settings the global Maven settings object
+     * @param user user to check for
+     * @param registry registry to use, might be null in which case a default registry is checked,
+     * @return the authentication configuration or <code>null</code> if none could be found
+     *
+     * @throws MojoFailureException
+     */
+    public AuthConfig createAuthConfig(boolean isPush, boolean skipExchange, Map authConfig, Settings settings, String user, String registry)
+            throws MojoExecutionException {
+
+        AuthConfig ret = createAuthConfig(isPush, authConfig, settings, user, registry);
+        if (ret != null) {
+            if (!skipExchange) {
+                return exhangeCredentials(registry, ret);
+            }
+        }
+
+        // Finally check ~/.docker/config.json
+        return getAuthConfigFromDockerConfig(registry);
+    };
+
+    private AuthConfig exhangeCredentials(String registry, AuthConfig ret) {
+        System.err.println("maybe exchange credentials for " + registry);
+        return ret;
+    }
+
+    /**
+     * Create an authentication config object which can be used for communication with a Docker registry
+     *
+     * The authentication information is looked up at various places (in this order):
+     *
+     * <ul>
+     *    <li>From system properties</li>
+     *    <li>From the provided map which can contain key-value pairs</li>
+     *    <li>From the openshift settings in ~/.config/kube</li>
      *    <li>From the Maven settings stored typically in ~/.m2/settings.xml</li>
      * </ul>
      *
@@ -117,12 +173,6 @@ public class AuthConfigFactory {
 
         // Now lets lookup the registry & user from ~/.m2/setting.xml
         ret = getAuthConfigFromSettings(settings, user, registry);
-        if (ret != null) {
-            return ret;
-        }
-
-        // Finally check ~/.docker/config.json
-        ret = getAuthConfigFromDockerConfig(registry);
         if (ret != null) {
             return ret;
         }
@@ -406,6 +456,6 @@ public class AuthConfigFactory {
         public String getConfigMapKey() {
             return configMapKey;
         }
-    };
+    }
 
 }

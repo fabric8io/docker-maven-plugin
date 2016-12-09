@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker.access;
 
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
@@ -18,20 +17,26 @@ public class AuthConfig {
 
     public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "");
 
-    private String authEncoded;
+    private final String username;
+    private final String password;
+    private final String email;
+    private final String auth;
+
+    private final String authEncoded;
 
     public AuthConfig(Map<String,String> params) {
-        this.authEncoded = createAuthEncoded(params);
+        this(params.get("username"),
+                params.get("password"),
+                params.get("email"),
+                params.get("auth"));
     }
 
-    public AuthConfig(String user, String password, String email, String auth) {
-        Map<String,String>  params = new HashMap<>();
-        putNonNull(params, "username", user);
-        putNonNull(params, "password", password);
-        putNonNull(params, "email", email);
-        putNonNull(params, "auth", auth);
-
-        this.authEncoded = createAuthEncoded(params);
+    public AuthConfig(String username, String password, String email, String auth) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.auth = auth;
+        authEncoded = createAuthEncoded();
     }
 
     /**
@@ -43,11 +48,11 @@ public class AuthConfig {
     public AuthConfig(String credentialsDockerEncoded, String email) {
         String credentials = new String(Base64.decodeBase64(credentialsDockerEncoded));
         String[] parsedCreds = credentials.split(":",2);
-        Map<String,String> params = new HashMap<>();
-        putNonNull(params,"username",parsedCreds[0]);
-        putNonNull(params,"password",parsedCreds[1]);
-        putNonNull(params,"email",email);
-        this.authEncoded = createAuthEncoded(params);
+        username = parsedCreds[0];
+        password = parsedCreds[1];
+        this.email = email;
+        auth = null;
+        authEncoded = createAuthEncoded();
     }
 
     public String toHeaderValue() {
@@ -56,12 +61,12 @@ public class AuthConfig {
 
     // ======================================================================================================
 
-    private String createAuthEncoded(Map<String,String> params) {
+    private String createAuthEncoded() {
         JSONObject ret = new JSONObject();
-        add(params, ret, "username");
-        add(params, ret, "password");
-        add(params, ret, "email");
-        add(params, ret, "auth");
+        putNonNull(ret, "username", username);
+        putNonNull(ret, "password", password);
+        putNonNull(ret, "email", email);
+        putNonNull(ret, "auth", auth);
         try {
             return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -69,13 +74,7 @@ public class AuthConfig {
         }
     }
 
-    private void add(Map<String,String> params, JSONObject ret, String key) {
-        if (params.containsKey(key)) {
-            ret.put(key,params.get(key));
-        }
-    }
-
-    private void putNonNull(Map ret, String key, String value) {
+    private void putNonNull(JSONObject ret, String key, String value) {
         if (value != null) {
             ret.put(key,value);
         }
