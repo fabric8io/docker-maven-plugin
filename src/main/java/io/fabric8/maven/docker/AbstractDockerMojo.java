@@ -141,10 +141,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected String registry;
 
     /**
-     * Skip exchanging local iam credentials for ecr credentials
+     * Skip extended authentication
      */
-    @Parameter(property = "docker.exchange.skip")
-    protected boolean skipExchange;
+    @Parameter(property = "docker.skip.extendedAuth")
+    protected boolean skipExtendedAuth;
 
     // maximum connection to use in parallel for connecting the docker host
     @Parameter(property = "docker.maxConnections", defaultValue = "100")
@@ -391,12 +391,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
 
-    protected AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush, boolean skipExchange)
+    protected AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush)
             throws MojoExecutionException {
         String user = isPush ? image.getUser() : null;
         String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
 
-        return authConfigFactory.createAuthConfig(isPush, skipExchange, authConfig, settings, user, registry);
+        return authConfigFactory.createAuthConfig(isPush, skipExtendedAuth, authConfig, settings, user, registry);
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {
@@ -441,7 +441,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         DockerAccess docker = hub.getDockerAccess();
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
-        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false, skipExchange), registry);
+        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         updatePreviousPulledImageCache(image);
 

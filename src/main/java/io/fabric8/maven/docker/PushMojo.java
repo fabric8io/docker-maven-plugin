@@ -7,7 +7,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -45,7 +44,7 @@ public class PushMojo extends AbstractDockerMojo {
             String name = imageConfig.getName();
             if (buildConfig != null) {
                 String configuredRegistry = getConfiguredRegistry(imageConfig, pushRegistry);
-                AuthConfig authConfig = prepareAuthConfig(new ImageName(name), configuredRegistry, true, skipExchange);
+                AuthConfig authConfig = prepareAuthConfig(new ImageName(name), configuredRegistry, true);
 
                 DockerAccess docker = hub.getDockerAccess();
 

@@ -41,6 +41,8 @@ public class AuthConfigFactory {
     private static final String AUTH_AUTHTOKEN = "authToken";
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
+    private static final Pattern AWS_REGISTRY = Pattern.compile("^(\\d{12})\\.dkr\\.ecr\\.([a-z\\-0-9]+)\\.amazonaws\\.com$");
+
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final PlexusContainer container;
@@ -78,13 +80,13 @@ public class AuthConfigFactory {
      *     <li>email: Optional EMail address which is send to the registry, too</li>
      * </ul>
      *
-     *  IF the repository is in an aws ecr registry and skipExchange is not true, if found 
+     *  If the repository is in an aws ecr registry and skipExtendedAuth is not true, if found
      *  credentials are not from docker settings, they will be interpreted as iam credentials
      *  and exchanged for ecr credentials.
      *
-     * @param isPush if true this authconfig is created for a push, if false its for a pull
-     * @param skipExchange if false, do not exchange aws iam credentials for ecr token
-     * @param authConfigMap String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
+     * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
+     * @param skipExtendedAuth if false, do not execute extended authentication methods
+     * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
      * @param settings the global Maven settings object
      * @param user user to check for
@@ -93,22 +95,26 @@ public class AuthConfigFactory {
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(boolean isPush, boolean skipExchange, Map authConfig, Settings settings, String user, String registry)
+    public AuthConfig createAuthConfig(boolean isPush, boolean skipExtendedAuth, Map authConfig, Settings settings, String user, String registry)
             throws MojoExecutionException {
 
         AuthConfig ret = createAuthConfig(isPush, authConfig, settings, user, registry);
         if (ret != null) {
-            if (!skipExchange) {
-                return exhangeCredentials(registry, ret);
+            if (!skipExtendedAuth) {
+                return extendedAuthentication(registry, ret);
             }
         }
 
         // Finally check ~/.docker/config.json
         return getAuthConfigFromDockerConfig(registry);
-    };
+    }
 
-    private AuthConfig exhangeCredentials(String registry, AuthConfig ret) {
-        System.err.println("maybe exchange credentials for " + registry);
+    private AuthConfig extendedAuthentication(String registry, AuthConfig ret) {
+        Matcher matcher = AWS_REGISTRY.matcher(registry);
+        if (matcher.matches()) {
+            System.out.println("maybe exchange aws credentials account "
+                +  matcher.group(1) + ", region " + matcher.group(2));
+        }
         return ret;
     }
 
@@ -133,7 +139,7 @@ public class AuthConfigFactory {
      * </ul>
      *
      *
-     * @param isPush if true this authconfig is created for a push, if false its for a pull
+     * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
      * @param authConfigMap String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
      * @param settings the global Maven settings object
