@@ -20,7 +20,7 @@ The old variable names are still accepted but will be removed for release 1.0
 * **0.17.1** (2016-10-28)
   - Add initial [Docker compose](https://dmp.fabric8.io/#docker-compose) support ([#384](https://github.com/fabric8io/docker-maven-plugin/issues/384))
   - Made `docker:run` running in the foreground
-  - Add lifecycle fork to package for `docker:build` and `docker:source` for ease of use. Introducher `docker:build-nofork` and `docker:source-nofork`
+  - Add lifecycle fork to package for `docker:build` and `docker:source` for ease of use. Introduce `docker:build-nofork` and `docker:source-nofork`
   - Removed lifecycle forks for all other Mojos ([#567](https://github.com/fabric8io/docker-maven-plugin/issues/567)) ([#599](https://github.com/fabric8io/docker-maven-plugin/issues/599))
   - Add new option `tarLongFileMode` for the assembly configuration to avoid warning for too long files ([#591](https://github.com/fabric8io/docker-maven-plugin/issues/591))
   - Add new option `tmpfs` for `<run>` to add mount pathes for temorary file systems ([#455](https://github.com/fabric8io/docker-maven-plugin/issues/455))

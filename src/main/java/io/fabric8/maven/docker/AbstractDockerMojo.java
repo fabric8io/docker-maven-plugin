@@ -143,7 +143,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     /**
      * Skip extended authentication
      */
-    @Parameter(property = "docker.skip.extendedAuth")
+    @Parameter(property = "docker.skip.extendedAuth", defaultValue = "false")
     protected boolean skipExtendedAuth;
 
     // maximum connection to use in parallel for connecting the docker host
@@ -188,6 +188,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
+            authConfigFactory.setLog(log);
+            
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)

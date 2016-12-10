@@ -39,6 +39,9 @@ public class AuthConfigHandlerTest {
     @Mocked
     Settings settings;
 
+    @Mocked
+    private Logger log;
+
     private AuthConfigFactory factory;
 
     private boolean isPush = true;
@@ -61,6 +64,7 @@ public class AuthConfigHandlerTest {
 
         }};
         factory = new AuthConfigFactory(container);
+        factory.setLog(log);
     }
 
     @Test

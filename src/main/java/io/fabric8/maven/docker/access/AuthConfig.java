@@ -55,6 +55,14 @@ public class AuthConfig {
         authEncoded = createAuthEncoded();
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     public String toHeaderValue() {
         return authEncoded;
     }

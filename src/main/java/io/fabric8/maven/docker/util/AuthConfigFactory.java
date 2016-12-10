@@ -1,6 +1,8 @@
 package io.fabric8.maven.docker.util;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -16,6 +18,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -41,11 +44,10 @@ public class AuthConfigFactory {
     private static final String AUTH_AUTHTOKEN = "authToken";
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
-    private static final Pattern AWS_REGISTRY = Pattern.compile("^(\\d{12})\\.dkr\\.ecr\\.([a-z\\-0-9]+)\\.amazonaws\\.com$");
-
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final PlexusContainer container;
+    private Logger log;
     public static final String[] DEFAULT_REGISTRIES = new String[]{
             "docker.io", "index.docker.io", "registry.hub.docker.com"
     };
@@ -53,10 +55,14 @@ public class AuthConfigFactory {
     /**
      * Constructor which should be used during startup phase of a plugin
      *
-     * @param container the container used for do decrytion of passwords
+     * @param container the container used for do decryption of passwords
      */
     public AuthConfigFactory(PlexusContainer container) {
         this.container = container;
+    }
+
+    public void setLog(Logger log) {
+        this.log = log;
     }
 
     /**
@@ -84,6 +90,7 @@ public class AuthConfigFactory {
      *  credentials are not from docker settings, they will be interpreted as iam credentials
      *  and exchanged for ecr credentials.
      *
+     * @param logger The logger for tracing
      * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
      * @param skipExtendedAuth if false, do not execute extended authentication methods
      * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
@@ -100,22 +107,49 @@ public class AuthConfigFactory {
 
         AuthConfig ret = createAuthConfig(isPush, authConfig, settings, user, registry);
         if (ret != null) {
-            if (!skipExtendedAuth) {
+            if (registry == null ) {
+                log.debug("default registry; no extended auth");
+                return ret;
+            }
+            if (skipExtendedAuth) {
+                log.debug("skipping extended auth");
+                return ret;
+            }
+            try {
                 return extendedAuthentication(registry, ret);
+            } catch (IOException e) {
+                throw new MojoExecutionException(e.getMessage(), e);
             }
         }
 
         // Finally check ~/.docker/config.json
-        return getAuthConfigFromDockerConfig(registry);
+        ret = getAuthConfigFromDockerConfig(registry);
+        if(ret != null) {
+            log.debug("found credentials in ~.docker/config.json");
+            return ret;
+        }
+
+        log.debug("no credentials found");
+        return null;
     }
 
-    private AuthConfig extendedAuthentication(String registry, AuthConfig ret) {
-        Matcher matcher = AWS_REGISTRY.matcher(registry);
-        if (matcher.matches()) {
-            System.out.println("maybe exchange aws credentials account "
-                +  matcher.group(1) + ", region " + matcher.group(2));
+    /**
+     * Try various extended authentication method.  Currently only supports amazon ECR
+     *
+     * @param logger The logger for tracing
+     * @param registry The registry to authenticated against.
+     * @param localCredentials The locally stored credentials.
+     * @return The given credentials, if registry does not need extended authentication;
+     * else, the credentials after authentication.
+     * @throws IOException
+     * @throws MojoExecutionException
+     */
+    private AuthConfig extendedAuthentication(String registry, AuthConfig localCredentials) throws IOException, MojoExecutionException {
+        EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry);
+        if (ecr.isValidRegistry()) {
+            return ecr.extendedAuth(localCredentials);
         }
-        return ret;
+        return localCredentials;
     }
 
     /**
@@ -158,18 +192,21 @@ public class AuthConfigFactory {
             // System properties docker.username and docker.password always take precedence
             ret = getAuthConfigFromSystemProperties(lookupMode);
             if (ret != null) {
+                log.debug("found credentials in system properties");
                 return ret;
             }
 
             // Check for openshift authentication either from the plugin config or from system props
             ret = getAuthConfigFromOpenShiftConfig(lookupMode,authConfigMap);
             if (ret != null) {
+                log.debug("found openshift credentials");
                 return ret;
             }
 
             // Get configuration from global plugin config
             ret = getAuthConfigFromPluginConfiguration(lookupMode,authConfigMap);
             if (ret != null) {
+                log.debug("found credentials in plugin config");
                 return ret;
             }
         }
@@ -180,6 +217,7 @@ public class AuthConfigFactory {
         // Now lets lookup the registry & user from ~/.m2/setting.xml
         ret = getAuthConfigFromSettings(settings, user, registry);
         if (ret != null) {
+            log.debug("found credentials in ~/.m2/setting.xml");
             return ret;
         }
 

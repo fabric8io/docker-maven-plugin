@@ -87,7 +87,7 @@ Creates and starts a specified docker container with the additional possibility 
 | **assemblyDescriptorRef** | Predefined assemblies which can be directly used. For possible values, see below. | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
-| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
+| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artifact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
 | **authConfig** | Authentication configuration when autopulling images. See below for details. | | |
 | **portPropertyFile** | Path to a file where dynamically mapped ports are written to |   |                         |
@@ -129,7 +129,7 @@ the registry `docker.test.org` at port `5000`. Security information (i.e. user a
 | **assemblyDescriptorRef** | Predefined assemblies which can be directly used. Possible values are given below | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
-| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
+| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artifact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
 | **keepData**  | Keep the data image after the build if set to `true` | `docker.keepData` |  `true`                       |
 | **authConfig** | Authentication configuration when pushing images. See below for details. | | |
@@ -152,7 +152,7 @@ and does not delete the image afterwards.
 | **assemblyDescriptorRef** | Predefined assemblies which can be directly used. Possible values are given below | | |
 | **mergeData** | If set to `true` create a new image based on the configured image and containing the assembly as described with `assemblyDescriptor` or `assemblyDescriptorRef` | `docker.mergeData` | `false` |
 | **dataBaseImage** | Base for the data image (used only when `mergeData` is false) | `docker.baseImage` | `busybox:latest` |
-| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artefact>:<version>` |
+| **dataImage** | Name to use for the created data image | `docker.dataImage` | `<group>/<artifact>:<version>` |
 | **dataExportDir** | Name of the volume which gets exported | `docker.dataExportDir` | `/maven` |
 | **ports**    | List of ports to be exposed                             |                |  | 
 | **env**      | List of environment variables to use for building       |                |  | 
@@ -344,6 +344,12 @@ Regardless which mode you choose you can encrypt password as described in the [M
 ````
 
 This password then can be used in `authConfig`, `docker.password` and/or the `<server>` setting configuration. However, putting an encrypted password into `authConfig` in the `pom.xml` doesn't make much sense, since this password is encrypted with an individual master password.
+
+### Extended Authentication
+
+Some docker registries require additional steps to authenticate.  [Amazon ECR](http://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html) requires using an IAM access key to obtain temporary docker login credentials. The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _awsAccountId_**.dkr.ecr.**_awsRegion_**.amazonaws.com**, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set false.
+
+You can use any IAM access key with the necessary permissions in any of the locations mentioned above. Use the IAM **Access key ID** as the username and the **Secret access key** as the password.
 
 ## SSL with keys and certificates
 
