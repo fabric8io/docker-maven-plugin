@@ -11,6 +11,15 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class WaitConfiguration implements Serializable {
 
+    // Default HTTP Method to use
+    public static final String DEFAULT_HTTP_METHOD = "HEAD";
+
+    // Default status codes
+    public static final int DEFAULT_MIN_STATUS = 200;
+    public static final int DEFAULT_MAX_STATUS = 399;
+
+    public static final String DEFAULT_STATUS_RANGE = String.format("%d..%d", DEFAULT_MIN_STATUS, DEFAULT_MAX_STATUS);
+
     @Parameter
     private int time;
 
@@ -197,10 +206,10 @@ public class WaitConfiguration implements Serializable {
         private String url;
 
         @Parameter
-        private String method;
+        private String method = DEFAULT_HTTP_METHOD;
 
         @Parameter
-        private String status;
+        private String status = DEFAULT_STATUS_RANGE;
 
         @Parameter
         private boolean allowAllHosts;

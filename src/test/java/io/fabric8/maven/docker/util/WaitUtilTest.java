@@ -11,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 import com.sun.net.httpserver.*;
 import org.junit.*;
 
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.util.WaitUtil.WaitTimeoutException;
 
 import static org.junit.Assert.*;
@@ -43,21 +44,21 @@ public class WaitUtilTest {
     @Test
     public void httpSuccessWithStatus() throws TimeoutException {
         for (String status : new String[] { "200", "200 ... 300", "200..250" }) {
-            long waited = WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, status));
+            long waited = WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, status));
             assertTrue("Waited less than  700ms: " + waited, waited < 700);
         }
     }
 
     @Test(expected = TimeoutException.class)
     public void httpFailWithStatus() throws TimeoutException {
-        WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, null, "500"));
+        WaitUtil.wait(700, new WaitUtil.HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, "500"));
     }
 
     @Test
     public void httpSuccessWithGetMethod() throws Exception {
         serverMethodToAssert = "GET";
         try {
-            WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, "GET", null);
+            WaitUtil.HttpPingChecker checker = new WaitUtil.HttpPingChecker(httpPingUrl, "GET", WaitConfiguration.DEFAULT_STATUS_RANGE);
             long waited = WaitUtil.wait(700, checker);
             assertTrue("Waited less than 500ms: " + waited, waited < 700);
         } finally {
