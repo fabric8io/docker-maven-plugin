@@ -1,5 +1,5 @@
 
-This plugin supports als configuration via a  https://docs.docker.com/compose/[docker-compose] file, especially for running containers specified in `docker-compose.yml`. Docker Compose handling is available also as an external configuration provider.
+This plugin supports also configuration via a  https://docs.docker.com/compose/[docker-compose] file, especially for running containers specified in `docker-compose.yml`. Docker Compose handling is available also as an external configuration provider.
 
 .Example
 [source,xml]
