@@ -85,6 +85,14 @@ public class DockerAccessIT {
         }
     }
 
+    @Test
+    public void testLoadImage() throws DockerAccessException {
+        testDoesNotHave();
+        dockerClient.loadImage(IMAGE_TAG, "integration/busybox-image.tar.gz");
+        assertTrue(hasImage(IMAGE_TAG));
+        testRemoveImage(IMAGE_TAG);
+    }
+
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             String certPath = createDockerConnectionDetector(logger).detectConnectionParameter(null,null).getCertPath();

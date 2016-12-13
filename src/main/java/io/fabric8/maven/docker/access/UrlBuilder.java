@@ -93,6 +93,11 @@ public final class UrlBuilder {
         return builder.build();
     }
 
+    public String loadImage() {
+        return u("images/load")
+            .build();
+    }
+
     public String pullImage(ImageName name, String registry) {
         return u("images/create")
                 .p("fromImage", name.getNameWithoutTag(registry))
