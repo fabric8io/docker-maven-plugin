@@ -291,8 +291,13 @@ public class StartMojo extends AbstractDockerMojo {
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
 
             String imageName = imageConfig.getName();
-            checkImageWithAutoPull(hub, imageName,
-                                   getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
+
+            if (imageConfig.getFile() != null) {
+                loadImage(hub, imageName, imageConfig.getFile());
+            } else {
+                checkImageWithAutoPull(hub, imageName,
+                    getConfiguredRegistry(imageConfig, pullRegistry), imageConfig.getBuildConfiguration() == null);
+            }
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             NetworkConfig config = runConfig.getNetworkingConfig();

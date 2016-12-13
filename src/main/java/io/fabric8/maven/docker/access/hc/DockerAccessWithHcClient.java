@@ -14,6 +14,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +25,8 @@ import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -353,6 +357,25 @@ public class DockerAccessWithHcClient implements DockerAccess {
             delegate.delete(url, HTTP_NO_CONTENT);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove container [%s]", containerId);
+        }
+    }
+
+    @Override
+    public void loadImage(String image, String filepath)
+        throws DockerAccessException {
+        ImageName name = new ImageName(image);
+        String url = urlBuilder.loadImage();
+
+        try {
+            delegate.post(url, new File(filepath), new BodyAndStatusResponseHandler(), HTTP_OK);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to load %s", filepath);
+        }
+
+        // if tag is not "latest", tag the latest with the tag.
+        if (name.getTag() != null && !"latest".equals(name.getTag())) {
+            String src = new ImageName(name.getNameWithoutTag(), "latest").getFullName();
+            tag(src, image, false);
         }
     }
 
