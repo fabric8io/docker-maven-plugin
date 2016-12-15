@@ -1,5 +1,5 @@
 
 This goal uploads images to the registry which have a `<build>` configuration section. The images to push can be restricted with with
-the global option `image` (see <<global-configuration,Global Configuration>> for details). The registry to push is by default `docker.io` but can be specified as part of the images's `name` name the Docker way. E.g. `docker.test.org:5000/data:1.5` will push the image `data` with tag `1.5` to the registry `docker.test.org` at port `5000`. Security information (i.e. user and password) can be specified in multiple ways as described in section <<authentication,Authentication>>.
+the global option `filter` (see <<global-configuration,Global Configuration>> for details). The registry to push is by default `docker.io` but can be specified as part of the images's `name` name the Docker way. E.g. `docker.test.org:5000/data:1.5` will push the image `data` with tag `1.5` to the registry `docker.test.org` at port `5000`. Security information (i.e. user and password) can be specified in multiple ways as described in section <<authentication,Authentication>>.
 
 By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option `-B`). A very simplified progress meter is provided when using no color output (i.e. with `-Ddocker.useColor=false`).
