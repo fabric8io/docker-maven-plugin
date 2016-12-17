@@ -26,6 +26,7 @@ import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -148,6 +149,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     Map authConfig;
 
+    /**
+     * volume configurations configured directly.
+     */
+    @Parameter
+    private List<VolumeConfiguration> volumes;
+    
     /**
      * Image configurations configured directly.
      */
@@ -321,7 +328,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return ret;
     }
 
-    /**
+   /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
      * docker tar archives)
      *
@@ -342,14 +349,20 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // =============================================================================================
 
     /**
-     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images. The values
-     * is taken as comma separated list.
+     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images. 
+     * The values are taken as comma separated list.
      *
      * @return list of image configuration to use
      */
     protected List<ImageConfiguration> getResolvedImages() {
         return resolvedImages;
     }
+    
+    /**
+     *  getUser configured images
+     *  @return
+     */
+    protected List<VolumeConfiguration> getVolumes() { return volumes; }
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {

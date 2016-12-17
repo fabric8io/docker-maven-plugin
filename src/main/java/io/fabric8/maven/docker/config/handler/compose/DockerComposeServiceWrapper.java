@@ -236,8 +236,8 @@ class DockerComposeServiceWrapper {
         return ret;
     }
 
-    VolumeConfiguration getVolumeConfig() {
-        VolumeConfiguration.Builder builder = new VolumeConfiguration.Builder();
+    ImageVolumeConfiguration getVolumeConfig() {
+        ImageVolumeConfiguration.Builder builder = new ImageVolumeConfiguration.Builder();
         List<String> volumes = asList("volumes");
         boolean added = false;
         if (volumes.size() > 0) {

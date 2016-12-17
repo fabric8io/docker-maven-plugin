@@ -11,6 +11,7 @@ import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
+import io.fabric8.maven.docker.model.Volume;
 
 /**
  * Access to the <a href="http://docs.docker.io/en/latest/reference/api/docker_remote_api/">Docker API</a> which
@@ -246,4 +247,30 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+
+   /**
+    *  Create a volume for use by containers
+    *  
+    *  @param configuration volume configuration
+    *  @return the name of the Volume
+    *  @throws DockerAccessException if the volume could not be created.
+    */
+   String createVolume(VolumeCreateConfig configuration)
+         throws DockerAccessException;
+
+   /**
+    * Get a Volume
+    * 
+    * @param name volume name
+    * @return <code>VolumeDetails<code> representing the volume or null if none could be found
+    * @throws DockerAccessException if the volume could not be inspected
+    */
+   Volume getVolume(String name) throws DockerAccessException;
+
+   /**
+    * removes a volume
+    * @param name volume name to remove
+    * @throws DockerAccessException if the volume could not be removed
+    */
+   void removeVolume(String name) throws DockerAccessException;
 }
