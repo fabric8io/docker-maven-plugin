@@ -15,7 +15,8 @@ package io.fabric8.maven.docker.log;/*
  * limitations under the License.
  */
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Timestamp;
@@ -27,14 +28,11 @@ import io.fabric8.maven.docker.util.Timestamp;
 public class DefaultLogCallback implements LogCallback {
 
     private final LogOutputSpec outputSpec;
-    private PrintStream ps;
-    public DefaultLogCallback(LogOutputSpec outputSpec) throws FileNotFoundException {
+    private final PrintStream ps;
+    
+    public DefaultLogCallback(LogOutputSpec outputSpec, PrintStream ps) throws FileNotFoundException {
         this.outputSpec = outputSpec;
-        ps = createPrintStream(outputSpec.isLogStdout(), outputSpec.getFile());
-    }
-
-    private PrintStream createPrintStream(boolean logStdout, String file) throws FileNotFoundException {
-        return !logStdout && file != null ? new PrintStream(new FileOutputStream(file), true) : System.out;
+        this.ps = ps;
     }
 
     @Override

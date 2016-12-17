@@ -6,6 +6,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static io.fabric8.maven.docker.log.LogCallbackFactory.createLogCallback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -145,7 +146,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     private ResponseHandler<Object> createExecResponseHandler(LogOutputSpec outputSpec) throws FileNotFoundException {
-        final LogCallback callback = new DefaultLogCallback(outputSpec);
+        final LogCallback callback = createLogCallback(outputSpec);
         return new ResponseHandler<Object>() {
             @Override
             public Object handleResponse(HttpResponse response) throws IOException {
