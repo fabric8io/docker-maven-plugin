@@ -81,7 +81,6 @@ which you can put into your `~/.gitconfig`:
 ````
 
 When sending pull request we prefer that to be a single commit. So please squash your commits
-with an interactive rebase before sending the pull request. Also, your pull request should be
-rebased to the current branch `integration`. All this is nicely explained [here](https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request).
+with an interactive rebase before sending the pull request.  This is nicely explained [here](https://github.com/edx/edx-platform/wiki/How-to-Rebase-a-Pull-Request).
 
 Said all this, don't hesitate to ask when there are any problems or you have an issue with this process.
