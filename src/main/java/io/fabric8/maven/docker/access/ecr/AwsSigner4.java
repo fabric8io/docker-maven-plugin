@@ -56,16 +56,6 @@ public class AwsSigner4 {
      *
      * @param request The request to sign.
      * @param credentials The credentials to use when signing.
-     */
-    public void sign(HttpRequest request, AuthConfig credentials) {
-        sign(request, credentials, new Date());
-    }
-
-    /**
-     * Sign a request.  Add the headers that authenticate the request.
-     *
-     * @param request The request to sign.
-     * @param credentials The credentials to use when signing.
      * @param signingTime The invocation time to use;
      */
     public void sign(HttpRequest request, AuthConfig credentials, Date signingTime) {

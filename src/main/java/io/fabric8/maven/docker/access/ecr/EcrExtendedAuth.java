@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +36,7 @@ public class EcrExtendedAuth {
 
     private final Logger logger;
     private final Matcher matcher;
+    private final boolean isValid;
 
     /**
      * Initialize an extended authentication for ecr registry.
@@ -44,7 +46,8 @@ public class EcrExtendedAuth {
     public EcrExtendedAuth(Logger logger, String registry) {
         this.logger = logger;
         matcher = AWS_REGISTRY.matcher(registry);
-        logger.debug("registry = %s", registry);
+        isValid = matcher.matches();
+        logger.debug("registry = %s, isValid= %b", registry, isValid);
     }
 
     /**
@@ -52,8 +55,6 @@ public class EcrExtendedAuth {
      * @return true, if the registry matches the ecr pattern
      */
     public boolean isValidRegistry() {
-        boolean isValid = matcher.matches();
-        logger.debug("isValidRegistry %b", isValid);
         return isValid;
     }
 
@@ -77,6 +78,33 @@ public class EcrExtendedAuth {
     }
 
     private JSONObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
+        HttpPost request = createSignedRequest(localCredentials, new Date());
+        return executeRequest(createClient(), request);
+    }
+
+    CloseableHttpClient createClient() {
+        return HttpClients.createDefault();
+    }
+
+    JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
+        try {
+            CloseableHttpResponse response = client.execute(request);
+            int statusCode = response.getStatusLine().getStatusCode();
+            logger.debug("Response status %d", statusCode);
+            if(statusCode != HttpStatus.SC_OK) {
+                throw new MojoExecutionException("AWS authentication failure");
+            }
+
+            HttpEntity entity = response.getEntity();
+            Reader jr = new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8);
+            return new JSONObject(new JSONTokener(jr));
+        }
+        finally {
+            client.close();
+        }
+    }
+
+    HttpPost createSignedRequest(AuthConfig localCredentials, Date time) {
         String accountId = matcher.group(1);
         String region = matcher.group(2);
         String host = "ecr." + region + ".amazonaws.com";
@@ -90,22 +118,7 @@ public class EcrExtendedAuth {
         request.setEntity(new StringEntity("{\"registryIds\":[\""+ accountId + "\"]}", StandardCharsets.UTF_8));
 
         AwsSigner4 signer = new AwsSigner4(region, "ecr");
-        signer.sign(request, localCredentials);
-
-        CloseableHttpClient client = HttpClients.createDefault();
-        try {
-            CloseableHttpResponse response = client.execute(request);
-            logger.debug("Response status %d", response.getStatusLine().getStatusCode());
-            if(response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                throw new MojoExecutionException("AWS authentication failure");
-            }
-
-            HttpEntity entity = response.getEntity();
-            Reader jr = new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8);
-            return new JSONObject(new JSONTokener(jr));
-        }
-        finally {
-            client.close();
-        }
+        signer.sign(request, localCredentials, time);
+        return request;
     }
 }
