@@ -7,6 +7,7 @@ import java.net.SocketAddress;
 
 import io.fabric8.maven.docker.access.hc.util.AbstractNativeSocketFactory;
 import jnr.unixsocket.UnixSocketAddress;
+import jnr.unixsocket.UnixSocketChannel;
 import org.apache.http.protocol.HttpContext;
 
 final class UnixConnectionSocketFactory extends AbstractNativeSocketFactory {
@@ -17,7 +18,7 @@ final class UnixConnectionSocketFactory extends AbstractNativeSocketFactory {
 
     @Override
     public Socket createSocket(HttpContext context) throws IOException {
-        return new UnixSocket();
+        return new jnr.unixsocket.UnixSocket(UnixSocketChannel.open());
     }
 
     @Override
