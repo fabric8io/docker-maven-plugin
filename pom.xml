@@ -477,7 +477,7 @@
               </execution>
               <execution>
                 <id>restore</id>
-                <phase>prepare-package</phase>
+                <phase>test</phase>
                 <goals>
                   <goal>restore-instrumented-classes</goal>
                   <goal>report</goal>
