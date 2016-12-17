@@ -18,7 +18,7 @@ general:
 
 deployment:
   website:
-    branch: master
+    branch: dmp.fabric8.io
     owner: fabric8io
     commands:
       - git config --global user.email "circleci@fabric8.io"
