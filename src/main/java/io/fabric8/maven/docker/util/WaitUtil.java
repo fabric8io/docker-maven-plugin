@@ -25,6 +25,8 @@ import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 
+import io.fabric8.maven.docker.config.WaitConfiguration;
+
 
 /**
  * @author roland
@@ -41,13 +43,6 @@ public class WaitUtil {
     // Timeout for pings
     private static final int HTTP_PING_TIMEOUT = 500;
     private static final int TCP_PING_TIMEOUT = 500;
-
-    // Default HTTP Method to use
-    public static final String DEFAULT_HTTP_METHOD = "HEAD";
-
-    // Default status codes
-    public static final int DEFAULT_MIN_STATUS = 200;
-    public static final int DEFAULT_MAX_STATUS = 399;
 
     // Disable HTTP client retries by default.
     public static final int HTTP_CLIENT_RETRIES = 0;
@@ -145,26 +140,17 @@ public class WaitUtil {
             this.url = url;
             this.method = method;
 
-            if (method == null) {
-                this.method = DEFAULT_HTTP_METHOD;
-            }
-
-            if (status == null) {
-                statusMin = DEFAULT_MIN_STATUS;
-                statusMax = DEFAULT_MAX_STATUS;
+            Matcher matcher = Pattern.compile("^(\\d+)\\s*\\.\\.+\\s*(\\d+)$").matcher(status);
+            if (matcher.matches()) {
+                statusMin = Integer.parseInt(matcher.group(1));
+                statusMax = Integer.parseInt(matcher.group(2));
             } else {
-                Matcher matcher = Pattern.compile("^(\\d+)\\s*\\.\\.+\\s*(\\d+)$").matcher(status);
-                if (matcher.matches()) {
-                    statusMin = Integer.parseInt(matcher.group(1));
-                    statusMax = Integer.parseInt(matcher.group(2));
-                } else {
-                    statusMin = statusMax = Integer.parseInt(status);
-                }
+                statusMin = statusMax = Integer.parseInt(status);
             }
         }
 
         public HttpPingChecker(String waitUrl) {
-            this(waitUrl, null, null);
+            this(waitUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, WaitConfiguration.DEFAULT_STATUS_RANGE);
         }
 
         public HttpPingChecker(String url, String method, String status, boolean allowAllHosts) {
