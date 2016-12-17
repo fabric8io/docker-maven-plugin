@@ -51,6 +51,7 @@
             <phase>post-integration-test</phase>
             <goals>
               <goal>stop</goal>
+              <goal>volume-remove</goal>
             </goals>
           </execution>
         </executions>
