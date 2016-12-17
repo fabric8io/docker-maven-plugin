@@ -3,6 +3,9 @@ jdk:
   - oraclejdk8
 after_script:
   - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn -Psonarqube package sonar:sonar -Dsonar.host.url=https://sonarqube.com -Dsonar.login=${SONARQUBE_TOKEN}"
+iafter_success:
+  - bash <(curl -s https://codecov.io/bash)
+
 
 notifications:
   webhooks:
