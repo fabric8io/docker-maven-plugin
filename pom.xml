@@ -188,9 +188,10 @@
     <dependency>
       <groupId>org.jmockit</groupId>
       <artifactId>jmockit</artifactId>
-      <version>1.23</version>
+      <version>1.29</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -443,10 +444,10 @@
 
     <!-- Enable JaCoCo Test -->
     <profile>
-      <id>sonarqube</id>
+      <id>jacoco</id>
 
       <properties>
-        <jacoco.version>0.7.6.201602180812</jacoco.version>
+        <jacoco.version>0.7.8</jacoco.version>
       </properties>
 
       <dependencies>
@@ -476,7 +477,7 @@
               </execution>
               <execution>
                 <id>restore</id>
-                <phase>prepare-package</phase>
+                <phase>test</phase>
                 <goals>
                   <goal>restore-instrumented-classes</goal>
                   <goal>report</goal>

@@ -17,6 +17,7 @@ package io.fabric8.maven.docker.util;
  */
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Properties;
 
 import mockit.*;
@@ -65,6 +66,9 @@ public class ImageNameFormatterTest {
     @Test
     public void defaultUserName() throws Exception {
 
+        new Expectations() {{
+            project.getProperties(); result = new Properties();
+        }};
         String[] data = {
             "io.fabric8", "fabric8",
             "io.FABRIC8", "fabric8",
@@ -102,6 +106,7 @@ public class ImageNameFormatterTest {
             project.getArtifactId(); result = "docker-maven-plugin";
             project.getGroupId(); result = "io.fabric8";
             project.getVersion(); result = "1.2.3-SNAPSHOT";
+            project.getProperties(); result = new Properties();
         }};
         assertThat(formatter.format("%g/%a:%l"), equalTo("fabric8/docker-maven-plugin:latest"));
         assertThat(formatter.format("%g/%a:%v"), equalTo("fabric8/docker-maven-plugin:1.2.3-SNAPSHOT"));
@@ -114,6 +119,7 @@ public class ImageNameFormatterTest {
             project.getArtifactId(); result = "docker-maven-plugin";
             project.getGroupId(); result = "io.fabric8";
             project.getVersion(); result = "1.2.3";
+            project.getProperties(); result = new Properties();
         }};
 
         assertThat(formatter.format("%g/%a:%l"), equalTo("fabric8/docker-maven-plugin:1.2.3"));

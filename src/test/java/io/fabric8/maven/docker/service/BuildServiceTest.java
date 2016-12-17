@@ -74,7 +74,7 @@ public class BuildServiceTest {
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
-    
+
     @Test
     public void testCleanupCachedImage() throws Exception {
         givenAnImageConfiguration(true);
@@ -83,7 +83,7 @@ public class BuildServiceTest {
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
-    
+
     @Test
     public void testCleanupNoExistingImage() throws Exception {
         givenAnImageConfiguration(true);
@@ -92,12 +92,12 @@ public class BuildServiceTest {
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
-    
+
     private void givenAnImageConfiguration(Boolean cleanup) {
         BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
                 .cleanup(cleanup.toString())
                 .build();
-        
+
         imageConfig = new ImageConfiguration.Builder()
                 .name("build-image")
                 .alias("build-alias")
@@ -108,14 +108,15 @@ public class BuildServiceTest {
     private void givenImageIds(final String oldImageId, final String newImageId) throws DockerAccessException {
         this.oldImageId = oldImageId;
         new Expectations() {{
-            queryService.getImageId(imageConfig.getName()); returns(oldImageId,newImageId);
+            queryService.getImageId(imageConfig.getName()); result = new String[] { oldImageId, newImageId };
         }};
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {
+        final File dockerBuildTar = new File("docker-build.tar");
         new Verifications() {{
-            docker.buildImage(withEqual(imageConfig.getName()),
-                              withEqual(new File("docker-build.tar")),
+            docker.buildImage(imageConfig.getName(),
+                              dockerBuildTar,
                               (String) withNull(),
                               anyBoolean, anyBoolean, (Map) any);
         }};
