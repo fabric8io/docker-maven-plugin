@@ -1,5 +1,9 @@
 # ChangeLog
 
+* **0.18.2** 
+  - Better log message when waiting for URL (#640)
+  
+
 * **0.18.1** (2016-11-17)
   - Renamed `basedir` and `exportBasedir` in an `<assembly>` configuration to `targetDir` and `exportTargetDir` since this better reflects the purpose, i.e. the target in the Docker image to which the assembly is copied. The old name is still recognized but deprecated. 
   - Fix issue with log statements which use a single argument form
