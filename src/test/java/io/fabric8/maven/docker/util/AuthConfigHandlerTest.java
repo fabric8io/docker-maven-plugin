@@ -39,6 +39,9 @@ public class AuthConfigHandlerTest {
     @Mocked
     Settings settings;
 
+    @Mocked
+    private Logger log;
+
     private AuthConfigFactory factory;
 
     private boolean isPush = true;
@@ -61,6 +64,7 @@ public class AuthConfigHandlerTest {
 
         }};
         factory = new AuthConfigFactory(container);
+        factory.setLog(log);
     }
 
     @Test
@@ -126,7 +130,7 @@ public class AuthConfigHandlerTest {
     private void checkDockerLogin(File homeDir,String configRegistry, String lookupRegistry)
             throws IOException, MojoExecutionException {
         createDockerConfig(homeDir, "roland", "secret", "roland@jolokia.org", configRegistry);
-        AuthConfig config = factory.createAuthConfig(isPush, null, settings, "roland", lookupRegistry);
+        AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", lookupRegistry);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
 

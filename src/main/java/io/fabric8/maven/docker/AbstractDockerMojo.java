@@ -140,6 +140,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.registry")
     protected String registry;
 
+    /**
+     * Skip extended authentication
+     */
+    @Parameter(property = "docker.skip.extendedAuth", defaultValue = "false")
+    protected boolean skipExtendedAuth;
+
     // maximum connection to use in parallel for connecting the docker host
     @Parameter(property = "docker.maxConnections", defaultValue = "100")
     private int maxConnections;
@@ -182,6 +188,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
+            authConfigFactory.setLog(log);
+
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)
@@ -390,7 +398,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         String user = isPush ? image.getUser() : null;
         String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
 
-        return authConfigFactory.createAuthConfig(isPush, authConfig, settings, user, registry);
+        return authConfigFactory.createAuthConfig(isPush, skipExtendedAuth, authConfig, settings, user, registry);
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {

@@ -5,14 +5,13 @@
 When pulling (via the `autoPull` mode of `{plugin}:start`) or pushing image, it
 might be necessary to authenticate against a Docker registry.
 
-There are three different ways for providing credentials:
+There are five different locations searched for credentials.  In order, these are:
 
-* Using a `<authConfig>` section in the plugin configuration with
-`<username>` and `<password>` elements.
-* Providing system properties `docker.username` and `docker.password`
-from the outside
+* Providing system properties `docker.username` and `docker.password` from the outside.
+* Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
+* Using OpenShift configuration in `~/.config/kube`
 * Using a `<server>` configuration in `~/.m2/settings.xml`
-* Login into a registry with `docker login`
+* Login into a registry with `docker login` (credentials in `~/.docker/config.json`)
 
 Using the username and password directly in the `pom.xml` is not
 recommended since this is widely visible. This is most easiest and
@@ -62,7 +61,7 @@ The server id must specify the registry to push to/pull from, which by
 default is central index `docker.io` (or `index.docker.io` / `registry.hub.docker.com` as fallbacks).
 Here you should add your docker.io account for your repositories. If you have multiple accounts
 for the same registry, the second user can be specified as part of the ID. In the example above, if you
-have a second accorunt 'fabric8io' then use an `<id>docker.io/fabric8io</id>` for this second entry. I.e. add the
+have a second account 'fabric8io' then use an `<id>docker.io/fabric8io</id>` for this second entry. I.e. add the
 username with a slash to the id name. The default without username is only taken if no server entry with
 a username appended id is chosen.
 
@@ -106,7 +105,7 @@ as described in the previous section is used as fallback.
 == OpenShift Authentication
 
 When working with the default registry in OpenShift, the credentials
-to authtenticate are the OpenShift username and access token. So, a
+to authenticate are the OpenShift username and access token. So, a
 typical interaction with the OpenShift registry from the outside is:
 
 ----
@@ -135,7 +134,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
 Alternatively the configuration option `<useOpenShiftAuth>` can be
 added to the `<authConfig>` section.
 
-For dedicted _pull_ and _push_ configuration the system properties
+For dedicated _pull_ and _push_ configuration the system properties
 `docker.pull.useOpenShiftAuth` and `docker.push.useOpenShiftAuth` are
 available as well as the configuration option `<useOpenShiftAuth>` in
 an `<pull>` or `<push>` section within the `<authConfig>`
@@ -148,7 +147,7 @@ Regardless which mode you choose you can encrypt password as described
 in the
 http://maven.apache.org/guides/mini/guide-encryption.html[Maven documentation]. Assuming
 that you have setup a _master password_ in
-`~/.m2/security-settings.xml` you can create easily encrypted
+`~/.m2/security-settings.xml` you can create easily encrypt
 passwords:
 
 .Example
@@ -164,3 +163,10 @@ and/or the `<server>` setting configuration. However, putting an
 encrypted password into `authConfig` in the `pom.xml` doesn't make
 much sense, since this password is encrypted with an individual master
 password.
+
+[[extended-authentication]]
+== Extended Authentication
+
+Some docker registries require additional steps to authenticate.  link:https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html[Amazon ECR] requires using an IAM access key to obtain temporary docker login credentials. The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _awsAccountId_*.dkr.ecr.*_awsRegion_*.amazonaws.com*, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set true.
+
+You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`. Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
