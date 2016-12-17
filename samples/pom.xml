@@ -26,6 +26,7 @@
 
   <url>http://www.jolokia.org</url>
 
+  <!-- Should this reference the outer directory as a parent pom instead?  -->
   <properties>
     <docker.maven.plugin.version>0.18-SNAPSHOT</docker.maven.plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -47,6 +48,7 @@
   <modules>
     <module>net</module>
     <module>custom-net</module>
+    <module>volume</module>
     <module>properties</module>
     <module>dockerignore</module>
     <module>docker-compose-demo</module>
