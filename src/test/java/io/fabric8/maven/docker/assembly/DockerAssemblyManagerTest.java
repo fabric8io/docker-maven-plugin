@@ -65,8 +65,6 @@ public class DockerAssemblyManagerTest {
             result = "target/"; times = 3;
 
             mojoParams.getProject();
-            result = project;
-
             project.getBasedir();
             result = ".";
 
