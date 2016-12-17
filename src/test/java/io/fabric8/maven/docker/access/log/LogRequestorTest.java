@@ -219,19 +219,15 @@ public class LogRequestorTest {
     private void setupMocks(final InputStream inputStream) throws Exception {
         new Expectations() {{
             RequestUtil.newGet(anyString);
-            result = httpUriRequest;
 
             client.execute((HttpUriRequest) any);
-            result = httpResponse;
 
             httpResponse.getStatusLine();
-            result = statusLine;
 
             statusLine.getStatusCode();
             result = 200;
 
             httpResponse.getEntity();
-            result = httpEntity;
 
             httpEntity.getContent();
             result = inputStream;
