@@ -443,7 +443,7 @@
 
     <!-- Enable JaCoCo Test -->
     <profile>
-      <id>sonarqube</id>
+      <id>jacoco</id>
 
       <properties>
         <jacoco.version>0.7.6.201602180812</jacoco.version>
