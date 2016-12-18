@@ -1,0 +1,17 @@
+coverage:
+  range: "45...90"
+  precision: 2
+  round: down
+  notify:
+    slack:
+      default:
+        url: "https://hooks.slack.com/services/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"
+        threshold: "2%"
+  status:
+    project:
+      default:
+        threshold: "2%"
+comment:
+  layout: "header, diff, tree, sunburst"
+  require_changes: true
+   
