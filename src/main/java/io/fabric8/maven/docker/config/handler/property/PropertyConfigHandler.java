@@ -265,8 +265,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return ret;
     }
 
-    private VolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {
-        return new VolumeConfiguration.Builder()
+    private ImageVolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {
+        return new ImageVolumeConfiguration.Builder()
                 .bind(listWithPrefix(prefix, BIND, properties))
                 .from(listWithPrefix(prefix, VOLUMES_FROM, properties))
                 .build();

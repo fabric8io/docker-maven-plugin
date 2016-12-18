@@ -24,9 +24,9 @@ import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
 
 /**
- * A service hub responsible for creating and managing service which are used by
+ * A service hub responsible for creating and managing services which are used by
  * Mojos for calling to the docker backend. The docker backend (DAO) is injected from the outside.
- &
+ *
  * @author roland
  * @since 01/12/15
  */
@@ -39,6 +39,7 @@ public class ServiceHub {
     private final BuildService buildService;
     private final MojoExecutionService mojoExecutionService;
     private final ArchiveService archiveService;
+    private final VolumeService volumeService;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
@@ -53,10 +54,12 @@ public class ServiceHub {
             queryService = new QueryService(dockerAccess);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
+            volumeService = new VolumeService(dockerAccess);
         } else {
             queryService = null;
             runService = null;
             buildService = null;
+            volumeService = null;
         }
     }
 
@@ -99,6 +102,16 @@ public class ServiceHub {
     public RunService getRunService() {
         checkDockerAccessInitialization();
         return runService;
+    }
+    
+    /**
+     * The volume service is responsible for creating volumes
+     *
+     * @return the run service
+     */
+    public VolumeService getVolumeService() {
+        checkDockerAccessInitialization();
+        return volumeService;
     }
 
     public ArchiveService getArchiveService() {

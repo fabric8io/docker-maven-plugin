@@ -1,95 +1,113 @@
-package io.fabric8.maven.docker.config;/*
- *
- * Copyright 2014 Roland Huss
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package io.fabric8.maven.docker.config;
+
+
+import io.fabric8.maven.docker.config.ImageConfiguration.Builder;
+import io.fabric8.maven.docker.util.DeepCopy;
 
 import java.io.Serializable;
-import java.util.*;
+import java.lang.String;
+import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Run configuration for volumes.
- *
- * @author roland
- * @since 08/12/14
+ *  Volume Configuration for Volumes to be created prior to container start
+ *  
+ *  @author Tom Burton
+ *  @version Dec 15, 2016
  */
-public class VolumeConfiguration implements Serializable {
+public class VolumeConfiguration implements Serializable
+{
+   /** Volume Name */
+   @Parameter
+   private String name;
+    
+   /** Docker Driver for mounting the volume */
+   @Parameter
+   private String driver;
+   
+   /** Driver specific options */
+   @Parameter
+   private Map<String, String> driverOpts;
+   
+   /** volume labels */
+   @Parameter
+   private Map<String, String> labels;
 
-    /**
-     * List of images names from where volumes are mounted
-     */
-    @Parameter
-    private List<String> from;
+   /** 
+    *  get the name of this volume
+    *  @return
+    */
+   public String getName() { return name; }
 
-    /**
-     * List of bind parameters for binding/mounting host directories
-     * into the container
-     */
-    @Parameter
-    private List<String> bind;
+   /**
+    *  get the docker driver for used to mounting the volume
+    *  @return
+    */
+   public String getDriver() { return driver; }
 
-    /**
-     * List of images to mount from
-     *
-     * @return images
-     */
-    public List<String> getFrom() {
-        return from;
-    }
+   /**
+    *  get driver specific options
+    *  @return
+    */
+   public Map<String, String> getDriverOpts() { return driverOpts; }
 
-    /**
-     * List of docker bind specification for mounting local directories
-     * @return list of bind specs
-     */
-    public List<String> getBind() {
-        return bind;
-    }
+   /**
+    *  get volume labels
+    *  @return
+    */
+   public Map<String, String> getLabels() { return labels; }
 
-    // ===========================================
+   /** Default Constructor - Does Nothing */
+   public VolumeConfiguration() { }
 
-    public static class Builder {
+   
+   /*
+    * =======================================================================
+    * Builder For Volume Configurations
+    * ======================================================================= 
+    */
 
-        private VolumeConfiguration config = new VolumeConfiguration();
+   public static final Builder builder() { return new Builder(); }
+   
+   public static class Builder 
+   {
+       private final VolumeConfiguration config;
 
-        public Builder() {
-            this.config = new VolumeConfiguration();
-        }
+       public Builder()  { this(null); }
 
-        public Builder from(List<String> args) {
-            if (args != null) {
-                if (config.from == null) {
-                    config.from = new ArrayList<>();
-                }
-                config.from.addAll(args);
-            }
-            return this;
-        }
+       public Builder(VolumeConfiguration that) 
+       {
+          if (that == null) { this.config = new VolumeConfiguration(); } 
+          else { this.config = DeepCopy.copy(that); }
+       }
 
-        public Builder bind(List<String> args) {
-            if (args != null) {
-                if (config.bind == null) {
-                    config.bind = new ArrayList<>();
-                }
-                config.bind.addAll(args);
-            }
-            return this;
-        }
+       public Builder name(String name) 
+       {
+           config.name = name;
+           return this;
+       }
+       
+       public Builder driver(String driver) 
+       {
+           config.driver = driver;
+           return this;
+       }
 
-        public VolumeConfiguration build() {
-            return config;
-        }
-    }
+       public Builder driverOpts(Map<String, String> driverOpts) 
+       {
+           config.driverOpts = driverOpts;
+           return this;
+       }
+       
+       public Builder labels(Map<String, String> labels) 
+       {
+           config.labels = labels;
+           return this;
+       }
+       
+       public VolumeConfiguration build() { return config; }
+       
+   }
+   
 }
