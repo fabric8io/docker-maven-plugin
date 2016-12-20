@@ -15,11 +15,9 @@ package io.fabric8.maven.docker.log;/*
  * limitations under the License.
  */
 
-import static io.fabric8.maven.docker.log.LogCallbackFactory.createLogCallback;
-import static io.fabric8.maven.docker.log.LogCallbackFactory.closeLogs;
-
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
@@ -40,16 +38,15 @@ public class LogDispatcher {
     }
 
     public synchronized void trackContainerLog(String containerId, LogOutputSpec spec) throws FileNotFoundException {
-        LogGetHandle handle = dockerAccess.getLogAsync(containerId, createLogCallback(spec));
+        LogGetHandle handle = dockerAccess.getLogAsync(containerId, new DefaultLogCallback(spec));
         logHandles.put(containerId, handle);
     }
 
     public synchronized void fetchContainerLog(String containerId, LogOutputSpec spec) throws FileNotFoundException {
-        dockerAccess.getLogSync(containerId, createLogCallback(spec));
+        dockerAccess.getLogSync(containerId, new DefaultLogCallback(spec));
     }
 
     public synchronized void untrackAllContainerLogs() {
-        closeLogs();
         for (String key : logHandles.keySet()) {
             LogGetHandle handle = logHandles.get(key);
             handle.finish();

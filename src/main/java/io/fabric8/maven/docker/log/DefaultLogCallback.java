@@ -16,7 +16,10 @@ package io.fabric8.maven.docker.log;/*
  */
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Timestamp;
@@ -27,24 +30,61 @@ import io.fabric8.maven.docker.util.Timestamp;
  */
 public class DefaultLogCallback implements LogCallback {
 
-    private final LogOutputSpec outputSpec;
-    private final PrintStream ps;
+    private static Map<String, SharedPrintStream> printStreamMap = new HashMap<>();
     
-    public DefaultLogCallback(LogOutputSpec outputSpec, PrintStream ps) throws FileNotFoundException {
+    private final LogOutputSpec outputSpec;
+    private final SharedPrintStream sps;
+    
+    public DefaultLogCallback(LogOutputSpec outputSpec) throws FileNotFoundException {
         this.outputSpec = outputSpec;
-        this.ps = ps;
+        this.sps = createOrReusePrintStream(outputSpec);
+    }
+    
+    private synchronized SharedPrintStream createOrReusePrintStream(LogOutputSpec spec) throws FileNotFoundException {
+        String file = spec.getFile();
+        if (spec.isLogStdout() || file == null) {
+            return new SharedPrintStream(System.out);
+        }
+        SharedPrintStream sps = printStreamMap.get(file);
+        if (sps == null) {
+            PrintStream ps = new PrintStream(new FileOutputStream(file), true);
+            sps = new SharedPrintStream(ps);
+            
+            printStreamMap.put(file, sps);
+        }
+        else {
+            sps.allocate();
+        }
+        return sps;
+    }
+    
+    private PrintStream ps() {
+        return sps.getPrintStream();
     }
 
     @Override
     public void log(int type, Timestamp timestamp, String txt) {
-        addLogEntry(ps, new LogEntry(type, timestamp, txt));
+        addLogEntry(ps(), new LogEntry(type, timestamp, txt));
     }
 
     @Override
     public void error(String error) {
-        ps.println(error);
+        ps().println(error);
     }
 
+    @Override
+    public synchronized void close() {
+        sps.free();
+        if (!sps.isUsed()) {
+            if (sps.getPrintStream() != System.out) {
+                sps.getPrintStream().close();
+            }
+            String file = outputSpec.getFile();
+            if (file != null) {
+                printStreamMap.remove(file);
+            }
+        }
+    }
     private void addLogEntry(PrintStream ps, LogEntry logEntry) {
         // TODO: Add the entry to a queue, and let the queue be picked up with a small delay from an extra
         // thread which then can sort the entries by time before printing it out in order to avoid race conditions.
@@ -86,4 +126,5 @@ public class DefaultLogCallback implements LogCallback {
             return timestamp.compareTo(entry.timestamp);
         }
     }
+
 }

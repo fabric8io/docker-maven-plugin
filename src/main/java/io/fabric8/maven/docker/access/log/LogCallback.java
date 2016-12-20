@@ -42,6 +42,8 @@ public interface LogCallback {
      * @param error error description
      */
     void error(String error);
+    
+    void close();
 
     /**
      * Exception indicating that logging is done and should be finished

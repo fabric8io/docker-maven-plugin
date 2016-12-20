@@ -6,7 +6,6 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static io.fabric8.maven.docker.log.LogCallbackFactory.createLogCallback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -40,6 +38,7 @@ import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.BodyAndStatusR
 import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.HttpBodyAndStatus;
 import io.fabric8.maven.docker.access.hc.http.HttpClientBuilder;
 import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.access.hc.win.NamedPipeClientBuilder;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
@@ -146,7 +145,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     private ResponseHandler<Object> createExecResponseHandler(LogOutputSpec outputSpec) throws FileNotFoundException {
-        final LogCallback callback = createLogCallback(outputSpec);
+        final LogCallback callback = new DefaultLogCallback(outputSpec);
         return new ResponseHandler<Object>() {
             @Override
             public Object handleResponse(HttpResponse response) throws IOException {
@@ -159,6 +158,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
                         }
                     } catch (LogCallback.DoneException e) {
                         // Ok, we stop here ...
+                    } finally {
+                        callback.close();
                     }
                 }
                 return null;
