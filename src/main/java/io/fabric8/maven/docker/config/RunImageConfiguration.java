@@ -119,7 +119,7 @@ public class RunImageConfiguration implements Serializable {
 
     // Mount volumes from the given image's started containers
     @Parameter
-    private ImageVolumeConfiguration volumes;
+    private RunVolumeConfiguration volumes;
 
     // Links to other container started
     @Parameter
@@ -267,7 +267,7 @@ public class RunImageConfiguration implements Serializable {
         return extraHosts;
     }
 
-    public ImageVolumeConfiguration getVolumeConfiguration() {
+    public RunVolumeConfiguration getVolumeConfiguration() {
         return volumes;
     }
 
@@ -468,7 +468,7 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder volumes(ImageVolumeConfiguration volumes) {
+        public Builder volumes(RunVolumeConfiguration volumes) {
             config.volumes = volumes;
             return this;
         }

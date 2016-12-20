@@ -34,8 +34,9 @@ public class VolumeRemoveMojo extends AbstractDockerMojo
    {
       VolumeService volService = serviceHub.getVolumeService();
       
-      for ( VolumeConfiguration volume : getVolumes())
-      { volService.removeVolume(volume.getName()); }
+      for ( VolumeConfiguration volume : getVolumes()) { 
+         volService.removeVolume(volume.getName()); 
+      }
    }
 
 }

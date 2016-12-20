@@ -52,8 +52,9 @@ public class VolumeDetails implements Volume
     { return parseMap(json.getJSONObject(STATUS)); }
 
     @Override
-    public Map<String, String> getLabels() 
-    { return parseMap(json.getJSONObject(LABELS)); }
+    public Map<String, String> getLabels() { 
+       return parseMap(json.getJSONObject(LABELS)); 
+    }
       
     private Map<String, String> parseMap(JSONObject labels) 
     {

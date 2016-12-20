@@ -34,8 +34,9 @@ public class VolumeCreateMojo extends AbstractDockerMojo
    {
       VolumeService volService = serviceHub.getVolumeService();
       
-      for ( VolumeConfiguration volume : getVolumes())
-      { volService.createVolume(volume); }
+      for ( VolumeConfiguration volume : getVolumes()) { 
+         volService.createVolume(volume); 
+      }
    }
 
 }

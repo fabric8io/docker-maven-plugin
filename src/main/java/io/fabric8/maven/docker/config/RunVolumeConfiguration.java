@@ -26,7 +26,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 08/12/14
  */
-public class ImageVolumeConfiguration implements Serializable {
+public class RunVolumeConfiguration implements Serializable {
 
     /**
      * List of images names from where volumes are mounted
@@ -62,10 +62,10 @@ public class ImageVolumeConfiguration implements Serializable {
 
     public static class Builder {
 
-        private ImageVolumeConfiguration config = new ImageVolumeConfiguration();
+        private RunVolumeConfiguration config = new RunVolumeConfiguration();
 
         public Builder() {
-            this.config = new ImageVolumeConfiguration();
+            this.config = new RunVolumeConfiguration();
         }
 
         public Builder from(List<String> args) {
@@ -88,7 +88,7 @@ public class ImageVolumeConfiguration implements Serializable {
             return this;
         }
 
-        public ImageVolumeConfiguration build() {
+        public RunVolumeConfiguration build() {
             return config;
         }
     }

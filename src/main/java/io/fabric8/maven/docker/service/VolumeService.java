@@ -6,7 +6,7 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
-import io.fabric8.maven.docker.config.ImageVolumeConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
@@ -34,8 +34,9 @@ public class VolumeService
    /**
     * Sets the DockerAccess object
     */
-   public VolumeService(DockerAccess dockerAccess) 
-   { this.docker = dockerAccess; }
+   public VolumeService(DockerAccess dockerAccess) { 
+      this.docker = dockerAccess; 
+   }
    
    public String createVolume(VolumeConfiguration vc)
           throws DockerAccessException
@@ -60,6 +61,7 @@ public class VolumeService
            return vconfig;
    }
    
-   public void removeVolume(String volumeName) throws DockerAccessException
-   { docker.removeVolume(volumeName); }
+   public void removeVolume(String volumeName) throws DockerAccessException { 
+      docker.removeVolume(volumeName); 
+   }
 }

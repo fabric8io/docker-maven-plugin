@@ -22,8 +22,8 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 | [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:remove) | Remove images from local docker host  |
 | [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/#docker:logs)     | Show container logs                   |
 | [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/#docker:source) | Attach docker build archive to Maven project |
-| [`docker:volume-create`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-create) | Attach docker build archive to Maven project |
-| [`docker:volume-remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-remove) | Attach docker build archive to Maven project |
+| [`docker:volume-create`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-create) | Create a volume to share data between containers |
+| [`docker:volume-remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-remove) | Remove a created volume |
 
 #### Documentation
 
