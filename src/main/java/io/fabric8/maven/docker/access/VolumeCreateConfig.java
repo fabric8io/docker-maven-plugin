@@ -20,20 +20,23 @@ public class VolumeCreateConfig
         add("Name", name);
     }
 
-    public VolumeCreateConfig driver(String driver) 
-    { return add("Driver", driver); }
+    public VolumeCreateConfig driver(String driver) { 
+       return add("Driver", driver); 
+    }
     
     public VolumeCreateConfig driverOpts(Map<String, String> driverOpts) 
     { 
-       if (driverOpts != null && driverOpts.size() > 0) 
-       { add("DriverOpts", new JSONObject(driverOpts)); }
+       if (driverOpts != null && driverOpts.size() > 0) { 
+          add("DriverOpts", new JSONObject(driverOpts)); 
+       }
        return this; 
     }
     
     public VolumeCreateConfig labels(Map<String,String> labels) 
     {
-        if (labels != null && labels.size() > 0) 
-        { add("Labels", new JSONObject(labels)); }
+        if (labels != null && labels.size() > 0) { 
+           add("Labels", new JSONObject(labels)); 
+        }
         return this;
     }
     

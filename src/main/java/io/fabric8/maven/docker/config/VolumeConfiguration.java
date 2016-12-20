@@ -78,8 +78,12 @@ public class VolumeConfiguration implements Serializable
 
        public Builder(VolumeConfiguration that) 
        {
-          if (that == null) { this.config = new VolumeConfiguration(); } 
-          else { this.config = DeepCopy.copy(that); }
+          if (that == null) { 
+             this.config = new VolumeConfiguration(); 
+          } 
+          else { 
+             this.config = DeepCopy.copy(that); 
+          }
        }
 
        public Builder name(String name) 

@@ -86,7 +86,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     }
 
     private void addVolumes(RunImageConfiguration runConfig, List<String> ret) {
-        ImageVolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
+        RunVolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             List<String> volumeImages = volConfig.getFrom();
             if (volumeImages != null) {

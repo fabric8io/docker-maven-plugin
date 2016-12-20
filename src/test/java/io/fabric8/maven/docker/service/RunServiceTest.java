@@ -357,8 +357,8 @@ public class RunServiceTest {
         return new RestartPolicy.Builder().name("on-failure").retry(1).build();
     }
 
-    private ImageVolumeConfiguration volumeConfiguration() {
-        return new ImageVolumeConfiguration.Builder()
+    private RunVolumeConfiguration volumeConfiguration() {
+        return new RunVolumeConfiguration.Builder()
                 .bind(bind())
                 .from(volumesFrom())
                 .build();

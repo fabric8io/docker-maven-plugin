@@ -5,7 +5,7 @@
 Creates a volume for use when storing data to be read by multiple containers.
 
 Docker Volumes are configured outside of Docker Images/Containers, 
-and can be references by them.
+and can be referenced by them.
 
 *Example:*
 
@@ -30,7 +30,7 @@ and can be references by them.
 </plugin>
 ----
 
-[[Volume-Configuration]]
+[[volume-configuration]]
 === Configuration
 
 The Sample Above Shows Several Fields.
@@ -38,10 +38,10 @@ Except for Name the fields are optional
 
 .Volume Configuration
 [options="header"]
-|===============================================================================
+|===
 | Field Name   | Description 
 | *name*       | Name of the Volume
 | *driver*     | Driver to use for creating the volume
 | *driverOpts* | Driver Specific options passed in as custom `<key>value</key>` where its maps to key=value for driver opts from the command line. 
 | *labels*     | labels passed in as custom `<key>value</key>` similar to images
-|===============================================================================
+|===
