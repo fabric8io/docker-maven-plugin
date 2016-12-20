@@ -183,10 +183,12 @@ public interface DockerAccess {
      * @param dockerfileName filename of the Dockerfile within the archive or <code>null</code> for the default Dockerfile
      * @param forceRemove whether to remove intermediate containers
      * @param noCache whether to use cache when building the image
-     * @param buildArgs buildArgs to add then building the image. Can be <code>null</code> for no build args.    @throws DockerAccessException if docker host reports an error during building of an image
+     * @param buildArgs buildArgs to add then building the image. Can be <code>null</code> for no build args.
+     * @param buildOptions buildOptions additional query arguments to add when building the image. Can be <code>null</code>.
+     * @throws DockerAccessException if docker host reports an error during building of an image
      */
     void buildImage(String image, File dockerArchive, String dockerfileName, boolean forceRemove, boolean noCache,
-                    Map<String, String> buildArgs) throws DockerAccessException;
+                    Map<String, String> buildArgs, Map<String, String> buildOptions) throws DockerAccessException;
 
     /**
      * Alias an image in the repository with a complete new name. (Note that this maps to a Docker Remote API 'tag'

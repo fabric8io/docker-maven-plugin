@@ -144,6 +144,11 @@ public class BuildImageConfiguration implements Serializable {
      */
     private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
 
+    /**
+     * @parameter
+     */
+    private Map<String,String> buildOptions;
+
     // Path to Dockerfile to use, initialized lazily ....
     File dockerFileFile;
     private boolean dockerFileMode;
@@ -233,6 +238,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public BuildTarArchiveCompression getCompression() {
         return compression;
+    }
+
+    public Map<String, String> getBuildOptions() {
+        return buildOptions;
     }
 
     public Arguments getEntryPoint() {
@@ -409,6 +418,11 @@ public class BuildImageConfiguration implements Serializable {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);
             }
+            return this;
+        }
+
+        public Builder buildOptions(Map<String,String> buildOptions) {
+            config.buildOptions = buildOptions;
             return this;
         }
 
