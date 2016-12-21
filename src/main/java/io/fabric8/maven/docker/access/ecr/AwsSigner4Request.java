@@ -17,6 +17,8 @@ import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.util.EntityUtils;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * The state of an aws sigV4 request.
  *
@@ -59,7 +61,7 @@ public class AwsSigner4Request {
         uri = getUri(request);
 
         Map<String, String> headers = getOrderedHeadersToSign(request.getAllHeaders());
-        signedHeaders = headersToSign(headers);
+        signedHeaders = StringUtils.join(headers.keySet(), ';');
         canonicalHeaders = canonicalHeaders(headers);
     }
 
@@ -101,7 +103,7 @@ public class AwsSigner4Request {
 
     private static String getSigningDateTime(HttpRequest request, Date signingTime) {
         Header dateHeader = request.getFirstHeader("X-Amz-Date");
-        if(dateHeader!=null) {
+        if (dateHeader != null) {
             return dateHeader.getValue();
         }
         synchronized (TIME_FORMAT) {
@@ -120,38 +122,37 @@ public class AwsSigner4Request {
         String scheme = "https";
         int schemeEnd = uri.indexOf(':');
         int pathStart = uri.indexOf('/');
-        if(schemeEnd>=0 && schemeEnd < pathStart) {
+        if (schemeEnd >= 0 && schemeEnd < pathStart) {
             scheme = uri.substring(0, schemeEnd);
-            if(uri.charAt(pathStart + 1) == '/') {
+            if (uri.charAt(pathStart + 1) == '/') {
                 authority = uri.substring(pathStart);
-                pathStart = uri.indexOf('/', pathStart+2);
+                pathStart = uri.indexOf('/', pathStart + 2);
             }
         }
 
         String path;
         String query;
         int queryIdx = uri.indexOf('?', pathStart);
-        if(queryIdx<0) {
-            query =  null;
+        if (queryIdx < 0) {
+            query = null;
             path = uri.substring(pathStart);
-        }
-        else {
-            query = uri.substring(queryIdx+1);
+        } else {
+            query = uri.substring(queryIdx + 1);
             path = uri.substring(pathStart, queryIdx);
         }
         try {
             return new URI(scheme, authority, path, query, null);
-        }
-        catch(URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw new UndeclaredThrowableException(e);
         }
     }
 
     /**
      * Get the ordered map of headers to sign.
+     *
      * @param headers the possible headers to sign
-     * @return A &lt;String, StringBuilder&gt; map of headers to sign.
-     * Key is the name of the header, Value is the comma separated values with minimized space
+     * @return A &lt;String, StringBuilder&gt; map of headers to sign. Key is the name of the
+     *         header, Value is the comma separated values with minimized space
      */
     private static Map<String, String> getOrderedHeadersToSign(Header[] headers) {
         Map<String, String> unique = new TreeMap<>();
@@ -165,10 +166,12 @@ public class AwsSigner4Request {
             if (value == null) {
                 value = "";
             } else {
+                // minimize white space
                 value = value.trim().replaceAll("\\s+", " ");
             }
-            if (unique.containsKey(key)) {
-                String prior = unique.get(key);
+            // merge all values with same header name
+            String prior = unique.get(key);
+            if (prior != null) {
                 if (prior.length() > 0) {
                     value = prior + ',' + value;
                 }
@@ -181,26 +184,11 @@ public class AwsSigner4Request {
     }
 
     /**
-     * Create set of headers to sign
+     * Create canonical header set. The headers are ordered by name.
+     *
      * @param headers The set of headers to sign
-     * @return The semicolon separated set of header names to be signed.
-     */
-    private static String headersToSign(Map<String, String> headers) {
-        StringBuilder signed = new StringBuilder();
-        for (String key : headers.keySet()) {
-            if (signed.length() > 0) {
-                signed.append(';');
-            }
-            signed.append(key);
-        }
-        return signed.toString();
-    }
-
-    /**
-     * Create canonical header set.  The headers are ordered by name.
-     * @param headers The set of headers to sign
-     * @return The signing value from headers. Headers are separated with newline.
-     *  Each header is formatted name:value with each header value whitespace trimmed and minimized
+     * @return The signing value from headers. Headers are separated with newline. Each header is
+     *         formatted name:value with each header value whitespace trimmed and minimized
      */
     private static String canonicalHeaders(Map<String, String> headers) {
         StringBuilder canonical = new StringBuilder();
@@ -211,9 +199,9 @@ public class AwsSigner4Request {
     }
 
     byte[] getBytes() {
-        if(request instanceof HttpEntityEnclosingRequestBase) {
+        if (request instanceof HttpEntityEnclosingRequestBase) {
             try {
-                HttpEntity entity = ((HttpEntityEnclosingRequestBase)request).getEntity();
+                HttpEntity entity = ((HttpEntityEnclosingRequestBase) request).getEntity();
                 return EntityUtils.toByteArray(entity);
             } catch (IOException e) {
                 throw new UndeclaredThrowableException(e);
