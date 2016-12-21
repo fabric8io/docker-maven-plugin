@@ -41,7 +41,6 @@ public class DefaultLogCallbackTest {
     public void before() throws FileNotFoundException {
         path = Paths.get("target", "one.log");
         path.toFile().delete();
-        path = Paths.get("target", "one.log");
         spec = new LogOutputSpec.Builder().prefix("callback-test")
                 .file(path.toString()).build();
         callback = new DefaultLogCallback(spec);
