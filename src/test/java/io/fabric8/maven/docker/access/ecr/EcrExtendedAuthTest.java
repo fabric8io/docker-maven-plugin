@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 
 import org.apache.http.HttpEntity;
@@ -25,6 +26,12 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.maven.plugin.MojoExecutionException;
 
+/**
+ * Test exchange of local stored credentials for temporary ecr credentials
+ *
+ * @author chas
+ * @since 2016-12-21
+ */
 public class EcrExtendedAuthTest {
 
     @Mocked
@@ -41,10 +48,11 @@ public class EcrExtendedAuthTest {
     }
 
     @Test
-    public void testHeaders() {
+    public void testHeaders() throws ParseException {
         EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com");
         AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
-        HttpPost request = eea.createSignedRequest(localCredentials, new Date(1482009058000L));
+        Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
+        HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
         assertEquals("ecr.eu-west-1.amazonaws.com", request.getFirstHeader("host").getValue());
         assertEquals("20161217T211058Z", request.getFirstHeader("X-Amz-Date").getValue());
         assertEquals("AWS4-HMAC-SHA256 Credential=username/20161217/eu-west-1/ecr/aws4_request, SignedHeaders=content-type;host;x-amz-target, Signature=1bab0f5c269debe913e532011d5d192b190bb4c55d3de1bc1506eefb93e058e1", request.getFirstHeader("Authorization").getValue());

@@ -58,11 +58,9 @@ public class AwsSigner4Request {
         method = request.getRequestLine().getMethod();
         uri = getUri(request);
 
-        StringBuilder canonical = new StringBuilder();
-        StringBuilder signed = new StringBuilder();
-        canonicalizeHeaders(request, canonical, signed);
-        canonicalHeaders = canonical.toString();
-        signedHeaders = signed.toString();
+        Map<String, String> headers = getOrderedHeadersToSign(request.getAllHeaders());
+        signedHeaders = headersToSign(headers);
+        canonicalHeaders = canonicalHeaders(headers);
     }
 
     public String getRegion() {
@@ -149,64 +147,67 @@ public class AwsSigner4Request {
         }
     }
 
-    private static void canonicalizeHeaders(HttpRequest request, StringBuilder canonical, StringBuilder signed) {
-        Map<String, StringBuilder> unique = new TreeMap<>();
-        for (Header header : request.getAllHeaders()) {
-            String key = header.getName().toLowerCase(Locale.US);
+    /**
+     * Get the ordered map of headers to sign.
+     * @param headers the possible headers to sign
+     * @return A &lt;String, StringBuilder&gt; map of headers to sign.
+     * Key is the name of the header, Value is the comma separated values with minimized space
+     */
+    private static Map<String, String> getOrderedHeadersToSign(Header[] headers) {
+        Map<String, String> unique = new TreeMap<>();
+        for (Header header : headers) {
+            String key = header.getName().toLowerCase(Locale.US).trim();
             if (key.equals("connection")) {
+                // do not sign 'connection' header, it is very likely to be changed en-route.
                 continue;
             }
-            StringBuilder builder = unique.get(key);
-            if (builder != null) {
-                if (builder.length() > 0) {
-                    builder.append(',');
-                }
-            } else {
-                builder = new StringBuilder();
-                unique.put(key, builder);
-            }
             String value = header.getValue();
-            if (value != null) {
-                builder.append(value);
+            if (value == null) {
+                value = "";
+            } else {
+                value = value.trim().replaceAll("\\s+", " ");
+            }
+            if (unique.containsKey(key)) {
+                String prior = unique.get(key);
+                if (prior.length() > 0) {
+                    value = prior + ',' + value;
+                }
+                unique.put(key, value);
+            } else {
+                unique.put(key, value);
             }
         }
+        return unique;
+    }
 
-        for (Map.Entry<String, StringBuilder> header : unique.entrySet()) {
+    /**
+     * Create set of headers to sign
+     * @param headers The set of headers to sign
+     * @return The semicolon separated set of header names to be signed.
+     */
+    private static String headersToSign(Map<String, String> headers) {
+        StringBuilder signed = new StringBuilder();
+        for (String key : headers.keySet()) {
             if (signed.length() > 0) {
                 signed.append(';');
             }
-            signed.append(header.getKey());
-
-            squeezeWhite(canonical, header.getKey());
-            canonical.append(':');
-            squeezeWhite(canonical, header.getValue().toString());
-            canonical.append('\n');
+            signed.append(key);
         }
+        return signed.toString();
     }
 
-    private static void squeezeWhite(StringBuilder dst, String src) {
-        int l = src.length();
-        while (l > 0) {
-            char ch = src.charAt(--l);
-            if (!Character.isWhitespace(ch)) {
-                break;
-            }
+    /**
+     * Create canonical header set.  The headers are ordered by name.
+     * @param headers The set of headers to sign
+     * @return The signing value from headers. Headers are separated with newline.
+     *  Each header is formatted name:value with each header value whitespace trimmed and minimized
+     */
+    private static String canonicalHeaders(Map<String, String> headers) {
+        StringBuilder canonical = new StringBuilder();
+        for (Map.Entry<String, String> header : headers.entrySet()) {
+            canonical.append(header.getKey()).append(':').append(header.getValue()).append('\n');
         }
-
-        boolean wasWhite = true;
-        for (int i = 0; i <= l; ++i) {
-            char ch = src.charAt(i);
-            boolean isWhite = Character.isWhitespace(ch);
-            if (isWhite) {
-                if (wasWhite) {
-                    continue;
-                }
-                dst.append(' ');
-            } else {
-                dst.append(ch);
-            }
-            wasWhite = isWhite;
-        }
+        return canonical.toString();
     }
 
     byte[] getBytes() {

@@ -105,7 +105,7 @@ public class AuthConfigFactory {
     public AuthConfig createAuthConfig(boolean isPush, boolean skipExtendedAuth, Map authConfig, Settings settings, String user, String registry)
             throws MojoExecutionException {
 
-        AuthConfig ret = createAuthConfig(isPush, authConfig, settings, user, registry);
+        AuthConfig ret = createStandardAuthConfig(isPush, authConfig, settings, user, registry);
         if (ret != null) {
             if (registry == null ) {
                 log.debug("default registry; no extended auth");
@@ -183,7 +183,7 @@ public class AuthConfigFactory {
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(boolean isPush, Map authConfigMap, Settings settings, String user, String registry)
+    private AuthConfig createStandardAuthConfig(boolean isPush, Map authConfigMap, Settings settings, String user, String registry)
             throws MojoExecutionException {
         AuthConfig ret;
 
@@ -212,7 +212,7 @@ public class AuthConfigFactory {
         }
 
         // ===================================================================
-        // These are lookups based on registry only, so the direction (push or pull) doesnt matter:
+        // These are lookups based on registry only, so the direction (push or pull) doesn't matter:
 
         // Now lets lookup the registry & user from ~/.m2/setting.xml
         ret = getAuthConfigFromSettings(settings, user, registry);
