@@ -85,6 +85,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .maintainer(withPrefix(prefix, MAINTAINER, properties))
                 .workdir(withPrefix(prefix, WORKDIR, properties))
                 .skip(withPrefix(prefix, SKIP_BUILD, properties))
+                .dockerArchive(withPrefix(prefix, DOCKER_ARCHIVE, properties))
                 .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
                 .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
                 .user(withPrefix(prefix, USER, properties))

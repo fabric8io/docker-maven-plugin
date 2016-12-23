@@ -33,9 +33,6 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     @Parameter
     private String registry;
 
-    @Parameter
-    private String file;
-
     // Used for injection
     public ImageConfiguration() {}
 
@@ -154,14 +151,6 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion, run.initAndValidate());
         }
         return minimalApiVersion;
-    }
-
-    public String getFile() {
-        return file;
-    }
-
-    public void setFile(String file) {
-        this.file = file;
     }
 
     // =========================================================================

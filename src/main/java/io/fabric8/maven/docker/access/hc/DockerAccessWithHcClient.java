@@ -371,12 +371,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to load %s", filepath);
         }
-
-        // if tag is not "latest", tag the latest with the tag.
-        if (name.getTag() != null && !"latest".equals(name.getTag())) {
-            String src = new ImageName(name.getNameWithoutTag(), "latest").getFullName();
-            tag(src, image, false);
-        }
     }
 
     @Override
