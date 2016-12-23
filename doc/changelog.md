@@ -3,6 +3,7 @@
 * **0.18.2** 
   - Better log message when waiting for URL (#640)
   - Update to jnr-unixsocket 0.15
+  - Add two new goals: "volume-create" and "volume-remove" for volume handling independent of images. 
 
 * **0.18.1** (2016-11-17)
   - Renamed `basedir` and `exportBasedir` in an `<assembly>` configuration to `targetDir` and `exportTargetDir` since this better reflects the purpose, i.e. the target in the Docker image to which the assembly is copied. The old name is still recognized but deprecated. 
