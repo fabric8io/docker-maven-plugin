@@ -1,11 +1,9 @@
+[[docker:volume-remove]]
+== *docker:volume-remove*
 
-[[docker:volume-create]]
-== *docker:volume-create*
-
-Creates a volume for use when storing data to be read by multiple containers.
-
-Docker Volumes are configured outside of Docker Images/Containers, 
-and can be referenced by them.
+This goals is the counterpart to <<docker:volume-create>> and removes a volume.
+Docker volumes are configured outside of Docker images, but can be referenced by them.
+The configuration is the same as for <<docker:volume-create>>
 
 *Example:*
 
@@ -15,14 +13,8 @@ and can be referenced by them.
   <configuration>
     <volumes>
        <volume>
-         <name>myVolumeName</name>
-         <driver>Local</Driver>
-         <driverOpts>
-           <someKey>someValue</someKey>
-         </driverOpts>
-         <labels>
-           <someKey>someValue</someKey>
-         </labels>
+         <name>temp-volume</name>
+         ....
        </volume>
     </volumes>
     ...
@@ -33,15 +25,14 @@ and can be referenced by them.
 [[volume-configuration]]
 === Configuration
 
-The Sample Above Shows Several Fields.
-Except for Name the fields are optional
+The configuration is quite simple. Only the name of the volume to delete is required.
 
-.Volume Configuration
+.Volume configuration
 [options="header"]
 |===
-| Field Name   | Description 
-| *name*       | Name of the Volume
-| *driver*     | Driver to use for creating the volume
-| *driverOpts* | Driver Specific options passed in as custom `<key>value</key>` where its maps to key=value for driver opts from the command line. 
-| *labels*     | labels passed in as custom `<key>value</key>` similar to images
+| Element | Description
+
+| *name*
+| Name of the volume
+
 |===

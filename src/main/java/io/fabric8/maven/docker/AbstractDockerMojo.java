@@ -150,11 +150,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     Map authConfig;
 
     /**
-     * volume configurations configured directly.
+     * Volume configuration
      */
     @Parameter
     private List<VolumeConfiguration> volumes;
-    
+
     /**
      * Image configurations configured directly.
      */
@@ -349,20 +349,23 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // =============================================================================================
 
     /**
-     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images. 
+     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images.
      * The values are taken as comma separated list.
      *
-     * @return list of image configuration to use
+     * @return list of image configuration to be use. Can be empty but never null.
      */
     protected List<ImageConfiguration> getResolvedImages() {
         return resolvedImages;
     }
-    
+
     /**
-     *  getUser configured images
-     *  @return
+     * Get all volumes which are defined separately from the images
+     *
+     * @return defined volumes
      */
-    protected List<VolumeConfiguration> getVolumes() { return volumes; }
+    protected List<VolumeConfiguration> getVolumes() {
+        return volumes;
+    }
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {

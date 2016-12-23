@@ -13,29 +13,21 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
- *  Mojo to Create Named Volumes prior to Docker container start
- *  
+ *  Mojo to remove volumes created with {@link VolumeCreateMojo}
+ *
  *  @author Tom Burton
- *  @version Dec 15, 2016
  */
-@Mojo(name = "volume-remove", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
-public class VolumeRemoveMojo extends AbstractDockerMojo
-{
-   
-   /** Default Constructor - Does Nothing */
-   public VolumeRemoveMojo() { }
+@Mojo(name = "volume-remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
+public class VolumeRemoveMojo extends AbstractDockerMojo {
 
-   /* (non-Javadoc)
-    * @see io.fabric8.maven.docker.AbstractDockerMojo#executeInternal(io.fabric8.maven.docker.service.ServiceHub)
-    */
    @Override
    protected void executeInternal(ServiceHub serviceHub)
-         throws DockerAccessException, MojoExecutionException
-   {
+         throws DockerAccessException, MojoExecutionException  {
       VolumeService volService = serviceHub.getVolumeService();
-      
-      for ( VolumeConfiguration volume : getVolumes()) { 
-         volService.removeVolume(volume.getName()); 
+
+      for ( VolumeConfiguration volume : getVolumes()) {
+         log.info("Removing volume %s", volume.getName());
+         volService.removeVolume(volume.getName());
       }
    }
 

@@ -52,15 +52,13 @@ import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ContainersListElement;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.model.NetworksListElement;
-import io.fabric8.maven.docker.model.Volume;
-import io.fabric8.maven.docker.model.VolumeDetails;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
 
 /**
- * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a> 
+ * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
  * for remotely accessing the docker host.
  * <p/>
  * The design goal here is to provide only the functionality required for this plugin in order to
@@ -68,7 +66,7 @@ import io.fabric8.maven.docker.util.Timestamp;
  * also the reason, why no framework like JAX-RS or docker-java is used so that the dependencies are
  * kept low.
  * <p/>
- * Of course, it's a bit more manual work, but it's worth the effort 
+ * Of course, it's a bit more manual work, but it's worth the effort
  * (as long as the Docker API functionality required is not too much).
  *
  * @author roland
@@ -476,50 +474,31 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public String createVolume(VolumeCreateConfig containerConfig)
-           throws DockerAccessException 
+           throws DockerAccessException
     {
         String createJson = containerConfig.toJson();
         log.debug("Volume create config: %s", createJson);
 
-        try 
+        try
         {
             String url = urlBuilder.createVolume();
             String response =
-                    delegate.post(url, 
-                                  createJson, 
-                                  new ApacheHttpClientDelegate.BodyResponseHandler(), 
+                    delegate.post(url,
+                                  createJson,
+                                  new ApacheHttpClientDelegate.BodyResponseHandler(),
                                   HTTP_CREATED);
             JSONObject json = new JSONObject(response);
             logWarnings(json);
 
             return json.getString("Name");
-        } 
-        catch (IOException e) 
+        }
+        catch (IOException e)
         {
            throw new DockerAccessException(e, "Unable to create volume for [%s]",
-                                           containerConfig.getVolumeName());
-        }
-    }
-    
-    @Override
-    public Volume getVolume(String name) throws DockerAccessException {
-        HttpBodyAndStatus response = inspectVolume(name);
-        if (response.getStatusCode() == HTTP_NOT_FOUND) {
-            return null;
-        } else {
-            return new VolumeDetails(new JSONObject(response.getBody()));
+                                           containerConfig.getName());
         }
     }
 
-    private HttpBodyAndStatus inspectVolume(String name) throws DockerAccessException {
-        try {
-            String url = urlBuilder.inspectVolume(name);
-            return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
-        } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to retrieve volume name for [%s]", name);
-        }
-    }
-    
     @Override
     public void removeVolume(String name) throws DockerAccessException {
         try {
@@ -530,7 +509,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
-    
+
     // ---------------
     // Lifecycle methods not needed here
     @Override
