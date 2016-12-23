@@ -29,6 +29,16 @@ public class BuildImageConfiguration implements Serializable {
      */
     private String dockerFile;
 
+    /**
+     * Path to a docker archive to load an image instead of building from scratch. Note only either dockerFile or
+     * dockerArchive can be used.
+     *
+     * @parameter
+     */
+    private String dockerArchive;
+
+
+
     // Base Image name of the data image to use.
     /**
      * @parameter
@@ -159,6 +169,10 @@ public class BuildImageConfiguration implements Serializable {
         return dockerFileFile;
     }
 
+    public String getDockerArchive() {
+        return dockerArchive;
+    }
+
     public String getFrom() {
         if (from == null && getFromExt() != null) {
             return getFromExt().get("name");
@@ -281,6 +295,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder dockerFile(String file) {
             config.dockerFile = file;
+            return this;
+        }
+
+        public Builder dockerArchive(String archive) {
+            config.dockerArchive = archive;
             return this;
         }
 
@@ -457,13 +476,17 @@ public class BuildImageConfiguration implements Serializable {
 
     // Initialize the dockerfile location and the build mode
     private void initDockerFileFile(Logger log) {
+        // can't have dockerFile/dockerFileDir and dockerArchive
+        if ((dockerFile != null || dockerFileDir != null) && dockerArchive != null) {
+            throw new IllegalArgumentException("Both <Dockerfile> (<dockerFileDir>) and <dockerArchive> are set.");
+        }
         if (dockerFile != null) {
             dockerFileFile = new File(dockerFile);
             dockerFileMode = true;
         } else if (dockerFileDir != null) {
             dockerFileFile = new File(dockerFileDir, "Dockerfile");
             dockerFileMode = true;
-        } else {
+        } else if (dockerArchive == null) {
             String deprecatedDockerFileDir = getAssemblyConfiguration() != null ?
                 getAssemblyConfiguration().getDockerFileDir() :
                 null;

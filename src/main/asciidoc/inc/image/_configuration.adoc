@@ -20,9 +20,6 @@ linking images together or for specifying it with the global *image* configurati
 | <<config-image-build, *build*>>
 | Element which contains all the configuration aspects when doing a <<{plugin}:build>>. This element can be omitted if the image is only pulled from a registry e.g. as support for integration tests like database images.
 
-| *file*
-| Local file name to an output of `docker save`.
-
 ifeval::["{plugin}" == "docker"]
 | <<config-image-run, *run*>>
 | Element which describe how containers should be
