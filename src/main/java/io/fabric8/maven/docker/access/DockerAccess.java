@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker.access;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -246,4 +245,20 @@ public interface DockerAccess {
      * cleaning up things.
      */
     void shutdown();
+
+   /**
+    *  Create a volume
+    *
+    *  @param configuration volume configuration
+    *  @return the name of the Volume
+    *  @throws DockerAccessException if the volume could not be created.
+    */
+   String createVolume(VolumeCreateConfig configuration) throws DockerAccessException;
+
+   /**
+    * removes a volume
+    * @param name volume name to remove
+    * @throws DockerAccessException if the volume could not be removed
+    */
+   void removeVolume(String name) throws DockerAccessException;
 }

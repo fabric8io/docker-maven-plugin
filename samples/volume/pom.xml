@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for demonstrating the volume creation feature
+
+  
+  Call it with 'mvn docker:create-volume'.
+  or
+  Call it with 'mvn docker:verify'
+  It will create the volume "newVolume"
+  -->
+
+  <parent>
+    <groupId>io.fabric8</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.18-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>volume</artifactId>
+  <version>0.18-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <verbose>true</verbose>
+          <autoPull>always</autoPull>
+          <startParallel>true</startParallel>
+          <volumes>
+            <volume>
+              <name>newVolume</name>
+            </volume>
+          </volumes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>volume-create</goal>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+              <goal>volume-remove</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

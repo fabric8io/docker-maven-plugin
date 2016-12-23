@@ -252,7 +252,7 @@ public class RunService {
                     .labels(mergeLabels(runConfig.getLabels(), pomLabel))
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(runConfig, mappedPorts));
-            VolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
+            RunVolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {
                 config.binds(volumeConfig.getBind());
             }
@@ -325,7 +325,7 @@ public class RunService {
     }
 
     private void addVolumeConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
-        VolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
+        RunVolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             config.binds(volConfig.getBind())
                   .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));

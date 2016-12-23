@@ -1,0 +1,52 @@
+
+[[docker:volume-create]]
+== *docker:volume-create*
+
+This goals creates one or more standalone https://docs.docker.com/engine/tutorials/dockervolumes/[Docker volume], which can be referenced in a <<docker:start>> configuration for linking to a volume during runtime.
+Each volume has therefore a unique and referenceable name. Beside the volume driver and driver options can be specified.
+
+.Example for a volume configuration
+[source,xml]
+----
+<plugin>
+  <configuration>
+    <volumes>
+       <volume>
+         <name>temp-volume</name>
+         <driver>local</Driver>
+         <opts>
+           <type>tmpfs</type>
+           <device>tmpfs</device>
+           <o>size=100m,uid=1000</o>
+         </opts>
+         <labels>
+           <volatileData>true</volatileData>
+         </labels>
+       </volume>
+    </volumes>
+    ...
+  </configuration>
+</plugin>
+----
+
+[[volume-configuration]]
+=== Configuration
+
+The following options are available when creating volumes:
+
+.Volume configuration
+|===
+| Element | Description
+
+| *name*
+| Name of the volume
+
+| *driver*
+| Volume driver to use. By default the driver `local` is used which is created on the local file system. Please refer to your Docker installation which additional drivers are available.
+
+| *opts*
+| Driver specific options passed in as custom `<key>value</key>` where its maps to `key=value` pairs for driver options as they can be provided from the Docker CLI, too. Each volume driver supports different options. The options supported by the `local` driver are the well known http://man7.org/linux/man-pages/man8/mount.8.html[Linux mount options].
+
+|*labels*
+| Labels given as `<key>value</key>` similar to image labels described in <<misc-env, Environment and Labels>>. These labels are used to tag the volumes themselves.
+|===

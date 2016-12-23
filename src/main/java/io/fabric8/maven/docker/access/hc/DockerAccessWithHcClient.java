@@ -32,6 +32,7 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.NetworkCreateConfig;
 import io.fabric8.maven.docker.access.UrlBuilder;
+import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
 import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
 import io.fabric8.maven.docker.access.chunked.PullOrPushResponseJsonHandler;
@@ -57,16 +58,16 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
 
 /**
- * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a> for accessing
- * remotely the docker host.
+ * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
+ * for remotely accessing the docker host.
  * <p/>
  * The design goal here is to provide only the functionality required for this plugin in order to
- * make it as robust as possible agains docker API changes (which happen quite frequently). That's
+ * make it as robust as possible against docker API changes (which happen quite frequently). That's
  * also the reason, why no framework like JAX-RS or docker-java is used so that the dependencies are
  * kept low.
  * <p/>
- * Of course, it's a bit more manual work, but it's worth the effort (as long as the Docker API
- * functionality required is not to much).
+ * Of course, it's a bit more manual work, but it's worth the effort
+ * (as long as the Docker API functionality required is not too much).
  *
  * @author roland
  * @since 26.03.14
@@ -470,6 +471,44 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throw new DockerAccessException(e, "Unable to remove network [%s]", networkId);
         }
     }
+
+    @Override
+    public String createVolume(VolumeCreateConfig containerConfig)
+           throws DockerAccessException
+    {
+        String createJson = containerConfig.toJson();
+        log.debug("Volume create config: %s", createJson);
+
+        try
+        {
+            String url = urlBuilder.createVolume();
+            String response =
+                    delegate.post(url,
+                                  createJson,
+                                  new ApacheHttpClientDelegate.BodyResponseHandler(),
+                                  HTTP_CREATED);
+            JSONObject json = new JSONObject(response);
+            logWarnings(json);
+
+            return json.getString("Name");
+        }
+        catch (IOException e)
+        {
+           throw new DockerAccessException(e, "Unable to create volume for [%s]",
+                                           containerConfig.getName());
+        }
+    }
+
+    @Override
+    public void removeVolume(String name) throws DockerAccessException {
+        try {
+            String url = urlBuilder.removeVolume(name);
+            delegate.delete(url, HTTP_NO_CONTENT);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to remove volume [%s]", name);
+        }
+    }
+
 
     // ---------------
     // Lifecycle methods not needed here

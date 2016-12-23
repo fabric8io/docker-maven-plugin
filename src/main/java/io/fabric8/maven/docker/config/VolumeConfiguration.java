@@ -1,95 +1,90 @@
-package io.fabric8.maven.docker.config;/*
- *
- * Copyright 2014 Roland Huss
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package io.fabric8.maven.docker.config;
+
+
+import io.fabric8.maven.docker.util.DeepCopy;
 
 import java.io.Serializable;
-import java.util.*;
+import java.lang.String;
+import java.util.Map;
 
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
- * Run configuration for volumes.
+ *  Volume Configuration for Volumes to be created prior to container start
  *
- * @author roland
- * @since 08/12/14
+ *  @author Tom Burton
+ *  @version Dec 15, 2016
  */
-public class VolumeConfiguration implements Serializable {
+public class VolumeConfiguration implements Serializable
+{
+   /** Volume Name */
+   @Parameter
+   private String name;
 
-    /**
-     * List of images names from where volumes are mounted
-     */
-    @Parameter
-    private List<String> from;
+   /** Volume driver for mounting the volume */
+   @Parameter
+   private String driver;
 
-    /**
-     * List of bind parameters for binding/mounting host directories
-     * into the container
-     */
-    @Parameter
-    private List<String> bind;
+   /** Driver specific options */
+   @Parameter
+   private Map<String, String> opts;
 
-    /**
-     * List of images to mount from
-     *
-     * @return images
-     */
-    public List<String> getFrom() {
-        return from;
-    }
+   /** Volume labels */
+   @Parameter
+   private Map<String, String> labels;
 
-    /**
-     * List of docker bind specification for mounting local directories
-     * @return list of bind specs
-     */
-    public List<String> getBind() {
-        return bind;
-    }
+   public String getName() {
+       return name;
+   }
 
-    // ===========================================
+   public String getDriver() {
+       return driver;
+   }
 
-    public static class Builder {
+   public Map<String, String> getOpts() {
+       return opts;
+   }
 
-        private VolumeConfiguration config = new VolumeConfiguration();
+   public Map<String, String> getLabels() {
+       return labels;
+   }
 
-        public Builder() {
-            this.config = new VolumeConfiguration();
-        }
+   // =============================================================================
 
-        public Builder from(List<String> args) {
-            if (args != null) {
-                if (config.from == null) {
-                    config.from = new ArrayList<>();
-                }
-                config.from.addAll(args);
-            }
-            return this;
-        }
+   public static class Builder {
+       private final VolumeConfiguration config;
 
-        public Builder bind(List<String> args) {
-            if (args != null) {
-                if (config.bind == null) {
-                    config.bind = new ArrayList<>();
-                }
-                config.bind.addAll(args);
-            }
-            return this;
-        }
+       public Builder()  {
+           this(null);
+       }
 
-        public VolumeConfiguration build() {
-            return config;
-        }
-    }
+       public Builder(VolumeConfiguration that) {
+           this.config = that == null ? new VolumeConfiguration() : DeepCopy.copy(that);
+       }
+
+       public Builder name(String name) {
+           config.name = name;
+           return this;
+       }
+
+       public Builder driver(String driver) {
+           config.driver = driver;
+           return this;
+       }
+
+       public Builder opts(Map<String, String> opts) {
+           config.opts = opts;
+           return this;
+       }
+
+       public Builder labels(Map<String, String> labels) {
+           config.labels = labels;
+           return this;
+       }
+
+       public VolumeConfiguration build() {
+           return config;
+       }
+   }
+
 }

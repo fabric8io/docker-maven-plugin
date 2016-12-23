@@ -78,18 +78,7 @@ public final class UrlBuilder {
 
     public String listContainers(String ... filter) {
         Builder builder = u("containers/json");
-        if (filter.length > 0) {
-            if (filter.length % 2 != 0) {
-                throw new IllegalArgumentException("Filters must be given as key value pairs and not " +Arrays.asList(filter));
-            }
-            JSONObject filters = new JSONObject();
-            for (int i = 0; i < filter.length; i +=2) {
-                JSONArray value = new JSONArray();
-                value.put(filter[i+1]);
-                filters.put(filter[i],value);
-            }
-            builder.p("filters",filters.toString());
-        }
+        addFilters(builder, filter);
         return builder.build();
     }
 
@@ -160,6 +149,14 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String createVolume() {
+       return u("volumes/create").build();
+    }
+
+    public String removeVolume(String name) {
+       return u("volumes/%s", name).build();
+    }
+
     public String getBaseUrl() {
         return baseUrl;
     }
@@ -203,6 +200,20 @@ public final class UrlBuilder {
         return String.format("%s/%s/%s", baseUrl, apiVersion, path);
     }
 
+    private void addFilters(Builder builder, String... filter) {
+       if (filter.length > 0) {
+           if (filter.length % 2 != 0) {
+               throw new IllegalArgumentException("Filters must be given as key value pairs and not " + Arrays.asList(filter));
+           }
+           JSONObject filters = new JSONObject();
+           for (int i = 0; i < filter.length; i +=2) {
+               JSONArray value = new JSONArray();
+               value.put(filter[i+1]);
+               filters.put(filter[i],value);
+           }
+           builder.p("filters",filters.toString());
+       }
+    }
 
     private static class Builder {
 
