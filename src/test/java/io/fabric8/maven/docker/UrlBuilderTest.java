@@ -42,7 +42,7 @@ public class UrlBuilderTest {
         HashMap<String, String> m = new HashMap<>();
         m.put("k1", "v1");
         m.put("k2", "v2");
-        assertEquals("/1.0//1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&dockerfile=df&t=image1&rm=1&nocache=0",
+        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&dockerfile=df&t=image1&rm=1&nocache=0",
             builder.buildImage("image1", "df", false, false, m));
     }
 
@@ -87,7 +87,7 @@ public class UrlBuilderTest {
     @Test
     public void loadImage() {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals("/1.0/containers/json",builder.loadImage());
+        assertEquals("/1.0/images/load",builder.loadImage());
     }
 
     @Test
