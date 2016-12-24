@@ -1,0 +1,38 @@
+[[docker:volume-remove]]
+== *docker:volume-remove*
+
+This goals is the counterpart to <<docker:volume-create>> and removes a volume.
+Docker volumes are configured outside of Docker images, but can be referenced by them.
+The configuration is the same as for <<docker:volume-create>>
+
+*Example:*
+
+[source,xml]
+----
+<plugin>
+  <configuration>
+    <volumes>
+       <volume>
+         <name>temp-volume</name>
+         ....
+       </volume>
+    </volumes>
+    ...
+  </configuration>
+</plugin>
+----
+
+[[volume-configuration]]
+=== Configuration
+
+The configuration is quite simple. Only the name of the volume to delete is required.
+
+.Volume configuration
+[options="header"]
+|===
+| Element | Description
+
+| *name*
+| Name of the volume
+
+|===

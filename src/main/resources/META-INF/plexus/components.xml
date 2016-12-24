@@ -19,7 +19,7 @@
               <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
               <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
               <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
-              <package>org.apache.maven.plugins:maven-jar-plugin:jar,${project.groupId}:${project.artifactId}:build</package>
+              <package>org.apache.maven.plugins:maven-jar-plugin:jar,${project.groupId}:${project.artifactId}:build-nofork</package>
               <pre-integration-test>${project.groupId}:${project.artifactId}:start</pre-integration-test>
               <integration-test>org.apache.maven.plugins:maven-failsafe-plugin:integration-test</integration-test>
               <verify>${project.groupId}:${project.artifactId}:stop,org.apache.maven.plugins:maven-failsafe-plugin:verify</verify>
@@ -44,7 +44,7 @@
               <process-test-resources>org.apache.maven.plugins:maven-resources-plugin:testResources</process-test-resources>
               <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
               <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
-              <package>org.apache.maven.plugins:maven-jar-plugin:jar,${project.groupId}:${project.artifactId}:build</package>
+              <package>org.apache.maven.plugins:maven-jar-plugin:jar,${project.groupId}:${project.artifactId}:build-nofork</package>
               <deploy>${project.groupId}:${project.artifactId}:push</deploy>
             </phases>
           </lifecycle>

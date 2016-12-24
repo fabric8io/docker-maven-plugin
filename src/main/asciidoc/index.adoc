@@ -34,6 +34,8 @@ include::inc/_docker-watch.adoc[]
 include::inc/_docker-remove.adoc[]
 include::inc/_docker-logs.adoc[]
 include::inc/_docker-source.adoc[]
+include::inc/_docker-volume-create.adoc[]
+include::inc/_docker-volume-remove.adoc[]
 
 include::inc/_external-configuration.adoc[]
 

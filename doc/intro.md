@@ -15,15 +15,14 @@ completely managed internally.
 
 One purpose of this plugin is to create docker images holding the
 actual application. This is done with the `docker:build` goal.  It
-is easy to include build artifacts and their dependencies into an
-image. Therefore, this plugin uses the
+is easy to include build artifacts and their dependencies into an image. 
+Therefore, this plugin uses the
 [assembly descriptor format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html)
 from the
 [maven-assembly-plugin](http://maven.apache.org/plugins/maven-assembly-plugin/)
-to specify the content which will be added from a sub-directory in
-the image (`/maven` by default). Images that are built with this
-plugin can be pushed to public or private Docker registries with
-`docker:push`.
+to specify the content which will be added from a sub-directory in the image 
+(`/maven` by default). Images that are built with this plugin can be pushed 
+to public or private Docker registries with `docker:push`.
 
 ### Running containers
 
@@ -37,8 +36,9 @@ together or share data via volumes. Containers are created and started
 with the `docker:start` goal and stopped and destroyed with the
 `docker:stop` goal. For integration tests both goals are typically
 bound to the the `pre-integration-test` and `post-integration-test` phase,
-respectively. It is recommended to use the [`maven-failsafe-plugin`](http://maven.apache.org/surefire/maven-failsafe-plugin/) for
-integration testing in order to stop the docker container even when
+respectively. It is recommended to use the 
+[`maven-failsafe-plugin`](http://maven.apache.org/surefire/maven-failsafe-plugin/) 
+for integration testing in order to stop the docker container even when
 the tests fail.
 
 For proper isolation, container exposed ports can be dynamically and
@@ -202,5 +202,5 @@ The high-level design goals and initial motiviation fort this plugin are:
   
 So, final words: Enjoy this plugin, and please use the
 [issue tracker](https://github.com/fabric8io/docker-maven-plugin/issues)
-for anything what hurts, or when you have a wish list. 
+for anything that hurts, or when you have a wish list. 
 
