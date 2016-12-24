@@ -37,6 +37,7 @@ public class DockerAccessWithHcClientTest {
     private String registry;
 
     private Exception thrownException;
+    private String archiveFile;
 
     @Before
     public void setup() throws IOException {
@@ -74,12 +75,33 @@ public class DockerAccessWithHcClientTest {
         thenImageWasNotPushed();
     }
 
+    @Test
+    public void testLoadImage() {
+        givenAnImageName("test");
+        givenArchiveFile("test.tar");
+        whenLoadImage();
+        thenImageLoaded();
+    }
+    @Test
+
+    public void testLoadImageFail() throws IOException {
+        givenAnImageName("test");
+        givenArchiveFile("test.tar");
+        givenTheLoadImageWillFail();
+        whenLoadImage();
+        thenImageWasNotLoaded();
+    }
+
     private void givenAnImageName(String imageName) {
         this.imageName = imageName;
     }
 
     private void givenANumberOfRetries(int retries) {
         this.pushRetries = retries;
+    }
+
+    private void givenArchiveFile(String archiveFile) {
+        this.archiveFile = archiveFile;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -91,6 +113,13 @@ public class DockerAccessWithHcClientTest {
             result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
             mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any, 200);
             minTimes = suceedAtEnd ? 1 : 0; maxTimes = suceedAtEnd ? 1 :0;
+        }};
+    }
+
+    private void givenTheLoadImageWillFail() throws IOException {
+        new StrictExpectations() {{
+            mockDelegate.post(anyString, any, (ResponseHandler) any, 200);
+            result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
         }};
     }
 
@@ -109,4 +138,20 @@ public class DockerAccessWithHcClientTest {
             thrownException = e;
         }
     }
+    private void whenLoadImage() {
+        try {
+            client.loadImage(imageName, archiveFile);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+    private void thenImageLoaded() {
+        assertNull(thrownException);
+    }
+
+    private void thenImageWasNotLoaded() {
+        assertNotNull(thrownException);
+    }
+
+
 }
