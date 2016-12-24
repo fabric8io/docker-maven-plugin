@@ -32,6 +32,7 @@ public class DockerAccessIT {
     private static final String IMAGE = "busybox:buildroot-2014.02";
 
     private static final String IMAGE_TAG = "busybox:tagged";
+    private static final String IMAGE_LATEST = "busybox:latest";
     private static final int PORT = 5677;
 
     private String containerId;
@@ -88,9 +89,9 @@ public class DockerAccessIT {
     @Test
     public void testLoadImage() throws DockerAccessException {
         testDoesNotHave();
-        dockerClient.loadImage(IMAGE_TAG, "integration/busybox-image.tar.gz");
-        assertTrue(hasImage(IMAGE_TAG));
-        testRemoveImage(IMAGE_TAG);
+        dockerClient.loadImage(IMAGE_LATEST, "integration/busybox-image.tar.gz");
+        assertTrue(hasImage(IMAGE_LATEST));
+        testRemoveImage(IMAGE_LATEST);
     }
 
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
