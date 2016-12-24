@@ -35,14 +35,14 @@ public class UrlBuilderTest {
     @Test
     public void buildImage() {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals("/1.0/build?dockerfile=df&t=image1&rm=1&nocache=0",
+        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1",
             builder.buildImage("image1", "df", false, false, null));
-        assertEquals("/1.0/build?forcerm=1&dockerfile=df&t=image1&nocache=1",
+        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=1&forcerm=1",
             builder.buildImage("image1", "df", true, true, null));
         HashMap<String, String> m = new HashMap<>();
         m.put("k1", "v1");
         m.put("k2", "v2");
-        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&dockerfile=df&t=image1&rm=1&nocache=0",
+        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1&buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D",
             builder.buildImage("image1", "df", false, false, m));
     }
 
@@ -56,7 +56,7 @@ public class UrlBuilderTest {
     @Test
     public void containerLogs() {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals("/1.0/containers/cid/logs?timestamps=1&stdout=1&stderr=1&follow=0",
+        assertEquals("/1.0/containers/cid/logs?stdout=1&timestamps=1&stderr=1&follow=0",
             builder.containerLogs("cid", false));
 
     }
@@ -93,7 +93,7 @@ public class UrlBuilderTest {
     @Test
     public void pullImage() {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals("/1.0/images/create?tag=latest&fromImage=reg%2Ft1",
+        assertEquals("/1.0/images/create?fromImage=reg%2Ft1&tag=latest",
             builder.pullImage(new ImageName("t1:latest"), "reg"));
         assertEquals("/1.0/images/create?fromImage=reg%2Ft1",
             builder.pullImage(new ImageName("t1"), "reg"));
@@ -102,7 +102,7 @@ public class UrlBuilderTest {
     @Test
     public void tagContainer() {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals("/1.0/images/t1%3Alatest/tag?tag=tag1&repo=new&force=1",
+        assertEquals("/1.0/images/t1%3Alatest/tag?repo=new&force=1&tag=tag1",
             builder.tagContainer(new ImageName("t1:latest"), new ImageName("new:tag1"), true));
 
     }
