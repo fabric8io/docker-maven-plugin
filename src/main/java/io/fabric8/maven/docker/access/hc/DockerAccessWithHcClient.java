@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -40,6 +39,7 @@ import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.BodyAndStatusR
 import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.HttpBodyAndStatus;
 import io.fabric8.maven.docker.access.hc.http.HttpClientBuilder;
 import io.fabric8.maven.docker.access.hc.unix.UnixSocketClientBuilder;
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.access.hc.win.NamedPipeClientBuilder;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
@@ -159,6 +159,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
                         }
                     } catch (LogCallback.DoneException e) {
                         // Ok, we stop here ...
+                    } finally {
+                        callback.close();
                     }
                 }
                 return null;

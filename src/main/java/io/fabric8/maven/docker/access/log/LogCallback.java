@@ -42,6 +42,13 @@ public interface LogCallback {
      * @param error error description
      */
     void error(String error);
+    
+    /**
+     * Must be invoked by caller when callback is no longer used.
+     * Closing the underlying stream may be delayed by the implementation
+     * when this stream is shared between multiple clients.
+     */
+    void close();
 
     /**
      * Exception indicating that logging is done and should be finished

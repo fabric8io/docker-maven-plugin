@@ -91,6 +91,8 @@ public class LogRequestor extends Thread implements LogGetHandle {
             parseResponse(resp);
         } catch (IOException exp) {
             callback.error(exp.getMessage());
+        } finally {
+            callback.close();
         }
     }
 
@@ -105,6 +107,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
         } catch (IOException exp) {
             callback.error("IO Error while requesting logs: " + exp);
         } finally {
+            callback.close();
             try {
                 synchronized (lock) {
                     client.close();
@@ -224,6 +227,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
                 }
             }
         }
+        callback.close();
     }
 
     @Override
