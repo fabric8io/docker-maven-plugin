@@ -35,14 +35,14 @@ public class UrlBuilderTest {
     @Test
     public void buildImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals(new URI("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1"),
+        assertEquals(new URI("/1.0/build?dockerfile=df&nocache=0&rm=1&t=image1"),
             new URI(builder.buildImage("image1", "df", false, false, null)));
-        assertEquals(new URI("/1.0/build?t=image1&dockerfile=df&nocache=1&forcerm=1"),
+        assertEquals(new URI("/1.0/build?dockerfile=df&forcerm=1&nocache=1&t=image1"),
             new URI(builder.buildImage("image1", "df", true, true, null)));
         HashMap<String, String> m = new HashMap<>();
         m.put("k1", "v1");
         m.put("k2", "v2");
-        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1&buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D",
+        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&dockerfile=df&nocache=0&rm=1&t=image1",
             builder.buildImage("image1", "df", false, false, m));
     }
 
@@ -56,7 +56,7 @@ public class UrlBuilderTest {
     @Test
     public void containerLogs() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals(new URI("/1.0/containers/cid/logs?stdout=1&timestamps=1&stderr=1&follow=0"),
+        assertEquals(new URI("/1.0/containers/cid/logs?follow=0&stderr=1&stdout=1&timestamps=1"),
                      new URI(builder.containerLogs("cid", false)));
 
     }
@@ -102,7 +102,7 @@ public class UrlBuilderTest {
     @Test
     public void tagContainer() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals(new URI("/1.0/images/t1%3Alatest/tag?repo=new&force=1&tag=tag1"),
+        assertEquals(new URI("/1.0/images/t1%3Alatest/tag?force=1&repo=new&tag=tag1"),
                      new URI(builder.tagContainer(new ImageName("t1:latest"), new ImageName("new:tag1"), true)));
 
     }
