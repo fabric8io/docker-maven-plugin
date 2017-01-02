@@ -362,9 +362,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void loadImage(String image, String filepath)
-        throws DockerAccessException {
-        ImageName name = new ImageName(image);
+    public void loadImage(String image, String filepath) throws DockerAccessException {
         String url = urlBuilder.loadImage();
 
         try {

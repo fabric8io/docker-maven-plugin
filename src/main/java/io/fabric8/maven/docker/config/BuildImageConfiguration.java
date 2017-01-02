@@ -37,8 +37,6 @@ public class BuildImageConfiguration implements Serializable {
      */
     private String dockerArchive;
 
-
-
     // Base Image name of the data image to use.
     /**
      * @parameter
@@ -155,14 +153,12 @@ public class BuildImageConfiguration implements Serializable {
     private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
 
     // Path to Dockerfile to use, initialized lazily ....
-    File dockerFileFile;
-    private boolean dockerFileMode;
+    private File dockerFileFile;
 
     public BuildImageConfiguration() {}
 
-
     public boolean isDockerFileMode() {
-        return dockerFileMode;
+        return dockerFileFile != null;
     }
 
     public File getDockerFile() {
@@ -478,26 +474,35 @@ public class BuildImageConfiguration implements Serializable {
     private void initDockerFileFile(Logger log) {
         // can't have dockerFile/dockerFileDir and dockerArchive
         if ((dockerFile != null || dockerFileDir != null) && dockerArchive != null) {
-            throw new IllegalArgumentException("Both <Dockerfile> (<dockerFileDir>) and <dockerArchive> are set.");
+            throw new IllegalArgumentException("Both <dockerFile> (<dockerFileDir>) and <dockerArchive> are set. " +
+                                               "Only one of them can be specified.");
         }
+        dockerFileFile = findDockerFileFile(log);
+    }
+
+    private File findDockerFileFile(Logger log) {
         if (dockerFile != null) {
-            dockerFileFile = new File(dockerFile);
-            dockerFileMode = true;
-        } else if (dockerFileDir != null) {
-            dockerFileFile = new File(dockerFileDir, "Dockerfile");
-            dockerFileMode = true;
-        } else if (dockerArchive == null) {
-            String deprecatedDockerFileDir = getAssemblyConfiguration() != null ?
-                getAssemblyConfiguration().getDockerFileDir() :
-                null;
+            return new File(dockerFile);
+        }
+
+        if (dockerFileDir != null) {
+            return new File(dockerFileDir, "Dockerfile");
+        }
+
+        // TODO: Remove the following deprecated handling section
+        if (dockerArchive == null) {
+            String deprecatedDockerFileDir =
+                getAssemblyConfiguration() != null ?
+                    getAssemblyConfiguration().getDockerFileDir() :
+                    null;
             if (deprecatedDockerFileDir != null) {
                 log.warn("<dockerFileDir> in the <assembly> section of a <build> configuration is deprecated");
                 log.warn("Please use <dockerFileDir> or <dockerFile> directly within the <build> configuration instead");
-                dockerFileFile = new File(deprecatedDockerFileDir,"Dockerfile");
-                dockerFileMode = true;
-            } else {
-                dockerFileMode = false;
+                return new File(deprecatedDockerFileDir,"Dockerfile");
             }
         }
+
+        // No dockerfile mode
+        return null;
     }
 }
