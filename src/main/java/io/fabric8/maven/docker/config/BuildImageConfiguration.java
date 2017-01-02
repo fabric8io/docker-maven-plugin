@@ -457,7 +457,14 @@ public class BuildImageConfiguration implements Serializable {
 
     // Initialize the dockerfile location and the build mode
     private void initDockerFileFile(Logger log) {
-        if (dockerFile != null) {
+        if (dockerFile != null && dockerFileDir != null) {
+            dockerFileFile = new File(dockerFile);
+            if (dockerFileFile.isAbsolute()) {
+                throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+            }
+            dockerFileFile = new File(dockerFileDir, dockerFile);
+            dockerFileMode = true;
+        } else if (dockerFile != null) {
             dockerFileFile = new File(dockerFile);
             dockerFileMode = true;
         } else if (dockerFileDir != null) {
