@@ -93,7 +93,7 @@ public class DockerAssemblyManager {
                 final File dockerFile = buildConfig.getAbsoluteDockerFilePath(params);
                 if (!dockerFile.exists()) {
                     throw new MojoExecutionException("Configured Dockerfile \"" +
-                                                     buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesnt exist");
+                                                     buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesn't exist");
                 }
                 // User dedicated Dockerfile from extra director
                 customizer = new ArchiverCustomizer() {

@@ -18,8 +18,10 @@ package io.fabric8.maven.docker;
 
 import java.io.UnsupportedEncodingException;
 import java.net.*;
+import java.util.HashMap;
 
 import io.fabric8.maven.docker.access.UrlBuilder;
+import io.fabric8.maven.docker.util.ImageName;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -29,6 +31,42 @@ import static org.junit.Assert.*;
  * @since 13/07/16
  */
 public class UrlBuilderTest {
+
+    @Test
+    public void buildImage() {
+        UrlBuilder builder = new UrlBuilder("","1.0");
+        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1",
+            builder.buildImage("image1", "df", false, false, null));
+        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=1&forcerm=1",
+            builder.buildImage("image1", "df", true, true, null));
+        HashMap<String, String> m = new HashMap<>();
+        m.put("k1", "v1");
+        m.put("k2", "v2");
+        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1&buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D",
+            builder.buildImage("image1", "df", false, false, m));
+    }
+
+    @Test
+    public void copyArchive() {
+        UrlBuilder builder = new UrlBuilder("","1.0");
+        assertEquals("/1.0/containers/cid/archive?path=tp", builder.copyArchive("cid", "tp"));
+
+    }
+
+    @Test
+    public void containerLogs() {
+        UrlBuilder builder = new UrlBuilder("","1.0");
+        assertEquals("/1.0/containers/cid/logs?stdout=1&timestamps=1&stderr=1&follow=0",
+            builder.containerLogs("cid", false));
+
+    }
+
+    @Test
+    public void deleteImage() {
+        UrlBuilder builder = new UrlBuilder("","1.0");
+        assertEquals("/1.0/images/n1?force=0", builder.deleteImage("n1", false));
+
+    }
 
     @Test
     public void listContainers() throws MalformedURLException, UnsupportedEncodingException {
@@ -44,5 +82,28 @@ public class UrlBuilderTest {
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("pair"));
         }
+    }
+
+    @Test
+    public void loadImage() {
+        UrlBuilder builder = new UrlBuilder("", "1.0");
+        assertEquals("/1.0/images/load",builder.loadImage());
+    }
+
+    @Test
+    public void pullImage() {
+        UrlBuilder builder = new UrlBuilder("", "1.0");
+        assertEquals("/1.0/images/create?fromImage=reg%2Ft1&tag=latest",
+            builder.pullImage(new ImageName("t1:latest"), "reg"));
+        assertEquals("/1.0/images/create?fromImage=reg%2Ft1",
+            builder.pullImage(new ImageName("t1"), "reg"));
+    }
+
+    @Test
+    public void tagContainer() {
+        UrlBuilder builder = new UrlBuilder("", "1.0");
+        assertEquals("/1.0/images/t1%3Alatest/tag?repo=new&force=1&tag=tag1",
+            builder.tagContainer(new ImageName("t1:latest"), new ImageName("new:tag1"), true));
+
     }
 }

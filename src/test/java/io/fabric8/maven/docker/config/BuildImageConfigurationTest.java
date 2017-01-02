@@ -80,4 +80,31 @@ public class BuildImageConfigurationTest {
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
     }
 
+    @Test
+    public void dockerFileAndArchve() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerArchive("this").
+                dockerFile("that").build();
+
+        try {
+            config.initAndValidate(logger);
+        } catch (IllegalArgumentException expected) {
+            return;
+        }
+        fail("Should have failed.");
+    }
+
+    @Test
+    public void dockerArchive() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerArchive("this").build();
+        config.initAndValidate(logger);
+
+        assertFalse(config.isDockerFileMode());
+        assertEquals("this", config.getDockerArchive());
+    }
+
+
 }
