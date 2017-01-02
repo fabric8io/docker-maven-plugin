@@ -26,9 +26,9 @@ public class AuthConfig {
 
     public AuthConfig(Map<String,String> params) {
         this(params.get("username"),
-                params.get("password"),
-                params.get("email"),
-                params.get("auth"));
+             params.get("password"),
+             params.get("email"),
+             params.get("auth"));
     }
 
     public AuthConfig(String username, String password, String email, String auth) {
@@ -42,11 +42,11 @@ public class AuthConfig {
     /**
      * Constructor which takes an base64 encoded credentials in the form 'user:password'
      *
-     * @param credentialsDockerEncoded the docker encoded user and password
+     * @param credentialsEncoded the docker encoded user and password
      * @param email the email to use for authentication
      */
-    public AuthConfig(String credentialsDockerEncoded, String email) {
-        String credentials = new String(Base64.decodeBase64(credentialsDockerEncoded));
+    public AuthConfig(String credentialsEncoded, String email) {
+        String credentials = new String(Base64.decodeBase64(credentialsEncoded));
         String[] parsedCreds = credentials.split(":",2);
         username = parsedCreds[0];
         password = parsedCreds[1];

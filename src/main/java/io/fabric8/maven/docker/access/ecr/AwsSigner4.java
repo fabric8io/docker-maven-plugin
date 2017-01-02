@@ -20,19 +20,12 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import io.fabric8.maven.docker.access.AuthConfig;
 
 /**
- * AwsSigner4 implementation that signs requests with the AWS4 signing protocol.
+ * AwsSigner4 implementation that signs requests with the AWS4 signing protocol. Refer to the AWS docs for mor details.
  *
  * @author chas
  * @since 2016-12-9
  */
-public class AwsSigner4 {
-
-    private static final Comparator<NameValuePair> PAIR_NAME_COMPARATOR = new Comparator<NameValuePair>() {
-        @Override
-        public int compare(NameValuePair l, NameValuePair r) {
-            return l.getName().compareToIgnoreCase(r.getName());
-        }
-    };
+class AwsSigner4 {
 
     // a-f must be lower case
     final private static char[] HEXITS = "0123456789abcdef".toCharArray();
@@ -46,7 +39,7 @@ public class AwsSigner4 {
      * @param region The aws region.
      * @param service The aws service.
      */
-    public AwsSigner4(String region, String service) {
+    AwsSigner4(String region, String service) {
         this.region = region;
         this.service = service;
     }
@@ -58,7 +51,7 @@ public class AwsSigner4 {
      * @param credentials The credentials to use when signing.
      * @param signingTime The invocation time to use;
      */
-    public void sign(HttpRequest request, AuthConfig credentials, Date signingTime) {
+    void sign(HttpRequest request, AuthConfig credentials, Date signingTime) {
         AwsSigner4Request sr = new AwsSigner4Request(region, service, request, signingTime);
         if(!request.containsHeader("X-Amz-Date")) {
             request.addHeader("X-Amz-Date", sr.getSigningDateTime());
@@ -101,13 +94,12 @@ public class AwsSigner4 {
         return hmacSha256(getSigningKey(sr, credentials), task2(sr));
     }
 
-    static byte[] getSigningKey(AwsSigner4Request sr, AuthConfig credentials) {
+    private static byte[] getSigningKey(AwsSigner4Request sr, AuthConfig credentials) {
         byte[] kSecret = ("AWS4" + credentials.getPassword()).getBytes(StandardCharsets.UTF_8);
         byte[] kDate = hmacSha256(kSecret, sr.getSigningDate());
         byte[] kRegion = hmacSha256(kDate, sr.getRegion());
         byte[] kService = hmacSha256(kRegion, sr.getService());
-        byte[] signingKey = hmacSha256(kService, "aws4_request");
-        return signingKey;
+        return hmacSha256(kService, "aws4_request");
     }
 
     /**
@@ -129,19 +121,24 @@ public class AwsSigner4 {
             return "";
         }
         List<NameValuePair> params = URLEncodedUtils.parse(query, StandardCharsets.UTF_8);
-        Collections.sort(params, PAIR_NAME_COMPARATOR);
+        Collections.sort(params, new Comparator<NameValuePair>() {
+            @Override
+            public int compare(NameValuePair l, NameValuePair r) {
+                return l.getName().compareToIgnoreCase(r.getName());
+            }
+        });
         return URLEncodedUtils.format(params, StandardCharsets.UTF_8);
     }
 
     static void hexEncode(StringBuilder dst, byte[] src) {
-        for ( int i = 0; i < src.length; ++i ) {
-            int v = src[i] & 0xFF;
+        for (byte aSrc : src) {
+            int v = aSrc & 0xFF;
             dst.append(HEXITS[v >>> 4]);
             dst.append(HEXITS[v & 0x0F]);
         }
     }
 
-    static byte[] hmacSha256(byte[] key, String value) {
+    private static byte[] hmacSha256(byte[] key, String value) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(key, "HmacSHA256"));
@@ -161,7 +158,7 @@ public class AwsSigner4 {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             md.update(bytes);
             return md.digest();
-        }
+         }
          catch (NoSuchAlgorithmException e) {
              throw new UnsupportedOperationException(e.getMessage(), e);
          }

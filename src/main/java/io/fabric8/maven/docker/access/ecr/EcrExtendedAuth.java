@@ -35,8 +35,9 @@ public class EcrExtendedAuth {
             Pattern.compile("^(\\d{12})\\.dkr\\.ecr\\.([a-z\\-0-9]+)\\.amazonaws\\.com$");
 
     private final Logger logger;
-    private final Matcher matcher;
-    private final boolean isValid;
+    private final boolean isAwsRegistry;
+    private final String accountId;
+    private final String region;
 
     /**
      * Initialize an extended authentication for ecr registry.
@@ -45,17 +46,24 @@ public class EcrExtendedAuth {
      */
     public EcrExtendedAuth(Logger logger, String registry) {
         this.logger = logger;
-        matcher = AWS_REGISTRY.matcher(registry);
-        isValid = matcher.matches();
-        logger.debug("registry = %s, isValid= %b", registry, isValid);
+        Matcher matcher = AWS_REGISTRY.matcher(registry);
+        isAwsRegistry = matcher.matches();
+        if (isAwsRegistry) {
+            accountId = matcher.group(1);
+            region = matcher.group(2);
+        } else {
+            accountId = null;
+            region = null;
+        }
+        logger.debug("registry = %s, isValid= %b", registry, isAwsRegistry);
     }
 
     /**
      * Is the registry an ecr registry?
      * @return true, if the registry matches the ecr pattern
      */
-    public boolean isValidRegistry() {
-        return isValid;
+    public boolean isAwsRegistry() {
+        return isAwsRegistry;
     }
 
     /**
@@ -86,12 +94,12 @@ public class EcrExtendedAuth {
         return HttpClients.createDefault();
     }
 
-    JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
+    private JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
         try {
             CloseableHttpResponse response = client.execute(request);
             int statusCode = response.getStatusLine().getStatusCode();
             logger.debug("Response status %d", statusCode);
-            if(statusCode != HttpStatus.SC_OK) {
+            if (statusCode != HttpStatus.SC_OK) {
                 throw new MojoExecutionException("AWS authentication failure");
             }
 
@@ -105,11 +113,9 @@ public class EcrExtendedAuth {
     }
 
     HttpPost createSignedRequest(AuthConfig localCredentials, Date time) {
-        String accountId = matcher.group(1);
-        String region = matcher.group(2);
         String host = "ecr." + region + ".amazonaws.com";
 
-        logger.debug("GetAuthorizationToken from %s", host);
+        logger.debug("Get ECR AuthorizationToken from %s", host);
 
         HttpPost request = new HttpPost("https://" + host + '/');
         request.setHeader("host", host);

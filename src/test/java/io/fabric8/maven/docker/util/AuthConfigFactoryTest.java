@@ -34,7 +34,7 @@ import static org.junit.Assert.*;
  * @since 29.07.14
  */
 @RunWith(JMockit.class)
-public class AuthConfigFatoryTest {
+public class AuthConfigFactoryTest {
 
     public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";
 
