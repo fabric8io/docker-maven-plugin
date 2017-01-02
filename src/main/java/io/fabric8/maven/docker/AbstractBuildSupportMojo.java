@@ -100,7 +100,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
         if (buildConfig.getDockerArchive() != null) {
-            // No autopull need in archive mode
+            // No auto pull needed in archive mode
             return;
         }
 

@@ -153,10 +153,10 @@ public interface DockerAccess {
      * Load an image from an archive.
      *
      * @param image the image to pull.
-     * @param filepath a URL string of the archive
+     * @param tarArchive archive file
      * @throws DockerAccessException if the image couldn't be loaded.
      */
-    void loadImage(String image, String filepath) throws DockerAccessException;
+    void loadImage(String image, File tarArchive) throws DockerAccessException;
 
     /**
      * Pull an image from a remote registry and store it locally.
