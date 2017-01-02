@@ -4,6 +4,7 @@ import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -140,7 +141,7 @@ public class DockerAccessWithHcClientTest {
     }
     private void whenLoadImage() {
         try {
-            client.loadImage(imageName, archiveFile);
+            client.loadImage(imageName, new File(archiveFile));
         } catch (Exception e) {
             thrownException = e;
         }

@@ -153,7 +153,7 @@ public class BuildImageConfiguration implements Serializable {
     private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
 
     // Path to Dockerfile to use, initialized lazily ....
-    private File dockerFileFile;
+    private File dockerFileFile, dockerArchiveFile;
 
     public BuildImageConfiguration() {}
 
@@ -165,8 +165,8 @@ public class BuildImageConfiguration implements Serializable {
         return dockerFileFile;
     }
 
-    public String getDockerArchive() {
-        return dockerArchive;
+    public File getDockerArchive() {
+        return dockerArchiveFile;
     }
 
     public String getFrom() {
@@ -267,6 +267,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public File getAbsoluteDockerFilePath(MojoParameters mojoParams) {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
+    }
+
+    public File getAbsoluteDockerTarPath(MojoParameters mojoParams) {
+        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerArchive().getPath());
     }
 
     public static class Builder {
@@ -478,11 +482,23 @@ public class BuildImageConfiguration implements Serializable {
                                                "Only one of them can be specified.");
         }
         dockerFileFile = findDockerFileFile(log);
+
+        if (dockerArchive != null) {
+            dockerArchiveFile = new File(dockerArchive);
+        }
     }
 
     private File findDockerFileFile(Logger log) {
         if (dockerFile != null) {
-            return new File(dockerFile);
+            File dFile = new File(dockerFile);
+            if (dockerFileDir == null) {
+                return dFile;
+            } else {
+                if (dFile.isAbsolute()) {
+                    throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+                }
+                return new File(dockerFileDir, dockerFile);
+            }
         }
 
         if (dockerFileDir != null) {
