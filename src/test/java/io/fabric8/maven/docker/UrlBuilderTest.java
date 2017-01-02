@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,12 +33,12 @@ import static org.junit.Assert.*;
 public class UrlBuilderTest {
 
     @Test
-    public void buildImage() {
+    public void buildImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1",
-            builder.buildImage("image1", "df", false, false, null));
-        assertEquals("/1.0/build?t=image1&dockerfile=df&nocache=1&forcerm=1",
-            builder.buildImage("image1", "df", true, true, null));
+        assertEquals(new URI("/1.0/build?t=image1&dockerfile=df&nocache=0&rm=1"),
+            new URI(builder.buildImage("image1", "df", false, false, null)));
+        assertEquals(new URI("/1.0/build?t=image1&dockerfile=df&nocache=1&forcerm=1"),
+            new URI(builder.buildImage("image1", "df", true, true, null)));
         HashMap<String, String> m = new HashMap<>();
         m.put("k1", "v1");
         m.put("k2", "v2");
@@ -47,34 +47,34 @@ public class UrlBuilderTest {
     }
 
     @Test
-    public void copyArchive() {
+    public void copyArchive() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals("/1.0/containers/cid/archive?path=tp", builder.copyArchive("cid", "tp"));
+        assertEquals(new URI("/1.0/containers/cid/archive?path=tp"), new URI(builder.copyArchive("cid", "tp")));
 
     }
 
     @Test
-    public void containerLogs() {
+    public void containerLogs() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals("/1.0/containers/cid/logs?stdout=1&timestamps=1&stderr=1&follow=0",
-            builder.containerLogs("cid", false));
+        assertEquals(new URI("/1.0/containers/cid/logs?stdout=1&timestamps=1&stderr=1&follow=0"),
+                     new URI(builder.containerLogs("cid", false)));
 
     }
 
     @Test
-    public void deleteImage() {
+    public void deleteImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals("/1.0/images/n1?force=0", builder.deleteImage("n1", false));
+        assertEquals(new URI("/1.0/images/n1?force=0"), new URI(builder.deleteImage("n1", false)));
 
     }
 
     @Test
-    public void listContainers() throws MalformedURLException, UnsupportedEncodingException {
+    public void listContainers() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
 
-        assertEquals("/1.0/containers/json",builder.listContainers());
-        assertEquals("/1.0/containers/json?filters=" + URLEncoder.encode("{\"ancestor\":[\"nginx\"]}","UTF8"),
-                     builder.listContainers("ancestor", "nginx"));
+        assertEquals(new URI("/1.0/containers/json"), new URI(builder.listContainers()));
+        assertEquals(new URI("/1.0/containers/json?filters=" + URLEncoder.encode("{\"ancestor\":[\"nginx\"]}","UTF8")),
+                     new URI(builder.listContainers("ancestor", "nginx")));
 
         try {
             builder.listContainers("ancestor");
@@ -85,25 +85,25 @@ public class UrlBuilderTest {
     }
 
     @Test
-    public void loadImage() {
+    public void loadImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals("/1.0/images/load",builder.loadImage());
+        assertEquals(new URI("/1.0/images/load"),new URI(builder.loadImage()));
     }
 
     @Test
-    public void pullImage() {
+    public void pullImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals("/1.0/images/create?fromImage=reg%2Ft1&tag=latest",
-            builder.pullImage(new ImageName("t1:latest"), "reg"));
-        assertEquals("/1.0/images/create?fromImage=reg%2Ft1",
-            builder.pullImage(new ImageName("t1"), "reg"));
+        assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1&tag=latest"),
+                     new URI(builder.pullImage(new ImageName("t1:latest"), "reg")));
+        assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1"),
+                     new URI(builder.pullImage(new ImageName("t1"), "reg")));
     }
 
     @Test
-    public void tagContainer() {
+    public void tagContainer() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
-        assertEquals("/1.0/images/t1%3Alatest/tag?repo=new&force=1&tag=tag1",
-            builder.tagContainer(new ImageName("t1:latest"), new ImageName("new:tag1"), true));
+        assertEquals(new URI("/1.0/images/t1%3Alatest/tag?repo=new&force=1&tag=tag1"),
+                     new URI(builder.tagContainer(new ImageName("t1:latest"), new ImageName("new:tag1"), true)));
 
     }
 }
