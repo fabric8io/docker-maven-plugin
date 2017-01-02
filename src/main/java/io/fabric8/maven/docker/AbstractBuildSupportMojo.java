@@ -61,9 +61,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
             throws DockerAccessException, MojoExecutionException {
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
-        if (imageConfig.getBuildConfiguration().getDockerArchive() == null) {
-            autoPullBaseImage(hub, imageConfig);
-        }
+        autoPullBaseImage(hub, imageConfig);
 
         MojoParameters params = createMojoParameters();
         hub.getBuildService().buildImage(imageConfig, params, checkForNocache(imageConfig), addBuildArgs());
@@ -100,6 +98,11 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     private void autoPullBaseImage(ServiceHub hub, ImageConfiguration imageConfig)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+
+        if (buildConfig.getDockerArchive() != null) {
+            // No autopull need in archive mode
+            return;
+        }
 
         String fromImage;
         if (buildConfig.isDockerFileMode()) {

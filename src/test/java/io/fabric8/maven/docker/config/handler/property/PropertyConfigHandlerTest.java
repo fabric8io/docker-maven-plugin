@@ -157,7 +157,24 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "src/main/docker/" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
         config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
+        assertTrue(config.getBuildConfiguration().isDockerFileMode());
         assertEquals(new File("src/main/docker/Dockerfile"), config.getBuildConfiguration().getDockerFile());
+    }
+
+    @Test
+    public void testDockerArchive() {
+        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar" };
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
+        assertFalse(config.getBuildConfiguration().isDockerFileMode());
+        assertEquals("dockerLoad.tar", config.getBuildConfiguration().getDockerArchive());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidDockerFileArchiveConfig() {
+        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR),  "src/main/docker/", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar" };
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
     }
 
     @Test
