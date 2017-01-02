@@ -6,6 +6,7 @@
   - Add two new goals: "volume-create" and "volume-remove" for volume handling independent of images. 
   - Support for loading from an tar archive (option `<build><dockerArchive>`) (#645)
   - Support when both `dockerFileDir` and `dockerFile` are set and `dockerFile` is a relative path (#624)
+  - Fix concurrency issue when writing into log files (#652)
 
 * **0.18.1** (2016-11-17)
   - Renamed `basedir` and `exportBasedir` in an `<assembly>` configuration to `targetDir` and `exportTargetDir` since this better reflects the purpose, i.e. the target in the Docker image to which the assembly is copied. The old name is still recognized but deprecated. 
