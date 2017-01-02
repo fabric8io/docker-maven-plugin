@@ -248,10 +248,11 @@ public final class UrlBuilder {
             if (queryParams.size() > 0) {
                 StringBuilder ret = new StringBuilder(url);
                 ret.append("?");
-                for (Map.Entry<String, String> entry : queryParams.entrySet()) {
-                    ret.append(entry.getKey())
+                // Sort to make order predictable e.g. for unit testing
+                for (String key : new TreeSet<>(queryParams.keySet())) {
+                    ret.append(key)
                        .append("=")
-                       .append(encode(entry.getValue()))
+                       .append(encode(queryParams.get(key)))
                        .append("&");
                 }
                 return ret.substring(0,ret.length() - 1);
