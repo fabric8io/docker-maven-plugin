@@ -362,13 +362,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void loadImage(String image, String filepath) throws DockerAccessException {
+    public void loadImage(String image, File tarArchive) throws DockerAccessException {
         String url = urlBuilder.loadImage();
 
         try {
-            delegate.post(url, new File(filepath), new BodyAndStatusResponseHandler(), HTTP_OK);
+            delegate.post(url, tarArchive, new BodyAndStatusResponseHandler(), HTTP_OK);
         } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to load %s", filepath);
+            throw new DockerAccessException(e, "Unable to load %s", tarArchive);
         }
     }
 

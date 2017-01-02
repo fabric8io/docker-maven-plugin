@@ -31,7 +31,7 @@ public class BuildService {
 
     /**
      * Build an image
-     * 
+     *
      * @param imageConfig the image configuration
      * @param params mojo params for the project
      * @param noCache if not null, dictate the caching behaviour. Otherwise its taken from the build configuration
@@ -57,7 +57,7 @@ public class BuildService {
         long time = System.currentTimeMillis();
 
         if (buildConfig.getDockerArchive() != null) {
-            docker.loadImage(imageName, buildConfig.getDockerArchive());
+            docker.loadImage(imageName, buildConfig.getAbsoluteDockerTarPath(params));
             log.info("%s: Loaded tarball in %s", buildConfig.getDockerArchive(), EnvUtil.formatDurationTill(time));
             return;
         }

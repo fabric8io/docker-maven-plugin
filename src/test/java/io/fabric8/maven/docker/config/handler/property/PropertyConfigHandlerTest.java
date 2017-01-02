@@ -20,6 +20,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
+import io.fabric8.maven.docker.util.MojoParameters;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -167,7 +168,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         ImageConfiguration config = resolveExternalImageConfig(testData);
         config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
         assertFalse(config.getBuildConfiguration().isDockerFileMode());
-        assertEquals("dockerLoad.tar", config.getBuildConfiguration().getDockerArchive());
+        assertEquals(new File("dockerLoad.tar"), config.getBuildConfiguration().getDockerArchive());
     }
 
     @Test(expected = IllegalArgumentException.class)

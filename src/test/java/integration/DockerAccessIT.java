@@ -89,7 +89,7 @@ public class DockerAccessIT {
     @Test
     public void testLoadImage() throws DockerAccessException {
         testDoesNotHave();
-        dockerClient.loadImage(IMAGE_LATEST, "integration/busybox-image.tar.gz");
+        dockerClient.loadImage(IMAGE_LATEST, new File("integration/busybox-image.tar.gz"));
         assertTrue(hasImage(IMAGE_LATEST));
         testRemoveImage(IMAGE_LATEST);
     }
