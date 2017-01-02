@@ -87,6 +87,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
      */
     public void fetchLogs() {
         try {
+            callback.open();
             HttpResponse resp = client.execute(getLogRequest(false));
             parseResponse(resp);
         } catch (IOException exp) {
@@ -101,6 +102,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
         // Response to extract from
 
         try {
+            callback.open();
             request = getLogRequest(true);
             HttpResponse response = client.execute(request);
             parseResponse(response);
@@ -227,7 +229,6 @@ public class LogRequestor extends Thread implements LogGetHandle {
                 }
             }
         }
-        callback.close();
     }
 
     @Override

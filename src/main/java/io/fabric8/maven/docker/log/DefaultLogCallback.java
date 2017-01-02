@@ -31,33 +31,49 @@ import io.fabric8.maven.docker.util.Timestamp;
 public class DefaultLogCallback implements LogCallback {
 
     private static Map<String, SharedPrintStream> printStreamMap = new HashMap<>();
-    
+
     private final LogOutputSpec outputSpec;
-    private final SharedPrintStream sps;
-    
+    private SharedPrintStream sps;
+
     public DefaultLogCallback(LogOutputSpec outputSpec) throws FileNotFoundException {
         this.outputSpec = outputSpec;
-        this.sps = createOrReusePrintStream(outputSpec);
     }
-    
-    private synchronized SharedPrintStream createOrReusePrintStream(LogOutputSpec spec) throws FileNotFoundException {
-        String file = spec.getFile();
-        if (spec.isLogStdout() || file == null) {
-            return new SharedPrintStream(System.out);
+
+    @Override
+    public synchronized void open() throws FileNotFoundException {
+        if (this.sps == null) {
+            String file = outputSpec.getFile();
+            if (outputSpec.isLogStdout() || file == null) {
+                this.sps = new SharedPrintStream(System.out);
+            } else {
+                SharedPrintStream cachedPs = printStreamMap.get(file);
+                if (cachedPs == null) {
+                    PrintStream ps = new PrintStream(new FileOutputStream(file), true);
+                    cachedPs = new SharedPrintStream(ps);
+                    printStreamMap.put(file, cachedPs);
+                } else {
+                    cachedPs.allocate();
+                }
+                this.sps = cachedPs;
+            }
         }
-        SharedPrintStream sps = printStreamMap.get(file);
-        if (sps == null) {
-            PrintStream ps = new PrintStream(new FileOutputStream(file), true);
-            sps = new SharedPrintStream(ps);
-            
-            printStreamMap.put(file, sps);
-        }
-        else {
-            sps.allocate();
-        }
-        return sps;
     }
-    
+
+    @Override
+    public synchronized void close() {
+        if (this.sps != null) {
+            sps.free();
+            if (!sps.isUsed()) {
+                sps.close();
+                String file = outputSpec.getFile();
+                if (file != null) {
+                    printStreamMap.remove(file);
+                }
+            }
+            this.sps = null;
+        }
+    }
+
     private PrintStream ps() {
         return sps.getPrintStream();
     }
@@ -70,20 +86,6 @@ public class DefaultLogCallback implements LogCallback {
     @Override
     public void error(String error) {
         ps().println(error);
-    }
-
-    @Override
-    public synchronized void close() {
-        sps.free();
-        if (!sps.isUsed()) {
-            if (sps.getPrintStream() != System.out) {
-                sps.getPrintStream().close();
-            }
-            String file = outputSpec.getFile();
-            if (file != null) {
-                printStreamMap.remove(file);
-            }
-        }
     }
     private void addLogEntry(PrintStream ps, LogEntry logEntry) {
         // TODO: Add the entry to a queue, and let the queue be picked up with a small delay from an extra

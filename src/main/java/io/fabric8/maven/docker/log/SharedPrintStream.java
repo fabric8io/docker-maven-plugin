@@ -6,30 +6,32 @@ class SharedPrintStream {
     private PrintStream printStream;
 
     private int numUsers;
-    
-    public SharedPrintStream(PrintStream ps) {
+
+    SharedPrintStream(PrintStream ps) {
         this.printStream = ps;
         this.numUsers = 1;
     }
 
-    public PrintStream getPrintStream() {
+    PrintStream getPrintStream() {
         return printStream;
-    }
-
-    public void setPrintStream(PrintStream printStream) {
-        this.printStream = printStream;
     }
 
     public boolean isUsed() {
         return numUsers > 0;
     }
 
-    public void allocate() {
+    synchronized void allocate() {
         numUsers++;
     }
-    
-    public void free() {
+
+    synchronized void free() {
         assert numUsers > 0;
         numUsers--;
+    }
+
+    public void close() {
+        if (printStream != System.out) {
+            printStream.close();;
+        }
     }
 }

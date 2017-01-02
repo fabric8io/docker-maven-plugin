@@ -154,6 +154,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                     LineNumberReader reader = new LineNumberReader(new InputStreamReader(stream));
                     String line;
                     try {
+                        callback.open();
                         while ( (line = reader.readLine()) != null) {
                             callback.log(1, new Timestamp(), line);
                         }

@@ -6,20 +6,16 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.maven.shared.utils.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,6 +40,7 @@ public class DefaultLogCallbackTest {
         spec = new LogOutputSpec.Builder().prefix("callback-test")
                 .file(path.toString()).build();
         callback = new DefaultLogCallback(spec);
+        callback.open();
         ts = new Timestamp("2016-12-21T15:09:00.999666333Z");
     }
 
@@ -53,7 +50,7 @@ public class DefaultLogCallbackTest {
         callback.log(1, ts, "line 2");
         callback.close();
 
-        List<String> lines = Files.readAllLines(path);
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
         assertThat(lines, contains("callback-test> line 1", "callback-test> line 2"));
     }
 
@@ -64,7 +61,7 @@ public class DefaultLogCallbackTest {
         callback.error("error 3");
         callback.close();
 
-        List<String> lines = Files.readAllLines(path);
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
         assertThat(lines, contains("error 1", "callback-test> line 2", "error 3"));
     }
 
@@ -82,7 +79,9 @@ public class DefaultLogCallbackTest {
             spec = new LogOutputSpec.Builder().prefix("stdout")
                     .build();
             callback = new DefaultLogCallback(spec);
+            callback.open();
             DefaultLogCallback callback2 = new DefaultLogCallback(spec);
+            callback2.open();
 
             callback.log(1, ts, "line 1");
             callback2.log(1, ts, "line 2");
@@ -91,7 +90,7 @@ public class DefaultLogCallbackTest {
             callback2.log(1, ts, "line 4");
             callback2.close();
 
-            List<String> lines = Files.readAllLines(path);
+            List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
             assertThat(lines, contains("stdout> line 1", "stdout> line 2", "stdout> line 3", "stdout> line 4"));
         } finally {
             System.setOut(stdout);
@@ -101,7 +100,7 @@ public class DefaultLogCallbackTest {
     @Test
     public void shouldKeepStreamOpen() throws IOException, DoneException {
         DefaultLogCallback callback2 = new DefaultLogCallback(spec);
-
+        callback2.open();
         callback.log(1, ts, "line 1");
         callback2.log(1, ts, "line 2");
         callback.log(1, ts, "line 3");
@@ -109,7 +108,7 @@ public class DefaultLogCallbackTest {
         callback2.log(1, ts, "line 4");
         callback2.close();
 
-        List<String> lines = Files.readAllLines(path);
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
         assertThat(lines,
                 contains("callback-test> line 1", "callback-test> line 2", "callback-test> line 3", "callback-test> line 4"));
     }
@@ -117,6 +116,7 @@ public class DefaultLogCallbackTest {
     @Test
     public void shouldLogInParallel() throws IOException, DoneException, InterruptedException {
         DefaultLogCallback callback2 = new DefaultLogCallback(spec);
+        callback2.open();
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         LoggerTask task1 = new LoggerTask(callback, 1);
@@ -126,7 +126,7 @@ public class DefaultLogCallbackTest {
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.SECONDS);
 
-        List<String> lines = Files.readAllLines(path);
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
         assertThat(lines.size(), is(20));
 
         // fill set with expected line numbers

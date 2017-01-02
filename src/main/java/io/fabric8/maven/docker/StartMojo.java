@@ -484,10 +484,15 @@ public class StartMojo extends AbstractDockerMojo {
                         public void error(String error) {
                             log.error("%s", error);
                         }
-                        
+
                         @Override
                         public void close() {
-                            // empty
+                            // no-op
+                        }
+
+                        @Override
+                        public void open() {
+                            // no-op
                         }
                     });
                     first = false;
