@@ -16,7 +16,8 @@ package io.fabric8.maven.docker.log;/*
  */
 
 import java.io.FileNotFoundException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
