@@ -150,6 +150,15 @@ public interface DockerAccess {
     void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException;
 
     /**
+     * Load an image from an archive.
+     *
+     * @param image the image to pull.
+     * @param filepath a URL string of the archive
+     * @throws DockerAccessException if the image couldn't be loaded.
+     */
+    void loadImage(String image, String filepath) throws DockerAccessException;
+
+    /**
      * Pull an image from a remote registry and store it locally.
      *
      * @param image the image to pull.
