@@ -492,4 +492,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         ImageName imageName = new ImageName(name);
         return imageName.getTag() == null ? imageName.getNameWithoutTag() + ":latest" : name;
     }
+
+    protected void loadImage(ServiceHub hub, String image, String filename) throws DockerAccessException {
+        DockerAccess dockerAccess = hub.getDockerAccess();
+        dockerAccess.loadImage(image, filename);
+    }
 }
