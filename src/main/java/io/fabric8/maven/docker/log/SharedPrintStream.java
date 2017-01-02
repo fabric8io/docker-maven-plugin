@@ -1,37 +1,33 @@
 package io.fabric8.maven.docker.log;
 
 import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class SharedPrintStream {
     private PrintStream printStream;
 
-    private int numUsers;
+    private AtomicInteger numUsers;
 
     SharedPrintStream(PrintStream ps) {
         this.printStream = ps;
-        this.numUsers = 1;
+        this.numUsers = new AtomicInteger(1);
     }
 
     PrintStream getPrintStream() {
         return printStream;
     }
 
-    public boolean isUsed() {
-        return numUsers > 0;
+    void allocate() {
+        numUsers.incrementAndGet();
     }
 
-    synchronized void allocate() {
-        numUsers++;
-    }
-
-    synchronized void free() {
-        assert numUsers > 0;
-        numUsers--;
-    }
-
-    public void close() {
-        if (printStream != System.out) {
+    boolean close() {
+        int nrUsers = numUsers.decrementAndGet();
+        if (nrUsers == 0 && printStream != System.out) {
             printStream.close();;
+            return true;
+        } else {
+            return false;
         }
     }
 }

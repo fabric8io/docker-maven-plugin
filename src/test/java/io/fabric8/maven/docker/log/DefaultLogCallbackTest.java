@@ -7,9 +7,6 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +22,7 @@ import io.fabric8.maven.docker.util.Timestamp;
 
 public class DefaultLogCallbackTest {
 
-    private Path path;
+    private File file;
 
     private LogOutputSpec spec;
 
@@ -33,12 +30,14 @@ public class DefaultLogCallbackTest {
 
     private Timestamp ts;
 
+    private static final int NR_LOOPS = 100;
+
     @Before
-    public void before() throws FileNotFoundException {
-        path = Paths.get("target", "one.log");
-        path.toFile().delete();
+    public void before() throws IOException {
+        file = File.createTempFile("logcallback", ".log");
+        file.deleteOnExit();
         spec = new LogOutputSpec.Builder().prefix("callback-test")
-                .file(path.toString()).build();
+                                          .file(file.toString()).build();
         callback = new DefaultLogCallback(spec);
         callback.open();
         ts = new Timestamp("2016-12-21T15:09:00.999666333Z");
@@ -50,7 +49,7 @@ public class DefaultLogCallbackTest {
         callback.log(1, ts, "line 2");
         callback.close();
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
         assertThat(lines, contains("callback-test> line 1", "callback-test> line 2"));
     }
 
@@ -61,7 +60,7 @@ public class DefaultLogCallbackTest {
         callback.error("error 3");
         callback.close();
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
         assertThat(lines, contains("error 1", "callback-test> line 2", "error 3"));
     }
 
@@ -70,8 +69,9 @@ public class DefaultLogCallbackTest {
         // we don't need the default stream for this test
         callback.close();
 
-        path = Paths.get("target", "stdout.log");
-        FileOutputStream os = new FileOutputStream(path.toFile());
+        file = File.createTempFile("logcallback-stdout", ".log");
+        file.deleteOnExit();
+        FileOutputStream os = new FileOutputStream(file);
         PrintStream ps = new PrintStream(os);
         PrintStream stdout = System.out;
         try {
@@ -90,7 +90,7 @@ public class DefaultLogCallbackTest {
             callback2.log(1, ts, "line 4");
             callback2.close();
 
-            List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
+            List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
             assertThat(lines, contains("stdout> line 1", "stdout> line 2", "stdout> line 3", "stdout> line 4"));
         } finally {
             System.setOut(stdout);
@@ -108,7 +108,7 @@ public class DefaultLogCallbackTest {
         callback2.log(1, ts, "line 4");
         callback2.close();
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
         assertThat(lines,
                 contains("callback-test> line 1", "callback-test> line 2", "callback-test> line 3", "callback-test> line 4"));
     }
@@ -120,18 +120,18 @@ public class DefaultLogCallbackTest {
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         LoggerTask task1 = new LoggerTask(callback, 1);
-        LoggerTask task2 = new LoggerTask(callback2, 11);
+        LoggerTask task2 = new LoggerTask(callback2, 1 + NR_LOOPS);
         executorService.submit(task1);
         executorService.submit(task2);
-        executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.SECONDS);
 
-        List<String> lines = Arrays.asList(FileUtils.fileReadArray(path.toFile()));
-        assertThat(lines.size(), is(20));
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
+        System.out.println(lines);
+        assertThat(lines.size(), is(NR_LOOPS * 2));
 
         // fill set with expected line numbers
         Set<Integer> indexes = new HashSet<>();
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 2 * NR_LOOPS; i++) {
             indexes.add(i);
         }
 
@@ -160,7 +160,7 @@ public class DefaultLogCallbackTest {
 
         @Override
         public void run() {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < NR_LOOPS; i++) {
                 try {
                     callback.log(1, ts, "line " + (start + i));
                 } catch (DoneException e) {

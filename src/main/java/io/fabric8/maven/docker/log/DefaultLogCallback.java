@@ -62,15 +62,13 @@ public class DefaultLogCallback implements LogCallback {
     @Override
     public synchronized void close() {
         if (this.sps != null) {
-            sps.free();
-            if (!sps.isUsed()) {
-                sps.close();
+            if (sps.close()) {
                 String file = outputSpec.getFile();
                 if (file != null) {
                     printStreamMap.remove(file);
                 }
+                this.sps = null;
             }
-            this.sps = null;
         }
     }
 
