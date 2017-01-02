@@ -2,7 +2,7 @@
 
 * **0.18.2** 
   - Better log message when waiting for URL (#640)
-  - Extended authentication for AWS ECR
+  - Extended authentication for AWS ECR (#663)
   - Add two new goals: "volume-create" and "volume-remove" for volume handling independent of images. 
 
 

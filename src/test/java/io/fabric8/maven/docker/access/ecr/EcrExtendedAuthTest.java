@@ -1,7 +1,5 @@
 package io.fabric8.maven.docker.access.ecr;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import io.fabric8.maven.docker.access.AuthConfig;
@@ -39,12 +37,12 @@ public class EcrExtendedAuthTest {
 
     @Test
     public void testIsNotAws() {
-        assertFalse(new EcrExtendedAuth(logger, "jolokia").isValidRegistry());
+        assertFalse(new EcrExtendedAuth(logger, "jolokia").isAwsRegistry());
     }
 
     @Test
     public void testIsAws() {
-        assertTrue(new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com").isValidRegistry());
+        assertTrue(new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com").isAwsRegistry());
     }
 
     @Test

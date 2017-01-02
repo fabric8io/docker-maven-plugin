@@ -90,7 +90,6 @@ public class AuthConfigFactory {
      *  credentials are not from docker settings, they will be interpreted as iam credentials
      *  and exchanged for ecr credentials.
      *
-     * @param logger The logger for tracing
      * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
      * @param skipExtendedAuth if false, do not execute extended authentication methods
      * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
@@ -107,16 +106,11 @@ public class AuthConfigFactory {
 
         AuthConfig ret = createStandardAuthConfig(isPush, authConfig, settings, user, registry);
         if (ret != null) {
-            if (registry == null ) {
-                log.debug("default registry; no extended auth");
-                return ret;
-            }
-            if (skipExtendedAuth) {
-                log.debug("skipping extended auth");
+            if (registry == null || skipExtendedAuth) {
                 return ret;
             }
             try {
-                return extendedAuthentication(registry, ret);
+                return extendedAuthentication(ret, registry);
             } catch (IOException e) {
                 throw new MojoExecutionException(e.getMessage(), e);
             }
@@ -125,31 +119,30 @@ public class AuthConfigFactory {
         // Finally check ~/.docker/config.json
         ret = getAuthConfigFromDockerConfig(registry);
         if(ret != null) {
-            log.debug("found credentials in ~.docker/config.json");
+            log.debug("AuthConfig: credentials from ~.docker/config.json");
             return ret;
         }
 
-        log.debug("no credentials found");
+        log.debug("AuthConfig: no credentials found");
         return null;
     }
 
     /**
      * Try various extended authentication method.  Currently only supports amazon ECR
      *
-     * @param logger The logger for tracing
+     * @param standardAuthConfig The locally stored credentials.
      * @param registry The registry to authenticated against.
-     * @param localCredentials The locally stored credentials.
      * @return The given credentials, if registry does not need extended authentication;
      * else, the credentials after authentication.
      * @throws IOException
      * @throws MojoExecutionException
      */
-    private AuthConfig extendedAuthentication(String registry, AuthConfig localCredentials) throws IOException, MojoExecutionException {
+    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException {
         EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry);
-        if (ecr.isValidRegistry()) {
-            return ecr.extendedAuth(localCredentials);
+        if (ecr.isAwsRegistry()) {
+            return ecr.extendedAuth(standardAuthConfig);
         }
-        return localCredentials;
+        return standardAuthConfig;
     }
 
     /**
@@ -192,21 +185,21 @@ public class AuthConfigFactory {
             // System properties docker.username and docker.password always take precedence
             ret = getAuthConfigFromSystemProperties(lookupMode);
             if (ret != null) {
-                log.debug("found credentials in system properties");
+                log.debug("AuthConfig: credentials from system properties");
                 return ret;
             }
 
             // Check for openshift authentication either from the plugin config or from system props
             ret = getAuthConfigFromOpenShiftConfig(lookupMode,authConfigMap);
             if (ret != null) {
-                log.debug("found openshift credentials");
+                log.debug("AuthConfig: OpenShift credentials");
                 return ret;
             }
 
             // Get configuration from global plugin config
             ret = getAuthConfigFromPluginConfiguration(lookupMode,authConfigMap);
             if (ret != null) {
-                log.debug("found credentials in plugin config");
+                log.debug("AuthConfig: credentials from plugin config");
                 return ret;
             }
         }
@@ -217,7 +210,7 @@ public class AuthConfigFactory {
         // Now lets lookup the registry & user from ~/.m2/setting.xml
         ret = getAuthConfigFromSettings(settings, user, registry);
         if (ret != null) {
-            log.debug("found credentials in ~/.m2/setting.xml");
+            log.debug("AuthConfig: credentials from ~/.m2/setting.xml");
             return ret;
         }
 
