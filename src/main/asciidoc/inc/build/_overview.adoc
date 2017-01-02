@@ -8,12 +8,13 @@ With an inline plugin configuration all information required to build the image 
 When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.
 
 [[external-dockerfile]]
-.External Dockerfile
-Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
+.External Dockerfile or docker archive
+Alternatively an external Dockerfile template or docker archive can be used. This mode is switch on by using one of these three configuration options within
 the `<build>` configuration section.
 
 * *dockerFileDir* specifies a directory containing a `Dockerfile` that will be used to create the image.
 * *dockerFile* specifies a specific Dockerfile. The `dockerFileDir` is set to the directory containing the file.
+* *dockerArchive* specifies a previously saved image archive to load directly.
 
 If `dockerFileDir` is a relative path it is looked up in `${project.basedir}/src/main/docker`. You can make easily an absolute path by prefixing with `${project.basedir}`.
 

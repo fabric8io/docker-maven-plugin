@@ -55,6 +55,13 @@ public class BuildService {
         }
 
         long time = System.currentTimeMillis();
+
+        if (buildConfig.getDockerArchive() != null) {
+            docker.loadImage(imageName, buildConfig.getDockerArchive());
+            log.info("%s: Loaded tarball in %s", buildConfig.getDockerArchive(), EnvUtil.formatDurationTill(time));
+            return;
+        }
+
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params, log);
         log.info("%s: Created %s in %s", dockerArchive.getName(), imageConfig.getDescription(), EnvUtil.formatDurationTill(time));
 
