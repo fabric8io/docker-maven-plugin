@@ -20,7 +20,7 @@ public final class UrlBuilder {
         this.baseUrl = stripSlash(baseUrl);
     }
 
-    public String buildImage(String image, String dockerfileName, boolean forceRemove, boolean noCache, Map<String, String> buildArgs) {
+    public String buildImage(String image, String dockerfileName, boolean forceRemove, boolean noCache, Map<String, String> buildArgs, Map<String, String> buildOptions) {
 
         Builder urlBuilder = u("build")
             .p("t", image)
@@ -28,6 +28,11 @@ public final class UrlBuilder {
             .p("nocache", noCache);
         if (buildArgs != null && !buildArgs.isEmpty()) {
             urlBuilder.p("buildargs", new JSONObject(buildArgs).toString());
+        }
+        if (buildOptions != null && !buildOptions.isEmpty()) {
+            for (String key : buildOptions.keySet()) {
+                urlBuilder.p(key, buildOptions.get(key));
+            }
         }
         if (dockerfileName != null) {
             urlBuilder.p("dockerfile",dockerfileName);
