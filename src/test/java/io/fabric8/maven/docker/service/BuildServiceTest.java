@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 
+import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -117,8 +118,7 @@ public class BuildServiceTest {
         new Verifications() {{
             docker.buildImage(imageConfig.getName(),
                               dockerBuildTar,
-                              (String) withNull(),
-                              anyBoolean, anyBoolean, (Map) any, (Map) any);
+                              (BuildOptions) any);
         }};
     }
 
@@ -136,11 +136,11 @@ public class BuildServiceTest {
 
     private void whenBuildImage(boolean cleanup, boolean nocache) throws DockerAccessException, MojoExecutionException {
         new Expectations() {{
-            docker.buildImage(withEqual(imageConfig.getName()), (File) any, (String) withNull(), anyBoolean, anyBoolean, (Map) any, (Map) any);
+            docker.buildImage(withEqual(imageConfig.getName()), (File) any, (BuildOptions) any);
         }};
         if (cleanup) {
             new Expectations() {{
-                docker.removeImage(withEqual(oldImageId), withEqual(true));result = true;
+                docker.removeImage(withEqual(oldImageId), withEqual(true)); result = true;
             }};
         }
 

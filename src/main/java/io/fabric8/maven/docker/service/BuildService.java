@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -68,12 +69,13 @@ public class BuildService {
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
 
         // auto is now supported by docker, consider switching?
-        String newImageId =
-                doBuildImage(imageName,
-                             dockerArchive,
-                             getDockerfileName(buildConfig),
-                             cleanupMode.isRemove(),
-                             noCache, mergedBuildMap, buildConfig.getBuildOptions());
+        BuildOptions opts =
+            new BuildOptions(buildConfig.getBuildOptions())
+            .dockerfile(getDockerfileName(buildConfig))
+            .forceRemove(cleanupMode.isRemove())
+            .noCache(noCache)
+            .buildArgs(mergedBuildMap);
+        String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s",imageConfig.getDescription(), newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
@@ -92,11 +94,10 @@ public class BuildService {
     }
 
     private Map<String, String> prepareBuildArgs(Map<String, String> buildArgs, BuildImageConfiguration buildConfig) {
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder().
-                putAll(buildArgs);
-            if(buildConfig.getArgs() != null){
-                builder.putAll(buildConfig.getArgs());
-            }
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder().putAll(buildArgs);
+        if (buildConfig.getArgs() != null) {
+            builder.putAll(buildConfig.getArgs());
+        }
         return builder.build();
     }
 
@@ -110,10 +111,9 @@ public class BuildService {
 
     // ===============================================================
 
-    private String doBuildImage(String imageName, File dockerArchive, String dockerfileName, boolean cleanUp, boolean noCache, Map<String, String> buildArgs,
-                                Map<String,String> buildOptions)
+    private String doBuildImage(String imageName, File dockerArchive, BuildOptions options)
         throws DockerAccessException, MojoExecutionException {
-        docker.buildImage(imageName, dockerArchive, dockerfileName, cleanUp, noCache, buildArgs, buildOptions);
+        docker.buildImage(imageName, dockerArchive, options);
         return queryService.getImageId(imageName);
     }
 
