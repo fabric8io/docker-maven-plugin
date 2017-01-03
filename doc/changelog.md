@@ -1,20 +1,20 @@
 # ChangeLog
 
-* **0.18.2** 
-  - Better log message when waiting for URL (#640)
-  - Extended authentication for AWS ECR (#663)
+* **0.19.1** (2017-01-03) 
+  - Better log message when waiting for URL ([#640](https://github.com/fabric8io/docker-maven-plugin/issues/640))
+  - Extended authentication for AWS ECR ([#663](https://github.com/fabric8io/docker-maven-plugin/issues/663))
   - Add two new goals: "volume-create" and "volume-remove" for volume handling independent of images. 
-  - Support for loading from an tar archive (option `<build><dockerArchive>`) (#645)
-  - Support when both `dockerFileDir` and `dockerFile` are set and `dockerFile` is a relative path (#624)
-  - Fix concurrency issue when writing into log files (#652)
-  - Support any Docker build options (#666)
+  - Support for loading from an tar archive (option `<build><dockerArchive>`) ([#645](https://github.com/fabric8io/docker-maven-plugin/issues/645))
+  - Support when both `dockerFileDir` and `dockerFile` are set and `dockerFile` is a relative path ([#624](https://github.com/fabric8io/docker-maven-plugin/issues/624))
+  - Fix concurrency issue when writing into log files ([#652](https://github.com/fabric8io/docker-maven-plugin/issues/652))
+  - Support any Docker build options ([#666](https://github.com/fabric8io/docker-maven-plugin/issues/666))
   
 * **0.18.1** (2016-11-17)
   - Renamed `basedir` and `exportBasedir` in an `<assembly>` configuration to `targetDir` and `exportTargetDir` since this better reflects the purpose, i.e. the target in the Docker image to which the assembly is copied. The old name is still recognized but deprecated. 
   - Fix issue with log statements which use a single argument form
-  - Fix bug in HTTP wait configuration when using an external property handler (#613)
-  - Fix NPE for "docker:log" when the container to log has already been stopped (#612)
-  - Allow a protocol (tcp/udp) for the specification of a port (#610) 
+  - Fix bug in HTTP wait configuration when using an external property handler ([#613](https://github.com/fabric8io/docker-maven-plugin/issues/613))
+  - Fix NPE for "docker:log" when the container to log has already been stopped ([#612](https://github.com/fabric8io/docker-maven-plugin/issues/612))
+  - Allow a protocol (tcp/udp) for the specification of a port ([#610](https://github.com/fabric8io/docker-maven-plugin/issues/610)) 
 
 The following variables in the assembly configuration has been renamed for consistencies sake:
  
