@@ -20,6 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.HashMap;
 
+import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.util.ImageName;
 import org.junit.Test;
@@ -35,15 +36,25 @@ public class UrlBuilderTest {
     @Test
     public void buildImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
-        assertEquals(new URI("/1.0/build?dockerfile=df&nocache=0&rm=1&t=image1"),
-            new URI(builder.buildImage("image1", "df", false, false, null)));
+        assertEquals(new URI("/1.0/build?dockerfile=df&nocache=0&t=image1"),
+            new URI(builder.buildImage("image1", new BuildOptions().dockerfile("df").noCache(false))));
         assertEquals(new URI("/1.0/build?dockerfile=df&forcerm=1&nocache=1&t=image1"),
-            new URI(builder.buildImage("image1", "df", true, true, null)));
+            new URI(builder.buildImage("image1", new BuildOptions().forceRemove(true).noCache(true).dockerfile("df"))));
         HashMap<String, String> m = new HashMap<>();
         m.put("k1", "v1");
         m.put("k2", "v2");
-        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&dockerfile=df&nocache=0&rm=1&t=image1",
-            builder.buildImage("image1", "df", false, false, m));
+        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&dockerfile=df&t=image1",
+            builder.buildImage("image1", new BuildOptions().dockerfile("df").buildArgs(m)));
+        HashMap<String, String> options = new HashMap<>();
+        options.put("cpusetcpus", "1");
+        options.put("memswap", "-1");
+        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&cpusetcpus=1&memswap=-1&t=image1",
+                     builder.buildImage("image1", new BuildOptions(options).buildArgs(m)));
+        options.put("dockerfile","blub");
+        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=bla&memswap=-1&t=image1",
+                     builder.buildImage("image1", new BuildOptions(options).dockerfile("bla")));
+        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=holla&memswap=-1&t=image1",
+                     builder.buildImage("image1", new BuildOptions(options).dockerfile("bla").addOption("dockerfile","holla")));
     }
 
     @Test
