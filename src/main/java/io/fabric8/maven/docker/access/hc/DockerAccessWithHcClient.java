@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.docker.access.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -29,13 +30,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.ContainerCreateConfig;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.NetworkCreateConfig;
-import io.fabric8.maven.docker.access.UrlBuilder;
-import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
 import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
 import io.fabric8.maven.docker.access.chunked.PullOrPushResponseJsonHandler;
@@ -241,10 +235,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void buildImage(String image, File dockerArchive, String dockerfileName, boolean forceRemove, boolean noCache,
-                           Map<String, String> buildArgs, Map<String, String> buildOptions) throws DockerAccessException {
+    public void buildImage(String image, File dockerArchive, BuildOptions options) throws DockerAccessException {
         try {
-            String url = urlBuilder.buildImage(image, dockerfileName, forceRemove, noCache, buildArgs, buildOptions);
+            String url = urlBuilder.buildImage(image, options);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to build image [%s]", image);
