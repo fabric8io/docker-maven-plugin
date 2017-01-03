@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.18-SNAPSHOT,</span>
-<span id="revdate">2016-12-17</span>
+<span id="revnumber">version 0.19.0,</span>
+<span id="revdate">2017-01-03</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -564,6 +564,16 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#docker:remove">5.6. <strong>docker:remove</strong></a></li>
 <li><a href="#docker:logs">5.7. <strong>docker:logs</strong></a></li>
 <li><a href="#docker:source">5.8. <strong>docker:source</strong></a></li>
+<li><a href="#docker:volume-create">5.9. <strong>docker:volume-create</strong></a>
+<ul class="sectlevel3">
+<li><a href="#volume-configuration">5.9.1. Configuration</a></li>
+</ul>
+</li>
+<li><a href="#docker:volume-remove">5.10. <strong>docker:volume-remove</strong></a>
+<ul class="sectlevel3">
+<li><a href="#volume-configuration">5.10.1. Configuration</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
@@ -582,6 +592,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#pull-vs-push-authentication">8.1. Pull vs. Push Authentication</a></li>
 <li><a href="#openshift-authentication">8.2. OpenShift Authentication</a></li>
 <li><a href="#password-encryption">8.3. Password encryption</a></li>
+<li><a href="#extended-authentication">8.4. Extended Authentication</a></li>
 </ul>
 </li>
 <li><a href="#further-reading">9. Further reading</a></li>
@@ -811,7 +822,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.18-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.19.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1342,6 +1353,14 @@ in the next sections.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:source"><strong>docker:source</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Attach docker build archive to Maven project</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:volume-create"><strong>docker:volume-create</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a volume for containers to share data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:volume-remove"><strong>docker:volume-remove</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove a volume</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -1377,22 +1396,24 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
 <div id="external-dockerfile" class="paragraph">
-<div class="title">External Dockerfile</div>
-<p>Alternatively an external Dockerfile template can be used. This mode is switch on by using one of these two configuration options within
-the <code>&lt;build&gt;</code> configuration section.</p>
+<div class="title">External Dockerfile or docker archive</div>
+<p>Alternatively an external Dockerfile template or Docker archive can be used. This mode is switch on by using one of these three configuration options within</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>dockerFileDir</strong> specifies a directory containing a <code>Dockerfile</code> that will be used to create the image.</p>
+<p><strong>dockerFileDir</strong> specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
 </li>
 <li>
-<p><strong>dockerFile</strong> specifies a specific Dockerfile. The <code>dockerFileDir</code> is set to the directory containing the file.</p>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>dockerFileDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
+</li>
+<li>
+<p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>If <code>dockerFileDir</code> is a relative path it is looked up in <code>${project.basedir}/src/main/docker</code>. You can make easily an absolute path by prefixing with <code>${project.basedir}</code>.</p>
+<p>All paths can be either absolute or relative paths (except when both <code>dockerFileDir</code> and <code>dockerFile</code> are provided in which case <code>dockerFile</code> must not be absolute). A relative path is looked up in <code>${project.basedir}/src/main/docker</code> by default. You can make it easily an absolute path by using `${project.basedir} in your configuration.</p>
 </div>
 <div class="paragraph">
 <p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
@@ -1471,6 +1492,12 @@ of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
 described in <a href="#build-buildargs">Build Args</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildOptions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
+<a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>nocache</code>, <code>cleanup</code> for <code>forcerm=1</code> and <code>buildArgs</code>) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -1585,6 +1612,9 @@ remote API.</p>
   <span class="tag">&lt;volumes&gt;</span>
     <span class="tag">&lt;volume&gt;</span>/path/to/expose<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/volumes&gt;</span>
+  <span class="tag">&lt;buildOptions&gt;</span>
+    <span class="tag">&lt;shmsize&gt;</span>2147483648<span class="tag">&lt;/shmsize&gt;</span>
+  <span class="tag">&lt;/buildOptions&gt;</span>
 
   <span class="tag">&lt;entryPoint&gt;</span>
     <span class="comment">&lt;!-- exec form for ENTRYPOINT --&gt;</span>
@@ -3394,6 +3424,125 @@ this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</c
 <p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>source-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="docker:volume-create">5.9. <strong>docker:volume-create</strong></h3>
+<div class="paragraph">
+<p>This goals creates one or more standalone <a href="https://docs.docker.com/engine/tutorials/dockervolumes/">Docker volume</a>, which can be referenced in a <a href="#docker:start"><strong>docker:start</strong></a> configuration for linking to a volume during runtime.
+Each volume has therefore a unique and referenceable name. Beside the volume driver and driver options can be specified.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example for a volume configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;volumes&gt;</span>
+       <span class="tag">&lt;volume&gt;</span>
+         <span class="tag">&lt;name&gt;</span>temp-volume<span class="tag">&lt;/name&gt;</span>
+         <span class="tag">&lt;driver&gt;</span>local<span class="tag">&lt;/Driver&gt;</span>
+         <span class="tag">&lt;opts&gt;</span>
+           <span class="tag">&lt;type&gt;</span>tmpfs<span class="tag">&lt;/type&gt;</span>
+           <span class="tag">&lt;device&gt;</span>tmpfs<span class="tag">&lt;/device&gt;</span>
+           <span class="tag">&lt;o&gt;</span>size=100m,uid=1000<span class="tag">&lt;/o&gt;</span>
+         <span class="tag">&lt;/opts&gt;</span>
+         <span class="tag">&lt;labels&gt;</span>
+           <span class="tag">&lt;volatileData&gt;</span>true<span class="tag">&lt;/volatileData&gt;</span>
+         <span class="tag">&lt;/labels&gt;</span>
+       <span class="tag">&lt;/volume&gt;</span>
+    <span class="tag">&lt;/volumes&gt;</span>
+    ...
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="volume-configuration">5.9.1. Configuration</h4>
+<div class="paragraph">
+<p>The following options are available when creating volumes:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 25. Volume configuration</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the volume</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>driver</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Volume driver to use. By default the driver <code>local</code> is used which is created on the local file system. Please refer to your Docker installation which additional drivers are available.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>opts</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Driver specific options passed in as custom <code>&lt;key&gt;value&lt;/key&gt;</code> where its maps to <code>key=value</code> pairs for driver options as they can be provided from the Docker CLI, too. Each volume driver supports different options. The options supported by the <code>local</code> driver are the well known <a href="http://man7.org/linux/man-pages/man8/mount.8.html">Linux mount options</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>labels</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Labels given as <code>&lt;key&gt;value&lt;/key&gt;</code> similar to image labels described in <a href="#misc-env">Environment and Labels</a>. These labels are used to tag the volumes themselves.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="docker:volume-remove">5.10. <strong>docker:volume-remove</strong></h3>
+<div class="paragraph">
+<p>This goals is the counterpart to <a href="#docker:volume-create"><strong>docker:volume-create</strong></a> and removes a volume.
+Docker volumes are configured outside of Docker images, but can be referenced by them.
+The configuration is the same as for <a href="#docker:volume-create"><strong>docker:volume-create</strong></a></p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;volumes&gt;</span>
+       <span class="tag">&lt;volume&gt;</span>
+         <span class="tag">&lt;name&gt;</span>temp-volume<span class="tag">&lt;/name&gt;</span>
+         ....
+       <span class="tag">&lt;/volume&gt;</span>
+    <span class="tag">&lt;/volumes&gt;</span>
+    ...
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="volume-configuration">5.10.1. Configuration</h4>
+<div class="paragraph">
+<p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 26. Volume configuration</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the volume</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -3445,7 +3594,7 @@ up from the following properties, which correspond to the corresponding
 values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. External properties</caption>
+<caption class="title">Table 27. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3485,7 +3634,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.assembly.dockerFileDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated p ease use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code> instead.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated please use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code> instead.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.nocache</strong></p></td>
@@ -3522,6 +3671,10 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dnsSearch.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of dns search domains</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dockerArchive</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specify an archive which can be loaded with <code>docker load</code>. Use this as an alternative to <code>docker.dockerFile</code> or <code>docker.dockerFileDir</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dockerFile</strong></p></td>
@@ -3854,7 +4007,7 @@ run and build configuration sections.</p>
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Docker compose configuration</caption>
+<caption class="title">Table 28. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4043,23 +4196,24 @@ because Docker can only push registry-named images.</p>
 might be necessary to authenticate against a Docker registry.</p>
 </div>
 <div class="paragraph">
-<p>There are three different ways for providing credentials:</p>
+<p>There are five different locations searched for credentials.  In order, these are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with
-<code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
+<p>Providing system properties <code>docker.username</code> and <code>docker.password</code> from the outside.</p>
 </li>
 <li>
-<p>Providing system properties <code>docker.username</code> and <code>docker.password</code>
-from the outside</p>
+<p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with <code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
+</li>
+<li>
+<p>Using OpenShift configuration in <code>~/.config/kube</code></p>
 </li>
 <li>
 <p>Using a <code>&lt;server&gt;</code> configuration in <code>~/.m2/settings.xml</code></p>
 </li>
 <li>
-<p>Login into a registry with <code>docker login</code></p>
+<p>Login into a registry with <code>docker login</code> (credentials in <code>~/.docker/config.json</code>)</p>
 </li>
 </ul>
 </div>
@@ -4115,7 +4269,7 @@ the Maven settings file <code>~/.m2/settings.xml</code>:</p>
 default is central index <code>docker.io</code> (or <code>index.docker.io</code> / <code>registry.hub.docker.com</code> as fallbacks).
 Here you should add your docker.io account for your repositories. If you have multiple accounts
 for the same registry, the second user can be specified as part of the ID. In the example above, if you
-have a second accorunt 'fabric8io' then use an <code>&lt;id&gt;docker.io/fabric8io&lt;/id&gt;</code> for this second entry. I.e. add the
+have a second account 'fabric8io' then use an <code>&lt;id&gt;docker.io/fabric8io&lt;/id&gt;</code> for this second entry. I.e. add the
 username with a slash to the id name. The default without username is only taken if no server entry with
 a username appended id is chosen.</p>
 </div>
@@ -4165,7 +4319,7 @@ as described in the previous section is used as fallback.</p>
 <h3 id="openshift-authentication">8.2. OpenShift Authentication</h3>
 <div class="paragraph">
 <p>When working with the default registry in OpenShift, the credentials
-to authtenticate are the OpenShift username and access token. So, a
+to authenticate are the OpenShift username and access token. So, a
 typical interaction with the OpenShift registry from the outside is:</p>
 </div>
 <div class="listingblock">
@@ -4200,7 +4354,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
 added to the <code>&lt;authConfig&gt;</code> section.</p>
 </div>
 <div class="paragraph">
-<p>For dedicted <em>pull</em> and <em>push</em> configuration the system properties
+<p>For dedicated <em>pull</em> and <em>push</em> configuration the system properties
 <code>docker.pull.useOpenShiftAuth</code> and <code>docker.push.useOpenShiftAuth</code> are
 available as well as the configuration option <code>&lt;useOpenShiftAuth&gt;</code> in
 an <code>&lt;pull&gt;</code> or <code>&lt;push&gt;</code> section within the <code>&lt;authConfig&gt;</code>
@@ -4214,7 +4368,7 @@ configuration.</p>
 in the
 <a href="http://maven.apache.org/guides/mini/guide-encryption.html">Maven documentation</a>. Assuming
 that you have setup a <em>master password</em> in
-<code>~/.m2/security-settings.xml</code> you can create easily encrypted
+<code>~/.m2/security-settings.xml</code> you can create easily encrypt
 passwords:</p>
 </div>
 <div class="listingblock">
@@ -4231,6 +4385,15 @@ and/or the <code>&lt;server&gt;</code> setting configuration. However, putting a
 encrypted password into <code>authConfig</code> in the <code>pom.xml</code> doesn&#8217;t make
 much sense, since this password is encrypted with an individual master
 password.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="extended-authentication">8.4. Extended Authentication</h3>
+<div class="paragraph">
+<p>Some docker registries require additional steps to authenticate.  <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials. The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>awsAccountId</em>*.dkr.ecr.<strong><em>awsRegion</em></strong>.amazonaws.com*, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
+</div>
+<div class="paragraph">
+<p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>. Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
 </div>
 </div>
 </div>
@@ -4276,8 +4439,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.18-SNAPSHOT<br>
-Last updated 2016-12-17 11:57:31 UTC
+Version 0.19.0<br>
+Last updated 2017-01-03 13:35:20 UTC
 </div>
 </div>
 </body>
