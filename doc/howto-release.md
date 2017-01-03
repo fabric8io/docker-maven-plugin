@@ -11,7 +11,7 @@ mvn versions:set -DgenerateBackupPoms=false -DnewVersion=0.15.4
 ```
 
 * Run "update_issue_links.sh" in "doc/"
-* Check into Git and push
+* Check into Git, push, create PR and apply
 
 ## Building and deploying
 
@@ -27,10 +27,3 @@ mvn versions:set -DgenerateBackupPoms=false -DnewVersion=0.15-SNAPSHOT
 
 * Check in
 
-* Rebase `integration` with `master` again
-
-```
-git co integration
-git rebase master
-git push
-```
