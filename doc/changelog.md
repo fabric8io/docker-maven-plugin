@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.19.1** (2017-01-03) 
+* **0.19.0** (2017-01-03) 
   - Better log message when waiting for URL ([#640](https://github.com/fabric8io/docker-maven-plugin/issues/640))
   - Extended authentication for AWS ECR ([#663](https://github.com/fabric8io/docker-maven-plugin/issues/663))
   - Add two new goals: "volume-create" and "volume-remove" for volume handling independent of images. 
