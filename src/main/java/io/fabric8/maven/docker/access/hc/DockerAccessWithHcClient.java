@@ -9,10 +9,12 @@ import static java.net.HttpURLConnection.HTTP_OK;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,13 +22,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import io.fabric8.maven.docker.access.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.codehaus.plexus.archiver.bzip2.BZip2Archiver;
+import org.codehaus.plexus.archiver.commonscompress.compressors.bzip2.BZip2CompressorOutputStream;
+import org.codehaus.plexus.archiver.gzip.GZipCompressor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -398,6 +405,46 @@ public class DockerAccessWithHcClient implements DockerAccess {
             }
         }
     }
+
+    @Override
+    public void saveImage(String image, String filename, String compression) throws DockerAccessException {
+        ImageName name = new ImageName(image);
+        String url = urlBuilder.getImage(name);
+        try {
+            delegate.get(url, getImageResponseHandler(filename, compression), HTTP_OK);
+        } catch (Exception e) {
+            throw new DockerAccessException(e, "Unable to save '%s' to '%s'", image, filename);
+        }
+
+    }
+
+    private ResponseHandler<Object> getImageResponseHandler(final String filename, final String compression) throws FileNotFoundException {
+        return new ResponseHandler<Object>() {
+            @Override
+            public Object handleResponse(HttpResponse response) throws IOException {
+                try (InputStream stream = response.getEntity().getContent();
+                     OutputStream out = getOuputStream()) {
+                    IOUtils.copy(stream, out);
+                }
+                return null;
+            }
+
+            private OutputStream getOuputStream() throws IOException {
+                OutputStream out = new FileOutputStream(filename);
+                if ("tar".equals(compression)) {
+                    return out;
+                }
+                if ("gz".equals(compression)) {
+                    return new GZIPOutputStream(out);
+                }
+                if ("bz".equals(compression)) {
+                    return new BZip2CompressorOutputStream(out);
+                }
+                throw new DockerAccessException("Unsupported format: %s", compression);
+            }
+        };
+    }
+
 
     @Override
     public void tag(String sourceImage, String targetImage, boolean force)

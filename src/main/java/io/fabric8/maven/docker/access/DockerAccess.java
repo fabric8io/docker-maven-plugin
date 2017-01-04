@@ -215,6 +215,16 @@ public interface DockerAccess {
     boolean removeImage(String image, boolean ... force) throws DockerAccessException;
 
     /**
+     * Save an image to a tar file
+     *
+     * @param image image to save
+     * @param filename filename
+     * @param compression "gz", "bz", or "tar"
+     * @throws DockerAccessException if an image cannot be removed
+     */
+    void saveImage(String image, String filename, String compression) throws DockerAccessException;
+
+    /**
      * List all networks
      *
      * @return list of <code>Network<code> objects
