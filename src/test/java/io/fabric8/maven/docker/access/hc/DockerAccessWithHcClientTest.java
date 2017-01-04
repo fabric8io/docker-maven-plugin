@@ -39,6 +39,9 @@ public class DockerAccessWithHcClientTest {
 
     private Exception thrownException;
     private String archiveFile;
+    private String filename;
+    private String compresion;
+    
 
     @Before
     public void setup() throws IOException {
@@ -81,16 +84,34 @@ public class DockerAccessWithHcClientTest {
         givenAnImageName("test");
         givenArchiveFile("test.tar");
         whenLoadImage();
-        thenImageLoaded();
+        thenNoException();
     }
     @Test
-
     public void testLoadImageFail() throws IOException {
         givenAnImageName("test");
         givenArchiveFile("test.tar");
-        givenTheLoadImageWillFail();
+        givenThePostWillFail();
         whenLoadImage();
         thenImageWasNotLoaded();
+    }
+
+    @Test
+    public void testSaveImage() throws IOException {
+        givenAnImageName("test");
+        givenFilename("test.tar");
+        givenCompression("");
+        whenSaveImage();
+        thenNoException();
+    }
+
+    @Test
+    public void testSaveImageFail() throws IOException {
+        givenAnImageName("test");
+        givenFilename("test.tar");
+        givenCompression("");
+        givenTheGetWillFail();
+        whenSaveImage();
+        thenImageWasNotSaved();
     }
 
     private void givenAnImageName(String imageName) {
@@ -103,6 +124,14 @@ public class DockerAccessWithHcClientTest {
 
     private void givenArchiveFile(String archiveFile) {
         this.archiveFile = archiveFile;
+    }
+    
+    private void givenFilename(String filename) {
+    	this.filename = filename;
+    }
+    
+    private void givenCompression(String compression) {
+    	this.compresion = compression;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -117,9 +146,16 @@ public class DockerAccessWithHcClientTest {
         }};
     }
 
-    private void givenTheLoadImageWillFail() throws IOException {
+    private void givenThePostWillFail() throws IOException {
         new StrictExpectations() {{
             mockDelegate.post(anyString, any, (ResponseHandler) any, 200);
+            result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
+        }};
+    }
+
+    private void givenTheGetWillFail() throws IOException {
+        new StrictExpectations() {{
+            mockDelegate.get(anyString, (ResponseHandler) any, 200);
             result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
         }};
     }
@@ -146,7 +182,16 @@ public class DockerAccessWithHcClientTest {
             thrownException = e;
         }
     }
-    private void thenImageLoaded() {
+    
+    private void whenSaveImage() {
+        try {
+            client.saveImage(imageName, filename, compresion);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    private void thenNoException() {
         assertNull(thrownException);
     }
 
@@ -154,5 +199,8 @@ public class DockerAccessWithHcClientTest {
         assertNotNull(thrownException);
     }
 
+    private void thenImageWasNotSaved() {
+        assertNotNull(thrownException);
+    }
 
 }

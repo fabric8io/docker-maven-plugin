@@ -65,6 +65,11 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String getImage(ImageName name) {
+        return u("images/%s/get", name.getNameWithoutTag())
+            .build();
+    }
+
     public String inspectContainer(String containerId) {
         return u("containers/%s/json", containerId)
                 .build();
