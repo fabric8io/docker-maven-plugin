@@ -348,11 +348,11 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder runCmds(List<String> theCmds) {
-            if (config.runCmds == null) {
+            if (theCmds == null) {
                 config.runCmds = new ArrayList<>();
+            } else {
+                config.runCmds = theCmds;
             }
-            else
-            	config.runCmds = theCmds;
             return this;
         }
 
