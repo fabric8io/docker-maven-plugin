@@ -384,16 +384,16 @@
   </build>
 
   <distributionManagement>
-    <snapshotRepository>
-      <id>sonatype-nexus-snapshots</id>
-      <name>Sonatype Nexus Snapshots</name>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </snapshotRepository>
     <repository>
-      <id>sonatype-nexus-staging</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>starling-central</id>
+      <name>Starling Releases</name>
+      <url>https://starlingbank.jfrog.io/starlingbank/libs-release-local</url>
     </repository>
+    <snapshotRepository>
+      <id>starling-snapshots</id>
+      <name>Starling Snapshots</name>
+      <url>https://starlingbank.jfrog.io/starlingbank/libs-snapshot-local</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <issueManagement>
