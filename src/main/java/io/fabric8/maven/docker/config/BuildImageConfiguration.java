@@ -22,7 +22,7 @@ public class BuildImageConfiguration implements Serializable {
 
     /**
      * Path to a dockerfile to use. Its parent directory is used as build context (i.e. as <code>dockerFileDir</code>).
-     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly givem
+     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly given
      * <code>dockerFileDir</code>
      *
      * @parameter
