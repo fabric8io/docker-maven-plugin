@@ -45,6 +45,30 @@ public class EnvUtilTest {
         assertTrue(Iterables.elementsEqual(it, expected));
     }
 
+    public void assertEmptyList(Iterable<String> actual) {
+        assertTrue(Iterables.elementsEqual(Collections.emptyList(), actual));
+    }
+    @Test
+    public void splitAtCommasEmpty() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.<String>emptyList()));
+    }
+
+    @Test
+    public void splitAtCommasSingleEmpty() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Arrays.asList("")));
+    }
+
+    @Test
+    public void splitAtCommasNullList() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(null));
+    }
+
+    // null occurs when <links><link></link></links>
+    @Test
+    public void splitAtCommasNullInList() {
+        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.<String>singletonList(null)));
+    }
+
     @Test
     @TestCaseName("{method}: input \"{0}\" splits to {1}")
     @Parameters

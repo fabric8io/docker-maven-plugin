@@ -12,6 +12,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.io.FileUtils;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -127,7 +128,8 @@ public class EnvUtil {
         if(input==null) {
             return Collections.emptyList();
         }
-        return Lists.newArrayList(Iterables.concat(Iterables.transform(input, COMMA_SPLITTER)));
+        Iterable<String> nonEmptyInputs = Iterables.filter(input, Predicates.notNull());
+        return Lists.newArrayList(Iterables.concat(Iterables.transform(nonEmptyInputs, COMMA_SPLITTER)));
     }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
