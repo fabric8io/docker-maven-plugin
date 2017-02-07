@@ -2,7 +2,6 @@ package io.fabric8.maven.docker;
 
 import java.util.Map;
 
-import io.fabric8.maven.docker.service.AuthService;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.util.MojoParameters;
 
@@ -51,13 +50,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
                 .buildArgs(buildArgs)
                 .mojoParameters(createMojoParameters())
                 .pullRegistry(pullRegistry)
-                .build();
-    }
-
-    @Override
-    protected AuthService.AuthContext getAuthContext() throws MojoExecutionException {
-        return new AuthService.AuthContext.Builder(super.getAuthContext())
-                .mojoParameters(createMojoParameters())
                 .build();
     }
 

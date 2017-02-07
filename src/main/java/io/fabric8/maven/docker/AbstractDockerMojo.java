@@ -52,12 +52,6 @@ import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
  */
 public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigHelper.Customizer {
 
-    // Key for the previously used image cache
-    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
-
-    // Filename for holding the build timestamp
-    public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
-
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
 
@@ -66,6 +60,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
+
+    // Key for the previously used image cache
+    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
+
+    // Filename for holding the build timestamp
+    public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
 
     // Current maven project
     @Parameter(defaultValue= "${project}", readonly = true)
@@ -258,6 +258,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected AuthService.AuthContext getAuthContext() throws MojoExecutionException {
         return new AuthService.AuthContext.Builder()
+                .settings(settings)
                 .authConfig(authConfig)
                 .authConfigFactory(authConfigFactory)
                 .skipExtendedAuth(skipExtendedAuth)
@@ -269,7 +270,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * call or a new current date is created
      * @return timestamp to use
      */
-    public synchronized Date getBuildTimestamp() throws MojoExecutionException {
+    protected synchronized Date getBuildTimestamp() throws MojoExecutionException {
         Date now = (Date) getPluginContext().get(CONTEXT_KEY_BUILD_TIMESTAMP);
         if (now == null) {
             now = getReferenceDate();
