@@ -60,8 +60,6 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.watchPostExec")
     private String watchPostExec;
 
-    private BuildService.BuildContext buildContext;
-
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
@@ -72,7 +70,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
                                                                        MojoExecutionException {
 
-        this.buildContext = getBuildContext();
+        BuildService.BuildContext buildContext = getBuildContext();
         WatchService.WatchContext watchContext = getWatchContext();
 
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
@@ -88,7 +86,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
                 .pomLabel(getPomLabel())
-                .mojoParameters(buildContext.getMojoParameters())
+                .mojoParameters(createMojoParameters())
                 .build();
     }
 

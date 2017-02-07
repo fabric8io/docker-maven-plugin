@@ -27,4 +27,4 @@ import org.apache.maven.plugins.annotations.Mojo;
  */
 @Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public class BuildMojo extends BuildMojoNoFork {}
+public class BuildMojo extends BuildMojoNoFork { }

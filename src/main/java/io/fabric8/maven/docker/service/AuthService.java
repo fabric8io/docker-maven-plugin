@@ -6,9 +6,9 @@ import java.util.Map;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.MojoParameters;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.settings.Settings;
 
 /**
  * Service to obtain authentication information for pushing to Docker registry.
@@ -21,14 +21,14 @@ public class AuthService {
         String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
 
         return authContext.getAuthConfigFactory().createAuthConfig(isPush, authContext.isSkipExtendedAuth(), authContext.getAuthConfig(),
-                authContext.getMojoParameters().getSettings(), user, registry);
+                authContext.getSettings(), user, registry);
     }
 
     // ======================================================
 
     public static class AuthContext implements Serializable {
 
-        private MojoParameters mojoParameters;
+        private Settings settings;
 
         private AuthConfigFactory authConfigFactory;
 
@@ -39,8 +39,8 @@ public class AuthService {
         public AuthContext() {
         }
 
-        public MojoParameters getMojoParameters() {
-            return mojoParameters;
+        public Settings getSettings() {
+            return settings;
         }
 
         public AuthConfigFactory getAuthConfigFactory() {
@@ -67,8 +67,8 @@ public class AuthService {
                 this.context = context;
             }
 
-            public Builder mojoParameters(MojoParameters mojoParameters) {
-                context.mojoParameters = mojoParameters;
+            public Builder settings(Settings settings) {
+                context.settings = settings;
                 return this;
             }
 
