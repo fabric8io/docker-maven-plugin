@@ -11,6 +11,7 @@ import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.service.AuthService;
 import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
@@ -53,9 +54,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
 
-    // Minimal API version, independent of any feature used
-    public static final String API_VERSION = "1.18";
-
     // Current maven project
     @Parameter(defaultValue= "${project}", readonly = true)
     protected MavenProject project;
@@ -78,6 +76,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     @Component
     protected ServiceHubFactory serviceHubFactory;
+
+    @Component
+    protected DockerAccessFactory dockerAccessFactory;
 
     @Parameter(property = "docker.autoPull", defaultValue = "on")
     protected String autoPull;
@@ -179,9 +180,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected Logger log;
 
-    // API version as requested from the client
-    private String serverVersion;
-
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
      * {@link #executeInternal(ServiceHub)}
@@ -202,7 +200,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             String minimalApiVersion = initImageConfiguration(getBuildTimestamp());
             DockerAccess access = null;
             try {
-                access = createDockerAccess(minimalApiVersion);
+                if (isDockerAccessRequired()) {
+                    DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContextBuilder(minimalApiVersion).build();
+                    access = dockerAccessFactory.createDockerAccess(dockerAccessContext, log);
+                }
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
@@ -217,6 +218,17 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             }
         }
+    }
+
+    protected DockerAccessFactory.DockerAccessContext.Builder getDockerAccessContextBuilder(String minimalApiVersion) {
+        return new DockerAccessFactory.DockerAccessContext.Builder()
+                .dockerHost(dockerHost)
+                .certPath(certPath)
+                .machine(machine)
+                .maxConnections(maxConnections)
+                .minimalApiVersion(minimalApiVersion)
+                .mavenProject(project)
+                .skipMachine(skipMachine);
     }
 
     protected BuildService.BuildContext.Builder getBuildContextBuilder() throws MojoExecutionException {
@@ -295,61 +307,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return imageConfigs;
     }
 
-    private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
-        DockerAccess access = null;
-        if (isDockerAccessRequired()) {
-            try {
-                DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector();
-                DockerConnectionDetector.ConnectionParameter connectionParam =
-                    dockerConnectionDetector.detectConnectionParameter(dockerHost, certPath);
-                String version =  minimalVersion != null ? minimalVersion : API_VERSION;
-                access = new DockerAccessWithHcClient("v" + version, connectionParam.getUrl(),
-                                                      connectionParam.getCertPath(),
-                                                      maxConnections,
-                                                      log);
-                access.start();
-                setDockerHostAddressProperty(connectionParam.getUrl());
-                serverVersion = access.getServerApiVersion();
-                if (!EnvUtil.greaterOrEqualsVersion(serverVersion,version)) {
-                    throw new MojoExecutionException(
-                        String.format("Server API version %s is smaller than required API version %s", serverVersion, version));
-                }
-            }
-            catch (IOException e) {
-                throw new MojoExecutionException("Cannot create docker access object ", e);
-            }
-        }
-        return access;
-    }
 
-    private DockerConnectionDetector createDockerConnectionDetector() {
-        return new DockerConnectionDetector(getDockerHostProviders());
-    }
 
-    /**
-     * Return a list of providers which could delive connection parameters from
-     * calling external commands. For this plugin this is docker-machine, but can be overridden
-     * to add other config options, too.
-     *
-     * @return list of providers or <code>null</code> if none are applicable
-     */
-    protected List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
-        DockerMachineConfiguration config = machine;
-        if (config == null) {
-            Properties projectProps = project.getProperties();
-            if (!skipMachine) {
-                if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
-                    config = new DockerMachineConfiguration(
-                        projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
-                        projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
-                }
-            }
-        }
 
-        List<DockerConnectionDetector.DockerHostProvider> ret = new ArrayList<>();
-        ret.add(new DockerMachine(log, config));
-        return ret;
-    }
 
    /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
@@ -390,24 +350,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return volumes;
     }
 
-    // Registry for managed containers
-    private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {
-        Properties props = project.getProperties();
-        if (props.getProperty("docker.host.address") == null) {
-            final String host;
-            try {
-                URI uri = new URI(dockerUrl);
-                if (uri.getHost() == null && (uri.getScheme().equals("unix") || uri.getScheme().equals("npipe"))) {
-                    host = "localhost";
-                } else {
-                    host = uri.getHost();
-                }
-            } catch (URISyntaxException e) {
-                throw new MojoFailureException("Cannot parse " + dockerUrl + " as URI: " + e.getMessage(), e);
-            }
-            props.setProperty("docker.host.address", host == null ? "" : host);
-        }
-    }
+
 
     // =================================================================================
 
