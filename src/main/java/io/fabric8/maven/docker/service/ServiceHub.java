@@ -41,6 +41,7 @@ public class ServiceHub {
     private final ArchiveService archiveService;
     private final VolumeService volumeService;
     private final AuthService authService;
+    private final WatchService watchService;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
@@ -57,11 +58,13 @@ public class ServiceHub {
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, archiveService, authService, logger);
             volumeService = new VolumeService(dockerAccess);
+            watchService = new WatchService(archiveService, buildService, dockerAccess, mojoExecutionService, queryService, runService, logger);
         } else {
             queryService = null;
             runService = null;
             buildService = null;
             volumeService = null;
+            watchService = null;
         }
     }
 
@@ -124,6 +127,16 @@ public class ServiceHub {
     public AuthService getAuthService() {
         checkDockerAccessInitialization();
         return authService;
+    }
+
+    /**
+     * The watch service is responsible for watching container status and rebuilding
+     *
+     * @return the watch service
+     */
+    public WatchService getWatchService() {
+        checkDockerAccessInitialization();
+        return watchService;
     }
 
     public ArchiveService getArchiveService() {
