@@ -1,23 +1,39 @@
 package io.fabric8.maven.docker;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.DockerMachineConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.AuthService;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
-import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageNameFormatter;
+import io.fabric8.maven.docker.util.ImagePullCache;
+import io.fabric8.maven.docker.util.ImagePullCacheManager;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.PomLabel;
+
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -27,12 +43,6 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.DockerMachineConfiguration;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
-import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
-import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 
 /**
  * Base class for this plugin.
@@ -41,6 +51,9 @@ import io.fabric8.maven.docker.log.LogOutputSpecFactory;
  * @since 26.03.14
  */
 public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigHelper.Customizer {
+
+    // Key for the previously used image cache
+    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
 
     // Filename for holding the build timestamp
     public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
@@ -180,6 +193,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected Logger log;
 
+    private String minimalApiVersion;
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
      * {@link #executeInternal(ServiceHub)}
@@ -197,11 +212,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)
-            String minimalApiVersion = initImageConfiguration(getBuildTimestamp());
+            this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
             DockerAccess access = null;
             try {
                 if (isDockerAccessRequired()) {
-                    DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContextBuilder(minimalApiVersion).build();
+                    DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
                     access = dockerAccessFactory.createDockerAccess(dockerAccessContext, log);
                 }
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
@@ -220,31 +235,33 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
-    protected DockerAccessFactory.DockerAccessContext.Builder getDockerAccessContextBuilder(String minimalApiVersion) {
+    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
         return new DockerAccessFactory.DockerAccessContext.Builder()
                 .dockerHost(dockerHost)
                 .certPath(certPath)
                 .machine(machine)
                 .maxConnections(maxConnections)
                 .minimalApiVersion(minimalApiVersion)
-                .mavenProject(project)
-                .skipMachine(skipMachine);
+                .projectProperties(project.getProperties())
+                .skipMachine(skipMachine)
+                .build();
     }
 
-    protected BuildService.BuildContext.Builder getBuildContextBuilder() throws MojoExecutionException {
+    protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
         return new BuildService.BuildContext.Builder()
-                .authParameters(getAuthParametersBuilder().build())
+                .authContext(getAuthContext())
                 .autoPull(autoPull)
-                .pluginContext(getPluginContext())
-                .buildTimestamp(getBuildTimestamp())
-                .registry(registry);
+                .imagePullCacheManager(getImagePullCacheManager())
+                .registry(registry)
+                .build();
     }
 
-    protected AuthService.AuthParameters.Builder getAuthParametersBuilder() throws MojoExecutionException {
-        return new AuthService.AuthParameters.Builder()
+    protected AuthService.AuthContext getAuthContext() throws MojoExecutionException {
+        return new AuthService.AuthContext.Builder()
                 .authConfig(authConfig)
                 .authConfigFactory(authConfigFactory)
-                .skipExtendedAuth(skipExtendedAuth);
+                .skipExtendedAuth(skipExtendedAuth)
+                .build();
     }
 
     /**
@@ -308,8 +325,26 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
 
+    private ImagePullCacheManager getImagePullCacheManager() {
+        return new ImagePullCacheManager() {
+            @Override
+            public ImagePullCache load() {
+                @SuppressWarnings({ "rawtypes", "unchecked" })
+                Properties userProperties = session.getUserProperties();
+                String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
+                ImagePullCache cache = new ImagePullCache(pullCacheJson);
+                if (pullCacheJson == null) {
+                    userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+                }
+                return cache;
+            }
 
-
+            @Override
+            public void save(ImagePullCache cache) {
+                session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
+            }
+        };
+    }
 
    /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching

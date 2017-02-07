@@ -3,17 +3,16 @@ package io.fabric8.maven.docker;
 import java.io.FileNotFoundException;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
+
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.QueryService;
 
 
 /**

@@ -15,11 +15,9 @@ import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
 
 /**
@@ -45,13 +43,12 @@ public class DockerAccessFactory {
             access.start();
             setDockerHostAddressProperty(dockerAccessContext, connectionParam.getUrl());
             String serverVersion = access.getServerApiVersion();
-            if (!EnvUtil.greaterOrEqualsVersion(serverVersion,version)) {
+            if (!EnvUtil.greaterOrEqualsVersion(serverVersion, version)) {
                 throw new MojoExecutionException(
                         String.format("Server API version %s is smaller than required API version %s", serverVersion, version));
             }
             return access;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new MojoExecutionException("Cannot create docker access object ", e);
         }
 
@@ -79,7 +76,7 @@ public class DockerAccessFactory {
     private List<DockerConnectionDetector.DockerHostProvider> getDefaultDockerHostProviders(DockerAccessContext dockerAccessContext, Logger log) {
         DockerMachineConfiguration config = dockerAccessContext.getMachine();
         if (config == null) {
-            Properties projectProps = dockerAccessContext.getMavenProject().getProperties();
+            Properties projectProps = dockerAccessContext.getProjectProperties();
             if (!dockerAccessContext.isSkipMachine()) {
                 if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
                     config = new DockerMachineConfiguration(
@@ -96,7 +93,7 @@ public class DockerAccessFactory {
 
     // Registry for managed containers
     private void setDockerHostAddressProperty(DockerAccessContext dockerAccessContext, String dockerUrl) throws MojoFailureException {
-        Properties props = dockerAccessContext.getMavenProject().getProperties();
+        Properties props = dockerAccessContext.getProjectProperties();
         if (props.getProperty("docker.host.address") == null) {
             final String host;
             try {
@@ -117,7 +114,7 @@ public class DockerAccessFactory {
 
     public static class DockerAccessContext implements Serializable {
 
-        private MavenProject mavenProject;
+        private Properties projectProperties;
 
         private DockerMachineConfiguration machine;
 
@@ -131,75 +128,42 @@ public class DockerAccessFactory {
 
         private String certPath;
 
-        private int maxConnections = 100;
+        private int maxConnections;
 
-        public DockerAccessContext() {}
-
-        public MavenProject getMavenProject() {
-            return mavenProject;
+        public DockerAccessContext() {
         }
 
-        public void setMavenProject(MavenProject mavenProject) {
-            this.mavenProject = mavenProject;
+        public Properties getProjectProperties() {
+            return projectProperties;
         }
 
         public DockerMachineConfiguration getMachine() {
             return machine;
         }
 
-        public void setMachine(DockerMachineConfiguration machine) {
-            this.machine = machine;
-        }
-
         public List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
             return dockerHostProviders;
-        }
-
-        public void setDockerHostProviders(List<DockerConnectionDetector.DockerHostProvider> dockerHostProviders) {
-            this.dockerHostProviders = dockerHostProviders;
         }
 
         public boolean isSkipMachine() {
             return skipMachine;
         }
 
-        public void setSkipMachine(boolean skipMachine) {
-            this.skipMachine = skipMachine;
-        }
-
         public String getMinimalApiVersion() {
             return minimalApiVersion;
-        }
-
-        public void setMinimalApiVersion(String minimalApiVersion) {
-            this.minimalApiVersion = minimalApiVersion;
         }
 
         public String getDockerHost() {
             return dockerHost;
         }
 
-        public void setDockerHost(String dockerHost) {
-            this.dockerHost = dockerHost;
-        }
-
         public String getCertPath() {
             return certPath;
-        }
-
-        public void setCertPath(String certPath) {
-            this.certPath = certPath;
         }
 
         public int getMaxConnections() {
             return maxConnections;
         }
-
-        public void setMaxConnections(int maxConnections) {
-            this.maxConnections = maxConnections;
-        }
-
-        // ===========================================
 
         public static class Builder {
 
@@ -209,43 +173,43 @@ public class DockerAccessFactory {
                 this.context = new DockerAccessContext();
             }
 
-            public Builder mavenProject(MavenProject mavenProject) {
-                context.setMavenProject(mavenProject);
+            public Builder projectProperties(Properties projectProperties) {
+                context.projectProperties = projectProperties;
                 return this;
             }
 
             public Builder machine(DockerMachineConfiguration machine) {
-                context.setMachine(machine);
+                context.machine = machine;
                 return this;
             }
 
             public Builder dockerHostProviders(List<DockerConnectionDetector.DockerHostProvider> dockerHostProviders) {
-                context.setDockerHostProviders(dockerHostProviders);
+                context.dockerHostProviders = dockerHostProviders;
                 return this;
             }
 
             public Builder skipMachine(boolean skipMachine) {
-                context.setSkipMachine(skipMachine);
+                context.skipMachine = skipMachine;
                 return this;
             }
 
             public Builder minimalApiVersion(String minimalApiVersion) {
-                context.setMinimalApiVersion(minimalApiVersion);
+                context.minimalApiVersion = minimalApiVersion;
                 return this;
             }
 
             public Builder dockerHost(String dockerHost) {
-                context.setDockerHost(dockerHost);
+                context.dockerHost = dockerHost;
                 return this;
             }
 
             public Builder certPath(String certPath) {
-                context.setCertPath(certPath);
+                context.certPath = certPath;
                 return this;
             }
 
             public Builder maxConnections(int maxConnections) {
-                context.setMaxConnections(maxConnections);
+                context.maxConnections = maxConnections;
                 return this;
             }
 

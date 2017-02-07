@@ -2,18 +2,18 @@ package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.AuthService;
+import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
+
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.service.ServiceHub;
 
 /**
  * Goal for pushing a data-docker container
@@ -46,8 +46,8 @@ public class PushMojo extends AbstractDockerMojo {
             String name = imageConfig.getName();
             if (buildConfig != null) {
                 String configuredRegistry = getConfiguredRegistry(imageConfig, pushRegistry);
-                AuthService.AuthParameters authParameters = getAuthParametersBuilder().build();
-                AuthConfig authConfig = hub.getAuthService().prepareAuthConfig(new ImageName(name), configuredRegistry, true, authParameters);
+                AuthService.AuthContext authContext = getAuthContext();
+                AuthConfig authConfig = hub.getAuthService().prepareAuthConfig(new ImageName(name), configuredRegistry, true, authContext);
 
                 DockerAccess docker = hub.getDockerAccess();
 

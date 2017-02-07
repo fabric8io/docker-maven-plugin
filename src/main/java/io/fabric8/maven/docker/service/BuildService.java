@@ -1,8 +1,13 @@
 package io.fabric8.maven.docker.service;
 
-import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -11,28 +16,19 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.ImagePullCache;
+import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
+
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.maven.plugin.MojoExecutionException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 public class BuildService {
-
-    // Key for the previously used image cache
-    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
 
     private final DockerAccess docker;
     private final QueryService queryService;
@@ -48,7 +44,15 @@ public class BuildService {
         this.log = log;
     }
 
-    public void executeBuildWorkflow(ImageConfiguration imageConfig, BuildContext buildContext)
+    /**
+     * Pull the base image if needed and run the build.
+     *
+     * @param imageConfig the image configuration
+     * @param buildContext the build context
+     * @throws DockerAccessException
+     * @throws MojoExecutionException
+     */
+    public void pullAndBuildImage(ImageConfiguration imageConfig, BuildContext buildContext)
             throws DockerAccessException, MojoExecutionException {
 
         autoPullBaseImage(imageConfig, buildContext);
@@ -67,16 +71,17 @@ public class BuildService {
      */
     public void checkImageWithAutoPull(String image, String registry, boolean autoPullAlwaysAllowed, BuildContext buildContext) throws DockerAccessException, MojoExecutionException {
         // TODO: further refactoring could be done to avoid referencing the QueryService here
-        ImagePullCache previouslyPulledCache = getPreviouslyPulledImageCache(buildContext);
+        ImagePullCache previouslyPulledCache = buildContext.getImagePullCacheManager().load();
         if (!queryService.imageRequiresAutoPull(buildContext.getAutoPull(), image, autoPullAlwaysAllowed, previouslyPulledCache)) {
             return;
         }
 
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
-        docker.pullImage(withLatestIfNoTag(image), authService.prepareAuthConfig(imageName, registry, false, buildContext.getAuthParameters()), registry);
+        docker.pullImage(withLatestIfNoTag(image), authService.prepareAuthConfig(imageName, registry, false, buildContext.getAuthContext()), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
-        updatePreviousPulledImageCache(image, buildContext);
+        previouslyPulledCache.add(image);
+        buildContext.getImagePullCacheManager().save(previouslyPulledCache);
 
         if (registry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
@@ -97,7 +102,7 @@ public class BuildService {
      * @throws MojoExecutionException
      */
     public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
-        throws DockerAccessException, MojoExecutionException {
+            throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
         ImageName.validate(imageName);
@@ -126,13 +131,13 @@ public class BuildService {
 
         // auto is now supported by docker, consider switching?
         BuildOptions opts =
-            new BuildOptions(buildConfig.getBuildOptions())
-            .dockerfile(getDockerfileName(buildConfig))
-            .forceRemove(cleanupMode.isRemove())
-            .noCache(noCache)
-            .buildArgs(mergedBuildMap);
+                new BuildOptions(buildConfig.getBuildOptions())
+                        .dockerfile(getDockerfileName(buildConfig))
+                        .forceRemove(cleanupMode.isRemove())
+                        .noCache(noCache)
+                        .buildArgs(mergedBuildMap);
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
-        log.info("%s: Built image %s",imageConfig.getDescription(), newImageId);
+        log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);
 
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
             try {
@@ -141,7 +146,7 @@ public class BuildService {
             } catch (DockerAccessException exp) {
                 if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
                     log.warn("%s: %s (old image)%s", imageConfig.getDescription(), exp.getMessage(),
-                             (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
+                            (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
                 } else {
                     throw exp;
                 }
@@ -166,12 +171,10 @@ public class BuildService {
     }
 
     private String doBuildImage(String imageName, File dockerArchive, BuildOptions options)
-        throws DockerAccessException, MojoExecutionException {
+            throws DockerAccessException, MojoExecutionException {
         docker.buildImage(imageName, dockerArchive, options);
         return queryService.getImageId(imageName);
     }
-
-    // ============================================
 
     private Map<String, String> addBuildArgs(BuildContext buildContext) {
         Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getMojoParameters().getProject().getProperties());
@@ -258,23 +261,6 @@ public class BuildService {
         }
     }
 
-    private void updatePreviousPulledImageCache(String image, BuildContext buildContext) {
-        ImagePullCache cache = getPreviouslyPulledImageCache(buildContext);
-        cache.add(image);
-        buildContext.getMojoParameters().getSession().getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-    }
-
-    private synchronized ImagePullCache getPreviouslyPulledImageCache(BuildContext buildContext) {
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        Properties userProperties = buildContext.getMojoParameters().getSession().getUserProperties();
-        String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
-        ImagePullCache cache = new ImagePullCache(pullCacheJson);
-        if (pullCacheJson == null) {
-            userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-        }
-        return cache;
-    }
-
     // Fetch only latest if no tag is given
     private String withLatestIfNoTag(String name) {
         ImageName imageName = new ImageName(name);
@@ -285,15 +271,13 @@ public class BuildService {
         return str == null || str.isEmpty();
     }
 
+
     // ===========================================
+
 
     public static class BuildContext implements Serializable {
 
         private MojoParameters mojoParameters;
-
-        private Map pluginContext;
-
-        private Date buildTimestamp;
 
         private Map<String, String> buildArgs;
 
@@ -301,77 +285,42 @@ public class BuildService {
 
         private String registry;
 
-        private String autoPull = "on";
+        private String autoPull;
 
-        private AuthService.AuthParameters authParameters;
+        private ImagePullCacheManager imagePullCacheManager;
 
-        public BuildContext() {}
+        private AuthService.AuthContext authContext;
+
+        public BuildContext() {
+        }
 
         public MojoParameters getMojoParameters() {
             return mojoParameters;
-        }
-
-        public void setMojoParameters(MojoParameters mojoParameters) {
-            this.mojoParameters = mojoParameters;
-        }
-
-        public Map getPluginContext() {
-            return pluginContext;
-        }
-
-        public void setPluginContext(Map pluginContext) {
-            this.pluginContext = pluginContext;
-        }
-
-        public Date getBuildTimestamp() {
-            return buildTimestamp;
-        }
-
-        public void setBuildTimestamp(Date buildTimestamp) {
-            this.buildTimestamp = buildTimestamp;
         }
 
         public Map<String, String> getBuildArgs() {
             return buildArgs;
         }
 
-        public void setBuildArgs(Map<String, String> buildArgs) {
-            this.buildArgs = buildArgs;
-        }
-
         public String getPullRegistry() {
             return pullRegistry;
-        }
-
-        public void setPullRegistry(String pullRegistry) {
-            this.pullRegistry = pullRegistry;
         }
 
         public String getRegistry() {
             return registry;
         }
 
-        public void setRegistry(String registry) {
-            this.registry = registry;
-        }
-
         public String getAutoPull() {
             return autoPull;
         }
 
-        public void setAutoPull(String autoPull) {
-            this.autoPull = autoPull;
+        public ImagePullCacheManager getImagePullCacheManager() {
+            return imagePullCacheManager;
         }
 
-        public AuthService.AuthParameters getAuthParameters() {
-            return authParameters;
+        public AuthService.AuthContext getAuthContext() {
+            return authContext;
         }
-
-        public void setAuthParameters(AuthService.AuthParameters authParameters) {
-            this.authParameters = authParameters;
-        }
-
-        // ===========================================
 
         public static class Builder {
 
@@ -381,43 +330,42 @@ public class BuildService {
                 this.context = new BuildContext();
             }
 
+            public Builder(BuildContext context) {
+                this.context = context;
+            }
+
             public Builder mojoParameters(MojoParameters mojoParameters) {
-                context.setMojoParameters(mojoParameters);
-                return this;
-            }
-
-            public Builder pluginContext(Map pluginContext) {
-                context.setPluginContext(pluginContext);
-                return this;
-            }
-
-            public Builder buildTimestamp(Date buildTimestamp) {
-                context.setBuildTimestamp(buildTimestamp);
+                context.mojoParameters = mojoParameters;
                 return this;
             }
 
             public Builder buildArgs(Map<String, String> buildArgs) {
-                context.setBuildArgs(buildArgs);
+                context.buildArgs = buildArgs;
                 return this;
             }
 
             public Builder pullRegistry(String pullRegistry) {
-                context.setPullRegistry(pullRegistry);
+                context.pullRegistry = pullRegistry;
                 return this;
             }
 
             public Builder registry(String registry) {
-                context.setRegistry(registry);
+                context.registry = registry;
                 return this;
             }
 
             public Builder autoPull(String autoPull) {
-                context.setAutoPull(autoPull);
+                context.autoPull = autoPull;
                 return this;
             }
 
-            public Builder authParameters(AuthService.AuthParameters authParameters) {
-                context.setAuthParameters(authParameters);
+            public Builder imagePullCacheManager(ImagePullCacheManager imagePullCacheManager) {
+                context.imagePullCacheManager = imagePullCacheManager;
+                return this;
+            }
+
+            public Builder authContext(AuthService.AuthContext authContext) {
+                context.authContext = authContext;
                 return this;
             }
 

@@ -1,19 +1,11 @@
 package io.fabric8.maven.docker;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.AuthService;
 import io.fabric8.maven.docker.service.BuildService;
-import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.MojoParameters;
+
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -54,23 +46,24 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     private String outputDirectory;
 
     @Override
-    protected BuildService.BuildContext.Builder getBuildContextBuilder() throws MojoExecutionException {
-        return super.getBuildContextBuilder()
+    protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
+        return new BuildService.BuildContext.Builder(super.getBuildContext())
                 .buildArgs(buildArgs)
                 .mojoParameters(createMojoParameters())
-                .pullRegistry(pullRegistry);
+                .pullRegistry(pullRegistry)
+                .build();
     }
 
     @Override
-    protected AuthService.AuthParameters.Builder getAuthParametersBuilder() throws MojoExecutionException {
-        return super.getAuthParametersBuilder()
-                .mojoParameters(createMojoParameters());
+    protected AuthService.AuthContext getAuthContext() throws MojoExecutionException {
+        return new AuthService.AuthContext.Builder(super.getAuthContext())
+                .mojoParameters(createMojoParameters())
+                .build();
     }
 
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
                                   settings, sourceDirectory, outputDirectory);
     }
-
 
 }

@@ -11,22 +11,22 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
- *
+ * Service to obtain authentication information for pushing to Docker registry.
  */
 public class AuthService {
 
-    public AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush, AuthParameters authParameters)
+    public AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush, AuthContext authContext)
             throws MojoExecutionException {
         String user = isPush ? image.getUser() : null;
         String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
 
-        return authParameters.getAuthConfigFactory().createAuthConfig(isPush, authParameters.isSkipExtendedAuth(), authParameters.getAuthConfig(),
-                authParameters.getMojoParameters().getSettings(), user, registry);
+        return authContext.getAuthConfigFactory().createAuthConfig(isPush, authContext.isSkipExtendedAuth(), authContext.getAuthConfig(),
+                authContext.getMojoParameters().getSettings(), user, registry);
     }
 
-    // ======================================
+    // ======================================================
 
-    public static class AuthParameters implements Serializable {
+    public static class AuthContext implements Serializable {
 
         private MojoParameters mojoParameters;
 
@@ -36,72 +36,59 @@ public class AuthService {
 
         private Map authConfig;
 
-        public AuthParameters() {}
+        public AuthContext() {
+        }
 
         public MojoParameters getMojoParameters() {
             return mojoParameters;
-        }
-
-        public void setMojoParameters(MojoParameters mojoParameters) {
-            this.mojoParameters = mojoParameters;
         }
 
         public AuthConfigFactory getAuthConfigFactory() {
             return authConfigFactory;
         }
 
-        public void setAuthConfigFactory(AuthConfigFactory authConfigFactory) {
-            this.authConfigFactory = authConfigFactory;
-        }
-
         public boolean isSkipExtendedAuth() {
             return skipExtendedAuth;
-        }
-
-        public void setSkipExtendedAuth(boolean skipExtendedAuth) {
-            this.skipExtendedAuth = skipExtendedAuth;
         }
 
         public Map getAuthConfig() {
             return authConfig;
         }
 
-        public void setAuthConfig(Map authConfig) {
-            this.authConfig = authConfig;
-        }
-
-        // ===========================================
-
         public static class Builder {
 
-            private AuthService.AuthParameters parameters = new AuthService.AuthParameters();
+            private AuthContext context = new AuthContext();
 
             public Builder() {
-                this.parameters = new AuthService.AuthParameters();
+                this.context = new AuthContext();
+            }
+
+            public Builder(AuthContext context) {
+                this.context = context;
             }
 
             public Builder mojoParameters(MojoParameters mojoParameters) {
-                parameters.setMojoParameters(mojoParameters);
+                context.mojoParameters = mojoParameters;
                 return this;
             }
 
             public Builder authConfigFactory(AuthConfigFactory authConfigFactory) {
-                parameters.setAuthConfigFactory(authConfigFactory);
+                context.authConfigFactory = authConfigFactory;
                 return this;
             }
 
             public Builder skipExtendedAuth(boolean skipExtendedAuth) {
-                parameters.setSkipExtendedAuth(skipExtendedAuth);
+                context.skipExtendedAuth = skipExtendedAuth;
                 return this;
             }
 
             public Builder authConfig(Map authConfig) {
-                parameters.setAuthConfig(authConfig);
+                context.authConfig = authConfig;
                 return this;
             }
 
-            public AuthParameters build() {
-                return parameters;
+            public AuthContext build() {
+                return context;
             }
         }
     }
