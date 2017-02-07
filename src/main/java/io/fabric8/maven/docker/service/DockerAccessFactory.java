@@ -173,6 +173,10 @@ public class DockerAccessFactory {
                 this.context = new DockerAccessContext();
             }
 
+            public Builder(DockerAccessContext context) {
+                this.context = context;
+            }
+
             public Builder projectProperties(Properties projectProperties) {
                 context.projectProperties = projectProperties;
                 return this;
