@@ -15,30 +15,15 @@ package io.fabric8.maven.docker;/*
  * limitations under the License.
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.assembly.AssemblyFiles;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
-import io.fabric8.maven.docker.service.*;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.service.WatchService;
+
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.StringUtils;
 
 /**
  * Mojo for watching source code changes.
@@ -75,6 +60,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.watchPostExec")
     private String watchPostExec;
 
+    private BuildService.BuildContext buildContext;
+
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
@@ -85,13 +72,13 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
                                                                        MojoExecutionException {
 
-        BuildService.BuildContext buildContext = getBuildContextBuilder().build();
-        WatchService.WatchContext watchContext = getWatchContextBuilder(buildContext).build();
+        this.buildContext = getBuildContext();
+        WatchService.WatchContext watchContext = getWatchContext();
 
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
     }
 
-    protected WatchService.WatchContext.Builder getWatchContextBuilder(BuildService.BuildContext buildContext) throws MojoExecutionException {
+    protected WatchService.WatchContext getWatchContext() throws MojoExecutionException {
         return new WatchService.WatchContext.Builder()
                 .watchInterval(watchInterval)
                 .watchMode(watchMode)
@@ -101,7 +88,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
                 .pomLabel(getPomLabel())
-                .mojoParameters(buildContext.getMojoParameters());
+                .mojoParameters(buildContext.getMojoParameters())
+                .build();
     }
 
 }

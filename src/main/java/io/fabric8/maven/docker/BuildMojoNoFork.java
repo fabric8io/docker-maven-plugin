@@ -4,18 +4,18 @@ import java.util.Date;
 import java.util.List;
 
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.service.BuildService;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.EnvUtil;
 
 /**
  * Mojo for building a data image
@@ -52,13 +52,13 @@ public class BuildMojoNoFork extends AbstractBuildSupportMojo {
     }
 
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
-        throws MojoExecutionException, DockerAccessException {
+            throws MojoExecutionException, DockerAccessException {
 
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
-        BuildService.BuildContext buildContext = getBuildContextBuilder().build();
+        BuildService.BuildContext buildContext = getBuildContext();
 
-        hub.getBuildService().executeBuildWorkflow(imageConfig, buildContext);
+        hub.getBuildService().pullAndBuildImage(imageConfig, buildContext);
         if (!skipTag) {
             tagImage(imageConfig.getName(), imageConfig, hub.getDockerAccess());
         }
@@ -72,7 +72,7 @@ public class BuildMojoNoFork extends AbstractBuildSupportMojo {
 
 
     private void tagImage(String imageName, ImageConfiguration imageConfig, DockerAccess dockerAccess)
-        throws DockerAccessException, MojoExecutionException {
+            throws DockerAccessException, MojoExecutionException {
 
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (tags.size() > 0) {

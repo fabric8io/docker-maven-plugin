@@ -28,7 +28,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
- *
+ * Watch service for monitoring changes and restarting containers
  */
 public class WatchService {
 
@@ -65,7 +65,7 @@ public class WatchService {
                 String imageId = queryService.getImageId(imageConfig.getName());
                 String containerId = runService.lookupContainer(imageConfig.getName());
 
-                ImageWatcher watcher = new ImageWatcher(imageConfig, imageId, containerId, context);
+                ImageWatcher watcher = new ImageWatcher(imageConfig, context, imageId, containerId);
                 long interval = watcher.getInterval();
 
                 WatchMode watchMode = watcher.getWatchMode(imageConfig);
@@ -77,7 +77,7 @@ public class WatchService {
                         imageConfig.getBuildConfiguration().getAssemblyConfiguration() != null) {
                     if (watcher.isCopy()) {
                         String containerBaseDir = imageConfig.getBuildConfiguration().getAssemblyConfiguration().getTargetDir();
-                        schedule(executor, createCopyWatchTask(watcher, context.getMojoParameters(), containerBaseDir),interval);
+                        schedule(executor, createCopyWatchTask(watcher, context.getMojoParameters(), containerBaseDir), interval);
                         tasks.add("copying artifacts");
                     }
 
@@ -93,7 +93,7 @@ public class WatchService {
                 }
 
                 if (tasks.size() > 0) {
-                    log.info("%s: Watch for %s",imageConfig.getDescription(), StringUtils.join(tasks.toArray()," and "));
+                    log.info("%s: Watch for %s", imageConfig.getDescription(), StringUtils.join(tasks.toArray(), " and "));
                 }
             }
             log.info("Waiting ...");
@@ -127,13 +127,13 @@ public class WatchService {
                     try {
                         log.info("%s: Assembly changed. Copying changed files to container ...", imageConfig.getDescription());
 
-                        File changedFilesArchive = archiveService.createChangedFilesArchive(entries,files.getAssemblyDirectory(),
-                                imageConfig.getName(),mojoParameters);
+                        File changedFilesArchive = archiveService.createChangedFilesArchive(entries, files.getAssemblyDirectory(),
+                                imageConfig.getName(), mojoParameters);
                         dockerAccess.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(watcher);
                     } catch (MojoExecutionException | IOException e) {
                         log.error("%s: Error when copying files to container %s: %s",
-                                imageConfig.getDescription(),watcher.getContainerId(),e.getMessage());
+                                imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
                     }
                 }
             }
@@ -170,7 +170,7 @@ public class WatchService {
                             watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
                         }
 
-                        buildService.executeBuildWorkflow(imageConfig, buildContext);
+                        buildService.pullAndBuildImage(imageConfig, buildContext);
 
                         String name = imageConfig.getName();
                         watcher.setImageId(queryService.getImageId(name));
@@ -179,7 +179,7 @@ public class WatchService {
                         }
                         callPostGoal(watcher);
                     } catch (MojoExecutionException | MojoFailureException | IOException e) {
-                        log.error("%s: Error when rebuilding - %s",imageConfig.getDescription(),e);
+                        log.error("%s: Error when rebuilding - %s", imageConfig.getDescription(), e);
                     }
                 }
             }
@@ -203,13 +203,13 @@ public class WatchService {
                         callPostGoal(watcher);
                     }
                 } catch (DockerAccessException | MojoFailureException | MojoExecutionException e) {
-                    log.warn("%s: Error when restarting image - %s",watcher.getImageConfiguration().getDescription(),e);
+                    log.warn("%s: Error when restarting image - %s", watcher.getImageConfiguration().getDescription(), e);
                 }
             }
         };
     }
 
-    protected void restartContainer(ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
+    private void restartContainer(ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
         Task<ImageWatcher> restarter = watcher.getWatchContext().getContainerRestarter();
         if (restarter == null) {
             restarter = defaultContainerRestartTask();
@@ -264,15 +264,15 @@ public class WatchService {
     // Helper class for holding state and parameter when watching images
     public class ImageWatcher {
 
+        private final ImageConfiguration imageConfig;
+        private final WatchContext watchContext;
         private final WatchMode mode;
         private final AtomicReference<String> imageIdRef, containerIdRef;
         private final long interval;
-        private final ImageConfiguration imageConfig;
         private final String postGoal;
         private String postExec;
-        protected WatchContext watchContext;
 
-        public ImageWatcher(ImageConfiguration imageConfig, String imageId, String containerIdRef, WatchContext watchContext) {
+        public ImageWatcher(ImageConfiguration imageConfig, WatchContext watchContext, String imageId, String containerIdRef) {
             this.imageConfig = imageConfig;
             this.watchContext = watchContext;
             this.imageIdRef = new AtomicReference<>(imageId);
@@ -364,8 +364,11 @@ public class WatchService {
         }
     }
 
-    // ===========================================
+    // ===========================================================
 
+    /**
+     * Context class to hold the watch configuration
+     */
     public static class WatchContext implements Serializable {
 
         private MojoParameters mojoParameters;
@@ -392,105 +395,56 @@ public class WatchService {
 
         private Task<ImageWatcher> containerRestarter;
 
-        public WatchContext() {}
+        public WatchContext() {
+        }
 
         public MojoParameters getMojoParameters() {
             return mojoParameters;
-        }
-
-        public void setMojoParameters(MojoParameters mojoParameters) {
-            this.mojoParameters = mojoParameters;
         }
 
         public WatchMode getWatchMode() {
             return watchMode;
         }
 
-        public void setWatchMode(WatchMode watchMode) {
-            this.watchMode = watchMode;
-        }
-
         public int getWatchInterval() {
             return watchInterval;
-        }
-
-        public void setWatchInterval(int watchInterval) {
-            this.watchInterval = watchInterval;
         }
 
         public boolean isKeepRunning() {
             return keepRunning;
         }
 
-        public void setKeepRunning(boolean keepRunning) {
-            this.keepRunning = keepRunning;
-        }
-
         public String getWatchPostGoal() {
             return watchPostGoal;
-        }
-
-        public void setWatchPostGoal(String watchPostGoal) {
-            this.watchPostGoal = watchPostGoal;
         }
 
         public String getWatchPostExec() {
             return watchPostExec;
         }
 
-        public void setWatchPostExec(String watchPostExec) {
-            this.watchPostExec = watchPostExec;
+        public PomLabel getPomLabel() {
+            return pomLabel;
         }
 
         public boolean isKeepContainer() {
             return keepContainer;
         }
 
-        public void setKeepContainer(boolean keepContainer) {
-            this.keepContainer = keepContainer;
-        }
-
         public boolean isRemoveVolumes() {
             return removeVolumes;
-        }
-
-        public void setRemoveVolumes(boolean removeVolumes) {
-            this.removeVolumes = removeVolumes;
         }
 
         public boolean isAutoCreateCustomNetworks() {
             return autoCreateCustomNetworks;
         }
 
-        public void setAutoCreateCustomNetworks(boolean autoCreateCustomNetworks) {
-            this.autoCreateCustomNetworks = autoCreateCustomNetworks;
-        }
-
-        public PomLabel getPomLabel() {
-            return pomLabel;
-        }
-
-        public void setPomLabel(PomLabel pomLabel) {
-            this.pomLabel = pomLabel;
-        }
-
         public Task<ImageConfiguration> getImageCustomizer() {
             return imageCustomizer;
-        }
-
-        public void setImageCustomizer(Task<ImageConfiguration> imageCustomizer) {
-            this.imageCustomizer = imageCustomizer;
         }
 
         public Task<ImageWatcher> getContainerRestarter() {
             return containerRestarter;
         }
-
-        public void setContainerRestarter(Task<ImageWatcher> containerRestarter) {
-            this.containerRestarter = containerRestarter;
-        }
-
-        // ===========================================
 
         public static class Builder {
 
@@ -500,63 +454,67 @@ public class WatchService {
                 this.context = new WatchContext();
             }
 
+            public Builder(WatchContext context) {
+                this.context = context;
+            }
+
             public Builder mojoParameters(MojoParameters mojoParameters) {
-                context.setMojoParameters(mojoParameters);
+                context.mojoParameters = mojoParameters;
                 return this;
             }
 
             public Builder watchMode(WatchMode watchMode) {
-                context.setWatchMode(watchMode);
+                context.watchMode = watchMode;
                 return this;
             }
 
             public Builder watchInterval(int watchInterval) {
-                context.setWatchInterval(watchInterval);
+                context.watchInterval = watchInterval;
                 return this;
             }
 
             public Builder keepRunning(boolean keepRunning) {
-                context.setKeepRunning(keepRunning);
+                context.keepRunning = keepRunning;
                 return this;
             }
 
             public Builder watchPostGoal(String watchPostGoal) {
-                context.setWatchPostGoal(watchPostGoal);
+                context.watchPostGoal = watchPostGoal;
                 return this;
             }
 
             public Builder watchPostExec(String watchPostExec) {
-                context.setWatchPostExec(watchPostExec);
+                context.watchPostExec = watchPostExec;
                 return this;
             }
 
             public Builder pomLabel(PomLabel pomLabel) {
-                context.setPomLabel(pomLabel);
+                context.pomLabel = pomLabel;
                 return this;
             }
 
             public Builder keepContainer(boolean keepContainer) {
-                context.setKeepContainer(keepContainer);
+                context.keepContainer = keepContainer;
                 return this;
             }
 
             public Builder removeVolumes(boolean removeVolumes) {
-                context.setRemoveVolumes(removeVolumes);
+                context.removeVolumes = removeVolumes;
                 return this;
             }
 
             public Builder imageCustomizer(Task<ImageConfiguration> imageCustomizer) {
-                context.setImageCustomizer(imageCustomizer);
+                context.imageCustomizer = imageCustomizer;
                 return this;
             }
 
             public Builder containerRestarter(Task<ImageWatcher> containerRestarter) {
-                context.setContainerRestarter(containerRestarter);
+                context.containerRestarter = containerRestarter;
                 return this;
             }
 
             public Builder autoCreateCustomNetworks(boolean autoCreateCustomNetworks) {
-                context.setAutoCreateCustomNetworks(autoCreateCustomNetworks);
+                context.autoCreateCustomNetworks = autoCreateCustomNetworks;
                 return this;
             }
 
