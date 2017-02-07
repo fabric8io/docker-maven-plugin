@@ -22,6 +22,7 @@ import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -291,9 +292,11 @@ public class StartMojo extends AbstractDockerMojo {
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
 
             String imageName = imageConfig.getName();
-            checkImageWithAutoPull(hub, imageName,
+
+            BuildService.BuildContext buildContext = getBuildContextBuilder().build();
+            hub.getBuildService().checkImageWithAutoPull(imageName,
                                    getConfiguredRegistry(imageConfig, pullRegistry),
-                                   imageConfig.getBuildConfiguration() == null);
+                                   imageConfig.getBuildConfiguration() == null, buildContext);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             NetworkConfig config = runConfig.getNetworkingConfig();
