@@ -31,6 +31,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.service.*;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -199,7 +200,9 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                     try {
                         log.info("%s: Assembly changed. Rebuild ...", imageConfig.getDescription());
 
-                        buildImage(hub, imageConfig);
+                        EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
+                        BuildService.BuildContext buildContext = getBuildContextBuilder().build();
+                        hub.getBuildService().executeBuildWorkflow(imageConfig, buildContext);
 
                         String name = imageConfig.getName();
                         watcher.setImageId(hub.getQueryService().getImageId(name));

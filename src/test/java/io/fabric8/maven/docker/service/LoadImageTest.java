@@ -43,6 +43,9 @@ public class LoadImageTest {
     @Injectable
     private ArchiveService archiveService;
 
+    @Injectable
+    private AuthService authService;
+
     private String dockerArchive;
 
     @Test

@@ -50,6 +50,9 @@ public class BuildServiceTest {
     @Injectable
     private ArchiveService archiveService;
 
+    @Injectable
+    private AuthService authService;
+
     @Before
     public void setup() throws Exception {
         new Expectations() {{

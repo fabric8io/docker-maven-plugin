@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.util;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 
@@ -18,17 +19,19 @@ public class MojoParameters {
     private final MavenFileFilter mavenFileFilter;
     private final MavenReaderFilter mavenFilterReader;
     private final MavenProject project;
+    private final Settings settings;
 
     private final String outputDirectory;
     private final String sourceDirectory;
 
     public MojoParameters(MavenSession session, MavenProject project, MavenArchiveConfiguration archive, MavenFileFilter mavenFileFilter,
-            MavenReaderFilter mavenFilterReader, String sourceDirectory, String outputDirectory) {
+            MavenReaderFilter mavenFilterReader, Settings settings, String sourceDirectory, String outputDirectory) {
         this.archive = archive;
         this.session = session;
         this.mavenFileFilter = mavenFileFilter;
         this.mavenFilterReader = mavenFilterReader;
         this.project = project;
+        this.settings = settings;
 
         this.sourceDirectory = sourceDirectory;
         this.outputDirectory = outputDirectory;
@@ -60,5 +63,9 @@ public class MojoParameters {
 
     public MavenProject getProject() {
         return project;
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 }

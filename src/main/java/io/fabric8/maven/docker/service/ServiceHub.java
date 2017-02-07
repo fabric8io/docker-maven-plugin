@@ -40,6 +40,7 @@ public class ServiceHub {
     private final MojoExecutionService mojoExecutionService;
     private final ArchiveService archiveService;
     private final VolumeService volumeService;
+    private final AuthService authService;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
@@ -49,11 +50,12 @@ public class ServiceHub {
 
         mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
         archiveService = new ArchiveService(dockerAssemblyManager, logger);
+        authService = new AuthService();
 
         if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
-            buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
+            buildService = new BuildService(dockerAccess, queryService, archiveService, authService, logger);
             volumeService = new VolumeService(dockerAccess);
         } else {
             queryService = null;
@@ -112,6 +114,16 @@ public class ServiceHub {
     public VolumeService getVolumeService() {
         checkDockerAccessInitialization();
         return volumeService;
+    }
+
+    /**
+     * The auth service is responsible for handling authentication
+     *
+     * @return the auth service
+     */
+    public AuthService getAuthService() {
+        checkDockerAccessInitialization();
+        return authService;
     }
 
     public ArchiveService getArchiveService() {

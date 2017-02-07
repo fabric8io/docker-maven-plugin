@@ -9,6 +9,8 @@ import java.util.*;
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.service.AuthService;
+import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
@@ -39,6 +41,9 @@ import io.fabric8.maven.docker.log.LogOutputSpecFactory;
  */
 public abstract class AbstractDockerMojo extends AbstractMojo implements Contextualizable, ConfigHelper.Customizer {
 
+    // Filename for holding the build timestamp
+    public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
+
     // Key for indicating that a "start" goal has run
     public static final String CONTEXT_KEY_START_CALLED = "CONTEXT_KEY_DOCKER_START_CALLED";
 
@@ -48,14 +53,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
 
-    // Key for the previously used image cache
-    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
-
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
-
-    // Filename for holding the build timestamp
-    public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
 
     // Current maven project
     @Parameter(defaultValue= "${project}", readonly = true)
@@ -220,12 +219,28 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
+    protected BuildService.BuildContext.Builder getBuildContextBuilder() throws MojoExecutionException {
+        return new BuildService.BuildContext.Builder()
+                .authParameters(getAuthParametersBuilder().build())
+                .autoPull(autoPull)
+                .pluginContext(getPluginContext())
+                .buildTimestamp(getBuildTimestamp())
+                .registry(registry);
+    }
+
+    protected AuthService.AuthParameters.Builder getAuthParametersBuilder() throws MojoExecutionException {
+        return new AuthService.AuthParameters.Builder()
+                .authConfig(authConfig)
+                .authConfigFactory(authConfigFactory)
+                .skipExtendedAuth(skipExtendedAuth);
+    }
+
     /**
      * Get the current build timestamp. this has either already been created by a previous
      * call or a new current date is created
      * @return timestamp to use
      */
-    protected synchronized Date getBuildTimestamp() throws MojoExecutionException {
+    public synchronized Date getBuildTimestamp() throws MojoExecutionException {
         Date now = (Date) getPluginContext().get(CONTEXT_KEY_BUILD_TIMESTAMP);
         if (now == null) {
             now = getReferenceDate();
@@ -406,15 +421,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected PomLabel getPomLabel() {
         // Label used for this run
         return new PomLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
-    }
-
-
-    protected AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush)
-            throws MojoExecutionException {
-        String user = isPush ? image.getUser() : null;
-        String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
-
-        return authConfigFactory.createAuthConfig(isPush, skipExtendedAuth, authConfig, settings, user, registry);
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {

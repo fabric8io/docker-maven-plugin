@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -52,7 +53,12 @@ public class BuildMojoNoFork extends AbstractBuildSupportMojo {
 
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
         throws MojoExecutionException, DockerAccessException {
-        buildImage(hub, imageConfig);
+
+        EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
+
+        BuildService.BuildContext buildContext = getBuildContextBuilder().build();
+
+        hub.getBuildService().executeBuildWorkflow(imageConfig, buildContext);
         if (!skipTag) {
             tagImage(imageConfig.getName(), imageConfig, hub.getDockerAccess());
         }
