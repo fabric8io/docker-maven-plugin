@@ -4,15 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.fabric8.maven.docker.WatchMojo;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
@@ -20,15 +17,14 @@ import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
-import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.PomLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.util.Task;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -169,6 +165,11 @@ public class WatchService {
                     try {
                         log.info("%s: Assembly changed. Rebuild ...", imageConfig.getDescription());
 
+                        if (watcher.getWatchContext().getImageCustomizer() != null) {
+                            log.info("%s: Customizing the image ...", imageConfig.getDescription());
+                            watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
+                        }
+
                         buildService.executeBuildWorkflow(imageConfig, buildContext);
 
                         String name = imageConfig.getName();
@@ -209,20 +210,35 @@ public class WatchService {
     }
 
     protected void restartContainer(ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
-        // Stop old one
-        ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
-        String id = watcher.getContainerId();
-
-        String optionalPreStop = getPreStopCommand(imageConfig);
-        if (optionalPreStop != null) {
-            runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
+        Task<ImageWatcher> restarter = watcher.getWatchContext().getContainerRestarter();
+        if (restarter == null) {
+            restarter = defaultContainerRestartTask();
         }
-        runService.stopPreviouslyStartedContainer(id, false, false);
 
-        // Start new one
-        watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
-                watcher.getWatchContext().getMojoParameters().getProject().getProperties()));
+        // Restart
+        restarter.execute(watcher);
+    }
+
+    private Task<ImageWatcher> defaultContainerRestartTask() throws DockerAccessException, MojoExecutionException, MojoFailureException {
+        return new Task<ImageWatcher>() {
+            @Override
+            public void execute(ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
+                // Stop old one
+                ImageConfiguration imageConfig = watcher.getImageConfiguration();
+                PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
+                String id = watcher.getContainerId();
+
+                String optionalPreStop = getPreStopCommand(imageConfig);
+                if (optionalPreStop != null) {
+                    runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
+                }
+                runService.stopPreviouslyStartedContainer(id, false, false);
+
+                // Start new one
+                watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
+                        watcher.getWatchContext().getMojoParameters().getProject().getProperties()));
+            }
+        };
     }
 
     private String getPreStopCommand(ImageConfiguration imageConfig) {
@@ -258,7 +274,7 @@ public class WatchService {
 
         public ImageWatcher(ImageConfiguration imageConfig, String imageId, String containerIdRef, WatchContext watchContext) {
             this.imageConfig = imageConfig;
-
+            this.watchContext = watchContext;
             this.imageIdRef = new AtomicReference<>(imageId);
             this.containerIdRef = new AtomicReference<>(containerIdRef);
 
@@ -266,7 +282,6 @@ public class WatchService {
             this.mode = getWatchMode(imageConfig);
             this.postGoal = getPostGoal(imageConfig);
             this.postExec = getPostExec(imageConfig);
-            this.watchContext = watchContext;
         }
 
         public String getContainerId() {
@@ -369,9 +384,13 @@ public class WatchService {
 
         private boolean keepContainer;
 
-        protected boolean removeVolumes;
+        private boolean removeVolumes;
 
-        protected boolean autoCreateCustomNetworks;
+        private boolean autoCreateCustomNetworks;
+
+        private Task<ImageConfiguration> imageCustomizer;
+
+        private Task<ImageWatcher> containerRestarter;
 
         public WatchContext() {}
 
@@ -455,6 +474,22 @@ public class WatchService {
             this.pomLabel = pomLabel;
         }
 
+        public Task<ImageConfiguration> getImageCustomizer() {
+            return imageCustomizer;
+        }
+
+        public void setImageCustomizer(Task<ImageConfiguration> imageCustomizer) {
+            this.imageCustomizer = imageCustomizer;
+        }
+
+        public Task<ImageWatcher> getContainerRestarter() {
+            return containerRestarter;
+        }
+
+        public void setContainerRestarter(Task<ImageWatcher> containerRestarter) {
+            this.containerRestarter = containerRestarter;
+        }
+
         // ===========================================
 
         public static class Builder {
@@ -463,10 +498,6 @@ public class WatchService {
 
             public Builder() {
                 this.context = new WatchContext();
-            }
-
-            public WatchContext build() {
-                return context;
             }
 
             public Builder mojoParameters(MojoParameters mojoParameters) {
@@ -514,9 +545,23 @@ public class WatchService {
                 return this;
             }
 
+            public Builder imageCustomizer(Task<ImageConfiguration> imageCustomizer) {
+                context.setImageCustomizer(imageCustomizer);
+                return this;
+            }
+
+            public Builder containerRestarter(Task<ImageWatcher> containerRestarter) {
+                context.setContainerRestarter(containerRestarter);
+                return this;
+            }
+
             public Builder autoCreateCustomNetworks(boolean autoCreateCustomNetworks) {
                 context.setAutoCreateCustomNetworks(autoCreateCustomNetworks);
                 return this;
+            }
+
+            public WatchContext build() {
+                return context;
             }
 
         }

@@ -301,7 +301,7 @@ public class BuildService {
 
         private String registry;
 
-        private String autoPull;
+        private String autoPull = "on";
 
         private AuthService.AuthParameters authParameters;
 
