@@ -126,7 +126,7 @@ public class DefaultLogCallbackTest {
         executorService.awaitTermination(1, TimeUnit.SECONDS);
 
         List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
-        System.out.println(lines);
+        //System.out.println(lines);
         assertThat(lines.size(), is(NR_LOOPS * 2));
 
         // fill set with expected line numbers

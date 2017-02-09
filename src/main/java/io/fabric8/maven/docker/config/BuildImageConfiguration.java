@@ -150,7 +150,7 @@ public class BuildImageConfiguration implements Serializable {
     /**
      * @parameter
      */
-    private BuildTarArchiveCompression compression = BuildTarArchiveCompression.none;
+    private ArchiveCompression compression = ArchiveCompression.none;
 
     /**
      * @parameter
@@ -246,7 +246,7 @@ public class BuildImageConfiguration implements Serializable {
         return skip;
     }
 
-    public BuildTarArchiveCompression getCompression() {
+    public ArchiveCompression getCompression() {
         return compression;
     }
 
@@ -395,9 +395,9 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder compression(String compression) {
             if (compression == null) {
-                config.compression = BuildTarArchiveCompression.none;
+                config.compression = ArchiveCompression.none;
             } else {
-                config.compression = BuildTarArchiveCompression.valueOf(compression);
+                config.compression = ArchiveCompression.valueOf(compression);
             }
             return this;
         }
