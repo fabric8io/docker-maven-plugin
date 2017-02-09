@@ -85,6 +85,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .autoCreateCustomNetworks(autoCreateCustomNetworks)
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
+                .removeVolumes(removeVolumes)
                 .pomLabel(getPomLabel())
                 .mojoParameters(createMojoParameters())
                 .build();

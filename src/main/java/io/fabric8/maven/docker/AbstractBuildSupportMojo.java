@@ -44,12 +44,13 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
 
-    @Override
+
     protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
-        return new BuildService.BuildContext.Builder(super.getBuildContext())
+        return new BuildService.BuildContext.Builder()
                 .buildArgs(buildArgs)
                 .mojoParameters(createMojoParameters())
                 .pullRegistry(pullRegistry)
+                .registryConfig(getRegistryConfig())
                 .build();
     }
 
