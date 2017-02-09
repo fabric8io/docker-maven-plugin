@@ -199,7 +199,7 @@ public class DockerAssemblyManager {
 
     // Create final tar-ball to be used for building the archive to send to the Docker daemon
     private File createBuildTarBall(BuildDirs buildDirs, ArchiverCustomizer archiverCustomizer,
-                                    AssemblyMode buildMode, BuildTarArchiveCompression compression) throws MojoExecutionException {
+                                    AssemblyMode buildMode, ArchiveCompression compression) throws MojoExecutionException {
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, buildMode);

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
+import io.fabric8.maven.docker.config.ArchiveCompression;
 import mockit.StrictExpectations;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -40,8 +41,8 @@ public class DockerAccessWithHcClientTest {
     private Exception thrownException;
     private String archiveFile;
     private String filename;
-    private String compresion;
-    
+    private ArchiveCompression compression;
+
 
     @Before
     public void setup() throws IOException {
@@ -99,7 +100,7 @@ public class DockerAccessWithHcClientTest {
     public void testSaveImage() throws IOException {
         givenAnImageName("test");
         givenFilename("test.tar");
-        givenCompression("");
+        givenCompression(ArchiveCompression.none);
         whenSaveImage();
         thenNoException();
     }
@@ -108,7 +109,7 @@ public class DockerAccessWithHcClientTest {
     public void testSaveImageFail() throws IOException {
         givenAnImageName("test");
         givenFilename("test.tar");
-        givenCompression("");
+        givenCompression(ArchiveCompression.none);
         givenTheGetWillFail();
         whenSaveImage();
         thenImageWasNotSaved();
@@ -125,13 +126,13 @@ public class DockerAccessWithHcClientTest {
     private void givenArchiveFile(String archiveFile) {
         this.archiveFile = archiveFile;
     }
-    
+
     private void givenFilename(String filename) {
     	this.filename = filename;
     }
-    
-    private void givenCompression(String compression) {
-    	this.compresion = compression;
+
+    private void givenCompression(ArchiveCompression compression) {
+    	this.compression = compression;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -182,10 +183,10 @@ public class DockerAccessWithHcClientTest {
             thrownException = e;
         }
     }
-    
+
     private void whenSaveImage() {
         try {
-            client.saveImage(imageName, filename, compresion);
+            client.saveImage(imageName, filename, compression);
         } catch (Exception e) {
             thrownException = e;
         }

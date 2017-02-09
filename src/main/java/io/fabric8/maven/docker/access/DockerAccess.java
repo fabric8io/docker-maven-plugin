@@ -2,10 +2,10 @@ package io.fabric8.maven.docker.access;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
+import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
@@ -219,10 +219,10 @@ public interface DockerAccess {
      *
      * @param image image to save
      * @param filename filename
-     * @param compression "gz", "bz", or "tar"
+     * @param compression compression to use for the archive
      * @throws DockerAccessException if an image cannot be removed
      */
-    void saveImage(String image, String filename, String compression) throws DockerAccessException;
+    void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException;
 
     /**
      * List all networks
