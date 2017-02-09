@@ -92,6 +92,10 @@ public class ImageName {
             }
         }
 
+        if (tag == null) {
+            tag = "latest";
+        }
+
         doValidate();
     }
 
@@ -175,7 +179,7 @@ public class ImageName {
      * @return full name with original registry (if set) or optional registry (if not <code>null</code>).
      */
     public String getFullName(String optionalRegistry) {
-        return getNameWithoutTag(optionalRegistry) + ":" + (tag != null ? tag : "latest");
+        return getNameWithoutTag(optionalRegistry) + ":" + tag;
     }
 
     /**

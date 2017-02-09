@@ -13,7 +13,7 @@ public class ImageNameTest {
         Object[] data = {
                 "jolokia/jolokia_demo",
                 r().repository("jolokia/jolokia_demo")
-                   .fullName("jolokia/jolokia_demo").fullNameWithTag("jolokia/jolokia_demo:latest").simpleName("jolokia_demo"),
+                   .fullName("jolokia/jolokia_demo").fullNameWithTag("jolokia/jolokia_demo:latest").simpleName("jolokia_demo").tag("latest"),
 
                 "jolokia/jolokia_demo:0.9.6",
                 r().repository("jolokia/jolokia_demo").tag("0.9.6")
@@ -25,7 +25,7 @@ public class ImageNameTest {
 
                 "test.org/jolokia/jolokia_demo",
                 r().registry("test.org").repository("jolokia/jolokia_demo")
-                        .fullName("test.org/jolokia/jolokia_demo").fullNameWithTag("test.org/jolokia/jolokia_demo:latest").simpleName("jolokia_demo"),
+                        .fullName("test.org/jolokia/jolokia_demo").fullNameWithTag("test.org/jolokia/jolokia_demo:latest").simpleName("jolokia_demo").tag("latest"),
 
                 "test.org:8000/jolokia/jolokia_demo:8.0",
                 r().registry("test.org:8000").repository("jolokia/jolokia_demo").tag("8.0")
@@ -33,7 +33,7 @@ public class ImageNameTest {
 
                 "jolokia_demo",
                 r().repository("jolokia_demo")
-                        .fullName("jolokia_demo").fullNameWithTag("jolokia_demo:latest").simpleName("jolokia_demo"),
+                        .fullName("jolokia_demo").fullNameWithTag("jolokia_demo:latest").simpleName("jolokia_demo").tag("latest"),
 
                 "jolokia_demo:0.9.6",
                 r().repository("jolokia_demo").tag("0.9.6")
@@ -52,7 +52,7 @@ public class ImageNameTest {
         Object[] data = {
                 "org/jolokia/jolokia_demo",
                 r().repository("org/jolokia/jolokia_demo")
-                        .fullName("org/jolokia/jolokia_demo").fullNameWithTag("org/jolokia/jolokia_demo:latest").simpleName("jolokia/jolokia_demo"),
+                        .fullName("org/jolokia/jolokia_demo").fullNameWithTag("org/jolokia/jolokia_demo:latest").simpleName("jolokia/jolokia_demo").tag("latest"),
 
                 "org/jolokia/jolokia_demo:0.9.6",
                 r().repository("org/jolokia/jolokia_demo").tag("0.9.6")
@@ -64,14 +64,14 @@ public class ImageNameTest {
 
                 "repo.example.com/org/jolokia/jolokia_demo",
                 r().registry("repo.example.com").repository("org/jolokia/jolokia_demo")
-                        .fullName("repo.example.com/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com/org/jolokia/jolokia_demo:latest").simpleName("jolokia/jolokia_demo"),
+                        .fullName("repo.example.com/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com/org/jolokia/jolokia_demo:latest").simpleName("jolokia/jolokia_demo").tag("latest"),
 
                 "repo.example.com:8000/org/jolokia/jolokia_demo:8.0",
                 r().registry("repo.example.com:8000").repository("org/jolokia/jolokia_demo").tag("8.0")
                         .fullName("repo.example.com:8000/org/jolokia/jolokia_demo").fullNameWithTag("repo.example.com:8000/org/jolokia/jolokia_demo:8.0").simpleName("jolokia/jolokia_demo"),
                 "org/jolokia_demo",
                 r().repository("org/jolokia_demo")
-                        .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:latest").simpleName("jolokia_demo"),
+                        .fullName("org/jolokia_demo").fullNameWithTag("org/jolokia_demo:latest").simpleName("jolokia_demo").tag("latest"),
 
                 "org/jolokia_demo:0.9.6",
                 r().repository("org/jolokia_demo").tag("0.9.6")
