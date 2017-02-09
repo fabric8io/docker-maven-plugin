@@ -106,7 +106,7 @@ public class UrlBuilderTest {
         UrlBuilder builder = new UrlBuilder("", "1.0");
         assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1&tag=latest"),
                      new URI(builder.pullImage(new ImageName("t1:latest"), "reg")));
-        assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1"),
+        assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1&tag=latest"),
                      new URI(builder.pullImage(new ImageName("t1"), "reg")));
     }
 

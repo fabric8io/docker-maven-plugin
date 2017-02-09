@@ -459,7 +459,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         DockerAccess docker = hub.getDockerAccess();
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
-        docker.pullImage(withLatestIfNoTag(image), prepareAuthConfig(imageName, registry, false), registry);
+        docker.pullImage(imageName.getFullName(), prepareAuthConfig(imageName, registry, false), registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         updatePreviousPulledImageCache(image);
 
@@ -487,9 +487,4 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return cache;
     }
 
-    // Fetch only latest if no tag is given
-    private String withLatestIfNoTag(String name) {
-        ImageName imageName = new ImageName(name);
-        return imageName.getTag() == null ? imageName.getNameWithoutTag() + ":latest" : name;
-    }
 }
