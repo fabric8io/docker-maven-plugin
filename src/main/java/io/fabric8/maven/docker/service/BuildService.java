@@ -19,7 +19,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.ImagePullCache;
 import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
@@ -32,15 +31,15 @@ public class BuildService {
 
     private final DockerAccess docker;
     private final QueryService queryService;
-    public final ArchiveService archiveService;
-    public final AuthService authService;
+    private final ArchiveService archiveService;
+    private final RegistryService registryService;
     private final Logger log;
 
-    BuildService(DockerAccess docker, QueryService queryService, ArchiveService archiveService, AuthService authService, Logger log) {
+    BuildService(DockerAccess docker, QueryService queryService, RegistryService registryService, ArchiveService archiveService, Logger log) {
         this.docker = docker;
         this.queryService = queryService;
+        this.registryService = registryService;
         this.archiveService = archiveService;
-        this.authService = authService;
         this.log = log;
     }
 
@@ -59,37 +58,6 @@ public class BuildService {
 
         buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), addBuildArgs(buildContext));
     }
-
-    /**
-     * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
-     * is not existent, throw an error
-     * @param image image name
-     * @param registry optional registry which is used if the image itself doesn't have a registry.
-     * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
-     * @throws DockerAccessException
-     * @throws MojoExecutionException
-     */
-    public void checkImageWithAutoPull(String image, String registry, boolean autoPullAlwaysAllowed, BuildContext buildContext) throws DockerAccessException, MojoExecutionException {
-        // TODO: further refactoring could be done to avoid referencing the QueryService here
-        ImagePullCache previouslyPulledCache = buildContext.getImagePullCacheManager().load();
-        if (!queryService.imageRequiresAutoPull(buildContext.getAutoPull(), image, autoPullAlwaysAllowed, previouslyPulledCache)) {
-            return;
-        }
-
-        ImageName imageName = new ImageName(image);
-        long time = System.currentTimeMillis();
-        docker.pullImage(withLatestIfNoTag(image), authService.prepareAuthConfig(imageName, registry, false, buildContext.getAuthContext()), registry);
-        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
-        previouslyPulledCache.add(image);
-        buildContext.getImagePullCacheManager().save(previouslyPulledCache);
-
-        if (registry != null && !imageName.hasRegistry()) {
-            // If coming from a registry which was not contained in the original name, add a tag from the
-            // full name with the registry to the short name with no-registry.
-            docker.tag(imageName.getFullName(registry), image, false);
-        }
-    }
-
 
     /**
      * Build an image
@@ -221,8 +189,9 @@ public class BuildService {
         }
         if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
             String pullRegistry =
-                    EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), buildContext.getPullRegistry(), buildContext.getRegistry());
-            checkImageWithAutoPull(fromImage, pullRegistry, true, buildContext);
+                    EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), buildContext.getPullRegistry(), buildContext.getRegistryConfig().getRegistry());
+
+            registryService.checkImageWithAutoPull(fromImage, pullRegistry, true, buildContext.getRegistryConfig());
         }
     }
 
@@ -261,12 +230,6 @@ public class BuildService {
         }
     }
 
-    // Fetch only latest if no tag is given
-    private String withLatestIfNoTag(String name) {
-        ImageName imageName = new ImageName(name);
-        return imageName.getTag() == null ? imageName.getNameWithoutTag() + ":latest" : name;
-    }
-
     private boolean isEmpty(String str) {
         return str == null || str.isEmpty();
     }
@@ -283,13 +246,7 @@ public class BuildService {
 
         private String pullRegistry;
 
-        private String registry;
-
-        private String autoPull;
-
-        private ImagePullCacheManager imagePullCacheManager;
-
-        private AuthService.AuthContext authContext;
+        private RegistryService.RegistryConfig registryConfig;
 
         public BuildContext() {
         }
@@ -306,20 +263,8 @@ public class BuildService {
             return pullRegistry;
         }
 
-        public String getRegistry() {
-            return registry;
-        }
-
-        public String getAutoPull() {
-            return autoPull;
-        }
-
-        public ImagePullCacheManager getImagePullCacheManager() {
-            return imagePullCacheManager;
-        }
-
-        public AuthService.AuthContext getAuthContext() {
-            return authContext;
+        public RegistryService.RegistryConfig getRegistryConfig() {
+            return registryConfig;
         }
 
         public static class Builder {
@@ -349,23 +294,8 @@ public class BuildService {
                 return this;
             }
 
-            public Builder registry(String registry) {
-                context.registry = registry;
-                return this;
-            }
-
-            public Builder autoPull(String autoPull) {
-                context.autoPull = autoPull;
-                return this;
-            }
-
-            public Builder imagePullCacheManager(ImagePullCacheManager imagePullCacheManager) {
-                context.imagePullCacheManager = imagePullCacheManager;
-                return this;
-            }
-
-            public Builder authContext(AuthService.AuthContext authContext) {
-                context.authContext = authContext;
+            public Builder registryConfig(RegistryService.RegistryConfig registryConfig) {
+                context.registryConfig = registryConfig;
                 return this;
             }
 

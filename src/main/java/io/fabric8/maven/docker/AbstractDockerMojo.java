@@ -15,14 +15,14 @@ import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.service.AuthService;
-import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
+import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.ImagePullCache;
 import io.fabric8.maven.docker.util.ImagePullCacheManager;
@@ -217,7 +217,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             try {
                 if (isDockerAccessRequired()) {
                     DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
-                    access = dockerAccessFactory.createDockerAccess(dockerAccessContext, log);
+                    access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
                 }
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
@@ -244,24 +244,19 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .minimalApiVersion(minimalApiVersion)
                 .projectProperties(project.getProperties())
                 .skipMachine(skipMachine)
+                .log(log)
                 .build();
     }
 
-    protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
-        return new BuildService.BuildContext.Builder()
-                .authContext(getAuthContext())
-                .autoPull(autoPull)
-                .imagePullCacheManager(getImagePullCacheManager())
-                .registry(registry)
-                .build();
-    }
-
-    protected AuthService.AuthContext getAuthContext() throws MojoExecutionException {
-        return new AuthService.AuthContext.Builder()
+    protected RegistryService.RegistryConfig getRegistryConfig() throws MojoExecutionException {
+        return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
                 .authConfig(authConfig)
                 .authConfigFactory(authConfigFactory)
                 .skipExtendedAuth(skipExtendedAuth)
+                .autoPull(autoPull)
+                .imagePullCacheManager(getImagePullCacheManager())
+                .registry(registry)
                 .build();
     }
 
@@ -419,7 +414,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @return the registry found or null if none could be extracted
      */
     protected String getConfiguredRegistry(ImageConfiguration imageConfig, String specificRegistry) {
-        return EnvUtil.findRegistry(imageConfig.getRegistry(), specificRegistry, registry);
+        return EnvUtil.findRegistry(new ImageName(imageConfig.getName()).getRegistry(), imageConfig.getRegistry(), specificRegistry, registry);
     }
 
     /**

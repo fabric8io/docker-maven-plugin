@@ -29,17 +29,17 @@ public class DockerAccessFactory {
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
 
-    public DockerAccess createDockerAccess(DockerAccessContext dockerAccessContext, Logger log) throws MojoExecutionException, MojoFailureException {
+    public DockerAccess createDockerAccess(DockerAccessContext dockerAccessContext) throws MojoExecutionException, MojoFailureException {
 
         try {
-            DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector(dockerAccessContext, log);
+            DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector(dockerAccessContext, dockerAccessContext.getLog());
             DockerConnectionDetector.ConnectionParameter connectionParam =
                     dockerConnectionDetector.detectConnectionParameter(dockerAccessContext.getDockerHost(), dockerAccessContext.getCertPath());
             String version = dockerAccessContext.getMinimalApiVersion() != null ? dockerAccessContext.getMinimalApiVersion() : API_VERSION;
             DockerAccess access = new DockerAccessWithHcClient("v" + version, connectionParam.getUrl(),
                     connectionParam.getCertPath(),
                     dockerAccessContext.getMaxConnections(),
-                    log);
+                    dockerAccessContext.getLog());
             access.start();
             setDockerHostAddressProperty(dockerAccessContext, connectionParam.getUrl());
             String serverVersion = access.getServerApiVersion();
@@ -130,6 +130,8 @@ public class DockerAccessFactory {
 
         private int maxConnections;
 
+        private Logger log;
+
         public DockerAccessContext() {
         }
 
@@ -163,6 +165,10 @@ public class DockerAccessFactory {
 
         public int getMaxConnections() {
             return maxConnections;
+        }
+
+        public Logger getLog() {
+            return log;
         }
 
         public static class Builder {
@@ -214,6 +220,11 @@ public class DockerAccessFactory {
 
             public Builder maxConnections(int maxConnections) {
                 context.maxConnections = maxConnections;
+                return this;
+            }
+
+            public Builder log(Logger log) {
+                context.log = log;
                 return this;
             }
 
