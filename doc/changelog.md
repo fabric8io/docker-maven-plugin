@@ -1,5 +1,10 @@
 # ChangeLog
 
+* **0.19.2** 
+
+  - Fix handling of `run` commands from properties (#684)
+  - Fix empty `<link>` causing `NullPointerException` (#693)
+  
 * **0.19.0** (2017-01-03) 
   - Better log message when waiting for URL ([#640](https://github.com/fabric8io/docker-maven-plugin/issues/640))
   - Extended authentication for AWS ECR ([#663](https://github.com/fabric8io/docker-maven-plugin/issues/663))
