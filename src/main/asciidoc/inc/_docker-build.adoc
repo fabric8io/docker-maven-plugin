@@ -2,8 +2,8 @@
 [[docker:build]]
 == *docker:build*
 
-This goal will build all images which have a `<build>` configuration section, or, if the global configuration variable `image` (property:
-`docker.image`) is set, only the images contained in this variable (comma separated) will be built.
+This goal will build all images which have a `<build>` configuration section, or, if the global configuration variable `filter` (property:
+`docker.filter`) is set, only the images contained in this variable (comma separated) will be built.
 
 include::build/_overview.adoc[]
 
