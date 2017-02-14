@@ -357,7 +357,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // =============================================================================================
 
     /**
-     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images.
+     * Get all images to use. Can be restricted via -Ddocker.filter to pick a one or more images.
      * The values are taken as comma separated list.
      *
      * @return list of image configuration to be use. Can be empty but never null.
