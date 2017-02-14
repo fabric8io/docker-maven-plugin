@@ -78,7 +78,7 @@ public class RegistryService {
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
         String actualRegistry = EnvUtil.findRegistry(imageName.getRegistry(), registry);
-        docker.pullImage(withLatestIfNoTag(image), createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry);
+        docker.pullImage(imageName.getFullName(), createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         previouslyPulledCache.add(image);
         registryConfig.getImagePullCacheManager().save(previouslyPulledCache);
@@ -88,12 +88,6 @@ public class RegistryService {
             // full name with the registry to the short name with no-registry.
             docker.tag(imageName.getFullName(registry), image, false);
         }
-    }
-
-    // Fetch only latest if no tag is given
-    private String withLatestIfNoTag(String name) {
-        ImageName imageName = new ImageName(name);
-        return imageName.getTag() == null ? imageName.getNameWithoutTag() + ":latest" : name;
     }
 
     private AuthConfig createAuthConfig(boolean isPush, String user, String registry, RegistryConfig config)
