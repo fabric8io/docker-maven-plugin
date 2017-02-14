@@ -51,7 +51,7 @@ public class BuildServiceTest {
     private ArchiveService archiveService;
 
     @Injectable
-    private RegistryService authService;
+    private RegistryService registryService;
 
     @Before
     public void setup() throws Exception {

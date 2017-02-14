@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -51,12 +52,28 @@ public class BuildService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void pullAndBuildImage(ImageConfiguration imageConfig, BuildContext buildContext)
+    public void buildImage(ImageConfiguration imageConfig, BuildContext buildContext)
             throws DockerAccessException, MojoExecutionException {
 
         autoPullBaseImage(imageConfig, buildContext);
 
         buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), addBuildArgs(buildContext));
+    }
+
+    public void tagImage(String imageName, ImageConfiguration imageConfig) throws DockerAccessException {
+
+        List<String> tags = imageConfig.getBuildConfiguration().getTags();
+        if (tags.size() > 0) {
+            log.info("%s: Tag with %s", imageConfig.getDescription(), EnvUtil.stringJoin(tags, ","));
+
+            for (String tag : tags) {
+                if (tag != null) {
+                    docker.tag(imageName, new ImageName(imageName, tag).getFullName(), true);
+                }
+            }
+
+            log.debug("Tagging image successful!");
+        }
     }
 
     /**
@@ -69,7 +86,7 @@ public class BuildService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
+    protected void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
             throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
