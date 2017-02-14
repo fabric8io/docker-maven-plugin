@@ -99,6 +99,23 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testRunCommands() {
+        List<ImageConfiguration> configs = resolveImage(
+            imageConfiguration,props(
+                "docker.name","demo",
+                "docker.run.1", "foo",
+                "docker.run.2", "bar",
+                "docker.run.3", "wibble")
+        );
+
+        assertEquals(1, configs.size());
+
+        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
+        assertArrayEquals(new String[]{"foo", "bar", "wibble"}, runCommands);
+    }
+
+    @Test
     public void testEnvAndLabels() throws Exception {
         List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
