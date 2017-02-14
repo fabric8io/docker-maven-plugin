@@ -49,7 +49,7 @@ public class LoadImageTest {
     private ArchiveService archiveService;
 
     @Injectable
-    private RegistryService authService;
+    private RegistryService registryService;
 
     private String dockerArchive;
 

@@ -170,7 +170,7 @@ public class WatchService {
                             watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
                         }
 
-                        buildService.pullAndBuildImage(imageConfig, buildContext);
+                        buildService.buildImage(imageConfig, buildContext);
 
                         String name = imageConfig.getName();
                         watcher.setImageId(queryService.getImageId(name));
@@ -178,7 +178,7 @@ public class WatchService {
                             restartContainer(watcher);
                         }
                         callPostGoal(watcher);
-                    } catch (MojoExecutionException | MojoFailureException | IOException e) {
+                    } catch (Exception e) {
                         log.error("%s: Error when rebuilding - %s", imageConfig.getDescription(), e);
                     }
                 }
@@ -202,14 +202,14 @@ public class WatchService {
                         restartContainer(watcher);
                         callPostGoal(watcher);
                     }
-                } catch (DockerAccessException | MojoFailureException | MojoExecutionException e) {
+                } catch (Exception e) {
                     log.warn("%s: Error when restarting image - %s", watcher.getImageConfiguration().getDescription(), e);
                 }
             }
         };
     }
 
-    private void restartContainer(ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
+    private void restartContainer(ImageWatcher watcher) throws Exception {
         Task<ImageWatcher> restarter = watcher.getWatchContext().getContainerRestarter();
         if (restarter == null) {
             restarter = defaultContainerRestartTask();
@@ -219,10 +219,10 @@ public class WatchService {
         restarter.execute(watcher);
     }
 
-    private Task<ImageWatcher> defaultContainerRestartTask() throws DockerAccessException, MojoExecutionException, MojoFailureException {
+    private Task<ImageWatcher> defaultContainerRestartTask() {
         return new Task<ImageWatcher>() {
             @Override
-            public void execute(ImageWatcher watcher) throws DockerAccessException, MojoExecutionException, MojoFailureException {
+            public void execute(ImageWatcher watcher) throws Exception {
                 // Stop old one
                 ImageConfiguration imageConfig = watcher.getImageConfiguration();
                 PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
