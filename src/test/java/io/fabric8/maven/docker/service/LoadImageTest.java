@@ -1,22 +1,27 @@
 package io.fabric8.maven.docker.service;
 
+import java.io.File;
+import java.util.Collections;
+
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import mockit.*;
-import mockit.integration.junit4.JMockit;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.util.Collections;
+import mockit.Expectations;
+import mockit.Injectable;
+import mockit.Mocked;
+import mockit.Tested;
+import mockit.Verifications;
+import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
 public class LoadImageTest {
@@ -42,6 +47,9 @@ public class LoadImageTest {
 
     @Injectable
     private ArchiveService archiveService;
+
+    @Injectable
+    private RegistryService registryService;
 
     private String dockerArchive;
 
