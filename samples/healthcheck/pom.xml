@@ -39,6 +39,11 @@
                   <cmd>curl -f http://localhost/ || exit 1</cmd>
                 </healthCheck>
               </build>
+              <run>
+                <wait>
+                  <healthy>true</healthy>
+                </wait>
+              </run>
             </image>
             <image>
               <alias>healthybox2</alias>
@@ -64,6 +69,11 @@
                   </cmd>
                 </healthCheck>
               </build>
+              <run>
+                <wait>
+                  <healthy>true</healthy>
+                </wait>
+              </run>
             </image>
             <image>
               <alias>healthybox4</alias>
