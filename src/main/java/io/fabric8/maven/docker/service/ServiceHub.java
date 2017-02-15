@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.service;/*
+/*
  *
  * Copyright 2015 Roland Huss
  *
@@ -14,11 +14,13 @@ package io.fabric8.maven.docker.service;/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.util.Logger;
+
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
@@ -36,10 +38,12 @@ public class ServiceHub {
 
     private final QueryService queryService;
     private final RunService runService;
+    private final RegistryService registryService;
     private final BuildService buildService;
     private final MojoExecutionService mojoExecutionService;
     private final ArchiveService archiveService;
     private final VolumeService volumeService;
+    private final WatchService watchService;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
@@ -52,14 +56,18 @@ public class ServiceHub {
 
         if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess);
+            registryService = new RegistryService(dockerAccess, queryService, logger);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
-            buildService = new BuildService(dockerAccess, queryService, archiveService, logger);
+            buildService = new BuildService(dockerAccess, queryService, registryService, archiveService, logger);
             volumeService = new VolumeService(dockerAccess);
+            watchService = new WatchService(archiveService, buildService, dockerAccess, mojoExecutionService, queryService, runService, logger);
         } else {
             queryService = null;
+            registryService = null;
             runService = null;
             buildService = null;
             volumeService = null;
+            watchService = null;
         }
     }
 
@@ -93,6 +101,16 @@ public class ServiceHub {
         return queryService;
     }
 
+    /**
+     * Get the registry service to push/pull images
+     *
+     * @return query service
+     */
+    public RegistryService getRegistryService() {
+        checkDockerAccessInitialization();
+        return registryService;
+    }
+
 
     /**
      * The run service is responsible for creating and starting up containers
@@ -112,6 +130,16 @@ public class ServiceHub {
     public VolumeService getVolumeService() {
         checkDockerAccessInitialization();
         return volumeService;
+    }
+
+    /**
+     * The watch service is responsible for watching container status and rebuilding
+     *
+     * @return the watch service
+     */
+    public WatchService getWatchService() {
+        checkDockerAccessInitialization();
+        return watchService;
     }
 
     public ArchiveService getArchiveService() {
