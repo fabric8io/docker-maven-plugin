@@ -14,19 +14,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.*;
+import io.fabric8.maven.docker.model.InspectedContainer;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -299,7 +296,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public Container getContainer(String containerIdOrName) throws DockerAccessException {
+    public InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException {
         HttpBodyAndStatus response = inspectContainer(containerIdOrName);
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;

@@ -39,6 +39,7 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.InspectedContainer;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
@@ -386,6 +387,10 @@ public class StartMojo extends AbstractDockerMojo {
             }
         }
 
+        if (wait.getHealthy()) {
+            checkers.add(getHealthyWaitChecker(imageConfig.getDescription(), hub.getDockerAccess(), containerId, logOut));
+        }
+
         if (checkers.isEmpty()) {
             if (wait.getTime() > 0) {
                 log.info("%s: Pausing for %d ms", imageConfig.getDescription(), wait.getTime());
@@ -481,6 +486,45 @@ public class StartMojo extends AbstractDockerMojo {
             host = projectProperties.getProperty("docker.host.address");
         }
         return host;
+    }
+
+    private WaitUtil.WaitChecker getHealthyWaitChecker(final String imageConfigDesc, final DockerAccess docker, final String containerId, final List<String> logOut) {
+
+
+        return new WaitUtil.WaitChecker() {
+
+            private boolean first = true;
+
+            @Override
+            public boolean check() {
+                try {
+                    final InspectedContainer container = docker.getContainer(containerId);
+                    if (container == null) {
+                        log.debug("HealthyWaitChecker:  Container %s not found");
+                        return false;
+                    }
+
+                    if (first) {
+                        final String healthcheckTests = container.healthcheckTests();
+                        if (healthcheckTests == null) {
+                            throw new IllegalArgumentException("Can not wait for healthy state of "+imageConfigDesc+". No HEALTHCHECK configured.");
+                        }
+                        log.info("%s: Waiting on healthcheck: '%s'", imageConfigDesc, healthcheckTests);
+                        logOut.add("on healthcheck '" + healthcheckTests+"'");
+                        first = false;
+                    } else if (log.isDebugEnabled()) {
+                        log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'",container.healthcheckTests());
+                    }
+
+                    return container.isHealthy();
+                } catch(DockerAccessException e) {
+                    return false;
+                }
+            }
+
+            @Override
+            public void cleanUp() {}
+        };
     }
 
     private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String  containerId) {

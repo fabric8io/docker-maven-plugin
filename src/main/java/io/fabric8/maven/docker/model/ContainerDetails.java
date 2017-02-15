@@ -7,7 +7,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 
 
-public class ContainerDetails implements Container {
+public class ContainerDetails implements InspectedContainer {
 
     static final String CONFIG = "Config";
     static final String CREATED = "Created";
@@ -23,6 +23,11 @@ public class ContainerDetails implements Container {
     static final String PORTS = "Ports";
     static final String SLASH = "/";
     static final String STATE = "State";
+    static final String HEALTH = "Health";
+    static final String STATUS = "Status";
+    static final String HEALTH_STATUS_HEALTHY = "healthy";
+    static final String HEALTHCHECK = "Healthcheck";
+    static final String TEST = "Test";
 
     private static final String RUNNING = "Running";
 
@@ -119,6 +124,21 @@ public class ContainerDetails implements Container {
     public boolean isRunning() {
         JSONObject state = json.getJSONObject(STATE);
         return state.getBoolean(RUNNING);
+    }
+
+    @Override
+    public boolean isHealthy() {
+        final JSONObject state = json.getJSONObject(STATE);
+        // always indicate healthy for docker hosts that do not support health checks.
+        return !state.has(HEALTH) || HEALTH_STATUS_HEALTHY.equals(state.getJSONObject(HEALTH).getString(STATUS));
+    }
+
+    @Override
+    public String healthcheckTests() {
+        if (!json.getJSONObject(CONFIG).has(HEALTHCHECK)) {
+            return null;
+        }
+        return json.getJSONObject(CONFIG).getJSONObject(HEALTHCHECK).getJSONArray(TEST).join(", ");
     }
 
     private void addPortMapping(String port, JSONObject hostConfig, Map<String, PortBinding> portBindings) {
