@@ -3,7 +3,7 @@
 == *docker:build*
 
 This goal will build all images which have a `<build>` configuration section, or, if the global configuration variable `filter` (property:
-`docker.filter`) is set, only the images contained in this variable (comma separated) will be built.
+`docker.filter`) is set, only the images contained in this variable (comma separated) will be built. `docker:build` is meant to be run from the command line and will automatically compile and package your application.
 
 include::build/_overview.adoc[]
 

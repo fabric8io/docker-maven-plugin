@@ -4,6 +4,8 @@ import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
@@ -13,6 +15,7 @@ import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
 import org.apache.maven.plugin.assembly.io.AssemblyReadException;
 import org.apache.maven.plugin.assembly.io.AssemblyReader;
 import org.apache.maven.plugin.assembly.model.Assembly;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.archiver.Archiver;
@@ -346,19 +349,71 @@ public class DockerAssemblyManager {
         Assembly assembly = getAssemblyConfig(assemblyConfig, source);
 
         AssemblyMode buildMode = assemblyConfig.getMode();
+        File originalArtifactFile = null;
         try {
+            originalArtifactFile = ensureThatArtifactFileIsSet(params.getProject());
             assembly.setId("docker");
             assemblyArchiver.createArchive(assembly, ASSEMBLY_NAME, buildMode.getExtension(), source, false);
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
-            throw new MojoExecutionException( "Failed to create assembly for docker image " +
-                                              " (with mode '" + buildMode + "'): " + e.getMessage(), e );
+            String error = "Failed to create assembly for docker image " +
+                           " (with mode '" + buildMode + "'): " + e.getMessage() + ".";
+            if (params.getProject().getArtifact().getFile() == null) {
+                error += " If you include the build artifact please ensure that you have " +
+                         "built the artifact before with 'mvn package' (should be available in the target/ dir). " +
+                         "Please see the documentation (section \"Assembly\") for more information.";
+            }
+            throw new MojoExecutionException(error, e);
         } catch (InvalidAssemblerConfigurationException e) {
             throw new MojoExecutionException(assembly, "Assembly is incorrectly configured: " + assembly.getId(),
                                             "Assembly: " + assembly.getId() + " is not configured correctly: "
                                             + e.getMessage());
+        } finally {
+            setArtifactFile(params.getProject(), originalArtifactFile);
         }
     }
 
+    // Set an artifact file if it is missing. This workaround the issues
+    // mentioned first in https://issues.apache.org/jira/browse/MASSEMBLY-94 which requires the package
+    // phase to run so set the ArtifactFile. There is no good solution, so we are trying
+    // to be very passive and add a workaround for some situation which won't work for every occasion.
+    // Unfortunately a plain forking of the Maven lifecycle is not good enough, since the MavenProject
+    // gets cloned before the fork, and the 'package' plugin (e.g. JarPlugin) sets the file on the cloned
+    // object which is then not available for the BuildMojo (there the file is still null leading to the
+    // the "Cannot include project artifact: ... The following patterns were never triggered in this artifact inclusion filter: <artifact>"
+    // warning with an error following.
+    private File ensureThatArtifactFileIsSet(MavenProject project) {
+        Artifact artifact = project.getArtifact();
+        if (artifact == null) {
+            return null;
+        }
+        File oldFile = artifact.getFile();
+        if (oldFile != null) {
+            return oldFile;
+        }
+        Build build = project.getBuild();
+        if (build == null) {
+            return null;
+        }
+        String finalName = build.getFinalName();
+        String target = build.getDirectory();
+        if (finalName == null || target == null) {
+            return null;
+        }
+        File artifactFile = new File(target, finalName + "." + project.getPackaging());
+        if (artifactFile.exists() && artifactFile.isFile()) {
+            // TODO: Maybe check also that the artifact file is 'young' ? (so that it could be assumed that
+            //       it has been created recently by a 'package' in the same run.)
+            setArtifactFile(project, artifactFile);
+        }
+        return null;
+    }
+
+    private void setArtifactFile(MavenProject project, File artifactFile) {
+        Artifact artifact = project.getArtifact();
+        if (artifact != null) {
+            artifact.setFile(artifactFile);
+        }
+    }
 
     private Assembly getAssemblyConfig(AssemblyConfiguration assemblyConfig, DockerAssemblyConfigurationSource source)
             throws MojoExecutionException {
