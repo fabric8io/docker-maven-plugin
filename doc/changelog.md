@@ -1,12 +1,14 @@
 # ChangeLog
 
 * **0.20.0** 
-
-  - Fix handling of `run` commands from properties (#684)
-  - Fix empty `<link>` causing `NullPointerException` (#693)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
 
 The experimental goals `build-nofork` and `source-nofork` have been removed again. Please use `build` and `source` directly when binding to execution phases.
+
+* **0.19.1** (2017-02-09) 
+
+  - Fix handling of `run` commands from properties (#684)
+  - Fix empty `<link>` causing `NullPointerException` (#693)
 
 * **0.19.0** (2017-01-03) 
   - Better log message when waiting for URL ([#640](https://github.com/fabric8io/docker-maven-plugin/issues/640))
