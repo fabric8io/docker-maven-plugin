@@ -124,8 +124,36 @@ will add the created artifact with the name `${project.build.finalName}.${artifa
 
 All declared files end up in the configured `targetDir` (or `/maven` by default) in the created image.
 
-If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. This happens either automatically when the `{plugin}:build` target is called, or when `{plugin}:build-nofork` is bound to an execution phase in the plugin configuration. By default `{plugin}:build-nofork` is bound to the `install`
-phase).
+.Maven peculiarities when including the artifact
+If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. Otherwise the artifact file can't be found by `docker:build`. This is an old https://issues.apache.org/jira/browse/MASSEMBLY-94[outstanding issue] of the assembly plugin which probably can't be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases you won't experience any problem. However, when the following warning happens which might lead to the given error:
+
+[source]
+----
+[WARNING] Cannot include project artifact: io.fabric8:helloworld:jar:0.20.0; it doesn't have an associated file or directory.
+[WARNING] The following patterns were never triggered in this artifact inclusion filter:
+o  'io.fabric8:helloworld'
+
+[ERROR] DOCKER> Failed to create assembly for docker image  (with mode 'dir'): Error creating assembly archive docker: You must set at least one file.
+----
+
+then you have two options to fix this:
+
+* Call `mvn package {plugin}:build` to explicitly run "package" and "docker:build" in a chain.
+* Bind `build` to an to an execution phase in the plugin's definition. By default `{plugin}:build` will bind to the `install` phase is set in an execution. Then you can use a plain `mvn install` for building the artifact and creating the image.
+
+[source,xml]
+----
+<executions>
+  <execution>
+    <id>docker-build</id>
+    <goals>
+       <goal>build</goal>
+    </goals>
+  </execution>
+<executions>
+----
+
+.Example
 
 In the following example a dependency from the pom.xml is included and
 mapped to the name `jolokia.war`. With this configuration you will end
@@ -133,7 +161,6 @@ up with an image, based on `busybox` which has a directory `/maven`
 containing a single file `jolokia.war`. This volume is also exported
 automatically.
 
-.Example
 [source,xml]
 ----
 <assembly>
