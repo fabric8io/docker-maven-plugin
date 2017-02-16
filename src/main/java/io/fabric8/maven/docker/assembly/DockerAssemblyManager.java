@@ -375,7 +375,7 @@ public class DockerAssemblyManager {
     // Set an artifact file if it is missing. This workaround the issues
     // mentioned first in https://issues.apache.org/jira/browse/MASSEMBLY-94 which requires the package
     // phase to run so set the ArtifactFile. There is no good solution, so we are trying
-    // to be very passive and add a workaround for some situation which won't work for every occasion.
+    // to be very defensive and add a workaround for some situation which won't work for every occasion.
     // Unfortunately a plain forking of the Maven lifecycle is not good enough, since the MavenProject
     // gets cloned before the fork, and the 'package' plugin (e.g. JarPlugin) sets the file on the cloned
     // object which is then not available for the BuildMojo (there the file is still null leading to the
