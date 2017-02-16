@@ -8,8 +8,13 @@ The `<dependsOn>` configuration can be used to expresses custom network dependen
 .Example
 [source,xml]
 ----
-<dependsOn>
-    <dependsOn>postgres</dependsOn>
-    <dependsOn>logstash</dependsOn>
-</dependsOn>
+<configuration>
+  <!-- .... -->
+  <run>
+    <dependsOn>
+      <container>postgres</container>
+      <container>logstash</container>
+    </dependsOn>
+  </run>
+</configuration>
 ----
