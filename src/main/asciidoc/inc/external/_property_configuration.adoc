@@ -194,6 +194,9 @@ values in the `<build>` and `<run>` sections.
 | *docker.restartPolicy.retry*
 | Max restrart retries if `on-failure` used
 
+| *docker.run.idx*
+| List of commands to `RUN` when creating the image
+
 | *docker.securityOpts.idx*
 | List of `opt` elements to specify kernel security options to add to the container. For example `docker.securityOpt.1=seccomp=unconfined`
 

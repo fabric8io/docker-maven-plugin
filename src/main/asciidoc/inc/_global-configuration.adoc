@@ -132,7 +132,7 @@ the URL is:
 | `docker.useColor`
 
 | *verbose*
-| Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is `false`
+| Boolean attribute for switching on verbose output on standard output (stdout). This includes detailed information like the build steps when doing a Docker build. Default is `false`
 | `docker.verbose`
 |===
 
