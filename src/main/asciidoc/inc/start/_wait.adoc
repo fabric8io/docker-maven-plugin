@@ -73,7 +73,7 @@ As soon as one condition is met the build continues. If you add a `<time>` const
         <port>9999</port>
      </ports>
   </tcp>
-  <healthy/>
+  <healthy>true</healthy>
 </wait>
 ----
 
