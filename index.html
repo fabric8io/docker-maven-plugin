@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.19.0,</span>
-<span id="revdate">2017-01-03</span>
+<span id="revnumber">version 0.20.0,</span>
+<span id="revdate">2017-02-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -822,7 +822,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.19.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.20.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1112,7 +1112,7 @@ the URL is:</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean attribute for switching on verbose output like the build steps when doing a Docker build. Default is <code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean attribute for switching on verbose output on standard output (stdout). This includes detailed information like the build steps when doing a Docker build. Default is <code>false</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.verbose</code></p></td>
 </tr>
 </tbody>
@@ -1369,21 +1369,11 @@ to start a container for your application you typically have to build
 its image before. <code>docker:start</code> does <strong>not</strong> imply building the image
 so you should use it then in combination with <code>docker:build</code>.</p>
 </div>
-<div class="paragraph">
-<p>All goals fork the lifecycle phase to call the lifecycle up to the <strong>initialize</strong> phase. This means you can bind other plugins to the phases <strong>initialize</strong> or <strong>validate</strong> for customization. By default no action is bound to these phases. See <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">Introduction to the Build Lifecycle</a> for more details about phases and lifecycles.</p>
-</div>
-<div class="sidebarblock">
-<div class="content">
-<div class="paragraph">
-<p>Note however that when you bind the goals about to lifecycle phases this will result in the <strong>initialize</strong> and <strong>validate</strong> phase called twice. Your bound plugins should be able to handle this.</p>
-</div>
-</div>
-</div>
 <div class="sect2">
 <h3 id="docker:build">5.1. <strong>docker:build</strong></h3>
 <div class="paragraph">
-<p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration section, or, if the global configuration variable <code>image</code> (property:
-<code>docker.image</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
+<p>This goal will build all images which have a <code>&lt;build&gt;</code> configuration section, or, if the global configuration variable <code>filter</code> (property:
+<code>docker.filter</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
 </div>
 <div id="build-overview" class="paragraph">
 <p>There are two different modes how Images can be built:</p>
@@ -1455,12 +1445,6 @@ so you should use it then in combination with <code>docker:build</code>.</p>
  ...
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Please note that <code>docker:build</code> fork the Maven lifecycle and calls all phases up to and including <code>package</code>. The reason for this is that for the assembly to be able to reference an artifact which is part of the build it needs to be included with this <code>package</code> phase. This is a general restriction of the Maven lifecycle which applies also to the <code>maven-assembly-plugin</code> itself.</p>
-</div>
-<div class="paragraph">
-<p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>build-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
 </div>
 <div class="sect3">
 <h4 id="build-configuration">5.1.1. Configuration</h4>
@@ -1832,10 +1816,45 @@ used for <code>descriptorRef</code>:</p>
 <p>All declared files end up in the configured <code>targetDir</code> (or <code>/maven</code> by default) in the created image.</p>
 </div>
 <div class="paragraph">
-<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. This happens either automatically when the <code>docker:build</code> target is called, or when <code>docker:build-nofork</code> is bound to an execution phase in the plugin configuration. By default <code>docker:build-nofork</code> is bound to the <code>install</code>
-phase).</p>
+<div class="title">Maven peculiarities when including the artifact</div>
+<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. Otherwise the artifact file can&#8217;t be found by <code>docker:build</code>. This is an old <a href="https://issues.apache.org/jira/browse/MASSEMBLY-94">outstanding issue</a> of the assembly plugin which probably can&#8217;t be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases you won&#8217;t experience any problem. However, when the following warning happens which might lead to the given error:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>[WARNING] Cannot include project artifact: io.fabric8:helloworld:jar:0.20.0; it doesn't have an associated file or directory.
+[WARNING] The following patterns were never triggered in this artifact inclusion filter:
+o  'io.fabric8:helloworld'
+
+[ERROR] DOCKER&gt; Failed to create assembly for docker image  (with mode 'dir'): Error creating assembly archive docker: You must set at least one file.</code></pre>
+</div>
 </div>
 <div class="paragraph">
+<p>then you have two options to fix this:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Call <code>mvn package docker:build</code> to explicitly run "package" and "docker:build" in a chain.</p>
+</li>
+<li>
+<p>Bind <code>build</code> to an to an execution phase in the plugin&#8217;s definition. By default <code>docker:build</code> will bind to the <code>install</code> phase is set in an execution. Then you can use a plain <code>mvn install</code> for building the artifact and creating the image.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;executions&gt;</span>
+  <span class="tag">&lt;execution&gt;</span>
+    <span class="tag">&lt;id&gt;</span>docker-build<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;goals&gt;</span>
+       <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
+    <span class="tag">&lt;/goals&gt;</span>
+  <span class="tag">&lt;/execution&gt;</span>
+<span class="tag">&lt;executions&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">Example</div>
 <p>In the following example a dependency from the pom.xml is included and
 mapped to the name <code>jolokia.war</code>. With this configuration you will end
 up with an image, based on <code>busybox</code> which has a directory <code>/maven</code>
@@ -1843,7 +1862,6 @@ containing a single file <code>jolokia.war</code>. This volume is also exported
 automatically.</p>
 </div>
 <div class="listingblock">
-<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
   <span class="tag">&lt;dependencySets&gt;</span>
@@ -2626,10 +2644,15 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;dependsOn&gt;</span>
-    <span class="tag">&lt;dependsOn&gt;</span>postgres<span class="tag">&lt;/dependsOn&gt;</span>
-    <span class="tag">&lt;dependsOn&gt;</span>logstash<span class="tag">&lt;/dependsOn&gt;</span>
-<span class="tag">&lt;/dependsOn&gt;</span></code></pre>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  <span class="comment">&lt;!-- .... --&gt;</span>
+  <span class="tag">&lt;run&gt;</span>
+    <span class="tag">&lt;dependsOn&gt;</span>
+      <span class="tag">&lt;container&gt;</span>postgres<span class="tag">&lt;/container&gt;</span>
+      <span class="tag">&lt;container&gt;</span>logstash<span class="tag">&lt;/container&gt;</span>
+    <span class="tag">&lt;/dependsOn&gt;</span>
+  <span class="tag">&lt;/run&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -3329,10 +3352,10 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p><code>mvn -Ddocker.removeAll docker:remove</code> will remove all three images</p>
 </li>
 <li>
-<p><code>mvn -Ddocker.image=data,tomcat docker:remove</code> will remove 'data'</p>
+<p><code>mvn -Ddocker.filter=data,tomcat docker:remove</code> will remove 'data'</p>
 </li>
 <li>
-<p><code>mvn -Ddocker.image=data,tomcat -Ddocker.removeAll docker:remove</code> will remove 'data' and 'tomcat'</p>
+<p><code>mvn -Ddocker.filter=data,tomcat -Ddocker.removeAll docker:remove</code> will remove 'data' and 'tomcat'</p>
 </li>
 </ul>
 </div>
@@ -3369,8 +3392,8 @@ properties can the behaviour of this goal:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If given will wait for subsequent log output until CRTL-C is pressed. This is similar to the behaviour of <code>docker logs -f</code> (or <code>tail -f</code>).</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.image</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Filte to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.filter</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.logDate</strong></p></td>
@@ -3418,10 +3441,7 @@ this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</c
 </div>
 </div>
 <div class="paragraph">
-<p><code>docker:source</code> forks the Maven lifecycle and calls all phases up to and including <code>package</code>. The reason for this is that for the assembly to be able to reference an artifact which is part of source archuve it needs to be included with this <code>package</code> phase. This is a general restriction of the Maven lifecycle which applies also to the <code>maven-assembly-plugin</code> itself.</p>
-</div>
-<div class="paragraph">
-<p>When you want to bind the build to an <code>&lt;execution&gt;</code> in the plugin configuration to bind it to a phase, please use the goal <code>source-nofork</code> which does not fork the lifecycle and avoids calling goals twice.</p>
+<p>If not bound to an execution phase, <code>docker:source</code> requires that the artifact has been created so you call it best together with <code>package</code></p>
 </div>
 </div>
 <div class="sect2">
@@ -3827,6 +3847,10 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.restartPolicy.retry</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Max restrart retries if <code>on-failure</code> used</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.run.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of commands to <code>RUN</code> when creating the image</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.securityOpts.idx</strong></p></td>
@@ -4439,8 +4463,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.19.0<br>
-Last updated 2017-01-03 13:35:20 UTC
+Version 0.20.0<br>
+Last updated 2017-02-17 08:30:20 UTC
 </div>
 </div>
 </body>
