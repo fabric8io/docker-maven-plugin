@@ -164,15 +164,17 @@ automatically.
 [source,xml]
 ----
 <assembly>
-  <dependencySets>
-    <dependencySet>
-      <includes>
-        <include>org.jolokia:jolokia-war</include>
-      </includes>
-      <outputDirectory>.</outputDirectory>
-      <outputFileNameMapping>jolokia.war</outputFileNameMapping>
-    </dependencySet>
-  </dependencySets>
+  <inline>
+    <dependencySets>
+      <dependencySet>
+        <includes>
+          <include>org.jolokia:jolokia-war</include>
+        </includes>
+        <outputDirectory>.</outputDirectory>
+        <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+      </dependencySet>
+    </dependencySets>
+  </inline>  
 </assembly>
 ----
 
