@@ -388,13 +388,18 @@ public class DockerAccessWithHcClient implements DockerAccess {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
         String temporaryImage = tagTemporaryImage(name, registry);
+        DockerAccessException dae = null;
         try {
             doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            throw dae;
         } finally {
             if (temporaryImage != null) {
-                removeImage(temporaryImage);
+                if (!removeImage(temporaryImage, true)) {
+                    // make sure not to hide previous 'unable to push' exception
+					throw new DockerAccessException(dae, "Unable to remove temporary image [%s]", temporaryImage);
+                }
             }
         }
     }
