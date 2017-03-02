@@ -320,6 +320,10 @@ public class EnvUtil {
         if (file.isAbsolute()) {
             return file;
         }
+        File directoryFile = new File(directory);
+        if (directoryFile.isAbsolute()) {
+            return new File(new File(directory), path);
+        }
         return new File(new File(params.getProject().getBasedir(), directory), path);
     }
 

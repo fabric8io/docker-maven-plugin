@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.assembly;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 
@@ -51,20 +52,40 @@ public class DockerAssemblyConfigurationSourceTest {
     }
 
     @Test
+    public void testCreateSourceAbsoluteFromAbsoluteProjectBaseDir() {
+        testCreateSource(buildParameters("/projects/project", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
+    }
+
+    @Test
+    public void testCreateSourceRelativeFromAbsoluteProjectBaseDir() {
+        testCreateSource(buildParameters("/project/project", "src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
+    }
+
+    @Test
+    public void testCreateSourceAbsoluteFromLongRelativeProjectBaseDir() {
+        testCreateSource(buildParameters("./projects/project", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
+    }
+
+    @Test
+    public void testCreateSourceRelativeFromLongRelativeProjectBaseDir() {
+        testCreateSource(buildParameters("./projects/project", "src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
+    }
+
+    @Test
     public void testOutputDirHasImage() {
         String image = "image";
         MojoParameters params = buildParameters(".", "src/docker", "output/docker");
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params,
-                                                                                         new BuildDirs(image, params),assemblyConfig);
-        
+                new BuildDirs(image, params),assemblyConfig);
+
         assertTrue(containsDir(image, source.getOutputDirectory()));
         assertTrue(containsDir(image, source.getWorkingDirectory()));
         assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
     }
-    
+
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
-        mavenProject.setFile(new File(projectDir));
+        mavenProject.setFile(new File(projectDir + File.separator  + "pom.xml"));
         return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir, outputDir);
     }
 
@@ -94,18 +115,48 @@ public class DockerAssemblyConfigurationSourceTest {
 
         String outputDir = params.getOutputDirectory();
 
-        assertStartsWithDir(outputDir, source.getOutputDirectory());
-        assertStartsWithDir(outputDir, source.getWorkingDirectory());
-        assertStartsWithDir(outputDir, source.getTemporaryRootDirectory());
+        final File outputFile = new File(params.getOutputDirectory());
+        if (outputFile.isAbsolute()) {
+            // if it was an absolute path at the beginning in MojoParameters then it should stay an absolute path with same root after all
+            String absolutePath = outputFile.getAbsolutePath();
+            assertStartsWithDir(absolutePath, source.getOutputDirectory());
+            assertStartsWithDir(absolutePath, source.getWorkingDirectory());
+            assertStartsWithDir(absolutePath, source.getTemporaryRootDirectory());
+        } else {
+            // if not - then at some level each plugin directory must be equal to outputDir
+            assertChildOfDir(outputDir, source.getOutputDirectory());
+            assertChildOfDir(outputDir, source.getWorkingDirectory());
+            assertChildOfDir(outputDir, source.getTemporaryRootDirectory());
+        }
     }
 
     private boolean containsDir(String outputDir, File path) {
         return path.toString().contains(outputDir + File.separator);
     }
-    
+
     private void assertStartsWithDir(String outputDir, File path) {
         String expectedStartsWith = outputDir + File.separator;
         int length = expectedStartsWith.length();
         assertEquals(expectedStartsWith, path.toString().substring(0, length));
+    }
+
+    private void assertChildOfDir(String outputDir, File path) {
+        File absoluteOutput = new File(outputDir).getAbsoluteFile();
+        File absolutePath = path.getAbsoluteFile();
+
+        do {
+            File parentPath = absolutePath.getParentFile();
+
+            if (parentPath == null && !absolutePath.equals(parentPath)) {
+                fail(path + " is not a child of " + outputDir);
+            }
+
+            if (absoluteOutput.equals(parentPath)) {
+                // success
+                return;
+            }
+
+            absoluteOutput = parentPath;
+        } while (true);
     }
 }
