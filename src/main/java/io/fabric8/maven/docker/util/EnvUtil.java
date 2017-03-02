@@ -308,7 +308,7 @@ public class EnvUtil {
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
+        return prepareAbsolutePath(params, new File(new File(params.getProject().getBuild().getDirectory(), params.getOutputDirectory()), dir).toString(), path);
     }
 
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
