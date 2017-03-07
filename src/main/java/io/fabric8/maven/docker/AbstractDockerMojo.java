@@ -1,20 +1,39 @@
 package io.fabric8.maven.docker;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ConfigHelper;
-import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.config.DockerMachineConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.service.DockerAccessFactory;
+import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.ImageNameFormatter;
+import io.fabric8.maven.docker.util.ImagePullCache;
+import io.fabric8.maven.docker.util.ImagePullCacheManager;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.PomLabel;
+
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -24,12 +43,6 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.DockerMachineConfiguration;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
-import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
-import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 
 /**
  * Base class for this plugin.
@@ -50,9 +63,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Key for the previously used image cache
     public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
-
-    // Minimal API version, independent of any feature used
-    public static final String API_VERSION = "1.18";
 
     // Filename for holding the build timestamp
     public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
@@ -79,6 +89,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     @Component
     protected ServiceHubFactory serviceHubFactory;
+
+    @Component
+    protected DockerAccessFactory dockerAccessFactory;
 
     @Parameter(property = "docker.autoPull", defaultValue = "on")
     protected String autoPull;
@@ -180,8 +193,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected Logger log;
 
-    // API version as requested from the client
-    private String serverVersion;
+    private String minimalApiVersion;
 
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
@@ -200,10 +212,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
             // The 'real' images configuration to use (configured images + externally resolved images)
-            String minimalApiVersion = initImageConfiguration(getBuildTimestamp());
+            this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
             DockerAccess access = null;
             try {
-                access = createDockerAccess(minimalApiVersion);
+                if (isDockerAccessRequired()) {
+                    DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
+                    access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
+                }
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
             } catch (DockerAccessException exp) {
@@ -218,6 +233,31 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             }
         }
+    }
+
+    protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
+        return new DockerAccessFactory.DockerAccessContext.Builder()
+                .dockerHost(dockerHost)
+                .certPath(certPath)
+                .machine(machine)
+                .maxConnections(maxConnections)
+                .minimalApiVersion(minimalApiVersion)
+                .projectProperties(project.getProperties())
+                .skipMachine(skipMachine)
+                .log(log)
+                .build();
+    }
+
+    protected RegistryService.RegistryConfig getRegistryConfig() throws MojoExecutionException {
+        return new RegistryService.RegistryConfig.Builder()
+                .settings(settings)
+                .authConfig(authConfig)
+                .authConfigFactory(authConfigFactory)
+                .skipExtendedAuth(skipExtendedAuth)
+                .autoPull(autoPull)
+                .imagePullCacheManager(getImagePullCacheManager())
+                .registry(registry)
+                .build();
     }
 
     /**
@@ -280,60 +320,26 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return imageConfigs;
     }
 
-    private DockerAccess createDockerAccess(String minimalVersion) throws MojoExecutionException, MojoFailureException {
-        DockerAccess access = null;
-        if (isDockerAccessRequired()) {
-            try {
-                DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector();
-                DockerConnectionDetector.ConnectionParameter connectionParam =
-                    dockerConnectionDetector.detectConnectionParameter(dockerHost, certPath);
-                String version =  minimalVersion != null ? minimalVersion : API_VERSION;
-                access = new DockerAccessWithHcClient("v" + version, connectionParam.getUrl(),
-                                                      connectionParam.getCertPath(),
-                                                      maxConnections,
-                                                      log);
-                access.start();
-                setDockerHostAddressProperty(connectionParam.getUrl());
-                serverVersion = access.getServerApiVersion();
-                if (!EnvUtil.greaterOrEqualsVersion(serverVersion,version)) {
-                    throw new MojoExecutionException(
-                        String.format("Server API version %s is smaller than required API version %s", serverVersion, version));
+
+    private ImagePullCacheManager getImagePullCacheManager() {
+        return new ImagePullCacheManager() {
+            @Override
+            public ImagePullCache load() {
+                @SuppressWarnings({ "rawtypes", "unchecked" })
+                Properties userProperties = session.getUserProperties();
+                String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
+                ImagePullCache cache = new ImagePullCache(pullCacheJson);
+                if (pullCacheJson == null) {
+                    userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
                 }
+                return cache;
             }
-            catch (IOException e) {
-                throw new MojoExecutionException("Cannot create docker access object ", e);
+
+            @Override
+            public void save(ImagePullCache cache) {
+                session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
             }
-        }
-        return access;
-    }
-
-    private DockerConnectionDetector createDockerConnectionDetector() {
-        return new DockerConnectionDetector(getDockerHostProviders());
-    }
-
-    /**
-     * Return a list of providers which could delive connection parameters from
-     * calling external commands. For this plugin this is docker-machine, but can be overridden
-     * to add other config options, too.
-     *
-     * @return list of providers or <code>null</code> if none are applicable
-     */
-    protected List<DockerConnectionDetector.DockerHostProvider> getDockerHostProviders() {
-        DockerMachineConfiguration config = machine;
-        if (config == null) {
-            Properties projectProps = project.getProperties();
-            if (!skipMachine) {
-                if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
-                    config = new DockerMachineConfiguration(
-                        projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
-                        projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
-                }
-            }
-        }
-
-        List<DockerConnectionDetector.DockerHostProvider> ret = new ArrayList<>();
-        ret.add(new DockerMachine(log, config));
-        return ret;
+        };
     }
 
    /**
@@ -357,7 +363,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // =============================================================================================
 
     /**
-     * Get all images to use. Can be restricted via -Ddocker.image to pick a one or more images.
+     * Get all images to use. Can be restricted via -Ddocker.filter to pick a one or more images.
      * The values are taken as comma separated list.
      *
      * @return list of image configuration to be use. Can be empty but never null.
@@ -375,24 +381,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return volumes;
     }
 
-    // Registry for managed containers
-    private void setDockerHostAddressProperty(String dockerUrl) throws MojoFailureException {
-        Properties props = project.getProperties();
-        if (props.getProperty("docker.host.address") == null) {
-            final String host;
-            try {
-                URI uri = new URI(dockerUrl);
-                if (uri.getHost() == null && (uri.getScheme().equals("unix") || uri.getScheme().equals("npipe"))) {
-                    host = "localhost";
-                } else {
-                    host = uri.getHost();
-                }
-            } catch (URISyntaxException e) {
-                throw new MojoFailureException("Cannot parse " + dockerUrl + " as URI: " + e.getMessage(), e);
-            }
-            props.setProperty("docker.host.address", host == null ? "" : host);
-        }
-    }
+
 
     // =================================================================================
 
@@ -406,15 +395,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected PomLabel getPomLabel() {
         // Label used for this run
         return new PomLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
-    }
-
-
-    protected AuthConfig prepareAuthConfig(ImageName image, String configuredRegistry, boolean isPush)
-            throws MojoExecutionException {
-        String user = isPush ? image.getUser() : null;
-        String registry = image.getRegistry() != null ? image.getRegistry() : configuredRegistry;
-
-        return authConfigFactory.createAuthConfig(isPush, skipExtendedAuth, authConfig, settings, user, registry);
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {
@@ -434,57 +414,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @return the registry found or null if none could be extracted
      */
     protected String getConfiguredRegistry(ImageConfiguration imageConfig, String specificRegistry) {
-        return EnvUtil.findRegistry(imageConfig.getRegistry(), specificRegistry, registry);
-    }
-
-    /**
-     * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
-     * is not existent, throw an error
-     *  @param hub access object to lookup an image (if autoPull is enabled)
-     * @param image image name
-     * @param registry optional registry which is used if the image itself doesn't have a registry.
-     * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
-     * @throws DockerAccessException
-     * @throws MojoExecutionException
-     */
-    protected void checkImageWithAutoPull(ServiceHub hub, String image, String registry,
-                                          boolean autoPullAlwaysAllowed) throws DockerAccessException, MojoExecutionException {
-        // TODO: further refactoring could be done to avoid referencing the QueryService here
-        QueryService queryService = hub.getQueryService();
-        ImagePullCache previouslyPulledCache = getPreviouslyPulledImageCache();
-        if (!queryService.imageRequiresAutoPull(autoPull, image, autoPullAlwaysAllowed, previouslyPulledCache)) {
-            return;
-        }
-
-        DockerAccess docker = hub.getDockerAccess();
-        ImageName imageName = new ImageName(image);
-        long time = System.currentTimeMillis();
-        docker.pullImage(imageName.getFullName(), prepareAuthConfig(imageName, registry, false), registry);
-        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
-        updatePreviousPulledImageCache(image);
-
-        if (registry != null && !imageName.hasRegistry()) {
-            // If coming from a registry which was not contained in the original name, add a tag from the
-            // full name with the registry to the short name with no-registry.
-            docker.tag(imageName.getFullName(registry), image, false);
-        }
-    }
-
-    private void updatePreviousPulledImageCache(String image) {
-        ImagePullCache cache = getPreviouslyPulledImageCache();
-        cache.add(image);
-        session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-    }
-
-    private synchronized ImagePullCache getPreviouslyPulledImageCache() {
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-            Properties userProperties = session.getUserProperties();
-        String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
-        ImagePullCache cache = new ImagePullCache(pullCacheJson);
-        if (pullCacheJson == null) {
-            userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-        }
-        return cache;
+        return EnvUtil.findRegistry(new ImageName(imageConfig.getName()).getRegistry(), imageConfig.getRegistry(), specificRegistry, registry);
     }
 
 }

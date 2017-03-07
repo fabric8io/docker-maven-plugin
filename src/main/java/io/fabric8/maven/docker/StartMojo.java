@@ -9,26 +9,51 @@ package io.fabric8.maven.docker;
  */
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.util.WaitUtil;
+
+import com.google.common.util.concurrent.MoreExecutors;
+
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
 
@@ -291,9 +316,11 @@ public class StartMojo extends AbstractDockerMojo {
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
 
             String imageName = imageConfig.getName();
-            checkImageWithAutoPull(hub, imageName,
+
+            RegistryService.RegistryConfig registryConfig = getRegistryConfig();
+            hub.getRegistryService().checkImageWithAutoPull(imageName,
                                    getConfiguredRegistry(imageConfig, pullRegistry),
-                                   imageConfig.getBuildConfiguration() == null);
+                                   imageConfig.getBuildConfiguration() == null, registryConfig);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             NetworkConfig config = runConfig.getNetworkingConfig();

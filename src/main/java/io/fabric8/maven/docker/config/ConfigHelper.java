@@ -55,7 +55,7 @@ public class ConfigHelper {
             for (ImageConfiguration image : ret) {
                 imageNames.add(image.getName());
             }
-            logger.warn("None of the resolved images [%s] match the docker.image filter '%s",
+            logger.warn("None of the resolved images [%s] match the configured filter '%s",
                         StringUtils.join(imageNames.iterator(), ","), imageNameFilter);
         }
         return filtered;
