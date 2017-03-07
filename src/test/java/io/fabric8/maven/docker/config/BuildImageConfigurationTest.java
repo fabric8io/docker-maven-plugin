@@ -101,7 +101,7 @@ public class BuildImageConfigurationTest {
     }
 
     @Test
-    public void dockerFileAndArchve() {
+    public void dockerFileAndArchive() {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
                 dockerArchive("this").
