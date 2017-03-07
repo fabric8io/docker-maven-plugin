@@ -20,8 +20,8 @@ properties can the behaviour of this goal:
 | *docker.follow*
 | If given will wait for subsequent log output until CRTL-C is pressed. This is similar to the behaviour of `docker logs -f` (or `tail -f`).
 
-| *docker.image*
-| Filte to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.
+| *docker.filter*
+| Filter to restrict the set of images for which log should be fetched. This can be a comma separated list of image or alias names.
 
 | *docker.logDate*
 | Date format to use. See "<<start-logging,Logging>>" for available formats.

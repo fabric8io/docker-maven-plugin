@@ -28,6 +28,10 @@ For example, this configuration will attach the docker build archive to the arti
 </plugin>
 ----
 
+<<<<<<< HEAD
 `docker:source` forks the Maven lifecycle and calls all phases up to and including `package`. The reason for this is that for the assembly to be able to reference an artifact which is part of source archive it needs to be included with this `package` phase. This is a general restriction of the Maven lifecycle which applies also to the `maven-assembly-plugin` itself.
 
 When you want to bind the build to an `<execution>` in the plugin configuration to bind it to a phase, please use the goal `source-nofork` which does not fork the lifecycle and avoids calling goals twice.
+=======
+If not bound to an execution phase, `docker:source` requires that the artifact has been created so you call it best together with `package`
+>>>>>>> master

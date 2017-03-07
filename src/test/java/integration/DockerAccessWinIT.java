@@ -1,10 +1,5 @@
 package integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -12,20 +7,30 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
-import io.fabric8.maven.docker.access.*;
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.DockerConnectionDetector;
+import io.fabric8.maven.docker.access.DockerMachine;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.model.Container.PortBinding;
+import io.fabric8.maven.docker.service.DockerAccessFactory;
+import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.Logger;
+
+import com.google.common.collect.Lists;
+
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
-import io.fabric8.maven.docker.AbstractDockerMojo;
-import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.model.Container.PortBinding;
-import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.Logger;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /*
  * if run from your ide, this test assumes you have configured the runner w/ the appropriate env variables
@@ -93,7 +98,7 @@ public class DockerAccessWinIT {
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             String certPath = createDockerConnectionDetector(logger).detectConnectionParameter(null, null).getCertPath();
-            return new DockerAccessWithHcClient("v" + AbstractDockerMojo.API_VERSION, baseUrl, certPath, 1, logger);
+            return new DockerAccessWithHcClient("v" + DockerAccessFactory.API_VERSION, baseUrl, certPath, 1, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             logger.error(e.getMessage());

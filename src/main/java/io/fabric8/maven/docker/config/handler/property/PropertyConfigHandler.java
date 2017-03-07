@@ -196,12 +196,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
 
     private List<String> extractRunCommands(String prefix, Properties properties) {
-        List<String> ret = new ArrayList<>();
-        List<String> cmds = listWithPrefix(prefix, RUN, properties);
-        if (cmds == null) {
-            return null;
-        }
-        return ret;
+        return listWithPrefix(prefix, RUN, properties);
     }
 
     private RestartPolicy extractRestartPolicy(String prefix, Properties properties) {

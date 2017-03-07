@@ -1,10 +1,15 @@
 # ChangeLog
 
-* **0.19.2** 
+* **0.20.0** (2017-02-17)
+  - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
 
-  - Fix handling of `run` commands from properties (#684)
-  - Fix empty `<link>` causing `NullPointerException` (#693)
-  
+The experimental goals `build-nofork` and `source-nofork` have been removed again. Please use `build` and `source` directly when binding to execution phases.
+
+* **0.19.1** (2017-02-09) 
+
+  - Fix handling of `run` commands from properties ([#684](https://github.com/fabric8io/docker-maven-plugin/issues/684))
+  - Fix empty `<link>` causing `NullPointerException` ([#693](https://github.com/fabric8io/docker-maven-plugin/issues/693))
+
 * **0.19.0** (2017-01-03) 
   - Better log message when waiting for URL ([#640](https://github.com/fabric8io/docker-maven-plugin/issues/640))
   - Extended authentication for AWS ECR ([#663](https://github.com/fabric8io/docker-maven-plugin/issues/663))
@@ -34,7 +39,7 @@ The old variable names are still accepted but will be removed for release 1.0
 * **0.17.1** (2016-10-28)
   - Add initial [Docker compose](https://dmp.fabric8.io/#docker-compose) support ([#384](https://github.com/fabric8io/docker-maven-plugin/issues/384))
   - Made `docker:run` running in the foreground
-  - Add lifecycle fork to package for `docker:build` and `docker:source` for ease of use. Introducher `docker:build-nofork` and `docker:source-nofork`
+  - Add lifecycle fork to package for `docker:build` and `docker:source` for ease of use. Introduced `docker:build-nofork` and `docker:source-nofork`
   - Removed lifecycle forks for all other Mojos ([#567](https://github.com/fabric8io/docker-maven-plugin/issues/567)) ([#599](https://github.com/fabric8io/docker-maven-plugin/issues/599))
   - Add new option `tarLongFileMode` for the assembly configuration to avoid warning for too long files ([#591](https://github.com/fabric8io/docker-maven-plugin/issues/591))
   - Add new option `tmpfs` for `<run>` to add mount pathes for temorary file systems ([#455](https://github.com/fabric8io/docker-maven-plugin/issues/455))
