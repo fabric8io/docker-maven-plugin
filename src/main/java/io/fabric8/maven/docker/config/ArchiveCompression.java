@@ -76,7 +76,7 @@ public enum ArchiveCompression {
 			return ArchiveCompression.gzip;
 		}
 
-        if (filename.endsWith(".tar.bz") || filename.endsWith(".tar.bzip2")) {
+        if (filename.endsWith(".tar.bz") || filename.endsWith(".tar.bzip2") || filename.endsWith(".tar.bz2")) {
             return ArchiveCompression.bzip2;
         }
         return ArchiveCompression.none;

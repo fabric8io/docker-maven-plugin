@@ -1,0 +1,35 @@
+
+[[docker:save]]
+== *docker:save*
+
+The `{plugin}:save` target saves an image defined in the build configuration to a local file, analogous to `docker save`. If property `file` is not set, the file name is `${alias}.tar.gz" using `alias` from the build configuration.
+
+.Save options
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *name*
+| The name of the configuration to save.
+| `docker.name`
+
+| *alias*
+| The alias of the configuration to save.
+| `docker.alias`
+
+| *file*
+| The filename to save.
+| `docker.save`
+
+| *attach*
+| A boolean flag whether to attach the saved file as artifact.
+| `docker.attach`
+
+| *classifier*
+| The optional classifier when attaching.
+| `docker.classifier`
+
+| *skip*
+| A boolean flag whether to skip execution of the goal.
+| `docker.skip.save`
+|===
