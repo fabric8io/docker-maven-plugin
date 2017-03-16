@@ -137,6 +137,11 @@ public class BuildImageConfigurationTest {
 
         config = new BuildImageConfiguration.Builder().build();
         assertEquals(none, config.getCompression());
+
+        config =
+            new BuildImageConfiguration.Builder().
+                compression(null).build();
+        assertEquals(none, config.getCompression());
     }
 
 
