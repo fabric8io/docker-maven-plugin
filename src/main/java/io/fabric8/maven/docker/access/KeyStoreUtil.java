@@ -4,12 +4,14 @@ import java.io.*;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
+
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 
 /**
  * Utility class for building up a keystore which can be used in
@@ -41,18 +43,28 @@ public class KeyStoreUtil {
         return keyStore;
     }
 
-    public static PrivateKey loadPrivateKey(String keyPath) throws IOException, GeneralSecurityException {
-        PEMKeyPair keyPair = loadPEM(keyPath);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyPair.getPrivateKeyInfo().getEncoded());
+    static PrivateKey loadPrivateKey(String keyPath) throws IOException, GeneralSecurityException {
+        try (Reader reader = new FileReader(keyPath);
+            PEMParser parser = new PEMParser(reader)) {
+            Object readObject = parser.readObject();
+            if (readObject instanceof PEMKeyPair) {
+                PEMKeyPair keyPair = (PEMKeyPair) readObject;
+                return generatePrivateKey(keyPair.getPrivateKeyInfo());
+            } else if (readObject instanceof PrivateKeyInfo) {
+                return generatePrivateKey((PrivateKeyInfo) readObject);
+            }
+        }
+        throw new GeneralSecurityException("Cannot generate private key from file: " + keyPath);
+    }
+
+    private static PrivateKey generatePrivateKey(PrivateKeyInfo keyInfo) throws IOException, NoSuchAlgorithmException,
+            InvalidKeySpecException {
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyInfo.getEncoded());
         return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
     }
 
-    private static PEMKeyPair loadPEM(String keyPath) throws IOException {
-        PEMParser parser = new PEMParser(new BufferedReader(new FileReader(keyPath)));
-        return (PEMKeyPair) parser.readObject();
-    }
-
-    private static void addCA(KeyStore keyStore, String caPath) throws KeyStoreException, FileNotFoundException, CertificateException {
+    private static void addCA(KeyStore keyStore, String caPath) throws IOException, KeyStoreException,
+            CertificateException {
         for (Certificate cert : loadCertificates(caPath)) {
             X509Certificate crt = (X509Certificate) cert;
             String alias = crt.getSubjectX500Principal().getName();
@@ -60,9 +72,11 @@ public class KeyStoreUtil {
         }
     }
 
-    private static Certificate[] loadCertificates(String certPath) throws FileNotFoundException, CertificateException {
-        InputStream is = new FileInputStream(certPath);
-        Collection<? extends Certificate> certs = CertificateFactory.getInstance("X509").generateCertificates(is);
-        return new ArrayList<>(certs).toArray(new Certificate[certs.size()]);
+    private static Certificate[] loadCertificates(String certPath) throws IOException, CertificateException {
+        try (InputStream is = new FileInputStream(certPath)) {
+            CertificateFactory certificateFactory = CertificateFactory.getInstance("X509");
+            Collection<? extends Certificate> certs = certificateFactory.generateCertificates(is);
+            return certs.toArray(new Certificate[certs.size()]);
+        }
     }
 }
