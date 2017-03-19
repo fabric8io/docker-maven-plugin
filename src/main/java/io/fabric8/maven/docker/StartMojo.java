@@ -504,16 +504,17 @@ public class StartMojo extends AbstractDockerMojo {
                         return false;
                     }
 
+                    final String healthcheck = container.getHealthcheck();
                     if (first) {
-                        final String healthcheckTests = container.healthcheckTests();
-                        if (healthcheckTests == null) {
+                        if (healthcheck == null) {
                             throw new IllegalArgumentException("Can not wait for healthy state of "+imageConfigDesc+". No HEALTHCHECK configured.");
                         }
-                        log.info("%s: Waiting on healthcheck: '%s'", imageConfigDesc, healthcheckTests);
-                        logOut.add("on healthcheck '" + healthcheckTests+"'");
+                        log.info("%s: Waiting to become healthy", imageConfigDesc);
+                        log.debug("HealthyWaitChecker: Waiting for healthcheck: '%s'", healthcheck);
+                        logOut.add("on healthcheck '" + healthcheck+"'");
                         first = false;
                     } else if (log.isDebugEnabled()) {
-                        log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'",container.healthcheckTests());
+                        log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'", healthcheck);
                     }
 
                     return container.isHealthy();

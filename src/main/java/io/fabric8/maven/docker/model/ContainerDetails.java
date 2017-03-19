@@ -134,8 +134,9 @@ public class ContainerDetails implements InspectedContainer {
     }
 
     @Override
-    public String healthcheckTests() {
-        if (!json.getJSONObject(CONFIG).has(HEALTHCHECK)) {
+    public String getHealthcheck() {
+        if (!json.getJSONObject(CONFIG).has(HEALTHCHECK) ||
+            !json.getJSONObject(CONFIG).getJSONObject(HEALTHCHECK).has(TEST)) {
             return null;
         }
         return json.getJSONObject(CONFIG).getJSONObject(HEALTHCHECK).getJSONArray(TEST).join(", ");

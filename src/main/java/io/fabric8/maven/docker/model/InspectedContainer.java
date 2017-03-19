@@ -24,8 +24,16 @@ package io.fabric8.maven.docker.model;
  */
 public interface InspectedContainer extends Container {
 
+    /**
+     * The Health Status of this container (if applicable).
+     * @return {@code false} if the container has a configured healthcheck and has not the
+     * Health Status "healthy". Returns {@code true} otherwise.
+     */
     boolean isHealthy();
 
-    String healthcheckTests();
+    /**
+     * @return the docker healthcheck command that is configured for this container.
+     */
+    String getHealthcheck();
 
 }
