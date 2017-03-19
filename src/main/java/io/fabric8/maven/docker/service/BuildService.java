@@ -110,7 +110,7 @@ public class BuildService {
         }
 
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params, log);
-        log.info("%s: Created %s in %s", dockerArchive.getName(), imageConfig.getDescription(), EnvUtil.formatDurationTill(time));
+        log.info("%s: Created %s in %s", imageConfig.getDescription(), dockerArchive.getName(), EnvUtil.formatDurationTill(time));
 
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
 

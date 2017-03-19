@@ -76,7 +76,7 @@ public class RunServiceTest {
         givenAnImageConfiguration("redis3", "db2", "redisContainer2");
 
         givenAnImageConfiguration("parent", "parentName", "parentContainer");
-        givenAnImageConfiguration("otherName", "other:ro", "otherContainer");
+        givenAnImageConfiguration("other_name", "other:ro", "otherContainer");
 
 
         whenCreateContainerConfig("base");
@@ -213,7 +213,7 @@ public class RunServiceTest {
 
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
-                .name("testName")
+                .name("test_name")
                 .alias("testAlias")
                 .runConfig(new RunImageConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()
@@ -226,7 +226,7 @@ public class RunServiceTest {
 
     private ImageConfiguration createImageConfigWithExecConfig(int wait) {
         return new ImageConfiguration.Builder()
-                .name("testName")
+                .name("test_name")
                 .alias("testAlias")
                 .runConfig(new RunImageConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()

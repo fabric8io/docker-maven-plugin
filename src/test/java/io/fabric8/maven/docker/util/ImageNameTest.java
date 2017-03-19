@@ -41,7 +41,12 @@ public class ImageNameTest {
 
                 "consol/tomcat-8.0:8.0.9",
                 r().repository("consol/tomcat-8.0").tag("8.0.9")
-                        .fullName("consol/tomcat-8.0").fullNameWithTag("consol/tomcat-8.0:8.0.9").simpleName("tomcat-8.0")
+                        .fullName("consol/tomcat-8.0").fullNameWithTag("consol/tomcat-8.0:8.0.9").simpleName("tomcat-8.0"),
+
+                "test.org/user/subproject/image:latest",
+                r().registry("test.org").repository("user/subproject/image").tag("latest")
+                        .fullName("test.org/user/subproject/image").fullNameWithTag("test.org/user/subproject/image:latest").simpleName("subproject/image")
+
         };
 
         verifyData(data);
