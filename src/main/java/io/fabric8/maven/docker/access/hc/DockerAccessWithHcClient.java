@@ -397,8 +397,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
         } finally {
             if (temporaryImage != null) {
                 if (!removeImage(temporaryImage, true)) {
-                    // make sure not to hide previous 'unable to push' exception
-					throw new DockerAccessException(dae, "Unable to remove temporary image [%s]", temporaryImage);
+                    if (dae == null) {
+                        throw new DockerAccessException("Image %s could be pushed, but the temporary tag could not be removed", temporaryImage);
+                    } else {
+                        throw new DockerAccessException(dae.getCause(), dae.getMessage() + " and also temporary image [%s] could not be removed.", temporaryImage);
+                    }
                 }
             }
         }
