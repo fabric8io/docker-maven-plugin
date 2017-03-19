@@ -213,26 +213,13 @@ public class ImageName {
         new ImageName(image);
     }
 
-    // ================================================================================================
-
-    // Validations patterns, taken directly from the docker source
-    // https://github.com/docker/docker/blob/master/vendor/src/github.com/docker/distribution/reference/regexp.go
-    // https://github.com/docker/docker/blob/master/vendor/src/github.com/docker/distribution/reference/reference.go
-    private final String nameComponentRegexp = "[a-z0-9]+(?:(?:[._]|__|[-]*)[a-z0-9]+)*";
-    private final String hostnameComponentRegexp = "(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])";
-    private final String hostnameRegexp = hostnameComponentRegexp + "(?:(?:\\." + hostnameComponentRegexp + ")+)?(?::[0-9]+)?";
-    private final Pattern NAME_COMP_REGEXP = Pattern.compile(nameComponentRegexp);
-    private final Pattern IMAGE_NAME_REGEXP = Pattern.compile("(?:" + hostnameRegexp + "/)?" + nameComponentRegexp + "(?:/" + nameComponentRegexp + ")?");
-    private final Pattern REGISTRY_REGEXP = Pattern.compile("^" + hostnameComponentRegexp + "(?:\\." + hostnameComponentRegexp + ")*(?::[0-9]+)?$");
-    private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
-
     // Validate parts and throw an IllegalArgumentException if a part is not valid
     private void doValidate() {
         List<String> errors = new ArrayList<>();
         // Stripp of user from repository name
         String image = user != null ? repository.substring(user.length() + 1) : repository;
         Object[] checks = new Object[] {
-            "registry", REGISTRY_REGEXP, registry,
+            "registry", DOMAIN_REGEXP, registry,
             "image", IMAGE_NAME_REGEXP, image,
             "user", NAME_COMP_REGEXP, user,
             "tag", TAG_REGEXP, tag
@@ -248,13 +235,39 @@ public class ImageName {
         }
         if (errors.size() > 0) {
             StringBuilder buf = new StringBuilder();
-            buf.append(String.format("Given repository name '%s' is invalid:\n",getFullName()));
+            buf.append(String.format("Given Docker name '%s' is invalid:\n", getFullName()));
             for (String error : errors) {
                 buf.append(String.format("   * %s\n",error));
             }
-            buf.append("See http://bit.ly/docker_image_format for more details");
+            buf.append("See http://bit.ly/docker_image_fmt for more details");
             throw new IllegalArgumentException(buf.toString());
         }
     }
 
+    // ================================================================================================
+
+    // Validations patterns, taken directly from the docker source -->
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/reference.go
+
+    // ---------------------------------------------------------------------
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L18
+    private final String nameComponentRegexp = "[a-z0-9]+(?:(?:(?:[._]|__|[-]*)[a-z0-9]+)+)?";
+
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L25
+    private final String domainComponentRegexp = "(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])";
+
+    // ==========================================================
+
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L18
+    private final Pattern NAME_COMP_REGEXP = Pattern.compile(nameComponentRegexp);
+
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L53
+    private final Pattern IMAGE_NAME_REGEXP = Pattern.compile(nameComponentRegexp + "(?:(?:/" + nameComponentRegexp + ")+)?");
+
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L31
+    private final Pattern DOMAIN_REGEXP = Pattern.compile("^" + domainComponentRegexp + "(?:\\." + domainComponentRegexp + ")*(?::[0-9]+)?$");
+
+    // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L37
+    private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
 }

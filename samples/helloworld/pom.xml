@@ -68,7 +68,7 @@
         <configuration>
           <images>
             <image>
-              <name>hellojava</name>
+              <name>hello/sub/project/java</name>
               <build>
                 <from>openjdk:latest</from>
                 <assembly>

@@ -129,7 +129,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     }
 
     public String getDescription() {
-        return String.format("[%s] %s", name, (alias != null ? "\"" + alias + "\"" : "")).trim();
+        return String.format("[%s] %s", new ImageName(name).getFullName(), (alias != null ? "\"" + alias + "\"" : "")).trim();
     }
 
     public String getRegistry() {
