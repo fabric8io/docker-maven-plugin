@@ -195,7 +195,7 @@ public class StartMojo extends AbstractDockerMojo {
             Thread.currentThread().interrupt();
             throw new MojoExecutionException("interrupted", e);
         } catch (IOException e) {
-            throw new MojoExecutionException("I/O Error",e);
+            throw new MojoExecutionException("I/O Error", e);
         } finally {
             shutdownExecutorService(executorService);
 

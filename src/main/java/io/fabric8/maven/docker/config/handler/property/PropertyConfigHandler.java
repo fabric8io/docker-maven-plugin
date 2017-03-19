@@ -64,7 +64,17 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .build());
     }
 
+    // Enable build config only when a `.from.` is configured
+    private boolean buildConfigured(String prefix, Properties properties) {
+        return withPrefix(prefix, FROM, properties) != null ||
+               mapWithPrefix(prefix,FROM_EXT,properties) != null;
+    }
+
+
     private BuildImageConfiguration extractBuildConfiguration(String prefix, Properties properties) {
+        if (!buildConfigured(prefix, properties)) {
+            return null;
+        }
         return new BuildImageConfiguration.Builder()
                 .cmd(withPrefix(prefix, CMD, properties))
                 .cleanup(withPrefix(prefix, CLEANUP, properties))
