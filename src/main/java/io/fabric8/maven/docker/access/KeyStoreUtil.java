@@ -54,7 +54,7 @@ public class KeyStoreUtil {
                 return generatePrivateKey((PrivateKeyInfo) readObject);
             }
         }
-        return null;
+        throw new GeneralSecurityException("Cannot generate private key from file: " + keyPath);
     }
 
     private static PrivateKey generatePrivateKey(PrivateKeyInfo keyInfo) throws IOException, NoSuchAlgorithmException,

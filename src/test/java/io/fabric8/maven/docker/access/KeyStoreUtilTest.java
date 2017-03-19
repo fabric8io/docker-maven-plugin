@@ -1,9 +1,12 @@
 package io.fabric8.maven.docker.access;
 
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -12,6 +15,9 @@ import static org.junit.Assert.assertNotNull;
  * @since 08.03.2017
  */
 public class KeyStoreUtilTest {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void createKeyStore() throws Exception {
@@ -34,6 +40,13 @@ public class KeyStoreUtilTest {
     public void loadPrivateKeyPKCS8() throws Exception {
         PrivateKey privateKey = KeyStoreUtil.loadPrivateKey(getFile("keys/pkcs8.pem"));
         assertNotNull(privateKey);
+    }
+
+    @Test
+    public void loadInvalidPrivateKey() throws Exception {
+        exception.expect(GeneralSecurityException.class);
+        exception.expectMessage("Cannot generate private key");
+        KeyStoreUtil.loadPrivateKey(getFile("keys/invalid.pem"));
     }
 
     private String getFile(String path) {
