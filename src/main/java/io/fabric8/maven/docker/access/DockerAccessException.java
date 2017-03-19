@@ -23,12 +23,21 @@ public class DockerAccessException extends IOException {
     public DockerAccessException(String message) {
         super(message);
     }
-    
+
     public DockerAccessException(String format, Object...args) {
         super(String.format(format, args));
     }
 
     public DockerAccessException(Throwable cause, String format, Object ... args) {
         super(String.format(format, args),cause);
+    }
+
+    @Override
+    public String getMessage() {
+        if (getCause() != null) {
+            return String.format("%s : %s", super.getMessage(), getCause().getMessage());
+        } else {
+            return super.getMessage();
+        }
     }
 }
