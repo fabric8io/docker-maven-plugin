@@ -1,7 +1,7 @@
 
 All build relevant configuration is contained in the `<build>` section
-of an image configuration. In addition to `<dockerFileDir>` and
-`<dockerFile>` the following configuration options are available:
+of an image configuration. In addition to `<dockerFileDir>`, `<dockerFile>`,
+and `<dockerFileTemplate>` the following configuration options are available:
 
 [[config-image-build]]
 .Build configuration (<<config-image, <image> >>)

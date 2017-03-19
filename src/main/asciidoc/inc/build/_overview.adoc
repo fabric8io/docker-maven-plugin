@@ -13,6 +13,7 @@ Alternatively an external Dockerfile template or Docker archive can be used. Thi
 
 * *dockerFileDir* specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is `Dockerfile` by default but can be also set with the option `dockerFile` (see below).
 * *dockerFile* specifies a specific Dockerfile path. The Docker build context directory is set to `dockerFileDir` if given. If not the directory by default is the directory in which the Dockerfile is stored.
+* *dockerFileTemplate* specifies a Dockerfile which contains variables to be interpolated.  The variable names should be delimited with a double percent "%%" before and after the variable name, for example, "%%myprop%%".  These variables will be replaced by the matching property name in the Maven build.
 * *dockerArchive* specifies a previously saved image archive to load directly. Such a tar archive can be created with `docker save`. If a `dockerArchive` is provided, no `dockerFile` or `dockerFileDir` must be given.
 
 All paths can be either absolute or relative paths (except when both `dockerFileDir` and `dockerFile` are provided in which case `dockerFile` must not be absolute). A relative path is looked up in `${project.basedir}/src/main/docker` by default. You can make it easily an absolute path by using `${project.basedir} in your configuration.

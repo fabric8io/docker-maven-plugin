@@ -98,6 +98,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .dockerArchive(withPrefix(prefix, DOCKER_ARCHIVE, properties))
                 .buildOptions(mapWithPrefix(prefix, BUILD_OPTIONS, properties))
                 .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
+                .dockerFileTemplate(withPrefix(prefix, DOCKER_FILE_TEMPLATE, properties))
                 .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
                 .user(withPrefix(prefix, USER, properties))
                 .healthCheck(extractHealthCheck(prefix, properties))

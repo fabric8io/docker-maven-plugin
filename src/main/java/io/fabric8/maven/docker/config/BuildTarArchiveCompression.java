@@ -18,7 +18,7 @@ package io.fabric8.maven.docker.config;/*
 import org.codehaus.plexus.archiver.tar.TarArchiver;
 
 /**
- * Enumeration for determine the compression mode when creating docker
+ * Enumeration for determining the compression mode when creating docker archive
  * build archives.
  *
  * @author roland

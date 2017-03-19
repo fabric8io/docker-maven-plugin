@@ -22,12 +22,20 @@ public class BuildImageConfiguration implements Serializable {
 
     /**
      * Path to a dockerfile to use. Its parent directory is used as build context (i.e. as <code>dockerFileDir</code>).
-     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly givem
+     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly given
      * <code>dockerFileDir</code>
      *
      * @parameter
      */
     private String dockerFile;
+
+    /**
+     * Path to a dockerfile template. Variables in the file will be interpolated before it is sent
+     * to docker to build the image.
+     *
+     * @parameter
+     */
+    private String dockerFileTemplate;
 
     /**
      * Path to a docker archive to load an image instead of building from scratch. Note only either dockerFile or
@@ -158,7 +166,7 @@ public class BuildImageConfiguration implements Serializable {
     private Map<String,String> buildOptions;
 
     // Path to Dockerfile to use, initialized lazily ....
-    private File dockerFileFile, dockerArchiveFile;
+    private File dockerFileFile, dockerArchiveFile, dockerFileTemplateFile;
 
     public BuildImageConfiguration() {}
 
@@ -168,6 +176,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public File getDockerFile() {
         return dockerFileFile;
+    }
+
+    public File getDockerFileTemplate() {
+        return dockerFileTemplateFile;
     }
 
     public File getDockerArchive() {
@@ -278,6 +290,10 @@ public class BuildImageConfiguration implements Serializable {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
     }
 
+    public File getAbsoluteDockerFiletemplatePath(MojoParameters mojoParams) {
+        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFileTemplate().getPath());
+    }
+
     public File getAbsoluteDockerTarPath(MojoParameters mojoParams) {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerArchive().getPath());
     }
@@ -304,6 +320,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder dockerFile(String file) {
             config.dockerFile = file;
+            return this;
+        }
+
+        public Builder dockerFileTemplate(String file) {
+            config.dockerFileTemplate = file;
             return this;
         }
 
@@ -499,6 +520,14 @@ public class BuildImageConfiguration implements Serializable {
 
         if (dockerArchive != null) {
             dockerArchiveFile = new File(dockerArchive);
+        }
+
+        if (dockerFileTemplate != null) {
+            // Check/validate dockerFileTemplate
+            dockerFileTemplateFile = new File(dockerFileTemplate);
+            if (dockerFileTemplateFile.isAbsolute()) {
+                throw new IllegalArgumentException("<dockerFileTemplate> path must not be an absolute path");
+            }
         }
     }
 

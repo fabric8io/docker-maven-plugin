@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.assembly;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.FileInterpolator;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.artifact.Artifact;
@@ -109,11 +110,23 @@ public class DockerAssemblyManager {
                     }
                 };
             } else {
-                // Create custom docker file in output dir
-                DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
-                builder.write(buildDirs.getOutputDirectory());
-                // Add own Dockerfile
-                final File dockerFile = new File(buildDirs.getOutputDirectory(),"Dockerfile");
+                final File dockerFile = new File(buildDirs.getOutputDirectory(), "Dockerfile");;
+                if(buildConfig.getDockerFileTemplate() != null) {
+                    File dockerFileTemplate = buildConfig.getAbsoluteDockerFiletemplatePath(params);
+                    if (!dockerFileTemplate.exists()) {
+                        throw new MojoExecutionException("Configured Dockerfile Template \"" +
+                                buildConfig.getDockerFileTemplate() + "\" (resolved to \"" + dockerFileTemplate +
+                                "\") doesn't exist");
+                    }
+                    // Create docker file in output dir based on template
+                    // FileUtils.copyFile(dockerFileTemplate, dockerFile);
+                    FileInterpolator.interpolate(dockerFileTemplate, dockerFile, params.getProject().getProperties());
+                } else {
+                    // Create custom docker file in output dir based on pom config
+                    DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
+                    builder.write(buildDirs.getOutputDirectory());
+                }
+
                 customizer = new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
