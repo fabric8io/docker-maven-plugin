@@ -54,7 +54,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, false)).getBuildConfiguration().skip());
         assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, true)).getBuildConfiguration().skip());
 
-        assertFalse(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image"}).getBuildConfiguration().skip());
+        assertFalse(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "busybox"}).getBuildConfiguration().skip());
     }
 
     @Test
@@ -82,7 +82,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                         "docker.name","demo",
                         "docker.ports.1", "jolokia.port:8080",
                         "docker.ports.2", "9090",
-                        "docker.ports.3", "0.0.0.0:80:80"
+                        "docker.ports.3", "0.0.0.0:80:80",
+                        "docker.from", "busybox"
                                         ));
         assertEquals(1,configs.size());
         RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
@@ -102,6 +103,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testRunCommands() {
         List<ImageConfiguration> configs = resolveImage(
             imageConfiguration,props(
+                "docker.from", "base",
                 "docker.name","demo",
                 "docker.run.1", "foo",
                 "docker.run.2", "bar",
@@ -119,6 +121,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testEnvAndLabels() throws Exception {
         List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
+                    "docker.from", "baase",
                         "docker.name","demo",
                         "docker.env.HOME", "/tmp",
                         "docker.env.root.dir", "/bla",
@@ -164,15 +167,23 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testNoCleanup() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CLEANUP), "none" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CLEANUP), "none", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(CleanupMode.NONE, config.getBuildConfiguration().cleanupMode());
     }
 
     @Test
+    public void testNoBuildConfig() throws Exception {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertNull(config.getBuildConfiguration());
+    }
+
+    @Test
     public void testDockerfile() throws Exception {
-        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "src/main/docker/" };
+        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "src/main/docker/", k(ConfigKey.FROM), "busybox" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
         config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
         assertTrue(config.getBuildConfiguration().isDockerFileMode());
@@ -181,7 +192,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testDockerArchive() {
-        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar" };
+        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar", k(ConfigKey.FROM), "busybox" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
         config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
         assertFalse(config.getBuildConfiguration().isDockerFileMode());
@@ -190,14 +201,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidDockerFileArchiveConfig() {
-        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR),  "src/main/docker/", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar" };
+        String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR),  "src/main/docker/", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar", k(ConfigKey.FROM), "base" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
         config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
     }
 
     @Test
     public void testNoCacheDisabled() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "false" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "false", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(false, config.getBuildConfiguration().nocache());
@@ -205,7 +216,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testNoCacheEnabled() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "true" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "true", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(true, config.getBuildConfiguration().nocache());
@@ -213,7 +224,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testNoOptimise() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.OPTIMISE), "false" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.OPTIMISE), "false", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(false, config.getBuildConfiguration().optimise());
@@ -275,7 +286,6 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         external.put("type", "props");
 
         ImageConfiguration config = new ImageConfiguration.Builder().name("image").alias("alias").externalConfig(external).build();
-        PropertyConfigHandler handler = new PropertyConfigHandler();
 
         List<ImageConfiguration> resolvedImageConfigs = resolveImage(config, props(testData));
         assertEquals(1, resolvedImageConfigs.size());
@@ -396,6 +406,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private String[] getTestAssemblyData() {
         return new String[] {
+            k(ConfigKey.FROM), "busybox",
             k(ConfigKey.ASSEMBLY_BASEDIR), "/basedir",
             k(ConfigKey.ASSEMBLY_DESCRIPTOR_REF), "project",
             k(ConfigKey.ASSEMBLY_EXPORT_BASEDIR), "false",
@@ -466,7 +477,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private String[] getSkipTestData(ConfigKey key, boolean value) {
-        return new String[] {k(ConfigKey.NAME), "image", k(key), String.valueOf(value) };
+        return new String[] {k(ConfigKey.NAME), "image", k(key), String.valueOf(value), k(ConfigKey.FROM), "busybox" };
     }
 
     private String k(ConfigKey from) {
