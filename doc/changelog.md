@@ -1,5 +1,9 @@
 # ChangeLog
 
+* **0.20.1**
+  - Add support for PKCS#8 private keys in pem.key file.
+  - Improve resource management for certificates and keys.
+
 * **0.20.0** (2017-02-17)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
 
