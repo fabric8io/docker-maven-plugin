@@ -1,8 +1,10 @@
 # ChangeLog
 
 * **0.20.1**
-  - Add support for PKCS#8 private keys in pem.key file.
-  - Improve resource management for certificates and keys.
+  - Tune log output for image names (#737)
+  - Allow image with multiple path segments (#694)
+  - Add support for PKCS#8 private keys in pem.key file. (#730)
+  - Improve resource management for certificates and keys. (#730)
 
 * **0.20.0** (2017-02-17)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
