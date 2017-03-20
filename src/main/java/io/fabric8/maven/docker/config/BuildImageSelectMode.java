@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.config;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ package io.fabric8.maven.docker.config;
  * @author roland
  * @since 26/04/16
  */
-public enum SourceMode {
+public enum BuildImageSelectMode {
 
     // Pick only the first build configuration
     first,

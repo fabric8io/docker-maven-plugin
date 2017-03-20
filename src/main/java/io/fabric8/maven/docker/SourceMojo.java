@@ -23,7 +23,7 @@ import java.util.List;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.SourceMode;
+import io.fabric8.maven.docker.config.BuildImageSelectMode;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.MojoParameters;
 
@@ -39,7 +39,7 @@ import org.apache.maven.project.MavenProjectHelper;
  *
  * If used in a lifecycle called 'docker-tar' the artifacts are attached
  * without classifier. Otherwise the classifier is "docker" and, depending on the
- * selected {@link SourceMode}, the alias name of the build configuration.
+ * selected {@link BuildImageSelectMode}, the alias name of the build configuration.
  *
  * @author roland
  * @since 25/10/15
@@ -60,10 +60,9 @@ public class SourceMojo extends AbstractBuildSupportMojo {
      *     </li>
      * </ul>
      *
-     * Use this ...
      */
     @Parameter
-    private SourceMode sourceMode = SourceMode.first;
+    private BuildImageSelectMode sourceMode = BuildImageSelectMode.first;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
@@ -79,7 +78,7 @@ public class SourceMojo extends AbstractBuildSupportMojo {
                 }
             }
         }
-        if (sourceMode == SourceMode.first && imageConfigs.size() > 0) {
+        if (sourceMode == BuildImageSelectMode.first && imageConfigs.size() > 0) {
             ImageConfiguration imageConfig = imageConfigs.get(0);
             File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
             projectHelper.attachArtifact(project, getArchiveType(imageConfig),

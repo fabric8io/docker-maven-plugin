@@ -218,7 +218,7 @@ public interface DockerAccess {
      * Save an image to a tar file
      *
      * @param image image to save
-     * @param filename filename
+     * @param filename target filename
      * @param compression compression to use for the archive
      * @throws DockerAccessException if an image cannot be removed
      */

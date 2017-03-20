@@ -2,34 +2,32 @@
 [[docker:save]]
 == *docker:save*
 
-The `{plugin}:save` target saves an image defined in the build configuration to a local file, analogous to `docker save`. If property `file` is not set, the file name is `${alias}.tar.gz" using `alias` from the build configuration.
+The `{plugin}:save` target saves an image defined in the build configuration to a local file, analogous to `docker save`.
+If the option `saveFile` is not set, the file name is calculated automatically:
+
+* If `saveAlias` is used then the file is stored as `target/<alias>-<project version>.tar.gz`
+* Otherwise the archive is stored as `target/<image name without registry and user part>-<image tag>.tar.gz`
+
+Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).
 
 .Save options
 [cols="1,5,1"]
 |===
 | Element | Description | Property
 
-| *name*
-| The name of the configuration to save.
-| `docker.name`
+| *saveName*
+| The name of the image configuration to save. Must not be used together with `alias`.
+| `docker.save.name`
 
-| *alias*
-| The alias of the configuration to save.
-| `docker.alias`
+| *saveAlias*
+| The alias of the image configuration to save. Must not be used together with `name`.
+| `docker.save.alias`
 
-| *file*
+| *saveFile*
 | The filename to save.
-| `docker.save`
+| `docker.save.file` or `docker.file` or `file`
 
-| *attach*
-| A boolean flag whether to attach the saved file as artifact.
-| `docker.attach`
-
-| *classifier*
-| The optional classifier when attaching.
-| `docker.classifier`
-
-| *skip*
+| *skipSave*
 | A boolean flag whether to skip execution of the goal.
 | `docker.skip.save`
 |===

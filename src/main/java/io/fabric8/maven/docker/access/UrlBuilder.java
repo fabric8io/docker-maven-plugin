@@ -66,7 +66,7 @@ public final class UrlBuilder {
     }
 
     public String getImage(ImageName name) {
-        return u("images/%s/get", name.getNameWithoutTag())
+        return u("images/%s/get", name.getFullName())
             .build();
     }
 

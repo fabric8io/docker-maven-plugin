@@ -65,10 +65,12 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
+<version>0.20-SNAPSHOT</version>
         <configuration>
           <images>
             <image>
-              <name>hello/sub/project/java</name>
+              <name>hello/sub/project/java:${project.version}</name>
+              <alias>hello</alias>
               <build>
                 <from>openjdk:latest</from>
                 <assembly>
