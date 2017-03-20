@@ -3,7 +3,6 @@ package io.fabric8.maven.docker.access.hc;
 import java.io.*;
 import java.net.URI;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
@@ -28,7 +27,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
-import org.codehaus.plexus.archiver.commonscompress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -379,7 +377,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                     if (dae == null) {
                         throw new DockerAccessException("Image %s could be pushed, but the temporary tag could not be removed", temporaryImage);
                     } else {
-                        throw new DockerAccessException(dae.getCause(), dae.getMessage() + " and also temporary image [%s] could not be removed.", temporaryImage);
+                        throw new DockerAccessException(dae.getCause(), dae.getMessage() + " and also temporary tag [%s] could not be removed, too.", temporaryImage);
                     }
                 }
             }
