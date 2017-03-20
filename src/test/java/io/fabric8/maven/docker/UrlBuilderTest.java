@@ -78,6 +78,12 @@ public class UrlBuilderTest {
         assertEquals(new URI("/1.0/images/n1?force=0"), new URI(builder.deleteImage("n1", false)));
 
     }
+    
+    @Test
+    public void getImage() throws URISyntaxException {
+        UrlBuilder builder = new UrlBuilder("","1.0");
+        assertEquals(new URI("/1.0/images/n1/get"), new URI(builder.getImage(new ImageName("n1:latest"))));    	
+    }
 
     @Test
     public void listContainers() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
