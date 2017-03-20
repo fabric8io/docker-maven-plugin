@@ -9,6 +9,7 @@ import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.InspectedContainer;
 import io.fabric8.maven.docker.model.Network;
 
 /**
@@ -35,7 +36,7 @@ public interface DockerAccess {
      * @return <code>ContainerDetails<code> representing the container or null if none could be found
      * @throws DockerAccessException if the container could not be inspected
      */
-    Container getContainer(String containerIdOrName) throws DockerAccessException;
+    InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
      * Check whether the given name exists as image at the docker daemon
