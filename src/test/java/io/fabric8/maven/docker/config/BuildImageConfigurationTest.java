@@ -25,6 +25,8 @@ import mockit.integration.junit4.JMockit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static io.fabric8.maven.docker.config.ArchiveCompression.gzip;
+import static io.fabric8.maven.docker.config.ArchiveCompression.none;
 import static org.junit.Assert.*;
 
 /**
@@ -101,7 +103,7 @@ public class BuildImageConfigurationTest {
     }
 
     @Test
-    public void dockerFileAndArchve() {
+    public void dockerFileAndArchive() {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
                 dockerArchive("this").
@@ -124,6 +126,22 @@ public class BuildImageConfigurationTest {
 
         assertFalse(config.isDockerFileMode());
         assertEquals(new File("this"), config.getDockerArchive());
+    }
+
+    @Test
+    public void compression() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                compression("gzip").build();
+        assertEquals(gzip, config.getCompression());
+
+        config = new BuildImageConfiguration.Builder().build();
+        assertEquals(none, config.getCompression());
+
+        config =
+            new BuildImageConfiguration.Builder().
+                compression(null).build();
+        assertEquals(none, config.getCompression());
     }
 
 
