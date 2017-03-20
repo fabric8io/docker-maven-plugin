@@ -6,6 +6,7 @@
   - Add support for PKCS#8 private keys in pem.key file. (#730)
   - Improve resource management for certificates and keys. (#730)
   - When using properties for configuration only build when `from` or `fromExt` is set (#736)
+  - Add new mojo "docker:save" for saving the image to a file (#687)
 
 * **0.20.0** (2017-02-17)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.

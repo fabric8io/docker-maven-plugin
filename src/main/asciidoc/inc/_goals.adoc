@@ -32,6 +32,9 @@ in the next sections.
 |**<<{plugin}:source>>**
 |Attach docker build archive to Maven project
 
+|**<<{plugin}:save>>**
+|Save images to a file
+
 |**<<{plugin}:volume-create>>**
 |Create a volume for containers to share data
 
