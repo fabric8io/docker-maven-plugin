@@ -3,8 +3,8 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.fabric8/docker-maven-plugin/badge.svg?style=flat-square)](https://maven-badges.herokuapp.com/maven-central/io.fabric8/docker-maven-plugin/)
 [![Travis](https://secure.travis-ci.org/fabric8io/docker-maven-plugin.png)](http://travis-ci.org/fabric8io/docker-maven-plugin)
 [![Circle CI](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/master.svg?style=shield)](https://circleci.com/gh/fabric8io/docker-maven-plugin/tree/master)
-[![Coverage](https://img.shields.io/sonar/https/sonarqube.com/io.fabric8:docker-maven-plugin/coverage.svg)](https://sonarqube.com/overview?id=io.fabric8%3Adocker-maven-plugin)
-[![Technical Debt](https://img.shields.io/sonar/https/sonarqube.com/io.fabric8:docker-maven-plugin/tech_debt.svg)](https://sonarqube.com/overview?id=io.fabric8%3Adocker-maven-plugin)
+[![Coverage](https://sonarqube.com/api/badges/measure?key=io.fabric8:docker-maven-plugin&metric=coverage)](https://sonarqube.com/dashboard?id=io.fabric8%3Adocker-maven-plugin)
+[![Technical Debt](https://sonarqube.com/api/badges/measure?key=io.fabric8:docker-maven-plugin&metric=sqale_debt_ratio)](https://sonarqube.com/dashboard?id=io.fabric8%3Adocker-maven-plugin)
 [![Dependency Status](https://www.versioneye.com/java/io.fabric8:docker-maven-plugin/badge?style=flat)](https://www.versioneye.com/java/io.fabric8:docker-maven-plugin/)
 
 This is a Maven plugin for building Docker images and managing containers for integration tests.
