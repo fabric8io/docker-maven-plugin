@@ -12,13 +12,13 @@
   <parent>
     <groupId>io.fabric8</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.20.0</version>
+    <version>0.20-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
 
   <artifactId>helloworld</artifactId>
-  <version>0.20.0</version>
+  <version>0.20-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>dmp-helloworld</name>
 
@@ -65,12 +65,11 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-<version>0.20-SNAPSHOT</version>
         <configuration>
           <images>
             <image>
               <name>hello/sub/project/java:${project.version}</name>
-              <alias>hello</alias>
+              <alias>hello-world</alias>
               <build>
                 <from>openjdk:latest</from>
                 <assembly>
