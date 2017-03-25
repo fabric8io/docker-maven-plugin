@@ -68,7 +68,7 @@ public class LogWaitCheckerTest {
         }};
 
         LogWaitChecker wait =
-            new LogWaitChecker("(?s)ready to accept connections.*ready to accept connections", serviceHub, CONTAINER_ID, log);
+            new LogWaitChecker("(?s)ready to accept connections.*\\n.*ready to accept connections", serviceHub, CONTAINER_ID, log);
         assertThat(wait.check()).isTrue();
         wait.cleanUp();
     }
