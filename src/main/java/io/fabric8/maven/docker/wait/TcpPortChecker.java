@@ -50,13 +50,14 @@ public class TcpPortChecker implements WaitChecker {
                 iter.remove();
             } catch (IOException e) {
                 // Ports isn't opened, yet. So don't remove from queue.
-
+                // Can happen and is part of the flow
             }
-
         }
         return pending.isEmpty();
     }
 
     @Override
-    public void cleanUp() { }
+    public void cleanUp() {
+        // No cleanup required
+    }
 }

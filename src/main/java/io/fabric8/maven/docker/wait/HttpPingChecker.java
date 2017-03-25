@@ -25,7 +25,8 @@ import org.apache.http.ssl.SSLContextBuilder;
  */
 public class HttpPingChecker implements WaitChecker {
 
-    private int statusMin, statusMax;
+    private int statusMin;
+    private int statusMax;
     private String url;
     private String method;
     private boolean allowAllHosts;
@@ -70,6 +71,7 @@ public class HttpPingChecker implements WaitChecker {
         try {
             return ping();
         } catch (IOException exception) {
+            // Could occur and then the check is always considered as failed
             return false;
         }
     }
@@ -83,7 +85,7 @@ public class HttpPingChecker implements WaitChecker {
                         .setRedirectsEnabled(false)
                         .build();
 
-        CloseableHttpClient httpClient = null;
+        CloseableHttpClient httpClient;
         if (allowAllHosts) {
             SSLContextBuilder builder = new SSLContextBuilder();
             try {
@@ -95,7 +97,7 @@ public class HttpPingChecker implements WaitChecker {
                                               .setSSLSocketFactory(socketFactory)
                                               .build();
             } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-                throw new RuntimeException("Unable to set self signed strategy on http wait", e);
+                throw new IOException("Unable to set self signed strategy on http wait: " + e, e);
             }
         } else {
             httpClient = HttpClientBuilder.create()
@@ -111,7 +113,7 @@ public class HttpPingChecker implements WaitChecker {
                 if (responseCode == 501) {
                     throw new IllegalArgumentException("Invalid or not supported HTTP method '" + method.toUpperCase() + "' for checking " + url);
                 }
-                return (responseCode >= statusMin && responseCode <= statusMax);
+                return responseCode >= statusMin && responseCode <= statusMax;
             } finally {
                 response.close();
             }
@@ -121,5 +123,7 @@ public class HttpPingChecker implements WaitChecker {
     }
 
     @Override
-    public void cleanUp() { }
+    public void cleanUp() {
+        // No cleanup required for this checker
+    }
 }
