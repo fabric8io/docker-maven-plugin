@@ -68,7 +68,7 @@ public class LogWaitChecker implements WaitChecker {
                       txt, logPattern, Thread.currentThread().getId());
             String toMatch;
             if (logBuffer != null) {
-                logBuffer.append(txt);
+                logBuffer.append(txt).append("\n");
                 toMatch = logBuffer.toString();
             } else {
                 toMatch = txt;
