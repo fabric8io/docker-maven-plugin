@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 public class WaitUtil {
 
     // how long to wait at max when doing a http ping
-    private static final long DEFAULT_MAX_WAIT = 10 * 1000;
+    private static final long DEFAULT_MAX_WAIT = 10 * 1000L;
 
     // How long to wait between pings
     private static final long WAIT_RETRY_WAIT = 500;
@@ -30,7 +30,7 @@ public class WaitUtil {
             } catch (@SuppressWarnings("unused") InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (@SuppressWarnings("unused") TimeoutException e) {
-                throw new WaitTimeoutException("timed out waiting for execution to complete", delta(now));
+                throw new WaitTimeoutException("timed out waiting for execution to complete: " + e, delta(now));
             }
         }
         return delta(now);
@@ -45,10 +45,8 @@ public class WaitUtil {
         long now = System.currentTimeMillis();
         try {
             do {
-                for (WaitChecker checker : checkers) {
-                    if (checker.check()) {
-                        return delta(now);
-                    }
+                if (check(checkers)) {
+                    return delta(now);
                 }
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
@@ -58,6 +56,15 @@ public class WaitUtil {
         } finally {
             cleanup(checkers);
         }
+    }
+
+    private static boolean check(Iterable<WaitChecker> checkers) {
+        for (WaitChecker checker : checkers) {
+            if (checker.check()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Give checkers a possibility to clean up
