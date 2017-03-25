@@ -18,7 +18,7 @@ a| HTTP ping check which periodically polls an URL. It knows the following sub-e
 
 | *log*
 | Regular expression which is applied against the log
-output of an container and blocks until the pattern is matched.
+output of an container and blocks until the pattern is matched. You can use `(?s)` in the pattern to switch on multi line matching.
 
 | *time*
 | Time in milliseconds to block.

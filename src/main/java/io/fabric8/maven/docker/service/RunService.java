@@ -27,7 +27,8 @@ import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.*;
-import io.fabric8.maven.docker.util.WaitUtil.WaitTimeoutException;
+import io.fabric8.maven.docker.wait.WaitUtil;
+import io.fabric8.maven.docker.wait.WaitTimeoutException;
 
 
 /**
