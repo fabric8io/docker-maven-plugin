@@ -1,16 +1,16 @@
 # ChangeLog
 
-* **0.20.1**
-  - Tune log output for image names (#737)
-  - Allow image with multiple path segments (#694)
-  - Add support for PKCS#8 private keys in pem.key file. (#730)
-  - Improve resource management for certificates and keys. (#730)
-  - When using properties for configuration only build when `from` or `fromExt` is set (#736)
-  - Add new mojo "docker:save" for saving the image to a file (#687)
-  - Check whether a temporary tag could be removed and throw an error if not (#725)
-  - Allow multi line matches in log output (#628)
-  - Add a wait condition on a healthcheck when starting up containers (#719)
-  - Don't use authentication from config when no "auth" is set (#731)
+* **0.20.1** (2017-03-29)
+  - Tune log output for image names ([#737](https://github.com/fabric8io/docker-maven-plugin/issues/737))
+  - Allow image with multiple path segments ([#694](https://github.com/fabric8io/docker-maven-plugin/issues/694))
+  - Add support for PKCS#8 private keys in pem.key file. ([#730](https://github.com/fabric8io/docker-maven-plugin/issues/730))
+  - Improve resource management for certificates and keys. ([#730](https://github.com/fabric8io/docker-maven-plugin/issues/730))
+  - When using properties for configuration only build when `from` or `fromExt` is set ([#736](https://github.com/fabric8io/docker-maven-plugin/issues/736))
+  - Add new mojo "docker:save" for saving the image to a file ([#687](https://github.com/fabric8io/docker-maven-plugin/issues/687))
+  - Check whether a temporary tag could be removed and throw an error if not ([#725](https://github.com/fabric8io/docker-maven-plugin/issues/725))
+  - Allow multi line matches in log output ([#628](https://github.com/fabric8io/docker-maven-plugin/issues/628))
+  - Add a wait condition on a healthcheck when starting up containers ([#719](https://github.com/fabric8io/docker-maven-plugin/issues/719))
+  - Don't use authentication from config when no "auth" is set ([#731](https://github.com/fabric8io/docker-maven-plugin/issues/731))
 
 * **0.20.0** (2017-02-17)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
