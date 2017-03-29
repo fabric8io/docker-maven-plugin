@@ -118,7 +118,7 @@ public class AuthConfigFactory {
 
         // Finally check ~/.docker/config.json
         ret = getAuthConfigFromDockerConfig(registry);
-        if(ret != null) {
+        if (ret != null) {
             log.debug("AuthConfig: credentials from ~.docker/config.json");
             return ret;
         }
@@ -314,7 +314,7 @@ public class AuthConfigFactory {
         JSONObject auths = dockerConfig.getJSONObject("auths");
         String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
         JSONObject credentials = getCredentialsNode(auths, registryToLookup);
-        if (credentials == null) {
+        if (credentials == null || !credentials.has("auth")) {
             return null;
         }
         String auth = credentials.getString("auth");
