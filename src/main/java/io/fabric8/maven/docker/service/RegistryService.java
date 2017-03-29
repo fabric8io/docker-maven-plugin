@@ -94,7 +94,7 @@ public class RegistryService {
             throws MojoExecutionException {
 
         return config.getAuthConfigFactory().createAuthConfig(isPush, config.isSkipExtendedAuth(), config.getAuthConfig(),
-                config.getSettings(), user, registry);
+                                                              config.getSettings(), user, registry);
     }
 
     // ===========================================
