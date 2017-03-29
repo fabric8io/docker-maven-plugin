@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.20.0,</span>
-<span id="revdate">2017-02-17</span>
+<span id="revnumber">version 0.20.1,</span>
+<span id="revdate">2017-03-29</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -564,14 +564,15 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#docker:remove">5.6. <strong>docker:remove</strong></a></li>
 <li><a href="#docker:logs">5.7. <strong>docker:logs</strong></a></li>
 <li><a href="#docker:source">5.8. <strong>docker:source</strong></a></li>
-<li><a href="#docker:volume-create">5.9. <strong>docker:volume-create</strong></a>
-<ul class="sectlevel3">
-<li><a href="#volume-configuration">5.9.1. Configuration</a></li>
-</ul>
-</li>
-<li><a href="#docker:volume-remove">5.10. <strong>docker:volume-remove</strong></a>
+<li><a href="#docker:save">5.9. <strong>docker:save</strong></a></li>
+<li><a href="#docker:volume-create">5.10. <strong>docker:volume-create</strong></a>
 <ul class="sectlevel3">
 <li><a href="#volume-configuration">5.10.1. Configuration</a></li>
+</ul>
+</li>
+<li><a href="#docker:volume-remove">5.11. <strong>docker:volume-remove</strong></a>
+<ul class="sectlevel3">
+<li><a href="#volume-configuration">5.11.1. Configuration</a></li>
 </ul>
 </li>
 </ul>
@@ -822,7 +823,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.20.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.20.1<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1354,6 +1355,10 @@ in the next sections.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Attach docker build archive to Maven project</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:save"><strong>docker:save</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Save images to a file</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:volume-create"><strong>docker:volume-create</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create a volume for containers to share data</p></td>
 </tr>
@@ -1864,15 +1869,17 @@ automatically.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;assembly&gt;</span>
-  <span class="tag">&lt;dependencySets&gt;</span>
-    <span class="tag">&lt;dependencySet&gt;</span>
-      <span class="tag">&lt;includes&gt;</span>
-        <span class="tag">&lt;include&gt;</span>org.jolokia:jolokia-war<span class="tag">&lt;/include&gt;</span>
-      <span class="tag">&lt;/includes&gt;</span>
-      <span class="tag">&lt;outputDirectory&gt;</span>.<span class="tag">&lt;/outputDirectory&gt;</span>
-      <span class="tag">&lt;outputFileNameMapping&gt;</span>jolokia.war<span class="tag">&lt;/outputFileNameMapping&gt;</span>
-    <span class="tag">&lt;/dependencySet&gt;</span>
-  <span class="tag">&lt;/dependencySets&gt;</span>
+  <span class="tag">&lt;inline&gt;</span>
+    <span class="tag">&lt;dependencySets&gt;</span>
+      <span class="tag">&lt;dependencySet&gt;</span>
+        <span class="tag">&lt;includes&gt;</span>
+          <span class="tag">&lt;include&gt;</span>org.jolokia:jolokia-war<span class="tag">&lt;/include&gt;</span>
+        <span class="tag">&lt;/includes&gt;</span>
+        <span class="tag">&lt;outputDirectory&gt;</span>.<span class="tag">&lt;/outputDirectory&gt;</span>
+        <span class="tag">&lt;outputFileNameMapping&gt;</span>jolokia.war<span class="tag">&lt;/outputFileNameMapping&gt;</span>
+      <span class="tag">&lt;/dependencySet&gt;</span>
+    <span class="tag">&lt;/dependencySets&gt;</span>
+  <span class="tag">&lt;/inline&gt;</span>
 <span class="tag">&lt;/assembly&gt;</span></code></pre>
 </div>
 </div>
@@ -2808,7 +2815,7 @@ some condition is met. These conditions can be specified within a
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>log</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Regular expression which is applied against the log
-output of an container and blocks until the pattern is matched.</p></td>
+output of an container and blocks until the pattern is matched. You can use <code>(?s)</code> in the pattern to switch on multi line matching.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>time</strong></p></td>
@@ -2857,6 +2864,15 @@ output of an container and blocks until the pattern is matched.</p></td>
 </ul>
 </div></div></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>healthy</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Check that waits until the container health state becomes <code>healthy</code>. A container is considered healthy when its <a href="#build-healthcheck">configured healtcheck</a> succeeds.</p>
+</div>
+<div class="paragraph">
+<p>This behaviour mimics the docker compose dependsOn <code>condition: service_healthy</code>.</p>
+</div></div></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -2885,6 +2901,7 @@ output of an container and blocks until the pattern is matched.</p></td>
         <span class="tag">&lt;port&gt;</span>9999<span class="tag">&lt;/port&gt;</span>
      <span class="tag">&lt;/ports&gt;</span>
   <span class="tag">&lt;/tcp&gt;</span>
+  <span class="tag">&lt;healthy&gt;</span>true<span class="tag">&lt;/healthy&gt;</span>
 <span class="tag">&lt;/wait&gt;</span></code></pre>
 </div>
 </div>
@@ -3445,7 +3462,64 @@ this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</c
 </div>
 </div>
 <div class="sect2">
-<h3 id="docker:volume-create">5.9. <strong>docker:volume-create</strong></h3>
+<h3 id="docker:save">5.9. <strong>docker:save</strong></h3>
+<div class="paragraph">
+<p>The <code>docker:save</code> target saves an image defined in the build configuration to a local file, analogous to <code>docker save</code>.
+If the option <code>saveFile</code> is not set, the file name is calculated automatically:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If <code>saveAlias</code> is used then the file is stored as <code>target/&lt;alias&gt;-&lt;project version&gt;.tar.gz</code></p>
+</li>
+<li>
+<p>Otherwise the archive is stored as <code>target/&lt;image name without registry and user part&gt;-&lt;image tag&gt;.tar.gz</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 25. Save options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>saveName</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the image configuration to save. Must not be used together with <code>alias</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.save.name</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>saveAlias</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The alias of the image configuration to save. Must not be used together with <code>name</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.save.alias</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>saveFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The filename to save.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.save.file</code> or <code>docker.file</code> or <code>file</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipSave</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A boolean flag whether to skip execution of the goal.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.save</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="docker:volume-create">5.10. <strong>docker:volume-create</strong></h3>
 <div class="paragraph">
 <p>This goals creates one or more standalone <a href="https://docs.docker.com/engine/tutorials/dockervolumes/">Docker volume</a>, which can be referenced in a <a href="#docker:start"><strong>docker:start</strong></a> configuration for linking to a volume during runtime.
 Each volume has therefore a unique and referenceable name. Beside the volume driver and driver options can be specified.</p>
@@ -3475,12 +3549,12 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </div>
 </div>
 <div class="sect3">
-<h4 id="volume-configuration">5.9.1. Configuration</h4>
+<h4 id="volume-configuration">5.10.1. Configuration</h4>
 <div class="paragraph">
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Volume configuration</caption>
+<caption class="title">Table 26. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3513,7 +3587,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </div>
 </div>
 <div class="sect2">
-<h3 id="docker:volume-remove">5.10. <strong>docker:volume-remove</strong></h3>
+<h3 id="docker:volume-remove">5.11. <strong>docker:volume-remove</strong></h3>
 <div class="paragraph">
 <p>This goals is the counterpart to <a href="#docker:volume-create"><strong>docker:volume-create</strong></a> and removes a volume.
 Docker volumes are configured outside of Docker images, but can be referenced by them.
@@ -3538,12 +3612,12 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 </div>
 </div>
 <div class="sect3">
-<h4 id="volume-configuration">5.10.1. Configuration</h4>
+<h4 id="volume-configuration">5.11.1. Configuration</h4>
 <div class="paragraph">
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Volume configuration</caption>
+<caption class="title">Table 27. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3594,7 +3668,7 @@ from such a external configuration are added to the <em>regular</em>
 <p>For simple needs the image configuration can be completely defined via
 Maven properties which are defined outside of this plugin&#8217;s
 configuration. Such a property based configuration can be selected
-with an <code>&lt;type&gt;</code> of <code>props</code>. As extra configuration a prefix for the
+with an <code>&lt;type&gt;</code> of <code>properties</code>. As extra configuration a prefix for the
 properties can be defined which by default is <code>docker</code>.</p>
 </div>
 <div class="listingblock">
@@ -3602,7 +3676,7 @@ properties can be defined which by default is <code>docker</code>.</p>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;image&gt;</span>
   <span class="tag">&lt;external&gt;</span>
-     <span class="tag">&lt;type&gt;</span>props<span class="tag">&lt;/type&gt;</span>
+     <span class="tag">&lt;type&gt;</span>properties<span class="tag">&lt;/type&gt;</span>
      <span class="tag">&lt;prefix&gt;</span>docker<span class="tag">&lt;/prefix&gt;</span> <span class="comment">&lt;!-- this is the default --&gt;</span>
   <span class="tag">&lt;/external&gt;</span>
 <span class="tag">&lt;/image&gt;</span></code></pre>
@@ -3611,10 +3685,11 @@ properties can be defined which by default is <code>docker</code>.</p>
 <div class="paragraph">
 <p>Given this example configuration a single image configuration is built
 up from the following properties, which correspond to the corresponding
-values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.</p>
+values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. A build configuration is only created
+when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. External properties</caption>
+<caption class="title">Table 28. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3713,12 +3788,8 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">Property part for the exposed container properties like internal IP addresses as described in <a href="#start-overview">docker:start</a>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.workdir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Container working directory</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.env.VARIABLE</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable. E.g. <code>&lt;docker.env.JAVA_OPTS&gt;-Xmx512m&lt;/docker.env.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable. E.g. <code>&lt;docker.env.JAVA_OPTS&gt;-Xmx512m&lt;/docker.env.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.envPropertyFile</strong></p></td>
@@ -3730,11 +3801,11 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.from</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image. Must be set when an image is created (or <code>fromExt</code>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.fromExt.VARIABLE</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image (extended format)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image (extended format), which also triggers a build of an image.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.cmd</strong></p></td>
@@ -3929,8 +4000,12 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections.<
 <td class="tableblock halign-left valign-top"><p class="tableblock">Time in milliseconds to wait between sending SIGTERM and SIGKILL to a container when stopping it.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.workdir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Container working directory where the image is build in</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.workingDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Working dir for commands to run in</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current Working dir for commands to run in when running containers</p></td>
 </tr>
 </tbody>
 </table>
@@ -3965,7 +4040,7 @@ run and build configuration sections.</p>
         <span class="tag">&lt;images&gt;</span>
           <span class="tag">&lt;image&gt;</span>
             <span class="tag">&lt;external&gt;</span>
-              <span class="tag">&lt;type&gt;</span>props<span class="tag">&lt;/type&gt;</span>
+              <span class="tag">&lt;type&gt;</span>properties<span class="tag">&lt;/type&gt;</span>
               <span class="tag">&lt;prefix&gt;</span>docker<span class="tag">&lt;/prefix&gt;</span>
             <span class="tag">&lt;/external&gt;</span>
           <span class="tag">&lt;/image&gt;</span>
@@ -4031,7 +4106,7 @@ run and build configuration sections.</p>
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Docker compose configuration</caption>
+<caption class="title">Table 29. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4146,7 +4221,7 @@ detecting a registry.</p>
 </div>
 <div class="paragraph">
 <p>This registry is used for pulling (i.e. for autopull the base image
-when doing a <code>docker:build</code>) and pushing with <code>docker.push</code>. However,
+when doing a <code>docker:build</code>) and pushing with <code>docker:push</code>. However,
 when these two goals a are combined on the command line like in <code>mvn
 -Ddocker.registry=myregistry:5000 package docker:build docker:push</code>
 the same registry is used for both operation. For a more fine grained
@@ -4463,8 +4538,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.20.0<br>
-Last updated 2017-02-17 08:30:20 UTC
+Version 0.20.1<br>
+Last updated 2017-03-29 22:09:53 UTC
 </div>
 </div>
 </body>
