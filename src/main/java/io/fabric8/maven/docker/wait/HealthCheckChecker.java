@@ -35,7 +35,7 @@ public class HealthCheckChecker implements WaitChecker {
         try {
             final InspectedContainer container = docker.getContainer(containerId);
             if (container == null) {
-                log.debug("HealthyWaitChecker:  Container %s not found");
+                log.debug("HealthyWaitChecker: Container %s not found");
                 return false;
             }
 
@@ -46,6 +46,7 @@ public class HealthCheckChecker implements WaitChecker {
                 }
                 log.info("%s: Waiting to become healthy", imageConfigDesc);
                 log.debug("HealthyWaitChecker: Waiting for healthcheck: '%s'", healthcheck);
+                logOut.add("on healthcheck '" + healthcheck+ "'");
                 first = false;
             } else if (log.isDebugEnabled()) {
                 log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'", healthcheck);
