@@ -9,6 +9,7 @@
   - Add new mojo "docker:save" for saving the image to a file (#687)
   - Check whether a temporary tag could be removed and throw an error if not (#725)
   - Allow multi line matches in log output (#628)
+  - Add a wait condition on a healthcheck when starting up containers (#719)
   - Don't use authentication from config when no "auth" is set (#731)
 
 * **0.20.0** (2017-02-17)
