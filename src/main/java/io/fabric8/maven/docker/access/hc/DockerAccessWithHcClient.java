@@ -1,32 +1,10 @@
 package io.fabric8.maven.docker.access.hc;
 
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
-import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
-import static java.net.HttpURLConnection.HTTP_OK;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.model.InspectedContainer;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ResponseHandler;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
 import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
 import io.fabric8.maven.docker.access.chunked.PullOrPushResponseJsonHandler;
@@ -39,18 +17,20 @@ import io.fabric8.maven.docker.access.hc.win.NamedPipeClientBuilder;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.access.log.LogRequestor;
+import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.DefaultLogCallback;
 import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.model.ContainerDetails;
-import io.fabric8.maven.docker.model.ContainersListElement;
-import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.model.NetworksListElement;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.model.*;
+import io.fabric8.maven.docker.util.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.ResponseHandler;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import static java.net.HttpURLConnection.*;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
@@ -385,15 +365,48 @@ public class DockerAccessWithHcClient implements DockerAccess {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
         String temporaryImage = tagTemporaryImage(name, registry);
+        DockerAccessException dae = null;
         try {
             doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
-            throw new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            throw dae;
         } finally {
             if (temporaryImage != null) {
-                removeImage(temporaryImage);
+                if (!removeImage(temporaryImage, true)) {
+                    if (dae == null) {
+                        throw new DockerAccessException("Image %s could be pushed, but the temporary tag could not be removed", temporaryImage);
+                    } else {
+                        throw new DockerAccessException(dae.getCause(), dae.getMessage() + " and also temporary tag [%s] could not be removed, too.", temporaryImage);
+                    }
+                }
             }
         }
+    }
+
+    @Override
+    public void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException {
+        ImageName name = new ImageName(image);
+        String url = urlBuilder.getImage(name);
+        try {
+            delegate.get(url, getImageResponseHandler(filename, compression), HTTP_OK);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to save '%s' to '%s'", image, filename);
+        }
+
+    }
+
+    private ResponseHandler<Object> getImageResponseHandler(final String filename, final ArchiveCompression compression) throws FileNotFoundException {
+        return new ResponseHandler<Object>() {
+            @Override
+            public Object handleResponse(HttpResponse response) throws IOException {
+                try (InputStream stream = response.getEntity().getContent();
+                     OutputStream out = compression.wrapOutputStream(new FileOutputStream(filename))) {
+                    IOUtils.copy(stream, out);
+                }
+                return null;
+            }
+        };
     }
 
     @Override

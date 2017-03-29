@@ -24,13 +24,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.access.log.LogCallback;
-import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
@@ -39,14 +35,12 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.model.InspectedContainer;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.StartOrderResolver;
-import io.fabric8.maven.docker.util.Timestamp;
-import io.fabric8.maven.docker.util.WaitUtil;
+import io.fabric8.maven.docker.wait.*;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -364,8 +358,7 @@ public class StartMojo extends AbstractDockerMojo {
         if (wait == null) {
             return;
         }
-
-        ArrayList<WaitUtil.WaitChecker> checkers = new ArrayList<>();
+        ArrayList<WaitChecker> checkers = new ArrayList<>();
         ArrayList<String> logOut = new ArrayList<>();
 
         if (wait.getUrl() != null) {
@@ -374,7 +367,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         if (wait.getLog() != null) {
             log.debug("LogWaitChecker: Waiting on %s",wait.getLog());
-            checkers.add(getLogWaitChecker(wait.getLog(), hub, containerId));
+            checkers.add(new LogWaitChecker(wait.getLog(), hub, containerId, log));
             logOut.add("on log out '" + wait.getLog() + "'");
         }
 
@@ -388,7 +381,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
 
         if (wait.getHealthy()) {
-            checkers.add(getHealthyWaitChecker(imageConfig.getDescription(), hub.getDockerAccess(), containerId, logOut));
+            checkers.add(new HealthCheckChecker(hub.getDockerAccess(), containerId, imageConfig.getDescription(), logOut, log));
         }
 
         if (checkers.isEmpty()) {
@@ -402,7 +395,7 @@ public class StartMojo extends AbstractDockerMojo {
         try {
             long waited = WaitUtil.wait(wait.getTime(), checkers);
             log.info("%s: Waited %s %d ms",imageConfig.getDescription(), StringUtils.join(logOut.toArray(), " and "), waited);
-        } catch (WaitUtil.WaitTimeoutException exp) {
+        } catch (WaitTimeoutException exp) {
             String desc = String.format("%s: Timeout after %d ms while waiting %s",
                                         imageConfig.getDescription(), exp.getWaited(),
                                         StringUtils.join(logOut.toArray(), " and "));
@@ -411,29 +404,29 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private WaitUtil.WaitChecker getUrlWaitChecker(String imageConfigDesc,
+    private WaitChecker getUrlWaitChecker(String imageConfigDesc,
                                                    Properties projectProperties,
                                                    WaitConfiguration wait,
                                                    ArrayList<String> logOut) {
         String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
         WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
-        WaitUtil.HttpPingChecker checker;
+        HttpPingChecker checker;
         if (httpConfig != null) {
-            checker = new WaitUtil.HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus(), httpConfig.isAllowAllHosts());
+            checker = new HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus(), httpConfig.isAllowAllHosts());
             log.info("%s: Waiting on url %s with method %s for status %s.",
                     imageConfigDesc, waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
         } else {
-            checker = new WaitUtil.HttpPingChecker(waitUrl);
+            checker = new HttpPingChecker(waitUrl);
             log.info("%s: Waiting on url %s.", imageConfigDesc, waitUrl);
         }
         logOut.add("on url " + waitUrl);
         return checker;
     }
 
-    private WaitUtil.WaitChecker getTcpWaitChecker(Container container,
-                                                   String imageConfigDesc,
-                                                   Properties projectProperties,
-                                                   WaitConfiguration.TcpConfiguration tcpConfig,
+    private WaitChecker getTcpWaitChecker(Container container,
+                                          String imageConfigDesc,
+                                          Properties projectProperties,
+                                          WaitConfiguration.TcpConfiguration tcpConfig,
                                                    ArrayList<String> logOut) throws MojoExecutionException {
         List<Integer> ports = new ArrayList<>();
 
@@ -457,7 +450,7 @@ public class StartMojo extends AbstractDockerMojo {
             log.info("%s: Waiting for ports %s directly on container with IP (%s).",
                      imageConfigDesc, ports, host);
         }
-        WaitUtil.TcpPortChecker tcpWaitChecker = new WaitUtil.TcpPortChecker(host, ports);
+        TcpPortChecker tcpWaitChecker = new TcpPortChecker(host, ports);
         logOut.add("on tcp port '" + tcpWaitChecker.getPending() + "'");
         return tcpWaitChecker;
     }
@@ -486,100 +479,6 @@ public class StartMojo extends AbstractDockerMojo {
             host = projectProperties.getProperty("docker.host.address");
         }
         return host;
-    }
-
-    private WaitUtil.WaitChecker getHealthyWaitChecker(final String imageConfigDesc, final DockerAccess docker, final String containerId, final List<String> logOut) {
-
-
-        return new WaitUtil.WaitChecker() {
-
-            private boolean first = true;
-
-            @Override
-            public boolean check() {
-                try {
-                    final InspectedContainer container = docker.getContainer(containerId);
-                    if (container == null) {
-                        log.debug("HealthyWaitChecker:  Container %s not found");
-                        return false;
-                    }
-
-                    final String healthcheck = container.getHealthcheck();
-                    if (first) {
-                        if (healthcheck == null) {
-                            throw new IllegalArgumentException("Can not wait for healthy state of "+imageConfigDesc+". No HEALTHCHECK configured.");
-                        }
-                        log.info("%s: Waiting to become healthy", imageConfigDesc);
-                        log.debug("HealthyWaitChecker: Waiting for healthcheck: '%s'", healthcheck);
-                        logOut.add("on healthcheck '" + healthcheck+"'");
-                        first = false;
-                    } else if (log.isDebugEnabled()) {
-                        log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'", healthcheck);
-                    }
-
-                    return container.isHealthy();
-                } catch(DockerAccessException e) {
-                    return false;
-                }
-            }
-
-            @Override
-            public void cleanUp() {}
-        };
-    }
-
-    private WaitUtil.WaitChecker getLogWaitChecker(final String logPattern, final ServiceHub hub, final String  containerId) {
-        return new WaitUtil.WaitChecker() {
-
-            private boolean first = true;
-            private LogGetHandle logHandle;
-            // Flag updated from a different thread, hence volatile (see also #595)
-            private volatile boolean detected = false;
-
-            @Override
-            public boolean check() {
-                if (first) {
-                    final Pattern pattern = Pattern.compile(logPattern);
-                    log.debug("LogWaitChecker: Pattern to match '%s'",logPattern);
-                    DockerAccess docker = hub.getDockerAccess();
-                    logHandle = docker.getLogAsync(containerId, new LogCallback() {
-                        @Override
-                        public void log(int type, Timestamp timestamp, String txt) throws LogCallback.DoneException {
-                            log.debug("LogWaitChecker: Tying to match '%s' [Pattern: %s] [thread: %d]",
-                                      txt, logPattern, Thread.currentThread().getId());
-                            if (pattern.matcher(txt).find()) {
-                                detected = true;
-                                throw new LogCallback.DoneException();
-                            }
-                        }
-
-                        @Override
-                        public void error(String error) {
-                            log.error("%s", error);
-                        }
-
-                        @Override
-                        public void close() {
-                            // no-op
-                        }
-
-                        @Override
-                        public void open() {
-                            // no-op
-                        }
-                    });
-                    first = false;
-                }
-                return detected;
-            }
-
-            @Override
-            public void cleanUp() {
-                if (logHandle != null) {
-                    logHandle.finish();
-                }
-            }
-        };
     }
 
     protected boolean showLogs(ImageConfiguration imageConfig) {
@@ -640,6 +539,4 @@ public class StartMojo extends AbstractDockerMojo {
     private String addDot(String part) {
         return part.endsWith(".") ? part : part + ".";
     }
-
-
 }
