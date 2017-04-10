@@ -67,10 +67,16 @@ public class WaitUtilTest {
         assertTrue("Waited less than 700ms: " + waited, waited < 700);
     }
 
-    @Test(expected = NotRunningException.class)
-    public void containerNotRunningDuringWait() throws TimeoutException, NotRunningException {
+    @Test
+    public void containerNotRunningButWaitConditionOk() throws TimeoutException, NotRunningException {
         running = false;
-        HttpPingChecker checker = new HttpPingChecker(httpPingUrl);
+        httpSuccess();
+    }
+
+    @Test(expected = NotRunningException.class)
+    public void containerNotRunningAndWaitConditionNok() throws TimeoutException, NotRunningException {
+        running = false;
+        HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
         wait(700, checker);
     }
 
