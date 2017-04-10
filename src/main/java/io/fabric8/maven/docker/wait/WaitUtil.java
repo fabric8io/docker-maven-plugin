@@ -53,6 +53,9 @@ public class WaitUtil {
             do {
                 try {
                     if (!access.getContainer(containerId).isRunning()) {
+                        if (check(checkers)) {
+                            return delta(now);
+                        }
                         //if not running, probably something went wrong during startup: spit out logs
                         try {
                             new LogDispatcher(access).fetchContainerLog(containerId, LogOutputSpec.DEFAULT);
@@ -60,12 +63,13 @@ public class WaitUtil {
                             //no logging
                         }
                         throw new NotRunningException("Container not running", delta(now));
+                    } else {
+                        if (check(checkers)) {
+                            return delta(now);
+                        }
                     }
                 } catch (DockerAccessException e) {
                     throw new NotRunningException("Unable to check container state: " + e.getMessage(), delta(now));
-                }
-                if (check(checkers)) {
-                    return delta(now);
                 }
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
