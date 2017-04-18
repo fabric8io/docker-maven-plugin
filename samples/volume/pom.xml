@@ -5,7 +5,7 @@
   <!--
   Sample project for demonstrating the volume creation feature
 
-  
+
   Call it with 'mvn docker:create-volume'.
   or
   Call it with 'mvn docker:verify'
@@ -13,7 +13,7 @@
   -->
 
   <parent>
-    <groupId>io.fabric8</groupId>
+    <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
     <version>0.20-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
