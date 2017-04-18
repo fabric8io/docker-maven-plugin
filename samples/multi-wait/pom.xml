@@ -2,11 +2,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.fabric8</groupId>
-  <artifactId>docker-maven-sample-multi-wait</artifactId>
+  <artifactId>dmp-sample-multi-wait</artifactId>
   <version>0.20-SNAPSHOT</version>
   <!-- Sample exhibiting connection error described in https://github.com/fabric8io/docker-maven-plugin/issues/574 -->
  <parent>
-    <groupId>io.fabric8</groupId>
+    <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
     <version>0.20-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
