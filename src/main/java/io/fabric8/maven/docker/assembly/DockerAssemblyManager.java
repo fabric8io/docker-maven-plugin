@@ -84,7 +84,7 @@ public class DockerAssemblyManager {
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         AssemblyMode assemblyMode = (assemblyConfig == null) ? AssemblyMode.dir : assemblyConfig.getMode();
 
-        // Build up assembly
+        // Build up assembly. In dockerfile mode this must be added explicitly in the Dockerfile with an ADD
         if (hasAssemblyConfiguration(assemblyConfig)) {
             createAssemblyArchive(assemblyConfig, params, buildDirs);
         }
@@ -98,7 +98,7 @@ public class DockerAssemblyManager {
                     throw new MojoExecutionException("Configured Dockerfile \"" +
                                                      buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesn't exist");
                 }
-                // User dedicated Dockerfile from extra director
+                // User dedicated Dockerfile from extra directory
                 customizer = new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
