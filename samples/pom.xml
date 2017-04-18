@@ -19,7 +19,7 @@
 
   -->
 
-  <groupId>io.fabric8</groupId>
+  <groupId>io.fabric8.dmp.samples</groupId>
   <artifactId>dmp-sample-parent</artifactId>
   <version>0.20-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -51,11 +51,12 @@
     <module>volume</module>
     <module>properties</module>
     <module>dockerignore</module>
-    <module>docker-compose-demo</module>
-    <module>data-jolokia-demo</module>
+    <module>docker-compose</module>
+    <module>data-jolokia</module>
     <module>healthcheck</module>
     <module>multi-wait</module>
     <module>helloworld</module>
-   <!-- module>cargo-jolokia-demo</module -->
+    <module>dockerfile</module>
+   <!-- module>cargo-jolokia</module -->
   </modules>
 </project>
