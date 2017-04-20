@@ -167,6 +167,9 @@ password.
 [[extended-authentication]]
 == Extended Authentication
 
-Some docker registries require additional steps to authenticate.  link:https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html[Amazon ECR] requires using an IAM access key to obtain temporary docker login credentials. The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _awsAccountId_*.dkr.ecr.*_awsRegion_*.amazonaws.com*, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set true.
+Some docker registries require additional steps to authenticate.
+link:https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html[Amazon ECR] requires using an IAM access key to obtain temporary docker login credentials.
+The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _<awsAccountId>_ *.dkr.ecr.* _<awsRegion>_ *.amazonaws.com*, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set true.
 
-You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`. Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
+You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
+Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
