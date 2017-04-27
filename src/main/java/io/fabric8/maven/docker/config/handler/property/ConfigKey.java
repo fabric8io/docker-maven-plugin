@@ -107,6 +107,7 @@ public enum ConfigKey {
     WAIT_HTTP_METHOD("wait.http.method"),
     WAIT_HTTP_STATUS("wait.http.status"),
     WAIT_KILL("wait.kill"),
+    WAIT_EXIT("wait.exit"),
     WAIT_SHUTDOWN("wait.shutdown"),
     WAIT_TCP_MODE("wait.tcp.mode"),
     WAIT_TCP_HOST("wait.tcp.host"),

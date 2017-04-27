@@ -100,6 +100,12 @@ public class ContainersListElement implements Container {
         return status.toLowerCase().contains(UP);
     }
 
+    @Override
+    public Integer getExitCode() {
+        // exit code is not provided by container list action.
+        return null;
+    }
+
     private PortBinding createPortBinding(JSONObject object) {
         PortBinding binding = null;
 
