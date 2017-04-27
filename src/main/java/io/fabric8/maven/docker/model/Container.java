@@ -53,6 +53,8 @@ public interface Container {
      */
     Map<String, String> getCustomNetworkIpAddresses();
 
+    Integer getExitCode();
+
     class PortBinding {
         private final String hostIp;
         private final Integer hostPort;
