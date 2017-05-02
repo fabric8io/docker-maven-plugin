@@ -143,7 +143,7 @@ public class DockerAssemblyManager {
     }
 
     private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, Logger log) {
-
+        // TODO: Add a warning if the Dockerfile does not contain an 'COPY' or 'ADD' for the assembly files
     }
 
     /**

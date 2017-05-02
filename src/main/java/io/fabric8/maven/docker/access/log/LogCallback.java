@@ -15,7 +15,6 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.CancellationException;
 
