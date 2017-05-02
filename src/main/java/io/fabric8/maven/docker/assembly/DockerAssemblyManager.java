@@ -98,6 +98,9 @@ public class DockerAssemblyManager {
                     throw new MojoExecutionException("Configured Dockerfile \"" +
                                                      buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesn't exist");
                 }
+
+                verifyGivenDockerfile(dockerFile, buildConfig, log);
+
                 // User dedicated Dockerfile from extra directory
                 customizer = new ArchiverCustomizer() {
                     @Override
@@ -137,6 +140,10 @@ public class DockerAssemblyManager {
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
         }
+    }
+
+    private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, Logger log) {
+        // TODO: Add a warning if the Dockerfile does not contain an 'COPY' or 'ADD' for the assembly files
     }
 
     /**

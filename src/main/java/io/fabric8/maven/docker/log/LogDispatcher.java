@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.log;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@ package io.fabric8.maven.docker.log;/*
  * limitations under the License.
  */
 
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,12 +36,12 @@ public class LogDispatcher {
         logHandles = new HashMap<>();
     }
 
-    public synchronized void trackContainerLog(String containerId, LogOutputSpec spec) throws FileNotFoundException {
+    public synchronized void trackContainerLog(String containerId, LogOutputSpec spec)  {
         LogGetHandle handle = dockerAccess.getLogAsync(containerId, new DefaultLogCallback(spec));
         logHandles.put(containerId, handle);
     }
 
-    public synchronized void fetchContainerLog(String containerId, LogOutputSpec spec) throws FileNotFoundException {
+    public synchronized void fetchContainerLog(String containerId, LogOutputSpec spec) {
         dockerAccess.getLogSync(containerId, new DefaultLogCallback(spec));
     }
 

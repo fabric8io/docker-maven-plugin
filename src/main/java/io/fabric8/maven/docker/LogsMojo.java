@@ -1,7 +1,5 @@
 package io.fabric8.maven.docker;
 
-import java.io.FileNotFoundException;
-
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
@@ -9,7 +7,6 @@ import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -62,16 +59,12 @@ public class LogsMojo extends AbstractDockerMojo {
         }
     }
 
-    private void doLogging(LogDispatcher logDispatcher, ImageConfiguration imageConfig, String container) throws MojoExecutionException {
+    private void doLogging(LogDispatcher logDispatcher, ImageConfiguration imageConfig, String container) {
         LogOutputSpec spec = serviceHubFactory.getLogOutputSpecFactory().createSpec(container, imageConfig);
-        try {
-            if (follow) {
-                logDispatcher.trackContainerLog(container, spec);
-            } else {
-                logDispatcher.fetchContainerLog(container, spec);
-            }
-        } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("Can not log to file " + spec.getFile());
+        if (follow) {
+            logDispatcher.trackContainerLog(container, spec);
+        } else {
+            logDispatcher.fetchContainerLog(container, spec);
         }
     }
 
