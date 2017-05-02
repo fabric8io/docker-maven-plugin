@@ -15,7 +15,7 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.concurrent.CancellationException;
 
 import io.fabric8.maven.docker.util.Timestamp;
@@ -48,7 +48,7 @@ public interface LogCallback {
      * To be called by a client to start the callback and allocate the underlying output stream.
      * In case of a shared stream it might be that the stream is reused
      */
-    void open() throws FileNotFoundException;
+    void open() throws IOException;
 
     /**
      * Invoked by a user when callback is no longer used.
