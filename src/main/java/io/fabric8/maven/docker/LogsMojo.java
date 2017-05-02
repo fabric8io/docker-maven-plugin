@@ -64,14 +64,10 @@ public class LogsMojo extends AbstractDockerMojo {
 
     private void doLogging(LogDispatcher logDispatcher, ImageConfiguration imageConfig, String container) throws MojoExecutionException {
         LogOutputSpec spec = serviceHubFactory.getLogOutputSpecFactory().createSpec(container, imageConfig);
-        try {
-            if (follow) {
-                logDispatcher.trackContainerLog(container, spec);
-            } else {
-                logDispatcher.fetchContainerLog(container, spec);
-            }
-        } catch (FileNotFoundException e) {
-            throw new MojoExecutionException("Can not log to file " + spec.getFile());
+        if (follow) {
+            logDispatcher.trackContainerLog(container, spec);
+        } else {
+            logDispatcher.fetchContainerLog(container, spec);
         }
     }
 
