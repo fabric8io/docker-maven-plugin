@@ -15,7 +15,6 @@ package io.fabric8.maven.docker.log;/*
  * limitations under the License.
  */
 
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
