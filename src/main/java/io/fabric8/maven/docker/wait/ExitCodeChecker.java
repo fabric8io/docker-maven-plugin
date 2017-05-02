@@ -5,12 +5,12 @@ import io.fabric8.maven.docker.service.ServiceHub;
 
 public class ExitCodeChecker implements WaitChecker {
 
-    private final int exitCode;
+    private final int exitCodeExpected;
     private final ServiceHub hub;
     private final String containerId;
 
-    public ExitCodeChecker(int exitCode, ServiceHub hub, String containerId) {
-        this.exitCode = exitCode;
+    public ExitCodeChecker(int exitCodeExpected, ServiceHub hub, String containerId) {
+        this.exitCodeExpected = exitCodeExpected;
         this.hub = hub;
         this.containerId = containerId;
     }
@@ -18,11 +18,11 @@ public class ExitCodeChecker implements WaitChecker {
     @Override
     public boolean check() {
         try {
-            Integer exitCode = hub.getQueryService().getMandatoryContainer(containerId).getExitCode();
-            if (exitCode == null) {
+            Integer exitCodeActual = hub.getQueryService().getMandatoryContainer(containerId).getExitCode();
+            if (exitCodeActual == null) { // container still running
                 return false;
             }
-            return exitCode == this.exitCode;
+            return exitCodeActual == exitCodeExpected;
         } catch (DockerAccessException e) {
             return false;
         }
