@@ -32,10 +32,6 @@ public class TcpPortChecker implements WaitChecker {
         return ports;
     }
 
-    public List<InetSocketAddress> getPending() {
-        return pending;
-    }
-
     @Override
     public boolean check() {
         Iterator<InetSocketAddress> iter = pending.iterator();
@@ -59,5 +55,10 @@ public class TcpPortChecker implements WaitChecker {
     @Override
     public void cleanUp() {
         // No cleanup required
+    }
+
+    @Override
+    public String getLogLabel() {
+        return "on tcp port '" + pending + "'";
     }
 }

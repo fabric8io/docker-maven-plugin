@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.log;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,11 +28,12 @@ import static org.fusesource.jansi.Ansi.ansi;
  */
 public class LogOutputSpec {
 
-    public static final LogOutputSpec DEFAULT = new LogOutputSpec("", YELLOW, null, null, null, true, true);
+    public static final LogOutputSpec DEFAULT = new LogOutputSpec("", YELLOW, false, null, null, null, true, true);
 
     private final String containerId;
     private final boolean useColor;
     private final boolean logStdout;
+    private final boolean fgBright;
     private String prefix;
     private Ansi.Color color;
     private DateTimeFormatter timeFormatter;
@@ -44,10 +45,11 @@ public class LogOutputSpec {
     };
     private static int globalColorIdx = 0;
 
-    private LogOutputSpec(String prefix, Ansi.Color color, DateTimeFormatter timeFormatter,
+    private LogOutputSpec(String prefix, Ansi.Color color, boolean fgBright, DateTimeFormatter timeFormatter,
                           String containerId, String file, boolean useColor, boolean logStdout) {
         this.prefix = prefix;
         this.color = color;
+        this.fgBright = fgBright;
         this.containerId = containerId;
         this.timeFormatter = timeFormatter;
         this.file = file;
@@ -61,10 +63,6 @@ public class LogOutputSpec {
 
     public boolean isLogStdout() {
         return logStdout;
-    }
-
-    public String getContainerId() {
-        return containerId;
     }
 
     public String getPrompt(boolean withColor,Timestamp timestamp) {
@@ -86,9 +84,17 @@ public class LogOutputSpec {
     }
 
     private String formatPrefix(String prefix,boolean withColor) {
-        return withColor ?
-                ansi().fg(color).a(prefix).reset().toString() :
-                prefix;
+        if (withColor) {
+            Ansi ansi = ansi();
+            if (fgBright) {
+                ansi.fgBright(color);
+            } else {
+                ansi.fg(color);
+            }
+            return ansi.a(prefix).reset().toString();
+        } else {
+            return prefix;
+        }
     }
 
     public static class Builder {
@@ -99,6 +105,7 @@ public class LogOutputSpec {
         private String file;
         private boolean useColor;
         private boolean logStdout;
+        private boolean fgBright;
 
         public Builder prefix(String prefix) {
             this.prefix = prefix;
@@ -106,15 +113,20 @@ public class LogOutputSpec {
         }
 
         public Builder color(String color) {
+            return color(color, false);
+        }
+
+        public Builder color(String color, boolean fgBright) {
             if (color == null) {
                 this.color = COLOR_PALETTE[globalColorIdx++ % COLOR_PALETTE.length];
             } else {
                 try {
                     this.color = Ansi.Color.valueOf(color.toUpperCase());
+                    this.fgBright = fgBright;
                 } catch (IllegalArgumentException exp) {
                     throw new IllegalArgumentException(
                             "Invalid color '" + color +
-                            "'. Color must be one YELLOW, CYAN, MAGENTA, GREEN, RED or BLUE");
+                            "'. Color must be one of YELLOW, CYAN, MAGENTA, GREEN, RED, BLUE or BLACK");
                 }
             }
             return this;
@@ -169,7 +181,7 @@ public class LogOutputSpec {
         }
 
         public LogOutputSpec build() {
-            return new LogOutputSpec(prefix, color, timeFormatter, containerId, file, useColor, logStdout);
+            return new LogOutputSpec(prefix, color, fgBright, timeFormatter, containerId, file, useColor, logStdout);
         }
     }
 }

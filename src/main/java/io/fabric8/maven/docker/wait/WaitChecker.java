@@ -16,4 +16,10 @@ public interface WaitChecker {
      * Cleanup hook which is called after the wait phase.
      */
     void cleanUp();
+
+    /**
+     * Get the label to be used in the log
+     * @return
+     */
+    String getLogLabel();
 }

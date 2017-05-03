@@ -18,8 +18,6 @@ public class ExitCodeCheckerTest {
     private static final String CONTAINER_ID = "1234";
 
     @Mocked
-    private ServiceHub hub;
-    @Mocked
     private QueryService queryService;
     @Mocked
     private Container container;
@@ -32,7 +30,7 @@ public class ExitCodeCheckerTest {
             queryService.getMandatoryContainer(CONTAINER_ID); result = e;
         }};
 
-        ExitCodeChecker checker = new ExitCodeChecker(0, hub, CONTAINER_ID);
+        ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
         assertThat(checker.check()).isFalse();
     }
 
@@ -43,7 +41,7 @@ public class ExitCodeCheckerTest {
             container.getExitCode(); result = null;
         }};
 
-        ExitCodeChecker checker = new ExitCodeChecker(0, hub, CONTAINER_ID);
+        ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
         assertThat(checker.check()).isFalse();
     }
 
@@ -54,7 +52,7 @@ public class ExitCodeCheckerTest {
             container.getExitCode(); result = 1;
         }};
 
-        ExitCodeChecker checker = new ExitCodeChecker(0, hub, CONTAINER_ID);
+        ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
         assertThat(checker.check()).isFalse();
     }
 
@@ -65,7 +63,7 @@ public class ExitCodeCheckerTest {
             container.getExitCode(); result = 0;
         }};
 
-        ExitCodeChecker checker = new ExitCodeChecker(0, hub, CONTAINER_ID);
+        ExitCodeChecker checker = new ExitCodeChecker(0, queryService, CONTAINER_ID);
         assertThat(checker.check()).isTrue();
     }
 }
