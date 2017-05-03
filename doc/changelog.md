@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.20-SNAPSHOT** 
+  - Add wait checker for checking the exit code of a container (#498) 
+  
 * **0.20.1** (2017-03-29)
   - Tune log output for image names ([#737](https://github.com/fabric8io/docker-maven-plugin/issues/737))
   - Allow image with multiple path segments ([#694](https://github.com/fabric8io/docker-maven-plugin/issues/694))
