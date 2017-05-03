@@ -9,42 +9,17 @@ package io.fabric8.maven.docker;
  */
 
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.ConfigHelper;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
-import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.service.QueryService;
-import io.fabric8.maven.docker.service.RegistryService;
-import io.fabric8.maven.docker.service.RunService;
-import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.StartOrderResolver;
-import io.fabric8.maven.docker.wait.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.apache.commons.lang3.text.StrSubstitutor;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.service.*;
+import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -271,7 +246,7 @@ public class StartMojo extends AbstractDockerMojo {
                 }
 
                 // Wait if requested
-                waitIfRequested(hub,image, projProperties, containerId);
+                hub.getWaitService().wait(image, projProperties, containerId);
                 WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
                 if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
                     runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), image);
@@ -346,149 +321,6 @@ public class StartMojo extends AbstractDockerMojo {
             executorService = MoreExecutors.newDirectExecutorService();
         }
         return executorService;
-    }
-
-    // ========================================================================================================
-
-    private void waitIfRequested(ServiceHub hub, ImageConfiguration imageConfig,
-                                 Properties projectProperties, String containerId) throws MojoExecutionException {
-        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-        WaitConfiguration wait = runConfig.getWaitConfiguration();
-
-        if (wait == null) {
-            return;
-        }
-        ArrayList<WaitChecker> checkers = new ArrayList<>();
-        ArrayList<String> logOut = new ArrayList<>();
-
-        if (wait.getUrl() != null) {
-            checkers.add(getUrlWaitChecker(imageConfig.getDescription(), projectProperties, wait, logOut));
-        }
-
-        if (wait.getLog() != null) {
-            log.debug("LogWaitChecker: Waiting on %s",wait.getLog());
-            checkers.add(new LogWaitChecker(wait.getLog(), hub, containerId, log));
-            logOut.add("on log out '" + wait.getLog() + "'");
-        }
-
-        if (wait.getTcp() != null) {
-            try {
-                Container container = hub.getQueryService().getMandatoryContainer(containerId);
-                checkers.add(getTcpWaitChecker(container, imageConfig.getDescription(), projectProperties, wait.getTcp(), logOut));
-            } catch (DockerAccessException e) {
-                throw new MojoExecutionException("Unable to access container.", e);
-            }
-        }
-
-        if (wait.getHealthy()) {
-            checkers.add(new HealthCheckChecker(hub.getDockerAccess(), containerId, imageConfig.getDescription(), logOut, log));
-        }
-
-        if (wait.getExit() != null) {
-            checkers.add(new ExitCodeChecker(wait.getExit(), hub, containerId));
-        }
-
-        if (checkers.isEmpty()) {
-            if (wait.getTime() > 0) {
-                log.info("%s: Pausing for %d ms", imageConfig.getDescription(), wait.getTime());
-                WaitUtil.sleep(wait.getTime());
-            }
-            return;
-        }
-
-        try {
-            long waited = WaitUtil.wait(hub.getDockerAccess(), containerId, wait.getTime(), checkers);
-            log.info("%s: Waited %s %d ms",imageConfig.getDescription(), StringUtils.join(logOut.toArray(), " and "), waited);
-        } catch (WaitTimeoutException exp) {
-            String desc = String.format("%s: Timeout after %d ms while waiting %s",
-                                        imageConfig.getDescription(), exp.getWaited(),
-                                        StringUtils.join(logOut.toArray(), " and "));
-            log.error(desc);
-            throw new MojoExecutionException(desc);
-        } catch (NotRunningException exp) {
-            String desc = String.format("%s: Container stopped unexpectedly after %d ms while waiting %s",
-                    imageConfig.getDescription(), exp.getWaited(),
-                    StringUtils.join(logOut.toArray(), " and "));
-            log.error(desc);
-            throw new MojoExecutionException(desc);
-        }
-    }
-
-    private WaitChecker getUrlWaitChecker(String imageConfigDesc,
-                                                   Properties projectProperties,
-                                                   WaitConfiguration wait,
-                                                   ArrayList<String> logOut) {
-        String waitUrl = StrSubstitutor.replace(wait.getUrl(), projectProperties);
-        WaitConfiguration.HttpConfiguration httpConfig = wait.getHttp();
-        HttpPingChecker checker;
-        if (httpConfig != null) {
-            checker = new HttpPingChecker(waitUrl, httpConfig.getMethod(), httpConfig.getStatus(), httpConfig.isAllowAllHosts());
-            log.info("%s: Waiting on url %s with method %s for status %s.",
-                    imageConfigDesc, waitUrl, httpConfig.getMethod(), httpConfig.getStatus());
-        } else {
-            checker = new HttpPingChecker(waitUrl);
-            log.info("%s: Waiting on url %s.", imageConfigDesc, waitUrl);
-        }
-        logOut.add("on url " + waitUrl);
-        return checker;
-    }
-
-    private WaitChecker getTcpWaitChecker(Container container,
-                                          String imageConfigDesc,
-                                          Properties projectProperties,
-                                          WaitConfiguration.TcpConfiguration tcpConfig,
-                                                   ArrayList<String> logOut) throws MojoExecutionException {
-        List<Integer> ports = new ArrayList<>();
-
-        List<Integer> portsConfigured = getTcpPorts(tcpConfig);
-        String host = getTcpHost(tcpConfig, projectProperties);
-        WaitConfiguration.TcpConfigMode mode = getTcpMode(tcpConfig, host, projectProperties);
-
-        if (mode == WaitConfiguration.TcpConfigMode.mapped) {
-            for (int port : portsConfigured) {
-                Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
-                if (binding == null) {
-                    throw new MojoExecutionException(
-                        String.format("Cannot watch on port %d, since there is no network binding", port));
-                }
-                ports.add(binding.getHostPort());
-            }
-            log.info("%s: Waiting for mapped ports %s on host %s", imageConfigDesc, ports, host);
-        } else {
-            host = container.getIPAddress();
-            ports = portsConfigured;
-            log.info("%s: Waiting for ports %s directly on container with IP (%s).",
-                     imageConfigDesc, ports, host);
-        }
-        TcpPortChecker tcpWaitChecker = new TcpPortChecker(host, ports);
-        logOut.add("on tcp port '" + tcpWaitChecker.getPending() + "'");
-        return tcpWaitChecker;
-    }
-
-    private List<Integer> getTcpPorts(WaitConfiguration.TcpConfiguration tcpConfig) throws MojoExecutionException {
-        List<Integer> portsConfigured = tcpConfig.getPorts();
-        if (portsConfigured == null || portsConfigured.size() == 0) {
-            throw new MojoExecutionException("TCP wait config given but no ports to wait on");
-        }
-        return portsConfigured;
-    }
-
-    private WaitConfiguration.TcpConfigMode getTcpMode(WaitConfiguration.TcpConfiguration tcpConfig, String host, Properties projectProperties) {
-        WaitConfiguration.TcpConfigMode mode = tcpConfig.getMode();
-        if (mode == null) {
-            return "localhost".equals(host) ? WaitConfiguration.TcpConfigMode.direct : WaitConfiguration.TcpConfigMode.mapped;
-        } else {
-            return mode;
-        }
-    }
-
-    private String getTcpHost(WaitConfiguration.TcpConfiguration tcpConfig, Properties projectProperties) {
-        String host = tcpConfig.getHost();
-        if (host == null) {
-            // Host defaults to ${docker.host.address}.
-            host = projectProperties.getProperty("docker.host.address");
-        }
-        return host;
     }
 
     protected boolean showLogs(ImageConfiguration imageConfig) {

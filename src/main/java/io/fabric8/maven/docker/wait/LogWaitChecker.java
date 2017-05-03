@@ -1,11 +1,11 @@
 package io.fabric8.maven.docker.wait;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
-import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
 
@@ -16,21 +16,21 @@ import io.fabric8.maven.docker.util.Timestamp;
 public class LogWaitChecker implements WaitChecker {
 
     private final String logPattern;
-    private final ServiceHub hub;
     private final String containerId;
     private final Logger log;
+    private final DockerAccess dockerAccess;
     private boolean first;
     private LogGetHandle logHandle;
     // Flag updated from a different thread, hence volatile (see also #595)
-    private volatile boolean detected;
+    private volatile AtomicBoolean detected;
 
-    public LogWaitChecker(String pattern, ServiceHub hub, String containerId, Logger log) {
+    public LogWaitChecker(String pattern, DockerAccess dockerAccess, String containerId, Logger log) {
         this.log = log;
+        this.dockerAccess = dockerAccess;
         this.logPattern = pattern;
-        this.hub = hub;
         this.containerId = containerId;
         first = true;
-        detected = false;
+        detected = new AtomicBoolean(false);
     }
 
     @Override
@@ -38,11 +38,10 @@ public class LogWaitChecker implements WaitChecker {
         if (first) {
             final Pattern pattern = Pattern.compile(logPattern);
             log.debug("LogWaitChecker: Pattern to match '%s'", logPattern);
-            DockerAccess docker = hub.getDockerAccess();
-            logHandle = docker.getLogAsync(containerId, new LogMatchCallback(pattern));
+            logHandle = dockerAccess.getLogAsync(containerId, new LogMatchCallback(pattern));
             first = false;
         }
-        return detected;
+        return detected.get();
     }
 
     @Override
@@ -50,6 +49,11 @@ public class LogWaitChecker implements WaitChecker {
         if (logHandle != null) {
             logHandle.finish();
         }
+    }
+
+    @Override
+    public String getLogLabel() {
+        return "on log out '" + logPattern + "'";
     }
 
     private class LogMatchCallback implements LogCallback {
@@ -74,7 +78,7 @@ public class LogWaitChecker implements WaitChecker {
                 toMatch = txt;
             }
             if (pattern.matcher(toMatch).find()) {
-                detected = true;
+                detected.set(true);
                 throw new DoneException();
             }
         }
@@ -86,7 +90,7 @@ public class LogWaitChecker implements WaitChecker {
 
         @Override
         public void close() {
-            // no-op
+            log.debug("Closing LogWaitChecker callback");
         }
 
         @Override
