@@ -9,7 +9,7 @@ When using this mode, the Dockerfile is created on the fly with all instructions
 
 [[external-dockerfile]]
 .External Dockerfile or Docker archive
-Alternatively an external Dockerfile template or Docker archive can be used. This mode is switch on by using one of these three configuration options within
+Alternatively an external Dockerfile template or Docker archive can be used. This mode is switched on by using one of these three configuration options within
 
 * *dockerFileDir* specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is `Dockerfile` by default but can be also set with the option `dockerFile` (see below).
 * *dockerFile* specifies a specific Dockerfile path. The Docker build context directory is set to `dockerFileDir` if given. If not the directory by default is the directory in which the Dockerfile is stored.
@@ -17,7 +17,20 @@ Alternatively an external Dockerfile template or Docker archive can be used. Thi
 
 All paths can be either absolute or relative paths (except when both `dockerFileDir` and `dockerFile` are provided in which case `dockerFile` must not be absolute). A relative path is looked up in `${project.basedir}/src/main/docker` by default. You can make it easily an absolute path by using `${project.basedir}` in your configuration.
 
-Any additional files located in the `dockerFileDir` directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert `ADD` or `COPY` directives yourself into the Dockerfile.
+Any additional files located in the `dockerFileDir` directory will also be added to the build context as well. 
+You can also use an assembly if specified in an <<build-assembly,assembly configuration>>. 
+However you need to add the files on your own in the Dockerfile with an `ADD` or `COPY` command.
+The files of the assembly are stored in a build context relative directory `maven/` but can be changed by changing the assembly name with the option `<name>` in the assembly configuration.
+
+E.g. the files can be added with
+
+.Example
+[source,dockerfils]
+----
+COPY maven/ /my/target/directory
+----
+
+so that the assembly files will end up in `/my/target/directory` within the container. 
 
 If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
 

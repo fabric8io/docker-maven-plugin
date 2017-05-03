@@ -8,8 +8,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 public class AssemblyConfiguration implements Serializable {
 
-    private static final String DEFAULT_BASE_DIR = "/maven";
-
     /**
      * @deprecated Use 'targetDir' instead
      */
@@ -22,6 +20,13 @@ public class AssemblyConfiguration implements Serializable {
      */
     @Parameter
     private String targetDir;
+
+    /**
+     * Name of the assembly which is used also as name of the archive
+     * which is created and has to be used when providing an own Dockerfile
+     */
+    @Parameter
+    private String name = "maven";
 
     @Parameter
     private String descriptor;
@@ -82,7 +87,7 @@ public class AssemblyConfiguration implements Serializable {
         } else if (basedir != null) {
             return basedir;
         } else {
-            return DEFAULT_BASE_DIR;
+            return "/" + getName();
         }
     }
 
@@ -127,8 +132,12 @@ public class AssemblyConfiguration implements Serializable {
         return (ignorePermissions != null) ? ignorePermissions : Boolean.FALSE;
     }
 
-    public PermissionMode getPermissions() {
+     public PermissionMode getPermissions() {
         return permissions != null ? permissions : PermissionMode.keep;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public static class Builder {
