@@ -8,8 +8,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 public class AssemblyConfiguration implements Serializable {
 
-    private static final String DEFAULT_BASE_DIR = "/maven";
-
     /**
      * @deprecated Use 'targetDir' instead
      */
