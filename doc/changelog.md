@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.20-SNAPSHOT**
+  - New assembly configuration "name" for specifying the directory which holds the assembly files (#634)
+  
 * **0.20.1** (2017-03-29)
   - Tune log output for image names ([#737](https://github.com/fabric8io/docker-maven-plugin/issues/737))
   - Allow image with multiple path segments ([#694](https://github.com/fabric8io/docker-maven-plugin/issues/694))

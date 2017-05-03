@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.assembly;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ public class AssemblyFiles {
      * @param assemblyDirectory directory into which the files are copied
      */
     public AssemblyFiles(File assemblyDirectory) {
-        this.assemblyDirectory = new File(assemblyDirectory.getParentFile(), DockerAssemblyManager.ASSEMBLY_NAME);
+        this.assemblyDirectory = assemblyDirectory;
     }
 
     /**

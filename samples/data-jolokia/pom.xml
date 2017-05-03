@@ -162,6 +162,8 @@
                    for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
                    does this. -->
                 <assembly>
+                  <name>app</name>
+                  <targetDir>/maven</targetDir>
                   <mode>tar</mode>
                   <user>www-data:www-data:www-data</user>
                   <descriptor>assembly.xml</descriptor>

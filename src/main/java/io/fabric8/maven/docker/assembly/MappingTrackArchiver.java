@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.assembly;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,13 +48,16 @@ public class MappingTrackArchiver extends TrackingArchiver {
     // Logger to use
     protected Logger log;
 
+    // Target directory to use for storing the assembly files (== name)
+    private String assemblyName;
+
     /**
      * Get all files depicted by this assembly.
      *
      * @return assembled files
      */
     public AssemblyFiles getAssemblyFiles(MavenSession session) {
-        AssemblyFiles ret = new AssemblyFiles(getDestFile());
+        AssemblyFiles ret = new AssemblyFiles(new File(getDestFile().getParentFile(), assemblyName));
         // Where the 'real' files are copied to
         for (Addition addition : added) {
             Object resource = addition.resource;
@@ -175,8 +178,9 @@ public class MappingTrackArchiver extends TrackingArchiver {
         );
     }
 
-    public void init(Logger log) {
+    public void init(Logger log, String assemblyName) {
         this.log = log;
+        this.assemblyName = assemblyName;
         added.clear();
     }
 }

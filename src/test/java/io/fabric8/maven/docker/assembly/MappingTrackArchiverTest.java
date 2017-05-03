@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.assembly;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ public class MappingTrackArchiverTest {
     @Before
     public void setup() throws IllegalAccessException {
         archiver = new MappingTrackArchiver();
-        archiver.init(new AnsiLogger(new SystemStreamLog(),false,false));
+        archiver.init(new AnsiLogger(new SystemStreamLog(),false,false), "maven");
     }
 
     @Test(expected = IllegalArgumentException.class)
