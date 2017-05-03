@@ -81,7 +81,6 @@ public class DockerAssemblyManager {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
-        AssemblyMode assemblyMode = (assemblyConfig == null) ? AssemblyMode.dir : assemblyConfig.getMode();
 
         // Build up assembly. In dockerfile mode this must be added explicitly in the Dockerfile with an ADD
         if (hasAssemblyConfiguration(assemblyConfig)) {
@@ -130,8 +129,7 @@ public class DockerAssemblyManager {
                     customizer = new AllFilesExecCustomizer(customizer, log);
                 }
             }
-
-            return createBuildTarBall(assemblyConfig.getName(), buildDirs, customizer, assemblyMode, buildConfig.getCompression());
+            return createBuildTarBall(buildDirs, customizer, assemblyConfig, buildConfig.getCompression());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
@@ -201,11 +199,11 @@ public class DockerAssemblyManager {
     }
 
     // Create final tar-ball to be used for building the archive to send to the Docker daemon
-    private File createBuildTarBall(String name, BuildDirs buildDirs, ArchiverCustomizer archiverCustomizer,
-                                    AssemblyMode buildMode, ArchiveCompression compression) throws MojoExecutionException {
+    private File createBuildTarBall(BuildDirs buildDirs, ArchiverCustomizer archiverCustomizer,
+                                    AssemblyConfiguration assemblyConfig, ArchiveCompression compression) throws MojoExecutionException {
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
-            TarArchiver archiver = createBuildArchiver(name, buildDirs.getOutputDirectory(), archive, buildMode);
+            TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, assemblyConfig);
             archiver = archiverCustomizer.customize(archiver);
             archiver.setCompression(compression.getTarCompressionMethod());
             archiver.createArchive();
@@ -273,14 +271,15 @@ public class DockerAssemblyManager {
         return archiveDir;
     }
 
-    private TarArchiver createBuildArchiver(String name, File outputDir, File archive, AssemblyMode buildMode) throws NoSuchArchiverException {
+    private TarArchiver createBuildArchiver(File outputDir, File archive, AssemblyConfiguration assemblyConfig) throws NoSuchArchiverException {
         TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
         archiver.setLongfile(TarLongFileMode.posix);
 
-        if (buildMode.isArchive()) {
+        AssemblyMode mode = assemblyConfig != null ? assemblyConfig.getMode() : null;
+        if (mode != null && mode.isArchive()) {
             DefaultArchivedFileSet archiveSet =
-                    DefaultArchivedFileSet.archivedFileSet(new File(outputDir, name + "." + buildMode.getExtension()));
-            archiveSet.setPrefix(name + "/");
+                    DefaultArchivedFileSet.archivedFileSet(new File(outputDir,  assemblyConfig.getName() + "." + mode.getExtension()));
+            archiveSet.setPrefix(mode + "/");
             archiveSet.setIncludingEmptyDirectories(true);
             archiveSet.setUsingDefaultExcludes(false);
             archiver.addArchivedFileSet(archiveSet);
