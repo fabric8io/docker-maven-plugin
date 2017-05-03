@@ -1,20 +1,34 @@
 package io.fabric8.maven.docker.util;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.model.ContainerDetails;
+import io.fabric8.maven.docker.model.InspectedContainer;
+import io.fabric8.maven.docker.wait.*;
+import mockit.Mock;
+import mockit.MockUp;
+import org.json.JSONObject;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-import com.sun.net.httpserver.*;
-import io.fabric8.maven.docker.wait.*;
-import org.junit.*;
-
-import io.fabric8.maven.docker.config.WaitConfiguration;
-
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
@@ -23,35 +37,61 @@ import static org.junit.Assert.*;
 @SuppressWarnings("restriction")
 public class WaitUtilTest {
 
+    private static final String CONTAINER_ID = "12345678";
     static HttpServer server;
     static int port;
     static String httpPingUrl;
     private static String serverMethodToAssert;
+    private static boolean running = true;
+    private static final DockerAccess dockerAccess = prepareDockerAccess();
+
+    public WaitUtilTest() {
+        running = true;
+    }
 
     @Test(expected = TimeoutException.class)
-    public void httpFail() throws TimeoutException {
+    public void httpFail() throws TimeoutException, NotRunningException {
+
         HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
-        long waited = WaitUtil.wait(500, checker);
+        wait(500, checker);
+    }
+
+    private static long wait(int wait, WaitChecker checker) throws WaitTimeoutException, NotRunningException {
+        return WaitUtil.wait(dockerAccess, CONTAINER_ID, wait, checker);
     }
 
     @Test
-    public void httpSuccess() throws TimeoutException {
+    public void httpSuccess() throws TimeoutException, NotRunningException {
         HttpPingChecker checker = new HttpPingChecker(httpPingUrl);
-        long waited = WaitUtil.wait(700, checker);
+        long waited = wait(700, checker);
         assertTrue("Waited less than 700ms: " + waited, waited < 700);
     }
 
     @Test
-    public void httpSuccessWithStatus() throws TimeoutException {
+    public void containerNotRunningButWaitConditionOk() throws TimeoutException, NotRunningException {
+        running = false;
+        httpSuccess();
+    }
+
+    @Test(expected = NotRunningException.class)
+    public void containerNotRunningAndWaitConditionNok() throws TimeoutException, NotRunningException {
+        running = false;
+        HttpPingChecker checker = new HttpPingChecker("http://127.0.0.1:" + port + "/fake-context/");
+        wait(700, checker);
+    }
+
+
+    @Test
+    public void httpSuccessWithStatus() throws TimeoutException, NotRunningException {
         for (String status : new String[] { "200", "200 ... 300", "200..250" }) {
-            long waited = WaitUtil.wait(700, new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, status));
+            long waited = wait(700, new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, status));
             assertTrue("Waited less than  700ms: " + waited, waited < 700);
         }
     }
 
     @Test(expected = TimeoutException.class)
-    public void httpFailWithStatus() throws TimeoutException {
-        WaitUtil.wait(700, new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, "500"));
+    public void httpFailWithStatus() throws TimeoutException, NotRunningException {
+        wait(700, new HttpPingChecker(httpPingUrl, WaitConfiguration.DEFAULT_HTTP_METHOD, "500"));
     }
 
     @Test
@@ -59,7 +99,7 @@ public class WaitUtilTest {
         serverMethodToAssert = "GET";
         try {
             HttpPingChecker checker = new HttpPingChecker(httpPingUrl, "GET", WaitConfiguration.DEFAULT_STATUS_RANGE);
-            long waited = WaitUtil.wait(700, checker);
+            long waited = wait(700, checker);
             assertTrue("Waited less than 500ms: " + waited, waited < 700);
         } finally {
             serverMethodToAssert = "HEAD";
@@ -67,24 +107,24 @@ public class WaitUtilTest {
     }
 
     @Test
-    public void tcpSuccess() throws TimeoutException {
+    public void tcpSuccess() throws TimeoutException, NotRunningException {
         TcpPortChecker checker = new TcpPortChecker("localhost", Collections.singletonList(port));
-        long waited = WaitUtil.wait(700, checker);
+        long waited = wait(700, checker);
         assertTrue("Waited less than 700ms: " + waited, waited < 700);
     }
 
     @Test
-    public void cleanupShouldBeCalledAfterMatchedExceptation() throws WaitTimeoutException {
+    public void cleanupShouldBeCalledAfterMatchedExceptation() throws WaitTimeoutException, NotRunningException {
         StubWaitChecker checker = new StubWaitChecker(true);
-        WaitUtil.wait(0, checker);
+        wait(0, checker);
         assertTrue(checker.isCleaned());
     }
 
     @Test
-    public void cleanupShouldBeCalledAfterFailedExceptation() {
+    public void cleanupShouldBeCalledAfterFailedExceptation() throws NotRunningException {
         StubWaitChecker checker = new StubWaitChecker(false);
         try {
-            WaitUtil.wait(0, checker);
+            wait(0, checker);
             fail("Failed expectation expected");
         } catch (WaitTimeoutException e) {
             assertTrue(checker.isCleaned());
@@ -164,8 +204,8 @@ public class WaitUtilTest {
 
         // preload - first time use almost always lasts much longer (i'm assuming its http client initialization behavior)
         try {
-            WaitUtil.wait(700, new HttpPingChecker(httpPingUrl));
-        } catch (TimeoutException exp) {
+            wait(700, new HttpPingChecker(httpPingUrl));
+        } catch (TimeoutException | NotRunningException exp) {
 
         }
     }
@@ -196,4 +236,21 @@ public class WaitUtilTest {
         }
         return false;
     }
+
+    private static DockerAccess prepareDockerAccess() {
+        return new MockUp<DockerAccess>() {
+            @Mock
+            InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException {
+                if (CONTAINER_ID.equals(containerIdOrName)) {
+                    JSONObject json = new JSONObject();
+                    json.put("State", new JSONObject("{'Running' : " + running + " }"));
+                    return new ContainerDetails(json);
+                } else {
+                    return null;
+                }
+            }
+
+        }.getMockInstance();
+    }
+
 }

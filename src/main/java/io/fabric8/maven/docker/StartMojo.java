@@ -397,12 +397,18 @@ public class StartMojo extends AbstractDockerMojo {
         }
 
         try {
-            long waited = WaitUtil.wait(wait.getTime(), checkers);
+            long waited = WaitUtil.wait(hub.getDockerAccess(), containerId, wait.getTime(), checkers);
             log.info("%s: Waited %s %d ms",imageConfig.getDescription(), StringUtils.join(logOut.toArray(), " and "), waited);
         } catch (WaitTimeoutException exp) {
             String desc = String.format("%s: Timeout after %d ms while waiting %s",
                                         imageConfig.getDescription(), exp.getWaited(),
                                         StringUtils.join(logOut.toArray(), " and "));
+            log.error(desc);
+            throw new MojoExecutionException(desc);
+        } catch (NotRunningException exp) {
+            String desc = String.format("%s: Container stopped unexpectedly after %d ms while waiting %s",
+                    imageConfig.getDescription(), exp.getWaited(),
+                    StringUtils.join(logOut.toArray(), " and "));
             log.error(desc);
             throw new MojoExecutionException(desc);
         }
