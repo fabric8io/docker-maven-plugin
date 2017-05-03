@@ -380,6 +380,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("post_start_command", wait.getExec().getPostStart());
         assertEquals("pre_stop_command", wait.getExec().getPreStop());
         assertEquals(5, wait.getTime());
+        assertEquals(0, wait.getExit().intValue());
 
         LogConfiguration config = runConfig.getLogConfiguration();
         assertEquals("green", config.getColor());
@@ -463,6 +464,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.POST_START), "post_start_command",
             k(ConfigKey.WAIT_LOG), "pattern",
             k(ConfigKey.WAIT_TIME), "5",
+            k(ConfigKey.WAIT_EXIT), "0",
             k(ConfigKey.WAIT_URL), "http://foo.com",
             k(ConfigKey.LOG_PREFIX), "SRV",
             k(ConfigKey.LOG_COLOR), "green",

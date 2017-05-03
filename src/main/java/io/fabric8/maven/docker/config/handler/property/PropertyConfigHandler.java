@@ -245,6 +245,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .status(withPrefix(prefix, WAIT_HTTP_STATUS, properties))
                 .log(withPrefix(prefix, WAIT_LOG, properties))
                 .kill(asInt(withPrefix(prefix, WAIT_KILL, properties)))
+                .exit(asInteger(withPrefix(prefix, WAIT_EXIT, properties)))
                 .shutdown(asInt(withPrefix(prefix, WAIT_SHUTDOWN, properties)))
                 .tcpHost(withPrefix(prefix, WAIT_TCP_HOST, properties))
                 .tcpPorts(asIntList(listWithPrefix(prefix, WAIT_TCP_PORT, properties)))
@@ -281,6 +282,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private int asInt(String s) {
         return s != null ? Integer.parseInt(s) : 0;
+    }
+
+    private Integer asInteger(String s) {
+        return s != null ? new Integer(s) : null;
     }
 
     private List<Integer> asIntList(List<String> strings) {
