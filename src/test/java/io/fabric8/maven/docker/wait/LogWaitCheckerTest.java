@@ -25,19 +25,13 @@ public class LogWaitCheckerTest {
 
     private static String CONTAINER_ID = "1234";
 
-    @Mocked
-    ServiceHub serviceHub;
 
     @Test
     public void simple() {
 
-        new Expectations() {{
-            DockerAccess access = prepareDockerAccess(true, "The start has finished right now");
-            serviceHub.getDockerAccess(); result = access;
-        }};
-
+        DockerAccess access = prepareDockerAccess(true, "The start has finished right now");
         LogWaitChecker wait =
-            new LogWaitChecker("start.*finished", serviceHub, CONTAINER_ID, log);
+            new LogWaitChecker("start.*finished", access, CONTAINER_ID, log);
         assertThat(wait.check()).isTrue();
         wait.cleanUp();
     }
@@ -45,30 +39,22 @@ public class LogWaitCheckerTest {
     @Test
     public void simpleNegative() {
 
-        new Expectations() {{
-            DockerAccess access = prepareDockerAccess(false, "The start has started right now");
-            serviceHub.getDockerAccess(); result = access;
-        }};
-
+        DockerAccess access = prepareDockerAccess(false, "The start has started right now");
         LogWaitChecker wait =
-            new LogWaitChecker("start.*finished", serviceHub, CONTAINER_ID, log);
+            new LogWaitChecker("start.*finished", access, CONTAINER_ID, log);
         assertThat(wait.check()).isFalse();
         wait.cleanUp();
     }
 
     @Test
     public void multiLine() {
-        new Expectations() {{
-            DockerAccess access = prepareDockerAccess(true,
-                                                      "LOG:  database system is ready to accept connections",
-                                                      "LOG:  autovacuum launcher started",
-                                                      "LOG:  database system is shut down",
-                                                      "LOG:  database system is ready to accept connections");
-            serviceHub.getDockerAccess(); result = access;
-        }};
-
+        DockerAccess access = prepareDockerAccess(true,
+                                                  "LOG:  database system is ready to accept connections",
+                                                  "LOG:  autovacuum launcher started",
+                                                  "LOG:  database system is shut down",
+                                                  "LOG:  database system is ready to accept connections");
         LogWaitChecker wait =
-            new LogWaitChecker("(?s)ready to accept connections.*\\n.*ready to accept connections", serviceHub, CONTAINER_ID, log);
+            new LogWaitChecker("(?s)ready to accept connections.*\\n.*ready to accept connections", access, CONTAINER_ID, log);
         assertThat(wait.check()).isTrue();
         wait.cleanUp();
     }

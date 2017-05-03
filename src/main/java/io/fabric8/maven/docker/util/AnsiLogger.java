@@ -105,6 +105,10 @@ public class AnsiLogger implements Logger {
         return log.isDebugEnabled();
     }
 
+    public boolean isVerboseEnabled() {
+        return verbose;
+    }
+
     /**
      * Start a progress bar
      */

@@ -63,6 +63,11 @@ public interface Logger {
     boolean isDebugEnabled();
 
     /**
+     * Whether verbose is enablee
+     */
+    boolean isVerboseEnabled();
+
+    /**
      * Start a progress bar* @param total the total number to be expected
      */
     void progressStart();
