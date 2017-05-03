@@ -50,8 +50,8 @@ public class DockerFileBuilder {
 
     // List of files to add. Source and destination follow except that destination
     // in interpreted as a relative path to the exportDir
-    // See also http://docs.docker.io/reference/builder/#add
-    private List<AddEntry> addEntries = new ArrayList<>();
+    // See also http://docs.docker.io/reference/builder/#copy
+    private List<CopyEntry> copyEntries = new ArrayList<>();
 
     // list of ports to expose and environments to use
     private List<String> ports = new ArrayList<>();
@@ -104,7 +104,7 @@ public class DockerFileBuilder {
         addLabels(b);
         addPorts(b);
 
-        addEntries(b);
+        addCopy(b);
         addWorkdir(b);
         addRun(b);
         addVolumes(b);
@@ -181,10 +181,10 @@ public class DockerFileBuilder {
         }
     }
 
-    private void addEntries(StringBuilder b) {
+    private void addCopy(StringBuilder b) {
         if (assemblyUser != null) {
             String tmpDir = createTempDir();
-            copyAddEntries(b,tmpDir);
+            addCopyEntries(b, tmpDir);
 
             String[] userParts = StringUtils.split(assemblyUser, ":");
             String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
@@ -197,7 +197,7 @@ public class DockerFileBuilder {
                 DockerFileKeyword.RUN.addTo(b, chmod);
             }
         } else {
-            copyAddEntries(b, "");
+            addCopyEntries(b, "");
         }
     }
 
@@ -205,8 +205,8 @@ public class DockerFileBuilder {
          return "/tmp/" + UUID.randomUUID().toString();
     }
 
-    private void copyAddEntries(StringBuilder b, String topLevelDir) {
-        for (AddEntry entry : addEntries) {
+    private void addCopyEntries(StringBuilder b, String topLevelDir) {
+        for (CopyEntry entry : copyEntries) {
             String dest = topLevelDir + (basedir.equals("/") ? "" : basedir) + "/" + entry.destination;
             DockerFileKeyword.COPY.addTo(b, entry.source, dest);
         }
@@ -353,7 +353,7 @@ public class DockerFileBuilder {
     }
 
     public DockerFileBuilder add(String source, String destination) {
-        this.addEntries.add(new AddEntry(source, destination));
+        this.copyEntries.add(new CopyEntry(source, destination));
         return this;
     }
 
@@ -423,10 +423,10 @@ public class DockerFileBuilder {
     }
 
     // All entries required, destination is relative to exportDir
-    private static final class AddEntry {
+    private static final class CopyEntry {
         private String source,destination;
 
-        private AddEntry(String src, String dest) {
+        private CopyEntry(String src, String dest) {
             source = src;
 
             // Strip leading slashes
