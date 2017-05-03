@@ -44,6 +44,7 @@ public class ServiceHub {
     private final ArchiveService archiveService;
     private final VolumeService volumeService;
     private final WatchService watchService;
+    private final WaitService waitService;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
@@ -61,6 +62,7 @@ public class ServiceHub {
             buildService = new BuildService(dockerAccess, queryService, registryService, archiveService, logger);
             volumeService = new VolumeService(dockerAccess);
             watchService = new WatchService(archiveService, buildService, dockerAccess, mojoExecutionService, queryService, runService, logger);
+            waitService = new WaitService(dockerAccess, queryService, logger);
         } else {
             queryService = null;
             registryService = null;
@@ -68,6 +70,7 @@ public class ServiceHub {
             buildService = null;
             volumeService = null;
             watchService = null;
+            waitService = null;
         }
     }
 
@@ -121,7 +124,7 @@ public class ServiceHub {
         checkDockerAccessInitialization();
         return runService;
     }
-    
+
     /**
      * The volume service is responsible for creating volumes
      *
@@ -142,6 +145,22 @@ public class ServiceHub {
         return watchService;
     }
 
+    /**
+     * The wait service is responsible on waiting on container based on several
+     * conditions
+     *
+     * @return the wait service
+     */
+    public WaitService getWaitService() {
+        checkDockerAccessInitialization();
+        return waitService;
+    }
+
+    /**
+     * Serivce for creating archives
+     *
+     * @return the archive service
+     */
     public ArchiveService getArchiveService() {
         return archiveService;
     }

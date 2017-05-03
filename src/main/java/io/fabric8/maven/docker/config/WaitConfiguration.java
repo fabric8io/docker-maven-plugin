@@ -49,9 +49,12 @@ public class WaitConfiguration implements Serializable {
     @Parameter
     private int kill;
 
+    @Parameter
+    private Integer exit;
+
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, TcpConfiguration tcp, boolean healthy, String log, int shutdown, int kill) {
+    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, TcpConfiguration tcp, boolean healthy, String log, int shutdown, int kill, Integer exit) {
         this.time = time;
         this.exec = exec;
         this.http = http;
@@ -60,6 +63,7 @@ public class WaitConfiguration implements Serializable {
         this.log = log;
         this.shutdown = shutdown;
         this.kill = kill;
+        this.exit = exit;
     }
 
     public int getTime() {
@@ -98,6 +102,10 @@ public class WaitConfiguration implements Serializable {
         return kill;
     }
 
+    public Integer getExit() {
+        return exit;
+    }
+
     // =============================================================================
 
     public static class Builder {
@@ -110,6 +118,7 @@ public class WaitConfiguration implements Serializable {
         private List<Integer> tcpPorts;
         private String tcpHost;
         private TcpConfigMode tcpMode;
+        private Integer exit;
 
         public Builder time(int time) {
             this.time = time;
@@ -151,6 +160,11 @@ public class WaitConfiguration implements Serializable {
             return this;
         }
 
+        public Builder exit(Integer exit) {
+            this.exit = exit;
+            return this;
+        }
+
         public Builder tcpPorts(List<Integer> tcpPorts) {
             this.tcpPorts = tcpPorts;
             return this;
@@ -177,7 +191,8 @@ public class WaitConfiguration implements Serializable {
                                          healthy,
                                          log,
                                          shutdown,
-                                         kill);
+                                         kill,
+                                         exit);
         }
 
         public Builder preStop(String command) {

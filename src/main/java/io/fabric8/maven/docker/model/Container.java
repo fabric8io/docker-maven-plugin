@@ -53,6 +53,14 @@ public interface Container {
      */
     Map<String, String> getCustomNetworkIpAddresses();
 
+    /**
+     * Exit code of the container if it already has excited
+     *
+     * @return exit code if the container has excited, <code>null</code> if it is still running. Also null,
+     * if the implementation doesn't support an exit code.
+     */
+    Integer getExitCode();
+
     class PortBinding {
         private final String hostIp;
         private final Integer hostPort;

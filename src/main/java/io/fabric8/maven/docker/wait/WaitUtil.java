@@ -36,24 +36,31 @@ public class WaitUtil {
         return delta(now);
     }
 
-    public static long wait(int maxWait, WaitChecker ... checkers) throws WaitTimeoutException {
-        return wait(maxWait, Arrays.asList(checkers));
+    public static long wait(Precondition precondition, int maxWait, WaitChecker ... checkers) throws WaitTimeoutException, PreconditionFailedException {
+        return wait(precondition, maxWait, Arrays.asList(checkers));
     }
 
-    public static long wait(int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException {
+    public static long wait(Precondition precondition, int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException, PreconditionFailedException {
         long max = maxWait > 0 ? maxWait : DEFAULT_MAX_WAIT;
         long now = System.currentTimeMillis();
         try {
             do {
-                if (check(checkers)) {
-                    return delta(now);
+                if (!precondition.isOk()) {
+                    // Final check, could be that the check just succeeded
+                    if (check(checkers)) {
+                        return delta(now);
+                    }
+                    throw new PreconditionFailedException("Precondition failed", delta(now));
+                } else {
+                    if (check(checkers)) {
+                        return delta(now);
+                    }
                 }
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
-
             throw new WaitTimeoutException("No checker finished successfully", delta(now));
-
         } finally {
+            precondition.cleanup();
             cleanup(checkers);
         }
     }
@@ -93,4 +100,13 @@ public class WaitUtil {
     }
 
 
+    /**
+     * Simple interfact for checking some preconditions
+     */
+    public interface Precondition {
+        // true if precondition is met
+        boolean isOk();
+        // cleanup which might be needed if the check is done.
+        void cleanup();
+    }
 }

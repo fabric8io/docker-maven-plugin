@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.log;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,10 +41,8 @@ public class LogOutputSpecFactory {
         LogConfiguration logConfig = extractLogConfiguration(imageConfiguration);
 
         addLogFormat(builder, logConfig);
-        addPrefix(builder, logConfig.getPrefix()
-                , imageConfiguration.getAlias(), containerId);
+        addPrefix(builder, logConfig.getPrefix(), imageConfiguration.getAlias(), containerId);
         builder.file(logConfig.getFileLocation())
-               .containerId(containerId)
                .useColor(useColor)
                .logStdout(logStdout)
                .color(logConfig.getColor());
