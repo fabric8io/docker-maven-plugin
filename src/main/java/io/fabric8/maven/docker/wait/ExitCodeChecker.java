@@ -19,10 +19,8 @@ public class ExitCodeChecker implements WaitChecker {
     public boolean check() {
         try {
             Integer exitCodeActual = hub.getQueryService().getMandatoryContainer(containerId).getExitCode();
-            if (exitCodeActual == null) { // container still running
-                return false;
-            }
-            return exitCodeActual == exitCodeExpected;
+            // container still running
+            return exitCodeActual != null && exitCodeActual == exitCodeExpected;
         } catch (DockerAccessException e) {
             return false;
         }
