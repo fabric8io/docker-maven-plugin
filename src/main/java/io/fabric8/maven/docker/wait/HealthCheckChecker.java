@@ -1,7 +1,5 @@
 package io.fabric8.maven.docker.wait;
 
-import java.util.List;
-
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.InspectedContainer;
@@ -15,18 +13,16 @@ public class HealthCheckChecker implements WaitChecker {
 
         private boolean first = true;
 
-    private final List<String> logOut;
-
     private DockerAccess docker;
     private String containerId;
     private Logger log;
     private final String imageConfigDesc;
+    private String healthcheck;
 
-    public HealthCheckChecker(DockerAccess docker, String containerId, String imageConfigDesc, List<String> logOut, Logger log) {
+    public HealthCheckChecker(DockerAccess docker, String containerId, String imageConfigDesc, Logger log) {
         this.docker = docker;
         this.containerId = containerId;
         this.imageConfigDesc = imageConfigDesc;
-        this.logOut = logOut;
         this.log = log;
     }
 
@@ -39,14 +35,13 @@ public class HealthCheckChecker implements WaitChecker {
                 return false;
             }
 
-            final String healthcheck = container.getHealthcheck();
+            healthcheck = container.getHealthcheck();
             if (first) {
                 if (healthcheck == null) {
                     throw new IllegalArgumentException("Can not wait for healthy state of " + imageConfigDesc +". No HEALTHCHECK configured.");
                 }
                 log.info("%s: Waiting to become healthy", imageConfigDesc);
                 log.debug("HealthyWaitChecker: Waiting for healthcheck: '%s'", healthcheck);
-                logOut.add("on healthcheck '" + healthcheck+ "'");
                 first = false;
             } else if (log.isDebugEnabled()) {
                 log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'", healthcheck);
@@ -60,4 +55,9 @@ public class HealthCheckChecker implements WaitChecker {
 
     @Override
     public void cleanUp() {}
-};
+
+    @Override
+    public String getLogLabel() {
+        return "on healthcheck '" + healthcheck + "'";
+    }
+}

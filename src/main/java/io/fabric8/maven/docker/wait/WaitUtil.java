@@ -1,11 +1,5 @@
 package io.fabric8.maven.docker.wait;
 
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.log.LogOutputSpec;
-
-import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.concurrent.*;
 
@@ -42,41 +36,31 @@ public class WaitUtil {
         return delta(now);
     }
 
-    public static long wait(DockerAccess access, String containerId, int maxWait, WaitChecker ... checkers) throws WaitTimeoutException, NotRunningException {
-        return wait(access, containerId, maxWait, Arrays.asList(checkers));
+    public static long wait(Precondition precondition, int maxWait, WaitChecker ... checkers) throws WaitTimeoutException, PreconditionFailedException {
+        return wait(precondition, maxWait, Arrays.asList(checkers));
     }
 
-    public static long wait(DockerAccess access, String containerId, int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException, NotRunningException {
+    public static long wait(Precondition precondition, int maxWait, Iterable<WaitChecker> checkers) throws WaitTimeoutException, PreconditionFailedException {
         long max = maxWait > 0 ? maxWait : DEFAULT_MAX_WAIT;
         long now = System.currentTimeMillis();
         try {
             do {
-                try {
-                    if (!access.getContainer(containerId).isRunning()) {
-                        if (check(checkers)) {
-                            return delta(now);
-                        }
-                        //if not running, probably something went wrong during startup: spit out logs
-                        try {
-                            new LogDispatcher(access).fetchContainerLog(containerId, LogOutputSpec.DEFAULT);
-                        } catch (FileNotFoundException e) {
-                            //no logging
-                        }
-                        throw new NotRunningException("Container not running", delta(now));
-                    } else {
-                        if (check(checkers)) {
-                            return delta(now);
-                        }
+                if (!precondition.isOk()) {
+                    // Final check, could be that the check just succeeded
+                    if (check(checkers)) {
+                        return delta(now);
                     }
-                } catch (DockerAccessException e) {
-                    throw new NotRunningException("Unable to check container state: " + e.getMessage(), delta(now));
+                    throw new PreconditionFailedException("Precondition failed", delta(now));
+                } else {
+                    if (check(checkers)) {
+                        return delta(now);
+                    }
                 }
                 sleep(WAIT_RETRY_WAIT);
             } while (delta(now) < max);
-
             throw new WaitTimeoutException("No checker finished successfully", delta(now));
-
         } finally {
+            precondition.cleanup();
             cleanup(checkers);
         }
     }
@@ -116,4 +100,13 @@ public class WaitUtil {
     }
 
 
+    /**
+     * Simple interfact for checking some preconditions
+     */
+    public interface Precondition {
+        // true if precondition is met
+        boolean isOk();
+        // cleanup which might be needed if the check is done.
+        void cleanup();
+    }
 }
