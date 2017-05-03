@@ -126,4 +126,9 @@ public class HttpPingChecker implements WaitChecker {
     public void cleanUp() {
         // No cleanup required for this checker
     }
+
+    @Override
+    public String getLogLabel() {
+        return "on url " + url;
+    }
 }

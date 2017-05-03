@@ -1,6 +1,8 @@
 # ChangeLog
 
-* **0.20-SNAPSHOT**
+* **0.20-SNAPSHOT** 
+  - Add wait checker for checking the exit code of a container (#498) 
+  - Check for exited container when doing wait checks (#757)
   - New assembly configuration "name" for specifying the directory which holds the assembly files (#634)
   
 * **0.20.1** (2017-03-29)
