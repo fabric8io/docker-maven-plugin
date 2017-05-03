@@ -29,6 +29,7 @@ public class ContainerDetails implements InspectedContainer {
     static final String HEALTHCHECK = "Healthcheck";
     static final String TEST = "Test";
 
+    private static final String EXIT_CODE = "ExitCode";
     private static final String RUNNING = "Running";
 
     private final JSONObject json;
@@ -124,6 +125,15 @@ public class ContainerDetails implements InspectedContainer {
     public boolean isRunning() {
         JSONObject state = json.getJSONObject(STATE);
         return state.getBoolean(RUNNING);
+    }
+
+    @Override
+    public Integer getExitCode() {
+        if (isRunning()) {
+            return null;
+        }
+        JSONObject state = json.getJSONObject(STATE);
+        return state.getInt(EXIT_CODE);
     }
 
     @Override

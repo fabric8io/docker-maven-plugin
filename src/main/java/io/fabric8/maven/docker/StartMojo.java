@@ -384,6 +384,10 @@ public class StartMojo extends AbstractDockerMojo {
             checkers.add(new HealthCheckChecker(hub.getDockerAccess(), containerId, imageConfig.getDescription(), logOut, log));
         }
 
+        if (wait.getExit() != null) {
+            checkers.add(new ExitCodeChecker(wait.getExit(), hub, containerId));
+        }
+
         if (checkers.isEmpty()) {
             if (wait.getTime() > 0) {
                 log.info("%s: Pausing for %d ms", imageConfig.getDescription(), wait.getTime());
