@@ -21,8 +21,7 @@ public class LogWaitChecker implements WaitChecker {
     private final DockerAccess dockerAccess;
     private boolean first;
     private LogGetHandle logHandle;
-    // Flag updated from a different thread, hence volatile (see also #595)
-    private volatile AtomicBoolean detected;
+    private AtomicBoolean detected;
 
     public LogWaitChecker(String pattern, DockerAccess dockerAccess, String containerId, Logger log) {
         this.log = log;
