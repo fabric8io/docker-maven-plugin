@@ -4,53 +4,53 @@ This plugin supports the following goals which are explained in detail
 in the next sections.
 
 .Plugin Goals
-[cols="1,1,2"]
+[cols="2,3,2"]
 |===
-|Goal | Default Lifecycle Phase | Description
+|Goal | Description | Default Lifecycle Phase
 
 |**<<{plugin}:build>>**
-|install
 |Build images
+|install
 
 |**<<{plugin}:start>>** or **<<{plugin}:start,{plugin}:run>>**
-|pre-integration-test
 |Create and start containers
+|pre-integration-test
 
 |**<<{plugin}:stop>>**
-|post-integration-test
 |Stop and destroy containers
+|post-integration-test
 
 |**<<{plugin}:push>>**
-|deploy
 |Push images to a registry
+|deploy
 
 |**<<{plugin}:watch>>**
-|
 |Watch for doing rebuilds and restarts
+|
 
 |**<<{plugin}:remove>>**
-|post-integration-test
 |Remove images from local docker host
+|post-integration-test
 
 |**<<{plugin}:logs>>**
-|
 |Show container logs
+|
 
 |**<<{plugin}:source>>**
-|
 |Attach docker build archive to Maven project
+|
 
 |**<<{plugin}:save>>**
-|
 |Save images to a file
+|
 
 |**<<{plugin}:volume-create>>**
-|pre-integration-test
 |Create a volume for containers to share data
+|pre-integration-test
 
 |**<<{plugin}:volume-remove>>**
-|post-integration-test
 |Remove a volume
+|post-integration-test
 |===
 
 Note that all goals are orthogonal to each other. For example in order
