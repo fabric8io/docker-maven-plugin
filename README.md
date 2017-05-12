@@ -12,19 +12,19 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 
 #### Goals
 
-| Goal                                                                                            | Default Lifecycle Phase | Description                                      |
-| ----------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------ |
-| [`docker:start`](https://fabric8io.github.io/docker-maven-plugin/#docker:start)                 | pre-integration-test    | Create and start containers                      |
-| [`docker:stop`](https://fabric8io.github.io/docker-maven-plugin/#docker:stop)                   | post-integration-test   | Stop and destroy containers                      |
-| [`docker:build`](https://fabric8io.github.io/docker-maven-plugin/#docker:build)                 | install                 | Build images                                     |
-| [`docker:watch`](https://fabric8io.github.io/docker-maven-plugin/#docker:watch)                 |                         | Watch for doing rebuilds and restarts            |
-| [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/#docker:push)                   | deploy                  | Push images to a registry                        |
-| [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:remove)               | post-integration-test   | Remove images from local docker host             |
-| [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/#docker:logs)                   |                         | Show container logs                              |
-| [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/#docker:source)               | package                 | Attach docker build archive to Maven project     |
-| [`docker:save`](https://fabric8io.github.io/docker-maven-plugin/#docker:save)                   |                         | Save image to a file                             |
-| [`docker:volume-create`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-create) | pre-integration-test    | Create a volume to share data between containers |
-| [`docker:volume-remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-remove) | post-integration-test   | Remove a created volume                          |
+| Goal                                                                                            | Description                                      | Default Lifecycle Phase |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------- |
+| [`docker:start`](https://fabric8io.github.io/docker-maven-plugin/#docker:start)                 | Create and start containers                      | pre-integration-test    |
+| [`docker:stop`](https://fabric8io.github.io/docker-maven-plugin/#docker:stop)                   | Stop and destroy containers                      | post-integration-test   |
+| [`docker:build`](https://fabric8io.github.io/docker-maven-plugin/#docker:build)                 | Build images                                     | install                 |
+| [`docker:watch`](https://fabric8io.github.io/docker-maven-plugin/#docker:watch)                 | Watch for doing rebuilds and restarts            |                         |
+| [`docker:push`](https://fabric8io.github.io/docker-maven-plugin/#docker:push)                   | Push images to a registry                        | deploy                  |
+| [`docker:remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:remove)               | Remove images from local docker host             | post-integration-test   |
+| [`docker:logs`](https://fabric8io.github.io/docker-maven-plugin/#docker:logs)                   | Show container logs                              |                         |
+| [`docker:source`](https://fabric8io.github.io/docker-maven-plugin/#docker:source)               | Attach docker build archive to Maven project     | package                 |
+| [`docker:save`](https://fabric8io.github.io/docker-maven-plugin/#docker:save)                   | Save image to a file                             |                         |
+| [`docker:volume-create`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-create) | Create a volume to share data between containers | pre-integration-test    |
+| [`docker:volume-remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-remove) | Remove a created volume                          | post-integration-test   |
 
 #### Documentation
 
