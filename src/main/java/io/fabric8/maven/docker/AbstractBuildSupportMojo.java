@@ -41,7 +41,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
     private String sourceDirectory;
 
-    @Parameter(property = "docker.target.dir", defaultValue="docker")
+    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
 
 
