@@ -308,23 +308,21 @@ public class EnvUtil {
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(new File(params.getProject().getBuild().getDirectory(), params.getOutputDirectory()), dir).toString(), path);
+        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir), path);
     }
 
     public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
+        return prepareAbsolutePath(params, new File(params.getSourceDirectory()), path);
     }
 
-    private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
+    private static File prepareAbsolutePath(MojoParameters params, File directory, String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
         }
-        File directoryFile = new File(directory);
-        if (directoryFile.isAbsolute()) {
-            return new File(new File(directory), path);
-        }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+        return directory.isAbsolute() ?
+            new File(directory, path) :
+            new File(new File(params.getProject().getBasedir(), directory.getPath()), path);
     }
 
     // create a timestamp file holding time in epoch seconds

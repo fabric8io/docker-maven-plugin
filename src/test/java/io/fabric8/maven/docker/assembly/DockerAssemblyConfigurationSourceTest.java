@@ -1,21 +1,18 @@
 package io.fabric8.maven.docker.assembly;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.MojoParameters;
-import java.net.URI;
-import java.net.URISyntaxException;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class DockerAssemblyConfigurationSourceTest {
 
@@ -126,9 +123,9 @@ public class DockerAssemblyConfigurationSourceTest {
             assertStartsWithDir(absolutePath, source.getTemporaryRootDirectory());
         } else {
             // if not - then at some level each plugin directory must be equal to outputDir
-            assertChildOfDir(projectDir + File.separator + params.getOutputDirectory(), source.getOutputDirectory());
-            assertChildOfDir(projectDir + File.separator + params.getOutputDirectory(), source.getWorkingDirectory());
-            assertChildOfDir(projectDir + File.separator + params.getOutputDirectory(), source.getTemporaryRootDirectory());
+            assertSubDirOf(projectDir + File.separator + params.getOutputDirectory(), source.getOutputDirectory());
+            assertSubDirOf(projectDir + File.separator + params.getOutputDirectory(), source.getWorkingDirectory());
+            assertSubDirOf(projectDir + File.separator + params.getOutputDirectory(), source.getTemporaryRootDirectory());
         }
     }
 
@@ -142,22 +139,14 @@ public class DockerAssemblyConfigurationSourceTest {
         assertEquals(expectedStartsWith, path.toString().substring(0, length));
     }
 
-    private void assertChildOfDir(String rootPath, File childCandidatePath) throws URISyntaxException {
-        File rootDir = new File(new URI(rootPath).normalize().getPath()).getAbsoluteFile();
-        File childCandidateDir = new File(new URI(childCandidatePath.getAbsolutePath()).normalize().getPath()).getAbsoluteFile();
-
-        do {
-
-            if (childCandidateDir == null && !childCandidateDir.equals(rootDir)) {
-                fail(childCandidatePath + " is not a child of " + rootPath);
-            }
-
-            if (rootDir.equals(childCandidateDir)) {
-                // success
-                return;
-            }
-
-            childCandidateDir = childCandidateDir.getParentFile();
-        } while (true);
+    private void assertSubDirOf(String rootPath, File subDirPath) throws URISyntaxException {
+        String rootDir = normalizedAbsolutePath(rootPath);
+        String candidate = normalizedAbsolutePath(subDirPath.getAbsolutePath());
+        assertTrue(candidate.startsWith(rootDir));
     }
+
+    private String normalizedAbsolutePath(String rootPath) throws URISyntaxException {
+        return new File(new URI(rootPath).normalize().getPath()).getAbsolutePath();
+    }
+
 }
