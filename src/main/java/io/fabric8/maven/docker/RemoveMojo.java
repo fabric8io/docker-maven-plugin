@@ -42,7 +42,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class RemoveMojo extends AbstractDockerMojo {
 
     // Should all configured images should be removed?
-    @Parameter(property = "docker.removeAll", defaultValue = "false")
+    @Parameter(property = "docker.removeAll", defaultValue = "false", alias = "removeAll")
     private boolean removeAll;
 
     @Override
