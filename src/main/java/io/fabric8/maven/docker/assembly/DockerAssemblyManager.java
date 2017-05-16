@@ -1,5 +1,8 @@
 package io.fabric8.maven.docker.assembly;
 
+import java.io.*;
+import java.util.*;
+
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.*;
 import org.apache.commons.io.IOUtils;
@@ -17,7 +20,6 @@ import org.apache.maven.plugin.assembly.model.Assembly;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
-import org.apache.maven.shared.utils.io.IOUtil;
 import org.codehaus.plexus.archiver.Archiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
@@ -27,10 +29,6 @@ import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
-import org.codehaus.plexus.util.InterpolationFilterReader;
-
-import java.io.*;
-import java.util.*;
 
 
 /**
@@ -50,6 +48,7 @@ public class DockerAssemblyManager {
     public static final String DOCKER_IGNORE = ".maven-dockerignore";
     public static final String DOCKER_EXCLUDE = ".maven-dockerexclude";
     public static final String DOCKER_INCLUDE = ".maven-dockerinclude";
+    public static final String DOCKERFILE_NAME = "Dockerfile";
 
     @Requirement
     private AssemblyArchiver assemblyArchiver;
@@ -105,7 +104,7 @@ public class DockerAssemblyManager {
                         addDockerIgnoreIfPresent(fileSet);
                         excludeDockerfile(fileSet, dockerFile);
                         archiver.addFileSet(fileSet);
-                        archiver.addFile(interpolatedDockerFile, "Dockerfile");
+                        archiver.addFile(interpolatedDockerFile, DOCKERFILE_NAME);
                         return archiver;
                     }
                 };
@@ -114,11 +113,11 @@ public class DockerAssemblyManager {
                 DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
                 builder.write(buildDirs.getOutputDirectory());
                 // Add own Dockerfile
-                final File dockerFile = new File(buildDirs.getOutputDirectory(),"Dockerfile");
+                final File dockerFile = new File(buildDirs.getOutputDirectory(), DOCKERFILE_NAME);
                 customizer = new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
-                        archiver.addFile(dockerFile, "Dockerfile");
+                        archiver.addFile(dockerFile, DOCKERFILE_NAME);
                         return archiver;
                     }
                 };
@@ -135,7 +134,7 @@ public class DockerAssemblyManager {
             return createBuildTarBall(buildDirs, customizer, assemblyConfig, buildConfig.getCompression());
 
         } catch (IOException e) {
-            throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
+            throw new MojoExecutionException(String.format("Cannot create %s in %s", DOCKERFILE_NAME, buildDirs.getOutputDirectory()), e);
         }
     }
 
