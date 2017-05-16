@@ -102,6 +102,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.extraHosts.idx*
 | List of `host:ip` to add to `/etc/hosts`
 
+| *docker.filter*
+| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details. 
+
 | *docker.from*
 | Base image for building an image. Must be set when an image is created (or `fromExt`)
 

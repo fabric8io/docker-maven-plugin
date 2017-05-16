@@ -1,7 +1,6 @@
 
 All build relevant configuration is contained in the `<build>` section
-of an image configuration. In addition to `<dockerFileDir>` and
-`<dockerFile>` the following configuration options are available:
+of an image configuration. The following configuration options are supported:
 
 [[config-image-build]]
 .Build configuration (<<config-image, <image> >>)
@@ -32,11 +31,24 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | *compression*
 | The compression mode how the build archive is transmitted to the docker daemon (`{plugin}:build`) and how docker build archives are attached to this build as sources (`{plugin}:source`). The value can be `none` (default), `gzip` or `bzip2`.
 
+| *dockerFile*
+| Path to a `Dockerfile` which also triggers _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
+ 
+| *dockerFileDir*
+| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
+ 
+
+| *dockerArchive*
+| Path to a saved image archive which is then imported. See <<external-dockerfile, Docker archive>> for details.
+
 | <<misc-startup, *entryPoint*>>
 | An entrypoint allows you to configure a container that will run as an executable. See <<misc-startup,Startup Arguments>> for details.
 
 | <<misc-env, *env*>>
 | The environments as described in <<misc-env,Setting Environment Variables and Labels>>.
+
+| *filter*
+| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details. 
 
 | [[build-config-from]]*from*
 | The base image which should be used for this image. If not given this default to `busybox:latest` and is suitable for a pure data image.

@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.util;/*
- * 
+ *
  * Copyright 2015 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,9 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
@@ -32,7 +35,8 @@ public class DockerFileUtilTest {
     @Test
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
-        assertEquals("fabric8/s2i-java",DockerFileUtil.extractBaseImage(toTest));
+        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
+            toTest, null, "false"));
     }
 
     private File copyToTempDir(String resource) throws IOException {
@@ -42,5 +46,35 @@ public class DockerFileUtilTest {
             IOUtil.copy(getClass().getResourceAsStream(resource), os);
         }
         return ret;
+    }
+
+    @Test
+    public void interpolate() throws Exception {
+        Properties props = new Properties();
+        props.put("base", "java");
+        props.put("name", "guenther");
+        props.put("age", "42");
+        props.put("ext", "png");
+
+        Map<String, String> filterMapping = new HashMap<>();
+        filterMapping.put("none", "false");
+        filterMapping.put("var", "${*}");
+        filterMapping.put("at", "@");
+
+        for (Map.Entry<String, String> entry : filterMapping.entrySet()) {
+            for (int i = 1; i < 2; i++) {
+                File dockerFile = getDockerfilePath(i, entry.getKey());
+                String expected =
+                    IOUtil.toString(new FileReader(dockerFile + ".expected"));
+                String actual = DockerFileUtil.interpolate(dockerFile, props, entry.getValue());
+                assertEquals(expected, actual);
+            }
+        }
+    }
+
+    private File getDockerfilePath(int i, String dir) {
+        ClassLoader classLoader = getClass().getClassLoader();
+        return new File(classLoader.getResource(
+            String.format("interpolate/%s/Dockerfile_%d", dir, i)).getFile());
     }
 }
