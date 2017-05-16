@@ -515,8 +515,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.20.1,</span>
-<span id="revdate">2017-03-29</span>
+<span id="revnumber">version 0.21.0,</span>
+<span id="revdate">2017-05-16</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -604,7 +604,7 @@ table.CodeRay td.code>pre{padding:0}
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2015 - 2016 The original authors.</p>
+<p>&#169; 2015 - 2017 The original authors.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -823,7 +823,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.20.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.21.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1312,59 +1312,72 @@ in the next sections.</p>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 5. Plugin Goals</caption>
 <colgroup>
-<col style="width: 25%;">
-<col style="width: 75%;">
+<col style="width: 28.5714%;">
+<col style="width: 42.8571%;">
+<col style="width: 28.5715%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top">Goal</th>
 <th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default Lifecycle Phase</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:build"><strong>docker:build</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Build images</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">install</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:start"><strong>docker:start</strong></a></strong> or <strong><a href="#docker:start">docker:run</a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create and start containers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pre-integration-test</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:stop"><strong>docker:stop</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Stop and destroy containers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">post-integration-test</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:push"><strong>docker:push</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Push images to a registry</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">deploy</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:watch"><strong>docker:watch</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Watch for doing rebuilds and restarts</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:remove"><strong>docker:remove</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Remove images from local docker host</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">post-integration-test</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:logs"><strong>docker:logs</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Show container logs</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:source"><strong>docker:source</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Attach docker build archive to Maven project</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:save"><strong>docker:save</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Save images to a file</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:volume-create"><strong>docker:volume-create</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Create a volume for containers to share data</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pre-integration-test</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:volume-remove"><strong>docker:volume-remove</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Remove a volume</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">post-integration-test</p></td>
 </tr>
 </tbody>
 </table>
@@ -1391,8 +1404,8 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <p>When using this mode, the Dockerfile is created on the fly with all instructions extracted from the configuration given.</p>
 </div>
 <div id="external-dockerfile" class="paragraph">
-<div class="title">External Dockerfile or docker archive</div>
-<p>Alternatively an external Dockerfile template or Docker archive can be used. This mode is switch on by using one of these three configuration options within</p>
+<div class="title">External Dockerfile or Docker archive</div>
+<p>Alternatively an external Dockerfile template or Docker archive can be used. This mode is switched on by using one of these three configuration options within</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1408,10 +1421,26 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>All paths can be either absolute or relative paths (except when both <code>dockerFileDir</code> and <code>dockerFile</code> are provided in which case <code>dockerFile</code> must not be absolute). A relative path is looked up in <code>${project.basedir}/src/main/docker</code> by default. You can make it easily an absolute path by using `${project.basedir} in your configuration.</p>
+<p>All paths can be either absolute or relative paths (except when both <code>dockerFileDir</code> and <code>dockerFile</code> are provided in which case <code>dockerFile</code> must not be absolute). A relative path is looked up in <code>${project.basedir}/src/main/docker</code> by default. You can make it easily an absolute path by using <code>${project.basedir}</code> in your configuration.</p>
 </div>
 <div class="paragraph">
-<p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well as any files specified by an assembly. However, you still need to insert <code>ADD</code> or <code>COPY</code> directives yourself into the Dockerfile.</p>
+<div class="title">Adding assemblies in Dockerfile mode</div>
+<p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well.
+You can also use an assembly if specified in an <a href="#build-assembly">assembly configuration</a>.
+However you need to add the files on your own in the Dockerfile with an <code>ADD</code> or <code>COPY</code> command.
+The files of the assembly are stored in a build context relative directory <code>maven/</code> but can be changed by changing the assembly name with the option <code>&lt;name&gt;</code> in the assembly configuration.</p>
+</div>
+<div class="paragraph">
+<p>E.g. the files can be added with</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="dockerfils">COPY maven/ /my/target/directory</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>so that the assembly files will end up in <code>/my/target/directory</code> within the container.</p>
 </div>
 <div class="paragraph">
 <p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
@@ -1422,19 +1451,31 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <div class="paragraph">
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
 </div>
-<div class="sidebarblock">
-<div class="content">
-<div class="paragraph">
-<p>For the future it is planned to introduce special keywords like <code>DMP_ADD_ASSEMBLY</code> which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.</p>
-</div>
-</div>
+<div id="build-filtering" class="paragraph">
+<div class="title">Filtering</div>
+<p>fabric8-maven-plugin filters given Dockerfile with Maven properties, much like the <code>maven-resource-plugin</code> does. Filtering is enabled by default and can be switched off with a build config <code>&lt;filter&gt;false&lt;/filter&gt;</code>. Properties which we want to replace are specified with the <code>${..}</code> syntax.
+Only properties which are set in the Maven build are replaced, all other remain untouched.</p>
 </div>
 <div class="paragraph">
+<p>This partial replacement means that you can easily mix it with Docker build arguments and environment variable reference, but you need to be careful.
+If you want to be more explicit about the property delimiter to clearly separate Docker properties and Maven properties you can redefine the delimiter.
+In general, the <code>filter</code> option can be specified the same way as delimiters in the resource plugin.
+In particular,  if this configuration contains a * then the parts left, and right of the asterisks are used as delimiters.</p>
+</div>
+<div class="paragraph">
+<p>For example, the default <code>&lt;filter&gt;${*}&lt;/filter&gt;</code> parse Maven properties in the format that we know.
+If you specify a single character for <code>&lt;filter&gt;</code> then this delimiter is taken for both, the start and the end.
+E.g a <code>&lt;filter&gt;@&lt;/filter&gt;</code> triggers on parameters in the format <code>@&#8230;&#8203;@</code>, much like in the <code>maven-invoker-plugin</code>.
+Use something like this if you want to clearly separate from Docker builds args.
+Property replacement works for Dockerfile only.
+For replacing other data in associated files targeted for the Docker image, please use the maven-resource-plugin to copy them over before.</p>
+</div>
+<div class="paragraph">
+<div class="title">Example</div>
 <p>The following example uses a Dockerfile in the directory
-<code>src/main/docker/demo</code>:</p>
+<code>src/main/docker/demo</code> and replaces all properties in the format <code>@property@</code> within the Dockerfile.</p>
 </div>
 <div class="listingblock">
-<div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
  <span class="tag">&lt;configuration&gt;</span>
@@ -1443,6 +1484,7 @@ so you should use it then in combination with <code>docker:build</code>.</p>
        <span class="tag">&lt;name&gt;</span>user/demo<span class="tag">&lt;/name&gt;</span>
        <span class="tag">&lt;build&gt;</span>
          <span class="tag">&lt;dockerFileDir&gt;</span>demo<span class="tag">&lt;/dockerFileDir&gt;</span>
+         <span class="tag">&lt;filter&gt;</span>@<span class="tag">&lt;/filter&gt;</span>
        <span class="tag">&lt;/build&gt;</span>
      <span class="tag">&lt;/image&gt;</span>
    <span class="tag">&lt;/images&gt;</span>
@@ -1455,8 +1497,7 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <h4 id="build-configuration">5.1.1. Configuration</h4>
 <div class="paragraph">
 <p>All build relevant configuration is contained in the <code>&lt;build&gt;</code> section
-of an image configuration. In addition to <code>&lt;dockerFileDir&gt;</code> and
-<code>&lt;dockerFile&gt;</code> the following configuration options are available:</p>
+of an image configuration. The following configuration options are supported:</p>
 </div>
 <table id="config-image-build" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 6. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
@@ -1501,12 +1542,28 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The compression mode how the build archive is transmitted to the docker daemon (<code>docker:build</code>) and how docker build archives are attached to this build as sources (<code>docker:source</code>). The value can be <code>none</code> (default), <code>gzip</code> or <code>bzip2</code>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a <code>Dockerfile</code> which also triggers <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory holding a <code>Dockerfile</code> and switch on <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerArchive</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a saved image archive which is then imported. See <a href="#external-dockerfile">Docker archive</a> for details.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>entryPoint</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">An entrypoint allows you to configure a container that will run as an executable. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>env</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The environments as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>filter</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable and set the delimiters for property replacements. By default properties in the format <code>${..}</code> are replaced with Maven properties. You can switch off property replacement by setting this property to <code>false</code>. When using a single char like <code>@</code> then this is used as a delimiter (e.g <code>@&#8230;&#8203;@</code>). See <a href="#build-filtering">Filtering</a> for more details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-from"></a><strong>from</strong></p></td>
@@ -1645,8 +1702,12 @@ remote API.</p>
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assembly name, which is <code>maven</code> by default. This name is used for the archived and directories created during the build and holding the assembly files. If an <a href="#external-dockerfile">external Dockerfile</a> is used than this name is also the relative directory which contains the assembly files.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>targetDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is <code>/maven</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is <code>/&lt;assembly name&gt;</code>, so <code>/maven</code> if <strong>name</strong> is not set to a different value. This option has no meaning when an <a href="#external-dockerfile">external Dockerfile</a> is used.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-assembly-descriptor"><strong>inline</strong></a></p></td>
@@ -2482,7 +2543,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
   <span class="tag">&lt;bind.host.ip&gt;</span>1.2.3.4<span class="tag">&lt;/bind.host.ip&gt;</span>
   <span class="tag">&lt;bind.host.name&gt;</span>some.host.pvt<span class="tag">&lt;/bind.host.name&gt;</span>
-<span class="tag">&lt;properties&gt;</span>
+<span class="tag">&lt;/properties&gt;</span>
 
 ...
 
@@ -2494,7 +2555,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
   <span class="tag">&lt;port&gt;</span>+container.ip.property:host.port:5678<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;port&gt;</span>+bind.host.ip:host.port:5678<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;port&gt;</span>+bind.host.name:5678:5678<span class="tag">&lt;/port&gt;</span>
-<span class="tag">&lt;ports&gt;</span></code></pre>
+<span class="tag">&lt;/ports&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2872,6 +2933,10 @@ output of an container and blocks until the pattern is matched. You can use <cod
 <div class="paragraph">
 <p>This behaviour mimics the docker compose dependsOn <code>condition: service_healthy</code>.</p>
 </div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exit</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check that waits until a container finishes with the given exit code.</p></td>
 </tr>
 </tbody>
 </table>
@@ -3800,6 +3865,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host:ip</code> to add to <code>/etc/hosts</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.filter</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable and set the delimiters for property replacements. By default properties in the format <code>${..}</code> are replaced with Maven properties. You can switch off property replacement by setting this property to <code>false</code>. When using a single char like <code>@</code> then this is used as a delimiter (e.g <code>@&#8230;&#8203;@</code>). See <a href="#build-filtering">Filtering</a> for more details.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.from</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Base image for building an image. Must be set when an image is created (or <code>fromExt</code>)</p></td>
 </tr>
@@ -4489,10 +4558,13 @@ password.</p>
 <div class="sect2">
 <h3 id="extended-authentication">8.4. Extended Authentication</h3>
 <div class="paragraph">
-<p>Some docker registries require additional steps to authenticate.  <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials. The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>awsAccountId</em>*.dkr.ecr.<strong><em>awsRegion</em></strong>.amazonaws.com*, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
+<p>Some docker registries require additional steps to authenticate.
+<a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials.
+The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>&lt;awsAccountId&gt;</em> <strong>.dkr.ecr.</strong> <em>&lt;awsRegion&gt;</em> <strong>.amazonaws.com</strong>, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
 </div>
 <div class="paragraph">
-<p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>. Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
+<p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
+Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
 </div>
 </div>
 </div>
@@ -4538,8 +4610,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.20.1<br>
-Last updated 2017-03-29 22:09:53 UTC
+Version 0.21.0<br>
+Last updated 2017-05-16 15:10:40 UTC
 </div>
 </div>
 </body>
