@@ -99,6 +99,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .buildOptions(mapWithPrefix(prefix, BUILD_OPTIONS, properties))
                 .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
                 .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
+                .filter(withPrefix(prefix, FILTER, properties))
                 .user(withPrefix(prefix, USER, properties))
                 .healthCheck(extractHealthCheck(prefix, properties))
                 .build();
