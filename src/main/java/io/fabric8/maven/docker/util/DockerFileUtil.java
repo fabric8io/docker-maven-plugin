@@ -42,7 +42,7 @@ public class DockerFileUtil {
      */
     public static String extractBaseImage(File dockerFile, Properties properties, String filter) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", properties, filter);
-        if (fromLines.size() > 0) {
+        if (!fromLines.isEmpty()) {
             String[] parts = fromLines.get(0);
             if (parts.length > 1) {
                 return parts[1];
@@ -96,7 +96,7 @@ public class DockerFileUtil {
     }
 
     private static String interpolateLine(String line, Properties properties, String[] delimiters) {
-        if (delimiters == null) {
+        if (delimiters == null || delimiters.length == 0) {
             return line;
         }
         Pattern propertyPattern =
