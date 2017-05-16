@@ -1,10 +1,10 @@
 # ChangeLog
 
 * **0.21.0** (2017-05-16)
-  - Add wait checker for checking the exit code of a container (#498) 
-  - Check for exited container when doing wait checks (#757)
-  - New assembly configuration "name" for specifying the directory which holds the assembly files (#634)
-  - Add support for property replacement in external Dockerfiles (#777)
+  - Add wait checker for checking the exit code of a container ([#498](https://github.com/fabric8io/docker-maven-plugin/issues/498)) 
+  - Check for exited container when doing wait checks ([#757](https://github.com/fabric8io/docker-maven-plugin/issues/757))
+  - New assembly configuration "name" for specifying the directory which holds the assembly files ([#634](https://github.com/fabric8io/docker-maven-plugin/issues/634))
+  - Add support for property replacement in external Dockerfiles ([#777](https://github.com/fabric8io/docker-maven-plugin/issues/777))
   
 Please note that now filtering in an external Dockerfiles is switched on by default. This might interfere with Docker build args, so should switch filtering of with `<filter>false</filter>` in the `<build>` configuration if you have issues with this. See also the Documentation about "Filtering" for more Details.
 
