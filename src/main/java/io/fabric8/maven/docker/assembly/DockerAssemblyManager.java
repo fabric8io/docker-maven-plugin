@@ -166,12 +166,12 @@ public class DockerAssemblyManager {
                 List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, project.getProperties(), buildConfig.getFilter());
                 for (String[] line : lines) {
                     // contains an ADD/COPY ... targetDir .... All good.
-                    if (line.length > 1 && line[1].contains(name)) {
+                    if (!line[0].startsWith("#") && line.length > 1 && line[1].contains(name)) {
                         return;
                     }
                 }
             }
-            log.warn("Dockerfile %s does not contain an ADD directive to include assembly created at %s. Ignoring assembly.",
+            log.warn("Dockerfile %s does not contain an ADD or COPY directive to include assembly created at %s. Ignoring assembly.",
                      dockerFile.getPath(), name);
         }
     }
