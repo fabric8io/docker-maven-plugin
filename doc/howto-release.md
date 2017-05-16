@@ -40,7 +40,7 @@ mvn versions:set -DgenerateBackupPoms=false -DnewVersion=0.15-SNAPSHOT
 * Update branch `dmp.fabric8.io` with the exact version of the plugin build and push it to upstream (https://github.com/fabric8io/docker-maven-plugin)
 
 ```
-git fetch --tags
+git fetch -u upstream --tags
 git co dmp.fabric8.io
 git merge v0.19.0
 git push -u upstream dmp.fabric8.io
