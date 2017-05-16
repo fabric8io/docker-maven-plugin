@@ -50,7 +50,6 @@
     <module>custom-net</module>
     <module>volume</module>
     <module>properties</module>
-    <module>dockerfile</module>
     <module>dockerignore</module>
     <module>docker-compose</module>
     <module>data-jolokia</module>
