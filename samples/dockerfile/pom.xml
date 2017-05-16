@@ -16,11 +16,15 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-
   <artifactId>dockerfile</artifactId>
   <version>0.20-SNAPSHOT</version>
   <packaging>war</packaging>
   <name>dmp-sample-dockerfile</name>
+
+  <properties>
+    <file>welcome.txt</file>
+    <base>jetty</base>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -52,6 +56,7 @@
               <name>fabric8:dmp-sample-dockerfile</name>
               <alias>dockerfile</alias>
               <build>
+                <filter>@</filter>
                 <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
                 <assembly>
                   <descriptorRef>rootWar</descriptorRef>

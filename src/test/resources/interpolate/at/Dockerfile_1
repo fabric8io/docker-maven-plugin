@@ -1,0 +1,3 @@
+FROM @base@
+LABEL name ${name} @age@ ${ext} blub @unknown@ @
+ENV @name@ @ext@

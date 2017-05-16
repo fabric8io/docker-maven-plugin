@@ -1,0 +1,3 @@
+FROM java
+LABEL name ${name} 42 ${ext} blub @unknown@ @
+ENV guenther png

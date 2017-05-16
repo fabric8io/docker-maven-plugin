@@ -228,7 +228,10 @@ public class BuildService {
         String fromImage;
         try {
             File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
-            fromImage = DockerFileUtil.extractBaseImage(fullDockerFilePath);
+            fromImage = DockerFileUtil.extractBaseImage(
+                fullDockerFilePath,
+                buildContext.getMojoParameters().getProject().getProperties(),
+                buildConfig.getFilter());
         } catch (IOException e) {
             // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
             // building the image, so we are passive here.

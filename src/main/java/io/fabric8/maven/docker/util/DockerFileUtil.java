@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.util;/*
- * 
+ *
  * Copyright 2015 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,9 @@ package io.fabric8.maven.docker.util;/*
  */
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,21 +36,96 @@ public class DockerFileUtil {
      * Extract the base image from a dockerfile. The first line containing a <code>FROM</code> is
      * taken.
      *
-     * @param dockerfile file from where to extract the base image
-     * @return the base image name or <code>null</code> if none is found.
+     * @param dockerFile file from where to extract the base image
+     * @param properties holding values used for interpolation
+     *@param filter @return the base image name or <code>null</code> if none is found.
      */
-    public static String extractBaseImage(File dockerfile) throws IOException {
-        // TODO: Interpolate Maven properties
-        try (BufferedReader reader = new BufferedReader(new FileReader(dockerfile))) {
+    public static String extractBaseImage(File dockerFile, Properties properties, String filter) throws IOException {
+        List<String[]> fromLines = extractLines(dockerFile, "FROM", properties, filter);
+        if (!fromLines.isEmpty()) {
+            String[] parts = fromLines.get(0);
+            if (parts.length > 1) {
+                return parts[1];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Extract all lines containing the given keyword
+     *
+     * @param dockerFile dockerfile to examine
+     * @param keyword keyword to extract the lines for
+     * @return list of matched lines or an empty list
+     */
+    public static List<String[]> extractLines(File dockerFile, String keyword, Properties props, String filter) throws IOException {
+        List<String[]> ret = new ArrayList<>();
+        String[] delimiters = extractDelimiters(filter);
+        try (BufferedReader reader = new BufferedReader(new FileReader(dockerFile))) {
             String line;
-            Pattern fromPattern = Pattern.compile("^\\s*FROM\\s+([^\\s]+).*$", Pattern.CASE_INSENSITIVE);
             while ((line = reader.readLine()) != null) {
-                Matcher matcher = fromPattern.matcher(line);
-                if (matcher.matches()) {
-                    return matcher.group(1);
+                String lineInterpolated = interpolateLine(line, props, delimiters);
+                String[] lineParts = lineInterpolated.split("\\s+");
+                if (lineParts.length > 0 && lineParts[0].equalsIgnoreCase(keyword)) {
+                    ret.add(lineParts);
                 }
             }
+        }
+        return ret;
+    }
+
+    /**
+     * Interpolate a docker file with the given properties and filter
+     *
+     * @param dockerFile docker file to interpolate
+     * @param properties properties to replace
+     * @param filter filter holding delimeters
+     * @return
+     * @throws IOException
+     */
+    public static String interpolate(File dockerFile, Properties properties, String filter) throws IOException {
+        StringBuilder ret = new StringBuilder();
+        String[] delimiters = extractDelimiters(filter);
+        try (BufferedReader reader = new BufferedReader(new FileReader(dockerFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                ret.append(interpolateLine(line, properties, delimiters)).append("\n");
+            }
+        }
+        return ret.toString();
+    }
+
+    private static String interpolateLine(String line, Properties properties, String[] delimiters) {
+        if (delimiters == null || delimiters.length == 0) {
+            return line;
+        }
+        Pattern propertyPattern =
+            Pattern.compile("(?<variable>" + Pattern.quote(delimiters[0]) + "(?<prop>.*?)" + Pattern.quote(delimiters[1]) + ")");
+        Matcher matcher = propertyPattern.matcher(line);
+        StringBuffer ret = new StringBuffer();
+        while (matcher.find()) {
+            String prop = matcher.group("prop");
+            String value = properties.containsKey(prop) ?
+                properties.getProperty(prop) :
+                matcher.group("variable");
+            matcher.appendReplacement(ret, value.replace("$","\\$"));
+        }
+        matcher.appendTail(ret);
+        return ret.toString();
+    }
+
+    private static String[] extractDelimiters(String filter) {
+        if (filter == null ||
+            filter.equalsIgnoreCase("false") ||
+            filter.equalsIgnoreCase("none")) {
             return null;
         }
+        if (filter.contains("*")) {
+            Matcher matcher = Pattern.compile("^(?<start>[^*]+)\\*(?<end>.*)$").matcher(filter);
+            if (matcher.matches()) {
+                return new String[] { matcher.group("start"), matcher.group("end") };
+            }
+        }
+        return new String[] { filter, filter };
     }
 }

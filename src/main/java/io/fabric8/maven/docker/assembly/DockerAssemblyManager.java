@@ -1,9 +1,11 @@
 package io.fabric8.maven.docker.assembly;
 
+import java.io.*;
+import java.util.*;
+
 import io.fabric8.maven.docker.config.*;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.util.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -28,12 +30,6 @@ import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -52,6 +48,7 @@ public class DockerAssemblyManager {
     public static final String DOCKER_IGNORE = ".maven-dockerignore";
     public static final String DOCKER_EXCLUDE = ".maven-dockerexclude";
     public static final String DOCKER_INCLUDE = ".maven-dockerinclude";
+    public static final String DOCKERFILE_NAME = "Dockerfile";
 
     @Requirement
     private AssemblyArchiver assemblyArchiver;
@@ -97,15 +94,17 @@ public class DockerAssemblyManager {
                                                      buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesn't exist");
                 }
 
-                verifyGivenDockerfile(dockerFile, buildConfig, log);
-
+                verifyGivenDockerfile(dockerFile, buildConfig, params.getProject(), log);
+                final File interpolatedDockerFile = interpolateDockerfile(dockerFile, buildDirs, params.getProject().getProperties(), buildConfig.getFilter());
                 // User dedicated Dockerfile from extra directory
                 customizer = new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
                         DefaultFileSet fileSet = DefaultFileSet.fileSet(dockerFile.getParentFile());
                         addDockerIgnoreIfPresent(fileSet);
+                        excludeDockerfile(fileSet, dockerFile);
                         archiver.addFileSet(fileSet);
+                        archiver.addFile(interpolatedDockerFile, DOCKERFILE_NAME);
                         return archiver;
                     }
                 };
@@ -114,11 +113,11 @@ public class DockerAssemblyManager {
                 DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
                 builder.write(buildDirs.getOutputDirectory());
                 // Add own Dockerfile
-                final File dockerFile = new File(buildDirs.getOutputDirectory(),"Dockerfile");
+                final File dockerFile = new File(buildDirs.getOutputDirectory(), DOCKERFILE_NAME);
                 customizer = new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
-                        archiver.addFile(dockerFile, "Dockerfile");
+                        archiver.addFile(dockerFile, DOCKERFILE_NAME);
                         return archiver;
                     }
                 };
@@ -135,12 +134,45 @@ public class DockerAssemblyManager {
             return createBuildTarBall(buildDirs, customizer, assemblyConfig, buildConfig.getCompression());
 
         } catch (IOException e) {
-            throw new MojoExecutionException(String.format("Cannot create Dockerfile in %s", buildDirs.getOutputDirectory()), e);
+            throw new MojoExecutionException(String.format("Cannot create %s in %s", DOCKERFILE_NAME, buildDirs.getOutputDirectory()), e);
         }
     }
 
-    private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, Logger log) {
-        // TODO: Add a warning if the Dockerfile does not contain an 'COPY' or 'ADD' for the assembly files
+    private void excludeDockerfile(DefaultFileSet fileSet, File dockerFile) {
+        ArrayList<String> excludes =
+            fileSet.getExcludes() != null ?
+                new ArrayList<>(Arrays.asList(fileSet.getExcludes())) :
+                new ArrayList<String>();
+        excludes.add(dockerFile.getName());
+        fileSet.setExcludes(excludes.toArray(new String[0]));
+    }
+
+    private File interpolateDockerfile(File dockerFile, BuildDirs params, Properties properties, String filter) throws IOException {
+        File targetDockerfile = new File(params.getOutputDirectory() + "/Dockerfile");
+        String dockerFileInterpolated =
+            DockerFileUtil.interpolate(dockerFile, properties, filter);
+        try (Writer writer = new FileWriter(targetDockerfile)) {
+            IOUtils.write(dockerFileInterpolated, writer);
+        }
+        return targetDockerfile;
+    }
+
+    private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, MavenProject project, Logger log) throws IOException {
+        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        if (assemblyConfig != null) {
+            String name = assemblyConfig.getName();
+            for (String keyword : new String[] { "ADD", "COPY" }) {
+                List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, project.getProperties(), buildConfig.getFilter());
+                for (String[] line : lines) {
+                    // contains an ADD/COPY ... targetDir .... All good.
+                    if (!line[0].startsWith("#") && line.length > 1 && line[1].contains(name)) {
+                        return;
+                    }
+                }
+            }
+            log.warn("Dockerfile %s does not contain an ADD or COPY directive to include assembly created at %s. Ignoring assembly.",
+                     dockerFile.getPath(), name);
+        }
     }
 
     /**

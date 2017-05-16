@@ -17,6 +17,7 @@ Alternatively an external Dockerfile template or Docker archive can be used. Thi
 
 All paths can be either absolute or relative paths (except when both `dockerFileDir` and `dockerFile` are provided in which case `dockerFile` must not be absolute). A relative path is looked up in `${project.basedir}/src/main/docker` by default. You can make it easily an absolute path by using `${project.basedir}` in your configuration.
 
+.Adding assemblies in Dockerfile mode
 Any additional files located in the `dockerFileDir` directory will also be added to the build context as well. 
 You can also use an assembly if specified in an <<build-assembly,assembly configuration>>. 
 However you need to add the files on your own in the Dockerfile with an `ADD` or `COPY` command.
@@ -38,14 +39,26 @@ If this directory contains a `.maven-dockerinclude` file, then it is used for in
 
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 
-****
-For the future it is planned to introduce special keywords like `DMP_ADD_ASSEMBLY` which can be used in the Dockerfile template to placing the configuration resulting from the additional configuration.
-****
+[[build-filtering]]
+.Filtering
+fabric8-maven-plugin filters given Dockerfile with Maven properties, much like the `maven-resource-plugin` does. Filtering is enabled by default and can be switched off with a build config `<filter>false</filter>`. Properties which we want to replace are specified with the `${..}` syntax. 
+Only properties which are set in the Maven build are replaced, all other remain untouched. 
 
-The following example uses a Dockerfile in the directory
-`src/main/docker/demo`:
+This partial replacement means that you can easily mix it with Docker build arguments and environment variable reference, but you need to be careful.
+If you want to be more explicit about the property delimiter to clearly separate Docker properties and Maven properties you can redefine the delimiter.
+In general, the `filter` option can be specified the same way as delimiters in the resource plugin.
+In particular,  if this configuration contains a * then the parts left, and right of the asterisks are used as delimiters. 
+
+For example, the default `<filter>${*}</filter>` parse Maven properties in the format that we know.
+If you specify a single character for `<filter>` then this delimiter is taken for both, the start and the end.
+E.g a `<filter>@</filter>` triggers on parameters in the format `@...@`, much like in the `maven-invoker-plugin`. 
+Use something like this if you want to clearly separate from Docker builds args.
+Property replacement works for Dockerfile only.
+For replacing other data in associated files targeted for the Docker image, please use the maven-resource-plugin to copy them over before. 
 
 .Example
+The following example uses a Dockerfile in the directory
+`src/main/docker/demo` and replaces all properties in the format `@property@` within the Dockerfile. 
 [source,xml]
 ----
 <plugin>
@@ -55,6 +68,7 @@ The following example uses a Dockerfile in the directory
        <name>user/demo</name>
        <build>
          <dockerFileDir>demo</dockerFileDir>
+         <filter>@</filter>
        </build>
      </image>
    </images>

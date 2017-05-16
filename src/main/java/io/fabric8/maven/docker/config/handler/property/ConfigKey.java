@@ -55,6 +55,7 @@ public enum ConfigKey {
     ENV_PROPERTY_FILE,
     EXPOSED_PROPERTY_KEY,
     EXTRA_HOSTS,
+    FILTER,
     FROM,
     FROM_EXT,
     HEALTHCHECK,
