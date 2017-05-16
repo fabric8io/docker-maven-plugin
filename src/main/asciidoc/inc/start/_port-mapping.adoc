@@ -29,7 +29,7 @@ The following are examples of valid configuration entries:
 <properties>
   <bind.host.ip>1.2.3.4</bind.host.ip>
   <bind.host.name>some.host.pvt</bind.host.name>
-<properties>
+</properties>
 
 ...
 
@@ -41,7 +41,7 @@ The following are examples of valid configuration entries:
   <port>+container.ip.property:host.port:5678</port>
   <port>+bind.host.ip:host.port:5678</port>
   <port>+bind.host.name:5678:5678</port>
-<ports>
+</ports>
 ----
 
 Another useful configuration option is `portPropertyFile` which can be used to to write out the container's host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.
