@@ -169,7 +169,7 @@ public class DockerConnectionDetector {
             if (this.certPath == null) {
                 File dockerHome = new File(System.getProperty("user.home") + "/.docker");
                 if (dockerHome.isDirectory()) {
-                    String entries[] = dockerHome.list(SuffixFileFilter.PEM_FILTER);
+                    String[] entries = dockerHome.list(SuffixFileFilter.PEM_FILTER);
                     if (entries == null) {
                         throw new IOException("Can not read directory " + dockerHome + ". Please check file permissions.");
                     }
