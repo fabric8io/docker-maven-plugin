@@ -74,15 +74,16 @@ public class DockerAccessFactory {
      * @return list of providers or <code>null</code> if none are applicable
      */
     private List<DockerConnectionDetector.DockerHostProvider> getDefaultDockerHostProviders(DockerAccessContext dockerAccessContext, Logger log) {
+
         DockerMachineConfiguration config = dockerAccessContext.getMachine();
-        if (config == null) {
+        if (dockerAccessContext.isSkipMachine()) {
+            config = null;
+        } else if (config == null) {
             Properties projectProps = dockerAccessContext.getProjectProperties();
-            if (!dockerAccessContext.isSkipMachine()) {
-                if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
-                    config = new DockerMachineConfiguration(
-                            projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
-                            projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
-                }
+            if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
+                config = new DockerMachineConfiguration(
+                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
+                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
             }
         }
 
