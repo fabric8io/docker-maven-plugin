@@ -95,7 +95,10 @@ public class DockerAssemblyManager {
                 }
 
                 verifyGivenDockerfile(dockerFile, buildConfig, params.getProject(), log);
-                final File interpolatedDockerFile = interpolateDockerfile(dockerFile, buildDirs, params.getProject().getProperties(), buildConfig.getFilter());
+                Properties interpolationProperties = new Properties();
+                interpolationProperties.putAll(params.getProject().getProperties());
+                interpolationProperties.putAll(params.getSession().getSystemProperties());
+                final File interpolatedDockerFile = interpolateDockerfile(dockerFile, buildDirs, interpolationProperties, buildConfig.getFilter());
                 // User dedicated Dockerfile from extra directory
                 customizer = new ArchiverCustomizer() {
                     @Override
