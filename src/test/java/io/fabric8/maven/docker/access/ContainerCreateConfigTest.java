@@ -38,7 +38,7 @@ public class ContainerCreateConfigTest {
     public void testEnvironment() throws Exception {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         Map<String, String> envMap = getEnvMap();
-        cc.environment(copyPropsToFile(), envMap, Collections.<String, String>emptyMap());
+        cc.environment(copyPropsToFile(), envMap, false, Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertNotNull(env);
         assertEquals(3, env.length());
@@ -51,7 +51,7 @@ public class ContainerCreateConfigTest {
     @Test
     public void testEnvironmentEmptyPropertiesFile() {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
-        cc.environment(null, getEnvMap(),Collections.<String, String>emptyMap());
+        cc.environment(null, getEnvMap(),false,Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertEquals(2, env.length());
     }
@@ -76,7 +76,7 @@ public class ContainerCreateConfigTest {
     @Test
     public void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment(null,null,Collections.<String, String>emptyMap());
+        cc.environment(null,null,false,Collections.<String, String>emptyMap());
         JSONObject config = new JSONObject(cc.toJson());
         assertFalse(config.has("Env"));
     }
@@ -84,17 +84,27 @@ public class ContainerCreateConfigTest {
     @Test
     public void testEnvNoMap() throws IOException {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment(copyPropsToFile(),null,Collections.<String, String>emptyMap());
+        cc.environment(copyPropsToFile(),null,false,Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertEquals(2, env.length());
         List<String> envAsString = convertToList(env);
         assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
     }
 
+    @Test
+    public void testEnvironmentKeepEnvs() throws IOException {
+        final ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
+        final Map<String, String> envs = getEnvMap();
+        cc.environment(copyPropsToFile(), envs, true, Collections.<String, String>emptyMap());
+        final JSONArray env = getEnvArray(cc);
+        assertEquals(3, env.length());
+        assertEquals(env.getString(2), "TEST_SERVICE=LOGGING");
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testNoPropFile() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
-        cc.environment("/not/really/a/file",null,Collections.<String, String>emptyMap());
+        cc.environment("/not/really/a/file",null,false,Collections.<String, String>emptyMap());
     }
 
 

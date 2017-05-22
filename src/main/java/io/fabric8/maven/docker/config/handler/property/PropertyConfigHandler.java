@@ -142,6 +142,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
                 .ulimits(extractUlimits(prefix, properties))
                 .tmpfs(listWithPrefix(prefix, TMPFS, properties))
+                .keepEnvs(withPrefix(prefix, KEEP_ENVS, properties))
                 .build();
     }
 

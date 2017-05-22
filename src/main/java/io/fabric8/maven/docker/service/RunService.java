@@ -75,7 +75,7 @@ public class RunService {
      */
     public String execInContainer(String containerId, String command, ImageConfiguration imageConfiguration)
             throws DockerAccessException {
-        Arguments arguments = new Arguments();
+        final Arguments arguments = new Arguments();
         arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
         String execContainerId = docker.createExecContainer(containerId, arguments);
         docker.startExecContainer(execContainerId, logConfig.createSpec(containerId, imageConfiguration));
@@ -249,7 +249,7 @@ public class RunService {
                     .workingDir(runConfig.getWorkingDir())
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
-                    .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
+                    .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), runConfig.keepEnvs(), mavenProps)
                     .labels(mergeLabels(runConfig.getLabels(), pomLabel))
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(runConfig, mappedPorts));

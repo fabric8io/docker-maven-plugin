@@ -6,6 +6,7 @@ import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -16,6 +17,7 @@ import static org.junit.Assert.assertEquals;
 public class ContainerHostConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
+    @Ignore
     public void testExtraHostsDoesNotResolve() {
         ContainerHostConfig hc = new ContainerHostConfig();
         hc.extraHosts(Arrays.asList("database.pvt:ahostnamewhichreallyshouldnot.exist.zz"));

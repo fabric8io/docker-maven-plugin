@@ -145,6 +145,8 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private boolean skip = false;
 
+    @Parameter
+    private boolean keepEnvs = false;
 
     public RunImageConfiguration() { }
 
@@ -315,6 +317,9 @@ public class RunImageConfiguration implements Serializable {
         return skip;
     }
 
+    public boolean keepEnvs() {
+        return keepEnvs;
+    }
     // ======================================================================================
 
     public static class Builder {
@@ -523,6 +528,13 @@ public class RunImageConfiguration implements Serializable {
         public Builder skip(String skip) {
             if (skip != null) {
                 config.skip = Boolean.valueOf(skip);
+            }
+            return this;
+        }
+
+        public Builder keepEnvs(final String keepEnvs) {
+            if (keepEnvs != null) {
+                config.keepEnvs = Boolean.valueOf(keepEnvs);
             }
             return this;
         }

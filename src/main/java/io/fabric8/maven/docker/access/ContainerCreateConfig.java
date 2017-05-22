@@ -50,7 +50,7 @@ public class ContainerCreateConfig {
         return this;
     }
 
-    public ContainerCreateConfig environment(String envPropsFile, Map<String, String> env, Map mavenProps) throws IllegalArgumentException {
+    public ContainerCreateConfig environment(String envPropsFile, Map<String, String> env, boolean keepEnvs, Map mavenProps) throws IllegalArgumentException {
 
         Properties envProps = new Properties();
         if (env != null && env.size() > 0) {
@@ -64,7 +64,7 @@ public class ContainerCreateConfig {
         }
         if (envPropsFile != null) {
             // Props from external file take precedence
-            addPropertiesFromFile(envPropsFile, envProps);
+            addPropertiesFromFile(envPropsFile, envProps, keepEnvs);
         }
 
         if (envProps.size() > 0) {
@@ -158,11 +158,18 @@ public class ContainerCreateConfig {
         createConfig.put("Env", containerEnv);
     }
 
-    private void addPropertiesFromFile(String envPropsFile, Properties envProps) {
+    private void addPropertiesFromFile(String envPropsFile, Properties envProps, boolean keepEnvs) {
         // External properties override internally specified properties
         try {
             FileReader reader = new FileReader(envPropsFile);
-            envProps.load(reader);
+            Properties envPropsFromFile = new Properties();
+            envPropsFromFile.load(reader);
+            if (keepEnvs) { // remove already set envs
+                for (final Object key : envProps.keySet()) {
+                    envPropsFromFile.remove(key);
+                }
+            }
+            envProps.putAll(envPropsFromFile);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(String.format("Cannot find environment property file '%s'", envPropsFile));
         } catch (IOException e) {
