@@ -13,6 +13,9 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class BuildImageConfiguration implements Serializable {
 
+    public static final String DEFAULT_FILTER = "${*}";
+    public static final String DEFAULT_CLEANUP = "try";
+
     /**
      * Directory holding an external Dockerfile which is used to build the
      * image. This Dockerfile will be enriched by the addition build configuration
@@ -40,7 +43,7 @@ public class BuildImageConfiguration implements Serializable {
      * How interpolation of a dockerfile should be performed
      */
     @Parameter
-    private String filter = "${*}";
+    private String filter = DEFAULT_FILTER;
 
     /**
      * Base Image
@@ -70,7 +73,7 @@ public class BuildImageConfiguration implements Serializable {
     private List<String> runCmds;
 
     @Parameter
-    private String cleanup = "try";
+    private String cleanup = DEFAULT_CLEANUP;
 
     @Parameter
     private boolean nocache = false;
@@ -284,7 +287,11 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder filter(String filter) {
-            config.filter = filter;
+            if (filter == null) {
+                config.filter = DEFAULT_FILTER;
+            } else {
+                config.filter = filter;
+            }
             return this;
         }
 
@@ -365,7 +372,11 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder cleanup(String cleanup) {
-            config.cleanup = cleanup;
+            if (cleanup == null) {
+                config.cleanup = DEFAULT_CLEANUP;
+            } else {
+                config.cleanup = cleanup;
+            }
             return this;
         }
 
