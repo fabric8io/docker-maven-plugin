@@ -28,6 +28,8 @@ import org.apache.maven.project.MavenProject;
 import org.junit.*;
 import org.junit.runner.RunWith;
 
+import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_CLEANUP;
+import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_FILTER;
 import static org.junit.Assert.*;
 
 /**
@@ -228,6 +230,56 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(false, config.getBuildConfiguration().optimise());
+    }
+
+    @Test
+    public void testDockerFile() {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE), "file" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertNotNull(config.getBuildConfiguration());
+    }
+
+    @Test
+    public void testDockerFileDir() {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "dir" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertNotNull(config.getBuildConfiguration());
+    }
+
+    @Test
+    public void testFilterDefault() {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(DEFAULT_FILTER, config.getBuildConfiguration().getFilter());
+    }
+
+    @Test
+    public void testFilter() {
+        String filter = "@";
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base", k(ConfigKey.FILTER), filter };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(filter, config.getBuildConfiguration().getFilter());
+    }
+
+    @Test
+    public void testCleanupDefault() {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(DEFAULT_CLEANUP, config.getBuildConfiguration().cleanupMode().toParameter());
+    }
+
+    @Test
+    public void testCleanup() {
+        CleanupMode mode = CleanupMode.REMOVE;
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base", k(ConfigKey.CLEANUP), mode.toParameter() };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(mode, config.getBuildConfiguration().cleanupMode());
     }
 
     @Test
