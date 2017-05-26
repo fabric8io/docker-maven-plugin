@@ -38,7 +38,7 @@ in the next sections.
 
 |**<<{plugin}:source>>**
 |Attach docker build archive to Maven project
-|
+|package
 
 |**<<{plugin}:save>>**
 |Save images to a file
