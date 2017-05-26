@@ -64,10 +64,12 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .build());
     }
 
-    // Enable build config only when a `.from.` is configured
+    // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
     private boolean buildConfigured(String prefix, Properties properties) {
         return withPrefix(prefix, FROM, properties) != null ||
-               mapWithPrefix(prefix,FROM_EXT,properties) != null;
+                mapWithPrefix(prefix, FROM_EXT, properties) != null ||
+                withPrefix(prefix, DOCKER_FILE, properties) != null ||
+                withPrefix(prefix, DOCKER_FILE_DIR, properties) != null;
     }
 
 
