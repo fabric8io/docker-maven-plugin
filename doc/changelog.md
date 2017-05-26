@@ -1,5 +1,9 @@
 # ChangeLog
 
+* **0.21-SNAPSHOT**
+  - Fix NPE when detecting cert paths (#764)
+  - Fix `skipDockerMachine` (#759)
+
 * **0.21.0** (2017-05-16)
   - Add wait checker for checking the exit code of a container ([#498](https://github.com/fabric8io/docker-maven-plugin/issues/498)) 
   - Check for exited container when doing wait checks ([#757](https://github.com/fabric8io/docker-maven-plugin/issues/757))
