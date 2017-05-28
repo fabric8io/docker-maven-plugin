@@ -1,18 +1,18 @@
 package io.fabric8.maven.docker.assembly;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.MojoParameters;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.project.MavenProject;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class DockerAssemblyConfigurationSourceTest {
 
@@ -41,13 +41,33 @@ public class DockerAssemblyConfigurationSourceTest {
     }
 
     @Test
-    public void testCreateSourceAbsolute() {
-        testCreateSource(buildParameters(".", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
+    public void testCreateSourceAbsolute() throws Exception {
+        testCreateSource(".", "/src/docker", "/output/docker");
     }
 
     @Test
-    public void testCreateSourceRelative() {
-        testCreateSource(buildParameters(".","src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
+    public void testCreateSourceRelative() throws Exception {
+        testCreateSource(".","src/docker", "output/docker");
+    }
+
+    @Test
+    public void testCreateSourceAbsoluteFromAbsoluteProjectBaseDir() throws Exception {
+        testCreateSource("/projects/project", "/src/docker", "/output/docker");
+    }
+
+    @Test
+    public void testCreateSourceRelativeFromAbsoluteProjectBaseDir() throws Exception {
+        testCreateSource("/project/project", "src/docker", "output/docker");
+    }
+
+    @Test
+    public void testCreateSourceAbsoluteFromLongRelativeProjectBaseDir() throws Exception {
+        testCreateSource("./projects/project", "/src/docker", "/output/docker");
+    }
+
+    @Test
+    public void testCreateSourceRelativeFromLongRelativeProjectBaseDir() throws Exception {
+        testCreateSource("./projects/project", "src/docker", "output/docker");
     }
 
     @Test
@@ -55,17 +75,17 @@ public class DockerAssemblyConfigurationSourceTest {
         String image = "image";
         MojoParameters params = buildParameters(".", "src/docker", "output/docker");
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params,
-                                                                                         new BuildDirs(image, params),assemblyConfig);
-        
+                new BuildDirs(image, params),assemblyConfig);
+
         assertTrue(containsDir(image, source.getOutputDirectory()));
         assertTrue(containsDir(image, source.getWorkingDirectory()));
         assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
     }
-    
+
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
-        mavenProject.setFile(new File(projectDir));
-        return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir, outputDir);
+        mavenProject.setFile(new File(projectDir, "pom.xml"));
+        return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir.replace("/", File.separator), outputDir.replace("/", File.separator));
     }
 
     @Test
@@ -77,7 +97,9 @@ public class DockerAssemblyConfigurationSourceTest {
         assertEquals(0,source.getDescriptors().length);
     }
 
-    private void testCreateSource(MojoParameters params) {
+    private void testCreateSource(String projectDir, String sourceDir, String outputDir) throws URISyntaxException {
+        MojoParameters params = buildParameters(projectDir, sourceDir, outputDir);
+
         DockerAssemblyConfigurationSource source =
                 new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params), assemblyConfig);
 
@@ -85,27 +107,46 @@ public class DockerAssemblyConfigurationSourceTest {
         String[] descriptorRefs = source.getDescriptorReferences();
 
         assertEquals("count of descriptors", 1, descriptors.length);
-        Assert.assertEquals("directory of assembly", EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
+        assertEquals("directory of assembly", EnvUtil.prepareAbsoluteSourceDirPath(params, "assembly.xml").getAbsolutePath(), descriptors[0]);
 
         assertEquals("count of descriptors references", 1, descriptorRefs.length);
         assertEquals("reference must be project", "project", descriptorRefs[0]);
 
         assertFalse("we must not ignore permissions when creating the archive", source.isIgnorePermissions());
 
-        String outputDir = params.getOutputDirectory();
-
-        assertStartsWithDir(outputDir, source.getOutputDirectory());
-        assertStartsWithDir(outputDir, source.getWorkingDirectory());
-        assertStartsWithDir(outputDir, source.getTemporaryRootDirectory());
+        final File outputFile = new File(params.getOutputDirectory());
+        if (outputFile.isAbsolute()) {
+            // if it was an absolute path at the beginning in MojoParameters then it should stay an absolute path with same root after all
+            String absolutePath = outputFile.getAbsolutePath();
+            assertStartsWithDir(absolutePath, source.getOutputDirectory());
+            assertStartsWithDir(absolutePath, source.getWorkingDirectory());
+            assertStartsWithDir(absolutePath, source.getTemporaryRootDirectory());
+        } else {
+            // if not - then at some level each plugin directory must be equal to outputDir
+            assertSubDirOf(projectDir + File.separator + params.getOutputDirectory(), source.getOutputDirectory());
+            assertSubDirOf(projectDir + File.separator + params.getOutputDirectory(), source.getWorkingDirectory());
+            assertSubDirOf(projectDir + File.separator + params.getOutputDirectory(), source.getTemporaryRootDirectory());
+        }
     }
 
     private boolean containsDir(String outputDir, File path) {
         return path.toString().contains(outputDir + File.separator);
     }
-    
+
     private void assertStartsWithDir(String outputDir, File path) {
         String expectedStartsWith = outputDir + File.separator;
         int length = expectedStartsWith.length();
         assertEquals(expectedStartsWith, path.toString().substring(0, length));
     }
+
+    private void assertSubDirOf(String rootPath, File subDirPath) throws URISyntaxException {
+        String rootDir = normalizedAbsolutePath(rootPath);
+        String candidate = normalizedAbsolutePath(subDirPath.getAbsolutePath());
+        assertTrue(candidate.startsWith(rootDir));
+    }
+
+    private String normalizedAbsolutePath(String rootPath) throws URISyntaxException {
+        return new File(new URI(rootPath).normalize().getPath()).getAbsolutePath();
+    }
+
 }

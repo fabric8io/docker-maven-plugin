@@ -88,7 +88,7 @@ the URL is:
 | `docker.maxConnections`
 
 | *outputDirectory*
-| Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
+| Default output directory to be used by this plugin. If this a relative directory path it is set relative to the project directory. The default value is `target/docker` and is only used for the goal {plugin}:build.
 | `docker.target.dir`
 
 | *portPropertyFile*
