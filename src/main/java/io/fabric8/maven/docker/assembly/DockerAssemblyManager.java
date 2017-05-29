@@ -98,16 +98,17 @@ public class DockerAssemblyManager {
                 Properties interpolationProperties = new Properties();
                 interpolationProperties.putAll(params.getProject().getProperties());
                 interpolationProperties.putAll(params.getSession().getSystemProperties());
-                final File interpolatedDockerFile = interpolateDockerfile(dockerFile, buildDirs, interpolationProperties, buildConfig.getFilter());
+                interpolateDockerfile(dockerFile, buildDirs, interpolationProperties, buildConfig.getFilter());
                 // User dedicated Dockerfile from extra directory
                 customizer = new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
                         DefaultFileSet fileSet = DefaultFileSet.fileSet(dockerFile.getParentFile());
                         addDockerIgnoreIfPresent(fileSet);
+                        // Exclude non-interpolated dockerfile from source tree
+                        // Interpolated Dockerfile is already added as it was created into the output directory
                         excludeDockerfile(fileSet, dockerFile);
                         archiver.addFileSet(fileSet);
-                        archiver.addFile(interpolatedDockerFile, DOCKERFILE_NAME);
                         return archiver;
                     }
                 };
@@ -150,14 +151,13 @@ public class DockerAssemblyManager {
         fileSet.setExcludes(excludes.toArray(new String[0]));
     }
 
-    private File interpolateDockerfile(File dockerFile, BuildDirs params, Properties properties, String filter) throws IOException {
-        File targetDockerfile = new File(params.getOutputDirectory() + "/Dockerfile");
+    private void interpolateDockerfile(File dockerFile, BuildDirs params, Properties properties, String filter) throws IOException {
+        File targetDockerfile = new File(params.getOutputDirectory(), dockerFile.getName());
         String dockerFileInterpolated =
             DockerFileUtil.interpolate(dockerFile, properties, filter);
         try (Writer writer = new FileWriter(targetDockerfile)) {
             IOUtils.write(dockerFileInterpolated, writer);
         }
-        return targetDockerfile;
     }
 
     private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, MavenProject project, Logger log) throws IOException {
