@@ -244,8 +244,8 @@ public class AnsiLogger implements Logger {
     // Emphasize parts encloses in "[[*]]" tags
     private String evaluateEmphasis(String message, Ansi.Color msgColor) {
         // Split with delimiters [[.]]. See also http://stackoverflow.com/a/2206545/207604
-        String prepared = message.replaceAll("\\[\\[(.)\\]\\]","[[]]$1[[]]");
-        String[] parts = prepared.split("\\[\\[\\]\\]");
+        String prepared = message.replaceAll("\\[\\[(.)]]","[[]]$1[[]]");
+        String[] parts = prepared.split("\\[\\[]]");
         if (parts.length == 1) {
             return message;
         }

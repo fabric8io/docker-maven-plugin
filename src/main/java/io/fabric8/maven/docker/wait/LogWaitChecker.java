@@ -67,7 +67,7 @@ public class LogWaitChecker implements WaitChecker {
 
         @Override
         public void log(int type, Timestamp timestamp, String txt) throws DoneException {
-            log.debug("LogWaitChecker: Tying to match '%s' [Pattern: %s] [thread: %d]",
+            log.debug("LogWaitChecker: Trying to match '%s' [Pattern: %s] [thread: %d]",
                       txt, logPattern, Thread.currentThread().getId());
             String toMatch;
             if (logBuffer != null) {
@@ -77,6 +77,7 @@ public class LogWaitChecker implements WaitChecker {
                 toMatch = txt;
             }
             if (pattern.matcher(toMatch).find()) {
+                log.debug("Found log-wait pattern in log output");
                 detected.set(true);
                 throw new DoneException();
             }
