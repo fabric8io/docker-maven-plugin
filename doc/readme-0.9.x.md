@@ -18,7 +18,7 @@ This is a Maven plugin for managing Docker images and containers from within Mav
 With this plugin it is possible to run completely isolated integration tests so you don't need to take care of shared resources. Ports can be mapped dynamically and made available as Maven properties. 
 
 Build artifacts and dependencies can be accessed from within 
-running containers, so that a file based deployment is easily possible and there is no need to use dedicated deployment support from plugins like [Cargo](http://cargo.codehaus.org/).
+running containers, so that a file based deployment is easily possible and there is no need to use dedicated deployment support from plugins like [Cargo](https://codehaus-cargo.github.io/cargo/Maven2+plugin.html).
  
 This plugin's **highlights** are:
 
@@ -358,7 +358,7 @@ configuration parameter `certPath`. Alternatively, the environment variable `DOC
 This plugin comes with some commented examples in the `samples/` directory:
 
 * [data-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/data-jolokia-demo) is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX bridge in a tomcat. It uses a Docker data container which is linked into the Tomcat container and contains the WAR files to deply
-* [cargo-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo) is the same as above except that Jolokia gets deployed via [Cargo](http://cargo.codehaus.org/Maven2+plugin)
+* [cargo-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo) is the same as above except that Jolokia gets deployed via [Cargo](https://codehaus-cargo.github.io/cargo/Maven2+plugin.html)
 
 For a complete example please refer to `samples/data-jolokia-demo/pom.xml`.
 
@@ -446,7 +446,7 @@ and what I want to achieve:
   which needs not necessarily map directly to docker config setup.
   
 * The plugin should play nicely with
-  [Cargo](http://cargo.codehaus.org/) so that deployments into
+  [Cargo](https://codehaus-cargo.github.io/cargo/Maven2+plugin.html) so that deployments into
   containers can be easy. 
   
 * I want as **less dependencies** as possible for this plugin. So I

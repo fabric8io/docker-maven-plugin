@@ -66,7 +66,7 @@ mvn docker:stop
 [cargo-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
 will use Docker to start a Tomcat 7 server with dynamic port mapping,
 which is used for remote deployment via
-[Cargo](http://cargo.codehaus.org/Maven2+plugin) and running the
+[Cargo](https://codehaus-cargo.github.io/cargo/Maven2+plugin.html) and running the
 integration tests.
 
 ### docker-maven-plugin Shootout
