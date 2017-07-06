@@ -308,21 +308,46 @@ public class AuthConfigFactory {
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
         JSONObject dockerConfig = readDockerConfig();
-        if (dockerConfig == null || !dockerConfig.has("auths")) {
+        if (dockerConfig == null) {
             return null;
         }
-        JSONObject auths = dockerConfig.getJSONObject("auths");
         String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
-        JSONObject credentials = getCredentialsNode(auths, registryToLookup);
-        if (credentials == null || !credentials.has("auth")) {
+
+        if (dockerConfig.has("credHelpers") || dockerConfig.has("credsStore")) {
+            if (dockerConfig.has("credHelpers")) {
+                final JSONObject credHelpers = dockerConfig.getJSONObject("credHelpers");
+                if (credHelpers.has(registryToLookup)) {
+                    CredentialHelperClient credentialHelper = new CredentialHelperClient(log,credHelpers.getString(registryToLookup));
+                    log.debug("AuthConfig: credentials from credential helper %s version %s",credentialHelper.getName(),credentialHelper.getVersion());
+
+                    // "The default credential store will not be used for operations concerning credentials of the specified registries."
+                    return credentialHelper.getCredentialNode(registryToLookup);
+                }
+            }
+            if (dockerConfig.has("credsStore")) {
+                CredentialHelperClient credentialStore = new CredentialHelperClient(log,dockerConfig.getString("credsStore"));
+                log.debug("AuthConfig: credentials from credentials store %s version %s",credentialStore.getName(),credentialStore.getVersion());
+
+                return credentialStore.getCredentialNode(registryToLookup);
+            }
             return null;
         }
-        String auth = credentials.getString("auth");
-        String email = credentials.has("email") ? credentials.getString("email") : null;
-        return new AuthConfig(auth,email);
+
+        if (dockerConfig.has("auths")) {
+            JSONObject auths = dockerConfig.getJSONObject("auths");
+            JSONObject credentials = getCredentialsNode(auths,registryToLookup);
+            if (credentials == null || !credentials.has("auth")) {
+                return null;
+            }
+            String auth = credentials.getString("auth");
+            String email = credentials.has("email") ? credentials.getString("email") : null;
+            return new AuthConfig(auth,email);
+        }
+
+        return null;
     }
 
-    private JSONObject getCredentialsNode(JSONObject auths, String registryToLookup) {
+    private JSONObject getCredentialsNode(JSONObject auths,String registryToLookup) {
         if (auths.has(registryToLookup)) {
             return auths.getJSONObject(registryToLookup);
         }
