@@ -71,7 +71,12 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testEmpty() throws Exception {
-        assertNull(factory.createAuthConfig(isPush, false, null, settings, null, "blubberbla:1611"));
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                assertNull(factory.createAuthConfig(isPush,false,null,settings,null,"blubberbla:1611"));
+            }
+        });
     }
 
     @Test
@@ -91,19 +96,30 @@ public class AuthConfigFactoryTest {
 
 
     @Test
-    public void testDockerLogin() throws Exception {
+    public void testDockerAuthLogin() throws Exception {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File homeDir) throws IOException, MojoExecutionException {
-                checkDockerLogin(homeDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
-                checkDockerLogin(homeDir,"localhost:5000","localhost:5000");
-                checkDockerLogin(homeDir,"https://localhost:5000","localhost:5000");
+                checkDockerAuthLogin(homeDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
+                checkDockerAuthLogin(homeDir,"localhost:5000","localhost:5000");
+                checkDockerAuthLogin(homeDir,"https://localhost:5000","localhost:5000");
             }
         });
     }
 
     @Test
     public void testDockerLoginNoConfig() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File dir) throws IOException, MojoExecutionException {
+                AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", null);
+                assertNull(config);
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginMisconfiguredCredentialsHelper() throws MojoExecutionException, IOException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File dir) throws IOException, MojoExecutionException {
@@ -129,7 +145,7 @@ public class AuthConfigFactoryTest {
         void exec(File dir) throws IOException, MojoExecutionException;
     }
 
-    private void checkDockerLogin(File homeDir,String configRegistry, String lookupRegistry)
+    private void checkDockerAuthLogin(File homeDir,String configRegistry,String lookupRegistry)
             throws IOException, MojoExecutionException {
         createDockerConfig(homeDir, "roland", "secret", "roland@jolokia.org", configRegistry);
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", lookupRegistry);
@@ -149,7 +165,7 @@ public class AuthConfigFactoryTest {
         JSONObject config = new JSONObject();
         JSONObject auths = new JSONObject();
         JSONObject value = new JSONObject();
-        value.put("auth", new String(Base64.encodeBase64(new String(user + ":" + password).getBytes())));
+        value.put("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
         value.put("email",email);
         auths.put(registry,value);
         config.put("auths",auths);
@@ -299,9 +315,14 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testWrongUserName() throws MojoExecutionException {
-        setupServers();
-        assertNull(factory.createAuthConfig(isPush, false, null, settings, "roland", "another.repo.org"));
+    public void testWrongUserName() throws IOException, MojoExecutionException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                setupServers();
+                assertNull(factory.createAuthConfig(isPush,false,null,settings,"roland","another.repo.org"));
+            }
+        });
     }
 
 

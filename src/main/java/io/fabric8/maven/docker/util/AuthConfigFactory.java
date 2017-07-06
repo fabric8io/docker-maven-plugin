@@ -308,21 +308,39 @@ public class AuthConfigFactory {
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
         JSONObject dockerConfig = readDockerConfig();
-        if (dockerConfig == null || !dockerConfig.has("auths")) {
+        if (dockerConfig == null) {
             return null;
         }
-        JSONObject auths = dockerConfig.getJSONObject("auths");
         String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
-        JSONObject credentials = getCredentialsNode(auths, registryToLookup);
-        if (credentials == null || !credentials.has("auth")) {
-            return null;
+
+        if (dockerConfig.has("credsStore")) {
+            CredentialHelperClient credentialHelperClient = new CredentialHelperClient(log,dockerConfig.getString("credsStore"));
+            log.debug("AuthConfig: credentials from credential helper %s version %s",credentialHelperClient.getName(),credentialHelperClient.getVersion());
+
+            JSONObject credentials = credentialHelperClient.getCredentialNode(registryToLookup);
+            if (credentials == null) {
+                return null;
+            }
+            String password = credentials.getString(CredentialHelperClient.SECRET_KEY);
+            String userKey = credentials.getString(CredentialHelperClient.USERNAME_KEY);
+            return new AuthConfig(userKey,password, null,null);
         }
-        String auth = credentials.getString("auth");
-        String email = credentials.has("email") ? credentials.getString("email") : null;
-        return new AuthConfig(auth,email);
+
+        if (dockerConfig.has("auths")) {
+            JSONObject auths = dockerConfig.getJSONObject("auths");
+            JSONObject credentials = getCredentialsNode(auths,registryToLookup);
+            if (credentials == null || !credentials.has("auth")) {
+                return null;
+            }
+            String auth = credentials.getString("auth");
+            String email = credentials.has("email") ? credentials.getString("email") : null;
+            return new AuthConfig(auth,email);
+        }
+
+        return null;
     }
 
-    private JSONObject getCredentialsNode(JSONObject auths, String registryToLookup) {
+    private JSONObject getCredentialsNode(JSONObject auths,String registryToLookup) {
         if (auths.has(registryToLookup)) {
             return auths.getJSONObject(registryToLookup);
         }
