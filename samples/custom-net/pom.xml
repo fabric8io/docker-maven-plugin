@@ -64,7 +64,7 @@
                   <alias>box2</alias>
                 </network>
                 <dependsOn>
-                  <dependsOn>box1</dependsOn>
+                  <container>box1</container>
                 </dependsOn>
                 <namingStrategy>none</namingStrategy>
                 <cmd>

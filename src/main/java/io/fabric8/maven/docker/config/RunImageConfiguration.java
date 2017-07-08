@@ -190,7 +190,7 @@ public class RunImageConfiguration implements Serializable {
     }
 
     public List<String> getDependsOn() {
-        return dependsOn;
+        return EnvUtil.splitAtCommasAndTrim(dependsOn);
     }
 
     public String getUser() {
