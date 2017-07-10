@@ -10,10 +10,13 @@ import org.codehaus.plexus.component.repository.exception.ComponentLookupExcepti
 import org.codehaus.plexus.util.Base64;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.hamcrest.Matchers;
 import io.fabric8.maven.docker.access.AuthConfig;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
@@ -27,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 /**
@@ -57,6 +61,9 @@ public class AuthConfigFactoryTest {
 
     @Mocked
     PlexusContainer container;
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     @Before
     public void containerSetup() throws ComponentLookupException {
@@ -122,9 +129,14 @@ public class AuthConfigFactoryTest {
     public void testDockerLoginMisconfiguredCredentialsHelper() throws MojoExecutionException, IOException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File dir) throws IOException, MojoExecutionException {
-                AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", null);
-                assertNull(config);
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),"this-does-not-exist");
+                expectedException.expect(MojoExecutionException.class);
+                expectedException.expectCause(Matchers.<Throwable>allOf(
+                        instanceOf(IOException.class),
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-this-does-not-exist version'"))
+                ));
+                factory.createAuthConfig(isPush,false,null,settings,"roland",null);
             }
         });
     }
@@ -147,16 +159,16 @@ public class AuthConfigFactoryTest {
 
     private void checkDockerAuthLogin(File homeDir,String configRegistry,String lookupRegistry)
             throws IOException, MojoExecutionException {
-        createDockerConfig(homeDir, "roland", "secret", "roland@jolokia.org", configRegistry);
+        writeDockerConfigJson(createDockerConfig(homeDir), "roland", "secret", "roland@jolokia.org", configRegistry);
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", lookupRegistry);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
 
-    private void createDockerConfig(File homeDir, String user, String password, String email, String registry)
+    private File createDockerConfig(File homeDir)
             throws IOException {
         File dockerDir = new File(homeDir,".docker");
         dockerDir.mkdirs();
-        writeDockerConfigJson(dockerDir, user, password, email, registry);
+        return dockerDir;
     }
 
     private void writeDockerConfigJson(File dockerDir, String user, String password,
@@ -169,6 +181,15 @@ public class AuthConfigFactoryTest {
         value.put("email",email);
         auths.put(registry,value);
         config.put("auths",auths);
+        Writer writer = new FileWriter(configFile);
+        config.write(writer);
+        writer.close();
+    }
+
+    private void writeDockerConfigJson(File dockerDir,String credHelper) throws IOException {
+        File configFile = new File(dockerDir,"config.json");
+        JSONObject config = new JSONObject();
+        config.put("credsStore",credHelper);
         Writer writer = new FileWriter(configFile);
         config.write(writer);
         writer.close();
@@ -224,7 +245,7 @@ public class AuthConfigFactoryTest {
         }
     }
 
-    @Test(expected = MojoExecutionException.class)
+    @Test
     public void testOpenShiftConfigNotLoggedIn() throws Exception {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
@@ -232,7 +253,9 @@ public class AuthConfigFactoryTest {
                 createOpenShiftConfig(homeDir,"openshift_nologin_config.yaml");
                 Map<String,String> authConfigMap = new HashMap<>();
                 authConfigMap.put("useOpenShiftAuth","true");
-                AuthConfig config = factory.createAuthConfig(isPush, false, authConfigMap, settings, "roland", null);
+                expectedException.expect(MojoExecutionException.class);
+                expectedException.expectMessage(startsWith("Authentication configured for OpenShift, but no active user and/or token found in ~/.config/kube."));
+                factory.createAuthConfig(isPush,false,authConfigMap,settings,"roland",null);
             }
         });
 
@@ -245,8 +268,10 @@ public class AuthConfigFactoryTest {
         IOUtil.copy(getClass().getResourceAsStream(testConfig),new FileWriter(config));
     }
 
-    @Test(expected = MojoExecutionException.class)
+    @Test
     public void testSystemPropertyNoPassword() throws Exception {
+        expectedException.expect(MojoExecutionException.class);
+        expectedException.expectMessage("No docker.password provided for username secret");
         checkException("docker.username");
     }
 
@@ -283,11 +308,13 @@ public class AuthConfigFactoryTest {
     }
 
 
-    @Test(expected = MojoExecutionException.class)
+    @Test
     public void testFromPluginConfigurationFailed() throws MojoExecutionException {
         Map pluginConfig = new HashMap();
-        pluginConfig.put("username", "admin");
-        factory.createAuthConfig(isPush, false, pluginConfig, settings, null, null);
+        pluginConfig.put("username","admin");
+        expectedException.expect(MojoExecutionException.class);
+        expectedException.expectMessage("No 'password' given while using <authConfig> in configuration for mode DEFAULT");
+        factory.createAuthConfig(isPush,false,pluginConfig,settings,null,null);
     }
 
     @Test
