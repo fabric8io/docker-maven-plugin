@@ -17,6 +17,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import javax.annotation.Nonnull;
+
 import static java.util.concurrent.TimeUnit.*;
 
 /**
@@ -124,6 +126,7 @@ public class EnvUtil {
      * @param input Iterable over strings.
      * @return An Iterable over string which breaks down each input element at comma boundaries
      */
+    @Nonnull
     public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
         if(input==null) {
             return Collections.emptyList();

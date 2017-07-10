@@ -10,6 +10,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import io.fabric8.maven.docker.util.EnvUtil;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author roland
  * @since 02.09.14
@@ -189,6 +191,7 @@ public class RunImageConfiguration implements Serializable {
         return domainname;
     }
 
+    @Nonnull
     public List<String> getDependsOn() {
         return EnvUtil.splitAtCommasAndTrim(dependsOn);
     }
@@ -271,6 +274,7 @@ public class RunImageConfiguration implements Serializable {
         return volumes;
     }
 
+    @Nonnull
     public List<String> getLinks() {
         return EnvUtil.splitAtCommasAndTrim(links);
     }
