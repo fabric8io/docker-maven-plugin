@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -126,17 +127,61 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginMisconfiguredCredentialsHelper() throws MojoExecutionException, IOException {
+    public void testDockerLoginIgnoreAuthWhenCredentialHelperAvailable() throws MojoExecutionException, IOException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File homeDir) throws IOException, MojoExecutionException {
-                writeDockerConfigJson(createDockerConfig(homeDir),"this-does-not-exist");
+                writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
+                assertNull(config);
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginSelectCredentialHelper() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-this-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist version'"))
+                ));
+                factory.createAuthConfig(isPush,false,null,settings,"roland","registry1");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginSelectCredentialsStore() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
+                expectedException.expect(MojoExecutionException.class);
+                expectedException.expectCause(Matchers.<Throwable>allOf(
+                        instanceOf(IOException.class),
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland",null);
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginDefaultToCredentialsStore() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
+                expectedException.expect(MojoExecutionException.class);
+                expectedException.expectCause(Matchers.<Throwable>allOf(
+                        instanceOf(IOException.class),
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
+                ));
+                factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
             }
         });
     }
@@ -174,25 +219,41 @@ public class AuthConfigFactoryTest {
     private void writeDockerConfigJson(File dockerDir, String user, String password,
                                        String email, String registry) throws IOException {
         File configFile = new File(dockerDir,"config.json");
+
         JSONObject config = new JSONObject();
+        addAuths(config,user,password,email,registry);
+
+        try (Writer writer = new FileWriter(configFile)){
+            config.write(writer);
+        }
+    }
+
+    private void writeDockerConfigJson(File dockerDir,String credsStore,Map<String,String> credHelpers) throws IOException {
+        File configFile = new File(dockerDir,"config.json");
+
+        JSONObject config = new JSONObject();
+        if (!credHelpers.isEmpty()){
+            config.put("credHelpers",credHelpers);
+        }
+
+        if (credsStore!=null) {
+            config.put("credsStore",credsStore);
+        }
+
+        addAuths(config,"roland","secret","roland@jolokia.org", "localhost:5000");
+
+        try (Writer writer = new FileWriter(configFile)){
+            config.write(writer);
+        }
+    }
+
+    private void addAuths(JSONObject config,String user,String password,String email,String registry) {
         JSONObject auths = new JSONObject();
         JSONObject value = new JSONObject();
         value.put("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
         value.put("email",email);
         auths.put(registry,value);
         config.put("auths",auths);
-        Writer writer = new FileWriter(configFile);
-        config.write(writer);
-        writer.close();
-    }
-
-    private void writeDockerConfigJson(File dockerDir,String credHelper) throws IOException {
-        File configFile = new File(dockerDir,"config.json");
-        JSONObject config = new JSONObject();
-        config.put("credsStore",credHelper);
-        Writer writer = new FileWriter(configFile);
-        config.write(writer);
-        writer.close();
     }
 
     @Test

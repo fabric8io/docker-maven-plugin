@@ -320,16 +320,17 @@ public class AuthConfigFactory {
                     CredentialHelperClient credentialHelper = new CredentialHelperClient(log,credHelpers.getString(registryToLookup));
                     log.debug("AuthConfig: credentials from credential helper %s version %s",credentialHelper.getName(),credentialHelper.getVersion());
 
-                    AuthConfig authConfig = credentialHelper.getCredentialNode(registryToLookup);
-                    if (authConfig != null) {
-                        return authConfig;
-                    }
+                    // "The default credential store will not be used for operations concerning credentials of the specified registries."
+                    return credentialHelper.getCredentialNode(registryToLookup);
                 }
             }
-            CredentialHelperClient credentialStore = new CredentialHelperClient(log,dockerConfig.getString("credsStore"));
-            log.debug("AuthConfig: credentials from credential helper %s version %s",credentialStore.getName(),credentialStore.getVersion());
+            if (dockerConfig.has("credsStore")) {
+                CredentialHelperClient credentialStore = new CredentialHelperClient(log,dockerConfig.getString("credsStore"));
+                log.debug("AuthConfig: credentials from credentials store %s version %s",credentialStore.getName(),credentialStore.getVersion());
 
-            return credentialStore.getCredentialNode(registryToLookup);
+                return credentialStore.getCredentialNode(registryToLookup);
+            }
+            return null;
         }
 
         if (dockerConfig.has("auths")) {
