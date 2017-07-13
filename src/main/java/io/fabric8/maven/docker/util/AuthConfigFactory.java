@@ -313,17 +313,23 @@ public class AuthConfigFactory {
         }
         String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
 
-        if (dockerConfig.has("credsStore")) {
-            CredentialHelperClient credentialHelperClient = new CredentialHelperClient(log,dockerConfig.getString("credsStore"));
-            log.debug("AuthConfig: credentials from credential helper %s version %s",credentialHelperClient.getName(),credentialHelperClient.getVersion());
+        if (dockerConfig.has("credHelpers") || dockerConfig.has("credsStore")) {
+            if (dockerConfig.has("credHelpers")) {
+                final JSONObject credHelpers = dockerConfig.getJSONObject("credHelpers");
+                if (credHelpers.has(registryToLookup)) {
+                    CredentialHelperClient credentialHelper = new CredentialHelperClient(log,credHelpers.getString(registryToLookup));
+                    log.debug("AuthConfig: credentials from credential helper %s version %s",credentialHelper.getName(),credentialHelper.getVersion());
 
-            JSONObject credentials = credentialHelperClient.getCredentialNode(registryToLookup);
-            if (credentials == null) {
-                return null;
+                    AuthConfig authConfig = credentialHelper.getCredentialNode(registryToLookup);
+                    if (authConfig != null) {
+                        return authConfig;
+                    }
+                }
             }
-            String password = credentials.getString(CredentialHelperClient.SECRET_KEY);
-            String userKey = credentials.getString(CredentialHelperClient.USERNAME_KEY);
-            return new AuthConfig(userKey,password, null,null);
+            CredentialHelperClient credentialStore = new CredentialHelperClient(log,dockerConfig.getString("credsStore"));
+            log.debug("AuthConfig: credentials from credential helper %s version %s",credentialStore.getName(),credentialStore.getVersion());
+
+            return credentialStore.getCredentialNode(registryToLookup);
         }
 
         if (dockerConfig.has("auths")) {

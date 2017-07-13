@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.util;
 
+import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.json.JSONObject;
@@ -31,20 +32,29 @@ public class CredentialHelperClient {
         }
     }
 
-    public JSONObject getCredentialNode(String registryToLookup) throws MojoExecutionException {
+    public AuthConfig getCredentialNode(String registryToLookup) throws MojoExecutionException {
         try {
             final GetCommand getCommand = new GetCommand();
             final JSONObject credential = getCommand.getCredentialNode(registryToLookup);
             if (credential != null) {
-                return credential;
+                return toAuthConfig(credential);
             }
-            return getCommand.getCredentialNode("https://" + registryToLookup);
+            return toAuthConfig(getCommand.getCredentialNode("https://" + registryToLookup));
         } catch (IOException e) {
             throw new MojoExecutionException("Error getting the credentials for " + registryToLookup + " from the configured credential helper",e);
         }
     }
 
-    // docker-credential-XXX reply
+    private AuthConfig toAuthConfig(JSONObject credential){
+        if (credential == null) {
+            return null;
+        }
+        String password = credential.getString(CredentialHelperClient.SECRET_KEY);
+        String userKey = credential.getString(CredentialHelperClient.USERNAME_KEY);
+        return new AuthConfig(userKey,password, null,null);
+    }
+
+    // docker-credential-XXX version
     private class VersionCommand extends ExternalCommand {
 
         private String version;
