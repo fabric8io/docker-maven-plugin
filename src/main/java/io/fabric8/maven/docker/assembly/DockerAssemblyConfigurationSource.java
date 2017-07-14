@@ -105,7 +105,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     // Maybe use injection
     @Override
     public List<MavenProject> getReactorProjects() {
-        return params.getProject().getCollectedProjects();
+        return params.getReactorProjects();
     }
 
     // Maybe use injection
