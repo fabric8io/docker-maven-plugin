@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
 
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -65,13 +66,13 @@ public class DockerAssemblyConfigurationSourceTest {
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
         mavenProject.setFile(new File(projectDir));
-        return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir, outputDir);
+        return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir, outputDir, null);
     }
 
     @Test
     public void testEmptyAssemblyConfig() {
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker"),
+               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", null),
                null,null
         );
         assertEquals(0,source.getDescriptors().length);
@@ -107,5 +108,20 @@ public class DockerAssemblyConfigurationSourceTest {
         String expectedStartsWith = outputDir + File.separator;
         int length = expectedStartsWith.length();
         assertEquals(expectedStartsWith, path.toString().substring(0, length));
+    }
+    
+    @Test
+    public void testReactorProjects() {
+    	MavenProject reactorProject1 = new MavenProject();
+    	reactorProject1.setFile(new File("../reactor-1"));
+        
+        MavenProject reactorProject2 = new MavenProject();
+        reactorProject2.setFile(new File("../reactor-2"));
+        
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
+               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", Arrays.asList(new MavenProject[] { reactorProject1, reactorProject2 })),
+               null,null
+        );
+        assertEquals(2,source.getReactorProjects().size());
     }
 }
