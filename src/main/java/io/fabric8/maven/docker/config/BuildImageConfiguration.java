@@ -7,6 +7,8 @@ import java.util.*;
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author roland
  * @since 02.09.14
@@ -175,16 +177,19 @@ public class BuildImageConfiguration implements Serializable {
         return assembly;
     }
 
+    @Nonnull
     public List<String> getPorts() {
-        return ports;
+        return EnvUtil.removeEmpties(ports);
     }
 
+    @Nonnull
     public List<String> getVolumes() {
-        return volumes != null ? volumes : Collections.<String>emptyList();
+        return EnvUtil.removeEmpties(volumes);
     }
 
+    @Nonnull
     public List<String> getTags() {
-        return tags != null ? tags : Collections.<String>emptyList();
+        return EnvUtil.removeEmpties(tags);
     }
 
     public Map<String, String> getEnv() {
@@ -232,8 +237,9 @@ public class BuildImageConfiguration implements Serializable {
         return entryPoint;
     }
 
+    @Nonnull
     public List<String> getRunCmds() {
-        return runCmds;
+        return EnvUtil.removeEmpties(runCmds);
     }
 
     public String getUser() {

@@ -212,8 +212,9 @@ public class RunImageConfiguration implements Serializable {
         return memorySwap;
     }
 
+    @Nonnull
     public List<String> getPorts() {
-        return (ports != null) ? ports : Collections.<String>emptyList();
+        return EnvUtil.removeEmpties(ports);
     }
 
     public Arguments getCmd() {
