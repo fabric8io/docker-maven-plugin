@@ -39,9 +39,9 @@ public class EnvUtilTest {
     }
 
     @Test
-    public void removeEmpties() {
-        assertEquals(ImmutableList.of("ein"),  EnvUtil.removeEmpties(Arrays.asList(null, "", "ein")));
-        assertEquals(ImmutableList.of(), EnvUtil.removeEmpties(null));
+    public void removeEmptyEntries() {
+        assertEquals(ImmutableList.of("ein"),  EnvUtil.removeEmptyEntries(Arrays.asList(null, "", " ein", " ")));
+        assertEquals(ImmutableList.of(), EnvUtil.removeEmptyEntries(null));
     }
 
     @Test

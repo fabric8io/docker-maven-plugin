@@ -123,10 +123,18 @@ public class EnvUtil {
         }
     };
 
-    static public final Predicate<String> NOT_EMPTY = new Predicate<String>() {
+    private static final Predicate<String> NOT_EMPTY = new Predicate<String>() {
         @Override
         public boolean apply(@Nullable String s) {
             return s!=null && !s.isEmpty();
+        }
+    };
+
+    private static final Function<String,String> TRIM = new Function<String,String>() {
+        @Nullable
+        @Override
+        public String apply(@Nullable String s) {
+            return s!=null ?s.trim() :s;
         }
     };
 
@@ -136,12 +144,13 @@ public class EnvUtil {
      * @return A list of Non-Empty (length>0) String
      */
     @Nonnull
-    public static List<String> removeEmpties(@Nullable List<String> input) {
+    public static List<String> removeEmptyEntries(@Nullable List<String> input) {
         if(input==null) {
             return Collections.emptyList();
         }
-        Iterable<String> nonEmptyInputs = Iterables.filter(input, NOT_EMPTY);
-        return Lists.newArrayList(Iterables.concat(nonEmptyInputs));
+        Iterable<String> trimmedInputs = Iterables.transform(input, TRIM);
+        Iterable<String> nonEmptyInputs = Iterables.filter(trimmedInputs, NOT_EMPTY);
+        return Lists.newArrayList(nonEmptyInputs);
     }
 
     /**

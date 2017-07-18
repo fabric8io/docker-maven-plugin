@@ -179,17 +179,17 @@ public class BuildImageConfiguration implements Serializable {
 
     @Nonnull
     public List<String> getPorts() {
-        return EnvUtil.removeEmpties(ports);
+        return EnvUtil.removeEmptyEntries(ports);
     }
 
     @Nonnull
     public List<String> getVolumes() {
-        return EnvUtil.removeEmpties(volumes);
+        return EnvUtil.removeEmptyEntries(volumes);
     }
 
     @Nonnull
     public List<String> getTags() {
-        return EnvUtil.removeEmpties(tags);
+        return EnvUtil.removeEmptyEntries(tags);
     }
 
     public Map<String, String> getEnv() {
@@ -239,7 +239,7 @@ public class BuildImageConfiguration implements Serializable {
 
     @Nonnull
     public List<String> getRunCmds() {
-        return EnvUtil.removeEmpties(runCmds);
+        return EnvUtil.removeEmptyEntries(runCmds);
     }
 
     public String getUser() {
