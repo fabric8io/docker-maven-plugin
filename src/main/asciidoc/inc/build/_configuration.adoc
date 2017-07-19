@@ -85,22 +85,22 @@ a| Definition of a health check as described in <<build-healthcheck, Healthcheck
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
 
 | *ports*
-| The exposed ports which is a list of `<port>` elements, one for each port to expose. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp"),
+| The exposed ports which is a list of `<port>` elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").
 
 | *runCmds*
-| Commands to be run during the build process. It contains *run* elements which are passed to the shell. The run commands are inserted right after the assembly and after *workdir* in to the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
+| Commands to be run during the build process. It contains *run* elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* in to the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property
 
 | *tags*
-| List of additional `tag` elements with which an image is to be tagged after the build.
+| List of additional `tag` elements with which an image is to be tagged after the build. Whitespace is trimmed from each element and empty elements are ignored.
 
 | *user*
 | User to which the Dockerfile should switch to the end (corresponds to the `USER` Dockerfile directive).
 
 | *volumes*
-| List of `volume` elements to create a container volume.
+| List of `volume` elements to create a container volume. Whitespace is trimmed from each element and empty elements are ignored.
 
 | *workdir*
 | Directory to change to when starting the container.

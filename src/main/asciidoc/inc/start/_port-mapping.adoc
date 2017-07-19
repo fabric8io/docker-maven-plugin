@@ -1,5 +1,5 @@
 
-The `<ports>` configuration contains a list of port mappings. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option `-p`.
+The `<ports>` configuration contains a list of port mappings. Whitespace is trimmed from each element and empty elements are ignored. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option `-p`.
 
 A `port` stanza may take one of the following forms:
 

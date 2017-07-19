@@ -6,6 +6,8 @@
   - Fix property config handler to work also with dockerFile and dockerFileDir (#790)
   - Fix `dockerFile` option when pointing to another Dockerfile name (#784)
   - Allow comma separated list of container names in dependsOn elements (#810)
+  - Trim whitespace and ignore empty elements in build configuration ports, runCmds, tags, volumes (#816)
+  - Trim whitespace and ignore empty elements in run configuration ports (#816)
   
 * **0.21.0** (2017-05-16)
   - Add wait checker for checking the exit code of a container ([#498](https://github.com/fabric8io/docker-maven-plugin/issues/498)) 
