@@ -35,10 +35,6 @@ public class CredentialHelperClient {
     public AuthConfig getCredentialNode(String registryToLookup) throws MojoExecutionException {
         try {
             final GetCommand getCommand = new GetCommand();
-            final JSONObject credential = getCommand.getCredentialNode(registryToLookup);
-            if (credential != null) {
-                return toAuthConfig(credential);
-            }
             return toAuthConfig(getCommand.getCredentialNode("https://" + registryToLookup));
         } catch (IOException e) {
             throw new MojoExecutionException("Error getting the credentials for " + registryToLookup + " from the configured credential helper",e);
