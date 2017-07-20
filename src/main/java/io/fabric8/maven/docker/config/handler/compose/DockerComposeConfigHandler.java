@@ -59,8 +59,8 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private void validateVersion(Map<String, Object> compose, File file) {
         Object version = compose.get("version");
-        if (version == null || !version.toString().trim().equals("2")) {
-            throw new ExternalConfigHandlerException("Only version 2 of the docker-compose format is supported for " + file);
+        if (version == null || !version.toString().trim().startsWith("2.")) {
+            throw new ExternalConfigHandlerException("Only version 2.X of the docker-compose format is supported for " + file);
         }
     }
 
