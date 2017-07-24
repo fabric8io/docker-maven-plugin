@@ -43,6 +43,13 @@ public class KeyStoreUtilTest {
     }
 
     @Test
+    public void loadPrivateKeyECDSA() throws Exception {
+        // ecdsa.pem has been created via `openssl ecparam -name secp521r1 -genkey -param_enc explicit -out ecdsa.pem`
+        PrivateKey privateKey = KeyStoreUtil.loadPrivateKey(getFile("keys/ecdsa.pem"));
+        assertNotNull(privateKey);
+    }
+
+    @Test
     public void loadInvalidPrivateKey() throws Exception {
         exception.expect(GeneralSecurityException.class);
         exception.expectMessage("Cannot generate private key");
