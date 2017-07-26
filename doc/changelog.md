@@ -6,6 +6,8 @@
   - Fix property config handler to work also with dockerFile and dockerFileDir (#790)
   - Fix `dockerFile` option when pointing to another Dockerfile name (#784)
   - Allow comma separated list of container names in dependsOn elements (#810)
+  - Trim whitespace and ignore empty elements in build configuration ports, runCmds, tags, volumes (#816)
+  - Trim whitespace and ignore empty elements in run configuration ports (#816)
   - Fix "useAllReactorProjects" in assembly (#812)
   - Add ECDSA support (#824)
   

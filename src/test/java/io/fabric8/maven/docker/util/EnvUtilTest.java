@@ -39,6 +39,12 @@ public class EnvUtilTest {
     }
 
     @Test
+    public void removeEmptyEntries() {
+        assertEquals(ImmutableList.of("ein"),  EnvUtil.removeEmptyEntries(Arrays.asList(null, "", " ein", " ")));
+        assertEquals(ImmutableList.of(), EnvUtil.removeEmptyEntries(null));
+    }
+
+    @Test
     public void splitAtCommas() {
         Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
         Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");

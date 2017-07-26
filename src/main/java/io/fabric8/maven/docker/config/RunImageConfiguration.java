@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -212,8 +211,9 @@ public class RunImageConfiguration implements Serializable {
         return memorySwap;
     }
 
+    @Nonnull
     public List<String> getPorts() {
-        return (ports != null) ? ports : Collections.<String>emptyList();
+        return EnvUtil.removeEmptyEntries(ports);
     }
 
     public Arguments getCmd() {

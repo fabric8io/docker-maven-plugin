@@ -12,12 +12,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.io.FileUtils;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static java.util.concurrent.TimeUnit.*;
 
@@ -120,6 +122,36 @@ public class EnvUtil {
             return COMMA_SPLIT.split(input);
         }
     };
+
+    private static final Predicate<String> NOT_EMPTY = new Predicate<String>() {
+        @Override
+        public boolean apply(@Nullable String s) {
+            return s!=null && !s.isEmpty();
+        }
+    };
+
+    private static final Function<String,String> TRIM = new Function<String,String>() {
+        @Nullable
+        @Override
+        public String apply(@Nullable String s) {
+            return s!=null ?s.trim() :s;
+        }
+    };
+
+    /**
+     * Remove empty members of a list.
+     * @param input A list of String
+     * @return A list of Non-Empty (length>0) String
+     */
+    @Nonnull
+    public static List<String> removeEmptyEntries(@Nullable List<String> input) {
+        if(input==null) {
+            return Collections.emptyList();
+        }
+        Iterable<String> trimmedInputs = Iterables.transform(input, TRIM);
+        Iterable<String> nonEmptyInputs = Iterables.filter(trimmedInputs, NOT_EMPTY);
+        return Lists.newArrayList(nonEmptyInputs);
+    }
 
     /**
      * Split each element of an Iterable<String> at commas.
@@ -360,5 +392,4 @@ public class EnvUtil {
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
-
 }
