@@ -9,6 +9,7 @@
   - Trim whitespace and ignore empty elements in build configuration ports, runCmds, tags, volumes (#816)
   - Trim whitespace and ignore empty elements in run configuration ports (#816)
   - Fix "useAllReactorProjects" in assembly (#812)
+  - Add ECDSA support (#824)
   
 * **0.21.0** (2017-05-16)
   - Add wait checker for checking the exit code of a container ([#498](https://github.com/fabric8io/docker-maven-plugin/issues/498))
