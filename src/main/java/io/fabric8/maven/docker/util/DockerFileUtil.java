@@ -89,7 +89,7 @@ public class DockerFileUtil {
         try (BufferedReader reader = new BufferedReader(new FileReader(dockerFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                ret.append(interpolateLine(line, properties, delimiters)).append("\n");
+                ret.append(interpolateLine(line, properties, delimiters)).append(System.lineSeparator());
             }
         }
         return ret.toString();
