@@ -4,7 +4,7 @@ This plugin comes with some commented examples in the `samples/` directory:
 
 ### Jolokia Demo
 
-[data-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/data-jolokia-demo)
+[data-jolokia](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/data-jolokia)
 is a setup for testing the [Jolokia](http://www.jolokia.org) HTTP-JMX
 bridge in a tomcat. It uses a Docker data container which is linked
 into the Tomcat container and contains the WAR files to deploy. There
@@ -63,7 +63,7 @@ mvn docker:stop
 
 ### Cargo Demo
 
-[cargo-jolokia-demo](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia-demo)
+[cargo-jolokia](https://github.com/fabric8io/docker-maven-plugin/tree/master/samples/cargo-jolokia)
 will use Docker to start a Tomcat 7 server with dynamic port mapping,
 which is used for remote deployment via
 [Cargo](https://codehaus-cargo.github.io/cargo/Maven2+plugin.html) and running the
