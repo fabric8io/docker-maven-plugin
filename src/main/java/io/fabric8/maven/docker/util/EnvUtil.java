@@ -393,12 +393,15 @@ public class EnvUtil {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
     
-    public static boolean isValidWindowsFileName(String text) {
-    	
-    	if (!isWindows()) {
-    		// only care on windows
-    		return true;
-    	}
+    /**
+     * Validate that the provided filename is a valid Windows filename.
+     * 
+     * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
+     * 
+     * @param filename the filename
+     * @return filename is a valid Windows filename
+     */
+    public static boolean isValidWindowsFileName(String filename) {
     	
         Pattern pattern = Pattern.compile(
             "# Match a valid Windows filename (unspecified file system).          \n" +
@@ -415,7 +418,7 @@ public class EnvUtil {
             "[^<>:\"/\\\\|?*\\x00-\\x1F\\ .]  # Last char is not a space or dot.  \n" +
             "$                                # Anchor to end of string.            ", 
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
-        Matcher matcher = pattern.matcher(text);
+        Matcher matcher = pattern.matcher(filename);
         boolean isMatch = matcher.matches();
         return isMatch;
     }
