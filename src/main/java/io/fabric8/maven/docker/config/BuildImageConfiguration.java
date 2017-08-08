@@ -505,7 +505,7 @@ public class BuildImageConfiguration implements Serializable {
                     throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
                 }
                 if (EnvUtil.isWindows() && !EnvUtil.isValidWindowsFileName(dockerFile)) {
-                    throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+                    throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
                 }
                 return new File(dockerFileDir, dockerFile);
             }
