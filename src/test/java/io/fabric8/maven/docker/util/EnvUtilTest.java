@@ -172,6 +172,14 @@ public class EnvUtilTest {
 
 
     }
+    
+    @Test
+    public void isValidWindowsFileName() {
+    	
+    	assertFalse(EnvUtil.isValidWindowsFileName("/Dockerfile"));
+    	assertTrue(EnvUtil.isValidWindowsFileName("Dockerfile"));
+    	assertFalse(EnvUtil.isValidWindowsFileName("Dockerfile/"));
+    }    
 
     private Properties getTestProperties(String ... vals) {
         Properties ret = new Properties();
