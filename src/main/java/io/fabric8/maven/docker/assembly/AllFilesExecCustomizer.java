@@ -31,11 +31,11 @@ import org.codehaus.plexus.util.StringUtils;
  * @author roland
  * @since 26/06/16
  */
-class AllFilesExecCustomizer implements DockerAssemblyManager.ArchiverCustomizer {
-    private DockerAssemblyManager.ArchiverCustomizer innerCustomizer;
+class AllFilesExecCustomizer implements ArchiverCustomizer {
+    private ArchiverCustomizer innerCustomizer;
     private Logger log;
 
-    AllFilesExecCustomizer(DockerAssemblyManager.ArchiverCustomizer inner, Logger logger) {
+    AllFilesExecCustomizer(ArchiverCustomizer inner, Logger logger) {
         innerCustomizer = inner;
         this.log = logger;
     }

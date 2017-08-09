@@ -15,6 +15,7 @@ package io.fabric8.maven.docker.service;/*
  * limitations under the License.
  */
 
+import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -56,7 +57,22 @@ public class ArchiveService {
      */
     public File createDockerBuildArchive(ImageConfiguration imageConfig, MojoParameters params)
             throws MojoExecutionException {
-        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params, log);
+        return createDockerBuildArchive(imageConfig, params, null);
+    }
+
+    /**
+     * Create the tar file container the source for building an image. This tar can be used directly for
+     * uploading to a Docker daemon for creating the image
+     *
+     * @param imageConfig the image configuration
+     * @param params mojo params for the project
+     * @param customizer final customizer to be applied to the tar before being generated
+     * @return file for holding the sources
+     * @throws MojoExecutionException if during creation of the tar an error occurs.
+     */
+    public File createDockerBuildArchive(ImageConfiguration imageConfig, MojoParameters params, ArchiverCustomizer customizer)
+            throws MojoExecutionException {
+        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params, log, customizer);
         log.info("%s: Created docker source tar %s",imageConfig.getDescription(), ret);
         return ret;
     }
@@ -99,6 +115,11 @@ public class ArchiveService {
 
     File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, Logger log)
             throws MojoExecutionException {
-        return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig, log);
+        return createArchive(imageName, buildConfig, params, log, null);
+    }
+
+    File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, Logger log, ArchiverCustomizer customizer)
+            throws MojoExecutionException {
+        return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig, log, customizer);
     }
 }

@@ -75,6 +75,23 @@ public class DockerAssemblyManager {
      */
     public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig, Logger log)
             throws MojoExecutionException {
+        return createDockerTarArchive(imageName, params, buildConfig, log, null);
+    }
+
+    /**
+     * Create an docker tar archive from the given configuration which can be send to the Docker host for
+     * creating the image.
+     *
+     * @param imageName Name of the image to create (used for creating build directories)
+     * @param params Mojos parameters (used for finding the directories)
+     * @param buildConfig configuration for how to build the image
+     * @param log Logger used to display warning if permissions are to be normalized
+     * @param finalCustomizer finalCustomizer to be applied to the tar archive
+     * @return file holding the path to the created assembly tar file
+     * @throws MojoExecutionException
+     */
+    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
+            throws MojoExecutionException {
         BuildDirs buildDirs = createBuildDirs(imageName, params);
 
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
@@ -135,7 +152,7 @@ public class DockerAssemblyManager {
                     customizer = new AllFilesExecCustomizer(customizer, log);
                 }
             }
-            return createBuildTarBall(buildDirs, customizer, assemblyConfig, buildConfig.getCompression());
+            return createBuildTarBall(buildDirs, Arrays.asList(customizer, finalCustomizer), assemblyConfig, buildConfig.getCompression());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create %s in %s", DOCKERFILE_NAME, buildDirs.getOutputDirectory()), e);
@@ -241,12 +258,16 @@ public class DockerAssemblyManager {
     }
 
     // Create final tar-ball to be used for building the archive to send to the Docker daemon
-    private File createBuildTarBall(BuildDirs buildDirs, ArchiverCustomizer archiverCustomizer,
+    private File createBuildTarBall(BuildDirs buildDirs, List<ArchiverCustomizer> archiverCustomizers,
                                     AssemblyConfiguration assemblyConfig, ArchiveCompression compression) throws MojoExecutionException {
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, assemblyConfig);
-            archiver = archiverCustomizer.customize(archiver);
+            for (ArchiverCustomizer customizer : archiverCustomizers) {
+                if (customizer != null) {
+                    archiver = customizer.customize(archiver);
+                }
+            }
             archiver.setCompression(compression.getTarCompressionMethod());
             archiver.createArchive();
             return archive;
@@ -480,11 +501,6 @@ public class DockerAssemblyManager {
         catch (InvalidAssemblerConfigurationException e) {
             throw new MojoExecutionException(assemblyReader, e.getMessage(), "Docker assembly configuration is invalid: " + e.getMessage());
         }
-    }
-
-    // Archiver used to adapt for customizations
-    interface ArchiverCustomizer {
-        TarArchiver customize(TarArchiver archiver) throws IOException;
     }
 
 }
