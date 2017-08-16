@@ -201,7 +201,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.securityOpts.idx*
 | List of `opt` elements to specify kernel security options to add to the container. For example `docker.securityOpt.1=seccomp=unconfined`
 
-| *docker.shmSize*
+| *docker.shmsize*
 | Size of `/dev/shm` in bytes.
 
 | *docker.tags.idx*
