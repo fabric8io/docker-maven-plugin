@@ -14,6 +14,9 @@ import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
 import org.yaml.snakeyaml.Yaml;
 
+import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveAbsolutely;
+import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveComposeFileAbsolutely;
+
 
 /**
  * Docker Compose handler for allowing a docker-compose file to be used
@@ -39,7 +42,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         List<ImageConfiguration> resolved = new ArrayList<>();
 
         DockerComposeConfiguration handlerConfig = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
-        File composeFile = resolveComposeFile(handlerConfig.getBasedir(), handlerConfig.getComposeFile(), project);
+        File composeFile = resolveComposeFileAbsolutely(handlerConfig.getBasedir(), handlerConfig.getComposeFile(), project);
 
         for (Object composeO : getComposeConfigurations(composeFile, project, session)) {
             Map<String, Object> compose = (Map<String, Object>) composeO;
@@ -49,7 +52,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 String serviceName = entry.getKey();
                 Map<String, Object> serviceDefinition = (Map<String, Object>) entry.getValue();
 
-                DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig);
+                DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig, resolveAbsolutely(handlerConfig.getBasedir(), project));
                 resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile(), unresolvedConfig, handlerConfig));
             }
         }
@@ -211,8 +214,4 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private File resolveComposeFile(String baseDir, String compose, MavenProject project) {
-        File yamlFile = new File(compose);
-        return yamlFile.isAbsolute() ? yamlFile :  new File(new File(project.getBasedir(),baseDir),compose);
-    }
 }
