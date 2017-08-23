@@ -12,13 +12,20 @@ class DockerComposeServiceWrapper {
     private final String name;
     private final File composeFile;
     private final ImageConfiguration enclosingImageConfig;
+    private final File baseDir;
 
     DockerComposeServiceWrapper(String serviceName, File composeFile, Map<String, Object> serviceDefinition,
-                                ImageConfiguration enclosingImageConfig) {
+                                ImageConfiguration enclosingImageConfig, File baseDir) {
         this.name = serviceName;
         this.composeFile = composeFile;
         this.configuration = serviceDefinition;
         this.enclosingImageConfig = enclosingImageConfig;
+
+        if (!baseDir.isAbsolute()) {
+            throw new IllegalArgumentException(
+                    "Expected the base directory '" + baseDir + "' to be an absolute path.");
+        }
+        this.baseDir = baseDir;
     }
 
     String getAlias() {
@@ -240,7 +247,13 @@ class DockerComposeServiceWrapper {
         RunVolumeConfiguration.Builder builder = new RunVolumeConfiguration.Builder();
         List<String> volumes = asList("volumes");
         boolean added = false;
+//        String base = "/Users/esm/workspaces/rmap/rmap/indexing-solr/src/test/docker/";
         if (volumes.size() > 0) {
+            for (int i = 0; i < volumes.size(); i++) {
+                String resolvedVolume = resolveRelativeVolumeBinding(baseDir, volumes.get(i));
+                System.out.println("*** Resolved '" + volumes.get(i) + "' to '" + resolvedVolume + "'");
+                volumes.set(i, resolveRelativeVolumeBinding(baseDir, volumes.get(i)));
+            }
             builder.bind(volumes);
             added = true;
         }
@@ -395,5 +408,98 @@ class DockerComposeServiceWrapper {
 
     private void throwIllegalArgumentException(String msg) {
         throw new IllegalArgumentException(String.format("%s: %s - ", composeFile, name) + msg);
+    }
+
+    /**
+     * Examines the supplied {@code volume} string, and resolves relative paths.  The returned string is guaranteed to
+     * be absolute, but <em>not</em> guaranteed to exist.
+     * <p>
+     * Volumes may be defined inside of {@code service} blocks <a href="https://docs.docker.com/compose/compose-file/compose-file-v2/#volumes-volume_driver">
+     * as documented here</a>:
+     * </p>
+     * <pre>
+     * volumes:
+     * # Just specify a path and let the Engine create a volume
+     * - /var/lib/mysql
+     *
+     * # Specify an absolute path mapping
+     * - /opt/data:/var/lib/mysql
+     *
+     * # Path on the host, relative to the Compose file
+     * - ./cache:/tmp/cache
+     *
+     * # User-relative path
+     * - ~/configs:/etc/configs/:ro
+     *
+     * # Named volume
+     * - datavolume:/var/lib/mysql"
+     * </pre>
+     * <p>
+     * This method only operates on volume strings that are relative: beginning with {@code ./} or {@code ~/}.  Relative
+     * paths beginning with {@code ./} are absolutized relative to the supplied base directory, which <em>must</em> be
+     * absolute.  Paths beginning with {@code ~/} are interpreted relative to {@code new File(System.getProperty(
+     * "user.home"))}, and {@code baseDir} is ignored.
+     * </p>
+     * <p>
+     * Volume strings that do not begin with a {@code ./} or {@code ~/} are returned as-is.
+     * </p>
+     * <h3>Examples:</h3>
+     * <p>
+     * Given {@code baseDir} equal to "/path/to/basedir" and a {@code volume} string equal to
+     * "./reldir:/some/other/dir", this method returns {@code /path/to/basedir/reldir:/some/other/dir}
+     * </p>
+     * <p>
+     * Given {@code baseDir} equal to "/path/to/basedir" and a {@code volume} string equal to
+     * "~/reldir:/some/other/dir", this method returns {@code /path/to/user/home/reldir:/some/other/dir}
+     * </p>
+     *
+     * @param baseDir the base directory used to resolve paths beginning with {@code ./}; <em>must</em> be absolute
+     * @param volume the volume string from the docker-compose file
+     * @return the volume string, with any relative paths resolved as absolute paths
+     */
+    static String resolveRelativeVolumeBinding(File baseDir, String volume) {
+
+        if (!baseDir.isAbsolute()) {
+            throw new IllegalArgumentException("Base directory '" + baseDir + "' must be absolute.");
+        }
+
+        // a 'services:' -> service -> 'volumes:' may be formatted as:
+        // (https://docs.docker.com/compose/compose-file/compose-file-v2/#volumes-volume_driver)
+        //
+        // volumes:
+        //  # Just specify a path and let the Engine create a volume
+        //  - /var/lib/mysql
+        //
+        //  # Specify an absolute path mapping
+        //  - /opt/data:/var/lib/mysql
+        //
+        //  # Path on the host, relative to the Compose file
+        //  - ./cache:/tmp/cache
+        //
+        //  # User-relative path
+        //  - ~/configs:/etc/configs/:ro
+        //
+        //  # Named volume
+        // - datavolume:/var/lib/mysql
+
+        String[] pathParts = volume.split(":");
+        String localPath = pathParts[0];
+        String serverPath = (pathParts.length > 1) ? pathParts[1] : "";
+
+        // only perform resolution if the localPath begins with '~/' or './'
+
+        if (localPath.startsWith("./")) {
+            localPath = new File(baseDir, localPath.substring(2)).getAbsolutePath();
+        }
+
+        if (localPath.startsWith("~/")) {
+            localPath = new File(System.getProperty("user.home"), localPath.substring(2)).getAbsolutePath();
+        }
+
+        if (serverPath.length() > 0) {
+            return String.format("%s:%s", localPath, serverPath);
+        }
+
+        return localPath;
     }
 }
