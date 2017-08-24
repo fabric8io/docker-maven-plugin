@@ -109,7 +109,7 @@ public class ContainerTracker {
         Iterator<Map.Entry<PomLabel, List<ContainerShutdownDescriptor>>> mapIt = shutdownDescriptorPerPomLabelMap.entrySet().iterator();
         while(mapIt.hasNext()) {
             Map.Entry<PomLabel,List<ContainerShutdownDescriptor>> mapEntry = mapIt.next();
-            List descs = mapEntry.getValue();
+            List<ContainerShutdownDescriptor> descs = mapEntry.getValue();
             Iterator<ContainerShutdownDescriptor> it = descs.iterator();
             while (it.hasNext()) {
                 ContainerShutdownDescriptor desc = it.next();

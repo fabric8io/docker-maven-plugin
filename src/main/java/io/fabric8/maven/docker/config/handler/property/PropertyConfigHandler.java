@@ -155,6 +155,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .build();
     }
 
+    @SuppressWarnings("deprecation")
     private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {
         return new AssemblyConfiguration.Builder()
                 .targetDir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))

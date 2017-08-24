@@ -126,7 +126,7 @@ public class QueryServiceAutoPullTest {
         new Expectations() {
             {
                 docker.hasImage(imageName);
-                returns(false);
+                result = false;
             }
         };
     }
@@ -137,7 +137,7 @@ public class QueryServiceAutoPullTest {
         new Expectations() {
             {
                 docker.hasImage(imageName);
-                returns(true);
+                result = true;
             }
         };
     }

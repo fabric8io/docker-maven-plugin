@@ -261,7 +261,8 @@ public class RunService {
             NetworkConfig networkConfig = runConfig.getNetworkingConfig();
             if(networkConfig.isCustomNetwork() && networkConfig.hasAliases()) {
                 ContainerNetworkingConfig networkingConfig =
-                    new ContainerNetworkingConfig().aliases(networkConfig);
+                    new ContainerNetworkingConfig()
+                        .aliases(networkConfig);
                 config.networkingConfig(networkingConfig);
             }
 

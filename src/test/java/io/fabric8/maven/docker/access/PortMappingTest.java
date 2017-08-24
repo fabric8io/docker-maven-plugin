@@ -3,7 +3,7 @@ package io.fabric8.maven.docker.access;
 import java.util.*;
 
 import io.fabric8.maven.docker.model.Container;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StrSubstitutor;
 import org.json.JSONArray;
 import org.junit.*;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -28,12 +28,12 @@ public class PortMappingTest {
 
     @Test
     public void testComplexMapping() {
-        
+
         givenAHostIpProperty("other.ip", "127.0.0.1");
-        
+
         givenAPortMapping("jolokia.port:8080", "18181:8181", "127.0.0.1:9090:9090", "+other.ip:${other.port}:5678");
         whenUpdateDynamicMapping(443);
-        
+
         whenUpdateDynamicMapping(8080, 49900, "0.0.0.0");
         whenUpdateDynamicMapping(5678, 49901, "127.0.0.1");
 
@@ -62,7 +62,7 @@ public class PortMappingTest {
         thenBindToHostMapContains("9090/tcp", "127.0.0.1");
         thenBindToHostMapContains("5678/tcp", "127.0.0.1");
     }
-    
+
 
     @Test
     public void testHostIpAsPropertyOnly() {
@@ -75,10 +75,10 @@ public class PortMappingTest {
         thenDynamicHostPortsSizeIs(0);
         thenDynamicHostIpsSizeIs(1);
         thenBindToHostMapSizeIs(0);
-        
+
         thenHostIpVariableEquals("other.ip", "1.2.3.4");
     }
-    
+
     @Test
     public void testHostIpPortAsProperties() {
         givenADockerHostAddress("5.6.7.8");
@@ -93,7 +93,7 @@ public class PortMappingTest {
         thenHostPortVariableEquals("other.port", 49900);
         thenHostIpVariableEquals("other.ip", "1.2.3.4");
     }
-    
+
     @Test
     public void testHostIpVariableReplacement() {
         givenAPortMapping("jolokia.port:8080");
@@ -135,18 +135,18 @@ public class PortMappingTest {
     public void testInvalidHostnameWithDynamicPort() {
         givenAPortMapping("does-not-exist.pvt:web.port:80");
     }
-    
+
     @Ignore
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidHostnameWithFixedPort() {
         givenAPortMapping("does-not-exist.pvt:80:80");
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidMapping() {
         givenAPortMapping("bla");
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidMapping2() {
         givenAPortMapping("jolokia.port:bla");
@@ -208,11 +208,11 @@ public class PortMappingTest {
     private void givenADockerHostAddress(String host) {
         properties.setProperty("docker.host.address", host);
     }
-    
+
     private void givenAHostIpProperty(String property, String hostIp) {
         properties.put(property, hostIp);
     }
-    
+
     private void givenAPortMapping(String... mappings) {
         mapping = new PortMapping(Arrays.asList(mappings), properties);
     }
@@ -277,7 +277,7 @@ public class PortMappingTest {
             assertEquals(args[i], StrSubstitutor.replace(args[i + 1], mapping.getHostPortVariableMap()));
         }
     }
-    
+
     private void whenUpdateDynamicMapping(int cPort) {
         Map<String, Container.PortBinding> dynMapping = new HashMap<>();
         dynMapping.put(cPort + "/tcp", null);

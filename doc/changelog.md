@@ -11,6 +11,7 @@
   - Fix "useAllReactorProjects" in assembly (#812)
   - Add ECDSA support (#824)
   - Fix test failures when build under Windows (#834)
+  - Update dependencies to latest versions where possible
   
 * **0.21.0** (2017-05-16)
   - Add wait checker for checking the exit code of a container ([#498](https://github.com/fabric8io/docker-maven-plugin/issues/498))

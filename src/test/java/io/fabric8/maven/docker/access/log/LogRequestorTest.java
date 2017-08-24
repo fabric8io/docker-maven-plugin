@@ -18,11 +18,9 @@ import io.fabric8.maven.docker.util.Timestamp;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -34,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class LogRequestorTest {
-    private static final String containerId = RandomStringUtils.randomAlphabetic(64);
+    private static final String containerId = new RandomStringGenerator.Builder().build().generate(64);
 
     @Mocked(stubOutClassInitialization = true)
     final RequestUtil unused = null;
@@ -80,9 +78,10 @@ public class LogRequestorTest {
     @Test
     public void testStdoutMessage() throws Exception {
         final Streams type = Streams.STDOUT;
-        final String message0 = RandomStringUtils.randomAlphanumeric(257);
+        RandomStringGenerator randomGenerator = new RandomStringGenerator.Builder().build();
+        final String message0 = randomGenerator.generate(257);
         final String message1 = "test test";
-        final String message2 = RandomStringUtils.randomAlphanumeric(666);
+        final String message2 = randomGenerator.generate(666);
 
         final ByteBuffer body = responseContent(type, message0, message1, message2);
         final InputStream inputStream = new ByteArrayInputStream(body.array());
@@ -102,16 +101,18 @@ public class LogRequestorTest {
         final Random rand = new Random();
         final int upperBound = 1024;
 
+        RandomStringGenerator randomGenerator = new RandomStringGenerator.Builder().build();
+
         final Streams type0 = Streams.STDIN;
-        final String msg0 = RandomStringUtils.randomAlphanumeric(rand.nextInt(upperBound));
+        final String msg0 = randomGenerator.generate(rand.nextInt(upperBound));
         final ByteBuffer buf0 = messageToBuffer(type0, msg0);
 
         final Streams type1 = Streams.STDOUT;
-        final String msg1 = RandomStringUtils.randomAlphanumeric(rand.nextInt(upperBound));
+        final String msg1 = randomGenerator.generate(rand.nextInt(upperBound));
         final ByteBuffer buf1 = messageToBuffer(type1, msg1);
 
         final Streams type2 = Streams.STDERR;
-        final String msg2 = RandomStringUtils.randomAlphanumeric(rand.nextInt(upperBound));
+        final String msg2 = randomGenerator.generate(rand.nextInt(upperBound));
         final ByteBuffer buf2 = messageToBuffer(type2, msg2);
 
         final ByteBuffer body = combineBuffers(buf0, buf1, buf2);

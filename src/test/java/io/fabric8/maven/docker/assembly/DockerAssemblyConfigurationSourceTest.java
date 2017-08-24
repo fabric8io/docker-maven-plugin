@@ -29,6 +29,7 @@ public class DockerAssemblyConfigurationSourceTest {
                 .build();
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void permissionMode() {
         try {
@@ -57,12 +58,12 @@ public class DockerAssemblyConfigurationSourceTest {
         MojoParameters params = buildParameters(".", "src/docker", "output/docker");
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params,
                                                                                          new BuildDirs(image, params),assemblyConfig);
-        
+
         assertTrue(containsDir(image, source.getOutputDirectory()));
         assertTrue(containsDir(image, source.getWorkingDirectory()));
         assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
     }
-    
+
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
         mavenProject.setFile(new File(projectDir));
@@ -103,21 +104,21 @@ public class DockerAssemblyConfigurationSourceTest {
     private boolean containsDir(String outputDir, File path) {
         return path.toString().contains(outputDir + File.separator);
     }
-    
+
     private void assertStartsWithDir(String outputDir, File path) {
         String expectedStartsWith = outputDir + File.separator;
         int length = expectedStartsWith.length();
         assertEquals(expectedStartsWith, path.toString().substring(0, length));
     }
-    
+
     @Test
     public void testReactorProjects() {
     	MavenProject reactorProject1 = new MavenProject();
     	reactorProject1.setFile(new File("../reactor-1"));
-        
+
         MavenProject reactorProject2 = new MavenProject();
         reactorProject2.setFile(new File("../reactor-2"));
-        
+
         DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
                new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", Arrays.asList(new MavenProject[] { reactorProject1, reactorProject2 })),
                null,null

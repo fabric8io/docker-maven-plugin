@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.*;
 
 import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import io.fabric8.maven.docker.config.Arguments;
+import org.apache.commons.text.StrSubstitutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,7 +13,6 @@ public class ContainerCreateConfig {
 
     private final JSONObject createConfig = new JSONObject();
     private final String imageName;
-
     public ContainerCreateConfig(String imageName) {
         this.imageName = imageName;
         createConfig.put("Image", imageName);
