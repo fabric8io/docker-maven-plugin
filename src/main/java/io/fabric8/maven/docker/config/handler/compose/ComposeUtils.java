@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
+import io.fabric8.maven.docker.util.DockerPathUtil;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
@@ -43,7 +44,6 @@ class ComposeUtils {
      * @return an absolute {@code File} reference to {@code pathToResolve}; <em>not</em> guaranteed to exist
      */
     static File resolveAbsolutely(String pathToResolve, MavenProject project) {
-        File baseDirAsFile = new File(pathToResolve);
-        return baseDirAsFile.isAbsolute() ? baseDirAsFile : new File(project.getBasedir(), pathToResolve);
+        return DockerPathUtil.resolveAbsolutely(pathToResolve, project.getBasedir().getAbsolutePath());
     }
 }

@@ -33,16 +33,26 @@ public class ComposeUtilsTest {
     public void resolveComposeFileWithRelativeComposeFileAndAbsoluteBaseDir() throws Exception {
         String relComposeFile = "relative/path/to/docker-compose.yaml";
         String absBaseDir = "/basedir/";
+        final String absMavenProjectDir = "/absolute/path/to/maven/project";
+
+        new Expectations() {{
+            project.getBasedir();
+            result = new File(absMavenProjectDir);
+        }};
 
         assertEquals(new File(absBaseDir, relComposeFile),
-                ComposeUtils.resolveComposeFileAbsolutely(absBaseDir, relComposeFile, null));
+                ComposeUtils.resolveComposeFileAbsolutely(absBaseDir, relComposeFile, project));
+
+        new VerificationsInOrder() {{
+            project.getBasedir();
+        }};
     }
 
     @Test
     public void resolveComposeFileWithRelativeComposeFileAndRelativeBaseDir() throws Exception {
         String relComposeFile = "relative/path/to/docker-compose.yaml";
         String relBaseDir = "basedir/";
-        final String absMavenProjectDir = "/absoute/path/to/maven/project";
+        final String absMavenProjectDir = "/absolute/path/to/maven/project";
 
         new Expectations() {{
             project.getBasedir();
