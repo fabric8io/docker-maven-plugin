@@ -1,20 +1,25 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.VerificationsInOrder;
+import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.File;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  *
  */
+@RunWith(JMockit.class)
 public class ComposeUtilsTest {
 
+    @Mocked
+    private MavenProject project;
 
     @Test
     public void resolveComposeFileWithAbsoluteComposeFile() throws Exception {
@@ -37,14 +42,18 @@ public class ComposeUtilsTest {
     public void resolveComposeFileWithRelativeComposeFileAndRelativeBaseDir() throws Exception {
         String relComposeFile = "relative/path/to/docker-compose.yaml";
         String relBaseDir = "basedir/";
-        String absMavenProjectDir = "/absoute/path/to/maven/project";
+        final String absMavenProjectDir = "/absoute/path/to/maven/project";
 
-        MavenProject project = mock(MavenProject.class);
-        when(project.getBasedir()).thenReturn(new File(absMavenProjectDir));
-
+        new Expectations() {{
+            project.getBasedir();
+            result = new File(absMavenProjectDir);
+        }};
 
         assertEquals(new File(new File(absMavenProjectDir, relBaseDir), relComposeFile),
                 ComposeUtils.resolveComposeFileAbsolutely(relBaseDir, relComposeFile, project));
-        verify(project).getBasedir();
+
+        new VerificationsInOrder() {{
+            project.getBasedir();
+        }};
     }
 }
