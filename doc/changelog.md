@@ -1,16 +1,16 @@
 # ChangeLog
 
-* **0.21-SNAPSHOT**
-  - Fix NPE when detecting cert paths (#764)
-  - Fix `skipDockerMachine` (#759)
-  - Fix property config handler to work also with dockerFile and dockerFileDir (#790)
-  - Fix `dockerFile` option when pointing to another Dockerfile name (#784)
-  - Allow comma separated list of container names in dependsOn elements (#810)
-  - Trim whitespace and ignore empty elements in build configuration ports, runCmds, tags, volumes (#816)
-  - Trim whitespace and ignore empty elements in run configuration ports (#816)
-  - Fix "useAllReactorProjects" in assembly (#812)
-  - Add ECDSA support (#824)
-  - Fix test failures when build under Windows (#834)
+* **0.22** (2017-08-24)
+  - Fix NPE when detecting cert paths ([#764](https://github.com/fabric8io/docker-maven-plugin/issues/764))
+  - Fix `skipDockerMachine` ([#759](https://github.com/fabric8io/docker-maven-plugin/issues/759))
+  - Fix property config handler to work also with dockerFile and dockerFileDir ([#790](https://github.com/fabric8io/docker-maven-plugin/issues/790))
+  - Fix `dockerFile` option when pointing to another Dockerfile name ([#784](https://github.com/fabric8io/docker-maven-plugin/issues/784))
+  - Allow comma separated list of container names in dependsOn elements ([#810](https://github.com/fabric8io/docker-maven-plugin/issues/810))
+  - Trim whitespace and ignore empty elements in build configuration ports, runCmds, tags, volumes ([#816](https://github.com/fabric8io/docker-maven-plugin/issues/816))
+  - Trim whitespace and ignore empty elements in run configuration ports ([#816](https://github.com/fabric8io/docker-maven-plugin/issues/816))
+  - Fix "useAllReactorProjects" in assembly ([#812](https://github.com/fabric8io/docker-maven-plugin/issues/812))
+  - Add ECDSA support ([#824](https://github.com/fabric8io/docker-maven-plugin/issues/824))
+  - Fix test failures when build under Windows ([#834](https://github.com/fabric8io/docker-maven-plugin/issues/834))
   - Update dependencies to latest versions where possible
   
 * **0.21.0** (2017-05-16)
