@@ -35,7 +35,7 @@ The following options can be provided:
 | Element | Description | Default
 
 | *basedir*
-| Basedir where to find the compose file and which is also used as the current directory when examing the compose file
+| Basedir where to find the compose file and which is also used as the current directory when examing the compose file.  Any relative volume bindings will be resolved relative to this directory.
 | `${basedir}/src/main/docker`
 
 | *composeFile*
