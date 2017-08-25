@@ -1,6 +1,9 @@
 # ChangeLog
 
-* **0.22** (2017-08-24)
+* **0.22-SNAPSHOT**
+  - Allow Docker compose version "2", too (#829)
+
+* **0.22.0** (2017-08-24)
   - Fix NPE when detecting cert paths ([#764](https://github.com/fabric8io/docker-maven-plugin/issues/764))
   - Fix `skipDockerMachine` ([#759](https://github.com/fabric8io/docker-maven-plugin/issues/759))
   - Fix property config handler to work also with dockerFile and dockerFileDir ([#790](https://github.com/fabric8io/docker-maven-plugin/issues/790))
