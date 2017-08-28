@@ -197,6 +197,11 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             return this;
         }
 
+        public Builder registry(String registry) {
+            config.registry = registry;
+            return this;
+        }
+
         public ImageConfiguration build() {
             return config;
         }
