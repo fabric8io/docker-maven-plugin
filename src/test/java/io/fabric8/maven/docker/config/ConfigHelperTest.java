@@ -64,6 +64,16 @@ public class ConfigHelperTest {
     }
 
     @Test
+    public void registry() throws Exception {
+        List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().registry("docker.io").name("test").build());
+        List<ImageConfiguration> result = ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
+        assertEquals(1,result.size());
+        assertTrue(resolverCalled);
+        assertTrue(customizerCalled);
+        assertEquals("docker.io", configs.get(0).getRegistry());
+    }
+
+    @Test
     public void filter() throws Exception {
         List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
         CatchingLog logCatcher = new CatchingLog();
