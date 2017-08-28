@@ -31,7 +31,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     // Enable later when issue above is fixed. In the meantime its declared in the components.xml, too
     // @Requirement(role = MavenReaderFilter.class)
-    private MavenReaderFilter readerFilter;
+    MavenReaderFilter readerFilter;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -59,9 +59,13 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private void validateVersion(Map<String, Object> compose, File file) {
         Object version = compose.get("version");
-        if (version == null || !(Objects.equals(version, "2") && version.toString().trim().startsWith("2."))) {
-            throw new ExternalConfigHandlerException("Only version 2.X of the docker-compose format is supported for " + file);
+        if (version == null || !isVersion2(version.toString().trim())) {
+            throw new ExternalConfigHandlerException("Only version 2.x of the docker-compose format is supported for " + file);
         }
+    }
+
+    private boolean isVersion2(String version) {
+        return version.equals("2") || version.startsWith("2.");
     }
 
     private String extractDockerFilePath(DockerComposeServiceWrapper mapper, File parentDir) {

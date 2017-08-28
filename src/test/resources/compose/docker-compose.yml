@@ -7,6 +7,7 @@
 # - dns (list)
 # - dns_search (list)
 #
+version: 2
 services:
   service:
     cap_add:

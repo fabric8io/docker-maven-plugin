@@ -1,173 +1,151 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.HashMap;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
+import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
+import mockit.Expectations;
+import mockit.Injectable;
+import mockit.Mocked;
+import org.apache.commons.io.FileUtils;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.filtering.MavenFilteringException;
+import org.apache.maven.shared.filtering.MavenReaderFilter;
+import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
-public class DockerComposeConfigHandlerTest extends AbstractConfigHandlerTest {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+/**
+ * @author roland
+ * @since 28.08.17
+ */
+public class DockerComposeConfigHandlerTest {
+
+    @Injectable
+    ImageConfiguration unresolved;
+
+    @Mocked
+    MavenProject project;
+
+    @Mocked
+    MavenSession session;
+
+    @Mocked
+    MavenReaderFilter readerFilter;
 
     private DockerComposeConfigHandler handler;
 
-    private List<ImageConfiguration> resolved;
-
-    private ImageConfiguration unresolved;
-
-    private String composeBuildDir;
-    private String dockerFileDir;
-
-    //@Mock
-    //private DockerComposeValueProvider provider;
-
-
     @Before
-    public void setup() {
-        //MockitoAnnotations.initMocks(this);
+    public void setUp() throws Exception {
+        handler = new DockerComposeConfigHandler();
+        handler.readerFilter = readerFilter;
+    }
 
-        this.handler = new DockerComposeConfigHandler();
+
+    @Test
+    public void simple() throws IOException, MavenFilteringException {
+        setupComposeExpectations("docker-compose.yml");
+        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+        assertEquals(1, configs.size());
+        validateRunConfiguration(configs.get(0).getRunConfiguration());
     }
 
     @Test
-    public void testFullResolve() {
-        givenAnUnresolvedImage();
-        whenResolveImages();
-        thenResolveImageSizeIs(1);
-        thenResolvedImageIsCorrect();
+    public void positiveVersionTest() throws IOException, MavenFilteringException {
+        for (String composeFile : new String[] { "version/compose-version-2.yml", "version/compose-version-2x.yml"} ) {
+            setupComposeExpectations(composeFile);
+            assertNotNull(handler.resolve(unresolved, project, session));
+        }
+
     }
 
-//    @Test
-//    public void testBuildPathIsDot()
-//    {
-//        whenBuildDockerFile();
-//
-//    }
+    @Test
+    public void negativeVersionTest() throws IOException, MavenFilteringException {
+        for (String composeFile : new String[] { "version/compose-wrong-version.yml", "version/compose-no-version.yml"} ) {
+            try {
+                setupComposeExpectations(composeFile);
+                handler.resolve(unresolved, project, session);
+                fail();
+            } catch (ExternalConfigHandlerException exp) {
+                assertTrue(exp.getMessage().contains(("2.x")));
+            }
+        }
 
-    private void givenBuildDirIsDot()
-    {
-        composeBuildDir = ".";
-        //when(provider.getBuildDir()).thenReturn(composeBuildDir);
     }
 
-    private void whenBuildDockerFile()
-    {
-        //dockerFileDir = handler.buildDockerFileDir(provider, composeBuildDir);
+    private void setupComposeExpectations(final String file) throws IOException, MavenFilteringException {
+        new Expectations() {{
+            File input = getAsFile("/compose/" + file);
+
+            unresolved.getExternalConfig();
+            result = Collections.singletonMap("composeFile", input.getAbsolutePath());
+            readerFilter.filter((MavenReaderFilterRequest) any);
+            result = new FileReader(input);
+        }};
+    }
+
+    private File getAsFile(String resource) throws IOException {
+        File tempFile = File.createTempFile("compose",".yml");
+        InputStream is = getClass().getResourceAsStream(resource);
+        FileUtils.copyInputStreamToFile(is,tempFile);
+        return tempFile;
     }
 
 
-    @Override
-    protected String getEnvPropertyFile() {
-        // this predates compose support and doesn't work the same way
-        return null;
+     void validateRunConfiguration(RunImageConfiguration runConfig) {
+        assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
+        assertEquals(a("CAP"), runConfig.getCapAdd());
+        assertEquals(a("CAP"), runConfig.getCapDrop());
+        assertEquals("command.sh", runConfig.getCmd().getShell());
+        assertEquals(a("8.8.8.8"), runConfig.getDns());
+        assertEquals(a("example.com"), runConfig.getDnsSearch());
+        assertEquals("domain.com", runConfig.getDomainname());
+        assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
+        assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
+        assertEquals("subdomain", runConfig.getHostname());
+        assertEquals(a("redis","link1"), runConfig.getLinks());
+        assertEquals((Long) 1L, runConfig.getMemory());
+        assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());
+        assertEquals(null,runConfig.getEnvPropertyFile());
+
+        assertEquals(null, runConfig.getPortPropertyFile());
+        assertEquals(a("8081:8080"), runConfig.getPorts());
+        assertEquals(true, runConfig.getPrivileged());
+        assertEquals("tomcat", runConfig.getUser());
+        assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
+        assertEquals("foo", runConfig.getWorkingDir());
+
+        validateEnv(runConfig.getEnv());
+
+        // not sure it's worth it to implement 'equals/hashcode' for these
+        RestartPolicy policy = runConfig.getRestartPolicy();
+        assertEquals("on-failure", policy.getName());
+        assertEquals(1, policy.getRetry());
     }
 
-    @Override
-    protected RunImageConfiguration.NamingStrategy getRunNamingStrategy() {
-        return RunImageConfiguration.NamingStrategy.alias;
-    }
-
-    @Override
     protected void validateEnv(Map<String, String> env) {
         assertEquals(2, env.size());
         assertEquals("name", env.get("NAME"));
         assertEquals("true", env.get("BOOL"));
     }
 
-    private void givenAnUnresolvedImage() {
-
-        Map<String, String> config = new HashMap<>();
-        config.put("composeFile",getClass().getResource("/compose/docker-compose.yml").getFile());
-        unresolved = new ImageConfiguration.Builder()
-                .externalConfig(config)
-                .build();
-    }
-
-    private void thenBuildImageIsCorrect() {
-
-    }
-
-    private void thenResolvedImageIsCorrect() {
-        ImageConfiguration config = resolved.get(0);
-
-        assertEquals("image", config.getName());
-        assertEquals("service", config.getAlias());
-
-        validateRunConfiguration(config.getRunConfiguration());
-        assertTrue(config.getRunConfiguration().skip());
-    }
-
-    private void thenResolveImageSizeIs(int size) {
-        assertEquals(size, resolved.size());
-    }
-
-    private void whenResolveImages() {
-        resolved = handler.resolve(unresolved, null, null);
-    }
-
-    class ServiceImageBuilder {
-        private final BuildImageConfiguration.Builder buildBuilder = new BuildImageConfiguration.Builder();
-
-        private final ImageConfiguration.Builder imageBuilder = new ImageConfiguration.Builder();
-
-        private final RunImageConfiguration.Builder runBuilder = new RunImageConfiguration.Builder();
-
-        public ServiceImageBuilder(String alias) {
-            imageBuilder.alias(alias);
-        }
-
-        public ImageConfiguration build() {
-            return imageBuilder.buildConfig(buildBuilder.build())
-                    .runConfig(runBuilder.build())
-                    .build();
-        }
-
-        public ServiceImageBuilder cleanup(boolean cleanup) {
-            buildBuilder.cleanup(toStr(cleanup));
-            return this;
-        }
-
-        public ServiceImageBuilder compression(String compression) {
-            buildBuilder.compression(compression);
-            return this;
-        }
-
-        public ServiceImageBuilder image(String image) {
-            imageBuilder.name(image);
-            return this;
-        }
-
-        public ServiceImageBuilder noCache(boolean noCache) {
-            buildBuilder.nocache(toStr(noCache));
-            return this;
-        }
-
-        public ServiceImageBuilder portPropertyFile(String portPropertyFile) {
-            runBuilder.portPropertyFile(portPropertyFile);
-            return this;
-        }
-
-        public ServiceImageBuilder skipBuild(boolean skip) {
-            buildBuilder.skip(toStr(skip));
-            return this;
-        }
-
-        public ServiceImageBuilder skipRun(boolean skip) {
-            runBuilder.skip(toStr(skip));
-            return this;
-        }
-
-        private String toStr(boolean bool) {
-            return String.valueOf(bool);
-        }
+    protected List<String> a(String ... args) {
+        return Arrays.asList(args);
     }
 }
