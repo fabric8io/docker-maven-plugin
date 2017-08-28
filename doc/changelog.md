@@ -1,7 +1,8 @@
 # ChangeLog
 
-* **0.22-SNAPSHOT**
-  - Allow Docker compose version "2", too (#829)
+* **0.22.1** (2017-08-28)
+  - Allow Docker compose version "2", too ([#829](https://github.com/fabric8io/docker-maven-plugin/issues/829))
+  - Allow a registry to be set programmatically ([#853](https://github.com/fabric8io/docker-maven-plugin/issues/853))
 
 * **0.22.0** (2017-08-24)
   - Fix NPE when detecting cert paths ([#764](https://github.com/fabric8io/docker-maven-plugin/issues/764))
