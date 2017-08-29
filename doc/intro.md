@@ -163,7 +163,7 @@ which compares the four most active plugins. It contains a simple demo
 project with a database and a microservice image, along with an integration
 test. Each plugin is configured to create images and run the
 integration test (if possible). Although it might be a bit biased, it can 
-be useful for figuring out which plugin suites you best.
+be useful for figuring out which plugin suits you best.
 
 The high-level design goals and initial motiviation fort this plugin are:
 
