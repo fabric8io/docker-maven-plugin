@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -90,10 +91,17 @@ public class DockerComposeConfigHandlerTest {
 
     private void setupComposeExpectations(final String file) throws IOException, MavenFilteringException {
         new Expectations() {{
-            File input = getAsFile("/compose/" + file);
+            final File input = getAsFile("/compose/" + file);
 
             unresolved.getExternalConfig();
-            result = Collections.singletonMap("composeFile", input.getAbsolutePath());
+            result = new HashMap<String,String>() {{
+                put("composeFile", input.getAbsolutePath());
+                // provide a base directory that actually exists, so that relative paths referenced by the
+                // docker-compose.yaml file can be resolved
+                // (note: this is different than the directory returned by 'input.getParent()')
+                put("basedir", this.getClass().getResource("/").getFile());
+            }};
+
             readerFilter.filter((MavenReaderFilterRequest) any);
             result = new FileReader(input);
         }};
