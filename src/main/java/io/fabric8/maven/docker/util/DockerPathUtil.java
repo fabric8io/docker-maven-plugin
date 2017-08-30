@@ -35,6 +35,11 @@ public class DockerPathUtil {
             return fileToResolve;
         }
 
+        if (baseDir == null) {
+            throw new IllegalArgumentException("Cannot resolve relative path '" + pathToResolve + "' with a " +
+                    "null base directory.");
+        }
+
         File baseDirAsFile = new File(baseDir);
         if (!baseDirAsFile.isAbsolute()) {
             throw new IllegalArgumentException("Base directory '" + baseDirAsFile + "' must be absolute");

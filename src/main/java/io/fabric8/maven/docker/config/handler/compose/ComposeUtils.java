@@ -40,10 +40,15 @@ class ComposeUtils {
      * </p>
      *
      * @param pathToResolve represents a filesystem resource, which may be an absolute path
-     * @param project the Maven project used to resolve non-absolute path resources
+     * @param project the Maven project used to resolve non-absolute path resources, may be {@code null} if
+     *                {@code pathToResolve} is {@link File#isAbsolute() absolute}
      * @return an absolute {@code File} reference to {@code pathToResolve}; <em>not</em> guaranteed to exist
+     * @throws IllegalArgumentException if {@code pathToResolve} is relative, and {@code project} is {@code null} or
+     *                                  provides a relative {@link MavenProject#getBasedir() base directory}
      */
     static File resolveAbsolutely(String pathToResolve, MavenProject project) {
-        return DockerPathUtil.resolveAbsolutely(pathToResolve, project.getBasedir().getAbsolutePath());
+        // avoid an NPE if the Maven project is not needed by DockerPathUtil
+        return DockerPathUtil.resolveAbsolutely(pathToResolve,
+                (project == null) ? null : project.getBasedir().getAbsolutePath());
     }
 }
