@@ -4,6 +4,7 @@ import io.fabric8.maven.docker.util.DockerPathUtil;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Path-resolution methods
@@ -26,7 +27,17 @@ class ComposeUtils {
      */
     static File resolveComposeFileAbsolutely(String baseDir, String composeFile, MavenProject project) {
         File yamlFile = new File(composeFile);
-        return yamlFile.isAbsolute() ? yamlFile :  new File(resolveAbsolutely(baseDir, project),composeFile);
+        if (yamlFile.isAbsolute()) {
+            return yamlFile;
+        }
+
+        File toCanonicalize = new File(resolveAbsolutely(baseDir, project), composeFile);
+
+        try {
+            return toCanonicalize.getCanonicalFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to canonicalize the resolved docker-compose file path '" + toCanonicalize + "'");
+        }
     }
 
     /**

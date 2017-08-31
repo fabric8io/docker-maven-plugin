@@ -30,28 +30,32 @@ public class DockerPathUtilTest {
 
     @Test
     public void resolveAbsolutelyWithRelativePath() {
-        String toResolve = RELATIVE_PATH;
-        String absBaseDir = ABS_BASE_DIR;
+        String toResolve = RELATIVE_PATH; // relative/path
+        String absBaseDir = ABS_BASE_DIR; // /base/directory
 
+        // '/base/directory' and 'relative/path' to '/base/directory/relative/path'
         assertEquals(new File(absBaseDir + "/" + toResolve),
                 DockerPathUtil.resolveAbsolutely(toResolve, absBaseDir));
     }
 
     @Test
     public void resolveAbsolutelyWithRelativePathAndTrailingSlash() {
-        String toResolve = RELATIVE_PATH + "/";
-        String absBaseDir = ABS_BASE_DIR;
+        String toResolve = RELATIVE_PATH + "/"; // relative/path/
+        String absBaseDir = ABS_BASE_DIR;       // /base/directory
 
+        // '/base/directory' and 'relative/path/' to '/base/directory/relative/path'
         assertEquals(new File(absBaseDir + "/" + toResolve),
                 DockerPathUtil.resolveAbsolutely(toResolve, absBaseDir));
     }
 
     @Test
     public void resolveAbsolutelyWithTrailingSlashWithRelativePath() {
-        String toResolve = RELATIVE_PATH;
-        String absBaseDir = ABS_BASE_DIR + "/";
+        String toResolve = RELATIVE_PATH;        // relative/path
+        String absBaseDir = ABS_BASE_DIR + "/";  // /base/directory/
 
-        assertEquals(new File(absBaseDir + toResolve), DockerPathUtil.resolveAbsolutely(toResolve, absBaseDir));
+        // '/base/directory/' and 'relative/path' to '/base/directory/relative/path'
+        assertEquals(new File(absBaseDir + toResolve),
+                DockerPathUtil.resolveAbsolutely(toResolve, absBaseDir));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -65,14 +69,25 @@ public class DockerPathUtilTest {
      */
     @Test
     public void resolveAbsolutelyWithAbsolutePathAndRelativeBaseDir() {
-        String absolutePath = "/" + RELATIVE_PATH;
+        String absolutePath = "/" + RELATIVE_PATH; // /relative/path
         assertEquals(new File(absolutePath), DockerPathUtil.resolveAbsolutely(absolutePath, REL_BASE_DIR));
     }
 
     @Test
     public void resolveAbsolutelyWithExtraSlashes() throws Exception {
-        String toResolve = RELATIVE_PATH + "//";
+        String toResolve = RELATIVE_PATH + "//"; // relative/path//
+
+        // '/base/directory' and 'relative/path//' to '/base/directory/relative/path'
         assertEquals(new File(ABS_BASE_DIR + "/" + RELATIVE_PATH),
+                DockerPathUtil.resolveAbsolutely(toResolve, ABS_BASE_DIR));
+    }
+
+    @Test
+    public void resolveAbsolutelyWithRelativeParentPath() throws Exception {
+        String toResolve = "../" + RELATIVE_PATH; // ../relative/path
+
+        // '/base/directory' and '../relative/path' to '/base/relative/path'
+        assertEquals(new File(new File(ABS_BASE_DIR).getParent(), RELATIVE_PATH),
                 DockerPathUtil.resolveAbsolutely(toResolve, ABS_BASE_DIR));
     }
 

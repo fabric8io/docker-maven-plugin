@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.util;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Docker path resolution and manipulation utility methods.
@@ -45,6 +46,11 @@ public class DockerPathUtil {
             throw new IllegalArgumentException("Base directory '" + baseDirAsFile + "' must be absolute");
         }
 
-        return new File(baseDirAsFile, pathToResolve);
+        final File toCanonicalize = new File(baseDirAsFile, pathToResolve);
+        try {
+            return toCanonicalize.getCanonicalFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to canonicalize the file path '" + toCanonicalize + "'");
+        }
     }
 }

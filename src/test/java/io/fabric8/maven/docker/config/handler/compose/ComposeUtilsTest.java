@@ -66,4 +66,13 @@ public class ComposeUtilsTest {
             project.getBasedir();
         }};
     }
+
+    @Test
+    public void resolveComposesFileWithRelativeComposeFileParentDirectory() throws Exception {
+        String relComposeFile = "../relative/path/to/docker-compose.yaml";
+        String absBaseDir = "/basedir/";
+
+        assertEquals(new File(relComposeFile.substring(2)),
+                ComposeUtils.resolveComposeFileAbsolutely(absBaseDir, relComposeFile, null));
+    }
 }

@@ -4,14 +4,9 @@ import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBinding;
 import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
@@ -94,6 +89,19 @@ public class VolumeBindingUtilTest {
         String expectedBindingString = String.format(BIND_STRING_FMT,
                 join("", ABS_BASEDIR.getAbsolutePath(), stripLeadingPeriod(RELATIVE_PATH)), CONTAINER_PATH);
         assertEquals(expectedBindingString, volumeConfiguration.getBind().get(0));
+    }
+
+    @Test
+    public void testResolveParentRelativeVolumePath() throws Exception {
+        String relativePath = "." + RELATIVE_PATH; // '../rel'
+        String volumeString = String.format(BIND_STRING_FMT, relativePath, CONTAINER_PATH);
+
+        // '../rel:/path/to/container/dir to '/absolute/rel:/path/to/container/dir'
+        String relativizedVolumeString = resolveRelativeVolumeBinding(ABS_BASEDIR, volumeString);
+
+        String expectedBindingString = String.format(BIND_STRING_FMT,
+                new File(ABS_BASEDIR.getParent(), stripLeadingPeriod(RELATIVE_PATH)), CONTAINER_PATH);
+        assertEquals(expectedBindingString, relativizedVolumeString);
     }
 
     private static String join(String character, String... objects) {
