@@ -1,14 +1,19 @@
 package io.fabric8.maven.docker.util;
 
+import com.sun.org.apache.regexp.internal.REProgram;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import org.junit.Test;
 
 import java.io.File;
 
+import static io.fabric8.maven.docker.util.VolumeBindingUtil.isRelativePath;
+import static io.fabric8.maven.docker.util.VolumeBindingUtil.isUserHomeRelativePath;
 import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBinding;
 import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
 import static java.util.Collections.singletonList;
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  *
@@ -18,6 +23,7 @@ public class VolumeBindingUtilTest {
     private static final File ABS_BASEDIR = new File("/absolute/basedir");
     private static final String RELATIVE_PATH = "./rel";
     private static final String USER_PATH = "~/relUser";
+    private static final String USER_HOME = "~user";
     private static final String CONTAINER_PATH = "/path/to/container/dir";
     private final String BIND_STRING_FMT = "%s:%s";
 
@@ -47,6 +53,18 @@ public class VolumeBindingUtilTest {
 
         String expectedBindingString = String.format(BIND_STRING_FMT,
                 new File(System.getProperty("user.home"), stripLeadingTilde(USER_PATH)), CONTAINER_PATH);
+        assertEquals(expectedBindingString, relativizedVolumeString);
+    }
+
+    @Test
+    public void testResolveUserHomeVolumePath() throws Exception {
+        String volumeString = String.format(BIND_STRING_FMT, USER_HOME, CONTAINER_PATH);
+
+        // '~user:/path/to/container/dir' to '/home/user:/path/to/container/dir'
+        String relativizedVolumeString = resolveRelativeVolumeBinding(ABS_BASEDIR, volumeString);
+
+        String expectedBindingString = String.format(BIND_STRING_FMT,
+                new File(System.getProperty("user.home")), CONTAINER_PATH);
         assertEquals(expectedBindingString, relativizedVolumeString);
     }
 
@@ -102,6 +120,60 @@ public class VolumeBindingUtilTest {
         String expectedBindingString = String.format(BIND_STRING_FMT,
                 new File(ABS_BASEDIR.getParent(), stripLeadingPeriod(RELATIVE_PATH)), CONTAINER_PATH);
         assertEquals(expectedBindingString, relativizedVolumeString);
+    }
+
+    /**
+     * The volume binding string: {@code rel:/path/to/container/mountpoint} is not resolved, because {@code rel} is
+     * considered a <em>named volume</em>.
+     */
+    @Test
+    public void testResolveRelativeVolumePathWithoutCurrentDirectory() throws Exception {
+        String relativePath = "rel";
+        String volumeString = String.format(BIND_STRING_FMT, relativePath, CONTAINER_PATH);
+
+        // 'rel:/path/to/container/dir' to 'rel:/path/to/container/dir'
+        String relativizedVolumeString = resolveRelativeVolumeBinding(ABS_BASEDIR, volumeString);
+
+        String expectedBindingString = String.format(BIND_STRING_FMT, relativePath, CONTAINER_PATH);
+        assertEquals(expectedBindingString, relativizedVolumeString);
+    }
+
+    /**
+     * The volume binding string: {@code src/test/docker:/path/to/container/mountpoint} is resolved, because {@code src/
+     * test/docker} is considered a <em>relative path</em>.
+     */
+    @Test
+    public void testResolveRelativeVolumePathContainingSlashes() throws Exception {
+        String relativePath = "src/test/docker";
+        String volumeString = String.format(BIND_STRING_FMT, relativePath, CONTAINER_PATH);
+
+        // 'src/test/docker:/path/to/container/dir' to '/absolute/basedir/src/test/docker:/path/to/container/dir'
+        String relativizedVolumeString = resolveRelativeVolumeBinding(ABS_BASEDIR, volumeString);
+
+        String expectedBindingString = String.format(BIND_STRING_FMT,
+                new File(ABS_BASEDIR, relativePath), CONTAINER_PATH);
+        assertEquals(expectedBindingString, relativizedVolumeString);
+    }
+
+    @Test
+    public void testIsRelativePath() throws Exception {
+        assertTrue(isRelativePath("rel/"));
+        assertTrue(isRelativePath("src/test/docker"));
+        assertTrue(isRelativePath("./rel"));
+        assertTrue(isRelativePath("~/rel"));
+        assertTrue(isRelativePath("../rel"));
+        assertFalse(isRelativePath("rel")); // 'rel' is a named volume in this case
+        assertFalse(isRelativePath("/abs")); // '/abs' is absolute
+    }
+
+    @Test
+    public void testIsUserRelativeHomeDir() throws Exception {
+        assertFalse(isUserHomeRelativePath("foo~bar"));
+        assertFalse(isUserHomeRelativePath("foo~"));
+        assertFalse(isUserHomeRelativePath("foo"));
+        assertTrue(isUserHomeRelativePath("~foo"));
+        assertTrue(isUserHomeRelativePath("~/user"));
+        assertTrue(isUserHomeRelativePath("~user/dir"));
     }
 
     private static String join(String character, String... objects) {
