@@ -4,6 +4,7 @@ import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static io.fabric8.maven.docker.util.DockerPathUtil.resolveAbsolutely;
@@ -103,7 +104,6 @@ public class VolumeBindingUtil {
 
         String[] pathParts = bindingString.split(":");
         String localPath = pathParts[0];
-        String serverPath = (pathParts.length > 1) ? pathParts[1] : "";
 
         if (isRelativePath(localPath)) {
             File resolvedFile;
@@ -119,8 +119,9 @@ public class VolumeBindingUtil {
             }
         }
 
-        if (serverPath.length() > 0) {
-            return String.format("%s:%s", localPath, serverPath);
+        if (pathParts.length > 1) {
+            pathParts[0] = localPath;
+            return join(":", pathParts);
         }
 
         return localPath;
@@ -258,5 +259,18 @@ public class VolumeBindingUtil {
         // otherwise userHomePath = '~user' and we can just return the empty string.
 
         return "";
+    }
+
+    private static String join(String with, String... components) {
+        StringBuilder result = new StringBuilder();
+        int i = 0;
+        while (i < components.length) {
+            result.append(components[i++]);
+            if (i < components.length) {
+                result.append(with);
+            }
+        }
+
+        return result.toString();
     }
 }

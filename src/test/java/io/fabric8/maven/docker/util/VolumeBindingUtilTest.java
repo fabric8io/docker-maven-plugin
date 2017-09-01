@@ -26,6 +26,9 @@ public class VolumeBindingUtilTest {
     private static final String USER_HOME = "~user";
     private static final String CONTAINER_PATH = "/path/to/container/dir";
     private final String BIND_STRING_FMT = "%s:%s";
+    private final String BIND_STRING_WITH_ACCESS_FMT = "%s:%s:%s";
+    private final String RO = "ro";
+    private final String RW = "rw";
 
     @Test(expected = IllegalArgumentException.class)
     public void relativeBaseDir() throws Exception {
@@ -41,6 +44,18 @@ public class VolumeBindingUtilTest {
 
         String expectedBindingString = String.format(BIND_STRING_FMT,
                 new File(ABS_BASEDIR, stripLeadingPeriod(RELATIVE_PATH)), CONTAINER_PATH);
+        assertEquals(expectedBindingString, relativizedVolumeString);
+    }
+
+    @Test
+    public void testResolveRelativeVolumePathWithAccessSpecifications() throws Exception {
+        String volumeString = String.format(BIND_STRING_WITH_ACCESS_FMT, RELATIVE_PATH, CONTAINER_PATH, RO);
+
+        // './rel:/path/to/container/dir:ro' to '/absolute/basedir/rel:/path/to/container/dir:ro'
+        String relativizedVolumeString = resolveRelativeVolumeBinding(ABS_BASEDIR, volumeString);
+
+        String expectedBindingString = String.format(BIND_STRING_WITH_ACCESS_FMT,
+                new File(ABS_BASEDIR, stripLeadingPeriod(RELATIVE_PATH)), CONTAINER_PATH, RO);
         assertEquals(expectedBindingString, relativizedVolumeString);
     }
 
