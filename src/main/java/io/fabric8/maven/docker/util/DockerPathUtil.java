@@ -30,6 +30,7 @@ public class DockerPathUtil {
      * @throws IllegalArgumentException if the supplied {@code baseDir} does not represent an absolute path
      */
     public static File resolveAbsolutely(String pathToResolve, String baseDir) {
+        // TODO: handle the case where pathToResolve specifies a non-existent path, for example, a base directory equal to "/" and a relative path of "../../foo".
         File fileToResolve = new File(pathToResolve);
 
         if (fileToResolve.isAbsolute()) {

@@ -4,15 +4,80 @@ import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static io.fabric8.maven.docker.util.DockerPathUtil.resolveAbsolutely;
 
 /**
  * Utility methods for working with Docker volume bindings.
+ * <p>
+ * This class provides explicit support for relative binding paths.  This means that the plugin configuration or
+ * docker compose file can specify a relative path when configuring a volume binding.  Methods in this class will
+ * examine volume binding strings in a {@link RunVolumeConfiguration} and resolve any relative paths in the host portion
+ * of volume bindings.  Examples of relative bindings include:
+ * <dl>
+ *     <dd>A host path relative to the current working directory</dd>
+ *     <dt>./relative/path:/absolute/container/path</dt>
+ *
+ *     <dd>A host path relative to the current working directory</dd>
+ *     <dt>relative/path/:/absolute/container/path</dt>
+ *
+ *     <dd>A host path relative to the parent of the current working directory</dd>
+ *     <dt>../relative/path:/absolute/container/path</dt>
+ *
+ *     <dd>A host path equal to the current user's home directory</dd>
+ *     <dt>~:/absolute/container/path</dt>
+ *
+ *     <dd>A host path relative to the current user's home directory</dd>
+ *     <dt>~/relative/path:/absolute/container/path</dt>
+ * </dl>
+ * </p>
+ * <p>
+ * Understand that the following is <em>not</em> considered a relative binding path, and is instead interpreted as a
+ * <em>named volume</em>:
+ * <dl>
+ *     <dd>{@code rel} is interpreted as a <em>named volume</em>.  Use {@code ./rel} or {@code rel/} to have it
+ *         interpreted as a relative path.</dd>
+ *     <dt>rel:/absolute/container/path</dt>
+ * </dl>
+ * </p>
+ * <p>
+ * Volume bindings that specify an absolute path for the host portion are preserved and returned unmodified.
+ * </p>
  */
 public class VolumeBindingUtil {
+
+    /**
+     * A dot representing the current working directory
+     */
+    private static final String DOT = ".";
+
+    /**
+     * A tilde representing the current user's home directory
+     */
+    private static final String TILDE = "~";
+
+    /**
+     * The current runtime platform file separator, '/' for *nix, '\' for Windows
+     */
+    private static final String RUNTIME_SEP = System.getProperty("file.separator");
+
+    /**
+     * Windows file separator: '\'
+     */
+    private static final String WINDOWS_SEP = "\\";
+
+    /**
+     * Unix file separator '/'
+     */
+    private static final String UNIX_SEP = "/";
+
+    /**
+     * Matches a windows drive letter followed by a colon and backwards slash.  For example, will match:
+     * 'C:\' or 'x:\'.
+     */
+    private static final Pattern WINDOWS_DRIVE_PATTERN = Pattern.compile("^[A-Za-z]:\\\\.*");
 
     /**
      * Resolves relative paths in the supplied {@code bindingString}, and returns a binding string that has relative
@@ -43,8 +108,8 @@ public class VolumeBindingUtil {
      * <p>
      * This method only operates on volume strings that are relative: beginning with {@code ./}, {@code ../}, or
      * {@code ~}.  Relative paths beginning with {@code ./} or {@code ../} are absolutized relative to the supplied
-     * {@code baseDir}, which <em>must</em> be absolute.  Paths beginning with {@code ~/} are interpreted relative to
-     * {@code new File(System.getProperty( "user.home"))}, and {@code baseDir} is ignored.
+     * {@code baseDir}, which <em>must</em> be absolute.  Paths beginning with {@code ~} are interpreted relative to
+     * {@code new File(System.getProperty("user.home"))}, and {@code baseDir} is ignored.
      * </p>
      * <p>
      * Volume strings that do not begin with a {@code ./}, {@code ../}, or {@code ~} are returned as-is.
@@ -60,7 +125,7 @@ public class VolumeBindingUtil {
      * </p>
      * <p>
      * Given {@code baseDir} equal to "/path/to/basedir" and a {@code bindingString} string equal to
-     * "~/reldir:/some/other/dir", this method returns {@code /path/to/user/home/reldir:/some/other/dir}
+     * "~/reldir:/some/other/dir", this method returns {@code /home/user/reldir:/some/other/dir}
      * </p>
      * <p>
      * Given {@code baseDir} equal to "/path/to/basedir" and a {@code bindingString} equal to
@@ -78,10 +143,6 @@ public class VolumeBindingUtil {
      * @throws IllegalArgumentException if the supplied {@code baseDir} is not absolute
      */
     public static String resolveRelativeVolumeBinding(File baseDir, String bindingString) {
-
-        if (!baseDir.isAbsolute()) {
-            throw new IllegalArgumentException("Base directory '" + baseDir + "' must be absolute.");
-        }
 
         // a 'services:' -> service -> 'volumes:' may be formatted as:
         // (https://docs.docker.com/compose/compose-file/compose-file-v2/#volumes-volume_driver)
@@ -110,6 +171,9 @@ public class VolumeBindingUtil {
             if (isUserHomeRelativePath(localPath)) {
                 resolvedFile = resolveAbsolutely(prepareUserHomeRelativePath(localPath), System.getProperty("user.home"));
             } else {
+                if (!baseDir.isAbsolute()) {
+                    throw new IllegalArgumentException("Base directory '" + baseDir + "' must be absolute.");
+                }
                 resolvedFile = resolveAbsolutely(localPath, baseDir.getAbsolutePath());
             }
             try {
@@ -130,6 +194,10 @@ public class VolumeBindingUtil {
     /**
      * Iterates over each {@link RunVolumeConfiguration#getBind() binding} in the {@code volumeConfiguration}, and
      * resolves any relative paths in the binding strings using {@link #resolveRelativeVolumeBinding(File, String)}.
+     * The {@code volumeConfiguration} is modified in place, with any relative paths replaced with absolute paths.
+     * <p>
+     * Relative paths are resolved relative to the supplied {@code baseDir}, which <em>must</em> be absolute.
+     * </p>
      *
      * @param baseDir the base directory used to resolve relative paths (e.g. beginning with {@code ./}, {@code ../},
      *                {@code ~}) present in the binding string; <em>must</em> be absolute
@@ -137,11 +205,6 @@ public class VolumeBindingUtil {
      * @throws IllegalArgumentException if the supplied {@code baseDir} is not absolute
      */
     public static void resolveRelativeVolumeBindings(File baseDir, RunVolumeConfiguration volumeConfiguration) {
-
-        if (!baseDir.isAbsolute()) {
-            throw new IllegalArgumentException("Base directory '" + baseDir + "' must be absolute.");
-        }
-
         List<String> bindings = volumeConfiguration.getBind();
 
         if (bindings.isEmpty()) {
@@ -206,15 +269,23 @@ public class VolumeBindingUtil {
      * @return true if the candidate path is considered to be a relative path
      */
     static boolean isRelativePath(String candidatePath) {
-        if (candidatePath.startsWith("/")) {
+
+        // java.io.File considers Windows paths to be absolute _only_ if they start with a drive letter.  That is,
+        // a Windows path '\foo\bar\baz' is _not_ considered absolute by File#isAbsolute.  This block differs from
+        // java.io.File in that it considers Windows paths to be absolute if they begin with the file separator _or_ a
+        // drive letter
+        if (candidatePath.startsWith(UNIX_SEP) ||
+                candidatePath.startsWith(WINDOWS_SEP) ||
+                WINDOWS_DRIVE_PATTERN.matcher(candidatePath).matches()) {
             return false;
         }
 
-        if (candidatePath.startsWith("./") || candidatePath.startsWith("../")) {
+        // './' or '../'
+        if (candidatePath.startsWith(DOT + RUNTIME_SEP) || candidatePath.startsWith(DOT + DOT + RUNTIME_SEP)) {
             return true;
         }
 
-        if (candidatePath.contains("/")) {
+        if (candidatePath.contains(UNIX_SEP) || candidatePath.contains(WINDOWS_SEP)) {
             return true;
         }
 
@@ -233,7 +304,7 @@ public class VolumeBindingUtil {
      * @return true if the path begins with {@code ~}
      */
     static boolean isUserHomeRelativePath(String candidatePath) {
-        return candidatePath.startsWith("~");
+        return candidatePath.startsWith(TILDE);
     }
 
     private static String prepareUserHomeRelativePath(String userHomePath) {
@@ -243,22 +314,20 @@ public class VolumeBindingUtil {
 
         // Handle ~user and ~/path and ~
 
-        if (userHomePath.equals("~")) {
+        // '~'
+        if (userHomePath.equals(TILDE)) {
             return "";
         }
 
-        if (userHomePath.startsWith("~/")) {
+        // '~/'
+        if (userHomePath.startsWith(TILDE + RUNTIME_SEP)) {
             return userHomePath.substring(2);
         }
 
-        // e.g. userHomePath = '~user/foo' we just want 'foo'
-        if (userHomePath.contains("/")) {
-            return userHomePath.substring(userHomePath.indexOf("/") + 1);
-        }
-
-        // otherwise userHomePath = '~user' and we can just return the empty string.
-
-        return "";
+        // '~user' is not supported; no logic to support "find the home directory for an arbitrary user".
+        // e.g. '~user' or '~user/foo'
+        throw new IllegalArgumentException("'" + userHomePath + "' cannot be relativized, cannot resolve arbitrary" +
+                " user home paths.");
     }
 
     private static String join(String with, String... components) {

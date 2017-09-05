@@ -10,6 +10,10 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 
+import static io.fabric8.maven.docker.util.PathTestUtil.DOT;
+import static io.fabric8.maven.docker.util.PathTestUtil.SEP;
+import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
+import static io.fabric8.maven.docker.util.PathTestUtil.join;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -18,12 +22,16 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JMockit.class)
 public class ComposeUtilsTest {
 
+    private final String className = ComposeUtilsTest.class.getSimpleName();
+
+    private final String ABS_BASEDIR = createTmpFile(className).getAbsolutePath();
+
     @Mocked
     private MavenProject project;
 
     @Test
     public void resolveComposeFileWithAbsoluteComposeFile() throws Exception {
-        String absComposeFile = "/absolute/path/to/docker-compose.yaml";
+        String absComposeFile = createTmpFile(className).getAbsolutePath() + SEP + "docker-compose.yaml";
 
         assertEquals(new File(absComposeFile),
                 ComposeUtils.resolveComposeFileAbsolutely(null, absComposeFile, null));
@@ -31,17 +39,16 @@ public class ComposeUtilsTest {
 
     @Test
     public void resolveComposeFileWithRelativeComposeFileAndAbsoluteBaseDir() throws Exception {
-        String relComposeFile = "relative/path/to/docker-compose.yaml";
-        String absBaseDir = "/basedir/";
-        final String absMavenProjectDir = "/absolute/path/to/maven/project";
+        String relComposeFile = join(SEP, "relative", "path", "to", "docker-compose.yaml");  // relative/path/to/docker-compose.yaml
+        final String absMavenProjectDir = createTmpFile(className).getAbsolutePath();
 
         new Expectations() {{
             project.getBasedir();
             result = new File(absMavenProjectDir);
         }};
 
-        assertEquals(new File(absBaseDir, relComposeFile),
-                ComposeUtils.resolveComposeFileAbsolutely(absBaseDir, relComposeFile, project));
+        assertEquals(new File(ABS_BASEDIR, relComposeFile),
+                ComposeUtils.resolveComposeFileAbsolutely(ABS_BASEDIR, relComposeFile, project));
 
         new VerificationsInOrder() {{
             project.getBasedir();
@@ -50,9 +57,9 @@ public class ComposeUtilsTest {
 
     @Test
     public void resolveComposeFileWithRelativeComposeFileAndRelativeBaseDir() throws Exception {
-        String relComposeFile = "relative/path/to/docker-compose.yaml";
-        String relBaseDir = "basedir/";
-        final String absMavenProjectDir = "/absolute/path/to/maven/project";
+        String relComposeFile = join(SEP, "relative", "path", "to", "docker-compose.yaml");  // relative/path/to/docker-compose.yaml
+        String relBaseDir = "basedir" + SEP;
+        final String absMavenProjectDir = createTmpFile(className).getAbsolutePath();
 
         new Expectations() {{
             project.getBasedir();
@@ -69,10 +76,11 @@ public class ComposeUtilsTest {
 
     @Test
     public void resolveComposesFileWithRelativeComposeFileParentDirectory() throws Exception {
-        String relComposeFile = "../relative/path/to/docker-compose.yaml";
-        String absBaseDir = "/basedir/";
+        String relComposeFile = join(SEP, DOT + DOT, "relative", "path", "to", "docker-compose.yaml");  // ../relative/path/to/docker-compose.yaml
+        File tmpDir = createTmpFile(ComposeUtilsTest.class.getName());
+        String absBaseDir = tmpDir.getAbsolutePath();
 
-        assertEquals(new File(relComposeFile.substring(2)),
+        assertEquals(new File(tmpDir.getParentFile(), relComposeFile.substring(3)),
                 ComposeUtils.resolveComposeFileAbsolutely(absBaseDir, relComposeFile, null));
     }
 }
