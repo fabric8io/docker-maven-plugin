@@ -236,7 +236,8 @@ public class WatchService {
 
                 // Start new one
                 watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
-                        watcher.getWatchContext().getMojoParameters().getProject().getProperties()));
+                        watcher.getWatchContext().getMojoParameters().getProject().getProperties(),
+                        watcher.getWatchContext().getMojoParameters().getProject().getBasedir()));
             }
         };
     }

@@ -1,7 +1,9 @@
 package io.fabric8.maven.docker.service;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.*;
 
 import io.fabric8.maven.docker.log.LogOutputSpec;
@@ -299,8 +301,8 @@ public class RunServiceTest {
     private void whenCreateContainerConfig(String imageName) throws DockerAccessException {
         PortMapping portMapping = runService.createPortMapping(runConfig, properties);
 
-        containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, null, properties);
-        startConfig = runService.createContainerHostConfig(runConfig, portMapping);
+        containerConfig = runService.createContainerConfig(imageName, runConfig, portMapping, null, properties, getBaseDirectory());
+        startConfig = runService.createContainerHostConfig(runConfig, portMapping, getBaseDirectory());
     }
 
     private List<String> bind() {
@@ -347,6 +349,10 @@ public class RunServiceTest {
 
     private String loadFile(String fileName) throws IOException {
         return IOUtils.toString(getClass().getClassLoader().getResource(fileName));
+    }
+
+    private File getBaseDirectory() {
+        return new File(getClass().getResource("/").getPath());
     }
 
     private List<String> ports() {

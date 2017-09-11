@@ -17,6 +17,7 @@ package io.fabric8.maven.docker.service;
  * limitations under the License.
  */
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -29,6 +30,8 @@ import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.*;
 import io.fabric8.maven.docker.wait.WaitUtil;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
+
+import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
 
 
 /**
@@ -96,11 +99,12 @@ public class RunService {
     public String createAndStartContainer(ImageConfiguration imageConfig,
                                           PortMapping portMapping,
                                           PomLabel pomLabel,
-                                          Properties mavenProps) throws DockerAccessException {
+                                          Properties mavenProps,
+                                          File baseDir) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
         String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps);
+        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps, baseDir);
 
         String id = docker.createContainer(config, containerName);
         startContainer(imageConfig, id, pomLabel);
@@ -239,7 +243,7 @@ public class RunService {
 
     // visible for testing
     ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
-                                                PomLabel pomLabel, Properties mavenProps)
+                                                PomLabel pomLabel, Properties mavenProps, File baseDir)
             throws DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
@@ -252,9 +256,10 @@ public class RunService {
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
                     .labels(mergeLabels(runConfig.getLabels(), pomLabel))
                     .command(runConfig.getCmd())
-                    .hostConfig(createContainerHostConfig(runConfig, mappedPorts));
+                    .hostConfig(createContainerHostConfig(runConfig, mappedPorts, baseDir));
             RunVolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
             if (volumeConfig != null) {
+                resolveRelativeVolumeBindings(baseDir, volumeConfig);
                 config.binds(volumeConfig.getBind());
             }
 
@@ -283,7 +288,7 @@ public class RunService {
         return ret;
     }
 
-    ContainerHostConfig createContainerHostConfig(RunImageConfiguration runConfig, PortMapping mappedPorts)
+    ContainerHostConfig createContainerHostConfig(RunImageConfiguration runConfig, PortMapping mappedPorts, File baseDir)
             throws DockerAccessException {
         RestartPolicy restartPolicy = runConfig.getRestartPolicy();
 
@@ -309,7 +314,7 @@ public class RunService {
                 .tmpfs(runConfig.getTmpfs())
                 .ulimits(runConfig.getUlimits());
 
-        addVolumeConfig(config, runConfig);
+        addVolumeConfig(config, runConfig, baseDir);
         addNetworkingConfig(config, runConfig);
 
         return config;
@@ -326,9 +331,10 @@ public class RunService {
         }
     }
 
-    private void addVolumeConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
+    private void addVolumeConfig(ContainerHostConfig config, RunImageConfiguration runConfig, File baseDir) throws DockerAccessException {
         RunVolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
+            resolveRelativeVolumeBindings(baseDir, volConfig);
             config.binds(volConfig.getBind())
                   .volumesFrom(findVolumesFromContainers(volConfig.getFrom()));
         }

@@ -21,9 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
 
+import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -64,10 +66,11 @@ public class DockerFileUtilTest {
         for (Map.Entry<String, String> entry : filterMapping.entrySet()) {
             for (int i = 1; i < 2; i++) {
                 File dockerFile = getDockerfilePath(i, entry.getKey());
-                String expected =
-                    IOUtil.toString(new FileReader(dockerFile + ".expected"));
-                String actual = DockerFileUtil.interpolate(dockerFile, props, entry.getValue());
-                assertEquals(expected, actual);
+                File expectedDockerFile = new File(dockerFile.getParent(), dockerFile.getName() + ".expected");
+                File actualDockerFile = createTmpFile(dockerFile.getName());
+                FileUtils.write(actualDockerFile,
+                        DockerFileUtil.interpolate(dockerFile, props, entry.getValue()), "UTF-8");
+                FileUtils.contentEqualsIgnoreEOL(expectedDockerFile, actualDockerFile, "UTF-8");
             }
         }
     }
@@ -77,4 +80,5 @@ public class DockerFileUtilTest {
         return new File(classLoader.getResource(
             String.format("interpolate/%s/Dockerfile_%d", dir, i)).getFile());
     }
+
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.util.VolumeBindingUtil;
 
 
 class DockerComposeServiceWrapper {
@@ -12,13 +13,20 @@ class DockerComposeServiceWrapper {
     private final String name;
     private final File composeFile;
     private final ImageConfiguration enclosingImageConfig;
+    private final File baseDir;
 
     DockerComposeServiceWrapper(String serviceName, File composeFile, Map<String, Object> serviceDefinition,
-                                ImageConfiguration enclosingImageConfig) {
+                                ImageConfiguration enclosingImageConfig, File baseDir) {
         this.name = serviceName;
         this.composeFile = composeFile;
         this.configuration = serviceDefinition;
         this.enclosingImageConfig = enclosingImageConfig;
+
+        if (!baseDir.isAbsolute()) {
+            throw new IllegalArgumentException(
+                    "Expected the base directory '" + baseDir + "' to be an absolute path.");
+        }
+        this.baseDir = baseDir;
     }
 
     String getAlias() {
@@ -249,7 +257,14 @@ class DockerComposeServiceWrapper {
             builder.from(volumesFrom);
             added = true;
         }
-        return added ? builder.build() : null;
+
+        if (added) {
+            RunVolumeConfiguration configuration = builder.build();
+            VolumeBindingUtil.resolveRelativeVolumeBindings(baseDir, configuration);
+            return configuration;
+        }
+
+        return null;
     }
 
     String getDomainname() {
@@ -396,4 +411,5 @@ class DockerComposeServiceWrapper {
     private void throwIllegalArgumentException(String msg) {
         throw new IllegalArgumentException(String.format("%s: %s - ", composeFile, name) + msg);
     }
+
 }
