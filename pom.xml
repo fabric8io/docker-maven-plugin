@@ -7,7 +7,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.22-SNAPSHOT</version>
+  <version>0.22.0.fuse-000006</version>
   <packaging>maven-plugin</packaging>
 
   <name>docker-maven-plugin</name>
