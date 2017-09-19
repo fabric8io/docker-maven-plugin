@@ -1,8 +1,23 @@
 package io.fabric8.maven.docker.util;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
-
+import io.fabric8.maven.docker.config.AuthConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -14,19 +29,6 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.yaml.snakeyaml.Yaml;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -125,6 +127,33 @@ public class AuthConfigFactory {
 
         log.debug("AuthConfig: no credentials found");
         return null;
+    }
+
+    /**
+     * Transforms authentication information from plugin configuration to a {@link Map}
+     *
+     * @param authConfiguration authentication information from plugin configuration
+     * @return authentication information from plugin configuration as a {@link Map}
+     */
+    @SuppressWarnings("unchecked")
+    public Map authConfigurationToMap(AuthConfiguration authConfiguration) {
+        final Map authMap = new TreeMap();
+        if (null == authConfiguration) {
+            return authMap;
+        }
+        if (null != authConfiguration.getPush()) {
+            authMap.put(LookupMode.PUSH.configMapKey, authConfiguration.getPush());
+        }
+        if (null != authConfiguration.getPull()) {
+            authMap.put(LookupMode.PULL.configMapKey, authConfiguration.getPull());
+        }
+        if (StringUtils.isNotBlank(authConfiguration.getUsername())) {
+            authMap.put(AUTH_USERNAME, authConfiguration.getUsername());
+        }
+        if (StringUtils.isNotBlank(authConfiguration.getPassword())) {
+            authMap.put(AUTH_PASSWORD, authConfiguration.getPassword());
+        }
+        return authMap;
     }
 
     /**
