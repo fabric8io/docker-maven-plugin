@@ -11,13 +11,16 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class LogConfiguration implements Serializable {
 
-    public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null, null);
+    public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, false, null, null, null, null);
 
     @Parameter(defaultValue = "true")
     private boolean enabled = true;
 
     @Parameter
     private String prefix;
+
+    @Parameter (defaultValue = "false")
+    private boolean disablePrefix = false;
 
     @Parameter
     private String date;
@@ -33,9 +36,10 @@ public class LogConfiguration implements Serializable {
 
     public LogConfiguration() {}
 
-    private LogConfiguration(boolean enabled, String prefix, String color, String date, String file, LogDriver driver) {
+    private LogConfiguration(boolean enabled, String prefix, boolean disablePrefix, String color, String date, String file, LogDriver driver) {
         this.enabled = enabled;
         this.prefix = prefix;
+        this.disablePrefix = disablePrefix;
         this.date = date;
         this.color = color;
         this.file = file;
@@ -44,6 +48,10 @@ public class LogConfiguration implements Serializable {
 
     public String getPrefix() {
         return prefix;
+    }
+
+    public boolean isDisablePrefix() {
+        return disablePrefix;
     }
 
     public String getDate() {
@@ -97,6 +105,7 @@ public class LogConfiguration implements Serializable {
     public static class Builder {
         private boolean enabled = true;
         private String prefix, date, color, file;
+        private boolean disablePrefix = false;
         private Map<String, String> driverOpts;
         private String driverName;
         public Builder enabled(boolean enabled) {
@@ -106,6 +115,11 @@ public class LogConfiguration implements Serializable {
 
         public Builder prefix(String prefix) {
             this.prefix = prefix;
+            return this;
+        }
+
+        public Builder disablePrefix(boolean disablePrefix) {
+            this.disablePrefix = disablePrefix;
             return this;
         }
 
@@ -136,7 +150,7 @@ public class LogConfiguration implements Serializable {
 
 
         public LogConfiguration build() {
-            return new LogConfiguration(enabled, prefix, color, date, file,
+            return new LogConfiguration(enabled, prefix, disablePrefix, color, date, file,
                                         driverName != null ? new LogDriver(driverName,driverOpts) : null);
         }
     }

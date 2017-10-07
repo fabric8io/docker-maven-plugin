@@ -69,6 +69,7 @@ public enum ConfigKey {
     LINKS,
     LOG_ENABLED("log.enabled"),
     LOG_PREFIX("log.prefix"),
+    LOG_DISABLE_PREFIX("log.disablePrefix"),
     LOG_DATE("log.date"),
     LOG_COLOR("log.color"),
     LOG_DRIVER_NAME("log.driver.name"),

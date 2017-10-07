@@ -41,7 +41,7 @@ public class LogOutputSpecFactory {
         LogConfiguration logConfig = extractLogConfiguration(imageConfiguration);
 
         addLogFormat(builder, logConfig);
-        addPrefix(builder, logConfig.getPrefix(), imageConfiguration.getAlias(), containerId);
+        addPrefix(builder, logConfig.getPrefix(), logConfig.isDisablePrefix(), imageConfiguration.getAlias(), containerId);
         builder.file(logConfig.getFileLocation())
                .useColor(useColor)
                .logStdout(logStdout)
@@ -50,7 +50,11 @@ public class LogOutputSpecFactory {
         return builder.build();
     }
 
-    private void addPrefix(LogOutputSpec.Builder builder, String logPrefix, String alias, String containerId) {
+    private void addPrefix(LogOutputSpec.Builder builder, String logPrefix, boolean disablePrefix, String alias, String containerId) {
+        // Don't configure a prefix if we've disabled it
+        if (disablePrefix) {
+            return;
+        }
         String prefix = logPrefix;
         if (prefix == null) {
             prefix = alias;

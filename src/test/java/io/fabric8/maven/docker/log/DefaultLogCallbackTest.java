@@ -44,6 +44,34 @@ public class DefaultLogCallbackTest {
     }
 
     @Test
+    public void canDisablePrefix() throws IOException, DoneException {
+        callback.close();
+        spec = new LogOutputSpec.Builder().file(file.toString()).build();
+		callback = new DefaultLogCallback(spec);
+		callback.open();
+
+        callback.log(1, ts, "unprefixed line");
+        callback.close();
+
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
+        assertThat(lines, contains("unprefixed line"));
+    }
+
+    @Test
+    public void blankPrefixHonored() throws IOException, DoneException {
+        callback.close();
+        spec = new LogOutputSpec.Builder().prefix("").file(file.toString()).build();
+		callback = new DefaultLogCallback(spec);
+		callback.open();
+
+        callback.log(1, ts, "blank prefix line");
+        callback.close();
+
+        List<String> lines = Arrays.asList(FileUtils.fileReadArray(file));
+        assertThat(lines, contains("> blank prefix line"));
+    }
+
+    @Test
     public void shouldLogSequentially() throws IOException, DoneException {
         callback.log(1, ts, "line 1");
         callback.log(1, ts, "line 2");
