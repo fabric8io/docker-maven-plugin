@@ -18,9 +18,14 @@ package io.fabric8.maven.docker.util;/*
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.maven.plugin.assembly.interpolation.AssemblyInterpolator;
+import org.apache.maven.plugin.assembly.io.DefaultAssemblyReader;
+import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
+
+import io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSource;
 
 
 /**
@@ -37,11 +42,11 @@ public class DockerFileUtil {
      * taken.
      *
      * @param dockerFile file from where to extract the base image
-     * @param properties holding values used for interpolation
-     *@param filter @return the base image name or <code>null</code> if none is found.
+     * @param interpolator interpolator for replacing properties
+     * @param filter @return the base image name or <code>null</code> if none is found.
      */
-    public static String extractBaseImage(File dockerFile, Properties properties, String filter) throws IOException {
-        List<String[]> fromLines = extractLines(dockerFile, "FROM", properties, filter);
+    public static String extractBaseImage(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
+        List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
         if (!fromLines.isEmpty()) {
             String[] parts = fromLines.get(0);
             if (parts.length > 1) {
@@ -56,15 +61,15 @@ public class DockerFileUtil {
      *
      * @param dockerFile dockerfile to examine
      * @param keyword keyword to extract the lines for
+     * @param interpolator interpolator for replacing properties
      * @return list of matched lines or an empty list
      */
-    public static List<String[]> extractLines(File dockerFile, String keyword, Properties props, String filter) throws IOException {
+    public static List<String[]> extractLines(File dockerFile, String keyword, FixedStringSearchInterpolator interpolator) throws IOException {
         List<String[]> ret = new ArrayList<>();
-        String[] delimiters = extractDelimiters(filter);
         try (BufferedReader reader = new BufferedReader(new FileReader(dockerFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String lineInterpolated = interpolateLine(line, props, delimiters);
+                String lineInterpolated = interpolator.interpolate(line);
                 String[] lineParts = lineInterpolated.split("\\s+");
                 if (lineParts.length > 0 && lineParts[0].equalsIgnoreCase(keyword)) {
                     ret.add(lineParts);
@@ -78,40 +83,41 @@ public class DockerFileUtil {
      * Interpolate a docker file with the given properties and filter
      *
      * @param dockerFile docker file to interpolate
-     * @param properties properties to replace
-     * @param filter filter holding delimeters
-     * @return
+     * @param interpolator interpolator for replacing properties
+     * @return The interpolated contents of the file.
      * @throws IOException
      */
-    public static String interpolate(File dockerFile, Properties properties, String filter) throws IOException {
+    public static String interpolate(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
         StringBuilder ret = new StringBuilder();
-        String[] delimiters = extractDelimiters(filter);
         try (BufferedReader reader = new BufferedReader(new FileReader(dockerFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                ret.append(interpolateLine(line, properties, delimiters)).append(System.lineSeparator());
+                ret.append(interpolator.interpolate(line)).append(System.lineSeparator());
             }
         }
         return ret.toString();
     }
 
-    private static String interpolateLine(String line, Properties properties, String[] delimiters) {
-        if (delimiters == null || delimiters.length == 0) {
-            return line;
+    /**
+     * Create an interpolator for the given maven parameters and filter configuration.
+     *
+     * @param params The maven parameters.
+     * @param filter The filter configuration.
+     * @return An interpolator for replacing maven properties.
+     */
+    public static FixedStringSearchInterpolator createInterpolator(MojoParameters params, String filter) {
+        String[] delimiters = extractDelimiters(filter);
+        if (delimiters == null) {
+            // Don't interpolate anything
+            return FixedStringSearchInterpolator.create();
         }
-        Pattern propertyPattern =
-            Pattern.compile("(?<variable>" + Pattern.quote(delimiters[0]) + "(?<prop>.*?)" + Pattern.quote(delimiters[1]) + ")");
-        Matcher matcher = propertyPattern.matcher(line);
-        StringBuffer ret = new StringBuffer();
-        while (matcher.find()) {
-            String prop = matcher.group("prop");
-            String value = properties.containsKey(prop) ?
-                properties.getProperty(prop) :
-                matcher.group("variable");
-            matcher.appendReplacement(ret, value.replace("$","\\$"));
-        }
-        matcher.appendTail(ret);
-        return ret.toString();
+
+        DockerAssemblyConfigurationSource configSource = new DockerAssemblyConfigurationSource(params, null, null);
+        // Patterned after org.apache.maven.plugin.assembly.interpolation.AssemblyExpressionEvaluator
+        return AssemblyInterpolator
+                .fullInterpolator(params.getProject(),
+                        DefaultAssemblyReader.createProjectInterpolator(params.getProject()), configSource)
+                .withExpressionMarkers(delimiters[0], delimiters[1]);
     }
 
     private static String[] extractDelimiters(String filter) {

@@ -29,7 +29,9 @@ import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
+import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 
+import com.google.common.base.Function;
 
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
@@ -111,11 +113,9 @@ public class DockerAssemblyManager {
                                                      buildConfig.getDockerFile() + "\" (resolved to \"" + dockerFile + "\") doesn't exist");
                 }
 
-                verifyGivenDockerfile(dockerFile, buildConfig, params.getProject(), log);
-                Properties interpolationProperties = new Properties();
-                interpolationProperties.putAll(params.getProject().getProperties());
-                interpolationProperties.putAll(params.getSession().getSystemProperties());
-                interpolateDockerfile(dockerFile, buildDirs, interpolationProperties, buildConfig.getFilter());
+                FixedStringSearchInterpolator interpolator = DockerFileUtil.createInterpolator(params, buildConfig.getFilter());
+                verifyGivenDockerfile(dockerFile, buildConfig, interpolator, log);
+                interpolateDockerfile(dockerFile, buildDirs, interpolator);
                 // User dedicated Dockerfile from extra directory
                 customizer = new ArchiverCustomizer() {
                     @Override
@@ -168,21 +168,20 @@ public class DockerAssemblyManager {
         fileSet.setExcludes(excludes.toArray(new String[0]));
     }
 
-    private void interpolateDockerfile(File dockerFile, BuildDirs params, Properties properties, String filter) throws IOException {
+    private void interpolateDockerfile(File dockerFile, BuildDirs params, FixedStringSearchInterpolator interpolator) throws IOException {
         File targetDockerfile = new File(params.getOutputDirectory(), dockerFile.getName());
-        String dockerFileInterpolated =
-            DockerFileUtil.interpolate(dockerFile, properties, filter);
+        String dockerFileInterpolated = DockerFileUtil.interpolate(dockerFile, interpolator);
         try (Writer writer = new FileWriter(targetDockerfile)) {
             IOUtils.write(dockerFileInterpolated, writer);
         }
     }
 
-    private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, MavenProject project, Logger log) throws IOException {
+    private void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         if (assemblyConfig != null) {
             String name = assemblyConfig.getName();
             for (String keyword : new String[] { "ADD", "COPY" }) {
-                List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, project.getProperties(), buildConfig.getFilter());
+                List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, interpolator);
                 for (String[] line : lines) {
                     // contains an ADD/COPY ... targetDir .... All good.
                     if (!line[0].startsWith("#") && line.length > 1 && line[1].contains(name)) {
