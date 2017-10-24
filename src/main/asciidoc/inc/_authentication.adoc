@@ -173,5 +173,5 @@ The `docker:push` and `docker:pull` goals automatically execute this exchange fo
 
 You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
-In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well!
+In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
 To do so, either specify the `docker.authToken` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
