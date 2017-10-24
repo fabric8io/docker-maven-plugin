@@ -63,6 +63,10 @@ public class AuthConfig {
         return password;
     }
 
+    public String getAuth() {
+        return auth;
+    }
+
     public String toHeaderValue() {
         return authEncoded;
     }
