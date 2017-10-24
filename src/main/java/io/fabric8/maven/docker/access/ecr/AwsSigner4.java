@@ -18,6 +18,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import org.codehaus.plexus.util.StringUtils;
 
 /**
  * AwsSigner4 implementation that signs requests with the AWS4 signing protocol. Refer to the AWS docs for mor details.
@@ -57,6 +58,10 @@ class AwsSigner4 {
             request.addHeader("X-Amz-Date", sr.getSigningDateTime());
         }
         request.addHeader("Authorization", task4(sr, credentials));
+        final String securityToken = credentials.getAuth();
+        if (StringUtils.isNotEmpty(securityToken)) {
+            request.addHeader("X-Amz-Security-Token", securityToken);
+        }
     }
 
     /**
