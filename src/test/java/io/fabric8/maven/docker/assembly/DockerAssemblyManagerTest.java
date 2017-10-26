@@ -1,6 +1,9 @@
 package io.fabric8.maven.docker.assembly;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Properties;
 
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.MojoParameters;
@@ -23,6 +26,7 @@ import io.fabric8.maven.docker.util.AnsiLogger;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DockerAssemblyManagerTest {
 
@@ -81,5 +85,62 @@ public class DockerAssemblyManagerTest {
                         .build();
 
         assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, new AnsiLogger(new SystemStreamLog(),true,true));
+    }
+
+    @Test
+    public void testCopyValidVerifyGivenDockerfile(@Injectable final MavenProject project) throws IOException {
+        new Expectations() {{
+            project.getProperties();
+            result = new Properties();
+            times = 2;
+        }};
+
+        BuildImageConfiguration buildConfig =
+                new BuildImageConfiguration.Builder()
+                        .assembly(new AssemblyConfiguration.Builder()
+                                .descriptorRef("artifact")
+                                .build())
+                        .build();
+
+        boolean ret = assemblyManager.verifyGivenDockerfile(new File(getClass().getResource("/docker/Dockerfile_assembly_verify_copy_valid.test").getPath()), buildConfig, project, new AnsiLogger(new SystemStreamLog(), true, true));
+        assertTrue(ret);
+    }
+
+    @Test
+    public void testCopyInvalidVerifyGivenDockerfile(@Injectable final MavenProject project) throws IOException {
+        new Expectations() {{
+            project.getProperties();
+            result = new Properties();
+            times = 2;
+        }};
+
+        BuildImageConfiguration buildConfig =
+                new BuildImageConfiguration.Builder()
+                        .assembly(new AssemblyConfiguration.Builder()
+                                .descriptorRef("artifact")
+                                .build())
+                        .build();
+
+        boolean ret = assemblyManager.verifyGivenDockerfile(new File(getClass().getResource("/docker/Dockerfile_assembly_verify_copy_invalid.test").getPath()), buildConfig, project, new AnsiLogger(new SystemStreamLog(), true, true));
+        assertFalse(ret);
+    }
+
+    @Test
+    public void testCopyChownValidVerifyGivenDockerfile(@Injectable final MavenProject project) throws IOException {
+        new Expectations() {{
+            project.getProperties();
+            result = new Properties();
+            times = 2;
+        }};
+
+        BuildImageConfiguration buildConfig =
+                new BuildImageConfiguration.Builder()
+                        .assembly(new AssemblyConfiguration.Builder()
+                                .descriptorRef("artifact")
+                                .build())
+                        .build();
+
+        boolean ret = assemblyManager.verifyGivenDockerfile(new File(getClass().getResource("/docker/Dockerfile_assembly_verify_copy_chown_valid.test").getPath()), buildConfig, project, new AnsiLogger(new SystemStreamLog(), true, true));
+        assertTrue(ret);
     }
 }
