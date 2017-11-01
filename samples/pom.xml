@@ -53,9 +53,9 @@
     <module>dockerignore</module>
     <module>docker-compose</module>
     <module>data-jolokia</module>
-    <module>healthcheck</module>
+    <!-- module>healthcheck</module -->
     <module>multi-wait</module>
-    <module>helloworld</module>
+    <!--module>helloworld</module -->
     <module>dockerfile</module>
    <!-- module>cargo-jolokia</module -->
   </modules>

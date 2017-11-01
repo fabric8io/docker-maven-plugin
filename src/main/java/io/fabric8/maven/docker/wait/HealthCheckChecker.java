@@ -11,13 +11,12 @@ import io.fabric8.maven.docker.util.Logger;
  */
 public class HealthCheckChecker implements WaitChecker {
 
-        private boolean first = true;
+    private boolean first = true;
 
     private DockerAccess docker;
     private String containerId;
     private Logger log;
     private final String imageConfigDesc;
-    private String healthcheck;
 
     public HealthCheckChecker(DockerAccess docker, String containerId, String imageConfigDesc, Logger log) {
         this.docker = docker;
@@ -31,24 +30,25 @@ public class HealthCheckChecker implements WaitChecker {
         try {
             final InspectedContainer container = docker.getContainer(containerId);
             if (container == null) {
-                log.debug("HealthyWaitChecker: Container %s not found");
+                log.debug("HealthWaitChecker: Container %s not found");
                 return false;
             }
 
-            healthcheck = container.getHealthcheck();
+            if (container.getHealthcheck() == null) {
+                throw new IllegalArgumentException("Can not wait for healthstate of " + imageConfigDesc +". No HEALTHCHECK configured.");
+            }
+
             if (first) {
-                if (healthcheck == null) {
-                    throw new IllegalArgumentException("Can not wait for healthy state of " + imageConfigDesc +". No HEALTHCHECK configured.");
-                }
                 log.info("%s: Waiting to become healthy", imageConfigDesc);
-                log.debug("HealthyWaitChecker: Waiting for healthcheck: '%s'", healthcheck);
+                log.debug("HealthWaitChecker: Waiting for healthcheck: '%s'", container.getHealthcheck());
                 first = false;
             } else if (log.isDebugEnabled()) {
-                log.debug("HealthyWaitChecker: Waiting on healthcheck '%s'", healthcheck);
+                log.debug("HealthWaitChecker: Waiting on healthcheck '%s'", container.getHealthcheck());
             }
 
             return container.isHealthy();
         } catch(DockerAccessException e) {
+            log.warn("Error while checking health: %s", e.getMessage());
             return false;
         }
     }
@@ -58,6 +58,11 @@ public class HealthCheckChecker implements WaitChecker {
 
     @Override
     public String getLogLabel() {
-        return "on healthcheck '" + healthcheck + "'";
+        try {
+            final InspectedContainer container = docker.getContainer(containerId);
+            return String.format("on healthcheck '%s'",container != null ? container.getHealthcheck() : "[container not found]");
+        } catch (DockerAccessException e) {
+            return String.format("on healthcheck [error fetching container: %s]", e.getMessage());
+        }
     }
 }

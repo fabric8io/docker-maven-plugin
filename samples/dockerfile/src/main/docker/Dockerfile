@@ -1,11 +1,12 @@
 # Sample Dockerfile for use with the Docker file mode
-FROM @base@
+FROM ${base}
 
 ENV SAMPLE_BUILD_MODE=dockerfile
-LABEL PROJECT_NAME=hello-world
+LABEL PROJECT_NAME=hello-world \
+      PROJECT=${project.artifactId}
 
 # Arbitrary files can be added
-ADD @file@ /
+ADD ${file} /
 
 # In maven/ the files as specified in the <assembly> section is stored
 # and need to be added manually
