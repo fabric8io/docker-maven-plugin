@@ -5,6 +5,7 @@
   - Allow  the session token for AWS authentication to be included in order to allow temporary security credentials provided by the AWS Security Token Service (AWS STS) to sign requests (#883)
   - Add support for credential helper to authenticate against a registry (#821)
   - Fix registry auth config in plugin configuration (#858)
+  - Preserve leading whitespace in logs (#875)
 
 * **0.22.1** (2017-08-28)
   - Allow Docker compose version "2", too ([#829](https://github.com/fabric8io/docker-maven-plugin/issues/829))
