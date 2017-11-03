@@ -97,6 +97,25 @@ public class LogRequestorTest {
     }
 
     @Test
+    public void testMessageWithLeadingWhitespace() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message0 = " I have a leading space";
+        final String message1 = "\tI have a leading tab";
+
+        final ByteBuffer body = responseContent(type, message0, message1);
+        final InputStream inputStream = new ByteArrayInputStream(body.array());
+
+        setupMocks(inputStream);
+        new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
+
+        new Verifications() {{
+            callback.log(type.type, (Timestamp) any, message0);
+            callback.log(type.type, (Timestamp) any, message1);
+        }};
+    }
+
+
+    @Test
     public void testAllStreams() throws Exception {
         final Random rand = new Random();
         final int upperBound = 1024;
