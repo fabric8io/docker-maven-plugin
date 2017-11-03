@@ -15,7 +15,7 @@ public class CredentialHelperClient {
     private final String credentialHelperName;
     private final Logger log;
 
-    public CredentialHelperClient(Logger log,String credentialsStore) {
+    public CredentialHelperClient(Logger log, String credentialsStore) {
         this.log = log;
         credentialHelperName = "docker-credential-" + credentialsStore;
     }
@@ -32,7 +32,7 @@ public class CredentialHelperClient {
         }
     }
 
-    public AuthConfig getCredentialNode(String registryToLookup) throws MojoExecutionException {
+    public AuthConfig getAuthConfig(String registryToLookup) throws MojoExecutionException {
         try {
             final GetCommand getCommand = new GetCommand();
             return toAuthConfig(getCommand.getCredentialNode("https://" + registryToLookup));
