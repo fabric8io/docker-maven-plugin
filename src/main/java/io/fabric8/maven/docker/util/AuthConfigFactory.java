@@ -10,14 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
-import io.fabric8.maven.docker.config.AuthConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -40,10 +37,10 @@ public class AuthConfigFactory {
 
     // Properties for specifying username, password (can be encrypted), email and authtoken (not used yet)
     // + whether to check for OpenShift authentication
-    private static final String AUTH_USERNAME = "username";
-    private static final String AUTH_PASSWORD = "password";
-    private static final String AUTH_EMAIL = "email";
-    private static final String AUTH_AUTHTOKEN = "authToken";
+    public static final String AUTH_USERNAME = "username";
+    public static final String AUTH_PASSWORD = "password";
+    public static final String AUTH_EMAIL = "email";
+    public static final String AUTH_AUTHTOKEN = "authToken";
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
@@ -129,32 +126,6 @@ public class AuthConfigFactory {
         return null;
     }
 
-    /**
-     * Transforms authentication information from plugin configuration to a {@link Map}
-     *
-     * @param authConfiguration authentication information from plugin configuration
-     * @return authentication information from plugin configuration as a {@link Map}
-     */
-    @SuppressWarnings("unchecked")
-    public Map authConfigurationToMap(AuthConfiguration authConfiguration) {
-        final Map authMap = new TreeMap();
-        if (null == authConfiguration) {
-            return authMap;
-        }
-        if (null != authConfiguration.getPush()) {
-            authMap.put(LookupMode.PUSH.configMapKey, authConfiguration.getPush());
-        }
-        if (null != authConfiguration.getPull()) {
-            authMap.put(LookupMode.PULL.configMapKey, authConfiguration.getPull());
-        }
-        if (StringUtils.isNotBlank(authConfiguration.getUsername())) {
-            authMap.put(AUTH_USERNAME, authConfiguration.getUsername());
-        }
-        if (StringUtils.isNotBlank(authConfiguration.getPassword())) {
-            authMap.put(AUTH_PASSWORD, authConfiguration.getPassword());
-        }
-        return authMap;
-    }
 
     /**
      * Try various extended authentication method.  Currently only supports amazon ECR
@@ -219,14 +190,14 @@ public class AuthConfigFactory {
             }
 
             // Check for openshift authentication either from the plugin config or from system props
-            ret = getAuthConfigFromOpenShiftConfig(lookupMode,authConfigMap);
+            ret = getAuthConfigFromOpenShiftConfig(lookupMode, authConfigMap);
             if (ret != null) {
                 log.debug("AuthConfig: OpenShift credentials");
                 return ret;
             }
 
             // Get configuration from global plugin config
-            ret = getAuthConfigFromPluginConfiguration(lookupMode,authConfigMap);
+            ret = getAuthConfigFromPluginConfiguration(lookupMode, authConfigMap);
             if (ret != null) {
                 log.debug("AuthConfig: credentials from plugin config");
                 return ret;
