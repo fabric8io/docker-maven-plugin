@@ -308,12 +308,33 @@ public class AuthConfigFactory {
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
         JSONObject dockerConfig = readDockerConfig();
-        if (dockerConfig == null || !dockerConfig.has("auths")) {
+        if (dockerConfig == null) {
             return null;
         }
-        JSONObject auths = dockerConfig.getJSONObject("auths");
         String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
-        JSONObject credentials = getCredentialsNode(auths, registryToLookup);
+
+        if (dockerConfig.has("credHelpers") || dockerConfig.has("credsStore")) {
+            if (dockerConfig.has("credHelpers")) {
+                final JSONObject credHelpers = dockerConfig.getJSONObject("credHelpers");
+                if (credHelpers.has(registryToLookup)) {
+                    return extractAuthConfigFromCredentialsHelper(registryToLookup, credHelpers.getString(registryToLookup));
+                }
+            }
+            if (dockerConfig.has("credsStore")) {
+                return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.getString("credsStore"));
+            }
+            return null;
+        }
+
+        if (dockerConfig.has("auths")) {
+            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.getJSONObject("auths"));
+        }
+
+        return null;
+    }
+
+    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JSONObject auths) {
+        JSONObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
@@ -322,7 +343,15 @@ public class AuthConfigFactory {
         return new AuthConfig(auth,email);
     }
 
-    private JSONObject getCredentialsNode(JSONObject auths, String registryToLookup) {
+    private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) throws MojoExecutionException {
+        CredentialHelperClient credentialHelper = new CredentialHelperClient(log, credConfig);
+        log.debug("AuthConfig: credentials from credential helper/store %s version %s",
+                  credentialHelper.getName(),
+                  credentialHelper.getVersion());
+        return credentialHelper.getAuthConfig(registryToLookup);
+    }
+
+    private JSONObject getCredentialsNode(JSONObject auths,String registryToLookup) {
         if (auths.has(registryToLookup)) {
             return auths.getJSONObject(registryToLookup);
         }

@@ -11,7 +11,7 @@ There are five different locations searched for credentials.  In order, these ar
 * Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
 * Using OpenShift configuration in `~/.config/kube`
 * Using a `<server>` configuration in `~/.m2/settings.xml`
-* Login into a registry with `docker login` (credentials in `~/.docker/config.json`)
+* Login into a registry with `docker login` (credentials in a credential helper or in `~/.docker/config.json`)
 
 Using the username and password directly in the `pom.xml` is not
 recommended since this is widely visible. This is most easiest and
@@ -41,8 +41,7 @@ the outside:
 mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t {plugin}:push
 ----
 
-The most secure and also the most _mavenish_ way is to add a server to
-the Maven settings file `~/.m2/settings.xml`:
+The most _mavenish_ way is to add a server to the Maven settings file `~/.m2/settings.xml`:
 
 .Example
 [source,xml]
@@ -65,8 +64,14 @@ have a second account 'fabric8io' then use an `<id>docker.io/fabric8io</id>` for
 username with a slash to the id name. The default without username is only taken if no server entry with
 a username appended id is chosen.
 
-As a final fallback, this plugin consults `~/.docker/config.json` for getting to the credentials. Within this
-file credentials are stored when connecting to a registry with the command `docker login` from the command line.
+The most _secure_ way is to rely on docker's credential store or credential helper and read confidential information
+from an external credentials store, such as the native keychain of the operating system. Follow the instruction on
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store[the docker login documentation].
+
+As a final fallback, this plugin consults `~/.docker/config.json` and reads credentials stored directly within this
+file. This unsafe behavior happened when connecting to a registry with the command `docker login` from the command line
+with older versions of docker (pre 1.13.0) or when docker is not configured to use a
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store[credential store].
 
 == Pull vs. Push Authentication
 
