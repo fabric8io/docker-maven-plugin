@@ -1,20 +1,5 @@
 package io.fabric8.maven.docker.util;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.settings.Server;
-import org.apache.maven.settings.Settings;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -28,6 +13,20 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+import org.yaml.snakeyaml.Yaml;
+
 /**
  * Factory for creating docker specific authentication configuration
  *
@@ -38,10 +37,10 @@ public class AuthConfigFactory {
 
     // Properties for specifying username, password (can be encrypted), email and authtoken (not used yet)
     // + whether to check for OpenShift authentication
-    private static final String AUTH_USERNAME = "username";
-    private static final String AUTH_PASSWORD = "password";
-    private static final String AUTH_EMAIL = "email";
-    private static final String AUTH_AUTHTOKEN = "authToken";
+    public static final String AUTH_USERNAME = "username";
+    public static final String AUTH_PASSWORD = "password";
+    public static final String AUTH_EMAIL = "email";
+    public static final String AUTH_AUTHTOKEN = "authToken";
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
@@ -127,6 +126,7 @@ public class AuthConfigFactory {
         return null;
     }
 
+
     /**
      * Try various extended authentication method.  Currently only supports amazon ECR
      *
@@ -190,14 +190,14 @@ public class AuthConfigFactory {
             }
 
             // Check for openshift authentication either from the plugin config or from system props
-            ret = getAuthConfigFromOpenShiftConfig(lookupMode,authConfigMap);
+            ret = getAuthConfigFromOpenShiftConfig(lookupMode, authConfigMap);
             if (ret != null) {
                 log.debug("AuthConfig: OpenShift credentials");
                 return ret;
             }
 
             // Get configuration from global plugin config
-            ret = getAuthConfigFromPluginConfiguration(lookupMode,authConfigMap);
+            ret = getAuthConfigFromPluginConfiguration(lookupMode, authConfigMap);
             if (ret != null) {
                 log.debug("AuthConfig: credentials from plugin config");
                 return ret;

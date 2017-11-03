@@ -3,11 +3,11 @@ package io.fabric8.maven.docker;
 import java.io.File;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -28,7 +28,6 @@ import io.fabric8.maven.docker.util.ImagePullCache;
 import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.PomLabel;
-
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -166,7 +165,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Authentication information
     @Parameter
-    Map authConfig;
+    private RegistryAuthConfiguration authConfig;
 
     /**
      * Volume configuration
@@ -259,7 +258,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected RegistryService.RegistryConfig getRegistryConfig() throws MojoExecutionException {
         return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
-                .authConfig(authConfig)
+                .authConfig(authConfig.toMap())
                 .authConfigFactory(authConfigFactory)
                 .skipExtendedAuth(skipExtendedAuth)
                 .autoPull(autoPull)
