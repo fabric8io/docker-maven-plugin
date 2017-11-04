@@ -33,14 +33,6 @@ public class VolumeService {
    }
 
    public void removeVolume(String volumeName) throws DockerAccessException {
-      try {
-	docker.removeVolume(volumeName);
-      } catch ( DockerAccessException dae ) {
-	// IGNORE
-	// If you're using volume-clean, the most likely cause for a failure
-	// is that the volume doesn't exist.  In that case, the build should
-	// not be failed.  For any other probable cause of failure, another
-	// goal will almost certainly point you at the real problem.
-      }
+      docker.removeVolume(volumeName);
    }
 }
