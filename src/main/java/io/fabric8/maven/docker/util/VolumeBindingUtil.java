@@ -207,7 +207,7 @@ public class VolumeBindingUtil {
     public static void resolveRelativeVolumeBindings(File baseDir, RunVolumeConfiguration volumeConfiguration) {
         List<String> bindings = volumeConfiguration.getBind();
 
-        if (bindings.isEmpty()) {
+        if (bindings == null || bindings.isEmpty()) {
             return;
         }
 
