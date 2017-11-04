@@ -18,7 +18,7 @@ a| Prefix to use for the log output in order to identify the container. You can 
 * `%n`: The image name
 * `%z`: An empty string
 
-By default the format is "`%a> `".
+By default the format is "%a> ".
 
 | *date*
 a| Dateformat to use for log timestamps. If `<date>` is not given no timestamp will be shown. The date specification can be either a constant or a date format. The recognized constants are:
