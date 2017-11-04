@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.22-SNAPSHOT**
+* **0.23.0** (2017-11-04)
   - Support relative paths when binding volumes in `docker-compose.yml` ([#846](https://github.com/fabric8io/docker-maven-plugin/issues/846))
   - Allow  the session token for AWS authentication to be included in order to allow temporary security credentials provided by the AWS Security Token Service (AWS STS) to sign requests ([#883](https://github.com/fabric8io/docker-maven-plugin/issues/883))
   - Add support for credential helper to authenticate against a registry ([#821](https://github.com/fabric8io/docker-maven-plugin/issues/821))
