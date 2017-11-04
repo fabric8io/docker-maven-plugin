@@ -83,6 +83,7 @@ public class DefaultLogCallback implements LogCallback {
     public void error(String error) {
         ps().println(error);
     }
+
     private void addLogEntry(PrintStream ps, LogEntry logEntry) {
         // TODO: Add the entry to a queue, and let the queue be picked up with a small delay from an extra
         // thread which then can sort the entries by time before printing it out in order to avoid race conditions.

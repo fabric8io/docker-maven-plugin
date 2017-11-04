@@ -7,7 +7,8 @@
   - Fix registry auth config in plugin configuration (#858)
   - Preserve leading whitespace in logs (#875)
   - Maven property interpolation in Dockerfiles (#877)
-
+  - Allow parameters for the log prefix (#890)
+  
 * **0.22.1** (2017-08-28)
   - Allow Docker compose version "2", too ([#829](https://github.com/fabric8io/docker-maven-plugin/issues/829))
   - Allow a registry to be set programmatically ([#853](https://github.com/fabric8io/docker-maven-plugin/issues/853))

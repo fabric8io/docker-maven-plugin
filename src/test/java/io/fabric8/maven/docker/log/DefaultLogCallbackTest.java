@@ -36,7 +36,7 @@ public class DefaultLogCallbackTest {
     public void before() throws IOException {
         file = File.createTempFile("logcallback", ".log");
         file.deleteOnExit();
-        spec = new LogOutputSpec.Builder().prefix("callback-test")
+        spec = new LogOutputSpec.Builder().prefix("callback-test> ")
                                           .file(file.toString()).build();
         callback = new DefaultLogCallback(spec);
         callback.open();
@@ -76,7 +76,7 @@ public class DefaultLogCallbackTest {
         PrintStream stdout = System.out;
         try {
             System.setOut(ps);
-            spec = new LogOutputSpec.Builder().prefix("stdout")
+            spec = new LogOutputSpec.Builder().prefix("stdout> ")
                     .build();
             callback = new DefaultLogCallback(spec);
             callback.open();
