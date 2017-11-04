@@ -187,10 +187,13 @@ public class DockerAssemblyManager {
     }
 
     // visible for testing
-    boolean verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
+    void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
-        if (assemblyConfig != null) {
-            String name = assemblyConfig.getName();
+        if (assemblyConfig == null) {
+            return;
+        }
+
+        String name = assemblyConfig.getName();
             for (String keyword : new String[] { "ADD", "COPY" }) {
                 List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, interpolator);
                 for (String[] line : lines) {
@@ -206,17 +209,13 @@ public class DockerAssemblyManager {
 
                         // contains an ADD/COPY ... targetDir .... All good.
                         if (i < line.length && line[i].contains(name)) {
-                            return true;
+                            return;
                         }
                     }
                 }
             }
-            log.warn("Dockerfile %s does not contain an ADD or COPY directive to include assembly created at %s. Ignoring assembly.",
-                     dockerFile.getPath(), name);
-            return false;
-        }
-
-        return true;
+        log.warn("Dockerfile %s does not contain an ADD or COPY directive to include assembly created at %s. Ignoring assembly.",
+                 dockerFile.getPath(), name);
     }
 
     /**
