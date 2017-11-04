@@ -66,7 +66,7 @@ public class LogOutputSpec {
     }
 
     public String getPrompt(boolean withColor,Timestamp timestamp) {
-        return formatTimestamp(timestamp,withColor) + formatPrefix(prefix, withColor) + "> ";
+        return formatTimestamp(timestamp,withColor) + formatPrefix(prefix, withColor);
     }
 
     public String getFile(){
