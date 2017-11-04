@@ -231,6 +231,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         if (enabled != null) {
             builder.enabled(enabled);
         }
+        Boolean disablePrefix = booleanWithPrefix(prefix, LOG_DISABLE_PREFIX, properties);
+        if (disablePrefix != null) {
+            builder.disablePrefix(disablePrefix);
+        }
         return builder.build();
     }
 

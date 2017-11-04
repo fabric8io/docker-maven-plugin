@@ -12,6 +12,9 @@ When running containers the standard output and standard error of the container 
 | *prefix*
 | Prefix to use for the log output in order to identify the container. By default the image `alias` is used or alternatively the container `id`.
 
+| *disablePrefix*
+| Whether to disable the prefix added to log lines to differentiate containers. When only one container is in use and no differentiation is needed, you can eliminate noise by disabling log prefixing. Defaults to `false`.
+
 | *date*
 a| Dateformat to use for log timestamps. If `<date>` is not given no timestamp will be shown. The date specification can be either a constant or a date format. The recognized constants are:
 
@@ -28,7 +31,7 @@ As an alternative a date-time format string as recognized by
 http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[JodaTime] is possible. In order to set a consistent date format the global configuration parameter `logDate` can be used.
 
 | *color*
-| Color used for coloring the prefix when coloring is enabeld (i.e. if running in a console and `useColor` is set). The available colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If coloring is enabled and now color is provided a color is picked for you.
+| Color used for coloring the prefix when coloring is enabled (i.e. if running in a console and `useColor` is set). The available colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If coloring is enabled and now color is provided a color is picked for you.
 
 | *file*
 | Path to a file to which the log output is written. This file is overwritten for every run and colors are switched off.
