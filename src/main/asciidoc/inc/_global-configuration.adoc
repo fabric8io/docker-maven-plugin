@@ -67,6 +67,10 @@ the URL is:
 . `//./pipe/docker_engine` if it is a readable named pipe (Windows)
 | `docker.host`
 
+| *skipSSL*
+| If the docker daemon is listening on port 2376 but is unsecured (hence, no SSL available), set this switch to true to enable communication on a not SSL-secured channel where the plugin expects an SSL-secured connection.
+| `docker.skipSSL`
+
 | *filter*
 | In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.filter` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
 | `docker.filter`

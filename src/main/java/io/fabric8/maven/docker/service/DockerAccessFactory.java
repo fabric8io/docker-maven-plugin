@@ -38,6 +38,7 @@ public class DockerAccessFactory {
             String version = dockerAccessContext.getMinimalApiVersion() != null ? dockerAccessContext.getMinimalApiVersion() : API_VERSION;
             DockerAccess access = new DockerAccessWithHcClient("v" + version, connectionParam.getUrl(),
                     connectionParam.getCertPath(),
+                    dockerAccessContext.isSkipSSL(),
                     dockerAccessContext.getMaxConnections(),
                     dockerAccessContext.getLog());
             access.start();
@@ -123,6 +124,8 @@ public class DockerAccessFactory {
 
         private boolean skipMachine;
 
+        private boolean skipSSL;
+
         private String minimalApiVersion;
 
         private String dockerHost;
@@ -171,6 +174,8 @@ public class DockerAccessFactory {
         public Logger getLog() {
             return log;
         }
+
+        public boolean isSkipSSL() { return skipSSL; }
 
         public static class Builder {
 
@@ -226,6 +231,11 @@ public class DockerAccessFactory {
 
             public Builder log(Logger log) {
                 context.log = log;
+                return this;
+            }
+
+            public Builder skipSSL(boolean skipSSL) {
+                context.skipSSL = skipSSL;
                 return this;
             }
 

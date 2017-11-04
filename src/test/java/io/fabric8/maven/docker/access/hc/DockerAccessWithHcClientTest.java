@@ -46,7 +46,7 @@ public class DockerAccessWithHcClientTest {
 
     @Before
     public void setup() throws IOException {
-        client = new DockerAccessWithHcClient("v1.20", "tcp://1.2.3.4:2375", null, 1, mockLogger) {
+        client = new DockerAccessWithHcClient("v1.20", "tcp://1.2.3.4:2375", null, false, 1, mockLogger) {
             @Override
             ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
                 return mockDelegate;
