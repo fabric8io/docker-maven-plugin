@@ -43,7 +43,6 @@ public class DockerFileUtil {
      *
      * @param dockerFile file from where to extract the base image
      * @param interpolator interpolator for replacing properties
-     * @param filter @return the base image name or <code>null</code> if none is found.
      */
     public static String extractBaseImage(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
