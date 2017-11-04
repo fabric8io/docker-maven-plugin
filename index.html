@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.4">
+<meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="author" content="Roland Huß">
 <title>fabric8io/docker-maven-plugin</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
@@ -18,7 +18,6 @@ audio:not([controls]){display:none;height:0}
 [hidden],template{display:none}
 script{display:none!important}
 html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
-body{margin:0}
 a{background:transparent}
 a:focus{outline:thin dotted}
 a:active,a:hover{outline:0}
@@ -53,7 +52,7 @@ textarea{overflow:auto;vertical-align:top}
 table{border-collapse:collapse;border-spacing:0}
 *,*:before,*:after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
 html,body{font-size:100%}
-body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
 a:hover{cursor:pointer}
 img,object,embed{max-width:100%;height:auto}
 object,embed{height:100%}
@@ -65,7 +64,6 @@ img{-ms-interpolation-mode:bicubic}
 .text-center{text-align:center!important}
 .text-justify{text-align:justify!important}
 .hide{display:none}
-body{-webkit-font-smoothing:antialiased}
 img,object,svg{display:inline-block;vertical-align:middle}
 textarea{height:auto;min-height:50px}
 select{width:100%}
@@ -92,13 +90,12 @@ strong,b{font-weight:bold;line-height:inherit}
 small{font-size:60%;line-height:inherit}
 code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
 ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
-ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul,ol{margin-left:1.5em}
 ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
 ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
 ul.square{list-style-type:square}
 ul.circle{list-style-type:circle}
 ul.disc{list-style-type:disc}
-ul.no-bullet{list-style:none}
 ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
 dl dt{margin-bottom:.3125em;font-weight:bold}
 dl dd{margin-bottom:1.25em}
@@ -120,18 +117,25 @@ table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:
 table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
 table tr.even,table tr.alt,table tr:nth-of-type(even){background:#f8f8f7}
 table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{display:table-cell;line-height:1.6}
-body{tab-size:4}
 h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
 h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
 .clearfix:before,.clearfix:after,.float-group:before,.float-group:after{content:" ";display:table}
 .clearfix:after,.float-group:after{clear:both}
-*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed}
+*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed;word-wrap:break-word}
+*:not(pre)>code.nobreak{word-wrap:normal}
+*:not(pre)>code.nowrap{white-space:nowrap}
 pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeSpeed}
+em em{font-style:normal}
+strong strong{font-weight:400}
 .keyseq{color:rgba(51,51,51,.8)}
 kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
 .keyseq kbd:first-child{margin-left:0}
 .keyseq kbd:last-child{margin-right:0}
-.menuseq,.menu{color:rgba(0,0,0,.8)}
+.menuseq,.menuref{color:#000}
+.menuseq b:not(.caret),.menuref{font-weight:inherit}
+.menuseq{word-spacing:-.02em}
+.menuseq b.caret{font-size:1.25em;line-height:.8}
+.menuseq i.caret{font-weight:bold;text-align:center;width:.45em}
 b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
 b.button:before{content:"[";padding:0 3px 0 2px}
 b.button:after{content:"]";padding:0 2px 0 3px}
@@ -198,7 +202,7 @@ table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
 table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
 .admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
 .admonitionblock>table td.icon{text-align:center;width:80px}
-.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon img{max-width:initial}
 .admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
 .admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
 .admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
@@ -254,13 +258,13 @@ table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
 table.tableblock{max-width:100%;border-collapse:separate}
 table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
 table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
-table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
-table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
-table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
-table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
-table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
-table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
-table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.grid-all>thead>tr>.tableblock,table.grid-all>tbody>tr>.tableblock{border-width:0 1px 1px 0}
+table.grid-all>tfoot>tr>.tableblock{border-width:1px 1px 0 0}
+table.grid-cols>*>tr>.tableblock{border-width:0 1px 0 0}
+table.grid-rows>thead>tr>.tableblock,table.grid-rows>tbody>tr>.tableblock{border-width:0 0 1px 0}
+table.grid-rows>tfoot>tr>.tableblock{border-width:1px 0 0 0}
+table.grid-all>*>tr>.tableblock:last-child,table.grid-cols>*>tr>.tableblock:last-child{border-right-width:0}
+table.grid-all>tbody>tr:last-child>.tableblock,table.grid-all>thead:last-child>tr>.tableblock,table.grid-rows>tbody>tr:last-child>.tableblock,table.grid-rows>thead:last-child>tr>.tableblock{border-bottom-width:0}
 table.frame-all{border-width:1px}
 table.frame-sides{border-width:0 1px}
 table.frame-topbot{border-width:1px 0}
@@ -281,10 +285,12 @@ ul li ol{margin-left:1.5em}
 dl dd{margin-left:1.125em}
 dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
 ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
-ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
-ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
-ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
-ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
+ul.checklist,ul.none,ol.none,ul.no-bullet,ol.no-bullet,ol.unnumbered,ul.unstyled,ol.unstyled{list-style-type:none}
+ul.no-bullet,ol.no-bullet,ol.unnumbered{margin-left:.625em}
+ul.unstyled,ol.unstyled{margin-left:0}
+ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1.25em;font-size:.8em;position:relative;bottom:.125em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{margin-right:.25em}
 ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
 ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
 ul.inline>li>*{display:block}
@@ -301,7 +307,8 @@ ol.lowergreek{list-style-type:lower-greek}
 td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
 td.hdlist1{font-weight:bold;padding-bottom:1.25em}
 .literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
-.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
+.colist>table tr>td:first-of-type{padding:.4em .75em 0 .75em;line-height:1;vertical-align:top}
+.colist>table tr>td:first-of-type img{max-width:initial}
 .colist>table tr>td:last-of-type{padding:.25em 0}
 .thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
 .imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
@@ -364,6 +371,7 @@ div.unbreakable{page-break-inside:avoid}
 .yellow{color:#bfbf00}
 .yellow-background{background-color:#fafa00}
 span.icon>.fa{cursor:default}
+a span.icon>.fa{cursor:inherit}
 .admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
 .admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
 .admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
@@ -417,7 +425,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .hide-for-print{display:none!important}
 .show-for-print{display:inherit!important}}
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
 <style>
 /* Stylesheet for CodeRay to match GitHub theme | MIT License | http://foundation.zurb.com */
 /*pre.CodeRay {background-color:#f7f7f8;}*/
@@ -515,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.21.0,</span>
-<span id="revdate">2017-06-10</span>
+<span id="revnumber">version 0.23-SNAPSHOT,</span>
+<span id="revdate">2017-11-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -650,10 +658,10 @@ table.CodeRay td.code>pre{padding:0}
 <p>A general image part containing the image name and alias.</p>
 </li>
 <li>
-<p>A <a href="#docker:build">&lt;build&gt;</a> configuration specifying how images are built</p>
+<p>A <a href="#docker:build">&lt;build&gt; </a> configuration specifying how images are built</p>
 </li>
 <li>
-<p>A <a href="#docker:start">&lt;run&gt;</a> configuration describing how containers should be created and started.</p>
+<p>A <a href="#docker:start">&lt;run&gt; </a> configuration describing how containers should be created and started.</p>
 </li>
 </ul>
 </div>
@@ -664,7 +672,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="example">1.4. Example</h3>
 <div class="paragraph">
-<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt;</a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <a href="#docker:build">&lt;build&gt;</a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynamically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
+<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt; </a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <a href="#docker:build">&lt;build&gt; </a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynamically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
 </div>
 <div class="paragraph">
 <p>Images can be specified in any order and the plugin will take care of the proper startup order (and will bail out if it detects circular dependencies).</p>
@@ -823,7 +831,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.21.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.23-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1362,7 +1370,7 @@ in the next sections.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:source"><strong>docker:source</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Attach docker build archive to Maven project</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">package</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:save"><strong>docker:save</strong></a></strong></p></td>
@@ -1454,7 +1462,7 @@ The files of the assembly are stored in a build context relative directory <code
 <div id="build-filtering" class="paragraph">
 <div class="title">Filtering</div>
 <p>fabric8-maven-plugin filters given Dockerfile with Maven properties, much like the <code>maven-resource-plugin</code> does. Filtering is enabled by default and can be switched off with a build config <code>&lt;filter&gt;false&lt;/filter&gt;</code>. Properties which we want to replace are specified with the <code>${..}</code> syntax.
-Only properties which are set in the Maven build are replaced, all other remain untouched.</p>
+Replacement includes Maven project properties such as <code>${project.artifactId}</code>, properties set in the build, command-line properties, and system properties. Unresolved properties remain untouched.</p>
 </div>
 <div class="paragraph">
 <p>This partial replacement means that you can easily mix it with Docker build arguments and environment variable reference, but you need to be careful.
@@ -1467,8 +1475,8 @@ In particular,  if this configuration contains a * then the parts left, and righ
 If you specify a single character for <code>&lt;filter&gt;</code> then this delimiter is taken for both, the start and the end.
 E.g a <code>&lt;filter&gt;@&lt;/filter&gt;</code> triggers on parameters in the format <code>@&#8230;&#8203;@</code>, much like in the <code>maven-invoker-plugin</code>.
 Use something like this if you want to clearly separate from Docker builds args.
-Property replacement works for Dockerfile only.
-For replacing other data in associated files targeted for the Docker image, please use the maven-resource-plugin to copy them over before.</p>
+This form of property replacement works for Dockerfile only.
+For replacing other data in other files targeted for the Docker image, please use the <code>maven-resource-plugin</code> or an <a href="#build-assembly">assembly configuration</a> with filtering to make them available in the docker build context.</p>
 </div>
 <div class="paragraph">
 <div class="title">Example</div>
@@ -1500,7 +1508,7 @@ For replacing other data in associated files targeted for the Docker image, plea
 of an image configuration. The following configuration options are supported:</p>
 </div>
 <table id="config-image-build" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Build configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
+<caption class="title">Table 6. Build configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1609,11 +1617,11 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ports</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp"),</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -1621,7 +1629,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tags</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of additional <code>tag</code> elements with which an image is to be tagged after the build. Whitespace is trimmed from each element and empty elements are ignored.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>user</strong></p></td>
@@ -1629,7 +1637,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>volumes</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>volume</code> elements to create a container volume.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>volume</code> elements to create a container volume. Whitespace is trimmed from each element and empty elements are ignored.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>workdir</strong></p></td>
@@ -1689,7 +1697,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Assembly Configuration (<a href="#config-image">&lt;image&gt;</a> : <a href="#config-image-build">&lt;build&gt;</a>)</caption>
+<caption class="title">Table 7. Assembly Configuration (<a href="#config-image">&lt;image&gt; </a> : <a href="#config-image-build">&lt;build&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1788,10 +1796,10 @@ assembly configuration</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="config-image-build-assembly-user"></a> <strong>user</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.
-</p><p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.
-</p><p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.
-</p><p class="tableblock">For example, the image <code>jboss/wildfly</code> use a "jboss" user under which all commands are executed. Adding files in Docker always happens under the UID root. These files can only be changed to "jboss" is the <code>chown</code> command is executed as root. For the following commands to be run again as "jboss" (like the final <code>standalone.sh</code>), the plugin switches back to user <code>jboss</code> (this is this "run-user") after changing the file ownership. For this example a specification of
+<td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.</p>
+<p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.</p>
+<p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.</p>
+<p class="tableblock">For example, the image <code>jboss/wildfly</code> use a "jboss" user under which all commands are executed. Adding files in Docker always happens under the UID root. These files can only be changed to "jboss" is the <code>chown</code> command is executed as root. For the following commands to be run again as "jboss" (like the final <code>standalone.sh</code>), the plugin switches back to user <code>jboss</code> (this is this "run-user") after changing the file ownership. For this example a specification of
 <code>jboss:jboss:jboss</code> would be required.</p></td>
 </tr>
 </tbody>
@@ -2196,7 +2204,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tbody>
 </table>
 <div class="paragraph">
-<p>Instead of the <code>&lt;alias&gt;</code> a fixed property key can be configured in the image&#8217;s <a href="#config-image-run">&lt;run&gt;</a> configuration with the option <code>exposedPropertyKey</code>.</p>
+<p>Instead of the <code>&lt;alias&gt;</code> a fixed property key can be configured in the image&#8217;s <a href="#config-image-run">&lt;run&gt; </a> configuration with the option <code>exposedPropertyKey</code>.</p>
 </div>
 <div class="paragraph">
 <p>For example the Maven property <code>docker.container.tomcat.ip</code> would hold the Docker internal IP for a container with an alias "tomcat". You can set the global configuration <strong>exposeContainerInfo</strong> to an empty string to not expose container information that way or to a string for an other prefix than <code>docker.container</code>.</p>
@@ -2239,7 +2247,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
 <table id="config-image-run" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Run configuration (<a href="#config-image">&lt;image&gt;</a>)</caption>
+<caption class="title">Table 13. Run configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2498,7 +2506,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect3">
 <h4 id="start-port-mapping">5.2.3. Port Mapping</h4>
 <div class="paragraph">
-<p>The <code>&lt;ports&gt;</code> configuration contains a list of port mappings. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option <code>-p</code>.</p>
+<p>The <code>&lt;ports&gt;</code> configuration contains a list of port mappings. Whitespace is trimmed from each element and empty elements are ignored. Each mapping has multiple parts, each separate by a colon. This is equivalent to the port mapping when using the Docker CLI with option <code>-p</code>.</p>
 </div>
 <div class="paragraph">
 <p>A <code>port</code> stanza may take one of the following forms:</p>
@@ -2624,7 +2632,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <div class="sect3">
 <h4 id="network-configuration">5.2.5. Network</h4>
 <div class="paragraph">
-<p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt;</a> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:</p>
+<p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt; </a> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 15. Network configuration</caption>
@@ -2708,6 +2716,9 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 <div class="paragraph">
 <p>The <code>&lt;dependsOn&gt;</code> configuration can be used to expresses custom network dependencies between your containers. <code>docker:start</code> will ensure that all dependencies a container depends on are completely started (fulfilling all <code>&lt;wait&gt;</code> conditions) before the depending container is started.</p>
+</div>
+<div class="paragraph">
+<p>Additionally, each <code>&lt;container&gt;</code> element can specify a comma separated set of containers.  Comma (and whitespace) can be used to separate containers since valid docker container names contain only characters, digits, underscores, periods and dashes.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example</div>
@@ -2814,7 +2825,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>In this example the container creates a new volume named  <code>/logs</code> on the container and mounts <code>/opt/host_export</code> from the host as <code>/opt/container_import</code> on the container. In addition all exported volumes from the container which has been created from the image <code>jolokia/docker-demo</code> are mounted directly into the container (with the same directory names under which the exporting container exposes these directories). This image must be also configured for this plugin. Instead of the full image name, an alias name can be used, too.</p>
 </div>
 <div class="paragraph">
-<p>Please note, that no relative paths are allowed. However, you can use Maven variables in the path specifications. This should even work for boot2docker and docker-machine:</p>
+<p>You can use Maven variables in the path specifications. This should even work for boot2docker and docker-machine:</p>
 </div>
 <div class="listingblock">
 <div class="title">Example with absolute paths</div>
@@ -2823,6 +2834,23 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
   <span class="tag">&lt;bind&gt;</span>
     <span class="tag">&lt;volume&gt;</span>${project.build.directory}/${project.artifactId}-${project.version}:/usr/local/tomcat/webapps/${project.name}<span class="tag">&lt;/volume&gt;</span>
     <span class="tag">&lt;volume&gt;</span>${project.basedir}/data:/data<span class="tag">&lt;/volume&gt;</span>
+  <span class="tag">&lt;/bind&gt;</span>
+<span class="tag">&lt;/volumes&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can also use relative paths.  Relative paths are interpreted relative to the Maven project base directory.  Paths
+that begin with <code>~</code> are interpreted relative to the JVM&#8217;s <code>user.home</code> directory.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example with relative paths</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;volumes&gt;</span>
+  <span class="tag">&lt;bind&gt;</span>
+    <span class="tag">&lt;volume&gt;</span>src/main/webapps/foo:/usr/local/tomcat/webapps/foo<span class="tag">&lt;/volume&gt;</span>
+    <span class="tag">&lt;volume&gt;</span>./target:/data<span class="tag">&lt;/volume&gt;</span>
+    <span class="tag">&lt;volume&gt;</span>~:/home/user<span class="tag">&lt;/volume&gt;</span>
+    <span class="tag">&lt;volume&gt;</span>~/.m2/repository:/home/user/.m2/repository<span class="tag">&lt;/volume&gt;</span>
   <span class="tag">&lt;/bind&gt;</span>
 <span class="tag">&lt;/volumes&gt;</span></code></pre>
 </div>
@@ -3001,7 +3029,31 @@ output of an container and blocks until the pattern is matched. You can use <cod
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>prefix</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Prefix to use for the log output in order to identify the container. By default the image <code>alias</code> is used or alternatively the container <code>id</code>.</p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Prefix to use for the log output in order to identify the container. You can use placeholders in the prefix which are replaced on the fly:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>%a</code>: Alias of the image, or, if not set, the short container id.</p>
+</li>
+<li>
+<p><code>%c</code>: Short container id (i.e. the first 6 chars of the container id</p>
+</li>
+<li>
+<p><code>%C</code>: The full container id</p>
+</li>
+<li>
+<p><code>%n</code>: The image name</p>
+</li>
+<li>
+<p><code>%z</code>: An empty string</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default the format is "`%a&gt; `".</p>
+</div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>date</strong></p></td>
@@ -3493,7 +3545,7 @@ properties can the behaviour of this goal:</p>
 <div class="sect2">
 <h3 id="docker:source">5.8. <strong>docker:source</strong></h3>
 <div class="paragraph">
-<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build">&lt;&lt;docker:build&gt;</a>.</p>
+<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build">&lt;&lt;docker:build&gt; </a>.</p>
 </div>
 <div class="paragraph">
 <p><code>docker:source</code> uses the image&#8217;s <a href="image-configuration.md">alias</a> as part of the classifier, so it is mandatory that the alias is set for
@@ -3997,6 +4049,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>opt</code> elements to specify kernel security options to add to the container. For example <code>docker.securityOpt.1=seccomp=unconfined</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.shmsize</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Size of <code>/dev/shm</code> in bytes.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tags.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">List of tags to apply to a built image</p></td>
 </tr>
@@ -4191,7 +4247,7 @@ run and build configuration sections.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>basedir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Basedir where to find the compose file and which is also used as the current directory when examing the compose file</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Basedir where to find the compose file and which is also used as the current directory when examing the compose file.  Any relative volume bindings will be resolved relative to this directory.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>${basedir}/src/main/docker</code></p></td>
 </tr>
 <tr>
@@ -4210,7 +4266,7 @@ run and build configuration sections.</p>
 <p>The Docker Compose file can contain variables as described in the <a href="https://docs.docker.com/compose/compose-file/#/variable-substitution">Docker Compose documentation</a>. These are substituted with Maven project properties. Please note, when the <code>docker-compose.yml</code> with variables is to be used with the <code>docker-compose</code> CLI command, that these variables must also be valid environment variables (i.e. must not contain a <code>.</code>).</p>
 </div>
 <div class="paragraph">
-<p>In addition to the <code>docker-compose.yml</code> you can add all known options for <a href="#build-configuration">&lt;build&gt;</a>, <a href="#start-configuration">&lt;run&gt;</a> and <a href="#watch-configuration">&lt;watch&gt;</a> configuration elements which are then used as defaults and are overwritten by the configuration defined in the <code>docker-compose.yml</code> file. The merging between the XML configuration and the information found in <code>docker-compose.yml</code> is correlated via the <code>&lt;alias&gt;</code> name. E.g. if the XML image configuration is aliased with <code>webapp</code> then its is used as a default configuration for a Docker Compose <em>service</em> name <code>webapp</code>. All other services defined in the compose file are left untouched.</p>
+<p>In addition to the <code>docker-compose.yml</code> you can add all known options for <a href="#build-configuration">&lt;build&gt; </a>, <a href="#start-configuration">&lt;run&gt; </a> and <a href="#watch-configuration">&lt;watch&gt; </a> configuration elements which are then used as defaults and are overwritten by the configuration defined in the <code>docker-compose.yml</code> file. The merging between the XML configuration and the information found in <code>docker-compose.yml</code> is correlated via the <code>&lt;alias&gt;</code> name. E.g. if the XML image configuration is aliased with <code>webapp</code> then its is used as a default configuration for a Docker Compose <em>service</em> name <code>webapp</code>. All other services defined in the compose file are left untouched.</p>
 </div>
 <div class="sect3">
 <h4 id="limitations">6.2.1. Limitations</h4>
@@ -4381,7 +4437,7 @@ might be necessary to authenticate against a Docker registry.</p>
 <p>Using a <code>&lt;server&gt;</code> configuration in <code>~/.m2/settings.xml</code></p>
 </li>
 <li>
-<p>Login into a registry with <code>docker login</code> (credentials in <code>~/.docker/config.json</code>)</p>
+<p>Login into a registry with <code>docker login</code> (credentials in a credential helper or in <code>~/.docker/config.json</code>)</p>
 </li>
 </ul>
 </div>
@@ -4416,8 +4472,7 @@ the outside:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The most secure and also the most <em>mavenish</em> way is to add a server to
-the Maven settings file <code>~/.m2/settings.xml</code>:</p>
+<p>The most <em>mavenish</em> way is to add a server to the Maven settings file <code>~/.m2/settings.xml</code>:</p>
 </div>
 <div class="listingblock">
 <div class="title">Example</div>
@@ -4442,8 +4497,15 @@ username with a slash to the id name. The default without username is only taken
 a username appended id is chosen.</p>
 </div>
 <div class="paragraph">
-<p>As a final fallback, this plugin consults <code>~/.docker/config.json</code> for getting to the credentials. Within this
-file credentials are stored when connecting to a registry with the command <code>docker login</code> from the command line.</p>
+<p>The most <em>secure</em> way is to rely on docker&#8217;s credential store or credential helper and read confidential information
+from an external credentials store, such as the native keychain of the operating system. Follow the instruction on
+<a href="https://docs.docker.com/engine/reference/commandline/login/#credentials-store">the docker login documentation</a>.</p>
+</div>
+<div class="paragraph">
+<p>As a final fallback, this plugin consults <code>~/.docker/config.json</code> and reads credentials stored directly within this
+file. This unsafe behavior happened when connecting to a registry with the command <code>docker login</code> from the command line
+with older versions of docker (pre 1.13.0) or when docker is not configured to use a
+<a href="https://docs.docker.com/engine/reference/commandline/login/#credentials-store">credential store</a>.</p>
 </div>
 <div class="sect2">
 <h3 id="pull-vs-push-authentication">8.1. Pull vs. Push Authentication</h3>
@@ -4564,7 +4626,9 @@ The <code>docker:push</code> and <code>docker:pull</code> goals automatically ex
 </div>
 <div class="paragraph">
 <p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
-Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.</p>
+Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.
+In case you&#8217;re using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the <strong>security token</strong> as well.
+To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
 </div>
 </div>
 </div>
@@ -4610,8 +4674,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.21.0<br>
-Last updated 2017-06-10 07:53:09 UTC
+Version 0.23-SNAPSHOT<br>
+Last updated 2017-11-04 16:04:53 UTC
 </div>
 </div>
 </body>
