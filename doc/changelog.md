@@ -6,6 +6,7 @@
   - Add support for credential helper to authenticate against a registry (#821)
   - Fix registry auth config in plugin configuration (#858)
   - Preserve leading whitespace in logs (#875)
+  - Maven property interpolation in Dockerfiles (#877)
 
 * **0.22.1** (2017-08-28)
   - Allow Docker compose version "2", too ([#829](https://github.com/fabric8io/docker-maven-plugin/issues/829))

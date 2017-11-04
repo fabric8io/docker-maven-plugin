@@ -17,13 +17,23 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
+import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
+
+import mockit.Mock;
+import mockit.MockUp;
 
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
@@ -38,7 +48,7 @@ public class DockerFileUtilTest {
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
         assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, null, "false"));
+            toTest, FixedStringSearchInterpolator.create()));
     }
 
     private File copyToTempDir(String resource) throws IOException {
@@ -52,12 +62,7 @@ public class DockerFileUtilTest {
 
     @Test
     public void interpolate() throws Exception {
-        Properties props = new Properties();
-        props.put("base", "java");
-        props.put("name", "guenther");
-        props.put("age", "42");
-        props.put("ext", "png");
-
+        MojoParameters params = mockMojoParams();
         Map<String, String> filterMapping = new HashMap<>();
         filterMapping.put("none", "false");
         filterMapping.put("var", "${*}");
@@ -68,9 +73,10 @@ public class DockerFileUtilTest {
                 File dockerFile = getDockerfilePath(i, entry.getKey());
                 File expectedDockerFile = new File(dockerFile.getParent(), dockerFile.getName() + ".expected");
                 File actualDockerFile = createTmpFile(dockerFile.getName());
-                FileUtils.write(actualDockerFile,
-                        DockerFileUtil.interpolate(dockerFile, props, entry.getValue()), "UTF-8");
-                FileUtils.contentEqualsIgnoreEOL(expectedDockerFile, actualDockerFile, "UTF-8");
+                FixedStringSearchInterpolator interpolator = DockerFileUtil.createInterpolator(params, entry.getValue());
+                FileUtils.write(actualDockerFile, DockerFileUtil.interpolate(dockerFile, interpolator), "UTF-8");
+                // Compare text lines without regard to EOL delimiters
+                assertEquals(FileUtils.readLines(expectedDockerFile), FileUtils.readLines(actualDockerFile));
             }
         }
     }
@@ -81,4 +87,27 @@ public class DockerFileUtilTest {
             String.format("interpolate/%s/Dockerfile_%d", dir, i)).getFile());
     }
 
+    private MojoParameters mockMojoParams() {
+        MavenProject project = new MavenProject();
+        project.setArtifactId("docker-maven-plugin");
+
+        Properties projectProperties = project.getProperties();
+        projectProperties.put("base", "java");
+        projectProperties.put("name", "guenther");
+        projectProperties.put("age", "42");
+        projectProperties.put("ext", "png");
+
+        Settings settings = new Settings();
+        ArtifactRepository localRepository = new MockUp<ArtifactRepository>() {
+            @Mock
+            public String getBasedir() {
+                return "repository";
+            }
+        }.getMockInstance();
+        @SuppressWarnings("deprecation")
+        MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
+        session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue
+        session.getSystemProperties().put("user.name", "somebody"); // Java system property: -Duser.name=somebody
+        return new MojoParameters(session, project, null, null, null, settings, "src", "target", Collections.singletonList(project));
+    }
 }
