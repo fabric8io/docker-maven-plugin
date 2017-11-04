@@ -258,7 +258,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected RegistryService.RegistryConfig getRegistryConfig() throws MojoExecutionException {
         return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
-                .authConfig(authConfig.toMap())
+                .authConfig(authConfig != null ? authConfig.toMap() : null)
                 .authConfigFactory(authConfigFactory)
                 .skipExtendedAuth(skipExtendedAuth)
                 .autoPull(autoPull)
