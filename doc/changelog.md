@@ -8,6 +8,7 @@
   - Preserve leading whitespace in logs (#875)
   - Maven property interpolation in Dockerfiles (#877)
   - Allow parameters for the log prefix (#890)
+  - When removing a volume don't error if the volume does not exist (#788)
   
 * **0.22.1** (2017-08-28)
   - Allow Docker compose version "2", too ([#829](https://github.com/fabric8io/docker-maven-plugin/issues/829))
