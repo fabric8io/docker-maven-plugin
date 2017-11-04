@@ -272,7 +272,7 @@ public interface DockerAccess {
    String createVolume(VolumeCreateConfig configuration) throws DockerAccessException;
 
    /**
-    * removes a volume
+    * Removes a volume. It is a no-op if the volume does not exist.
     * @param name volume name to remove
     * @throws DockerAccessException if the volume could not be removed
     */

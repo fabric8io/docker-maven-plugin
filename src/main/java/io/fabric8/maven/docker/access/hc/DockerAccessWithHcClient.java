@@ -524,7 +524,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void removeVolume(String name) throws DockerAccessException {
         try {
             String url = urlBuilder.removeVolume(name);
-            delegate.delete(url, HTTP_NO_CONTENT);
+            delegate.delete(url, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove volume [%s]", name);
         }
