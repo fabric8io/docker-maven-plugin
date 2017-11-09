@@ -44,14 +44,9 @@ public class ConfigHelperTest {
 
     @Test
     public void noName() throws Exception {
-        try {
-            List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().build());
-            ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
-            fail();
-        } catch (IllegalArgumentException exp) {
-            assertTrue(exp.getMessage().contains("name"));
-        }
-
+        List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().build());
+        List<ImageConfiguration> images = ConfigHelper.resolveImages(null, configs, createResolver(), null, createCustomizer());
+        assertEquals("List should be empty", 0, images.size());
     }
 
     @Test

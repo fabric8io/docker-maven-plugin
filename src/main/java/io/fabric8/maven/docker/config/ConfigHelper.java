@@ -109,23 +109,14 @@ public class ConfigHelper {
         List<ImageConfiguration> ret = new ArrayList<>();
         if (unresolvedImages != null) {
             for (ImageConfiguration image : unresolvedImages) {
-                ret.addAll(imageResolver.resolve(image));
+                if(image.getName() != null) {
+                    ret.addAll(imageResolver.resolve(image));
+                }
+
             }
-            verifyImageNames(ret);
         }
         return ret;
     }
-
-
-    // Extract authentication information
-    private static void verifyImageNames(List<ImageConfiguration> ret) {
-        for (ImageConfiguration config : ret) {
-            if (config.getName() == null) {
-                throw new IllegalArgumentException("Configuration error: <image> must have a non-null <name>");
-            }
-        }
-    }
-
 
     // =========================================================================
 
