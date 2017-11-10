@@ -91,7 +91,7 @@ public class EcrExtendedAuth {
     }
 
     CloseableHttpClient createClient() {
-        return HttpClients.createDefault();
+        return HttpClients.custom().useSystemProperties().build();
     }
 
     private JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
