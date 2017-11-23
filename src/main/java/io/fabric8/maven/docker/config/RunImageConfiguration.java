@@ -146,6 +146,11 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private boolean skip = false;
 
+    /**
+     * Policy for pulling the image to start
+     */
+    @Parameter
+    private String imagePullPolicy;
 
     public RunImageConfiguration() { }
 
@@ -317,6 +322,10 @@ public class RunImageConfiguration implements Serializable {
 
     public boolean skip() {
         return skip;
+    }
+
+    public String getImagePullPolicy() {
+        return imagePullPolicy;
     }
 
     // ======================================================================================
@@ -530,6 +539,14 @@ public class RunImageConfiguration implements Serializable {
             }
             return this;
         }
+
+        public Builder imagePullPolicy(String imagePullPolicy) {
+            if (imagePullPolicy != null) {
+                config.imagePullPolicy = imagePullPolicy;
+            }
+            return this;
+        }
+
 
         public RunImageConfiguration build() {
             return config;

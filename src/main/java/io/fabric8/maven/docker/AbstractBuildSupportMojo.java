@@ -5,7 +5,6 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.util.MojoParameters;
-
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -45,7 +44,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
-    
+
     @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
     private List<MavenProject> reactorProjects;
 
@@ -54,8 +53,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
         return new BuildService.BuildContext.Builder()
                 .buildArgs(buildArgs)
                 .mojoParameters(createMojoParameters())
-                .pullRegistry(pullRegistry)
-                .registryConfig(getRegistryConfig())
+                .registryConfig(getRegistryConfig(pullRegistry))
                 .build();
     }
 

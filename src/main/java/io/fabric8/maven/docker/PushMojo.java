@@ -35,6 +35,6 @@ public class PushMojo extends AbstractDockerMojo {
             return;
         }
 
-        hub.getRegistryService().pushImages(getResolvedImages(), pushRegistry, retries, getRegistryConfig());
+        hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry));
     }
 }

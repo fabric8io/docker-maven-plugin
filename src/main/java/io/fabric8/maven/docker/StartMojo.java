@@ -284,15 +284,14 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Still to check: How to work with linking, volumes, etc ....
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
-
-            String imageName = imageConfig.getName();
-
-            RegistryService.RegistryConfig registryConfig = getRegistryConfig();
-            hub.getRegistryService().checkImageWithAutoPull(imageName,
-                                   getConfiguredRegistry(imageConfig, pullRegistry),
-                                   imageConfig.getBuildConfiguration() == null, registryConfig);
-
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+
+            RegistryService.RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
+            ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), autoPull);
+
+            hub.getRegistryService().pullImageWithPolicy(imageConfig.getName(), pullManager, registryConfig,
+                                                         queryService.hasImage(imageConfig.getName()));
+
             NetworkConfig config = runConfig.getNetworkingConfig();
             if (autoCreateCustomNetworks && config.isCustomNetwork()) {
                 runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
@@ -301,6 +300,10 @@ public class StartMojo extends AbstractDockerMojo {
             updateAliasesSet(imageAliases, imageConfig.getAlias());
         }
         return imagesWaitingToStart;
+    }
+
+    private String determinePullPolicy(RunImageConfiguration runConfig) {
+        return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
     }
 
     private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {

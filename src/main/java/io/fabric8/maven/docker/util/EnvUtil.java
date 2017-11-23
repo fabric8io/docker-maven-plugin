@@ -332,7 +332,12 @@ public class EnvUtil {
         return key.startsWith(prefix) && key.length() >= prefix.length();
     }
 
-    public static String findRegistry(String ... checkFirst) {
+    /**
+     * Return the first non null registry given. Use the env var DOCKER_REGISTRY as final fallback
+     * @param checkFirst list of registries to check
+     * @return registry found or null if none.
+     */
+    public static String fistRegistryOf(String ... checkFirst) {
         for (String registry : checkFirst) {
             if (registry != null) {
                 return registry;
@@ -392,17 +397,17 @@ public class EnvUtil {
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
-    
+
     /**
      * Validate that the provided filename is a valid Windows filename.
-     * 
+     *
      * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
-     * 
+     *
      * @param filename the filename
      * @return filename is a valid Windows filename
      */
     public static boolean isValidWindowsFileName(String filename) {
-    	
+
         Pattern pattern = Pattern.compile(
             "# Match a valid Windows filename (unspecified file system).          \n" +
             "^                                # Anchor to start of string.        \n" +
@@ -416,7 +421,7 @@ public class EnvUtil {
             ")                                # End negative lookahead assertion. \n" +
             "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
             "[^<>:\"/\\\\|?*\\x00-\\x1F\\ .]  # Last char is not a space or dot.  \n" +
-            "$                                # Anchor to end of string.            ", 
+            "$                                # Anchor to end of string.            ",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
         Matcher matcher = pattern.matcher(filename);
         boolean isMatch = matcher.matches();

@@ -6,7 +6,7 @@ script:
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 after_script:
-  - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn -Pjacoco package sonar:sonar -Dsonar.host.url=https://sonarqube.com -Dsonar.login=${SONARQUBE_TOKEN}"
+  - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn -Pjacoco package sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONARQUBE_TOKEN}"
 
 
 notifications:

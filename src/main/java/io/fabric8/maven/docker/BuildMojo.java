@@ -6,9 +6,9 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -53,9 +53,10 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
         BuildService.BuildContext buildContext = getBuildContext();
+        ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), autoPull);
         BuildService buildService = hub.getBuildService();
 
-        buildService.buildImage(imageConfig, buildContext);
+        buildService.buildImage(imageConfig, pullManager, buildContext);
         if (!skipTag) {
             buildService.tagImage(imageConfig.getName(), imageConfig);
         }
@@ -65,5 +66,9 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     @Override
     protected Date getReferenceDate() throws MojoExecutionException {
         return new Date();
+    }
+
+    private String determinePullPolicy(BuildImageConfiguration buildConfig) {
+        return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : imagePullPolicy;
     }
 }

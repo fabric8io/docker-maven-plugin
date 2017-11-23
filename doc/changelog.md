@@ -1,8 +1,11 @@
 # ChangeLog
 
-* **0.23-SNAPSHOT** 
+* **0.24-SNAPSHOT**
   - Respect system properties for ECR authentication (#897)
-  
+  - Simplified auto pull handling and moved to `imagePullPolicy` instead.
+
+Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry.
+
 * **0.23.0** (2017-11-04)
   - Support relative paths when binding volumes in `docker-compose.yml` ([#846](https://github.com/fabric8io/docker-maven-plugin/issues/846))
   - Allow  the session token for AWS authentication to be included in order to allow temporary security credentials provided by the AWS Security Token Service (AWS STS) to sign requests ([#883](https://github.com/fabric8io/docker-maven-plugin/issues/883))
@@ -13,7 +16,7 @@
   - Allow parameters for the log prefix ([#890](https://github.com/fabric8io/docker-maven-plugin/issues/890))
   - When removing a volume don't error if the volume does not exist ([#788](https://github.com/fabric8io/docker-maven-plugin/issues/788))
   - Fix warning when COPY and/or ADD with parameters are used ([#884](https://github.com/fabric8io/docker-maven-plugin/issues/884))
-  
+
 * **0.22.1** (2017-08-28)
   - Allow Docker compose version "2", too ([#829](https://github.com/fabric8io/docker-maven-plugin/issues/829))
   - Allow a registry to be set programmatically ([#853](https://github.com/fabric8io/docker-maven-plugin/issues/853))
@@ -30,7 +33,7 @@
   - Add ECDSA support ([#824](https://github.com/fabric8io/docker-maven-plugin/issues/824))
   - Fix test failures when build under Windows ([#834](https://github.com/fabric8io/docker-maven-plugin/issues/834))
   - Update dependencies to latest versions where possible
-  
+
 * **0.21.0** (2017-05-16)
   - Add wait checker for checking the exit code of a container ([#498](https://github.com/fabric8io/docker-maven-plugin/issues/498))
   - Check for exited container when doing wait checks ([#757](https://github.com/fabric8io/docker-maven-plugin/issues/757))

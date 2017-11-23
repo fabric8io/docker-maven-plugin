@@ -35,14 +35,13 @@ be specified by the certPath or machine configuration, or by the
 | `docker.autoCreate` `CustomNetworks`
 
 | *autoPull*
-a| Decide how to pull missing base images or images to start:
+a| Decide how to pull missing base images or images to start. This option is *deprecated*, please use <<image-pull-policy, imagePullPolicy>> instead.
 
- * `on` : Automatic download any missing images (default)
- * `off` : Automatic pulling is switched off
- * `always` : Pull images always even when they are already exist locally
- * `once` : For multi-module builds images are only checked once and pulled for the whole build.
+The following values are supported:
 
-By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option `-B`). A very simplified progress meter is provided when using no color output (i.e. with `-Ddocker.useColor=false`).
+ * `on` or `once`: Automatic download any missing images (default)
+ * `off` : Automatic pulling is switched off always
+ * `always` : Pull images always even when they already exist locally.
 
 | `docker.autoPull`
 
@@ -70,6 +69,17 @@ the URL is:
 | *filter*
 | In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.filter` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
 | `docker.filter`
+
+| [[image-pull-policy]] *imagePullPolicy*
+a| Specify whether images should be pull when looking for base images while building or images for starting.
+This property can take the following values (case insensitive):
+
+ * `IfNotPresent`: Automatic download any missing images (default)
+ * `Never` : Automatic pulling is switched off always
+ * `Always` : Pull images always even when they already exist locally.
+
+By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option `-B`). A very simplified progress meter is provided when using no color output (i.e. with `-Ddocker.useColor=false`).
+| `docker.imagePullPolicy`
 
 | *logDate*
 | Date format which is used for printing out container logs. This configuration can be overwritten by individual run configurations and described below. The format is described in <<loggging,Logging>>.
