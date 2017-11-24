@@ -7,25 +7,23 @@ import java.util.Properties;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
-import io.fabric8.maven.docker.util.ImagePullCache;
-import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.PomLabel;
 import org.apache.maven.execution.MavenSession;
@@ -60,9 +58,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
 
-    // Key for the previously used image cache
-    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
-
     // Filename for holding the build timestamp
     public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
 
@@ -92,8 +87,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Component
     protected DockerAccessFactory dockerAccessFactory;
 
-    @Parameter(property = "docker.autoPull", defaultValue = "on")
+    @Parameter(property = "docker.autoPull")
     protected String autoPull;
+
+    @Parameter(property = "docker.imagePullPolicy")
+    protected String imagePullPolicy;
 
     // Whether to keep the containers afters stopping (start/watch/stop)
     @Parameter(property = "docker.keepContainer", defaultValue = "false")
@@ -255,15 +253,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .build();
     }
 
-    protected RegistryService.RegistryConfig getRegistryConfig() throws MojoExecutionException {
+    protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) throws MojoExecutionException {
         return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
                 .authConfig(authConfig != null ? authConfig.toMap() : null)
                 .authConfigFactory(authConfigFactory)
                 .skipExtendedAuth(skipExtendedAuth)
-                .autoPull(autoPull)
-                .imagePullCacheManager(getImagePullCacheManager())
-                .registry(registry)
+                .registry(specificRegistry != null ? specificRegistry : registry)
                 .build();
     }
 
@@ -328,27 +324,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
 
-    private ImagePullCacheManager getImagePullCacheManager() {
-        return new ImagePullCacheManager() {
-            @Override
-            public ImagePullCache load() {
-                @SuppressWarnings({ "rawtypes", "unchecked" })
-                Properties userProperties = session.getUserProperties();
-                String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
-                ImagePullCache cache = new ImagePullCache(pullCacheJson);
-                if (pullCacheJson == null) {
-                    userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-                }
-                return cache;
-            }
-
-            @Override
-            public void save(ImagePullCache cache) {
-                session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-            }
-        };
-    }
-
    /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
      * docker tar archives)
@@ -388,8 +363,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return volumes;
     }
 
-
-
     // =================================================================================
 
     @Override
@@ -413,15 +386,23 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return dispatcher;
     }
 
-    /**
-     * Try to get the registry from various configuration parameters
-     *
-     * @param imageConfig image config which might contain the registry
-     * @param specificRegistry specific registry
-     * @return the registry found or null if none could be extracted
-     */
-    protected String getConfiguredRegistry(ImageConfiguration imageConfig, String specificRegistry) {
-        return EnvUtil.findRegistry(new ImageName(imageConfig.getName()).getRegistry(), imageConfig.getRegistry(), specificRegistry, registry);
+    public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {
+        return new ImagePullManager(getSessionCacheStore(), imagePullPolicy, autoPull);
     }
 
+    private ImagePullManager.CacheStore getSessionCacheStore() {
+        return new ImagePullManager.CacheStore() {
+            @Override
+            public String get(String key) {
+                Properties userProperties = session.getUserProperties();
+                return userProperties.getProperty(key);
+            }
+
+            @Override
+            public void put(String key, String value) {
+                Properties userProperties = session.getUserProperties();
+                userProperties.setProperty(key, value);
+            }
+        };
+    }
 }

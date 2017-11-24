@@ -29,7 +29,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </plugin>
 ----
 
-[[volume-configuration]]
+[[volume-create-configuration]]
 === Configuration
 
 The following options are available when creating volumes:

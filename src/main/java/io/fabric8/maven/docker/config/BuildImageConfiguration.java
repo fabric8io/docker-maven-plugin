@@ -1,8 +1,10 @@
 package io.fabric8.maven.docker.config;
 
+import java.awt.*;
 import java.io.File;
 import java.io.Serializable;
 import java.util.*;
+import java.util.List;
 
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -67,6 +69,12 @@ public class BuildImageConfiguration implements Serializable {
 
     @Parameter
     private List<String> ports;
+
+    /**
+     * Policy for pulling the base images
+     */
+    @Parameter
+    private String imagePullPolicy;
 
     /**
      * RUN Commands within Build/Image
@@ -180,6 +188,10 @@ public class BuildImageConfiguration implements Serializable {
     @Nonnull
     public List<String> getPorts() {
         return EnvUtil.removeEmptyEntries(ports);
+    }
+
+    public String getImagePullPolicy() {
+        return imagePullPolicy;
     }
 
     @Nonnull
@@ -333,6 +345,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder ports(List<String> ports) {
             config.ports = ports;
+            return this;
+        }
+
+        public Builder imagePullPolicy(String imagePullPolicy) {
+            config.imagePullPolicy = imagePullPolicy;
             return this;
         }
 

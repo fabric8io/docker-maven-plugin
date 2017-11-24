@@ -170,7 +170,7 @@ public class WatchService {
                             watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
                         }
 
-                        buildService.buildImage(imageConfig, buildContext);
+                        buildService.buildImage(imageConfig, null, buildContext);
 
                         String name = imageConfig.getName();
                         watcher.setImageId(queryService.getImageId(name));

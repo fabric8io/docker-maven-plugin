@@ -9,11 +9,10 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.ImagePullCache;
-import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -25,22 +24,32 @@ import org.apache.maven.settings.Settings;
 public class RegistryService {
 
     private final DockerAccess docker;
-    private final QueryService queryService;
     private final Logger log;
 
-    RegistryService(DockerAccess docker, QueryService queryService, Logger log) {
+    RegistryService(DockerAccess docker, Logger log) {
         this.docker = docker;
-        this.queryService = queryService;
         this.log = log;
     }
 
-    public void pushImages(Collection<ImageConfiguration> imageConfigs, String pushRegistry, int retries, RegistryConfig registryConfig) throws DockerAccessException, MojoExecutionException {
+    /**
+     * Push a set of images to a registry
+     *
+     * @param imageConfigs images to push (but only if they have a build configuration)
+     * @param retries how often to retry
+     * @param registryConfig a global registry configuration
+     * @throws DockerAccessException
+     * @throws MojoExecutionException
+     */
+    public void pushImages(Collection<ImageConfiguration> imageConfigs,
+                           int retries, RegistryConfig registryConfig) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
             if (buildConfig != null) {
-                String configuredRegistry = EnvUtil.findRegistry(new ImageName(imageConfig.getName()).getRegistry(),
-                        imageConfig.getRegistry(), pushRegistry, registryConfig.getRegistry());
+                String configuredRegistry = EnvUtil.fistRegistryOf(
+                    new ImageName(imageConfig.getName()).getRegistry(),
+                    imageConfig.getRegistry(),
+                    registryConfig.getRegistry());
 
 
                 AuthConfig authConfig = createAuthConfig(true, new ImageName(name).getUser(), configuredRegistry, registryConfig);
@@ -62,39 +71,74 @@ public class RegistryService {
     /**
      * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
      * is not existent, throw an error
-     * @param image image name
-     * @param registry optional registry which is used if the image itself doesn't have a registry.
-     * @param autoPullAlwaysAllowed whether an unconditional autopull is allowed.
+     * @param registryConfig registry configuration
+     *
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void checkImageWithAutoPull(String image, String registry, boolean autoPullAlwaysAllowed, RegistryConfig registryConfig) throws DockerAccessException, MojoExecutionException {
-        // TODO: further refactoring could be done to avoid referencing the QueryService here
-        ImagePullCache previouslyPulledCache = registryConfig.getImagePullCacheManager().load();
-        if (!queryService.imageRequiresAutoPull(registryConfig.getAutoPull(), image, autoPullAlwaysAllowed, previouslyPulledCache)) {
+    public void pullImageWithPolicy(String image, ImagePullManager pullManager, RegistryConfig registryConfig, boolean hasImage)
+        throws DockerAccessException, MojoExecutionException {
+
+        // Already pulled, so we don't need to take care
+        if (pullManager.hasAlreadyPulled(image)) {
+            return;
+        }
+
+        // Check if a pull is required
+        if (!imageRequiresPull(hasImage, pullManager.getImagePullPolicy(), image)) {
             return;
         }
 
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
-        String actualRegistry = EnvUtil.findRegistry(imageName.getRegistry(), registry);
-        docker.pullImage(imageName.getFullName(), createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry);
+        String actualRegistry = EnvUtil.fistRegistryOf(
+            imageName.getRegistry(),
+            registryConfig.getRegistry());
+        docker.pullImage(imageName.getFullName(),
+                         createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
-        previouslyPulledCache.add(image);
-        registryConfig.getImagePullCacheManager().save(previouslyPulledCache);
+        pullManager.pulled(image);
 
-        if (registry != null && !imageName.hasRegistry()) {
+        if (actualRegistry != null && !imageName.hasRegistry()) {
             // If coming from a registry which was not contained in the original name, add a tag from the
             // full name with the registry to the short name with no-registry.
-            docker.tag(imageName.getFullName(registry), image, false);
+            docker.tag(imageName.getFullName(actualRegistry), image, false);
         }
+    }
+
+
+    // ============================================================================================================
+
+
+    private boolean imageRequiresPull(boolean hasImage, ImagePullPolicy pullPolicy, String imageName)
+        throws MojoExecutionException {
+
+        // The logic here is like this (see also #96):
+        // otherwise: don't pull
+
+        if (pullPolicy == ImagePullPolicy.Never) {
+            if (!hasImage) {
+                throw new MojoExecutionException(
+                    String.format("No image '%s' found and pull policy 'Never' is set. Please chose another pull policy or pull the image yourself)", imageName));
+            }
+            return false;
+        }
+
+        // If the image is not available and mode is not ImagePullPolicy.Never --> pull
+        if (!hasImage) {
+            return true;
+        }
+
+        // If pullPolicy == Always --> pull, otherwise not (we have it already)
+        return pullPolicy == ImagePullPolicy.Always;
     }
 
     private AuthConfig createAuthConfig(boolean isPush, String user, String registry, RegistryConfig config)
             throws MojoExecutionException {
 
-        return config.getAuthConfigFactory().createAuthConfig(isPush, config.isSkipExtendedAuth(), config.getAuthConfig(),
-                                                              config.getSettings(), user, registry);
+        return config.getAuthConfigFactory().createAuthConfig(
+            isPush, config.isSkipExtendedAuth(), config.getAuthConfig(),
+            config.getSettings(), user, registry);
     }
 
     // ===========================================
@@ -103,10 +147,6 @@ public class RegistryService {
     public static class RegistryConfig implements Serializable {
 
         private String registry;
-
-        private String autoPull;
-
-        private ImagePullCacheManager imagePullCacheManager;
 
         private Settings settings;
 
@@ -121,14 +161,6 @@ public class RegistryService {
 
         public String getRegistry() {
             return registry;
-        }
-
-        public String getAutoPull() {
-            return autoPull;
-        }
-
-        public ImagePullCacheManager getImagePullCacheManager() {
-            return imagePullCacheManager;
         }
 
         public Settings getSettings() {
@@ -161,16 +193,6 @@ public class RegistryService {
 
             public Builder registry(String registry) {
                 context.registry = registry;
-                return this;
-            }
-
-            public Builder autoPull(String autoPull) {
-                context.autoPull = autoPull;
-                return this;
-            }
-
-            public Builder imagePullCacheManager(ImagePullCacheManager imagePullCacheManager) {
-                context.imagePullCacheManager = imagePullCacheManager;
                 return this;
             }
 

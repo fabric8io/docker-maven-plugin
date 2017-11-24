@@ -97,6 +97,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .maintainer(withPrefix(prefix, MAINTAINER, properties))
                 .workdir(withPrefix(prefix, WORKDIR, properties))
                 .skip(withPrefix(prefix, SKIP_BUILD, properties))
+                .imagePullPolicy(withPrefix(prefix, IMAGE_PULL_POLICY_BUILD, properties))
                 .dockerArchive(withPrefix(prefix, DOCKER_ARCHIVE, properties))
                 .buildOptions(mapWithPrefix(prefix, BUILD_OPTIONS, properties))
                 .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
@@ -142,6 +143,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .wait(extractWaitConfig(prefix, properties))
                 .volumes(extractVolumeConfig(prefix, properties))
                 .skip(withPrefix(prefix, SKIP_RUN, properties))
+                .imagePullPolicy(withPrefix(prefix, IMAGE_PULL_POLICY_RUN, properties))
                 .ulimits(extractUlimits(prefix, properties))
                 .tmpfs(listWithPrefix(prefix, TMPFS, properties))
                 .build();

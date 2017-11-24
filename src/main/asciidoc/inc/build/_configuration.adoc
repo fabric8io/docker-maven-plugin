@@ -33,10 +33,10 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 
 | *dockerFile*
 | Path to a `Dockerfile` which also triggers _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
- 
+
 | *dockerFileDir*
 | Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
- 
+
 
 | *dockerArchive*
 | Path to a saved image archive which is then imported. See <<external-dockerfile, Docker archive>> for details.
@@ -48,7 +48,7 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | The environments as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *filter*
-| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details. 
+| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details.
 
 | [[build-config-from]]*from*
 | The base image which should be used for this image. If not given this default to `busybox:latest` and is suitable for a pure data image.
@@ -70,7 +70,10 @@ endif::[]
 A provided `<from>` takes precedence over the name given here. This tag is useful for extensions of this plugin like the https://maven.fabric8.io[fabric8-maven-plugin] which can evaluate the additional information given here.
 
 | <<build-healthcheck, *healthCheck*>>
-a| Definition of a health check as described in <<build-healthcheck, Healthcheck>>
+| Definition of a health check as described in <<build-healthcheck, Healthcheck>>
+
+| *imagePullPolicy*
+| Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <<image-pull-policy, imagePullPolicy>> for the possible values and the default.
 
 | <<misc-env, *labels*>>
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.

@@ -20,7 +20,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 
@@ -52,10 +51,12 @@ public class BuildService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, BuildContext buildContext)
+    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
             throws DockerAccessException, MojoExecutionException {
 
-        autoPullBaseImage(imageConfig, buildContext);
+        if (imagePullManager != null) {
+            autoPullBaseImage(imageConfig, imagePullManager, buildContext);
+        }
 
         buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), addBuildArgs(buildContext));
     }
@@ -189,7 +190,7 @@ public class BuildService {
         return buildArgs;
     }
 
-    private void autoPullBaseImage(ImageConfiguration imageConfig, BuildContext buildContext)
+    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
@@ -205,10 +206,7 @@ public class BuildService {
             fromImage = extractBaseFromConfiguration(buildConfig);
         }
         if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
-            String pullRegistry =
-                    EnvUtil.findRegistry(new ImageName(fromImage).getRegistry(), buildContext.getPullRegistry(), buildContext.getRegistryConfig().getRegistry());
-
-            registryService.checkImageWithAutoPull(fromImage, pullRegistry, true, buildContext.getRegistryConfig());
+            registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
         }
     }
 
@@ -263,8 +261,6 @@ public class BuildService {
 
         private Map<String, String> buildArgs;
 
-        private String pullRegistry;
-
         private RegistryService.RegistryConfig registryConfig;
 
         public BuildContext() {
@@ -276,10 +272,6 @@ public class BuildService {
 
         public Map<String, String> getBuildArgs() {
             return buildArgs;
-        }
-
-        public String getPullRegistry() {
-            return pullRegistry;
         }
 
         public RegistryService.RegistryConfig getRegistryConfig() {
@@ -305,11 +297,6 @@ public class BuildService {
 
             public Builder buildArgs(Map<String, String> buildArgs) {
                 context.buildArgs = buildArgs;
-                return this;
-            }
-
-            public Builder pullRegistry(String pullRegistry) {
-                context.pullRegistry = pullRegistry;
                 return this;
             }
 

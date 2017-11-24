@@ -355,6 +355,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(a("/foo"), buildConfig.getVolumes());
         assertEquals("fabric8io@redhat.com",buildConfig.getMaintainer());
         assertEquals(false, buildConfig.nocache());
+        assertEquals("Always", buildConfig.getImagePullPolicy());
 
         validateEnv(buildConfig.getEnv());
         validateLabels(buildConfig.getLabels());
@@ -417,6 +418,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertUlimitEquals(ulimit("memlock",2048,null),runConfig.getUlimits().get(3));
         assertEquals("/var/lib/mysql:10m", runConfig.getTmpfs().get(0));
         assertEquals(1, runConfig.getTmpfs().size());
+        assertEquals("Never", runConfig.getImagePullPolicy());
 
 
         validateEnv(runConfig.getEnv());
@@ -526,7 +528,9 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.LOG_DRIVER_OPTS) + ".max-size", "1024",
             k(ConfigKey.LOG_DRIVER_OPTS) + ".max-file", "10",
             k(ConfigKey.WORKING_DIR), "foo",
-            k(ConfigKey.TMPFS) + ".1", "/var/lib/mysql:10m"
+            k(ConfigKey.TMPFS) + ".1", "/var/lib/mysql:10m",
+            k(ConfigKey.IMAGE_PULL_POLICY_BUILD), "Always",
+            k(ConfigKey.IMAGE_PULL_POLICY_RUN), "Never"
         };
     }
 

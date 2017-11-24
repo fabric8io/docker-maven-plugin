@@ -65,6 +65,8 @@ public enum ConfigKey {
     HEALTHCHECK_RETRIES("healthcheck.retries"),
     HEALTHCHECK_CMD("healthcheck.cmd"),
     HOSTNAME,
+    IMAGE_PULL_POLICY_BUILD("imagePullPolicy.build"),
+    IMAGE_PULL_POLICY_RUN("imagePullPolicy.run"),
     LABELS,
     LINKS,
     LOG_ENABLED("log.enabled"),

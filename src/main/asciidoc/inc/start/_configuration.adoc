@@ -61,6 +61,9 @@ The `<run>` configuration element knows the following sub elements:
 | *hostname*
 | Hostname of the container
 
+| *imagePullPolicy*
+| Specific pull policy for downloading the image. This overwrites any global pull policy. See the global <<image-pull-policy, imagePullPolicy>> configuration option for the possible values and the default.
+
 | <<misc-env, *labels*>>
 | Labels which should be attached to the  container. They are specified in the typical maven property format as described in <<misc-env,Environment and Labels>>.
 

@@ -22,12 +22,12 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.23-SNAPSHOT</version>
+    <version>0.24-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-data-jolokia</artifactId>
-  <version>0.22-SNAPSHOT</version>
+  <version>0.24-SNAPSHOT</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
@@ -87,7 +87,7 @@
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
-          <autoPull>always</autoPull>
+          <imagePullPolicy>IfNotPresent</imagePullPolicy>
           <watchPostGoal>org.apache.maven.plugins:maven-help-plugin:help</watchPostGoal>
           <images>
             <!-- Docker Image to use -->
