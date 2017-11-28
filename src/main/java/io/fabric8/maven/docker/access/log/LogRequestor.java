@@ -15,14 +15,6 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -32,9 +24,18 @@ import io.fabric8.maven.docker.util.Timestamp;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggerFactory;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Extractor for parsing the response of a log request
@@ -43,7 +44,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
  * @since 28/11/14
  */
 public class LogRequestor extends Thread implements LogGetHandle {
-
     // Patter for matching log entries
     static final Pattern LOG_LINE = Pattern.compile("^\\[?(?<timestamp>[^\\s\\]]*)]? (?<entry>.*?)\\s*$", Pattern.DOTALL);
     private final CloseableHttpClient client;
@@ -79,7 +79,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
         this.callback = callback;
         this.exception = null;
-        this.setDaemon(true);
+        // this.setDaemon(true);
     }
 
     /**
@@ -88,8 +88,11 @@ public class LogRequestor extends Thread implements LogGetHandle {
     public void fetchLogs() {
         try {
             callback.open();
-            HttpResponse resp = client.execute(getLogRequest(false));
-            parseResponse(resp);
+            this.request = getLogRequest(false);
+            final HttpResponse respone = client.execute(request);
+            parseResponse(respone);
+        } catch (LogCallback.DoneException e) {
+            finish();
         } catch (IOException exp) {
             callback.error(exp.getMessage());
         } finally {
@@ -99,24 +102,19 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     // Fetch log asynchronously as stream and follow stream
     public void run() {
-        // Response to extract from
-
-        try {
-            callback.open();
-            request = getLogRequest(true);
-            HttpResponse response = client.execute(request);
-            parseResponse(response);
-        } catch (IOException exp) {
-            callback.error("IO Error while requesting logs: " + exp);
-        } finally {
-            callback.close();
+        synchronized (lock) {
             try {
-                synchronized (lock) {
-                    client.close();
-                    request = null;
-                }
-            } catch (IOException exp) {
-                callback.error("Error while closing client: " + exp);
+                callback.open();
+
+                this.request = getLogRequest(true);
+                final HttpResponse response = client.execute(request);
+                parseResponse(response);
+            } catch (LogCallback.DoneException e) {
+                finish();
+            } catch (IOException e) {
+                callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
+            } finally {
+                callback.close();
             }
         }
     }
@@ -184,23 +182,25 @@ public class LogRequestor extends Thread implements LogGetHandle {
         return true;
     }
 
-    private void parseResponse(HttpResponse response) {
-        StatusLine status = response.getStatusLine();
+    private void parseResponse(HttpResponse response) throws LogCallback.DoneException, IOException {
+        final StatusLine status = response.getStatusLine();
         if (status.getStatusCode() != 200) {
             exception = new DockerAccessException("Error while reading logs (" + status + ")");
+            throw new LogCallback.DoneException();
         }
-        try (InputStream is = response.getEntity().getContent()) {
+
+        final InputStream is = response.getEntity().getContent();
+
+        try {
             while (true) {
                 if (!readStreamFrame(is)) {
                     return;
                 }
             }
-        } catch (IOException e) {
-            callback.error("Cannot process chunk response: " + e);
-            finish();
-        } catch (LogCallback.DoneException e) {
-            // Can be thrown by a log callback which indicates that we are done.
-            finish();
+        } finally {
+            if ((is != null) && (is.available() > 0)) {
+                is.close();
+            }
         }
     }
 
@@ -222,11 +222,10 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     @Override
     public void finish() {
-        if (request != null) {
-            synchronized (lock) {
-                if (request != null) {
-                    request.abort();
-                }
+        synchronized (lock) {
+            if (request != null) {
+                request.abort();
+                request = null;
             }
         }
     }
