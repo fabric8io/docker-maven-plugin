@@ -8,6 +8,9 @@ import mockit.Mocked;
 import org.junit.Test;
 
 public class LogMatchCallbackTest {
+
+    private final String defaultPattern = "Hello, world!";
+
     @Mocked
     private Logger logger;
 
@@ -67,5 +70,41 @@ public class LogMatchCallbackTest {
         }};
 
         logMatchCallback.log(1, new Timestamp(), "2017-11-21T12:44:43.678+0000 I NETWORK  [initandlisten] waiting for connections on port 27017" );
+    }
+
+    @Test
+    public void errorMethodProducesLogMessage() {
+        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, defaultPattern);
+
+        new Expectations() {{
+            logger.error(anyString, anyString);
+            times = 1;
+        }};
+
+        logMatchCallback.error("The message");
+    }
+
+    @Test
+    public void openMethodProducesLogMessage() {
+        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, "");
+
+        new Expectations() {{
+            logger.debug(anyString);
+            times = 1;
+        }};
+
+        logMatchCallback.open();
+    }
+
+    @Test
+    public void closeMethodProducesLogMessage() {
+        final LogMatchCallback logMatchCallback = new LogMatchCallback(logger, callback, "");
+
+        new Expectations() {{
+            logger.debug(anyString);
+            times = 1;
+        }};
+
+        logMatchCallback.close();
     }
 }

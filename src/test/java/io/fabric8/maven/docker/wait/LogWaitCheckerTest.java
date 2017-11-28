@@ -33,6 +33,8 @@ public class LogWaitCheckerTest {
 
     @Before
     public void setup() {
+
+        presetExpections();
         logWaitChecker = new LogWaitChecker("Hello, world!", access, "1", logger);
     }
 
@@ -50,6 +52,7 @@ public class LogWaitCheckerTest {
 
     @Test
     public void checkingAfterMatchingSucceeds() {
+
         logWaitChecker.matched();
 
         assertThat(logWaitChecker.check()).isTrue();
@@ -57,6 +60,34 @@ public class LogWaitCheckerTest {
 
     @Test
     public void checkingWithoutMatchingFails() {
+
         assertThat(logWaitChecker.check()).isFalse();
+    }
+
+    @Test
+    public void checkerClosesLogHandle() {
+
+        new Expectations() {{
+            handle.finish();
+            times = 1;
+        }};
+
+        logWaitChecker.cleanUp();
+    }
+
+    @Test
+    public void checkerReturnsValidLogLabel() {
+
+        final String expectedLogLabel = "on log out '" + "Hello, world!" + "'";
+        assertThat(logWaitChecker.getLogLabel()).isEqualTo(expectedLogLabel);
+    }
+
+    private void presetExpections() {
+
+        new Expectations() {{
+            access.getLogAsync(anyString, withInstanceOf(LogCallback.class));
+            times = 1;
+            result = handle;
+        }};
     }
 }

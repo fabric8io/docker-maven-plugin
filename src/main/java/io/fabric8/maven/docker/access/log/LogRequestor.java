@@ -79,7 +79,6 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
         this.callback = callback;
         this.exception = null;
-        // this.setDaemon(true);
     }
 
     /**
