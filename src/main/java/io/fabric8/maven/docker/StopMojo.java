@@ -1,9 +1,12 @@
 package io.fabric8.maven.docker;
 
 import java.io.IOException;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -60,6 +63,9 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.containerNamePattern")
     private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
+    @Parameter( property = "docker.stopUsingRegex", defaultValue = "false" )
+    private boolean userRegexForStopping;
+
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, IOException, ExecException {
         QueryService queryService = hub.getQueryService();
@@ -98,7 +104,35 @@ public class StopMojo extends AbstractDockerMojo {
         runService.removeCustomNetworks(networksToRemove);
     }
 
-    private boolean shouldStopContainer(Container container, GavLabel gavLabel) {
+    // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
+    private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
+        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
+
+        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
+            if(userRegexForStopping) {
+                return queryService.findContainersByRegex(image.getAliasRegex());
+            }
+            else {
+                Container container = queryService.getContainer(image.getAlias());
+                return container != null ? Collections.singletonList(container) : Collections.<Container>emptyList();
+            }
+        } else {
+            if(userRegexForStopping) {
+            	List<String> imageNames = queryService.findImageNamesByRegex(image.getNameRegex());
+                List<Container> containers = new ArrayList<Container>();
+            	for(String imageName : imageNames) {
+            		List<Container> foundContainers = queryService.getContainersForImage(imageName);
+            		containers.addAll(foundContainers);
+            	}
+                return containers;
+            }
+            else {
+                return queryService.getContainersForImage(image.getName());
+            }
+        }
+    }
+
+    private boolean shouldStopContainer(Container container, PomLabel pomLabel, ImageConfiguration image) {
         if (isStopAllContainers()) {
             return true;
         }

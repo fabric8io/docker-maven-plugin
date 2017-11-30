@@ -42,6 +42,20 @@ public class QueryService {
     }
 
     /**
+     * Find containers by the given regex name
+     * @param nameRegex of container to lookup
+     * @return the List of containers found or empty List if no container is available.
+     * @throws DockerAccessException in case of an remote error
+     */
+    public List<Container> findContainersByRegex(final String regexContainerIdOrName) throws DockerAccessException {
+        return docker.findContainerByRegex(regexContainerIdOrName);
+    }
+
+    public List<String> findImageNamesByRegex(String nameRegex) throws DockerAccessException {
+        return docker.findImageByRegexName(nameRegex);
+    }
+
+    /**
      * Get a container running for a given container name.
      * @param containerIdOrName name of container to lookup
      * @return the container found or <code>null</code> if no container is available.

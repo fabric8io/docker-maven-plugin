@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.access.hc;
 
+<<<<<<< HEAD
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -9,6 +10,8 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
+import java.net.URI;
+import java.util.regex.Pattern;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,7 +21,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStream;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -339,6 +341,42 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
+    @Override
+    public List<Container> findContainerByRegex(String regexContainerIdOrName) throws DockerAccessException {
+        String url = urlBuilder.listContainers();
+        Pattern p = Pattern.compile(regexContainerIdOrName);
+        List<Container> containers = new ArrayList<>();
+        List<String> matchingNames = new ArrayList<>();
+        try {
+            HttpBodyAndStatus response = delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
+            if (response.getStatusCode() == HTTP_NOT_FOUND) {
+                return containers;
+            } else {
+                JSONArray array = new JSONArray(response.getBody());
+
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject container = array.getJSONObject(i);
+                    JSONArray names = container.getJSONArray("Names");
+                    for(int x = 0; x < names.length(); x++) {
+                        String name = names.getString(x);
+                        if(name.startsWith("/")) {
+                            name = name.substring(1);
+                        }
+                        if(p.matcher(name).matches()){
+                            matchingNames.add(name);
+                        }
+                    }
+                }
+                for(String name : matchingNames) {
+                    containers.add(getContainer(name));
+                }
+                return containers;
+            }
+        } catch(Exception e) {
+            throw new DockerAccessException(e, "Unable to list container regex for [%s]", regexContainerIdOrName);
+        }
+    }
+
     private HttpBodyAndStatus inspectContainer(String containerIdOrName) throws DockerAccessException {
         try {
             String url = urlBuilder.inspectContainer(containerIdOrName);
@@ -610,7 +648,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
-    	return createHttpClient(builder, true);
+        return createHttpClient(builder, true);
     }
 
     ApacheHttpClientDelegate createHttpClient(ClientBuilder builder, boolean pooled) throws IOException {
@@ -723,8 +761,46 @@ public class DockerAccessWithHcClient implements DockerAccess {
         get.addHeader(HttpHeaders.ACCEPT, "*/*");
         get.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         try (CloseableHttpResponse response = delegate.getHttpClient().execute(get)) {
-
             return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
+        }
+    }
+
+    @Override
+    public List<String> findImageByRegexName(String nameRegex) throws DockerAccessException {
+        String url = urlBuilder.listImages();
+        List<String> imageNames = new ArrayList<>();
+        Pattern p = Pattern.compile(nameRegex);
+
+        try {
+            HttpBodyAndStatus response = delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
+            if (response.getStatusCode() == HTTP_NOT_FOUND) {
+                return imageNames;
+            }
+            JSONArray imageDetails = new JSONArray(response.getBody());
+
+            for(int i=0;i<imageDetails.length();i++) {
+                JSONObject image = imageDetails.getJSONObject(i);
+                if(!image.has("RepoTags") || image.isNull("RepoTags")) {
+                    log.debug("Invalid RepoTags found on %s", image.get("Id"));
+                    continue;
+                }
+                try{
+                    JSONArray tags = image.getJSONArray("RepoTags");
+                    for(int x=0;x<tags.length();x++) {
+                        String tag = tags.getString(x);
+                        if(p.matcher(tag).matches()) {
+                            imageNames.add(tag);
+                        }
+                    }
+                }catch(Exception ex) {
+                    log.error("Error processing RepoTags section of %s", image.get("Id"));
+                    ex.printStackTrace();
+                }
+            }
+            return imageNames;
+
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to find name by regex [%s]", nameRegex);
         }
     }
 }

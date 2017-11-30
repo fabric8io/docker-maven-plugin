@@ -49,6 +49,16 @@ public interface DockerAccess {
     ExecDetails getExecContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
+     * Get a container
+     *
+     * @param containerIdOrName container id or name
+     * @return <code>ContainerDetails<code> representing the container or null if none could be found
+     * @throws DockerAccessException if the container could not be inspected
+     */
+    List<Container> findContainerByRegex(String regexContainerIdOrName) throws DockerAccessException;
+
+
+    /**
      * Check whether the given name exists as image at the docker daemon
      *
      * @param name image name to check
@@ -56,6 +66,13 @@ public interface DockerAccess {
      */
     boolean hasImage(String name) throws DockerAccessException;
 
+    /**
+     * Check whether the given name exists as image at the docker daemon
+     *
+     * @param name image name to check
+     * @return true if the image exists
+     */
+    List<String> findImageByRegexName(String nameRegex) throws DockerAccessException;
     /**
      * Get the image id of a given name or <code>null</code> if no such image exists
      *

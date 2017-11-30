@@ -22,7 +22,13 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     private String name;
 
     @Parameter
+    private String nameRegex;
+
+    @Parameter
     private String alias;
+
+    @Parameter
+    private String aliasRegex;
 
     @Parameter
     private RunImageConfiguration run;
@@ -67,7 +73,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     }
 
     @Override
-	public String getAlias() {
+    public String getAlias() {
         return alias;
     }
 
@@ -223,5 +229,21 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             config.watch = watchConfig;
             return this;
         }
+    }
+
+    public String getNameRegex() {
+        return nameRegex;
+    }
+
+    public void setNameRegex(String nameRegex) {
+        this.nameRegex = nameRegex;
+    }
+
+    public String getAliasRegex() {
+        return aliasRegex;
+    }
+
+    public void setAliasRegex(String aliasRegex) {
+        this.aliasRegex = aliasRegex;
     }
 }

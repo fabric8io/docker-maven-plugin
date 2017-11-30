@@ -21,12 +21,13 @@ import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 
+import java.util.List;
+
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Mojo for removing images. By default only data images are removed. Data images are
@@ -52,20 +53,27 @@ public class RemoveMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.removeMode")
     private String removeMode;
-    
+
     /** 
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;
     
+    @Parameter(property = "docker.removeUsingRegex", defaultValue = "false")
+    private boolean removeUsingRegex;
+
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException {
         for (ImageConfiguration image : getResolvedImages()) {
             String name = image.getName();
 
             if (imageShouldBeRemoved(image)) {
-                removeImage(hub, name);
+                if (removeUsingRegex && image.getNameRegex() != null) {
+                    removeWithRegexp(hub, image.getNameRegex());
+                } else {
+                    removeImage(hub, name);
+                }
 
                 if(!skipTag) {
                     // Remove any tagged images
@@ -103,6 +111,13 @@ public class RemoveMojo extends AbstractDockerMojo {
             if (hub.getDockerAccess().removeImage(name,true)) {
                 log.info("%s: Remove", name);
             }
+        }
+    }
+
+    private void removeWithRegexp(ServiceHub hub, String nameRegexp) throws DockerAccessException {
+        QueryService queryService = hub.getQueryService();
+        for (String name : queryService.findImageNamesByRegex(nameRegexp)) {
+            removeImage(hub, name);
         }
     }
 

@@ -44,6 +44,11 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String listImages() {
+        return u("images/json").p("all", true)
+                .build();
+    }
+
     public String containerLogs(String containerId, boolean follow) {
         return u("containers/%s/logs", containerId)
                 .p("stdout",true)
