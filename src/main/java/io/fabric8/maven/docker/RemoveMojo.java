@@ -24,6 +24,9 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Mojo for removing images. By default only data images are removed. Data images are
  * images without a run configuration.
@@ -57,7 +60,24 @@ public class RemoveMojo extends AbstractDockerMojo {
                         log.info("%s: Remove",image.getDescription());
                     }
                 }
+
+                //Remove any tagged images
+                for (String tag: getImageBuildTags(image)){
+                    if (queryService.hasImage(name+":"+tag)) {
+                        if (hub.getDockerAccess().removeImage(name+":"+tag, true)) {
+                            log.info("%s tag %s : Remove", image.getDescription(), tag);
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private List<String> getImageBuildTags(ImageConfiguration image){
+        if (null != image.getBuildConfiguration()
+        && null != image.getBuildConfiguration().getTags()) {
+            return image.getBuildConfiguration().getTags();
+        }
+        return new ArrayList<>(0);
     }
 }
