@@ -75,6 +75,11 @@ public final class UrlBuilder {
                 .build();
     }
 
+    public String inspectExecContainer(String containerId) {
+        return u("exec/%s/json", containerId)
+                .build();
+    }
+
     public String listContainers(String ... filter) {
         Builder builder = u("containers/json");
         addFilters(builder, filter);

@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.ExecDetails;
+import io.fabric8.maven.docker.model.InspectedContainer;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
@@ -82,6 +84,19 @@ public class RunService {
         arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
         String execContainerId = docker.createExecContainer(containerId, arguments);
         docker.startExecContainer(execContainerId, logConfig.createSpec(containerId, imageConfiguration));
+
+        ExecDetails execContainer = docker.getExecContainer(execContainerId);
+        Integer exitCode = execContainer.getExitCode();
+        if (!Integer.valueOf(0).equals(exitCode)) {
+            InspectedContainer container = docker.getContainer(containerId);
+            throw new IllegalArgumentException(String.format("Executing '%s' with args: '%s' inside container: %s [%s] %s resulted in a non-zero exit code: %d",
+                    execContainer.getEntryPoint(),
+                    Arrays.toString(execContainer.getArguments()),
+                    container.getName(),
+                    container.getImage(),
+                    container.getId(),
+                    exitCode));
+        }
         return execContainerId;
     }
 

@@ -9,6 +9,7 @@ import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.InspectedContainer;
 import io.fabric8.maven.docker.model.Network;
 
@@ -37,6 +38,15 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container could not be inspected
      */
     InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException;
+
+    /**
+     * Get an exec container
+     *
+     * @param containerIdOrName exec container id or name
+     * @return <code>ExecDetails<code> representing the container or null if none could be found
+     * @throws DockerAccessException if the container could not be inspected
+     */
+    ExecDetails getExecContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
      * Check whether the given name exists as image at the docker daemon
