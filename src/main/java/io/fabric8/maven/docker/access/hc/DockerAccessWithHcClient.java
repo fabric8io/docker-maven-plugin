@@ -1,6 +1,5 @@
 package io.fabric8.maven.docker.access.hc;
 
-<<<<<<< HEAD
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -343,7 +342,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     @Override
     public List<Container> findContainerByRegex(String regexContainerIdOrName) throws DockerAccessException {
-        String url = urlBuilder.listContainers();
+        String url = urlBuilder.listContainers(true);
         Pattern p = Pattern.compile(regexContainerIdOrName);
         List<Container> containers = new ArrayList<>();
         List<String> matchingNames = new ArrayList<>();
@@ -352,13 +351,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
             if (response.getStatusCode() == HTTP_NOT_FOUND) {
                 return containers;
             } else {
-                JSONArray array = new JSONArray(response.getBody());
+                JsonArray array = JsonFactory.newJsonArray(response.getBody());
 
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject container = array.getJSONObject(i);
-                    JSONArray names = container.getJSONArray("Names");
-                    for(int x = 0; x < names.length(); x++) {
-                        String name = names.getString(x);
+                for (int i = 0; i < array.size(); i++) {
+                    JsonObject container = array.get(i).getAsJsonObject();
+                    JsonArray names = container.get("Names").getAsJsonArray();
+                    for(int x = 0; x < names.size(); x++) {
+                        String name = names.get(x).getAsString();
                         if(name.startsWith("/")) {
                             name = name.substring(1);
                         }
@@ -776,18 +775,18 @@ public class DockerAccessWithHcClient implements DockerAccess {
             if (response.getStatusCode() == HTTP_NOT_FOUND) {
                 return imageNames;
             }
-            JSONArray imageDetails = new JSONArray(response.getBody());
+            JsonArray imageDetails = JsonFactory.newJsonArray(response.getBody());
 
-            for(int i=0;i<imageDetails.length();i++) {
-                JSONObject image = imageDetails.getJSONObject(i);
-                if(!image.has("RepoTags") || image.isNull("RepoTags")) {
+            for(int i=0; i < imageDetails.size(); i++) {
+                JsonObject image = imageDetails.get(i).getAsJsonObject();
+                if(!image.has("RepoTags") || image.get("RepoTags").isJsonNull()) {
                     log.debug("Invalid RepoTags found on %s", image.get("Id"));
                     continue;
                 }
                 try{
-                    JSONArray tags = image.getJSONArray("RepoTags");
-                    for(int x=0;x<tags.length();x++) {
-                        String tag = tags.getString(x);
+                    JsonArray tags = image.get("RepoTags").getAsJsonArray();
+                    for(int x=0; x < tags.size(); x++) {
+                        String tag = tags.get(x).getAsString();
                         if(p.matcher(tag).matches()) {
                             imageNames.add(tag);
                         }

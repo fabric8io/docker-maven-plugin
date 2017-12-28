@@ -11,6 +11,7 @@
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
   - Support docker SHELL setting for runCmds (#1157)
   - Added 'autoRemove' option for running containers (#1179)
+  - Stop and remove using regex names (#900)
   - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
   - Add support for auto-pulling multiple base image for multi stage builds (#1057)
   - Fix usage of credential helper that do not support 'version' command (#1159)

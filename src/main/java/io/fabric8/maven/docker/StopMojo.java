@@ -10,9 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
@@ -121,18 +123,18 @@ public class StopMojo extends AbstractDockerMojo {
             	List<String> imageNames = queryService.findImageNamesByRegex(image.getNameRegex());
                 List<Container> containers = new ArrayList<Container>();
             	for(String imageName : imageNames) {
-            		List<Container> foundContainers = queryService.getContainersForImage(imageName);
+            		List<Container> foundContainers = queryService.getContainersForImage(imageName, true);
             		containers.addAll(foundContainers);
             	}
                 return containers;
             }
             else {
-                return queryService.getContainersForImage(image.getName());
+                return queryService.getContainersForImage(image.getName(), true);
             }
         }
     }
 
-    private boolean shouldStopContainer(Container container, PomLabel pomLabel, ImageConfiguration image) {
+    private boolean shouldStopContainer(Container container, GavLabel gavLabel) {
         if (isStopAllContainers()) {
             return true;
         }

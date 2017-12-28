@@ -104,7 +104,6 @@ public class DockerAssemblyManager {
      */
     public File createDockerTarArchive(String imageName, final MojoParameters params, final BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
             throws MojoExecutionException {
-
         final BuildDirs buildDirs = createBuildDirs(imageName, params);
         final AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
 
