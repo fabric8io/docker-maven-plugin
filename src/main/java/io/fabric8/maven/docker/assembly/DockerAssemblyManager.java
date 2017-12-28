@@ -104,9 +104,9 @@ public class DockerAssemblyManager {
      */
     public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
             throws MojoExecutionException {
-        BuildDirs buildDirs = createBuildDirs(imageName, params);
+        final BuildDirs buildDirs = createBuildDirs(imageName, params);
 
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        final AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
 
         // Build up assembly. In dockerfile mode this must be added explicitly in the Dockerfile with an ADD
         if (hasAssemblyConfiguration(assemblyConfig)) {
@@ -135,6 +135,10 @@ public class DockerAssemblyManager {
                         // Exclude non-interpolated dockerfile from source tree
                         // Interpolated Dockerfile is already added as it was created into the output directory
                         excludeDockerfile(fileSet, dockerFile);
+                        AssemblyMode mode = assemblyConfig != null ? assemblyConfig.getMode() : null;
+                        if (mode != null && mode.isArchive()) {
+                            archiver.addFile(new File(buildDirs.getOutputDirectory(), dockerFile.getName()), dockerFile.getName());
+                        }
                         archiver.addFileSet(fileSet);
                         return archiver;
                     }
@@ -365,7 +369,7 @@ public class DockerAssemblyManager {
         if (mode != null && mode.isArchive()) {
             DefaultArchivedFileSet archiveSet =
                     DefaultArchivedFileSet.archivedFileSet(new File(outputDir,  assemblyConfig.getName() + "." + mode.getExtension()));
-            archiveSet.setPrefix(mode + "/");
+            archiveSet.setPrefix(assemblyConfig.getName() + "/");
             archiveSet.setIncludingEmptyDirectories(true);
             archiveSet.setUsingDefaultExcludes(false);
             archiver.addArchivedFileSet(archiveSet);
