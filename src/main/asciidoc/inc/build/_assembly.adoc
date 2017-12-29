@@ -128,7 +128,7 @@ will add the created artifact with the name `${project.build.finalName}.${artifa
 All declared files end up in the configured `targetDir` (or `/maven` by default) in the created image.
 
 .Maven peculiarities when including the artifact
-If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. Otherwise the artifact file can't be found by `docker:build`. This is an old https://issues.apache.org/jira/browse/MASSEMBLY-94[outstanding issue] of the assembly plugin which probably can't be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases you won't experience any problem. However, when the following warning happens which might lead to the given error:
+If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. Otherwise the artifact file, can't be found by `docker:build`. This is an old https://issues.apache.org/jira/browse/MASSEMBLY-94[outstanding issue] of the assembly plugin which probably can't be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases, you won't experience any problem. However, when the following warning happens which might lead to the given error:
 
 [source]
 ----

@@ -154,10 +154,10 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Name of an alternative log driver
 
 | *docker.log.driver.opts.VARIABLE*
-| Logging driver options (specified similar as in `docker.env.VARIABLE`)
+| Logging driver options (specified similarly as in `docker.env.VARIABLE`)
 
 | *docker.links.idx*
-| defines a list of links to other containers when starting a container. _idx_ can be any suffix which is not use except when _idx_ is numeric it specifies the order within the list (i.e. the list contains first a entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example `<docker.links.1>db</docker.links.1>` specifies a link to the image with alias 'db'.
+| defines a list of links to other containers when starting a container. _idx_ can be any suffix which is not used except when _idx_ is numeric it specifies the order within the list (i.e. the list contains first entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example `<docker.links.1>db</docker.links.1>` specifies a link to the image with alias 'db'.
 
 | *docker.maintainer*
 | defines the maintainer's email as used when building an image
@@ -199,7 +199,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Container restart policy
 
 | *docker.restartPolicy.retry*
-| Max restrart retries if `on-failure` used
+| Max restart retries if `on-failure` used
 
 | *docker.run.idx*
 | List of commands to `RUN` when creating the image

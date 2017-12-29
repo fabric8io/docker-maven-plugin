@@ -34,18 +34,18 @@ integration test code.
 Multiple containers can be managed at once, which can be linked
 together or share data via volumes. Containers are created and started
 with the `docker:start` goal and stopped and destroyed with the
-`docker:stop` goal. For integration tests both goals are typically
-bound to the the `pre-integration-test` and `post-integration-test` phase,
+`docker:stop` goal. For integration tests, both goals are typically
+bound to the `pre-integration-test` and `post-integration-test` phase,
 respectively. It is recommended to use the 
 [`maven-failsafe-plugin`](http://maven.apache.org/surefire/maven-failsafe-plugin/) 
 for integration testing in order to stop the docker container even when
 the tests fail.
 
 For proper isolation, container exposed ports can be dynamically and
-flexibly mapped to local host ports. It is easy to specify a Maven
+flexibly mapped to localhost ports. It is easy to specify a Maven
 property which will be filled in with a dynamically assigned port
 after a container has been started. This can then be used as
-parameter for integration tests to connect to the application.
+a parameter for integration tests to connect to the application.
 
 ### Configuration
 

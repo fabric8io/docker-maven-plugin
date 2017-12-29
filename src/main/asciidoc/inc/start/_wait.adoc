@@ -81,7 +81,7 @@ As soon as one condition is met the build continues. If you add a `<time>` const
 </wait>
 ----
 
-This setup will wait for the given URL to be reachable but ten seconds at most. Additionally, it will be waited for the TCP ports 3306 and 9999. Also, when stopping the container after an integration tests, the build wait for 500 ms before it tries to remove the container (if not `keepContainer` or `keepRunning` is used). You can use maven properties in each condition, too. In the example, the `${host.port}` property is probably set before within a port mapping section.
+This setup will wait for the given URL to be reachable but ten seconds at most. Additionally, it will wait for the TCP ports 3306 and 9999. Also, when stopping the container after integration tests, the build wait for 500 ms before it tries to remove the container (if not `keepContainer` or `keepRunning` is used). You can use maven properties in each condition, too. In the example, the `${host.port}` property is probably set before within a port mapping section.
 
 The property `${docker.host.address}` is set implicitly to the address of the Docker host. This host will be taken from the `docker.host` configuration if HTTP or HTTPS is used. If a Unix socket is used for communication with the docker daemon, then `localhost` is assumed. You can override this property always by setting this Maven property explicitly.
 
