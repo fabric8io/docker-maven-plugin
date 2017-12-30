@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.23-SNAPSHOT,</span>
-<span id="revdate">2017-11-04</span>
+<span id="revnumber">version 0.24-SNAPSHOT,</span>
+<span id="revdate">2017-12-30</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -575,12 +575,12 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#docker:save">5.9. <strong>docker:save</strong></a></li>
 <li><a href="#docker:volume-create">5.10. <strong>docker:volume-create</strong></a>
 <ul class="sectlevel3">
-<li><a href="#volume-configuration">5.10.1. Configuration</a></li>
+<li><a href="#volume-create-configuration">5.10.1. Configuration</a></li>
 </ul>
 </li>
 <li><a href="#docker:volume-remove">5.11. <strong>docker:volume-remove</strong></a>
 <ul class="sectlevel3">
-<li><a href="#volume-configuration">5.11.1. Configuration</a></li>
+<li><a href="#volume-remove-configuration">5.11.1. Configuration</a></li>
 </ul>
 </li>
 </ul>
@@ -831,7 +831,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.23-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.24-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -978,26 +978,23 @@ be specified by the certPath or machine configuration, or by the
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoPull</strong></p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Decide how to pull missing base images or images to start:</p>
+<p>Decide how to pull missing base images or images to start. This option is <strong>deprecated</strong>, please use <a href="#image-pull-policy">imagePullPolicy</a> instead.</p>
+</div>
+<div class="paragraph">
+<p>The following values are supported:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>on</code> : Automatic download any missing images (default)</p>
+<p><code>on</code> or <code>once</code>: Automatic download any missing images (default)</p>
 </li>
 <li>
-<p><code>off</code> : Automatic pulling is switched off</p>
+<p><code>off</code> : Automatic pulling is switched off always</p>
 </li>
 <li>
-<p><code>always</code> : Pull images always even when they are already exist locally</p>
-</li>
-<li>
-<p><code>once</code> : For multi-module builds images are only checked once and pulled for the whole build.</p>
+<p><code>always</code> : Pull images always even when they already exist locally.</p>
 </li>
 </ul>
-</div>
-<div class="paragraph">
-<p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.autoPull</code></p></td>
 </tr>
@@ -1043,6 +1040,30 @@ the URL is:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>filter</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property <code>docker.filter</code> when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn&#8217;t refer an image in the configuration will be ignored.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.filter</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="image-pull-policy"></a> <strong>imagePullPolicy</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Specify whether images should be pull when looking for base images while building or images for starting.
+This property can take the following values (case insensitive):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>IfNotPresent</code>: Automatic download any missing images (default)</p>
+</li>
+<li>
+<p><code>Never</code> : Automatic pulling is switched off always</p>
+</li>
+<li>
+<p><code>Always</code> : Pull images always even when they already exist locally.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.imagePullPolicy</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>logDate</strong></p></td>
@@ -1595,9 +1616,11 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-healthcheck"><strong>healthCheck</strong></a></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Definition of a health check as described in <a href="#build-healthcheck">Healthcheck</a></p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Definition of a health check as described in <a href="#build-healthcheck">Healthcheck</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>imagePullPolicy</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <a href="#image-pull-policy">imagePullPolicy</a> for the possible values and the default.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>labels</strong></a></p></td>
@@ -1731,7 +1754,7 @@ remote API.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Directory containing an external Dockerfile. <em>This option is deprecated, please use &lt;dockerfiledir&gt; directly in the &lt;build&gt; section</em>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory containing an external Dockerfile. <em>This option is deprecated, please use &lt;dockerFileDir&gt; directly in the &lt;build&gt; section</em>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>exportTargetDir</strong></p></td>
@@ -1740,7 +1763,7 @@ remote API.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>ignorePermissions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specification if existing file permissions should be ignored
-when creating the assembly archive with a mode <code>dir</code>. This value is <code>false</code> by default. <em>This property is deprecated, use a <code>permissionMode</code> of <code>ignore</code> instead.</em></p></td>
+when creating the assembly archive with a mode <code>dir</code>. This value is <code>false</code> by default. <em>This property is deprecated, use a <code>permissions</code> of <code>ignore</code> instead.</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mode</strong></p></td>
@@ -1924,7 +1947,7 @@ o  'io.fabric8:helloworld'
        <span class="tag">&lt;goal&gt;</span>build<span class="tag">&lt;/goal&gt;</span>
     <span class="tag">&lt;/goals&gt;</span>
   <span class="tag">&lt;/execution&gt;</span>
-<span class="tag">&lt;executions&gt;</span></code></pre>
+<span class="tag">&lt;/executions&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2308,6 +2331,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock">Hostname of the container</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>imagePullPolicy</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy for downloading the image. This overwrites any global pull policy. See the global <a href="#image-pull-policy">imagePullPolicy</a> configuration option for the possible values and the default.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>labels</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Labels which should be attached to the  container. They are specified in the typical maven property format as described in <a href="#misc-env">Environment and Labels</a>.</p></td>
 </tr>
@@ -2514,8 +2541,8 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 14. Port mapping format</caption>
 <colgroup>
-<col style="width: 16.6666%;">
-<col style="width: 83.3334%;">
+<col style="width: 28.5714%;">
+<col style="width: 71.4286%;">
 </colgroup>
 <thead>
 <tr>
@@ -2525,19 +2552,19 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>18080:8080</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18080:8080</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two numeric values separated by a <code>:</code>. This form will result in an explicit mapping between the docker host and the corresponding port inside the container. In the above example, port 18080 would be exposed on the docker host and mapped to port 8080 in the running container.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>&lt;host.port&gt;:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>host.port</strong>:80</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of a string and a numeric value separated by a <code>:</code>. In this form, the string portion of the tuple will correspond to a Maven property. If the property is undefined when the <code>start</code> task executes, a port will be dynamically selected by Docker in the ephemeral port range and assigned to the property which may then be used later in the same POM file. The ephemeral port range is configured by the <code>/proc/sys/net/ipv4/ip_local_port_range</code> kernel parameter, which typically ranges from 32678 to 61000.  If the property exists and has numeric value, that value will be used as the exposed port on the docker host as in the previous form. In the above example, the docker service will elect a new port and assign the value to the property <code>host.port</code> which may then later be used in a property expression similar to <code>&lt;value&gt;${host.port}&lt;/value&gt;</code>. This can be used to pin a port from the outside when doing some initial testing similar to <code>mvn -Dhost.port=10080 docker:start</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>bindTo:&lt;host.port&gt;:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>bindTo</strong>:<strong>host.port</strong>:80</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two strings and a numeric value separated by a <code>:</code>. In this form, <code>bindTo</code> is an ip address on the host the container should bind to. As a convenience, a hostname pointing to the docker host may also be specified. The container will fail to start if the hostname can not be resolved.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>+host.ip:&lt;host.port&gt;:80</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">+<strong>host.ip</strong>:<strong>host.port</strong>:80</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Tuple consisting of two strings and a numeric value separated by a <code>:</code>. In this form, the host ip of the container will be placed into a Maven property name <code>host.ip</code>. If docker reports that value to be <code>0.0.0.0</code>, the value of <code>docker.host.address</code> will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (<code>host.ip</code> in this example) containing the value to use. <code>host:port</code> works in the same way as described above.</p></td>
 </tr>
 </tbody>
@@ -2632,7 +2659,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <div class="sect3">
 <h4 id="network-configuration">5.2.5. Network</h4>
 <div class="paragraph">
-<p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt; </a> configuration section can be used to configure the network mode of the container. This is now the prefered way for linking containers together. It know the following sub elements:</p>
+<p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt; </a> configuration section can be used to configure the network mode of the container. This is now the preferred way for linking containers together. It knows the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 15. Network configuration</caption>
@@ -2664,7 +2691,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p><strong>container</strong> : Connect to the network of the specified container. The name of the container is taken from the <code>&lt;name&gt;</code> element.</p>
 </li>
 <li>
-<p><strong>custom</strong> : Use a custom network, which must be created before using <code>docker network create</code>. Alternatively you can set the <code><code>docker.autoCreateCustomNetworks</code></code> <a href="#global-configuration">global configuration</a> parameter to <code><code>true</code></code> to automatically create custom networks. Custom networks are available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
+<p><strong>custom</strong> : Use a custom network, which must be created before by using <code>docker network create</code>. Alternatively you can set the <code><code>docker.autoCreateCustomNetworks</code></code> <a href="#global-configuration">global configuration</a> parameter to <code><code>true</code></code> to automatically create custom networks. Custom networks are available for Docker 1.9 and newer. For more about the networking options please refer to the <a href="https://docs.docker.com/engine/userguide/networking/work-with-networks">Docker documentation</a>.</p>
 </li>
 <li>
 <p><strong>none</strong> : No network will be setup.</p>
@@ -3666,7 +3693,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </div>
 </div>
 <div class="sect3">
-<h4 id="volume-configuration">5.10.1. Configuration</h4>
+<h4 id="volume-create-configuration">5.10.1. Configuration</h4>
 <div class="paragraph">
 <p>The following options are available when creating volumes:</p>
 </div>
@@ -3729,7 +3756,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 </div>
 </div>
 <div class="sect3">
-<h4 id="volume-configuration">5.11.1. Configuration</h4>
+<h4 id="volume-remove-configuration">5.11.1. Configuration</h4>
 <div class="paragraph">
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
@@ -3951,6 +3978,14 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.hostname</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container hostname</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.imagePullPolicy.build</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy used when building images. See <a href="#image-pull-policy">imagePullPolicy</a> for the possible values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.imagePullPolicy.run</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy used for downloading images to run. See <a href="#image-pull-policy">imagePullPolicy</a> for the possible values.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.labels.LABEL</strong></p></td>
@@ -4674,8 +4709,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.23-SNAPSHOT<br>
-Last updated 2017-11-04 16:16:40 UTC
+Version 0.24-SNAPSHOT<br>
+Last updated 2017-12-30 10:30:52 UTC
 </div>
 </div>
 </body>
