@@ -11,6 +11,7 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
+import mockit.Injectable;
 import mockit.Mocked;
 import mockit.Verifications;
 import org.junit.Before;
@@ -46,13 +47,16 @@ public class RegistryServiceTest {
     @Mocked
     private AuthConfigFactory authConfigFactory;
 
+    @Injectable
+    private QueryService queryService;
+
     @Before
     public void setup() {
         reset();
     }
 
     private void reset() {
-        registryService = new RegistryService(docker, logger);
+        registryService = new RegistryService(docker, queryService, logger);
         cacheStore = new TestCacheStore();
         authConfig = new HashMap();
 

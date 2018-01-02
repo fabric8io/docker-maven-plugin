@@ -24,10 +24,12 @@ import org.apache.maven.settings.Settings;
 public class RegistryService {
 
     private final DockerAccess docker;
+    private QueryService queryService;
     private final Logger log;
 
-    RegistryService(DockerAccess docker, Logger log) {
+    RegistryService(DockerAccess docker, QueryService queryService,  Logger log) {
         this.docker = docker;
+        this.queryService = queryService;
         this.log = log;
     }
 
@@ -45,22 +47,28 @@ public class RegistryService {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
+            ImageName imageName = new ImageName(name);
+            String imageId = queryService.getImageId(imageName.getFullName());
+
             if (buildConfig != null) {
-                String configuredRegistry = EnvUtil.fistRegistryOf(
-                    new ImageName(imageConfig.getName()).getRegistry(),
+                String configuredRegistry = EnvUtil.fistRegistryOf(imageName.getRegistry(),
                     imageConfig.getRegistry(),
                     registryConfig.getRegistry());
 
-
-                AuthConfig authConfig = createAuthConfig(true, new ImageName(name).getUser(), configuredRegistry, registryConfig);
+                AuthConfig authConfig = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
 
                 long start = System.currentTimeMillis();
-                docker.pushImage(name, authConfig, configuredRegistry, retries);
-                log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
+                docker.pushImage(imageName.getFullName(), authConfig, configuredRegistry, retries);
+                log.info("Pushed %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(start));
 
+                String taggedImageName;
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {
-                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
+                        taggedImageName = new ImageName(name, tag).getFullName();
+                        if (!imageId.equals(queryService.getImageId(taggedImageName))) {
+                            docker.pushImage(taggedImageName, authConfig, configuredRegistry, retries);
+                            log.info("Pushed %s in %s", taggedImageName, EnvUtil.formatDurationTill(start));
+                        }
                     }
                 }
             }
