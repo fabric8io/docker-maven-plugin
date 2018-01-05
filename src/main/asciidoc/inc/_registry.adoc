@@ -13,7 +13,7 @@ with a registry part, this registry is contacted. Authentication is
 explained in the next <<_authentication,section>>.
 
 There are some situations however where you want to have more
-flexibility for specifying a remote registry. This might be, because
+flexibility for specifying a remote registry. This might be because
 you do not want to hard code a registry into `pom.xml` but
 provide it from the outside with an environment variable or a system
 property.

@@ -14,7 +14,7 @@ There are five different locations searched for credentials.  In order, these ar
 * Login into a registry with `docker login` (credentials in a credential helper or in `~/.docker/config.json`)
 
 Using the username and password directly in the `pom.xml` is not
-recommended since this is widely visible. This is most easiest and
+recommended since this is widely visible. This is easiest and
 transparent way, though. Using an `<authConfig>` is straight forward:
 
 [source,xml]
@@ -76,7 +76,7 @@ https://docs.docker.com/engine/reference/commandline/login/#credentials-store[cr
 == Pull vs. Push Authentication
 
 The credentials lookup described above is valid for both push and
-pull operations. In order to narrow things down, credentials can be be
+pull operations. In order to narrow things down, credentials can be
 provided for pull or push operations alone:
 
 In an `<authConfig>` section a sub-section `<pull>` and/or `<push>`
@@ -121,7 +121,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
     -Ddocker.password=$(oc whoami -t)
 ----
 
-(note, that the image's user name part ("default" here") must
+(note, that the image's username part ("default" here") must
 correspond to an OpenShift project with the same name to which you
 currently connected account has access).
 

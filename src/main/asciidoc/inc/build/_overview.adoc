@@ -20,7 +20,7 @@ All paths can be either absolute or relative paths (except when both `dockerFile
 .Adding assemblies in Dockerfile mode
 Any additional files located in the `dockerFileDir` directory will also be added to the build context as well. 
 You can also use an assembly if specified in an <<build-assembly,assembly configuration>>. 
-However you need to add the files on your own in the Dockerfile with an `ADD` or `COPY` command.
+However, you need to add the files on your own in the Dockerfile with an `ADD` or `COPY` command.
 The files of the assembly are stored in a build context relative directory `maven/` but can be changed by changing the assembly name with the option `<name>` in the assembly configuration.
 
 E.g. the files can be added with
@@ -33,9 +33,9 @@ COPY maven/ /my/target/directory
 
 so that the assembly files will end up in `/my/target/directory` within the container. 
 
-If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
+If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
 
-If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
+If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
 
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 

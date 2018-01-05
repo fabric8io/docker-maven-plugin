@@ -44,7 +44,7 @@ The following are examples of valid configuration entries:
 </ports>
 ----
 
-Another useful configuration option is `portPropertyFile` which can be used to to write out the container's host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.
+Another useful configuration option is `portPropertyFile` which can be used to write out the container's host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.
 
 This property file might be useful with tests or with other maven plugins that will be unable to use the resolved properties because they can only be updated after the container has started and plugins resolve their properties in an earlier lifecycle phase.
 

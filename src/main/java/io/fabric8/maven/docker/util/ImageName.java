@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  *
  * <ul>
  *     <li>If the first part before the slash contains a "." or a ":" it is considered to be a registry URL</li>
- *     <li>A last part starting with with a ":" is considered to be a tag</li>
+ *     <li>A last part starting with a ":" is considered to be a tag</li>
  *     <li>The rest is considered the repository name (which might be separated via slashes)</li>
  * </ul>
  *

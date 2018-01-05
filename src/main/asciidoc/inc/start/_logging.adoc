@@ -30,13 +30,13 @@ logging.
 * `MEDIUM` Joda medium date time format
 * `SHORT` Joda short date time format
 * `LONG` Joda long date time format
-* `ISO8601` Full ISO-8601 formatted date time with milli seconds
+* `ISO8601` Full ISO-8601 formatted date time with milliseconds
 
 As an alternative a date-time format string as recognized by
-http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[JodaTime] is possible. In order to set a consistent date format the global configuration parameter `logDate` can be used.
+http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[JodaTime] is possible. In order to set a consistent date format, the global configuration parameter `logDate` can be used.
 
 | *color*
-| Color used for coloring the prefix when coloring is enabeld (i.e. if running in a console and `useColor` is set). The available colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If coloring is enabled and now color is provided a color is picked for you.
+| Color used for coloring the prefix when coloring is enabled (i.e. if running in a console and `useColor` is set). The available colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If coloring is enabled and now color is provided a color is picked for you.
 
 | *file*
 | Path to a file to which the log output is written. This file is overwritten for every run and colors are switched off.

@@ -299,7 +299,7 @@ There are three different ways for providing credentials:
 * Providing system properties `docker.username` and `docker.password` from the outside
 * Using a `<server>` configuration in the the `~/.m2/settings.xml` settings
 
-Using the username and password directly in the `pom.xml` is not recommended since this is widely visible. This is most easiest and transparent way, though. Using an `<authConfig>` is straight forward:
+Using the username and password directly in the `pom.xml` is not recommended since this is widely visible. This is easiest and transparent way, though. Using an `<authConfig>` is straight forward:
 
 ````xml
 <plugin>
