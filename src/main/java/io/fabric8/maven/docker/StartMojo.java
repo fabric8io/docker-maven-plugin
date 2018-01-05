@@ -121,6 +121,12 @@ public class StartMojo extends AbstractDockerMojo {
             // Queue of images to start as containers
             final Queue<ImageConfiguration> imagesStarting = new ArrayDeque<>();
 
+            // Prepare the shutdown hook for stopping containers if we are going to follow them.  Add the hook before starting any
+            // of the containers so that partial or aborted starts will behave the same as fully-successful ones.
+            if (follow) {
+                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
+            }
+
             // Loop until every image has been started and the start of all images has been completed
             while (!hasBeenAllImagesStarted(imagesWaitingToStart, imagesStarting)) {
 
@@ -155,7 +161,6 @@ public class StartMojo extends AbstractDockerMojo {
             portMappingPropertyWriteHelper.write();
 
             if (follow) {
-                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
                 wait();
             }
 
