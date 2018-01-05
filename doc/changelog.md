@@ -3,6 +3,7 @@
 * **0.24-SNAPSHOT**
   - Respect system properties for ECR authentication (#897)
   - Simplified auto pull handling and moved to `imagePullPolicy` instead.
+  - Initialize shutdown hook early to allow killing of containers when waiting for a condition (#921)
 
 Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry.
 
