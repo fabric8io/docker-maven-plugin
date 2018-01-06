@@ -102,18 +102,18 @@ public class DockerAssemblyManager {
      * @return file holding the path to the created assembly tar file
      * @throws MojoExecutionException
      */
-    public File createDockerTarArchive(String imageName, MojoParameters params, BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
+    public File createDockerTarArchive(String imageName, MojoParameters params, final BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
             throws MojoExecutionException {
-        BuildDirs buildDirs = createBuildDirs(imageName, params);
 
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        final BuildDirs buildDirs = createBuildDirs(imageName, params);
+        final AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+
+        final List<ArchiverCustomizer> archiveCustomizers = new ArrayList<>();
 
         // Build up assembly. In dockerfile mode this must be added explicitly in the Dockerfile with an ADD
         if (hasAssemblyConfiguration(assemblyConfig)) {
             createAssemblyArchive(assemblyConfig, params, buildDirs);
         }
-
-        ArchiverCustomizer customizer;
         try {
             if (buildConfig.isDockerFileMode()) {
                 // Use specified docker directory which must include a Dockerfile.
@@ -127,31 +127,40 @@ public class DockerAssemblyManager {
                 verifyGivenDockerfile(dockerFile, buildConfig, interpolator, log);
                 interpolateDockerfile(dockerFile, buildDirs, interpolator);
                 // User dedicated Dockerfile from extra directory
-                customizer = new ArchiverCustomizer() {
+                archiveCustomizers.add(new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
                         DefaultFileSet fileSet = DefaultFileSet.fileSet(dockerFile.getParentFile());
                         addDockerIgnoreIfPresent(fileSet);
                         // Exclude non-interpolated dockerfile from source tree
-                        // Interpolated Dockerfile is already added as it was created into the output directory
+                        // Interpolated Dockerfile is already added as it was created into the output directory when
+                        // using dir dir mode
                         excludeDockerfile(fileSet, dockerFile);
+
+                        // If the content is added as archive, then we need to add the Dockerfile from the builddir
+                        // directly to docker.tar (as the output builddir is not picked up in archive mode)
+                        if (isArchive(assemblyConfig)) {
+                            String name = dockerFile.getName();
+                            archiver.addFile(new File(buildDirs.getOutputDirectory(), name), name);
+                        }
+
                         archiver.addFileSet(fileSet);
                         return archiver;
                     }
-                };
+                });
             } else {
                 // Create custom docker file in output dir
                 DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
                 builder.write(buildDirs.getOutputDirectory());
                 // Add own Dockerfile
                 final File dockerFile = new File(buildDirs.getOutputDirectory(), DOCKERFILE_NAME);
-                customizer = new ArchiverCustomizer() {
+                archiveCustomizers.add(new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
                         archiver.addFile(dockerFile, DOCKERFILE_NAME);
                         return archiver;
                     }
-                };
+                });
             }
 
             // If required make all files in the assembly executable
@@ -159,15 +168,21 @@ public class DockerAssemblyManager {
                 AssemblyConfiguration.PermissionMode mode = assemblyConfig.getPermissions();
                 if (mode == AssemblyConfiguration.PermissionMode.exec ||
                     mode == AssemblyConfiguration.PermissionMode.auto && EnvUtil.isWindows()) {
-                    customizer = new AllFilesExecCustomizer(customizer, log);
+                    archiveCustomizers.add(new AllFilesExecCustomizer(log));
                 }
             }
-            return createBuildTarBall(buildDirs, Arrays.asList(customizer, finalCustomizer), assemblyConfig, buildConfig.getCompression());
+
+            if (finalCustomizer != null) {
+                archiveCustomizers.add(finalCustomizer);
+            }
+
+            return createBuildTarBall(buildDirs, archiveCustomizers, assemblyConfig, buildConfig.getCompression());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create %s in %s", DOCKERFILE_NAME, buildDirs.getOutputDirectory()), e);
         }
     }
+
 
     private void excludeDockerfile(DefaultFileSet fileSet, File dockerFile) {
         ArrayList<String> excludes =
@@ -252,8 +267,14 @@ public class DockerAssemblyManager {
     private boolean hasAssemblyConfiguration(AssemblyConfiguration assemblyConfig) {
         return assemblyConfig != null &&
                 (assemblyConfig.getInline() != null ||
-                        assemblyConfig.getDescriptor() != null ||
-                        assemblyConfig.getDescriptorRef() != null);
+                 assemblyConfig.getDescriptor() != null ||
+                 assemblyConfig.getDescriptorRef() != null);
+    }
+
+    private boolean isArchive(AssemblyConfiguration assemblyConfig) {
+        return hasAssemblyConfiguration(assemblyConfig) &&
+               assemblyConfig.getMode() != null &&
+               assemblyConfig.getMode().isArchive();
     }
 
     public File createChangedFilesArchive(List<AssemblyFiles.Entry> entries, File assemblyDirectory,
@@ -365,7 +386,7 @@ public class DockerAssemblyManager {
         if (mode != null && mode.isArchive()) {
             DefaultArchivedFileSet archiveSet =
                     DefaultArchivedFileSet.archivedFileSet(new File(outputDir,  assemblyConfig.getName() + "." + mode.getExtension()));
-            archiveSet.setPrefix(mode + "/");
+            archiveSet.setPrefix(assemblyConfig.getName() + "/");
             archiveSet.setIncludingEmptyDirectories(true);
             archiveSet.setUsingDefaultExcludes(false);
             archiver.addArchivedFileSet(archiveSet);

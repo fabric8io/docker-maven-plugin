@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.assembly;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,11 +32,9 @@ import org.codehaus.plexus.util.StringUtils;
  * @since 26/06/16
  */
 class AllFilesExecCustomizer implements ArchiverCustomizer {
-    private ArchiverCustomizer innerCustomizer;
     private Logger log;
 
-    AllFilesExecCustomizer(ArchiverCustomizer inner, Logger logger) {
-        innerCustomizer = inner;
+    AllFilesExecCustomizer(Logger logger) {
         this.log = logger;
     }
 
@@ -48,10 +46,6 @@ class AllFilesExecCustomizer implements ArchiverCustomizer {
         log.warn("|'-rwxr-xr-x' permissions. It is recommended to double check |");
         log.warn("|and reset permissions for sensitive files and directories.  |");
         log.warn("\\------------------------------------------------------------/");
-
-        if (innerCustomizer != null) {
-            archiver = innerCustomizer.customize(archiver);
-        }
 
         TarArchiver newArchiver = new TarArchiver();
         newArchiver.setDestFile(archiver.getDestFile());

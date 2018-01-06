@@ -8,7 +8,7 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 | Element | Description
 
 | *name*
-| Assembly name, which is `maven` by default. This name is used for the archived and directories created during the build and holding the assembly files. If an <<external-dockerfile,external Dockerfile>> is used than this name is also the relative directory which contains the assembly files.
+| Assembly name, which is `maven` by default. This name is used for the archives and directories created during the build. This directory holds the files specified by the assembly. If an <<external-dockerfile,external Dockerfile>> is used than this name is also the relative directory which contains the assembly files.
 
 | *targetDir*
 | Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/<assembly name>`, so `/maven` if *name* is not set to a different value. This option has no meaning when an <<external-dockerfile,external Dockerfile>> is used.
