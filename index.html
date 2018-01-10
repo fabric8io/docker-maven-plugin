@@ -524,7 +524,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
 <span id="revnumber">version 0.24-SNAPSHOT,</span>
-<span id="revdate">2018-01-05</span>
+<span id="revdate">2018-01-10</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -672,7 +672,7 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="example">1.4. Example</h3>
 <div class="paragraph">
-<p>In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt; </a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <a href="#docker:build">&lt;build&gt; </a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynamically chosen port, and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
+<p>In the following examples, two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <a href="#docker:start">&lt;run&gt; </a> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <a href="#docker:build">&lt;build&gt; </a> section. It creates an image which has artifacts and dependencies in the <code>/maven</code> directory (and which are specified with an assembly descriptor). Additionally, it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the <code>&lt;run&gt;</code> section this port is mapped to a dynamically chosen port and then assigned to the Maven property <code>${tomcat.port}</code>. This property could be used, for example, by an integration test to access this microservice. An important part is the <code>&lt;links&gt;</code> section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with <code>DB_</code>).</p>
 </div>
 <div class="paragraph">
 <p>Images can be specified in any order and the plugin will take care of the proper startup order (and will bail out if it detects circular dependencies).</p>
@@ -795,7 +795,7 @@ table.CodeRay td.code>pre{padding:0}
 <p>Docker machine support</p>
 </li>
 <li>
-<p>Flexible registry handling (i.e. registries can be specified as meta data)</p>
+<p>Flexible registry handling (i.e. registries can be specified as metadata)</p>
 </li>
 <li>
 <p>Specification of <a href="#password-encryption">encrypted</a> registry passwords for push and pull in ~/.m2/settings.xml (i.e., outside the pom.xml)</p>
@@ -881,7 +881,7 @@ available goals are described below.</p>
 <p><strong>docker-build</strong> : Much like the <em>docker</em> packaging, except that there are no integration tests configured by default.</p>
 </li>
 <li>
-<p><strong>docker-tar</strong> : Create a so called <em>Docker tar</em> archive which is used as the artifact and which later can be use for building an image. It contains essentially a <code>Dockerfile</code> with supporting files. See <a href="docker-source">docker:source</a> for more details.</p>
+<p><strong>docker-tar</strong> : Create a so called <em>Docker tar</em> archive which is used as the artifact and which later can be used for building an image. It contains essentially a <code>Dockerfile</code> with supporting files. See <a href="docker-source">docker:source</a> for more details.</p>
 </li>
 </ul>
 </div>
@@ -1190,10 +1190,10 @@ This property can take the following values (case insensitive):</p>
 </tbody>
 </table>
 <div class="paragraph">
-<p>When no Docker host is configured or available as environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but <code>autoCreate</code> is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine which has been created because of <code>autoCreate</code> gets never deleted by docker-maven-plugin. This needs to be done manually if required.</p>
+<p>When no Docker host is configured or available as an environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but <code>autoCreate</code> is true, then the machine is created and started. Otherwise, an error is printed. Please note, that a machine which has been created because of <code>autoCreate</code> gets never deleted by docker-maven-plugin. This needs to be done manually if required.</p>
 </div>
 <div class="paragraph">
-<p>In absence of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide the name of a Docker machine. Similarly the property <code>docker.machine.autoCreate</code> can be set to true for creating a Docker machine, too.</p>
+<p>In absence of a <code>&lt;machine&gt;</code> configuration section the Maven property <code>docker.machine.name</code> can be used to provide the name of a Docker machine. Similarly, the property <code>docker.machine.autoCreate</code> can be set to true for creating a Docker machine, too.</p>
 </div>
 <div class="paragraph">
 <p>You can use the property <code>docker.skip.machine</code> if you want to override the internal detection mechanism to always disable docker machine support.</p>
@@ -1456,7 +1456,7 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <div class="title">Adding assemblies in Dockerfile mode</div>
 <p>Any additional files located in the <code>dockerFileDir</code> directory will also be added to the build context as well.
 You can also use an assembly if specified in an <a href="#build-assembly">assembly configuration</a>.
-However you need to add the files on your own in the Dockerfile with an <code>ADD</code> or <code>COPY</code> command.
+However, you need to add the files on your own in the Dockerfile with an <code>ADD</code> or <code>COPY</code> command.
 The files of the assembly are stored in a build context relative directory <code>maven/</code> but can be changed by changing the assembly name with the option <code>&lt;name&gt;</code> in the assembly configuration.</p>
 </div>
 <div class="paragraph">
@@ -1472,10 +1472,10 @@ The files of the assembly are stored in a build context relative directory <code
 <p>so that the assembly files will end up in <code>/my/target/directory</code> within the container.</p>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
+<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as an <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
+<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
 </div>
 <div class="paragraph">
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
@@ -1546,7 +1546,7 @@ of an image configuration. The following configuration options are supported:</p
 <td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-buildargs"><strong>buildArgs</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#build-buildargs"><strong>args</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the value of <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build args</a>
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or <code>labels</code> or <code>env</code>).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
@@ -1644,7 +1644,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after <strong>workdir</strong> in to the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after <strong>workdir</strong> into the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
@@ -1734,7 +1734,7 @@ remote API.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Assembly name, which is <code>maven</code> by default. This name is used for the archived and directories created during the build and holding the assembly files. If an <a href="#external-dockerfile">external Dockerfile</a> is used than this name is also the relative directory which contains the assembly files.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assembly name, which is <code>maven</code> by default. This name is used for the archives and directories created during the build. This directory holds the files specified by the assembly. If an <a href="#external-dockerfile">external Dockerfile</a> is used than this name is also the relative directory which contains the assembly files.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>targetDir</strong></p></td>
@@ -1914,7 +1914,7 @@ used for <code>descriptorRef</code>:</p>
 </div>
 <div class="paragraph">
 <div class="title">Maven peculiarities when including the artifact</div>
-<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. Otherwise the artifact file can&#8217;t be found by <code>docker:build</code>. This is an old <a href="https://issues.apache.org/jira/browse/MASSEMBLY-94">outstanding issue</a> of the assembly plugin which probably can&#8217;t be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases you won&#8217;t experience any problem. However, when the following warning happens which might lead to the given error:</p>
+<p>If the assembly references the artifact to build with this pom, it is required that the <code>package</code> phase is included in the run. Otherwise the artifact file, can&#8217;t be found by <code>docker:build</code>. This is an old <a href="https://issues.apache.org/jira/browse/MASSEMBLY-94">outstanding issue</a> of the assembly plugin which probably can&#8217;t be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases, you won&#8217;t experience any problem. However, when the following warning happens which might lead to the given error:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2594,7 +2594,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </div>
 </div>
 <div class="paragraph">
-<p>Another useful configuration option is <code>portPropertyFile</code> which can be used to to write out the container&#8217;s host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.</p>
+<p>Another useful configuration option is <code>portPropertyFile</code> which can be used to write out the container&#8217;s host ip and any dynamic ports that have been resolved. The keys of this property file are the property names defined in the port mapping configuration and their values those of the corresponding docker attributes.</p>
 </div>
 <div class="paragraph">
 <p>This property file might be useful with tests or with other maven plugins that will be unable to use the resolved properties because they can only be updated after the container has started and plugins resolve their properties in an earlier lifecycle phase.</p>
@@ -3026,7 +3026,7 @@ output of an container and blocks until the pattern is matched. You can use <cod
 </div>
 </div>
 <div class="paragraph">
-<p>This setup will wait for the given URL to be reachable but ten seconds at most. Additionally, it will be waited for the TCP ports 3306 and 9999. Also, when stopping the container after an integration tests, the build wait for 500 ms before it tries to remove the container (if not <code>keepContainer</code> or <code>keepRunning</code> is used). You can use maven properties in each condition, too. In the example, the <code>${host.port}</code> property is probably set before within a port mapping section.</p>
+<p>This setup will wait for the given URL to be reachable but ten seconds at most. Additionally, it will wait for the TCP ports 3306 and 9999. Also, when stopping the container after integration tests, the build wait for 500 ms before it tries to remove the container (if not <code>keepContainer</code> or <code>keepRunning</code> is used). You can use maven properties in each condition, too. In the example, the <code>${host.port}</code> property is probably set before within a port mapping section.</p>
 </div>
 <div class="paragraph">
 <p>The property <code>${docker.host.address}</code> is set implicitly to the address of the Docker host. This host will be taken from the <code>docker.host</code> configuration if HTTP or HTTPS is used. If a Unix socket is used for communication with the docker daemon, then <code>localhost</code> is assumed. You can override this property always by setting this Maven property explicitly.</p>
@@ -3107,18 +3107,18 @@ logging.</p>
 <p><code>LONG</code> Joda long date time format</p>
 </li>
 <li>
-<p><code>ISO8601</code> Full ISO-8601 formatted date time with milli seconds</p>
+<p><code>ISO8601</code> Full ISO-8601 formatted date time with milliseconds</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
 <p>As an alternative a date-time format string as recognized by
-<a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html">JodaTime</a> is possible. In order to set a consistent date format the global configuration parameter <code>logDate</code> can be used.</p>
+<a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html">JodaTime</a> is possible. In order to set a consistent date format, the global configuration parameter <code>logDate</code> can be used.</p>
 </div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>color</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Color used for coloring the prefix when coloring is enabeld (i.e. if running in a console and <code>useColor</code> is set). The available colors are <code>YELLOW</code>, <code>CYAN</code>, <code>MAGENTA</code>, <code>GREEN</code>, <code>RED</code>, <code>BLUE</code>. If coloring is enabled and now color is provided a color is picked for you.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Color used for coloring the prefix when coloring is enabled (i.e. if running in a console and <code>useColor</code> is set). The available colors are <code>YELLOW</code>, <code>CYAN</code>, <code>MAGENTA</code>, <code>GREEN</code>, <code>RED</code>, <code>BLUE</code>. If coloring is enabled and now color is provided a color is picked for you.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>file</strong></p></td>
@@ -3162,13 +3162,13 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <div class="sect2">
 <h3 id="docker:stop">5.3. <strong>docker:stop</strong></h3>
 <div class="paragraph">
-<p>Stops and removes a docker container. This goals stops every container started with <code>&lt;docker:start&gt;</code> either during the same build (e.g. when bound to lifecycle phases when doing integration tests) or for containers created by a previous call to <code>&lt;docker:start&gt;</code></p>
+<p>Stops and removes a docker container. This goal stops every container started with <code>&lt;docker:start&gt;</code> either during the same build (e.g. when bound to lifecycle phases when doing integration tests) or for containers created by a previous call to <code>&lt;docker:start&gt;</code></p>
 </div>
 <div class="paragraph">
 <p>If called within the same build run, only the containers that were explicitly started during the run will be stopped. Existing containers started using <code>docker:start</code> for the project will not be affected.</p>
 </div>
 <div class="paragraph">
-<p>If called as a separate invocation, the plugin will stop and remove any container it finds whose image is defined in the project&#8217;s configuration. Any existing containers found running whose image name matches but was not started by the plugin will not be affected.</p>
+<p>If called as a separate invocation, the plugin will stop and remove any container it finds whose image is defined in the project&#8217;s configuration. Any existing containers found running whose image name matches but were not started by the plugin will not be affected.</p>
 </div>
 <div class="paragraph">
 <p>In case the naming strategy for an image is <code>alias</code> (i.e. the container name is set to the given alias), then only the container with this alias is stopped. Other containers originating from the same image are not touched.</p>
@@ -3226,7 +3226,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <div class="sect2">
 <h3 id="docker:push">5.4. <strong>docker:push</strong></h3>
 <div class="paragraph">
-<p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with with
+<p>This goal uploads images to the registry which have a <code>&lt;build&gt;</code> configuration section. The images to push can be restricted with
 the global option <code>filter</code> (see <a href="#global-configuration">Global Configuration</a> for details). The registry to push is by default <code>docker.io</code> but can be specified as part of the images&#8217;s <code>name</code> name the Docker way. E.g. <code>docker.test.org:5000/data:1.5</code> will push the image <code>data</code> with tag <code>1.5</code> to the registry <code>docker.test.org</code> at port <code>5000</code>. Security information (i.e. user and password) can be specified in multiple ways as described in section <a href="#authentication">Authentication</a>.</p>
 </div>
 <div class="paragraph">
@@ -3272,7 +3272,7 @@ more details.</p></td>
 <p>When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing <code>docker:build</code> and <code>docker:start</code> all the time is cumbersome. With <code>docker:watch</code> you can enable automatic rebuilding of images and restarting of containers in case of updates.</p>
 </div>
 <div class="paragraph">
-<p><code>docker:watch</code> is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:</p>
+<p><code>docker:watch</code> is the top-level goal which performs these tasks. There are two watch modes, which can be specified in multiple ways:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -3787,13 +3787,13 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <h2 id="external-configuration">6. External Configuration</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>For special configuration needs there is the possibility to get the
+<p>For special configuration needs, there is the possibility to get the
 runtime and build configuration from places outside the plugin&#8217;s
 configuration. This is done with the help of <code>&lt;external&gt;</code>
 configuration sections which at least has a <code>&lt;type&gt;</code> subelement. This
 <code>&lt;type&gt;</code> element selects a specific so called "handler" which is
 responsible for creating the full image configuration. A handler can
-decided to use the <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code> configuration which could
+decide to use the <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code> configuration which could
 be provided in addition to this <code>&lt;external&gt;</code> section or it can decide
 to completely ignore any extra configuration option.</p>
 </div>
@@ -4013,11 +4013,11 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.driver.opts.VARIABLE</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Logging driver options (specified similar as in <code>docker.env.VARIABLE</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Logging driver options (specified similarly as in <code>docker.env.VARIABLE</code>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.links.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of links to other containers when starting a container. <em>idx</em> can be any suffix which is not use except when <em>idx</em> is numeric it specifies the order within the list (i.e. the list contains first a entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link to the image with alias 'db'.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of links to other containers when starting a container. <em>idx</em> can be any suffix which is not used except when <em>idx</em> is numeric it specifies the order within the list (i.e. the list contains first entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link to the image with alias 'db'.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.maintainer</strong></p></td>
@@ -4073,7 +4073,7 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.restartPolicy.retry</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Max restrart retries if <code>on-failure</code> used</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max restart retries if <code>on-failure</code> used</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.run.idx</strong></p></td>
@@ -4341,7 +4341,7 @@ explained in the next <a href="#_authentication">section</a>.</p>
 </div>
 <div class="paragraph">
 <p>There are some situations however where you want to have more
-flexibility for specifying a remote registry. This might be, because
+flexibility for specifying a remote registry. This might be because
 you do not want to hard code a registry into <code>pom.xml</code> but
 provide it from the outside with an environment variable or a system
 property.</p>
@@ -4478,7 +4478,7 @@ might be necessary to authenticate against a Docker registry.</p>
 </div>
 <div class="paragraph">
 <p>Using the username and password directly in the <code>pom.xml</code> is not
-recommended since this is widely visible. This is most easiest and
+recommended since this is widely visible. This is easiest and
 transparent way, though. Using an <code>&lt;authConfig&gt;</code> is straight forward:</p>
 </div>
 <div class="listingblock">
@@ -4546,7 +4546,7 @@ with older versions of docker (pre 1.13.0) or when docker is not configured to u
 <h3 id="pull-vs-push-authentication">8.1. Pull vs. Push Authentication</h3>
 <div class="paragraph">
 <p>The credentials lookup described above is valid for both push and
-pull operations. In order to narrow things down, credentials can be be
+pull operations. In order to narrow things down, credentials can be
 provided for pull or push operations alone:</p>
 </div>
 <div class="paragraph">
@@ -4597,7 +4597,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
 </div>
 </div>
 <div class="paragraph">
-<p>(note, that the image&#8217;s user name part ("default" here") must
+<p>(note, that the image&#8217;s username part ("default" here") must
 correspond to an OpenShift project with the same name to which you
 currently connected account has access).</p>
 </div>
@@ -4710,7 +4710,7 @@ explains how you can contribute to this project. Pull requests are highly apprec
 <div id="footer">
 <div id="footer-text">
 Version 0.24-SNAPSHOT<br>
-Last updated 2018-01-05 13:44:58 UTC
+Last updated 2018-01-10 11:09:46 UTC
 </div>
 </div>
 </body>
