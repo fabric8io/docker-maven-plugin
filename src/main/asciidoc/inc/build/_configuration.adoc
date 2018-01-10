@@ -11,7 +11,7 @@ of an image configuration. The following configuration options are supported:
 | <<config-image-build-assembly, *assembly*>>
 | specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
 
-| <<build-buildargs, *buildArgs*>>
+| <<build-buildargs, *args*>>
 | Map specifying the value of https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build args]
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or `labels` or `env`).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
