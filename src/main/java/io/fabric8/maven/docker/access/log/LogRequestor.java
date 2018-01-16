@@ -15,6 +15,14 @@ package io.fabric8.maven.docker.access.log;/*
  * limitations under the License.
  */
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -26,16 +34,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggerFactory;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Extractor for parsing the response of a log request

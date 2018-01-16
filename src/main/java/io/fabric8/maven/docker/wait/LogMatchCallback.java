@@ -1,10 +1,10 @@
 package io.fabric8.maven.docker.wait;
 
+import java.util.regex.Pattern;
+
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
-
-import java.util.regex.Pattern;
 
 class LogMatchCallback implements LogCallback {
 

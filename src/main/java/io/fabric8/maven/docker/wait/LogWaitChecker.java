@@ -1,10 +1,10 @@
 package io.fabric8.maven.docker.wait;
 
+import java.util.concurrent.CountDownLatch;
+
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.util.Logger;
-
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author roland
