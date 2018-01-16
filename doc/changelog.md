@@ -6,6 +6,7 @@
   - Initialize shutdown hook early to allow killing of containers when waiting for a condition (#921)
   - Fix for including in assembly in archive mode when using a Dockerfile (#916)
   - Fix for hanging wait on log (#904)
+  - Fix for credential helper which do not return a version (#896)
 
 Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry.
 
