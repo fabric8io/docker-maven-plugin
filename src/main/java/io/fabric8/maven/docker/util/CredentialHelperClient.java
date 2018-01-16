@@ -73,7 +73,7 @@ public class CredentialHelperClient {
         public String getVersion() throws IOException {
             execute();
             if (version == null) {
-                log.info("The credentials helper \"%s\" didn't return a version string",CredentialHelperClient.this.credentialHelperName);
+                log.verbose("The credentials helper \"%s\" didn't return a version string",CredentialHelperClient.this.credentialHelperName);
             }
             return version;
         }
