@@ -24,6 +24,10 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Mojo for removing images. By default only data images are removed. Data images are
  * images without a run configuration.
@@ -31,7 +35,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * By setting <code>removeAll</code> (property: <code>docker.removeAll</code>) also other
  * images can be removed.
  *
- * In order to explicitely restrict the images to remove, use <code>images</code> to specify a
+ * In order to explicitly restrict the images to remove, use <code>images</code> to specify a
  * (comma separated) list of images to remove.
  *
  * @author roland
@@ -42,22 +46,61 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class RemoveMojo extends AbstractDockerMojo {
 
     // Should all configured images should be removed?
-    @Parameter(property = "docker.removeAll", defaultValue = "false")
-    private boolean removeAll;
+    @Parameter(property = "docker.removeAll")
+    @Deprecated
+    private Boolean removeAll;
+
+    @Parameter(property = "docker.removeMode")
+    private String removeMode;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException {
-        QueryService queryService = hub.getQueryService();
-
         for (ImageConfiguration image : getResolvedImages()) {
             String name = image.getName();
-            if (removeAll || image.isDataImage()) {
-                if (queryService.hasImage(name)) {
-                    if (hub.getDockerAccess().removeImage(name,true)) {
-                        log.info("%s: Remove",image.getDescription());
-                    }
+
+            if (imageShouldBeRemoved(image)) {
+                removeImage(hub, name);
+
+                // Remove any tagged images
+                for (String tag: getImageBuildTags(image)){
+                    removeImage(hub, name + ":" + tag);
                 }
             }
         }
+    }
+
+    private boolean imageShouldBeRemoved(ImageConfiguration image) {
+        if ("all".equalsIgnoreCase(removeMode)) {
+            return true;
+        }
+        if ("build".equalsIgnoreCase(removeMode)) {
+            return image.getBuildConfiguration() != null;
+        }
+        if ("run".equalsIgnoreCase(removeMode)) {
+            return image.getRegistry() != null;
+        }
+        if ("data".equalsIgnoreCase(removeMode)) {
+            return image.isDataImage();
+        }
+        if (removeAll != null) {
+            return removeAll || image.isDataImage();
+        }
+        // Default
+        return image.getBuildConfiguration() != null;
+    }
+
+    private void removeImage(ServiceHub hub, String name) throws DockerAccessException {
+        QueryService queryService = hub.getQueryService();
+        if (queryService.hasImage(name)) {
+            if (hub.getDockerAccess().removeImage(name,true)) {
+                log.info("%s: Remove", name);
+            }
+        }
+    }
+
+    private List<String> getImageBuildTags(ImageConfiguration image){
+        return image.getBuildConfiguration() != null ?
+            image.getBuildConfiguration().getTags() :
+            Collections.<String>emptyList();
     }
 }

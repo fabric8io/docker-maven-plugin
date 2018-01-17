@@ -7,8 +7,10 @@
   - Fix for including in assembly in archive mode when using a Dockerfile (#916)
   - Fix for hanging wait on log (#904)
   - Fix for credential helper which do not return a version (#896)
+  - Also remove tagged images when calling `docker:remove` (#193)
+  - Introduce a `removeMode` for selecting the images to remove
 
-Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry.
+Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry. Also `removeAll` for `docker:remove` is deprecated in favor of `removeMode` (and the default mode has changed slightly). Please refer to the documentation for more information.
 
 * **0.23.0** (2017-11-04)
   - Support relative paths when binding volumes in `docker-compose.yml` ([#846](https://github.com/fabric8io/docker-maven-plugin/issues/846))
