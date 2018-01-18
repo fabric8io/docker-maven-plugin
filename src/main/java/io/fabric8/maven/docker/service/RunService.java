@@ -433,7 +433,7 @@ public class RunService {
                 if (descriptor.isBreakOnError()) {
                     throw e;
                 } else {
-                    log.error("%s", e.getMessage());
+                    log.warn("Cannot run preStop: %s", e.getMessage());
                 }
             }
         }

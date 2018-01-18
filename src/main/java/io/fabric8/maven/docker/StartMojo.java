@@ -264,7 +264,7 @@ public class StartMojo extends AbstractDockerMojo {
                         if (waitConfig.getExec().isBreakOnError()) {
                             throw exp;
                         } else {
-                            log.error("Cannot run preStart: %s", exp.getMessage());
+                            log.warn("Cannot run postStart: %s", exp.getMessage());
                         }
                     }
                 }

@@ -220,14 +220,14 @@ public class WaitConfiguration implements Serializable {
         private String preStop;
 
         @Parameter
-        private boolean isBreakOnError;
+        private boolean breakOnError;
 
         public ExecConfiguration() {}
 
-        public ExecConfiguration(String postStart, String preStop, boolean isBreakOnError) {
+        public ExecConfiguration(String postStart, String preStop, boolean breakOnError) {
             this.postStart = postStart;
             this.preStop = preStop;
-            this.isBreakOnError = isBreakOnError;
+            this.breakOnError = breakOnError;
         }
 
         public String getPostStart() {
@@ -239,7 +239,7 @@ public class WaitConfiguration implements Serializable {
         }
 
         public boolean isBreakOnError() {
-            return isBreakOnError;
+            return breakOnError;
         }
     }
 
