@@ -2,7 +2,7 @@ package io.fabric8.maven.docker.wait;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.model.InspectedContainer;
+import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -28,7 +28,7 @@ public class HealthCheckChecker implements WaitChecker {
     @Override
     public boolean check() {
         try {
-            final InspectedContainer container = docker.getContainer(containerId);
+            final ContainerDetails container = docker.getContainer(containerId);
             if (container == null) {
                 log.debug("HealthWaitChecker: Container %s not found");
                 return false;
@@ -59,7 +59,7 @@ public class HealthCheckChecker implements WaitChecker {
     @Override
     public String getLogLabel() {
         try {
-            final InspectedContainer container = docker.getContainer(containerId);
+            final ContainerDetails container = docker.getContainer(containerId);
             return String.format("on healthcheck '%s'",container != null ? container.getHealthcheck() : "[container not found]");
         } catch (DockerAccessException e) {
             return String.format("on healthcheck [error fetching container: %s]", e.getMessage());

@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.log.LogDispatcher;
@@ -91,6 +92,7 @@ public class StartMojo extends AbstractDockerMojo {
      */
     @Override
     public synchronized void executeInternal(final ServiceHub hub) throws DockerAccessException,
+                                                                          ExecException,
                                                                           MojoExecutionException {
         if (skipRun) {
             return;
@@ -203,12 +205,14 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private void rethrowCause(ExecutionException e) throws IOException, InterruptedException {
+    private void rethrowCause(ExecutionException e) throws IOException, InterruptedException, ExecException {
         Throwable cause = e.getCause();
         if (cause instanceof RuntimeException) {
             throw (RuntimeException) cause;
         } else if (cause instanceof IOException) {
             throw (IOException) cause;
+        } else if (cause instanceof ExecException) {
+            throw (ExecException) cause;
         } else if (cause instanceof InterruptedException) {
                 throw (InterruptedException) cause;
         } else {
@@ -254,7 +258,15 @@ public class StartMojo extends AbstractDockerMojo {
                 hub.getWaitService().wait(image, projProperties, containerId);
                 WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
                 if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
-                    runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), image);
+                    try {
+                        runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), image);
+                    } catch (ExecException exp) {
+                        if (waitConfig.getExec().isBreakOnError()) {
+                            throw exp;
+                        } else {
+                            log.error("Cannot run preStart: %s", exp.getMessage());
+                        }
+                    }
                 }
 
                 return new StartedContainer(image, containerId);

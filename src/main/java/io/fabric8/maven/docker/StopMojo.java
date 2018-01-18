@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
@@ -55,9 +56,8 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter( property = "docker.sledgeHammer", defaultValue = "false" )
     private boolean sledgeHammer;
 
-
     @Override
-    protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
+    protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException, ExecException {
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
 
@@ -76,7 +76,7 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
-    private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException {
+    private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException, ExecException {
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, pomLabel);
         for (ImageConfiguration image : getResolvedImages()) {
             for (Container container : getContainersToStop(queryService, image)) {

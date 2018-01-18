@@ -34,6 +34,7 @@ a| Commands to execute during specified lifecycle of the container. It knows the
 
 * *postStart* Command to run after the above wait criteria has been met
 * *preStop* Command to run before the container is stopped.
+* *breakOnError* If set to `true` then break the build if a `postStart` or `preStop` command exits with an return code other than 0, otherwise only print an error message.
 
 | *tcp*
 a| TCP port check which periodically polls given tcp ports. It knows the following sub-elements:

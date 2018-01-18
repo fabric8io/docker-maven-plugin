@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -218,7 +219,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
-            } catch (DockerAccessException exp) {
+            } catch (DockerAccessException | ExecException exp) {
                 logException(exp);
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } catch (MojoExecutionException exp) {
@@ -340,7 +341,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @param serviceHub context for accessing backends
      */
     protected abstract void executeInternal(ServiceHub serviceHub)
-        throws DockerAccessException, MojoExecutionException;
+        throws DockerAccessException, ExecException, MojoExecutionException;
 
     // =============================================================================================
 

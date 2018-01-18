@@ -276,7 +276,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException {
+    public ContainerDetails getContainer(String containerIdOrName) throws DockerAccessException {
         HttpBodyAndStatus response = inspectContainer(containerIdOrName);
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;

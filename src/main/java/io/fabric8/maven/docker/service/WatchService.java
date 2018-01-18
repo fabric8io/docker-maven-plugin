@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -131,16 +132,16 @@ public class WatchService {
                                 imageConfig.getName(), mojoParameters);
                         dockerAccess.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(watcher);
-                    } catch (MojoExecutionException | IOException e) {
+                    } catch (MojoExecutionException | IOException | ExecException e) {
                         log.error("%s: Error when copying files to container %s: %s",
-                                imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
+                                  imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
                     }
                 }
             }
         };
     }
 
-    private void callPostExec(ImageWatcher watcher) throws DockerAccessException {
+    private void callPostExec(ImageWatcher watcher) throws DockerAccessException, ExecException {
         if (watcher.getPostExec() != null) {
             String containerId = watcher.getContainerId();
             runService.execInContainer(containerId, watcher.getPostExec(), watcher.getImageConfiguration());

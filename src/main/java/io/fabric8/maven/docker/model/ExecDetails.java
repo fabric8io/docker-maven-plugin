@@ -3,6 +3,9 @@ package io.fabric8.maven.docker.model;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * Model class holding details of the result of an exec command on a running container.
+ */
 public class ExecDetails {
     private static final String EXIT_CODE = "ExitCode";
     private static final String RUNNING = "Running";

@@ -188,8 +188,10 @@ public class ContainerTracker {
         // How long to wait after stop to kill container (in seconds)
         private final int killGracePeriod;
 
-        // Command to call before stopping container
+
+        // Command to call before stopping container and whether to stop the build
         private String preStop;
+        private boolean breakOnError = false;
 
         ContainerShutdownDescriptor(ImageConfiguration imageConfig, String containerId) {
             this.imageConfig = imageConfig;
@@ -201,6 +203,7 @@ public class ContainerTracker {
             this.killGracePeriod = waitConfig != null ? waitConfig.getKill() : 0;
             if (waitConfig != null && waitConfig.getExec() != null) {
                 this.preStop = waitConfig.getExec().getPreStop();
+                this.breakOnError = waitConfig.getExec().isBreakOnError();
             }
         }
 
@@ -230,6 +233,10 @@ public class ContainerTracker {
 
         public String getPreStop() {
             return preStop;
+        }
+
+        public boolean isBreakOnError() {
+            return breakOnError;
         }
 
         @Override
