@@ -7,7 +7,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.util.*;
 
 
-public class ContainerDetails implements InspectedContainer {
+public class ContainerDetails implements Container {
 
     static final String CONFIG = "Config";
     static final String CREATED = "Created";
@@ -136,14 +136,12 @@ public class ContainerDetails implements InspectedContainer {
         return state.getInt(EXIT_CODE);
     }
 
-    @Override
     public boolean isHealthy() {
         final JSONObject state = json.getJSONObject(STATE);
         // always indicate healthy for docker hosts that do not support health checks.
         return !state.has(HEALTH) || HEALTH_STATUS_HEALTHY.equals(state.getJSONObject(HEALTH).getString(STATUS));
     }
 
-    @Override
     public String getHealthcheck() {
         if (!json.getJSONObject(CONFIG).has(HEALTHCHECK) ||
             !json.getJSONObject(CONFIG).getJSONObject(HEALTHCHECK).has(TEST)) {

@@ -22,7 +22,10 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.ContainerDetails;
+import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
@@ -77,11 +80,18 @@ public class RunService {
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String execInContainer(String containerId, String command, ImageConfiguration imageConfiguration)
-            throws DockerAccessException {
+        throws DockerAccessException, ExecException {
         Arguments arguments = new Arguments();
         arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
         String execContainerId = docker.createExecContainer(containerId, arguments);
         docker.startExecContainer(execContainerId, logConfig.createSpec(containerId, imageConfiguration));
+
+        ExecDetails execContainer = docker.getExecContainer(execContainerId);
+        Integer exitCode = execContainer.getExitCode();
+        if (exitCode != null && exitCode != 0) {
+            ContainerDetails container = docker.getContainer(containerId);
+            throw new ExecException(execContainer, container);
+        }
         return execContainerId;
     }
 
@@ -127,7 +137,7 @@ public class RunService {
                               ImageConfiguration imageConfig,
                               boolean keepContainer,
                               boolean removeVolumes)
-            throws DockerAccessException {
+        throws DockerAccessException, ExecException {
         ContainerTracker.ContainerShutdownDescriptor descriptor =
                 new ContainerTracker.ContainerShutdownDescriptor(imageConfig, containerId);
         shutdown(descriptor, keepContainer, removeVolumes);
@@ -145,7 +155,7 @@ public class RunService {
     public void stopPreviouslyStartedContainer(String containerId,
                                                boolean keepContainer,
                                                boolean removeVolumes)
-            throws DockerAccessException {
+        throws DockerAccessException, ExecException {
         ContainerTracker.ContainerShutdownDescriptor descriptor = tracker.removeContainer(containerId);
         if (descriptor != null) {
             shutdown(descriptor, keepContainer, removeVolumes);
@@ -154,16 +164,15 @@ public class RunService {
 
     /**
      * Stop all registered container
-     * @param keepContainer whether to keep container or to remove them after stoppings
+     * @param keepContainer whether to keep container or to remove them after stopping
      * @param removeVolumes whether to remove volumes after stopping
-     *
      * @throws DockerAccessException if during stopping of a container sth fails
      */
     public void stopStartedContainers(boolean keepContainer,
                                       boolean removeVolumes,
                                       boolean removeCustomNetworks,
                                       PomLabel pomLabel)
-            throws DockerAccessException {
+        throws DockerAccessException, ExecException {
         Set<Network> networksToRemove = new HashSet<>();
         for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(pomLabel)) {
             collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
@@ -222,7 +231,7 @@ public class RunService {
             public void run() {
                 try {
                     stopStartedContainers(keepContainer, removeVolumes, removeCustomNetworks, null);
-                } catch (DockerAccessException e) {
+                } catch (DockerAccessException | ExecException e) {
                     log.error("Error while stopping containers: %s", e.getMessage());
                 }
             }
@@ -412,7 +421,7 @@ public class RunService {
     }
 
     private void shutdown(ContainerTracker.ContainerShutdownDescriptor descriptor, boolean keepContainer, boolean removeVolumes)
-        throws DockerAccessException {
+        throws DockerAccessException, ExecException {
 
         String containerId = descriptor.getContainerId();
         if (descriptor.getPreStop() != null) {
@@ -420,6 +429,12 @@ public class RunService {
                 execInContainer(containerId, descriptor.getPreStop(), descriptor.getImageConfiguration());
             } catch (DockerAccessException e) {
                 log.error("%s", e.getMessage());
+            } catch (ExecException e) {
+                if (descriptor.isBreakOnError()) {
+                    throw e;
+                } else {
+                    log.warn("Cannot run preStop: %s", e.getMessage());
+                }
             }
         }
 

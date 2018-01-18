@@ -276,7 +276,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException {
+    public ContainerDetails getContainer(String containerIdOrName) throws DockerAccessException {
         HttpBodyAndStatus response = inspectContainer(containerIdOrName);
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
@@ -285,9 +285,28 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
+    @Override
+    public ExecDetails getExecContainer(String containerIdOrName) throws DockerAccessException {
+        HttpBodyAndStatus response = inspectExecContainer(containerIdOrName);
+        if (response.getStatusCode() == HTTP_NOT_FOUND) {
+            return null;
+        } else {
+            return new ExecDetails(new JSONObject(response.getBody()));
+        }
+    }
+
     private HttpBodyAndStatus inspectContainer(String containerIdOrName) throws DockerAccessException {
         try {
             String url = urlBuilder.inspectContainer(containerIdOrName);
+            return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
+        } catch (IOException e) {
+            throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
+        }
+    }
+
+    private HttpBodyAndStatus inspectExecContainer(String containerIdOrName) throws DockerAccessException {
+        try {
+            String url = urlBuilder.inspectExecContainer(containerIdOrName);
             return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);

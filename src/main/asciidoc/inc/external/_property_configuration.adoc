@@ -249,6 +249,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.wait.exec.preStop*
 | Command to execute before command stops.
 
+| *docker.wait.exec.breakOnError*
+| If set to "true" then stop the build if the a `postStart` or `preStop` command failed
+
 | *docker.wait.shutdown*
 | Time in milliseconds to wait between stopping a container and removing it.
 

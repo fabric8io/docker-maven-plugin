@@ -20,7 +20,6 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
-import io.fabric8.maven.docker.util.MojoParameters;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -433,6 +432,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("pattern", wait.getLog());
         assertEquals("post_start_command", wait.getExec().getPostStart());
         assertEquals("pre_stop_command", wait.getExec().getPreStop());
+        assertTrue(wait.getExec().isBreakOnError());
         assertEquals(5, wait.getTime());
         assertEquals(0, wait.getExit().intValue());
 
@@ -514,8 +514,9 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.ULIMITS)+".4", "memlock=2048",
             k(ConfigKey.VOLUMES) + ".1", "/foo",
             k(ConfigKey.VOLUMES_FROM) + ".1", "from",
-            k(ConfigKey.PRE_STOP), "pre_stop_command",
-            k(ConfigKey.POST_START), "post_start_command",
+            k(ConfigKey.WAIT_EXEC_PRE_STOP), "pre_stop_command",
+            k(ConfigKey.WAIT_EXEC_POST_START), "post_start_command",
+            k(ConfigKey.WAIT_EXEC_BREAK_ON_ERROR), "true",
             k(ConfigKey.WAIT_LOG), "pattern",
             k(ConfigKey.WAIT_TIME), "5",
             k(ConfigKey.WAIT_EXIT), "0",

@@ -119,6 +119,7 @@ public class WaitConfiguration implements Serializable {
         private String tcpHost;
         private TcpConfigMode tcpMode;
         private Integer exit;
+        private Boolean breakOnError = false;
 
         public Builder time(int time) {
             this.time = time;
@@ -185,7 +186,7 @@ public class WaitConfiguration implements Serializable {
 
         public WaitConfiguration build() {
             return new WaitConfiguration(time,
-                                         postStart != null || preStop != null ? new ExecConfiguration(postStart, preStop) : null,
+                                         postStart != null || preStop != null ? new ExecConfiguration(postStart, preStop, breakOnError != null ? breakOnError : false) : null,
                                          url != null ? new HttpConfiguration(url,method,status) : null,
                                          tcpPorts != null ? new TcpConfiguration(tcpMode, tcpHost, tcpPorts) : null,
                                          healthy,
@@ -204,6 +205,11 @@ public class WaitConfiguration implements Serializable {
             this.postStart = command;
             return this;
         }
+
+        public Builder breakOnError(Boolean stop) {
+            this.breakOnError = stop;
+            return this;
+        }
     }
 
     public static class ExecConfiguration implements Serializable {
@@ -213,11 +219,15 @@ public class WaitConfiguration implements Serializable {
         @Parameter
         private String preStop;
 
+        @Parameter
+        private boolean breakOnError;
+
         public ExecConfiguration() {}
 
-        public ExecConfiguration(String postStart, String preStop) {
+        public ExecConfiguration(String postStart, String preStop, boolean breakOnError) {
             this.postStart = postStart;
             this.preStop = preStop;
+            this.breakOnError = breakOnError;
         }
 
         public String getPostStart() {
@@ -226,6 +236,10 @@ public class WaitConfiguration implements Serializable {
 
         public String getPreStop() {
             return preStop;
+        }
+
+        public boolean isBreakOnError() {
+            return breakOnError;
         }
     }
 
