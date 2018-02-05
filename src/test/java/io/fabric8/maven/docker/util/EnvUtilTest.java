@@ -99,11 +99,71 @@ public class EnvUtilTest {
         Properties props = getTestProperties(
                 "bla.hello","world",
                 "bla.max","morlock",
-                "blub.not","aMap");
-        Map<String,String> result = EnvUtil.extractFromPropertiesAsMap("bla", props);
+                "blub.not","aMap",
+                "bla.empty", "");
+
+        Map<String,String> result = EnvUtil.extractFromPropertiesAsMap("bla", props, true);
+        assertEquals(3,result.size());
+        assertEquals("world",result.get("hello"));
+        assertEquals("morlock",result.get("max"));
+        assertEquals("",result.get("empty"));
+
+        result = EnvUtil.extractFromPropertiesAsMap("bla", props, false);
         assertEquals(2,result.size());
         assertEquals("world",result.get("hello"));
         assertEquals("morlock",result.get("max"));
+    }
+
+    @Test
+    public void extractFromMap() {
+        Map<String, String> src = getTestMap(
+                "bla.hello","world",
+                "bla.max","morlock",
+                "blub.not","aMap",
+                "bla.empty", "");
+
+        Map<String, String> result = new HashMap<>();
+        EnvUtil.extractFromMap("bla", src, true, result);
+        assertEquals(3,result.size());
+        assertEquals("world",result.get("hello"));
+        assertEquals("morlock",result.get("max"));
+        assertEquals("",result.get("empty"));
+
+        // test sending to Properties
+        Properties resultP = new Properties();
+        EnvUtil.extractFromMap("bla", src, false, resultP);
+        assertEquals(2,resultP.size());
+        assertEquals("world",resultP.get("hello"));
+        assertEquals("morlock",resultP.get("max"));
+    }
+
+    @Test
+    public void extractMavenAndSystemProperties() {
+        Properties src = getTestProperties(
+                "bla.hello","world",
+                "bla.max","morlock",
+                "blub.not","aMap",
+                "bla.empty", "");
+
+        System.setProperty("bla.sysprop", "someSysProp");
+        System.setProperty("bla.emptyprop", "");
+
+        Map<String, String> result = new HashMap<>();
+        EnvUtil.extractMavenAndSystemProperties("bla", src, true, result);
+        assertEquals(5,result.size());
+        assertEquals("world",result.get("hello"));
+        assertEquals("morlock",result.get("max"));
+        assertEquals("someSysProp",result.get("sysprop"));
+        assertEquals("",result.get("emptyprop"));
+        assertEquals("",result.get("empty"));
+
+        // test properties alternative, which is also Map
+        Properties resultP = new Properties();
+        EnvUtil.extractMavenAndSystemProperties("bla", src, false, resultP);
+        assertEquals(3,resultP.size());
+        assertEquals("world",resultP.get("hello"));
+        assertEquals("morlock",resultP.get("max"));
+        assertEquals("someSysProp",result.get("sysprop"));
     }
 
     @Test
@@ -185,6 +245,14 @@ public class EnvUtilTest {
         Properties ret = new Properties();
         for (int i = 0; i < vals.length; i+=2) {
             ret.setProperty(vals[i],vals[i+1]);
+        }
+        return ret;
+    }
+
+    private Map<String, String> getTestMap(String ... vals) {
+        Map<String, String> ret = new HashMap();
+        for (int i = 0; i < vals.length; i+=2) {
+            ret.put(vals[i],vals[i+1]);
         }
         return ret;
     }

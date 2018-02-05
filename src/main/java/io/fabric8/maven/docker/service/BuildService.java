@@ -163,29 +163,14 @@ public class BuildService {
     }
 
     private Map<String, String> addBuildArgs(BuildContext buildContext) {
-        Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getMojoParameters().getProject().getProperties());
-        Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
-        return ImmutableMap.<String, String>builder()
-                .putAll(buildContext.getBuildArgs() != null ? buildContext.getBuildArgs() : Collections.<String, String>emptyMap())
-                .putAll(buildArgsFromProject)
-                .putAll(buildArgsFromSystem)
-                .build();
-    }
-
-    private Map<String, String> addBuildArgsFromProperties(Properties properties) {
-        String argPrefix = "docker.buildArg.";
+        String argPrefix = "docker.buildArg";
         Map<String, String> buildArgs = new HashMap<>();
-        for (Object keyObj : properties.keySet()) {
-            String key = (String) keyObj;
-            if (key.startsWith(argPrefix)) {
-                String argKey = key.replaceFirst(argPrefix, "");
-                String value = properties.getProperty(key);
 
-                if (!isEmpty(value)) {
-                    buildArgs.put(argKey, value);
-                }
-            }
-        }
+        if(buildContext.getBuildArgs() != null)
+            buildArgs.putAll(buildContext.getBuildArgs());
+
+        EnvUtil.extractMavenAndSystemProperties(argPrefix, buildContext.getMojoParameters().getProject().getProperties(), false, buildArgs);
+
         log.debug("Build args set %s", buildArgs);
         return buildArgs;
     }
@@ -246,11 +231,6 @@ public class BuildService {
             return buildConfig.nocache();
         }
     }
-
-    private boolean isEmpty(String str) {
-        return str == null || str.isEmpty();
-    }
-
 
     // ===========================================
 

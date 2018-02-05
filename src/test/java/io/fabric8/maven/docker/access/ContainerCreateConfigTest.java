@@ -7,6 +7,7 @@ import java.util.*;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -33,6 +34,11 @@ import static org.junit.Assert.*;
  * @since 27/03/15
  */
 public class ContainerCreateConfigTest {
+
+    @After
+    public void tearDown() throws Exception {
+        System.clearProperty("docker.runEnv.otherProp");
+    }
 
     @Test
     public void testEnvironment() throws Exception {
@@ -97,6 +103,39 @@ public class ContainerCreateConfigTest {
         cc.environment("/not/really/a/file",null,Collections.<String, String>emptyMap());
     }
 
+    @Test
+    public void testEnvFromMavenAndSystemProperties() throws Exception {
+        ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
+
+        Map<String, String> envMap = getEnvMap();
+        Map<String, String> mavenProps = new HashMap<>();
+        mavenProps.put("docker.runEnv.http_proxy", "http://proxy.example.com:8080");
+        mavenProps.put("docker.buildArg.https_proxy", "ignored");
+
+        cc.environment(copyPropsToFile(), envMap, mavenProps);
+
+        JSONArray env = getEnvArray(cc);
+        assertNotNull(env);
+        assertEquals(4, env.length());
+        List<String> envAsString = convertToList(env);
+        assertTrue(envAsString.contains("JAVA_OPTS=-Xmx512m"));
+        assertTrue(envAsString.contains("TEST_SERVICE=SECURITY"));
+        assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
+        assertTrue(envAsString.contains("http_proxy=http://proxy.example.com:8080"));
+
+        System.setProperty("docker.runEnv.otherProp", "testvalue");
+        cc.environment(copyPropsToFile(), envMap, mavenProps);
+
+        env = getEnvArray(cc);
+        assertNotNull(env);
+        assertEquals(5, env.length());
+        envAsString = convertToList(env);
+        assertTrue(envAsString.contains("JAVA_OPTS=-Xmx512m"));
+        assertTrue(envAsString.contains("TEST_SERVICE=SECURITY"));
+        assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
+        assertTrue(envAsString.contains("http_proxy=http://proxy.example.com:8080"));
+        assertTrue(envAsString.contains("otherProp=testvalue"));
+    }
 
     private JSONArray getEnvArray(ContainerCreateConfig cc) {
         JSONObject config = new JSONObject(cc.toJson());
