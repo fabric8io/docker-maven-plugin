@@ -9,7 +9,7 @@
   - Fix for credential helper which do not return a version ([#896](https://github.com/fabric8io/docker-maven-plugin/issues/896))
   - Also remove tagged images when calling `docker:remove` ([#193](https://github.com/fabric8io/docker-maven-plugin/issues/193))
   - Introduced a `removeMode` for selecting the images to remove
-  - Introduced a `breakOnError`` for the `postStart` and `preStop` hooks in the 
+  - Introduced a `breakOnError` for the `postStart` and `preStop` hooks in the 
     wait configuration ([#914](https://github.com/fabric8io/docker-maven-plugin/issues/914))
     
 Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry. Also `removeAll` for `docker:remove` is deprecated in favor of `removeMode` (and the default mode has changed slightly). Please refer to the documentation for more information.
