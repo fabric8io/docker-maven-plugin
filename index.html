@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.24-SNAPSHOT,</span>
-<span id="revdate">2018-01-10</span>
+<span id="revnumber">version 0.24.0,</span>
+<span id="revdate">2018-02-07</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -831,7 +831,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.24-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.24.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2958,6 +2958,9 @@ output of an container and blocks until the pattern is matched. You can use <cod
 <li>
 <p><strong>preStop</strong> Command to run before the container is stopped.</p>
 </li>
+<li>
+<p><strong>breakOnError</strong> If set to <code>true</code> then break the build if a <code>postStart</code> or <code>preStop</code> command exits with an return code other than 0, otherwise only print an error message.</p>
+</li>
 </ul>
 </div></div></td>
 </tr>
@@ -3499,10 +3502,48 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div class="sect2">
 <h3 id="docker:remove">5.6. <strong>docker:remove</strong></h3>
 <div class="paragraph">
-<p>This goal can be used to clean up images and containers. By default all so called <em>data images</em> are removed with its containers. A data image is an image without a run configuration. This can be tuned by providing the properties <code>removeAll</code> which indicates to remove all images managed by this build. As with the other goals, the configuration <code>image</code> can be used to tune the images to remove. All containers belonging to the images are removed as well.</p>
+<p>This goal can be used to clean up images and containers. By default all images with a build configuration are removed.
+You can tune this by setting the property <code>removeMode</code> (property: <code>docker.removeMode</code>) to one of the following values:</p>
+</div>
+<table id="config-image-build" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 24. removeMode Values</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All images with a <a href="#build-configuration">build configuration</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All images with a <a href="#start-configuration">run configuration</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>all</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All configured images</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>data</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All data images, which are images without a run configuration.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Previously, this could be tuned also by providing the property <code>removeAll</code> which indicates to remove all images managed by this build. Otherwise only data images were delete before 0.24.0. <code>removeAll</code> is deprecated and will be removed soone. Please use <code>removeMode</code> instead.</p>
 </div>
 <div class="paragraph">
-<p>Considering three images 'db','tomcat' and 'data' where 'data' is the only data images this example demonstrates the effect of this goal:</p>
+<p>As with the other goals, the configuration <code>image</code> can be used to tune the images to remove. All containers belonging to the images are removed as well as the all tags assigned to this image</p>
+</div>
+<div class="paragraph">
+<p>Considering three images 'db','tomcat' and 'data' where 'data' is the only image with a build configuration:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -3510,13 +3551,13 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p><code>mvn docker:remove</code> will remove 'data'</p>
 </li>
 <li>
-<p><code>mvn -Ddocker.removeAll docker:remove</code> will remove all three images</p>
+<p><code>mvn -Ddocker.removeMode=all docker:remove</code> will remove all three images</p>
 </li>
 <li>
 <p><code>mvn -Ddocker.filter=data,tomcat docker:remove</code> will remove 'data'</p>
 </li>
 <li>
-<p><code>mvn -Ddocker.filter=data,tomcat -Ddocker.removeAll docker:remove</code> will remove 'data' and 'tomcat'</p>
+<p><code>mvn -Ddocker.filter=data,tomcat -Ddocker.removeMode=all docker:remove</code> will remove 'data' and 'tomcat'</p>
 </li>
 </ul>
 </div>
@@ -3532,7 +3573,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. Logging options</caption>
+<caption class="title">Table 25. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3625,7 +3666,7 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <p>Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Save options</caption>
+<caption class="title">Table 26. Save options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3698,7 +3739,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Volume configuration</caption>
+<caption class="title">Table 27. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3761,7 +3802,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Volume configuration</caption>
+<caption class="title">Table 28. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3833,7 +3874,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. 
 when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. External properties</caption>
+<caption class="title">Table 29. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4140,6 +4181,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute before command stops.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.exec.breakOnError</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to "true" then stop the build if the a <code>postStart</code> or <code>preStop</code> command failed</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.shutdown</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Time in milliseconds to wait between stopping a container and removing it.</p></td>
 </tr>
@@ -4266,7 +4311,7 @@ run and build configuration sections.</p>
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Docker compose configuration</caption>
+<caption class="title">Table 30. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4709,8 +4754,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.24-SNAPSHOT<br>
-Last updated 2018-01-10 11:09:46 UTC
+Version 0.24.0<br>
+Last updated 2018-02-07 13:08:58 UTC
 </div>
 </div>
 </body>
