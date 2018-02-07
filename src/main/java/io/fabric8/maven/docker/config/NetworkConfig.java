@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.fabric8.maven.docker.access.ContainerNetworkingConfig;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -126,7 +125,7 @@ public class NetworkConfig implements Serializable {
     }
 
     public boolean hasAliases() {
-        return !aliases.isEmpty();
+        return aliases != null && !aliases.isEmpty();
     }
 
     // ==============================================================================
