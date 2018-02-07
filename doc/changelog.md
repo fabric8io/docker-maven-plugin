@@ -1,16 +1,16 @@
 # ChangeLog
 
-* **0.24-SNAPSHOT**
-  - Respect system properties for ECR authentication (#897)
+* **0.24.0** (2018-02-07)
+  - Respect system properties for ECR authentication ([#897](https://github.com/fabric8io/docker-maven-plugin/issues/897))
   - Simplified auto pull handling and moved to `imagePullPolicy` instead.
-  - Initialize shutdown hook early to allow killing of containers when waiting for a condition (#921)
-  - Fix for including in assembly in archive mode when using a Dockerfile (#916)
-  - Fix for hanging wait on log (#904)
-  - Fix for credential helper which do not return a version (#896)
-  - Also remove tagged images when calling `docker:remove` (#193)
+  - Initialize shutdown hook early to allow killing of containers when waiting for a condition ([#921](https://github.com/fabric8io/docker-maven-plugin/issues/921))
+  - Fix for including in assembly in archive mode when using a Dockerfile ([#916](https://github.com/fabric8io/docker-maven-plugin/issues/916))
+  - Fix for hanging wait on log ([#904](https://github.com/fabric8io/docker-maven-plugin/issues/904))
+  - Fix for credential helper which do not return a version ([#896](https://github.com/fabric8io/docker-maven-plugin/issues/896))
+  - Also remove tagged images when calling `docker:remove` ([#193](https://github.com/fabric8io/docker-maven-plugin/issues/193))
   - Introduced a `removeMode` for selecting the images to remove
   - Introduced a `breakOnError`` for the `postStart` and `preStop` hooks in the 
-    wait configuration (#914)
+    wait configuration ([#914](https://github.com/fabric8io/docker-maven-plugin/issues/914))
     
 Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry. Also `removeAll` for `docker:remove` is deprecated in favor of `removeMode` (and the default mode has changed slightly). Please refer to the documentation for more information.
 
