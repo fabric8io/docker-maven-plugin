@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.io.Files;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Timestamp;
 
@@ -46,6 +47,7 @@ public class DefaultLogCallback implements LogCallback {
             } else {
                 SharedPrintStream cachedPs = printStreamMap.get(file);
                 if (cachedPs == null) {
+                    Files.createParentDirs(new File(file));
                     PrintStream ps = new PrintStream(new FileOutputStream(file), true);
                     cachedPs = new SharedPrintStream(ps);
                     printStreamMap.put(file, cachedPs);
