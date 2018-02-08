@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.24-SNAPSHOT**
+  - Fix possible NPE when logging to a file and the parent directory does not exist yet (#911) (#940)
+
 * **0.24.0** (2018-02-07)
   - Respect system properties for ECR authentication ([#897](https://github.com/fabric8io/docker-maven-plugin/issues/897))
   - Simplified auto pull handling and moved to `imagePullPolicy` instead.
