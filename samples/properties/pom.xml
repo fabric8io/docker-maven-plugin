@@ -42,8 +42,9 @@
     <postgres.docker.name>postgres:9.5.2</postgres.docker.name>
     <postgres.docker.log.prefix>postgres</postgres.docker.log.prefix>
     <postgres.docker.ports.1>${itest.postgres.port}:5432</postgres.docker.ports.1>
-    <postgres.docker.env.POSTGRES_USER>superuser</postgres.docker.env.POSTGRES_USER>
-    <postgres.docker.env.POSTGRES_PASSWORD>superuser-password</postgres.docker.env.POSTGRES_PASSWORD>
+    <postgres.docker.env.POSTGRES_DB>localhost</postgres.docker.env.POSTGRES_DB>
+    <postgres.docker.envRun.POSTGRES_USER>superuser</postgres.docker.envRun.POSTGRES_USER>
+    <postgres.docker.envRun.POSTGRES_PASSWORD>superuser-password</postgres.docker.envRun.POSTGRES_PASSWORD>
     <postgres.docker.wait.time>10000</postgres.docker.wait.time>
     <postgres.docker.wait.log>PostgreSQL init process complete</postgres.docker.wait.log>
   </properties>

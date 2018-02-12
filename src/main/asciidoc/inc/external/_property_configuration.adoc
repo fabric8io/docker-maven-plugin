@@ -94,10 +94,16 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Property part for the exposed container properties like internal IP addresses as described in <<start-overview, docker:start>>.
 
 | *docker.env.VARIABLE*
-| Sets an environment variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
+| Sets an environment variable used in build and run. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
+
+| *docker.envBuild.VARIABLE*
+| Sets an environment variable used in build only. E.g. `<docker.envBuild.JAVA_OPTS>-Xmx512m</docker.envBuild.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is building images only. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
+
+| *docker.envRun.VARIABLE*
+| Sets an environment variable used in run only. E.g. `<docker.envRun.JAVA_OPTS>-Xmx512m</docker.envRun.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for running containers only. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
 
 | *docker.envPropertyFile*
-| specifies the path to a property file whose properties are used as environment variables. The environment variables takes precedence over any other environment variables specified.
+| specifies the path to a property file whose properties are used as environment variables in run. The environment variables takes precedence over any other environment variables specified.
 
 | *docker.extraHosts.idx*
 | List of `host:ip` to add to `/etc/hosts`

@@ -146,6 +146,57 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         }
     }
 
+
+    @Test
+    public void testSpecificEnv() throws Exception {
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "baase",
+                        "docker.name","demo",
+                        "docker.envBuild.HOME", "/tmp",
+                        "docker.envRun.root.dir", "/bla"
+                ));
+
+        assertEquals(1,configs.size());
+        ImageConfiguration calcConfig = configs.get(0);
+
+        Map<String, String> env;
+
+        env = calcConfig.getBuildConfiguration().getEnv();
+        assertEquals(1,env.size());
+        assertEquals("/tmp",env.get("HOME"));
+
+        env = calcConfig.getRunConfiguration().getEnv();
+        assertEquals(1,env.size());
+        assertEquals("/bla",env.get("root.dir"));
+    }
+
+    @Test
+    public void testMergedEnv() throws Exception {
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "baase",
+                        "docker.name","demo",
+                        "docker.env.HOME", "/tmp",
+                        "docker.envBuild.HOME", "/var/tmp",
+                        "docker.envRun.root.dir", "/bla"
+                ));
+
+        assertEquals(1,configs.size());
+        ImageConfiguration calcConfig = configs.get(0);
+
+        Map<String, String> env;
+
+        env = calcConfig.getBuildConfiguration().getEnv();
+        assertEquals(1,env.size());
+        assertEquals("/var/tmp",env.get("HOME"));
+
+        env = calcConfig.getRunConfiguration().getEnv();
+        assertEquals(2,env.size());
+        assertEquals("/tmp",env.get("HOME"));
+        assertEquals("/bla",env.get("root.dir"));
+    }
+
     @Test
     public void testAssembly() throws Exception {
         List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestAssemblyData()));
