@@ -53,6 +53,8 @@ public enum ConfigKey {
     ENTRYPOINT,
     ENV,
     ENV_PROPERTY_FILE,
+    ENV_BUILD("buildEnv"),
+    ENV_RUN("runEnv"),
     EXPOSED_PROPERTY_KEY,
     EXTRA_HOSTS,
     FILTER,
