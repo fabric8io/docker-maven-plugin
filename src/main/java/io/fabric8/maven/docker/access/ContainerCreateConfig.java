@@ -66,6 +66,9 @@ public class ContainerCreateConfig {
             addPropertiesFromFile(envPropsFile, envProps);
         }
 
+        // Props from Maven environment takes highest precedence.
+        addEnvironmentFromMavenProperties(envProps, mavenProps);
+
         if (envProps.size() > 0) {
             addEnvironment(envProps);
         }
@@ -168,4 +171,10 @@ public class ContainerCreateConfig {
             throw new IllegalArgumentException(String.format("Error while loading environment properties: %s", e.getMessage()), e);
         }
     }
+
+    private void addEnvironmentFromMavenProperties(Map envProps, Map mavenProps) {
+        String argPrefix = "docker.runEnv";
+        EnvUtil.extractMavenAndSystemProperties(argPrefix, mavenProps, false, envProps);
+    }
+
 }

@@ -314,7 +314,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private Map<String, String> mapWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        return extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties);
+        return extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties, true);
     }
 
     private String withPrefix(String prefix, ConfigKey key, Properties properties) {

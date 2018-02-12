@@ -198,25 +198,57 @@ public class EnvUtil {
     }
 
     /**
+     * Extract any properties matching the given prefix from a given Map, and join with any System properites.
+     *
+     * Intended for use to get Maven properties and any overrides from mvn -D flags.
+     * Intentionally not using String generics so it can be used with Properties instances.
+     *
+     * @param prefix prefix which specifies the part which should be extracted as map (without trailing dot)
+     * @param mavenProperties source properties to extract from
+     * @param includeEmpty If false, only add fields for which the value is non-null and non-empty
+     * @param target A Map which to put any found values in.
+     */
+    public static void extractMavenAndSystemProperties(String prefix, Map mavenProperties, boolean includeEmpty, Map target) {
+        EnvUtil.extractFromMap(prefix, mavenProperties, includeEmpty, target);
+        EnvUtil.extractFromMap(prefix, System.getProperties(), includeEmpty, target);
+    }
+
+    /**
      * Extract part of given properties as a map. The given prefix is used to find the properties,
      * the rest of the property name is used as key for the map.
      *
-     * @param prefix prefix which specifies the part which should be extracted as map
+     * @param prefix prefix which specifies the part which should be extracted as map (without trailing dot)
      * @param properties properties to extract from
-     * @return the extracted map or null if no such map exists
+     * @param includeEmpty If false, only add fields for which the value is non-null and non-empty.
+     * @return the extracted map or null if no matching entries exists
      */
-    public static Map<String, String> extractFromPropertiesAsMap(String prefix, Properties properties) {
+    public static Map<String, String> extractFromPropertiesAsMap(String prefix, Properties properties, boolean includeEmpty) {
         Map<String, String> ret = new HashMap<>();
-        Enumeration names = properties.propertyNames();
+        extractFromMap(prefix, properties, includeEmpty, ret);
+        return ret.size() > 0 ? ret : null;
+    }
+
+    /**
+     * Extract part of given map to another map. The given prefix is used to find the matching string key,
+     * the rest of the string key name is used as key for the map.
+     *
+     * Intentionally not using String generics so it can be used with Properties instances.
+     *
+     * @param prefix prefix which specifies the part which should be extracted as map (without trailing dot)
+     * @param src Map to extract from
+     * @param includeEmpty If false, only add fields for which the value is non-null and non-empty.
+     * @param target A Map which to put any found values in.
+     */
+    public static void extractFromMap(String prefix, Map src, boolean includeEmpty, Map target) {
         String prefixP = prefix + ".";
-        while (names.hasMoreElements()) {
-            String propName = (String) names.nextElement();
-            if (propMatchesPrefix(prefixP, propName)) {
-                String mapKey = propName.substring(prefixP.length());
-                ret.put(mapKey, properties.getProperty(propName));
+        for (Object propName : src.keySet()) {
+            if (propName instanceof String && propMatchesPrefix(prefixP, (String)propName)) {
+                String mapKey = ((String)propName).substring(prefixP.length());
+                Object value = src.get(propName);
+                if(value instanceof String && (includeEmpty || !isEmpty((String)value)))
+                    target.put(mapKey, value);
             }
         }
-        return ret.size() > 0 ? ret : null;
     }
 
     /**
@@ -328,6 +360,9 @@ public class EnvUtil {
 
     // ======================================================================================================
 
+    private static boolean isEmpty(String str) {
+        return str == null || str.isEmpty();
+    }
     private static boolean propMatchesPrefix(String prefix, String key) {
         return key.startsWith(prefix) && key.length() >= prefix.length();
     }
