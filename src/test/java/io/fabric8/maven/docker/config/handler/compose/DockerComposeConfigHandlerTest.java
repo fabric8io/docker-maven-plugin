@@ -1,15 +1,5 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
@@ -26,6 +16,16 @@ import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -136,7 +136,7 @@ public class DockerComposeConfigHandlerTest {
         assertEquals(a("redis","link1"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
-        assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());
+        assertEquals(null, runConfig.getNamingStrategy());
         assertEquals(null,runConfig.getEnvPropertyFile());
 
         assertEquals(null, runConfig.getPortPropertyFile());

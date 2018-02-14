@@ -1,29 +1,29 @@
 package io.fabric8.maven.docker;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NamingStrategy;
 import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.ContainerName;
 import io.fabric8.maven.docker.util.PomLabel;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -49,6 +49,19 @@ public class StopMojo extends AbstractDockerMojo {
      */
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
     protected boolean autoCreateCustomNetworks;
+
+    /**
+     * Default value for the naming strategy for containers.
+     */
+    @Parameter(property = "docker.namingStrategy", defaultValue = "auto")
+    protected NamingStrategy namingStrategy;
+
+    /**
+     * Container prefix for the naming strategy auto, the final container name will be
+     * &lt;prefix&gt;_&lt;image name&gt;
+     */
+    @Parameter(property = "docker.containerPrefix", defaultValue = "${project.name}")
+    protected String containerPrefix;
 
     @Parameter( property = "docker.allContainers", defaultValue = "false" )
     private boolean allContainers;
@@ -90,10 +103,10 @@ public class StopMojo extends AbstractDockerMojo {
 
     // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
     private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
-        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
+        NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
 
-        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
-            Container container = queryService.getContainer(image.getAlias());
+        if (!NamingStrategy.none.equals(strategy)) {
+            Container container = queryService.getContainer(ContainerName.calculate(image.getAlias(), strategy, namingStrategy, containerPrefix, image.getName()));
             return container != null ? Collections.singletonList(container) : Collections.<Container>emptyList();
         } else {
             return queryService.getContainersForImage(image.getName());
@@ -105,9 +118,10 @@ public class StopMojo extends AbstractDockerMojo {
             return true;
         }
 
-        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
-        if (RunImageConfiguration.NamingStrategy.alias.equals(strategy)) {
-            return container.getName().equals(image.getAlias());
+        final NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
+        if (!NamingStrategy.none.equals(strategy)) {
+            final String name = ContainerName.calculate(image.getAlias(), strategy, namingStrategy, containerPrefix, image.getName());
+            return container.getName().equals(name);
         }
 
         String key = pomLabel.getKey();

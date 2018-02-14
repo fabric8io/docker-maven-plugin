@@ -1,5 +1,23 @@
 package io.fabric8.maven.docker.service;
 
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.assembly.AssemblyFiles;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NamingStrategy;
+import io.fabric8.maven.docker.config.WatchImageConfiguration;
+import io.fabric8.maven.docker.config.WatchMode;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.util.Task;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.codehaus.plexus.util.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -9,24 +27,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.ExecException;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.assembly.AssemblyFiles;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.WatchImageConfiguration;
-import io.fabric8.maven.docker.config.WatchMode;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.PomLabel;
-import io.fabric8.maven.docker.util.StartOrderResolver;
-import io.fabric8.maven.docker.util.Task;
-
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.codehaus.plexus.util.StringUtils;
 
 /**
  * Watch service for monitoring changes and restarting containers
@@ -211,16 +211,17 @@ public class WatchService {
     }
 
     private void restartContainer(ImageWatcher watcher) throws Exception {
-        Task<ImageWatcher> restarter = watcher.getWatchContext().getContainerRestarter();
+        final WatchContext watchContext = watcher.getWatchContext();
+        Task<ImageWatcher> restarter = watchContext.getContainerRestarter();
         if (restarter == null) {
-            restarter = defaultContainerRestartTask();
+            restarter = defaultContainerRestartTask(watchContext.getDefaultNamingStrategy(), watchContext.getContainerPrefix());
         }
 
         // Restart
         restarter.execute(watcher);
     }
 
-    private Task<ImageWatcher> defaultContainerRestartTask() {
+    private Task<ImageWatcher> defaultContainerRestartTask(final NamingStrategy defaultNamingStrategy, final String containerPrefix) {
         return new Task<ImageWatcher>() {
             @Override
             public void execute(ImageWatcher watcher) throws Exception {
@@ -236,7 +237,7 @@ public class WatchService {
                 runService.stopPreviouslyStartedContainer(id, false, false);
 
                 // Start new one
-                watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
+                watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, defaultNamingStrategy, containerPrefix, watcher.getWatchContext().getPomLabel(),
                         watcher.getWatchContext().getMojoParameters().getProject().getProperties(),
                         watcher.getWatchContext().getMojoParameters().getProject().getBasedir()));
             }
@@ -393,6 +394,10 @@ public class WatchService {
 
         private boolean autoCreateCustomNetworks;
 
+        private NamingStrategy defaultNamingStrategy;
+
+        private String containerPrefix;
+
         private Task<ImageConfiguration> imageCustomizer;
 
         private Task<ImageWatcher> containerRestarter;
@@ -438,6 +443,14 @@ public class WatchService {
 
         public boolean isAutoCreateCustomNetworks() {
             return autoCreateCustomNetworks;
+        }
+
+        public NamingStrategy getDefaultNamingStrategy() {
+            return defaultNamingStrategy;
+        }
+
+        public String getContainerPrefix() {
+            return containerPrefix;
         }
 
         public Task<ImageConfiguration> getImageCustomizer() {
@@ -517,6 +530,16 @@ public class WatchService {
 
             public Builder autoCreateCustomNetworks(boolean autoCreateCustomNetworks) {
                 context.autoCreateCustomNetworks = autoCreateCustomNetworks;
+                return this;
+            }
+
+            public Builder defaultNamingStrategy(NamingStrategy namingStrategy) {
+                context.defaultNamingStrategy = namingStrategy;
+                return this;
+            }
+
+            public Builder containerPrefix(String containerPrefix) {
+                context.containerPrefix = containerPrefix;
                 return this;
             }
 

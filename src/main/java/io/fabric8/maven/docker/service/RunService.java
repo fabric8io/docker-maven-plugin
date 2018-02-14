@@ -17,22 +17,46 @@ package io.fabric8.maven.docker.service;
  * limitations under the License.
  */
 
-import java.io.File;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.ContainerNetworkingConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.NetworkCreateConfig;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NamingStrategy;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ExecDetails;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.util.*;
-import io.fabric8.maven.docker.wait.WaitUtil;
+import io.fabric8.maven.docker.util.ContainerName;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
+import io.fabric8.maven.docker.wait.WaitUtil;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
 
@@ -99,21 +123,25 @@ public class RunService {
      * Create and start a container with the given image configuration.
      * @param imageConfig image configuration holding the run information and the image name
      * @param portMapping container port mapping
-     * @param mavenProps properties to fill in with dynamically assigned ports
+     * @param defaultNamingStrategy default naming strategy if any
+     * @param containerPrefix the container prefix
      * @param pomLabel label to tag the started container with
      *
+     * @param mavenProps properties to fill in with dynamically assigned ports
      * @return the container id
      *
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
                                           PortMapping portMapping,
+                                          final NamingStrategy defaultNamingStrategy,
+                                          final String containerPrefix,
                                           PomLabel pomLabel,
                                           Properties mavenProps,
                                           File baseDir) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
-        String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
+        String containerName = ContainerName.calculate(imageConfig.getAlias(), runConfig.getNamingStrategy(), defaultNamingStrategy, containerPrefix, imageName);
         ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps, baseDir);
 
         String id = docker.createContainer(config, containerName);
@@ -378,17 +406,6 @@ public class RunService {
             }
         }
         return list;
-    }
-
-
-    private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
-        if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
-            return null;
-        }
-        if (alias == null) {
-            throw new IllegalArgumentException("A naming scheme 'alias' requires an image alias to be set");
-        }
-        return alias;
     }
 
     // checkAllContainers: false = only running containers are considered
