@@ -21,7 +21,7 @@ public class WaitConfiguration implements Serializable {
     public static final String DEFAULT_STATUS_RANGE = String.format("%d..%d", DEFAULT_MIN_STATUS, DEFAULT_MAX_STATUS);
 
     @Parameter
-    private int time;
+    private Integer time;
 
     /**
      * @deprecated Use &lt;http&gt;&lturl&gt;&lt;/url&gt;&lt;/http&gt; instead
@@ -38,23 +38,23 @@ public class WaitConfiguration implements Serializable {
     @Parameter
     private TcpConfiguration tcp;
 
-    @Parameter boolean healthy;
+    @Parameter Boolean healthy;
 
     @Parameter
     private String log;
 
     @Parameter
-    private int shutdown;
+    private Integer shutdown;
 
     @Parameter
-    private int kill;
+    private Integer kill;
 
     @Parameter
     private Integer exit;
 
     public WaitConfiguration() {}
 
-    private WaitConfiguration(int time, ExecConfiguration exec, HttpConfiguration http, TcpConfiguration tcp, boolean healthy, String log, int shutdown, int kill, Integer exit) {
+    private WaitConfiguration(Integer time, ExecConfiguration exec, HttpConfiguration http, TcpConfiguration tcp, Boolean healthy, String log, Integer shutdown, Integer kill, Integer exit) {
         this.time = time;
         this.exec = exec;
         this.http = http;
@@ -66,9 +66,7 @@ public class WaitConfiguration implements Serializable {
         this.exit = exit;
     }
 
-    public int getTime() {
-        return time;
-    }
+    public Integer getTime() { return time; }
 
     public String getUrl() {
         return http != null ? http.getUrl() : url;
@@ -86,32 +84,30 @@ public class WaitConfiguration implements Serializable {
         return tcp;
     }
 
-    public boolean getHealthy() {
-        return healthy;
-    }
-
     public String getLog() {
         return log;
-    }
-
-    public int getShutdown() {
-        return shutdown;
-    }
-
-    public int getKill() {
-        return kill;
     }
 
     public Integer getExit() {
         return exit;
     }
 
+    public Integer getShutdown() {
+        return shutdown;
+    }
+
+    public Integer getKill() {
+        return kill;
+    }
+
+    public Boolean getHealthy() { return healthy; }
+
     // =============================================================================
 
     public static class Builder {
-        private int time = 0,shutdown = 0, kill = 0;
+        private Integer time, shutdown, kill;
         private String url,log,status;
-        boolean healthy;
+        Boolean healthy;
         private String method;
         private String preStop;
         private String postStart;
@@ -141,7 +137,7 @@ public class WaitConfiguration implements Serializable {
             return this;
         }
 
-        public Builder healthy(boolean healthy) {
+        public Builder healthy(Boolean healthy) {
             this.healthy = healthy;
             return this;
         }
@@ -151,12 +147,12 @@ public class WaitConfiguration implements Serializable {
             return this;
         }
 
-        public Builder shutdown(int shutdown) {
+        public Builder shutdown(Integer shutdown) {
             this.shutdown = shutdown;
             return this;
         }
 
-        public Builder kill(int kill) {
+        public Builder kill(Integer kill) {
             this.kill = kill;
             return this;
         }

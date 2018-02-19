@@ -128,6 +128,14 @@ public class NetworkConfig implements Serializable {
         return aliases != null && !aliases.isEmpty();
     }
 
+    public Mode getMode() {
+        return mode;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     // ==============================================================================
 
     // Mode used for determining the network

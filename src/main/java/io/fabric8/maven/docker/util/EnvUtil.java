@@ -8,15 +8,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.shared.utils.io.FileUtils;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
+import com.google.common.base.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.utils.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,6 +33,8 @@ public class EnvUtil {
     // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
+
+    public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
 
     private EnvUtil() {}
 
@@ -198,8 +197,24 @@ public class EnvUtil {
     }
 
     /**
+     * Return all properties in Maven project, merged with all System properties (-D flags sent to Maven).
+     *
+     * System properties always takes precedence.
+     *
+     * @param project Project to extract Properties from
+     * @return
+     */
+    public static Properties getPropertiesWithSystemOverrides(MavenProject project) {
+        Properties properties = new Properties(project.getProperties());
+        properties.putAll(System.getProperties());
+        return properties;
+    }
+
+    /**
      * Extract part of given properties as a map. The given prefix is used to find the properties,
      * the rest of the property name is used as key for the map.
+     *
+     * NOTE: If key is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored! This is reserved for combine policy tweaking.
      *
      * @param prefix prefix which specifies the part which should be extracted as map
      * @param properties properties to extract from
@@ -213,6 +228,10 @@ public class EnvUtil {
             String propName = (String) names.nextElement();
             if (propMatchesPrefix(prefixP, propName)) {
                 String mapKey = propName.substring(prefixP.length());
+                if(PROPERTY_COMBINE_POLICY_SUFFIX.equals(mapKey)) {
+                    continue;
+                }
+
                 ret.put(mapKey, properties.getProperty(propName));
             }
         }
@@ -223,6 +242,9 @@ public class EnvUtil {
      * Extract from given properties a list of string values. The prefix is used to determine the subset of the
      * given properties from which the list should be extracted, the rest is used as a numeric index. If the rest
      * is not numeric, the order is not determined (all those props are appended to the end of the list)
+     *
+     * NOTE: If suffix/index is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored!
+     * This is reserved for combine policy tweaking.
      *
      * @param prefix for selecting the properties from which the list should be extracted
      * @param properties properties from which to extract from
@@ -237,6 +259,11 @@ public class EnvUtil {
             String key = (String) names.nextElement();
             if (propMatchesPrefix(prefixP, key)) {
                 String index = key.substring(prefixP.length());
+
+                if(PROPERTY_COMBINE_POLICY_SUFFIX.equals(index)) {
+                    continue;
+                }
+
                 String value = properties.getProperty(key);
                 try {
                     Integer nrIndex = Integer.parseInt(index);

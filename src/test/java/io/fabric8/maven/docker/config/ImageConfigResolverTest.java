@@ -18,13 +18,12 @@ package io.fabric8.maven.docker.config;/*
 import java.util.*;
 
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
+import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
 import org.codehaus.plexus.util.ReflectionUtils;
-import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +45,7 @@ public class ImageConfigResolverTest {
 
     @Test
     public void direct() throws IllegalAccessException, InitializationException {
-        List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"),null, null);
+        List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"), new MavenProject(), null);
         assertEquals(1, rest.size());
         assertEquals("vanilla", rest.get(0).getName());
     }
@@ -55,7 +54,20 @@ public class ImageConfigResolverTest {
     public void withReference() throws Exception {
         Map<String,String> refConfig = Collections.singletonMap("type", "test");
         ImageConfiguration config = new ImageConfiguration.Builder().name("reference").externalConfig(refConfig).build();
-        List<ImageConfiguration> rest = resolver.resolve(config,null, null);
+        List<ImageConfiguration> rest = resolver.resolve(config,new MavenProject(), null);
+        assertEquals(3,rest.size());
+        for (int i = 0; i < 3;i++) {
+            assertEquals("image " + i,rest.get(i).getName());
+        }
+    }
+
+    @Test
+    public void withExternalConfigActivation() throws Exception {
+        MavenProject project = new MavenProject();
+        // Value is not verified since we're only using our TestHandler
+        project.getProperties().put(ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, "notactuallyverified");
+
+        List<ImageConfiguration> rest = resolver.resolve(getImageConfiguration("vanilla"), project, null);
         assertEquals(3,rest.size());
         for (int i = 0; i < 3;i++) {
             assertEquals("image " + i,rest.get(i).getName());
@@ -68,7 +80,7 @@ public class ImageConfigResolverTest {
         ImageConfiguration config = new ImageConfiguration.Builder()
                 .name("reference")
                 .externalConfig(refConfig).build();
-        resolver.resolve(config,null, null);
+        resolver.resolve(config,new MavenProject(), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -77,7 +89,7 @@ public class ImageConfigResolverTest {
         ImageConfiguration config = new ImageConfiguration.Builder()
                 .name("reference")
                 .externalConfig(refConfig).build();
-        resolver.resolve(config,null, null);
+        resolver.resolve(config,new MavenProject(), null);
     }
 
     private static class TestHandler implements ExternalConfigHandler {

@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.util.DeepCopy;
-import org.apache.maven.plugins.annotations.Parameter;
-
 import io.fabric8.maven.docker.util.EnvUtil;
+import org.apache.maven.plugins.annotations.Parameter;
 
 import javax.annotation.Nonnull;
 
@@ -18,6 +17,10 @@ import javax.annotation.Nonnull;
 public class RunImageConfiguration implements Serializable {
 
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
+
+    public boolean isDefault() {
+        return this == RunImageConfiguration.DEFAULT;
+    }
 
     /**
      * Environment variables to set when starting the container. key: variable name, value: env value
@@ -144,7 +147,7 @@ public class RunImageConfiguration implements Serializable {
     private List<UlimitConfig> ulimits;
 
     @Parameter
-    private boolean skip = false;
+    private Boolean skip;
 
     /**
      * Policy for pulling the image to start
@@ -257,6 +260,11 @@ public class RunImageConfiguration implements Serializable {
         return dns;
     }
 
+    @Deprecated
+    public String getNetRaw() {
+        return net;
+    }
+
     public NetworkConfig getNetworkingConfig() {
         if (network != null) {
             return network;
@@ -308,6 +316,11 @@ public class RunImageConfiguration implements Serializable {
         return namingStrategy == null ? NamingStrategy.none : namingStrategy;
     }
 
+    public NamingStrategy getNamingStrategyRaw() {
+        return namingStrategy;
+
+    }
+
     public String getExposedPropertyKey() {
         return exposedPropertyKey;
     }
@@ -320,7 +333,15 @@ public class RunImageConfiguration implements Serializable {
         return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
     }
 
+    public RestartPolicy getRestartPolicyRaw() {
+        return restartPolicy;
+    }
+
     public boolean skip() {
+        return skip != null ? skip : false;
+    }
+
+    public Boolean getSkip() {
         return skip;
     }
 
@@ -533,10 +554,8 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder skip(String skip) {
-            if (skip != null) {
-                config.skip = Boolean.valueOf(skip);
-            }
+        public Builder skip(Boolean skip) {
+            config.skip = skip;
             return this;
         }
 

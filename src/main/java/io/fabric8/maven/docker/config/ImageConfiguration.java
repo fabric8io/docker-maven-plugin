@@ -52,6 +52,15 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         this.name = name;
     }
 
+    /**
+     * Override externalConfiguration when defined via special property.
+     *
+     * @param externalConfiguration Map with alternative config
+     */
+    public void setExternalConfiguration(Map<String, String> externalConfiguration) {
+        this.external = externalConfiguration;
+    }
+
     @Override
 	public String getAlias() {
         return alias;

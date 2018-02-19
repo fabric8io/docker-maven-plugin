@@ -5,6 +5,17 @@ configuration. Such a property based configuration can be selected
 with an `<type>` of `properties`. As extra configuration a prefix for the
 properties can be defined which by default is `docker`.
 
+For single-image configurations it is also possible to active property
+based configuration via an externally set property.
+
+By default, property based configuration uses only properties, ignoring
+any `<build>` and `<run>` sections. To combine values from both sources,
+use the <<combining-property-config,property mode configuration>>.
+
+Properties are read from the Maven project (defined in `<properties>` or global
+Maven configuration from `settings.xml`) and, since 0.25.0, from any `-D`
+flags given to Maven (takes priority over project properties).
+
 .Example
 [source,xml]
 ----
@@ -12,6 +23,7 @@ properties can be defined which by default is `docker`.
   <external>
      <type>properties</type>
      <prefix>docker</prefix> <!-- this is the default -->
+     <mode>only</mode> <!-- this is the default -->
   </external>
 </image>
 ----
@@ -20,6 +32,7 @@ Given this example configuration a single image configuration is built
 up from the following properties, which correspond to the corresponding
 values in the `<build>` and `<run>` sections. A build configuration is only created
 when a `docker.from` or a `docker.fromExt` is set.
+
 
 .External properties
 [cols="1,5"]
@@ -56,6 +69,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 
 | *docker.bind.idx*
 | Sets a list of paths to bind/expose in the container
+
+| *docker.buildArg.VARIABLE*
+| Set a ARG to be available during build of image. *Note*: this is handled separately from external configuration, and is always available. See <<property-buildargs,Build Args>> for more details.
 
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container
@@ -134,6 +150,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 
 | *docker.hostname*
 | Container hostname
+
+| *docker.imagePropertyConfiguration*
+| Special property to activate property configuration without altering XML file (see <<combining-property-config,Combining property and XML config>>).
 
 | *docker.imagePullPolicy.build*
 | Specific pull policy used when building images. See <<image-pull-policy,imagePullPolicy>> for the possible values.
@@ -280,14 +299,65 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Current Working dir for commands to run in when running containers
 |===
 
-Any other `<run>` or `<build>` sections are ignored when this handler
-is used. Multiple property configuration handlers can be used if they
+Multiple property configuration handlers can be used if they
 use different prefixes. As stated above the environment and ports
 configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.
 
-.Example
+[[combining-property-config]]
+.Combining property and XML configuration
+By default the property handler will only consider properties and ignore any other image
+configuration in the XML/POM file. This can be changed by adding the `<mode>`
+configuration (since version 0.25.0), which can have one of the following values:
+
+.Property mode
+[cols="1,5"]
+|===
+|`only`
+| Only look at properties, ignore any `<run>` or `<build>` sections for this image. This is the default, and also the behavior in versions before 0.25.0.
+
+|`override`
+| Use property if set, else fall back to value found in `<run>` or `<build>` sections for this image.
+
+|`fallback`
+| Use value found in `<run>` or `<build>` sections for this image, else fall back to to property value.
+
+|`skip`
+| Effectively disable properties, same as not specifying the `<external>` section at all.
+|===
+
+For single-image configurations it is also possible to active property
+configuration by setting the property `docker.imagePropertyConfiguration` to a
+valid `property mode`, without adding a `<external>` section.
+This will use properties with default prefix.
+This can be useful if most of configuration is specified in XML/POM file, but there
+is need to override certain configuration values without altering the POM file.
+
+.Merging POM and property values
+For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment
+we might want to inject a `http_proxy` environment variable, but we do not want to add this to the POM file.
+
+This is solved using a *Combine policy* which can be either `replace` or `merge`. Merge is only available for
+configuration of Map or List type. For scalar values such as strings and integers, it is not supported.
+For Maps, both sources are merged, with the priority source taking precedence. For Lists, they are concatenated, with values
+from the priority source being added first.
+
+Combine policy is specified per configuration key/property, and the default in most cases is currently `replace`. The following
+keys have `merge` as default policy:
+
+* docker.args
+* docker.envBuild
+* docker.envRun
+* docker.labels
+* docker.ports
+* docker.tags
+
+This can be overridden individually for all configuration keys (of map/list type) by setting an additional property suffixed `._combine`.
+For example, to not merge ports, set `docker.ports._combine=replace`, and to enable merging of dns, set `docker.dns._combine=merge`.
+
+
+.Example, properties only
 [source,xml]
 ----
 <properties>
@@ -320,3 +390,51 @@ run and build configuration sections.
   </plugins>
 </build>
 ----
+
+.Example, combining properties and XML/POM configuration
+[source,xml]
+----
+<properties>
+  <docker.assembly.descriptor>src/main/docker-assembly.xml</docker.assembly.descriptor>
+  <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
+  <docker.label.version>${project.version}</docker.label.version>
+  <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
+  <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
+</properties>
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <external>
+              <type>properties</type>
+              <prefix>docker</prefix>
+              <mode>override</mode>
+            </external>
+
+            <name>jolokia/demo</name>
+            <alias>service</alias>
+
+            <build>
+              <from>consol/tomcat:7.0</from>
+              <labels>
+                <software>tomcat</software>
+              </labels>
+            </build>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+This would build the same image as the previous example.
+If instead built with `mvn docker:build -Pdocker.from=console/tomcat:8.0 -Ddocker.tags.0=tc8-test` it would build from that image instead, and also add that tag to the image.
+
+If `-Ddocker.labels.status=beta` is added, the image would be given two labels: `status=beta` and `software=tomcat`.
+If `-Ddocker.labels._combine=replace` is added, the image would be given one label only: `status=beta`.
