@@ -9,6 +9,10 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 | Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
 | `docker.containerNamePattern`
 
+| *retries*
+| If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
+| `docker.pull.retries`
+
 | *showLogs*
 | In order to switch on globally the logs *showLogs* can be used as global configuration (i.e. outside of `<images>`). If set it will print out all standard
  output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
@@ -18,7 +22,6 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 | *startParallel*
 | Starts docker images in parallel while dependencies expressed as <<start-links,Link>> or <<start-depends-on,dependsOn>> are respected. This option can significantly reduce the startup time because independent containers do not need to wait for each other.
 | `docker.startParallel`
-
 |===
 
 The `<run>` configuration element knows the following sub elements:

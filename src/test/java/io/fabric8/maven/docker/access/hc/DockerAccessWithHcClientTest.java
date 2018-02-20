@@ -33,6 +33,10 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.net.HttpURLConnection.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 
 @ExtendWith(MockitoExtension.class)
 class DockerAccessWithHcClientTest {
@@ -57,7 +61,7 @@ class DockerAccessWithHcClientTest {
     @Mock
     private Logger mockLogger;
 
-    private int pushRetries;
+    private int pushPullRetries;
 
     private String registry;
 
@@ -118,7 +122,8 @@ class DockerAccessWithHcClientTest {
     @Test
     void testPushFails_noRetry() throws Exception {
         givenAnImageName("test");
-        givenThePushWillFail(1);
+        givenThePushOrPullWillFail(0,false);
+
         whenPushImage();
         thenImageWasNotPushed();
     }
@@ -127,7 +132,8 @@ class DockerAccessWithHcClientTest {
     void testRetryPush() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFailAndEventuallySucceed(1);
+        givenThePushOrPullWillFail(1, true);
+
         whenPushImage();
         thenImageWasPushed();
     }
@@ -136,7 +142,7 @@ class DockerAccessWithHcClientTest {
     void testRetriesExceeded() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFail(1);
+        givenThePushOrPullWillFail(1, false);
         whenPushImage();
         thenImageWasNotPushed();
     }
@@ -186,6 +192,32 @@ class DockerAccessWithHcClientTest {
     }
 
     @Test
+    void testPullFailes_noRetry() throws Exception {
+        givenAnImageName("test");
+        givenThePushOrPullWillFail(0,false);
+        whenPullImage();
+        thenImageWasNotPulled();
+    }
+
+    @Test
+    void testRetryPull() throws Exception {
+        givenAnImageName("test");
+        givenANumberOfRetries(1);
+        givenThePushOrPullWillFail(1, true);
+        whenPullImage();
+        thenImageWasPulled(2);
+    }
+
+    @Test
+    void testPullRetriesExceeded() throws Exception {
+        givenAnImageName("test");
+        givenANumberOfRetries(1);
+        givenThePushOrPullWillFail(1, false);
+        whenPullImage();
+        thenImageWasNotPulled();
+    }
+
+    @Test
     void testLoadImageFail() throws IOException {
         givenAnImageName("test");
         givenArchiveFile("test.tar");
@@ -217,14 +249,15 @@ class DockerAccessWithHcClientTest {
     void testPullImage() throws Exception {
         givenAnImageName("test");
         whenPullImage();
-        thenImageWasPulled();
+        thenImageWasPulled(1);
     }
 
     @Test
     void testPullImageThrowsException() throws Exception {
         givenAnImageName("test");
         givenPostCallThrowsException();
-        DockerAccessException dae = Assertions.assertThrows(DockerAccessException.class, this::whenPullImage);
+        whenPullImage();
+        DockerAccessException dae = (DockerAccessException) thrownException;
         Assertions.assertTrue(dae.getMessage().contains("Unable to pull 'test' from registry 'registry'"));
         Assertions.assertTrue(dae.getMessage().contains("Problem with images/create"));
     }
@@ -285,7 +318,7 @@ class DockerAccessWithHcClientTest {
     }
 
     private void givenANumberOfRetries(int retries) {
-        this.pushRetries = retries;
+        this.pushPullRetries = retries;
     }
 
     private void givenArchiveFile(String archiveFile) {
@@ -309,7 +342,7 @@ class DockerAccessWithHcClientTest {
             array.add(idNameObject);
         }
 
-        Mockito.doReturn(array.toString()).when(mockDelegate).get(Mockito.anyString(), Mockito.eq(200));
+        Mockito.doReturn(array.toString()).when(mockDelegate).get(anyString(), Mockito.eq(200));
     }
 
     private void givenImageIdRepoTagPairs(Pair<String, String>... idRepoTagPairs) throws IOException {
@@ -434,9 +467,20 @@ class DockerAccessWithHcClientTest {
         }
     }
 
-    private void whenPushImage() throws IOException {
+    private void whenPushImage() {
         try {
-            client.pushImage(imageName, authConfig, registry, pushRetries);
+            client.pushImage(imageName, authConfig, registry, pushPullRetries);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+    private void thenImageWasNotPulled() {
+        Assertions.assertNotNull(thrownException);
+    }
+
+    private void whenPullImage() {
+        try {
+            client.pullImage("test", null, "registry", new CreateImageOptions().tag("1.1"), pushPullRetries);
         } catch (Exception e) {
             thrownException = e;
         }
@@ -506,7 +550,7 @@ class DockerAccessWithHcClientTest {
                 .post(Mockito.anyString(), Mockito.any(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
     }
 
-    private void thenImageWasPulled() throws IOException {
+    private void thenImageWasPulled(int pushPullRetries) throws IOException {
         ArgumentCaptor<String> urlCapture = ArgumentCaptor.forClass(String.class);
         Mockito.verify(mockDelegate)
                 .post(urlCapture.capture(), Mockito.isNull(), Mockito.anyMap(), Mockito.any(ResponseHandler.class), Mockito.eq(HTTP_OK));
@@ -516,7 +560,18 @@ class DockerAccessWithHcClientTest {
         Assertions.assertEquals("tcp://1.2.3.4:2375/v1.40/images/create?tag=1.1", postUrl);
     }
 
-    private void whenPullImage() throws DockerAccessException {
-        client.pullImage("test", null, "registry", new CreateImageOptions().tag("1.1"));
+    private void givenThePushOrPullWillFail(final int pushPullRetries, final boolean succeedAtEnd) throws IOException {
+        if (pushPullRetries == 1 && succeedAtEnd) {
+            Mockito.when(mockDelegate.post(anyString(), isNull(), anyMap(), any(ResponseHandler.class), Mockito.eq(HTTP_OK)))
+                .thenThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"))
+                .thenReturn(new Object());
+        } else if (pushPullRetries == 1) {
+            Mockito.when(mockDelegate.post(anyString(), isNull(), anyMap(), any(ResponseHandler.class), Mockito.eq(HTTP_OK)))
+                .thenThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"))
+                .thenThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"));
+        } else {
+            Mockito.when(mockDelegate.post(anyString(), isNull(), anyMap(), any(ResponseHandler.class), Mockito.eq(HTTP_OK)))
+                .thenThrow(new HttpResponseException(HTTP_INTERNAL_ERROR, "error"));
+        }
     }
 }

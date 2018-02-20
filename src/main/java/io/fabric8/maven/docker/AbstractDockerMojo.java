@@ -121,6 +121,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.removeVolumes", defaultValue = "false")
     protected boolean removeVolumes;
 
+    @Parameter(property = "docker.pull.retries", defaultValue = "0")
+    protected int retries;
+
     @Parameter(property = "docker.apiVersion")
     private String apiVersion;
 
@@ -577,7 +580,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         RunImageConfiguration runConfiguration = imageConfig.getRunConfiguration();
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfiguration), autoPull);
         RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-        registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, imageConfig.getBuildConfiguration());
+        registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, imageConfig.getBuildConfiguration(), retries);
     }
 
     protected boolean shouldSkipPom() {
@@ -601,7 +604,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
-    private String determinePullPolicy(RunImageConfiguration runConfig) {
+    protected String determinePullPolicy(RunImageConfiguration runConfig) {
         return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
     }
 

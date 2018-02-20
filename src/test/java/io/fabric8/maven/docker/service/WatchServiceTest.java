@@ -79,7 +79,7 @@ class WatchServiceTest {
         // ACT
         Executors.newSingleThreadExecutor().submit(() -> {
             try {
-                watchService.watch(watchContext, buildContext, imageConfigurations);
+                watchService.watch(watchContext, buildContext, imageConfigurations, 0);
             } catch (Exception ignored) {}
         });
 

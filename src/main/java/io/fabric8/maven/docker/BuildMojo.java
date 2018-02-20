@@ -64,6 +64,8 @@ public class BuildMojo extends AbstractBuildSupportMojo {
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     protected boolean skipTag;
+    @Parameter(property = "docker.pull.retries", defaultValue = "0")
+    private int retries;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws IOException, MojoExecutionException {
@@ -111,7 +113,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             if (imageConfig.isBuildX()) {
                 hub.getBuildXService().build(createProjectPaths(), imageConfig, null, getAuthConfig(imageConfig), buildArchiveFile);
             } else {
-                buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
+                buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile, retries);
                 if (!skipTag) {
                     buildService.tagImage(imageConfig);
                 }

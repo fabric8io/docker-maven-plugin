@@ -285,7 +285,7 @@ class BuildMojoTest extends MojoTestBase {
 
     private void verifyBuild(int wantedNumberOfInvocations) throws DockerAccessException, MojoExecutionException {
         Mockito.verify(buildService, Mockito.times(wantedNumberOfInvocations))
-            .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any());
+            .buildImage(Mockito.any(ImageConfiguration.class), Mockito.any(ImagePullManager.class), Mockito.any(BuildService.BuildContext.class), Mockito.any(), Mockito.anyInt());
     }
 
     private void thenBuildxRun(String relativeConfigFile, String contextDir,
