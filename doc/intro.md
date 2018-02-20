@@ -126,7 +126,7 @@ descriptor). Additionally it specifies the startup command for the
 container, which in this example fires up a microservice from a jar
 file copied over via the assembly descriptor. It also exposes
 port 8080. In the `<run>` section this port is dynamically mapped to a
-dynmically chosen port, and then assigned to the
+dynamically chosen port, and then assigned to the
 Maven property `${tomcat.port}`. This property could be used, for example,
 by an integration test to access this microservice. An important part is
 the `<links>` section which indicates that the image with the alias of
@@ -165,7 +165,7 @@ test. Each plugin is configured to create images and run the
 integration test (if possible). Although it might be a bit biased, it can 
 be useful for figuring out which plugin suits you best.
 
-The high-level design goals and initial motiviation fort this plugin are:
+The high-level design goals and initial motivation for this plugin are:
 
 * A flexible, **dynamic port mapping** from container to host
   ports so that truly isolated builds could be made. This should

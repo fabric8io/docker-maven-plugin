@@ -178,8 +178,8 @@ A `port` stanza may take one of two forms:
 
 Another useful configuration option is `portPropertyFile` with which a file can be specified to which the real port
 mapping is written after all dynamic ports has been resolved. The keys of this property file are the variable names,
-the values are the dynamically assgined host ports. This property file might be useful together with other maven
-plugins which already resolved their maven variables earlier in the lifecycle than this plugin so that the port variables
+the values are the dynamically assigned host ports. This property file might be useful together with other Maven
+plugins which already resolved their Maven variables earlier in the lifecycle than this plugin so that the port variables
 might not be available to them.
 
 ## Setting environment variables
@@ -269,7 +269,7 @@ It is really that easy to deploy your artifacts. And it's fast (less than 10s fo
 
 The assembly descriptor has the same [format](http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html) as the the maven-assembly-plugin with the following exceptions:
 
-* `<formats>` are ignored, the assembly will allways use a directory when preparing the data container (i.e. the format is fixed to `dir`)
+* `<formats>` are ignored, the assembly will always use a directory when preparing the data container (i.e. the format is fixed to `dir`)
 * The `<id>` is ignored since only a single assembly descriptor is used (no need to distinguish multiple descriptors)
 
 This `docker-maven-plugin` comes with some predefined assembly descriptors which can be used with `assemblyDescritproRef`:
