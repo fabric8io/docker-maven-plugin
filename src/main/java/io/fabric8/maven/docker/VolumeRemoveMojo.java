@@ -6,8 +6,6 @@ import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.VolumeService;
 
-import java.lang.String;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;

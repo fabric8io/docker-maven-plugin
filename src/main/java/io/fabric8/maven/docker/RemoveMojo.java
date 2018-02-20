@@ -24,7 +24,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 

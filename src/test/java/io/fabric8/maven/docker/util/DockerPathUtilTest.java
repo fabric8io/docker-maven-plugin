@@ -4,15 +4,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
-
 import static io.fabric8.maven.docker.util.PathTestUtil.DOT;
 import static io.fabric8.maven.docker.util.PathTestUtil.SEP;
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static io.fabric8.maven.docker.util.PathTestUtil.getFirstDirectory;
 import static io.fabric8.maven.docker.util.PathTestUtil.join;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Path manipulation tests

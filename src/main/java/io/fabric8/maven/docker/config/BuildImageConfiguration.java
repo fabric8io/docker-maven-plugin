@@ -1,6 +1,5 @@
 package io.fabric8.maven.docker.config;
 
-import java.awt.*;
 import java.io.File;
 import java.io.Serializable;
 import java.util.*;
