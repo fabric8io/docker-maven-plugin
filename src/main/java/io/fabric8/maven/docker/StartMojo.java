@@ -48,6 +48,9 @@ public class StartMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.startParallel", defaultValue = "false")
     private boolean startParallel;
 
+    @Parameter(property = "docker.pull.retries", defaultValue = "0")
+    private int retries;
+
     // whether to block during to start. Set it via System property docker.follow
     private boolean follow;
 
@@ -307,7 +310,7 @@ public class StartMojo extends AbstractDockerMojo {
             ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), autoPull);
 
             hub.getRegistryService().pullImageWithPolicy(imageConfig.getName(), pullManager, registryConfig,
-                                                         queryService.hasImage(imageConfig.getName()));
+                                                         queryService.hasImage(imageConfig.getName()), retries);
 
             NetworkConfig config = runConfig.getNetworkingConfig();
             if (autoCreateCustomNetworks && config.isCustomNetwork()) {

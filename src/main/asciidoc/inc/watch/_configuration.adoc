@@ -45,6 +45,10 @@ below how this can be specified.
 | *removeVolumes*
 | if set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are `true`.
 | `docker.removeVolumes`
+
+| *retries*
+| If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
+| `docker.pull.retries`
 |===
 
 Image specific watch configuration goes into an extra image-level `<watch>` section (i.e. `+<image><watch>...</watch></image>+`). The following parameters are recognized:

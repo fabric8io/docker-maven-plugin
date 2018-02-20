@@ -178,7 +178,7 @@ public interface DockerAccess {
      * @param registry an optional registry from where to pull the image. Can be null.
      * @throws DockerAccessException if the image couldn't be pulled.
      */
-    void pullImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
+    void pullImage(String image, AuthConfig authConfig, String registry, int retries) throws DockerAccessException;
 
     /**
      * Push an image to a registry. An registry can be specified which is used as target

@@ -52,7 +52,7 @@ public class WatchService {
         this.log = log;
     }
 
-    public synchronized void watch(WatchContext context, BuildService.BuildContext buildContext, List<ImageConfiguration> images) throws DockerAccessException,
+    public synchronized void watch(WatchContext context, BuildService.BuildContext buildContext, List<ImageConfiguration> images, int pullRetries) throws DockerAccessException,
             MojoExecutionException {
 
         // Important to be be a single threaded scheduler since watch jobs must run serialized
@@ -83,7 +83,7 @@ public class WatchService {
                     }
 
                     if (watcher.isBuild()) {
-                        schedule(executor, createBuildWatchTask(watcher, context.getMojoParameters(), watchMode == WatchMode.both, buildContext), interval);
+                        schedule(executor, createBuildWatchTask(watcher, context.getMojoParameters(), watchMode == WatchMode.both, buildContext, pullRetries), interval);
                         tasks.add("rebuilding");
                     }
                 }
@@ -149,7 +149,7 @@ public class WatchService {
     }
 
     private Runnable createBuildWatchTask(final ImageWatcher watcher,
-                                          final MojoParameters mojoParameters, final boolean doRestart, final BuildService.BuildContext buildContext)
+                                          final MojoParameters mojoParameters, final boolean doRestart, final BuildService.BuildContext buildContext, final int pullRetries)
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
         final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
@@ -171,7 +171,7 @@ public class WatchService {
                             watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
                         }
 
-                        buildService.buildImage(imageConfig, null, buildContext);
+                        buildService.buildImage(imageConfig, null, buildContext, pullRetries);
 
                         String name = imageConfig.getName();
                         watcher.setImageId(queryService.getImageId(name));

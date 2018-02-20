@@ -34,7 +34,7 @@ public class DockerAccessWithHcClientTest {
     @Mocked
     private Logger mockLogger;
 
-    private int pushRetries;
+    private int pushPullRetries;
 
     private String registry;
 
@@ -57,7 +57,7 @@ public class DockerAccessWithHcClientTest {
     @Test
     public void testPushFailes_noRetry() throws Exception {
         givenAnImageName("test");
-        givenThePushWillFail(0,false);
+        givenThePushOrPullWillFail(0,false);
         whenPushImage();
         thenImageWasNotPushed();
     }
@@ -66,7 +66,7 @@ public class DockerAccessWithHcClientTest {
     public void testRetryPush() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFail(1, true);
+        givenThePushOrPullWillFail(1, true);
         whenPushImage();
         thenImageWasPushed();
     }
@@ -75,9 +75,35 @@ public class DockerAccessWithHcClientTest {
     public void testRetriesExceeded() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFail(1, false);
+        givenThePushOrPullWillFail(1, false);
         whenPushImage();
         thenImageWasNotPushed();
+    }
+
+    @Test
+    public void testPullFailes_noRetry() throws Exception {
+        givenAnImageName("test");
+        givenThePushOrPullWillFail(0,false);
+        whenPullImage();
+        thenImageWasNotPulled();
+    }
+
+    @Test
+    public void testRetryPull() throws Exception {
+        givenAnImageName("test");
+        givenANumberOfRetries(1);
+        givenThePushOrPullWillFail(1, true);
+        whenPullImage();
+        thenImageWasPulled();
+    }
+
+    @Test
+    public void testPullRetriesExceeded() throws Exception {
+        givenAnImageName("test");
+        givenANumberOfRetries(1);
+        givenThePushOrPullWillFail(1, false);
+        whenPullImage();
+        thenImageWasNotPulled();
     }
 
     @Test
@@ -120,7 +146,7 @@ public class DockerAccessWithHcClientTest {
     }
 
     private void givenANumberOfRetries(int retries) {
-        this.pushRetries = retries;
+        this.pushPullRetries = retries;
     }
 
     private void givenArchiveFile(String archiveFile) {
@@ -136,7 +162,7 @@ public class DockerAccessWithHcClientTest {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void givenThePushWillFail(final int retries, final boolean suceedAtEnd) throws IOException {
+    private void givenThePushOrPullWillFail(final int retries, final boolean suceedAtEnd) throws IOException {
         new StrictExpectations() {{
             int fail = retries + (suceedAtEnd ? 0 : 1);
             mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any, 200);
@@ -169,9 +195,24 @@ public class DockerAccessWithHcClientTest {
        assertNull(thrownException);
     }
 
+    private void thenImageWasNotPulled() {
+        assertNotNull(thrownException);
+    }
+
+    private void thenImageWasPulled() {
+        assertNull(thrownException);
+    }
+
     private void whenPushImage() {
         try {
-            client.pushImage(imageName, authConfig, registry, pushRetries);
+            client.pushImage(imageName, authConfig, registry, pushPullRetries);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+    private void whenPullImage() {
+        try {
+            client.pullImage(imageName, authConfig, registry, pushPullRetries);
         } catch (Exception e) {
             thrownException = e;
         }

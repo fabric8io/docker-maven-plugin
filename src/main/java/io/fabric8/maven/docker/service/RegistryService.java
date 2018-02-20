@@ -76,7 +76,7 @@ public class RegistryService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void pullImageWithPolicy(String image, ImagePullManager pullManager, RegistryConfig registryConfig, boolean hasImage)
+    public void pullImageWithPolicy(String image, ImagePullManager pullManager, RegistryConfig registryConfig, boolean hasImage, int retries)
         throws DockerAccessException, MojoExecutionException {
 
         // Already pulled, so we don't need to take care
@@ -95,7 +95,7 @@ public class RegistryService {
             imageName.getRegistry(),
             registryConfig.getRegistry());
         docker.pullImage(imageName.getFullName(),
-                         createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry);
+                         createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry, retries);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         pullManager.pulled(image);
 

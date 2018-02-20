@@ -29,6 +29,9 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.skip.build", defaultValue = "false")
     protected boolean skipBuild;
 
+    @Parameter(property = "docker.pull.retries", defaultValue = "0")
+    private int retries;
+
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         if (skipBuild) {
@@ -56,7 +59,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), autoPull);
         BuildService buildService = hub.getBuildService();
 
-        buildService.buildImage(imageConfig, pullManager, buildContext);
+        buildService.buildImage(imageConfig, pullManager, buildContext, retries);
         if (!skipTag) {
             buildService.tagImage(imageConfig.getName(), imageConfig);
         }

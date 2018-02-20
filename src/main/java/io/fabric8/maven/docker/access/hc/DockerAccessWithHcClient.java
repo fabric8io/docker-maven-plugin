@@ -365,14 +365,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void pullImage(String image, AuthConfig authConfig, String registry)
+    public void pullImage(String image, AuthConfig authConfig, String registry, int retries)
             throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pullUrl = urlBuilder.pullImage(name, registry);
 
         try {
-            delegate.post(pullUrl, null, createAuthHeader(authConfig),
-                    createPullOrPushResponseHandler(), HTTP_OK);
+            doPushPullImage(pullUrl, createAuthHeader(authConfig), createBuildResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         }
@@ -386,7 +385,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         String temporaryImage = tagTemporaryImage(name, registry);
         DockerAccessException dae = null;
         try {
-            doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
+            doPushPullImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
             dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
             throw dae;
@@ -595,16 +594,16 @@ public class DockerAccessWithHcClient implements DockerAccess {
         return errorCode == HTTP_INTERNAL_ERROR;
     }
 
-    private void doPushImage(String url, Map<String, String> header, HcChunkedResponseHandlerWrapper handler, int status,
+    private void doPushPullImage(String url, Map<String, String> header, HcChunkedResponseHandlerWrapper handler, int status,
                              int retries) throws IOException {
-        // 0: The original attemp, 1..retry: possible retries.
+        // 0: The original attempt, 1..retry: possible retries.
         for (int i = 0; i <= retries; i++) {
             try {
-                delegate.post(url, null, header, handler, HTTP_OK);
+                delegate.post(url, null, header, handler, status);
                 return;
             } catch (HttpResponseException e) {
                 if (isRetryableErrorCode(e.getStatusCode()) && i != retries) {
-                    log.warn("failed to push image to [{}], retrying...", url);
+                    log.warn("failed to push/pull image to/from [%s], retrying...", url);
                 } else {
                     throw e;
                 }

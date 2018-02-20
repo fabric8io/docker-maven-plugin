@@ -199,7 +199,7 @@ public class RegistryServiceTest {
     }
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString); times = 0;
+            docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString, anyInt); times = 0;
         }};
     }
 
@@ -222,7 +222,7 @@ public class RegistryServiceTest {
 
     private void thenImageHasBeenPulledWithRegistry(final String registry) throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(imageName, (AuthConfig) withNotNull(), registry);
+            docker.pullImage(imageName, (AuthConfig) withNotNull(), registry, anyInt);
         }};
         assertTrue(cacheStore.get(imageName) != null);
     }
@@ -240,7 +240,7 @@ public class RegistryServiceTest {
             if (registry != null) {
                 registryConfigBuilder.registry(registry);
             }
-            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), hasImage);
+            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), hasImage, 0);
 
         } catch (Exception e) {
             //e.printStackTrace();

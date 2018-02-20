@@ -48,14 +48,15 @@ public class BuildService {
      *
      * @param imageConfig the image configuration
      * @param buildContext the build context
+     * @param pullRetries the number of times to retry if pulling an image fails
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
+    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, int pullRetries)
             throws DockerAccessException, MojoExecutionException {
 
         if (imagePullManager != null) {
-            autoPullBaseImage(imageConfig, imagePullManager, buildContext);
+            autoPullBaseImage(imageConfig, imagePullManager, buildContext, pullRetries);
         }
 
         buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), addBuildArgs(buildContext));
@@ -190,7 +191,7 @@ public class BuildService {
         return buildArgs;
     }
 
-    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
+    private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, int retries)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
@@ -206,7 +207,7 @@ public class BuildService {
             fromImage = extractBaseFromConfiguration(buildConfig);
         }
         if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
-            registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+            registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage), retries);
         }
     }
 

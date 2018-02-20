@@ -66,6 +66,9 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
     protected boolean autoCreateCustomNetworks;
 
+    @Parameter(property = "docker.pull.retries", defaultValue = "0")
+    private int retries;
+
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
                                                                        MojoExecutionException {
@@ -73,7 +76,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         BuildService.BuildContext buildContext = getBuildContext();
         WatchService.WatchContext watchContext = getWatchContext();
 
-        hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
+        hub.getWatchService().watch(watchContext, buildContext, getResolvedImages(), retries);
     }
 
     protected WatchService.WatchContext getWatchContext() throws MojoExecutionException {
