@@ -507,8 +507,6 @@ public class DockerAssemblyManager {
         }
         File artifactFile = new File(target, finalName + "." + project.getPackaging());
         if (artifactFile.exists() && artifactFile.isFile()) {
-            // TODO: Maybe check also that the artifact file is 'young' ? (so that it could be assumed that
-            //       it has been created recently by a 'package' in the same run.)
             setArtifactFile(project, artifactFile);
         }
         return null;
