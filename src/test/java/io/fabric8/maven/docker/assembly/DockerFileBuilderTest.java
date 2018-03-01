@@ -194,7 +194,7 @@ public class DockerFileBuilderTest {
     public void testUser() {
         String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss").user("bob")
                                                    .add("a","a/nested").add("b","b/deeper/nested").content();
-        String EXPECTED_REGEXP = "USER bob$";
+        String EXPECTED_REGEXP = "USER bob";
         Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
         assertTrue(pattern.matcher(dockerFile).find());
     }
