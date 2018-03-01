@@ -24,6 +24,7 @@ import org.apache.maven.project.MavenProject;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
 
+import org.codehaus.plexus.util.CollectionUtils;
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 import static io.fabric8.maven.docker.util.EnvUtil.*;
 
@@ -84,7 +85,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .optimise(withPrefix(prefix, OPTIMISE, properties))
                 .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
                 .assembly(extractAssembly(prefix, properties))
-                .env(mapWithPrefix(prefix, ENV, properties))
+                .env(CollectionUtils.mergeMaps(
+                        mapWithPrefix(prefix, ENV_BUILD, properties),
+                        mapWithPrefix(prefix, ENV, properties)
+                ))
                 .args(mapWithPrefix(prefix, ARGS, properties))
                 .labels(mapWithPrefix(prefix,LABELS,properties))
                 .ports(extractPortValues(prefix, properties))
@@ -122,7 +126,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .dnsSearch(listWithPrefix(prefix, DNS_SEARCH, properties))
                 .domainname(withPrefix(prefix, DOMAINNAME, properties))
                 .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
-                .env(mapWithPrefix(prefix, ENV, properties))
+                .env(CollectionUtils.mergeMaps(
+                        mapWithPrefix(prefix, ENV_RUN, properties),
+                        mapWithPrefix(prefix, ENV, properties)
+                ))
                 .labels(mapWithPrefix(prefix,LABELS,properties))
                 .envPropertyFile(withPrefix(prefix, ENV_PROPERTY_FILE, properties))
                 .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
