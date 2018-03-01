@@ -189,10 +189,10 @@ public class DockerFileBuilder {
             String[] userParts = StringUtils.split(assemblyUser, ":");
             String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
             String chmod = "chown -R " + userArg + " " + tmpDir + " && cp -rp " + tmpDir + "/* / && rm -rf " + tmpDir;
-            if (userParts.length > 2) {
+            if (userParts.length > 2 || user != null) {
                 DockerFileKeyword.USER.addTo(b, "root");
                 DockerFileKeyword.RUN.addTo(b, chmod);
-                DockerFileKeyword.USER.addTo(b, userParts[2]);
+                user = user != null ? user : userParts[2];
             } else {
                 DockerFileKeyword.RUN.addTo(b, chmod);
             }
