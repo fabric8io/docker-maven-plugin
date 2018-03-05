@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker;
 
 import java.util.Date;
+import java.util.List;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -9,6 +10,7 @@ import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -34,15 +36,26 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         if (skipBuild) {
             return;
         }
-        for (ImageConfiguration imageConfig : getResolvedImages()) {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        List<ImageConfiguration> resolvedImages = getResolvedImages();
 
-            if (buildConfig != null) {
-                if (buildConfig.skip()) {
-                    log.info("%s : Skipped building", imageConfig.getDescription());
-                } else {
-                    buildAndTag(hub, imageConfig);
-                }
+        if(resolvedImages.isEmpty()) {
+            // No Configuration found, so build one up dynamically.
+            if(imageName == null) {
+                /*
+                 * Image name defaults to:
+                 *     `${project.groupId}/${project.artifactId}:${project.version}`
+                 */
+                imageName = project.getGroupId() + "/" + project.getArtifactId() + ":" +
+                        project.getVersion();
+            }
+            ImageConfiguration aDefaultImageConfig = ImageConfiguration.getDefaultImageConfiguration(imageName,
+                    project.getBasedir().getAbsolutePath());
+            processImageConfig(hub, aDefaultImageConfig);
+            return;
+        } else {
+            // Iterate over all the ImageConfigurations and process one by one
+            for (ImageConfiguration imageConfig : resolvedImages) {
+                processImageConfig(hub, imageConfig);
             }
         }
     }
@@ -70,5 +83,25 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     private String determinePullPolicy(BuildImageConfiguration buildConfig) {
         return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : imagePullPolicy;
+    }
+
+    /**
+     * Helper method to process an ImageConfiguration.
+     *
+     * @param hub ServiceHub
+     * @param aImageConfig ImageConfiguration that would be forwarded to build and tag
+     * @throws DockerAccessException
+     * @throws MojoExecutionException
+     */
+    private void processImageConfig(ServiceHub hub, ImageConfiguration aImageConfig) throws DockerAccessException, MojoExecutionException {
+        BuildImageConfiguration buildConfig = aImageConfig.getBuildConfiguration();
+
+        if (buildConfig != null) {
+            if(buildConfig.skip()) {
+                log.info("%s : Skipped building", aImageConfig.getDescription());
+            } else {
+                buildAndTag(hub, aImageConfig);
+            }
+        }
     }
 }

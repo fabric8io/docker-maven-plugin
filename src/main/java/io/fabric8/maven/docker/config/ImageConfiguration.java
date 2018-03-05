@@ -5,6 +5,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 
 /**
  * @author roland
@@ -151,6 +152,16 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion, run.initAndValidate());
         }
         return minimalApiVersion;
+    }
+
+    public static ImageConfiguration getDefaultImageConfiguration(String defaultImageName, String projectBaseDir) {
+        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
+                .name(defaultImageName)
+                .buildConfig(new BuildImageConfiguration.Builder()
+                        .dockerFileDir(DockerFileUtil.getDockerFileDirectory(projectBaseDir))
+                        .build())
+                .build();
+        return imageConfiguration;
     }
 
     // =========================================================================
