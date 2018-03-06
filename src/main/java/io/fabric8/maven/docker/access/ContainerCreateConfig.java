@@ -57,6 +57,12 @@ public class ContainerCreateConfig {
                 String value = entry.getValue();
                 if (value == null) {
                     value = "";
+                } else if(value.matches("^\\+\\$\\{.*\\}$")) {
+                    /*
+                     * This case is to handle the Maven interpolation issue which used
+                     * to occur when using ${..} only without any suffix.
+                     */
+                    value = value.substring(1, value.length());
                 }
                 envProps.put(entry.getKey(), StrSubstitutor.replace(value, mavenProps));
             }

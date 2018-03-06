@@ -41,11 +41,14 @@ public class ContainerCreateConfigTest {
         cc.environment(copyPropsToFile(), envMap, Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
         assertNotNull(env);
-        assertEquals(3, env.length());
+        assertEquals(6, env.length());
         List<String> envAsString = convertToList(env);
         assertTrue(envAsString.contains("JAVA_OPTS=-Xmx512m"));
         assertTrue(envAsString.contains("TEST_SERVICE=SECURITY"));
         assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
+        assertTrue(envAsString.contains("TEST_HTTP_ADDR=${docker.container.consul.ip}"));
+        assertTrue(envAsString.contains("TEST_CONSUL_IP=+${docker.container.consul.ip}:8080"));
+        assertTrue(envAsString.contains("TEST_CONSUL_IP_WITHOUT_DELIM=${docker.container.consul.ip}:8225"));
     }
 
     @Test
@@ -53,7 +56,7 @@ public class ContainerCreateConfigTest {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         cc.environment(null, getEnvMap(),Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
-        assertEquals(2, env.length());
+        assertEquals(5, env.length());
     }
 
     @Test
@@ -122,6 +125,9 @@ public class ContainerCreateConfigTest {
         Map<String,String> envMap = new HashMap<>();
         envMap.put("JAVA_OPTS", "-Xmx512m");
         envMap.put("TEST_SERVICE", "LOGGING");
+        envMap.put("TEST_HTTP_ADDR", "+${docker.container.consul.ip}");
+        envMap.put("TEST_CONSUL_IP", "+${docker.container.consul.ip}:8080");
+        envMap.put("TEST_CONSUL_IP_WITHOUT_DELIM", "${docker.container.consul.ip}:8225");
         return envMap;
     }
 
