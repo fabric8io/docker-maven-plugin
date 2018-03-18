@@ -24,7 +24,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
 public enum ConfigKey {
 
     ALIAS,
-    ARGS,
+    ARGS(ValueCombinePolicy.Merge),
     ASSEMBLY_BASEDIR("assembly.baseDir"),
     ASSEMBLY_DESCRIPTOR("assembly.descriptor"),
     ASSEMBLY_DESCRIPTOR_REF("assembly.descriptorRef"),
@@ -53,6 +53,8 @@ public enum ConfigKey {
     ENTRYPOINT,
     ENV,
     ENV_PROPERTY_FILE,
+    ENV_BUILD("envBuild", ValueCombinePolicy.Merge),
+    ENV_RUN("envRun", ValueCombinePolicy.Merge),
     EXPOSED_PROPERTY_KEY,
     EXTRA_HOSTS,
     FILTER,
@@ -67,7 +69,7 @@ public enum ConfigKey {
     HOSTNAME,
     IMAGE_PULL_POLICY_BUILD("imagePullPolicy.build"),
     IMAGE_PULL_POLICY_RUN("imagePullPolicy.run"),
-    LABELS,
+    LABELS(ValueCombinePolicy.Merge),
     LINKS,
     LOG_ENABLED("log.enabled"),
     LOG_PREFIX("log.prefix"),
@@ -85,7 +87,7 @@ public enum ConfigKey {
     NETWORK_NAME("network.name"),
     NETWORK_ALIAS("network.alias"),
     PORT_PROPERTY_FILE,
-    PORTS,
+    PORTS(ValueCombinePolicy.Merge),
     PRIVILEGED,
     REGISTRY,
     RESTART_POLICY_NAME("restartPolicy.name"),
@@ -95,7 +97,7 @@ public enum ConfigKey {
     SHMSIZE,
     SKIP_BUILD("skip.build"),
     SKIP_RUN("skip.run"),
-    TAGS,
+    TAGS(ValueCombinePolicy.Merge),
     TMPFS,
     ULIMITS,
     USER,
@@ -103,6 +105,7 @@ public enum ConfigKey {
     VOLUMES_FROM,
     WAIT_LOG("wait.log"),
     WAIT_TIME("wait.time"),
+    WAIT_HEALTHY("wait.healthy"),
     WAIT_URL("wait.url"),
     WAIT_HTTP_URL("wait.http.url"),
     WAIT_HTTP_METHOD("wait.http.method"),
@@ -119,22 +122,34 @@ public enum ConfigKey {
     WATCH_INTERVAL("watch.interval"),
     WATCH_MODE("watch.mode"),
     WATCH_POSTGOAL("watch.postGoal"),
+    WATCH_POSTEXEC("watch.postExec"),
     WORKDIR,
     WORKING_DIR;
 
     ConfigKey() {
-        this.key = toVarName(name());
+        this(ValueCombinePolicy.Replace);
     }
 
     ConfigKey(String key) {
-        this.key = key;
+        this(key, ValueCombinePolicy.Replace);
     }
 
-    private String key;
+    ConfigKey(ValueCombinePolicy valueCombinePolicy) {
+        this.key = toVarName(name());
+        this.valueCombinePolicy = valueCombinePolicy;
+    }
+
+    ConfigKey(String key, ValueCombinePolicy valueCombinePolicy) {
+        this.key = key;
+        this.valueCombinePolicy = valueCombinePolicy;
+    }
+
+    private final String key;
+    private final ValueCombinePolicy valueCombinePolicy;
 
     public static String DEFAULT_PREFIX = "docker";
 
-    // Convert to camle case
+    // Convert to camel case
     private String toVarName(String s) {
         String[] parts = s.split("_");
         String var = parts[0].toLowerCase();
@@ -151,5 +166,9 @@ public enum ConfigKey {
 
     public String asPropertyKey() {
         return DEFAULT_PREFIX + "." + key;
+    }
+
+    public ValueCombinePolicy getValueCombinePolicy() {
+        return valueCombinePolicy;
     }
 }

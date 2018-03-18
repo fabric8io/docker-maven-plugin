@@ -69,7 +69,7 @@ public class WaitService {
 
     private int getTimeOut(ImageConfiguration imageConfig) {
         WaitConfiguration wait = getWaitConfiguration(imageConfig);
-        return wait != null ? wait.getTime() : 0;
+        return wait != null && wait.getTime() != null ? wait.getTime() : 0;
     }
 
     private String extractCheckerLog(List<WaitChecker> checkers) {
@@ -107,7 +107,7 @@ public class WaitService {
             }
         }
 
-        if (wait.getHealthy()) {
+        if (wait.getHealthy() == Boolean.TRUE) {
             checkers.add(new HealthCheckChecker(dockerAccess, containerId, imageConfig.getDescription(), log));
         }
 

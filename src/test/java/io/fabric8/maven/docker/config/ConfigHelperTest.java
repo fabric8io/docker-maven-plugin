@@ -21,7 +21,9 @@ import java.util.Collections;
 import java.util.List;
 
 import io.fabric8.maven.docker.util.AnsiLogger;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,7 +53,29 @@ public class ConfigHelperTest {
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("name"));
         }
+    }
 
+    @Test
+    public void externalPropertyActivation() throws MojoFailureException {
+        MavenProject project = new MavenProject();
+        project.getProperties().put(ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, "anything");
+
+        List<ImageConfiguration> images = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
+        ConfigHelper.validateExternalPropertyActivation(project, images);
+
+        images = Arrays.asList(
+                new ImageConfiguration.Builder().name("test").build(),
+                new ImageConfiguration.Builder().name("test2").build());
+
+        try {
+            ConfigHelper.validateExternalPropertyActivation(project, images);
+            fail();
+        }catch(MojoFailureException ex) {
+            assertTrue(ex.getMessage().contains("Configuration error: Cannot use property"));
+        }
+
+        project.getProperties().clear();
+        ConfigHelper.validateExternalPropertyActivation(project, images);
     }
 
     @Test
