@@ -91,9 +91,8 @@ public class SourceMojo extends AbstractBuildSupportMojo {
                     throw new IllegalArgumentException(
                         "Image " + imageConfig.getDescription() + " must have an 'alias' configured to be " +
                         "used as a classifier for attaching a docker build tar as source to the maven build");
-                } else {
-                    projectHelper.attachArtifact(project, getArchiveType(imageConfig), getClassifier(alias), dockerTar);
                 }
+                projectHelper.attachArtifact(project, getArchiveType(imageConfig), getClassifier(alias), dockerTar);
             }
         }
     }
