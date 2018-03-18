@@ -1,0 +1,9 @@
+
+.Simple configuration Example
+[source,xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>docker-maven-plugin</artifactId>
+</plugin>
+----

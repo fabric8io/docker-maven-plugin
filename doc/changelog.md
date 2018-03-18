@@ -14,6 +14,8 @@
   - Introduced a `removeMode` for selecting the images to remove
   - Introduced a `breakOnError` for the `postStart` and `preStop` hooks in the 
     wait configuration ([#914](https://github.com/fabric8io/docker-maven-plugin/issues/914))
+  - Simplified Configuration: When only a single image is build with Dockerfile, no need to provide too much parameters
+    in configuration; build ImageConfiguration dynamically with given defaults.
     
 Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry. Also `removeAll` for `docker:remove` is deprecated in favor of `removeMode` (and the default mode has changed slightly). Please refer to the documentation for more information.
 
