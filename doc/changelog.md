@@ -3,6 +3,7 @@
 * **0.24-SNAPSHOT**
   - Fix possible NPE when logging to a file and the parent directory does not exist yet (#911) (#940)
   - Change content type to "application/json" when talking to the Docker daemon (#945)
+  - PostStart exec breakOnError now fails fast (#970)
 
 * **0.24.0** (2018-02-07)
   - Respect system properties for ECR authentication ([#897](https://github.com/fabric8io/docker-maven-plugin/issues/897))
