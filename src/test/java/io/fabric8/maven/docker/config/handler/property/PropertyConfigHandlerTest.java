@@ -194,14 +194,12 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     @Test
     public void testRunCommandsFromConfigAndProperties() {
         imageConfiguration = new ImageConfiguration.Builder()
-                .externalConfig(new HashMap<String, String>())
+                .externalConfig(externalConfigMode(PropertyMode.Fallback))
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .runCmds(Arrays.asList("some","configured","value"))
                         .build()
                 )
                 .build();
-
-        makeExternalConfigUse(PropertyMode.Fallback);
 
         List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
@@ -217,6 +215,173 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
         assertArrayEquals(new String[]{"some", "configured", "value"}, runCommands);
+    }
+
+    @Test
+    public void testDefaultLogEnabledConfiguration() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .buildConfig(new BuildImageConfiguration.Builder()
+                        .build()
+                )
+                .build();
+
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo")
+        );
+
+        assertEquals(1, configs.size());
+
+        RunImageConfiguration runConfiguration = configs.get(0).getRunConfiguration();
+        assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+
+        // If any log property is set, enabled shall be true by default
+        configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo",
+                        "docker.log.color", "green")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("green", runConfiguration.getLogConfiguration().getColor());
+
+
+        // If image configuration has non-blank log configuration, it should become enabled
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .log(new LogConfiguration.Builder().color("red").build())
+                        .build()
+                )
+                .build();
+
+        configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+
+
+        // and if set by property, still enabled but overrides
+        configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo",
+                        "docker.log.color", "yellow")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("yellow", runConfiguration.getLogConfiguration().getColor());
+
+
+        // Fallback works as well
+        makeExternalConfigUse(PropertyMode.Fallback);
+        configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo",
+                        "docker.log.color", "yellow")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+    }
+
+    @Test
+    public void testExplicitLogEnabledConfiguration() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .log(new LogConfiguration.Builder().color("red").build())
+                        .build()
+                )
+                .build();
+
+        // Explicitly enabled
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo",
+                        "docker.log.enabled", "true")
+        );
+
+        RunImageConfiguration runConfiguration = getRunImageConfiguration(configs);
+        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+
+        // Explicitly disabled
+        makeExternalConfigUse(PropertyMode.Override);
+        configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "base",
+                        "docker.name","demo",
+                        "docker.log.color", "yellow",
+                        "docker.log.enabled", "false")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("yellow", runConfiguration.getLogConfiguration().getColor());
+
+
+        // Disabled by config
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Fallback))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .log(new LogConfiguration.Builder().enabled(false).color("red").build())
+                        .build()
+                )
+                .build();
+
+        configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "base",
+                        "docker.name","demo")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+
+        // Enabled by property, with override
+        makeExternalConfigUse(PropertyMode.Override);
+        configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "base",
+                        "docker.name","demo",
+                        "docker.log.enabled", "true")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+
+        // Disabled with property too
+        configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "base",
+                        "docker.name","demo",
+                        "docker.log.enabled", "false")
+        );
+
+        runConfiguration = getRunImageConfiguration(configs);
+        assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+    }
+
+    private RunImageConfiguration getRunImageConfiguration(List<ImageConfiguration> configs) {
+        assertEquals(1, configs.size());
+        return configs.get(0).getRunConfiguration();
     }
 
     @Test
@@ -513,6 +678,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .build();
     }
 
+    private Map<String, String> externalConfigMode(PropertyMode mode) {
+        Map<String, String> externalConfig = new HashMap<>();
+        if(mode != null) {
+            externalConfig.put("type", "properties");
+            externalConfig.put("mode", mode.name());
+        }
+        return externalConfig;
+    }
 
     private void makeExternalConfigUse(PropertyMode mode) {
         Map<String, String> externalConfig = imageConfiguration.getExternalConfig();

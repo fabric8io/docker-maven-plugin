@@ -14,7 +14,7 @@ public class LogConfiguration implements Serializable {
     public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null, null);
 
     @Parameter(defaultValue = "true")
-    private boolean enabled = true;
+    private Boolean enabled;
 
     @Parameter
     private String prefix;
@@ -33,7 +33,7 @@ public class LogConfiguration implements Serializable {
 
     public LogConfiguration() {}
 
-    private LogConfiguration(boolean enabled, String prefix, String color, String date, String file, LogDriver driver) {
+    private LogConfiguration(Boolean enabled, String prefix, String color, String date, String file, LogDriver driver) {
         this.enabled = enabled;
         this.prefix = prefix;
         this.date = date;
@@ -54,7 +54,7 @@ public class LogConfiguration implements Serializable {
         return color;
     }
 
-    public boolean isEnabled() {
+    public Boolean isEnabled() {
         return enabled;
     }
 
@@ -95,7 +95,7 @@ public class LogConfiguration implements Serializable {
     // =============================================================================
 
     public static class Builder {
-        private boolean enabled = true;
+        private Boolean enabled = true;
         private String prefix, date, color, file;
         private Map<String, String> driverOpts;
         private String driverName;
@@ -134,6 +134,14 @@ public class LogConfiguration implements Serializable {
             return this;
         }
 
+        /**
+         * Returns true if all options (except enabled) are null, used to decide value of enabled.
+         *
+         * @return
+         */
+        public boolean isBlank() {
+            return prefix == null && date == null && color == null && file == null && driverName == null && driverOpts == null;
+        }
 
         public LogConfiguration build() {
             return new LogConfiguration(enabled, prefix, color, date, file,
