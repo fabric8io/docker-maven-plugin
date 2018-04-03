@@ -10,7 +10,6 @@ import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -25,11 +24,14 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
 public class BuildMojo extends AbstractBuildSupportMojo {
 
-    @Parameter(property = "docker.skip.tag", defaultValue = "false")
-    private boolean skipTag;
-
     @Parameter(property = "docker.skip.build", defaultValue = "false")
     protected boolean skipBuild;
+    
+    /** 
+     * Skip building tags
+     */
+    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    protected boolean skipTag;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
