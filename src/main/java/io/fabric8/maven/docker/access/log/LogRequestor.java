@@ -58,9 +58,6 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     private final UrlBuilder urlBuilder;
 
-    // Lock for synchronizing closing of requests
-    private final Object lock = new Object();
-
     /**
      * Create a helper object for requesting log entries synchronously ({@link #fetchLogs()}) or asynchronously ({@link #start()}.
      *
@@ -86,10 +83,10 @@ public class LogRequestor extends Thread implements LogGetHandle {
         try {
             callback.open();
             this.request = getLogRequest(false);
-            final HttpResponse respone = client.execute(request);
-            parseResponse(respone);
+            final HttpResponse response = client.execute(request);
+            parseResponse(response);
         } catch (LogCallback.DoneException e) {
-            finish();
+            // Signifies we're finished with the log stream.
         } catch (IOException exp) {
             callback.error(exp.getMessage());
         } finally {
@@ -99,20 +96,17 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     // Fetch log asynchronously as stream and follow stream
     public void run() {
-        synchronized (lock) {
-            try {
-                callback.open();
-
-                this.request = getLogRequest(true);
-                final HttpResponse response = client.execute(request);
-                parseResponse(response);
-            } catch (LogCallback.DoneException e) {
-                finish();
-            } catch (IOException e) {
-                callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
-            } finally {
-                callback.close();
-            }
+        try {
+            callback.open();
+            this.request = getLogRequest(true);
+            final HttpResponse response = client.execute(request);
+            parseResponse(response);
+        } catch (LogCallback.DoneException e) {
+            // Signifies we're finished with the log stream.
+        } catch (IOException e) {
+            callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
+        } finally {
+            callback.close();
         }
     }
 
@@ -186,17 +180,11 @@ public class LogRequestor extends Thread implements LogGetHandle {
             throw new LogCallback.DoneException();
         }
 
-        final InputStream is = response.getEntity().getContent();
-
-        try {
+        try (InputStream is = response.getEntity().getContent()) {
             while (true) {
                 if (!readStreamFrame(is)) {
                     return;
                 }
-            }
-        } finally {
-            if ((is != null) && (is.available() > 0)) {
-                is.close();
             }
         }
     }
@@ -219,11 +207,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     @Override
     public void finish() {
-        synchronized (lock) {
-            if (request != null) {
-                request.abort();
-                request = null;
-            }
+        if (request != null) {
+            request.abort();
+            request = null;
         }
     }
 
