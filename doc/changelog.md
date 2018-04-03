@@ -4,6 +4,7 @@
   - Fix possible NPE when logging to a file and the parent directory does not exist yet (#911) (#940)
   - Change content type to "application/json" when talking to the Docker daemon (#945)
   - Property placeholders are not interpolated when they are the only thing in the XML element value (#960)
+  - Fix deadlock waiting on docker log pattern to match (#767, #981, #947)
 
 * **0.24.0** (2018-02-07)
   - Respect system properties for ECR authentication ([#897](https://github.com/fabric8io/docker-maven-plugin/issues/897))
