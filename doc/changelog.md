@@ -3,6 +3,7 @@
 * **0.24-SNAPSHOT**
   - Fix possible NPE when logging to a file and the parent directory does not exist yet (#911) (#940)
   - Change content type to "application/json" when talking to the Docker daemon (#945)
+  - PostStart exec breakOnError now fails fast (#970)
   - Use docker.skip.tag property on push and remove (#954) ([#869](https://github.com/fabric8io/docker-maven-plugin/issues/869))
   - Property placeholders are not interpolated when they are the only thing in the XML element value (#960)
   - Fix deadlock waiting on docker log pattern to match (#767, #981, #947)
