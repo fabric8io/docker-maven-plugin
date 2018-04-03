@@ -44,4 +44,6 @@ include::inc/_registry.adoc[]
 
 include::inc/_authentication.adoc[]
 
+include::inc/_implicit-properties.adoc[]
+
 include::inc/_links.adoc[]
