@@ -1,5 +1,7 @@
 package io.fabric8.maven.docker.util;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -7,6 +9,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.IOException;
+import java.util.List;
 
 public class CredentialHelperClient {
 
@@ -82,7 +85,7 @@ public class CredentialHelperClient {
     // echo <registryToLookup> | docker-credential-XXX get
     private class GetCommand extends ExternalCommand {
 
-        private String reply;
+        private List<String> reply = Lists.newLinkedList();
 
         GetCommand() {
             super(CredentialHelperClient.this.log);
@@ -95,7 +98,7 @@ public class CredentialHelperClient {
 
         @Override
         protected void processLine(String line) {
-            reply = line;
+            reply.add(line);
         }
 
         public JSONObject getCredentialNode(String registryToLookup) throws IOException {
@@ -108,7 +111,7 @@ public class CredentialHelperClient {
                     throw ex;
                 }
             }
-            JSONObject credentials = new JSONObject(new JSONTokener(reply));
+            JSONObject credentials = new JSONObject(new JSONTokener(Joiner.on('\n').join(reply)));
             if (!credentials.has(SECRET_KEY) || !credentials.has(USERNAME_KEY)) {
                 return null;
             }
