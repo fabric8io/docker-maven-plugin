@@ -1,15 +1,17 @@
 # ChangeLog
 
-* **0.24-SNAPSHOT**
-  - Fix possible NPE when logging to a file and the parent directory does not exist yet (#911) (#940)
-  - Change content type to "application/json" when talking to the Docker daemon (#945)
-  - Add support for merging properties and POM configuration (#948)
-  - PostStart exec breakOnError now fails fast (#970)
-  - Use docker.skip.tag property on push and remove (#954) ([#869](https://github.com/fabric8io/docker-maven-plugin/issues/869))
-  - Property placeholders are not interpolated when they are the only thing in the XML element value (#960)
-  - Fix deadlock waiting on docker log pattern to match (#767) (#981) (#947)
-  - Support multiline labels and empty labels (#968)
-  - Handle multi line credential helper responses (#930)
+* **0.25.0** (2018-04-04)
+  - Fix possible NPE when logging to a file and the parent directory does not exist yet ([#911](https://github.com/fabric8io/docker-maven-plugin/issues/911)) ([#940](https://github.com/fabric8io/docker-maven-plugin/issues/940))
+  - Change content type to "application/json" when talking to the Docker daemon ([#945](https://github.com/fabric8io/docker-maven-plugin/issues/945))
+  - PostStart exec breakOnError now fails fast ([#970](https://github.com/fabric8io/docker-maven-plugin/issues/970))
+  - Use docker.skip.tag property on push and remove ([#954](https://github.com/fabric8io/docker-maven-plugin/issues/954)) ([#869](https://github.com/fabric8io/docker-maven-plugin/issues/869))
+  - Property placeholders are not interpolated when they are the only thing in the XML element value ([#960](https://github.com/fabric8io/docker-maven-plugin/issues/960))
+  - Fix deadlock waiting on docker log pattern to match ([#767](https://github.com/fabric8io/docker-maven-plugin/issues/767)) ([#981](https://github.com/fabric8io/docker-maven-plugin/issues/981)) ([#947](https://github.com/fabric8io/docker-maven-plugin/issues/947))
+  - Support multiline labels and empty labels ([#968](https://github.com/fabric8io/docker-maven-plugin/issues/968))
+  - Handle multi line credential helper responses ([#930](https://github.com/fabric8io/docker-maven-plugin/issues/930))
+  - Add support for merging external properties with XML configuration ([#938](https://github.com/fabric8io/docker-maven-plugin/issues/938)) ([#948](https://github.com/fabric8io/docker-maven-plugin/issues/948))
+  - Allow to specify different environment variables for run and build via properties ([#386](https://github.com/fabric8io/docker-maven-plugin/issues/386))
+  - Add simplified configuration which picks up a plain Dockerfile automatically from `src/main/docker` ([#957](https://github.com/fabric8io/docker-maven-plugin/issues/957))
 
 * **0.24.0** (2018-02-07)
   - Respect system properties for ECR authentication ([#897](https://github.com/fabric8io/docker-maven-plugin/issues/897))
@@ -20,11 +22,9 @@
   - Fix for credential helper which do not return a version ([#896](https://github.com/fabric8io/docker-maven-plugin/issues/896))
   - Also remove tagged images when calling `docker:remove` ([#193](https://github.com/fabric8io/docker-maven-plugin/issues/193))
   - Introduced a `removeMode` for selecting the images to remove
-  - Introduced a `breakOnError` for the `postStart` and `preStop` hooks in the 
+  - Introduced a `breakOnError` for the `postStart` and `preStop` hooks in the
     wait configuration ([#914](https://github.com/fabric8io/docker-maven-plugin/issues/914))
-  - Simplified Configuration: When only a single image is build with Dockerfile, no need to provide too much parameters
-    in configuration; build ImageConfiguration dynamically with given defaults.
-    
+
 Please note that `autoPullMode` is deprecated now and the behaviour of the `autoPullMode == always` has been changed slightly so that now, it really always pulls the image from the registry. Also `removeAll` for `docker:remove` is deprecated in favor of `removeMode` (and the default mode has changed slightly). Please refer to the documentation for more information.
 
 * **0.23.0** (2017-11-04)
