@@ -96,6 +96,9 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property
 
+| *skipTag*
+| If set to `true` this plugin won't add any tags to images. Property: `docker.skip.tag`
+
 | *tags*
 | List of additional `tag` elements with which an image is to be tagged after the build. Whitespace is trimmed from each element and empty elements are ignored.
 

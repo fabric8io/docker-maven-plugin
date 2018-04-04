@@ -9,6 +9,10 @@
 | If set to `true` the plugin won't push any images that have been built.
 | `docker.skip.push`
 
+| *skipTag*
+| If set to `true` this plugin won't push any tags
+| `docker.skip.tag`
+
 | *pushRegistry*
 | The registry to use when pushing the image. See <<registry,Registry Handling>> for
 more details.

@@ -5,7 +5,6 @@
 This goal can be used to clean up images and containers. By default all images with a build configuration are removed.
 You can tune this by setting the property `removeMode` (property: `docker.removeMode`) to one of the following values:
 
-[[config-image-build]]
 .removeMode Values
 [cols="1,5"]
 |===
@@ -34,3 +33,13 @@ Considering three images 'db','tomcat' and 'data' where 'data' is the only image
 * `mvn -Ddocker.removeMode=all {plugin}:remove` will remove all three images
 * `mvn -Ddocker.filter=data,tomcat {plugin}:remove` will remove 'data'
 * `mvn -Ddocker.filter=data,tomcat -Ddocker.removeMode=all {plugin}:remove` will remove 'data' and 'tomcat'
+
+.Remove options
+[cols="1,5,1"]
+|===
+| Element | Description | Property
+
+| *skipTag*
+| If set to `true` this plugin won't remove any tags
+| `docker.skip.tag`
+|===
