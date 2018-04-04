@@ -8,6 +8,7 @@
   - Use docker.skip.tag property on push and remove (#954) ([#869](https://github.com/fabric8io/docker-maven-plugin/issues/869))
   - Property placeholders are not interpolated when they are the only thing in the XML element value (#960)
   - Fix deadlock waiting on docker log pattern to match (#767, #981, #947)
+  - Support multiline labels and empty labels (#968)
 
 * **0.24.0** (2018-02-07)
   - Respect system properties for ECR authentication ([#897](https://github.com/fabric8io/docker-maven-plugin/issues/897))
