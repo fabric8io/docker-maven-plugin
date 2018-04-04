@@ -370,7 +370,7 @@ public class StartMojo extends AbstractDockerMojo {
         if (runConfig != null) {
             LogConfiguration logConfig = runConfig.getLogConfiguration();
             if (logConfig != null) {
-                return logConfig.isEnabled();
+                return Boolean.TRUE == logConfig.isEnabled();
             } else {
                 // Default is to show logs if "follow" is true
                 return follow;
