@@ -244,28 +244,26 @@ public class DockerFileBuilder {
         if (value == null || value.isEmpty()) {
             return sb.append("\"\"").toString();
         }
-        int mark = sb.length();
-        sb.append('"');
+	StringBuffer valBuf = new StringBuffer();
+	boolean escaped = false;
         for (int i = 0; i < value.length(); ++i) {
             char c = value.charAt(i);
             switch (c) {
                 case '"':
                 case '\n':
                 case '\\':
-                    mark = -1;
+                    escaped = true;
                     // escape the character
-                    sb.append('\\');
+                    valBuf.append('\\');
                     // fall into writing the character
                 default:
-                    sb.append(c);
+                    valBuf.append(c);
             }
         }
-        if (mark < 0) {
+        if (escaped) {
             // need to keep quotes
-            sb.append('"');
+            sb.append('"').append(valBuf.toString()).append('"');
         } else {
-            // reset to after key and drop quotes
-            sb.setLength(mark);
             sb.append(value);
         }
         return sb.toString();
