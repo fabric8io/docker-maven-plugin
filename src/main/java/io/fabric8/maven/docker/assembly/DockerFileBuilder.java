@@ -105,6 +105,7 @@ public class DockerFileBuilder {
         addPorts(b);
 
         addCopy(b);
+        addUser(b);
         addWorkdir(b);
         addRun(b);
         addVolumes(b);
@@ -114,7 +115,6 @@ public class DockerFileBuilder {
         addCmd(b);
         addEntryPoint(b);
 
-        addUser(b);
 
         return b.toString();
     }
