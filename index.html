@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.24.0,</span>
-<span id="revdate">2018-02-07</span>
+<span id="revnumber">version 0.25.0,</span>
+<span id="revdate">2018-04-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -604,7 +604,8 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#extended-authentication">8.4. Extended Authentication</a></li>
 </ul>
 </li>
-<li><a href="#further-reading">9. Further reading</a></li>
+<li><a href="#implicit-properties">9. Implicit properties</a></li>
+<li><a href="#further-reading">10. Further reading</a></li>
 </ul>
 </div>
 </div>
@@ -831,7 +832,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.24.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.25.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1122,7 +1123,9 @@ This property can take the following values (case insensitive):</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t add any tags to images that have been built with <code>docker:build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t add any tags to images that have been built with <code>docker:build</code>.<br>
+If set to <code>true</code> this plugin won&#8217;t push any tags with <code>docker:push</code>.<br>
+If set to <code>true</code> this plugin won&#8217;t remove any tags with <code>docker:remove</code>.<br></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.tag</code></p></td>
 </tr>
 <tr>
@@ -1328,6 +1331,21 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
   <span class="tag">&lt;/images&gt;</span>
 <span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>When only a single image is build with Dockerfile, no need to provide too much parameters in configuration. ImageConfiguration can be dynamically built with the given defaults.</p>
+</div>
+<div class="listingblock">
+<div class="title">Simple configuration Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It requires a single Dockerfile to be in the base directory or <code>/src/main/docker</code>.The image name would default to <code>${project.groupId}/${project.artifactId}:${project.version}</code>, but this can be configured with a <code>docker.autoConfiguration.imageName</code> flag</p>
 </div>
 </div>
 </div>
@@ -1649,6 +1667,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to true disables building of the image. This config option is best used together with a maven property</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t add any tags to images. Property: <code>docker.skip.tag</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tags</strong></p></td>
@@ -2100,7 +2122,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 </div>
 <div class="sect3">
 <h4 id="build-buildargs">5.1.4. Build Args</h4>
-<div class="paragraph">
+<div id="property-buildargs" class="paragraph">
 <p>As described in section <a href="#build-configuration">Configuration</a> for external Dockerfiles <a href="https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg">Docker build arg</a> can be used. In addition to the
 configuration within the plugin configuration you can also use properties to specify them:</p>
 </div>
@@ -3256,6 +3278,11 @@ the global option <code>filter</code> (see <a href="#global-configuration">Globa
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.push</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t push any tags</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.tag</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pushRegistry</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The registry to use when pushing the image. See <a href="#registry">Registry Handling</a> for
 more details.</p></td>
@@ -3505,7 +3532,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <p>This goal can be used to clean up images and containers. By default all images with a build configuration are removed.
 You can tune this by setting the property <code>removeMode</code> (property: <code>docker.removeMode</code>) to one of the following values:</p>
 </div>
-<table id="config-image-build" class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 24. removeMode Values</caption>
 <colgroup>
 <col style="width: 16.6666%;">
@@ -3561,6 +3588,28 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 </li>
 </ul>
 </div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 25. Remove options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t remove any tags</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.tag</code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
 <h3 id="docker:logs">5.7. <strong>docker:logs</strong></h3>
@@ -3573,7 +3622,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Logging options</caption>
+<caption class="title">Table 26. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3613,11 +3662,32 @@ properties can the behaviour of this goal:</p>
 <div class="sect2">
 <h3 id="docker:source">5.8. <strong>docker:source</strong></h3>
 <div class="paragraph">
-<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build">&lt;&lt;docker:build&gt; </a>.</p>
+<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build&gt; ">[docker:build&gt; ]</a>.</p>
 </div>
 <div class="paragraph">
-<p><code>docker:source</code> uses the image&#8217;s <a href="image-configuration.md">alias</a> as part of the classifier, so it is mandatory that the alias is set for
-this goal to work. The classifier is calculated as <code>docker-&lt;alias&gt;</code> so when the alias is set to <code>service</code>, then the classifier is <code>docker-service</code>.</p>
+<p>By default, only the first image configuration is used for creating the source archive.
+You can export all image configurations by setting the <code>sourceMode</code> configuration to <code>all</code>:</p>
+</div>
+<div class="listingblock">
+<div class="title">Export all image configs</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="comment">&lt;!-- source mode can be &quot;first&quot; or &quot;all&quot; --&gt;</span>
+    <span class="tag">&lt;sourceMode&gt;</span>all<span class="tag">&lt;/sourceMode&gt;</span>
+    <span class="comment">&lt;!-- .... --&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For exporting all image configurations, <code>docker:source</code> uses the image&#8217;s <a href="image-configuration.md">alias</a> as part of the classifier, so it is mandatory that the alias is set for
+this goal to work when all images should be exported this way.
+The classifier is calculated as <code>docker-&lt;alias&gt;</code> so when the alias is set to <code>service</code>, then the classifier is <code>docker-service</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you only export the first image configuration (which is the default), then the classifier is just <code>docker</code> (without alias).</p>
 </div>
 <div class="paragraph">
 <p><code>docker:source</code> can be attached to a Maven execution phase, which is <code>generate-sources</code> by default.</p>
@@ -3666,7 +3736,7 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <p>Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Save options</caption>
+<caption class="title">Table 27. Save options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3739,7 +3809,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Volume configuration</caption>
+<caption class="title">Table 28. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3802,7 +3872,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Volume configuration</caption>
+<caption class="title">Table 29. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3856,6 +3926,20 @@ configuration. Such a property based configuration can be selected
 with an <code>&lt;type&gt;</code> of <code>properties</code>. As extra configuration a prefix for the
 properties can be defined which by default is <code>docker</code>.</p>
 </div>
+<div class="paragraph">
+<p>For single-image configurations it is also possible to active property
+based configuration via an externally set property.</p>
+</div>
+<div class="paragraph">
+<p>By default, property based configuration uses only properties, ignoring
+any <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. To combine values from both sources,
+use the <a href="#combining-property-config">property mode configuration</a>.</p>
+</div>
+<div class="paragraph">
+<p>Properties are read from the Maven project (defined in <code>&lt;properties&gt;</code> or global
+Maven configuration from <code>settings.xml</code>) and, since 0.25.0, from any <code>-D</code>
+flags given to Maven (takes priority over project properties).</p>
+</div>
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
@@ -3863,6 +3947,7 @@ properties can be defined which by default is <code>docker</code>.</p>
   <span class="tag">&lt;external&gt;</span>
      <span class="tag">&lt;type&gt;</span>properties<span class="tag">&lt;/type&gt;</span>
      <span class="tag">&lt;prefix&gt;</span>docker<span class="tag">&lt;/prefix&gt;</span> <span class="comment">&lt;!-- this is the default --&gt;</span>
+     <span class="tag">&lt;mode&gt;</span>only<span class="tag">&lt;/mode&gt;</span> <span class="comment">&lt;!-- this is the default --&gt;</span>
   <span class="tag">&lt;/external&gt;</span>
 <span class="tag">&lt;/image&gt;</span></code></pre>
 </div>
@@ -3874,7 +3959,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. 
 when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. External properties</caption>
+<caption class="title">Table 30. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3923,6 +4008,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.bind.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Sets a list of paths to bind/expose in the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildArg.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set a ARG to be available during build of image. <strong>Note</strong>: this is handled separately from external configuration, and is always available. See <a href="#property-buildargs">Build Args</a> for more details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capAdd.idx</strong></p></td>
@@ -3974,11 +4063,19 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.env.VARIABLE</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable. E.g. <code>&lt;docker.env.JAVA_OPTS&gt;-Xmx512m&lt;/docker.env.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable used in build and run. E.g. <code>&lt;docker.env.JAVA_OPTS&gt;-Xmx512m&lt;/docker.env.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.envBuild.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable used in build only. E.g. <code>&lt;docker.envBuild.JAVA_OPTS&gt;-Xmx512m&lt;/docker.envBuild.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is building images only. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.envRun.VARIABLE</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets an environment variable used in run only. E.g. <code>&lt;docker.envRun.JAVA_OPTS&gt;-Xmx512m&lt;/docker.envRun.JAVA_OPTS&gt;</code> sets the environment variable <code>JAVA_OPTS</code>. Multiple such entries can be provided. This environment is used both for running containers only. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.envPropertyFile</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the path to a property file whose properties are used as environment variables. The environment variables takes precedence over any other environment variables specified.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">specifies the path to a property file whose properties are used as environment variables in run. The environment variables takes precedence over any other environment variables specified.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.extraHosts.idx</strong></p></td>
@@ -4019,6 +4116,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.hostname</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container hostname</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.imagePropertyConfiguration</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Special property to activate property configuration without altering XML file (see <a href="#combining-property-config">Combining property and XML config</a>).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.imagePullPolicy.build</strong></p></td>
@@ -4215,15 +4316,94 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tbody>
 </table>
 <div class="paragraph">
-<p>Any other <code>&lt;run&gt;</code> or <code>&lt;build&gt;</code> sections are ignored when this handler
-is used. Multiple property configuration handlers can be used if they
+<p>Multiple property configuration handlers can be used if they
 use different prefixes. As stated above the environment and ports
 configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.</p>
 </div>
+<div id="combining-property-config" class="paragraph">
+<div class="title">Combining property and XML configuration</div>
+<p>By default the property handler will only consider properties and ignore any other image
+configuration in the XML/POM file. This can be changed by adding the <code>&lt;mode&gt;</code>
+configuration (since version 0.25.0), which can have one of the following values:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 31. Property mode</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>only</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only look at properties, ignore any <code>&lt;run&gt;</code> or <code>&lt;build&gt;</code> sections for this image. This is the default, and also the behavior in versions before 0.25.0.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>override</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use property if set, else fall back to value found in <code>&lt;run&gt;</code> or <code>&lt;build&gt;</code> sections for this image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fallback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use value found in <code>&lt;run&gt;</code> or <code>&lt;build&gt;</code> sections for this image, else fall back to to property value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>skip</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Effectively disable properties, same as not specifying the <code>&lt;external&gt;</code> section at all.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>For single-image configurations it is also possible to active property
+configuration by setting the property <code>docker.imagePropertyConfiguration</code> to a
+valid <code>property mode</code>, without adding a <code>&lt;external&gt;</code> section.
+This will use properties with default prefix.
+This can be useful if most of configuration is specified in XML/POM file, but there
+is need to override certain configuration values without altering the POM file.</p>
+</div>
+<div class="paragraph">
+<div class="title">Merging POM and property values</div>
+<p>For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment
+we might want to inject a <code>http_proxy</code> environment variable, but we do not want to add this to the POM file.</p>
+</div>
+<div class="paragraph">
+<p>This is solved using a <strong>Combine policy</strong> which can be either <code>replace</code> or <code>merge</code>. Merge is only available for
+configuration of Map or List type. For scalar values such as strings and integers, it is not supported.
+For Maps, both sources are merged, with the priority source taking precedence. For Lists, they are concatenated, with values
+from the priority source being added first.</p>
+</div>
+<div class="paragraph">
+<p>Combine policy is specified per configuration key/property, and the default in most cases is currently <code>replace</code>. The following
+keys have <code>merge</code> as default policy:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>docker.args</p>
+</li>
+<li>
+<p>docker.envBuild</p>
+</li>
+<li>
+<p>docker.envRun</p>
+</li>
+<li>
+<p>docker.labels</p>
+</li>
+<li>
+<p>docker.ports</p>
+</li>
+<li>
+<p>docker.tags</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This can be overridden individually for all configuration keys (of map/list type) by setting an additional property suffixed <code>._combine</code>.
+For example, to not merge ports, set <code>docker.ports._combine=replace</code>, and to enable merging of dns, set <code>docker.dns._combine=merge</code>.</p>
+</div>
 <div class="listingblock">
-<div class="title">Example</div>
+<div class="title">Example, properties only</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
   <span class="tag">&lt;docker.name&gt;</span>jolokia/demo<span class="tag">&lt;/docker.name&gt;</span>
@@ -4255,6 +4435,56 @@ run and build configuration sections.</p>
   <span class="tag">&lt;/plugins&gt;</span>
 <span class="tag">&lt;/build&gt;</span></code></pre>
 </div>
+</div>
+<div class="listingblock">
+<div class="title">Example, combining properties and XML/POM configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
+  <span class="tag">&lt;docker.assembly.descriptor&gt;</span>src/main/docker-assembly.xml<span class="tag">&lt;/docker.assembly.descriptor&gt;</span>
+  <span class="tag">&lt;docker.env.CATALINA_OPTS&gt;</span>-Xmx32m<span class="tag">&lt;/docker.env.CATALINA_OPTS&gt;</span>
+  <span class="tag">&lt;docker.label.version&gt;</span>${project.version}<span class="tag">&lt;/docker.label.version&gt;</span>
+  <span class="tag">&lt;docker.ports.jolokia.port&gt;</span>8080<span class="tag">&lt;/docker.ports.jolokia.port&gt;</span>
+  <span class="tag">&lt;docker.wait.url&gt;</span>http://localhost:${jolokia.port}/jolokia<span class="tag">&lt;/docker.wait.url&gt;</span>
+<span class="tag">&lt;/properties&gt;</span>
+
+<span class="tag">&lt;build&gt;</span>
+  <span class="tag">&lt;plugins&gt;</span>
+    <span class="tag">&lt;plugin&gt;</span>
+      <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+      <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+      <span class="tag">&lt;configuration&gt;</span>
+        <span class="tag">&lt;images&gt;</span>
+          <span class="tag">&lt;image&gt;</span>
+            <span class="tag">&lt;external&gt;</span>
+              <span class="tag">&lt;type&gt;</span>properties<span class="tag">&lt;/type&gt;</span>
+              <span class="tag">&lt;prefix&gt;</span>docker<span class="tag">&lt;/prefix&gt;</span>
+              <span class="tag">&lt;mode&gt;</span>override<span class="tag">&lt;/mode&gt;</span>
+            <span class="tag">&lt;/external&gt;</span>
+
+            <span class="tag">&lt;name&gt;</span>jolokia/demo<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+
+            <span class="tag">&lt;build&gt;</span>
+              <span class="tag">&lt;from&gt;</span>consol/tomcat:7.0<span class="tag">&lt;/from&gt;</span>
+              <span class="tag">&lt;labels&gt;</span>
+                <span class="tag">&lt;software&gt;</span>tomcat<span class="tag">&lt;/software&gt;</span>
+              <span class="tag">&lt;/labels&gt;</span>
+            <span class="tag">&lt;/build&gt;</span>
+          <span class="tag">&lt;/image&gt;</span>
+        <span class="tag">&lt;/images&gt;</span>
+      <span class="tag">&lt;/configuration&gt;</span>
+    <span class="tag">&lt;/plugin&gt;</span>
+  <span class="tag">&lt;/plugins&gt;</span>
+<span class="tag">&lt;/build&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This would build the same image as the previous example.
+If instead built with <code>mvn docker:build -Pdocker.from=console/tomcat:8.0 -Ddocker.tags.0=tc8-test</code> it would build from that image instead, and also add that tag to the image.</p>
+</div>
+<div class="paragraph">
+<p>If <code>-Ddocker.labels.status=beta</code> is added, the image would be given two labels: <code>status=beta</code> and <code>software=tomcat</code>.
+If <code>-Ddocker.labels._combine=replace</code> is added, the image would be given one label only: <code>status=beta</code>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -4311,7 +4541,7 @@ run and build configuration sections.</p>
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Docker compose configuration</caption>
+<caption class="title">Table 32. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4714,7 +4944,25 @@ To do so, either specify the <code>docker.authToken</code> system property or pr
 </div>
 </div>
 <div class="sect1">
-<h2 id="further-reading">9. Further reading</h2>
+<h2 id="implicit-properties">9. Implicit properties</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>There are some implicit configurations in docker maven plugin that are not so straightforward. These are simply workarouds to get docker-maven-plugin&#8217;s flow right; just to overcome limitations of Maven and other things. Some of these are mentioned below:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the only value of the <code>env</code> parameter is a docker-maven-plugin internal property which has been set implicitly you have to prefix the property with a single <code>+</code> like in <code>+${docker.container.test.ip}</code>. This is necessary due to some Maven limitations which simply interpolates a lone, non defined property, to an empty string which can&#8217;t then be replaced by this plugin after the initial interpolation phase.</p>
+</li>
+<li>
+<p>When providing port mapping in a format like <code>host.ip:host.port:80</code>, you need to prefix property with a single <code>+</code>. In this form, the host ip of the container will be placed into a Maven property name host.ip. If docker reports that value to be 0.0.0.0, the value of docker.host.address will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (host.ip in this example) containing the value to use. host:port works in the same way as described above.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="further-reading">10. Further reading</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -4754,8 +5002,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.24.0<br>
-Last updated 2018-02-07 13:08:58 UTC
+Version 0.25.0<br>
+Last updated 2018-04-04 20:58:41 UTC
 </div>
 </div>
 </body>
