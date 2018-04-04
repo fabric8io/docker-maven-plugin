@@ -36,7 +36,22 @@ public class DockerFileBuilderTest {
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
-    
+
+    @Test
+    public void testBuildDockerFileMultilineLabel() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        String dockerfileContent = new DockerFileBuilder()
+                .add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .labels(ImmutableMap.of("key", "unquoted",
+                        "flag", "",
+                        "some-json", "{\n  \"key\": \"value\"\n}\n"))
+                .content();
+        String expected = loadFile("docker/Dockerfile.multiline_label.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+
     @Test
     public void testBuildDockerFileUDPPort() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
