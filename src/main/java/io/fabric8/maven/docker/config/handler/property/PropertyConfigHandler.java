@@ -54,9 +54,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
 
-        if (name == null)
+        if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
-
+        }
+        
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
@@ -118,9 +119,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private RunImageConfiguration extractRunConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider) {
         RunImageConfiguration config = fromConfig.getRunConfiguration();
-        if(config.isDefault())
+        if (config.isDefault()) {
             config = null;
-
+        }
+        
         return new RunImageConfiguration.Builder()
                 .capAdd(valueProvider.getList(CAP_ADD, config == null ? null : config.getCapAdd()))
                 .capDrop(valueProvider.getList(CAP_DROP, config == null ? null : config.getCapDrop()))
@@ -197,8 +199,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                     .mode(valueProvider.getString(HEALTHCHECK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
                     .cmd(extractArguments(valueProvider, HEALTHCHECK_CMD, config == null ? null : config.getCmd()))
                     .build();
-        }else
+        } else {
             return config;
+        }
     }
 
     // Extract only the values of the port mapping
@@ -218,8 +221,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private String extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
         String rawAlternative = null;
-        if(alternative != null)
+        if (alternative != null) {
             rawAlternative = alternative.getShell();
+        }
 
         return valueProvider.getString(configKey, rawAlternative);
     }
@@ -242,9 +246,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         Boolean configEnabled = config != null ? config.isEnabled() : null;
         Boolean enabled = valueProvider.getBoolean(LOG_ENABLED, configEnabled);
 
-        if(enabled == null)
+        if (enabled == null) {
             enabled = configEnabled == Boolean.TRUE || !builder.isBlank();
-
+        }
+        
         builder.enabled(enabled);
         return builder.build();
     }
@@ -291,7 +296,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private List<UlimitConfig> extractUlimits(List<UlimitConfig> config, ValueProvider valueProvider) {
         List<String> other = null;
-        if(config != null) {
+        if (config != null) {
             other = new ArrayList<>();
             // Convert back to string for potential merge
             for (UlimitConfig ulimitConfig : config) {
