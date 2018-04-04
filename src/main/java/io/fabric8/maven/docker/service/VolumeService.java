@@ -6,7 +6,6 @@ import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 
 import java.lang.String;
-import java.util.Map;
 
 /**
  *  Service Class for helping control Volumes

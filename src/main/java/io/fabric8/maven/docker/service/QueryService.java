@@ -8,8 +8,6 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.util.AutoPullMode;
-import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Query service for getting image and container information from the docker dameon

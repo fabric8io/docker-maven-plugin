@@ -7,7 +7,6 @@ import io.fabric8.maven.docker.config.UlimitConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
-import org.junit.experimental.theories.DataPoints;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONParser;
 

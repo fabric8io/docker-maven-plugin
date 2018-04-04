@@ -1,12 +1,10 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
 import io.fabric8.maven.docker.util.AuthConfigFactory;
-import io.fabric8.maven.docker.util.DeepCopy;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugins.annotations.Parameter;
 

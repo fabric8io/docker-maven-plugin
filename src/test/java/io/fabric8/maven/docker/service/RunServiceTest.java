@@ -3,7 +3,6 @@ package io.fabric8.maven.docker.service;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.URL;
 import java.util.*;
 
 import io.fabric8.maven.docker.log.LogOutputSpec;

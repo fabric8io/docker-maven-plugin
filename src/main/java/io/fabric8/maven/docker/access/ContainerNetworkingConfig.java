@@ -1,7 +1,5 @@
 package io.fabric8.maven.docker.access;
 
-import java.util.List;
-
 import io.fabric8.maven.docker.config.NetworkConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
