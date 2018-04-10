@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.25-SNAPSHOT**
+  - Fix regression which broke labels and env with space (#988)
+
 * **0.25.0** (2018-04-04)
   - Fix possible NPE when logging to a file and the parent directory does not exist yet ([#911](https://github.com/fabric8io/docker-maven-plugin/issues/911)) ([#940](https://github.com/fabric8io/docker-maven-plugin/issues/940))
   - Change content type to "application/json" when talking to the Docker daemon ([#945](https://github.com/fabric8io/docker-maven-plugin/issues/945))
