@@ -163,16 +163,6 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         return minimalApiVersion;
     }
 
-    public static ImageConfiguration getDefaultImageConfiguration(String defaultImageName, String projectBaseDir) {
-        ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
-                .name(defaultImageName)
-                .buildConfig(new BuildImageConfiguration.Builder()
-                        .dockerFileDir(DockerFileUtil.getDockerFileDirectory(projectBaseDir))
-                        .build())
-                .build();
-        return imageConfiguration;
-    }
-
     // =========================================================================
     // Builder for image configurations
 

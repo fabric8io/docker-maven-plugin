@@ -100,9 +100,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.removeVolumes", defaultValue = "false")
     protected boolean removeVolumes;
 
-    @Parameter(property = "docker.autoConfiguration.imageName", defaultValue = "")
-    protected String imageName;
-
     @Parameter(property = "docker.apiVersion")
     private String apiVersion;
 

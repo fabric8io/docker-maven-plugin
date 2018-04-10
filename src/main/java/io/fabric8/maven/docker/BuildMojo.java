@@ -1,5 +1,7 @@
 package io.fabric8.maven.docker;
 
+import java.io.File;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -26,8 +29,11 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     @Parameter(property = "docker.skip.build", defaultValue = "false")
     protected boolean skipBuild;
-    
-    /** 
+
+    @Parameter(property = "docker.name", defaultValue = "")
+    protected String name;
+
+    /**
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
@@ -40,26 +46,51 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         }
         List<ImageConfiguration> resolvedImages = getResolvedImages();
 
-        if(resolvedImages.isEmpty()) {
-            // No Configuration found, so build one up dynamically.
-            if(imageName == null) {
-                /*
-                 * Image name defaults to:
-                 *     `${project.groupId}/${project.artifactId}:${project.version}`
-                 */
-                imageName = project.getGroupId() + "/" + project.getArtifactId() + ":" +
-                        project.getVersion();
+        if (resolvedImages.isEmpty()) {
+            resolvedImages = addAutoDockerfileConfigIfFound();
+        }
+
+        // Iterate over all the ImageConfigurations and process one by one
+        for (ImageConfiguration imageConfig : resolvedImages) {
+            processImageConfig(hub, imageConfig);
+        }
+    }
+
+    private List<ImageConfiguration> addAutoDockerfileConfigIfFound() {
+        String dockerFile = findDefaultDockerFile();
+        if (dockerFile != null) {
+            // No configured name, so create one from maven GAV
+            if (name == null) {
+                name = project.getGroupId() + "/" + project.getArtifactId() + ":" +
+                       project.getVersion();
             }
-            ImageConfiguration aDefaultImageConfig = ImageConfiguration.getDefaultImageConfiguration(imageName,
-                    project.getBasedir().getAbsolutePath());
-            processImageConfig(hub, aDefaultImageConfig);
-            return;
-        } else {
-            // Iterate over all the ImageConfigurations and process one by one
-            for (ImageConfiguration imageConfig : resolvedImages) {
-                processImageConfig(hub, imageConfig);
+            BuildImageConfiguration buildConfig =
+                new BuildImageConfiguration.Builder()
+                    .dockerFile(dockerFile)
+                    .build();
+            buildConfig.initAndValidate(log);
+            ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
+                    .name(name)
+                    .buildConfig(buildConfig)
+                    .build();
+            return Collections.singletonList(imageConfiguration);
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * Fetch the location of docker file in case of simple configuration
+     *
+     * @return directory containing the Dockerfile
+     */
+    private String findDefaultDockerFile() {
+        String baseDir = project.getBasedir().getPath();
+        for (String tryPath : new String[] { baseDir + "/Dockerfile", baseDir + "/src/main/docker/Dockerfile"} ) {
+            if (new File(tryPath).exists()) {
+                return tryPath;
             }
         }
+        return null;
     }
 
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
