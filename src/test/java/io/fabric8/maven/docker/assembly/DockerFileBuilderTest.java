@@ -46,10 +46,19 @@ public class DockerFileBuilderTest {
                 .cmd(a)
                 .labels(ImmutableMap.of("key", "unquoted",
                         "flag", "",
+                        "with_space", "1.fc nuremberg",
                         "some-json", "{\n  \"key\": \"value\"\n}\n"))
                 .content();
         String expected = loadFile("docker/Dockerfile.multiline_label.test");
         assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
+    public void testBuildLabelWithSpace() throws Exception {
+        String dockerfileContent = new DockerFileBuilder()
+                .labels(ImmutableMap.of("key", "label with space"))
+                .content();
+        assertTrue(stripCR(dockerfileContent).contains("LABEL key=\"label with space\""));
     }
 
     @Test
@@ -85,7 +94,7 @@ public class DockerFileBuilderTest {
         String expected = loadFile("docker/Dockerfile_tcp.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
-    
+
     @Test(expected=IllegalArgumentException.class)
     public void testBuildDockerFileBadPort() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
@@ -101,7 +110,7 @@ public class DockerFileBuilderTest {
                 .volumes(Collections.singletonList("/vol1"))
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
-    }    
+    }
 
     @Test(expected=IllegalArgumentException.class)
     public void testBuildDockerFileBadProtocol() throws Exception {
@@ -118,7 +127,7 @@ public class DockerFileBuilderTest {
                 .volumes(Collections.singletonList("/vol1"))
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
-    }      
+    }
 
     @Test
     public void testDockerFileOptimisation() throws Exception {
