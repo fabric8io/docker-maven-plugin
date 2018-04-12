@@ -1,0 +1,17 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>fabric8io</groupId>
+  <artifactId>smallest</artifactId>
+  <version>1-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.25-SNAPSHOT</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -5,7 +5,14 @@ This is a Maven plugin for managing Docker images and containers. It focuses on 
 
 == Building Images
 
-One purpose of this plugin is to create Docker images holding the actual application. This is done with the <<{plugin}:build>> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (`/maven` by default). Images that are built with this plugin can be pushed to public or private Docker registries with <<{plugin}:push>>.
+One purpose of this plugin is to create Docker images holding the actual application. This is done with the <<{plugin}:build>> goal. It is easy to include build artefacts and their dependencies into an image.
+
+Several ways for configuring the builds are supported:
+
+* An own configuration syntax can be used to create a Dockerfile. For specifying artefacts and other files, the plugin uses the assembly descriptor format from the maven-assembly-plugin to copy over those file into the Docker image.
+* An external Dockerfile can be specified in which Maven properties can be inserted. This is also the default mode, if only a single image should be built and a top-level `Dockerfile` exists. See <<simple-dockerfile-build,Simple Dockerfile build>> for details of this zero XML configuration mode.
+
+Images that are built with this plugin can be pushed to public or private Docker registries with <<{plugin}:push>>.
 
 == Running Containers
 

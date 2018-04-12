@@ -1,7 +1,6 @@
 package io.fabric8.maven.docker;
 
 import java.util.Date;
-import java.util.List;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -26,8 +25,11 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     @Parameter(property = "docker.skip.build", defaultValue = "false")
     protected boolean skipBuild;
-    
-    /** 
+
+    @Parameter(property = "docker.name", defaultValue = "")
+    protected String name;
+
+    /**
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
@@ -38,29 +40,13 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         if (skipBuild) {
             return;
         }
-        List<ImageConfiguration> resolvedImages = getResolvedImages();
 
-        if(resolvedImages.isEmpty()) {
-            // No Configuration found, so build one up dynamically.
-            if(imageName == null) {
-                /*
-                 * Image name defaults to:
-                 *     `${project.groupId}/${project.artifactId}:${project.version}`
-                 */
-                imageName = project.getGroupId() + "/" + project.getArtifactId() + ":" +
-                        project.getVersion();
-            }
-            ImageConfiguration aDefaultImageConfig = ImageConfiguration.getDefaultImageConfiguration(imageName,
-                    project.getBasedir().getAbsolutePath());
-            processImageConfig(hub, aDefaultImageConfig);
-            return;
-        } else {
-            // Iterate over all the ImageConfigurations and process one by one
-            for (ImageConfiguration imageConfig : resolvedImages) {
-                processImageConfig(hub, imageConfig);
-            }
+        // Iterate over all the ImageConfigurations and process one by one
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
+            processImageConfig(hub, imageConfig);
         }
     }
+
 
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
             throws MojoExecutionException, DockerAccessException {
@@ -79,7 +65,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     // We ignore an already existing date file and always return the current date
     @Override
-    protected Date getReferenceDate() throws MojoExecutionException {
+    protected Date getReferenceDate() {
         return new Date();
     }
 

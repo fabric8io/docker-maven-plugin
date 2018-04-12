@@ -119,27 +119,6 @@ public class DockerFileUtil {
                 .withExpressionMarkers(delimiters[0], delimiters[1]);
     }
 
-    /**
-     * Fetch the location of docker file in case of simple configuration
-     *
-     * @param projectBaseDirPath Absolute path to project's base directory.
-     * @return directory containing the Dockerfile
-     */
-    public static String getDockerFileDirectory(String projectBaseDirPath) {
-        if(checkFileExists(projectBaseDirPath + "/Dockerfile")) {
-            return projectBaseDirPath;
-        } else if(checkFileExists(projectBaseDirPath + "/src/main/docker/Dockerfile")){
-            return projectBaseDirPath + "/src/main/docker";
-        } else {
-            throw new IllegalStateException("Unable to locate Dockerfile");
-        }
-    }
-
-    private static boolean checkFileExists(String filePath) {
-        File aFile = new File(filePath);
-        return aFile.exists() && !aFile.isDirectory();
-    }
-
     private static String[] extractDelimiters(String filter) {
         if (filter == null ||
             filter.equalsIgnoreCase("false") ||

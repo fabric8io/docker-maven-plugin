@@ -9,12 +9,6 @@ The `<image>` element can contain the following sub elements:
 
 include::image/_configuration.adoc[]
 
-Either a `<build>` or `<run>` section must be present. These are explained in details in the corresponding goal sections.
+Either a `<build>` or `<run>` section must be present (except when you are using the <<simple-dockerfile-build,simple Dockerfile build>> mode). These are explained in details in the corresponding goal sections.
 
 include::image/_example.adoc[]
-
-When only a single image is build with Dockerfile, no need to provide too much parameters in configuration. ImageConfiguration can be dynamically built with the given defaults.
-
-include::image/_simple_configuration_example.adoc[]
-
-It requires a single Dockerfile to be in the base directory or `/src/main/docker`.The image name would default to `${project.groupId}/${project.artifactId}:${project.version}`, but this can be configured with a `docker.autoConfiguration.imageName` flag
