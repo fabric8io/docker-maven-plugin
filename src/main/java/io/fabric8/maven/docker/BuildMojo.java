@@ -1,9 +1,6 @@
 package io.fabric8.maven.docker;
 
-import java.io.File;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -11,7 +8,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
