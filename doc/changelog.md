@@ -1,8 +1,8 @@
 # ChangeLog
 
-* **0.25-SNAPSHOT**
-  - Fix regression which broke labels and env with space (#988)
-  - Fix zero-config Dockerfile mode
+* **0.25.1** (2018-04-12)
+  - Fix regression which broke labels and env with space ([#988](https://github.com/fabric8io/docker-maven-plugin/issues/988))
+  - Fix and enhanced zero-config Dockerfile mode
 
 * **0.25.0** (2018-04-04)
   - Fix possible NPE when logging to a file and the parent directory does not exist yet ([#911](https://github.com/fabric8io/docker-maven-plugin/issues/911)) ([#940](https://github.com/fabric8io/docker-maven-plugin/issues/940))
