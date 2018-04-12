@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.25.0,</span>
-<span id="revdate">2018-04-04</span>
+<span id="revnumber">version 0.25.1,</span>
+<span id="revdate">2018-04-12</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -613,7 +613,7 @@ table.CodeRay td.code>pre{padding:0}
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2015 - 2017 The original authors.</p>
+<p>&#169; 2015 - 2018 The original authors.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -627,7 +627,23 @@ table.CodeRay td.code>pre{padding:0}
 <div class="sect2">
 <h3 id="building-images">1.1. Building Images</h3>
 <div class="paragraph">
-<p>One purpose of this plugin is to create Docker images holding the actual application. This is done with the <a href="#docker:build"><strong>docker:build</strong></a> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (<code>/maven</code> by default). Images that are built with this plugin can be pushed to public or private Docker registries with <a href="#docker:push"><strong>docker:push</strong></a>.</p>
+<p>One purpose of this plugin is to create Docker images holding the actual application. This is done with the <a href="#docker:build"><strong>docker:build</strong></a> goal. It is easy to include build artefacts and their dependencies into an image.</p>
+</div>
+<div class="paragraph">
+<p>Several ways for configuring the builds are supported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>An own configuration syntax can be used to create a Dockerfile. For specifying artefacts and other files, the plugin uses the assembly descriptor format from the maven-assembly-plugin to copy over those file into the Docker image.</p>
+</li>
+<li>
+<p>An external Dockerfile can be specified in which Maven properties can be inserted. This is also the default mode, if only a single image should be built and a top-level <code>Dockerfile</code> exists. See <a href="#simple-dockerfile-build">Simple Dockerfile build</a> for details of this zero XML configuration mode.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Images that are built with this plugin can be pushed to public or private Docker registries with <a href="#docker:push"><strong>docker:push</strong></a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -832,7 +848,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.25.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.25.1<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1314,7 +1330,7 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 </tbody>
 </table>
 <div class="paragraph">
-<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present. These are explained in details in the corresponding goal sections.</p>
+<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present (except when you are using the <a href="#simple-dockerfile-build">simple Dockerfile build</a> mode). These are explained in details in the corresponding goal sections.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example</div>
@@ -1331,21 +1347,6 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
   <span class="tag">&lt;/images&gt;</span>
 <span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>When only a single image is build with Dockerfile, no need to provide too much parameters in configuration. ImageConfiguration can be dynamically built with the given defaults.</p>
-</div>
-<div class="listingblock">
-<div class="title">Simple configuration Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
-  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
-  <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-<span class="tag">&lt;/plugin&gt;</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>It requires a single Dockerfile to be in the base directory or <code>/src/main/docker</code>.The image name would default to <code>${project.groupId}/${project.artifactId}:${project.version}</code>, but this can be configured with a <code>docker.autoConfiguration.imageName</code> flag</p>
 </div>
 </div>
 </div>
@@ -1497,6 +1498,16 @@ The files of the assembly are stored in a build context relative directory <code
 </div>
 <div class="paragraph">
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
+</div>
+<div id="simple-dockerfile-build" class="paragraph">
+<div class="title">Simple Dockerfile mode</div>
+<p>When only a single image should be built with a Dockerfile no XML configuration is needed at all.
+All what need to be done is to place a <code>Dockerfile</code> into the top-level module directory, alongside to <code>pom.xml</code>.
+You can still configure <a href="#global-configuration">global aspect</a> in the plugin configuration, but as soon as you add an <code>&lt;image&gt;</code> in the XML configuration, you need to configure also the build explicitly.</p>
+</div>
+<div class="paragraph">
+<p>The image name is by default set from the Maven coordinates: <code>${project.groupId}/${project.artifactId}:${project.version}</code>
+This name can be overwritten with a property <code>docker.name</code> which can also hold placeholders as described in <a href="#image-name-placeholders">Name placeholders</a>.</p>
 </div>
 <div id="build-filtering" class="paragraph">
 <div class="title">Filtering</div>
@@ -5002,8 +5013,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.25.0<br>
-Last updated 2018-04-04 20:58:41 UTC
+Version 0.25.1<br>
+Last updated 2018-04-12 11:06:45 UTC
 </div>
 </div>
 </body>
