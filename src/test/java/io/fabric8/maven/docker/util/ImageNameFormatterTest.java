@@ -17,7 +17,6 @@ package io.fabric8.maven.docker.util;
  */
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Properties;
 
 import mockit.*;

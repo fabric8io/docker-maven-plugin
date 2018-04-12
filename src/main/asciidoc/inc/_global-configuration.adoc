@@ -126,7 +126,9 @@ By default a progress meter is printed out on the console, which is omitted when
 | `docker.skip.run`
 
 | *skipTag*
-| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
+| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`. +
+If set to `true` this plugin won't push any tags with `{plugin}:push`. +
+If set to `true` this plugin won't remove any tags with `{plugin}:remove`. +
 | `docker.skip.tag`
 
 | *skipMachine*

@@ -19,12 +19,12 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.ImageName;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -52,7 +52,13 @@ public class RemoveMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.removeMode")
     private String removeMode;
-
+    
+    /** 
+     * Skip building tags
+     */
+    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    private boolean skipTag;
+    
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException {
         for (ImageConfiguration image : getResolvedImages()) {
@@ -61,9 +67,11 @@ public class RemoveMojo extends AbstractDockerMojo {
             if (imageShouldBeRemoved(image)) {
                 removeImage(hub, name);
 
-                // Remove any tagged images
-                for (String tag: getImageBuildTags(image)){
-                    removeImage(hub, name + ":" + tag);
+                if(!skipTag) {
+                    // Remove any tagged images
+                    for (String tag: getImageBuildTags(image)){
+                        removeImage(hub, new ImageName(name, tag).getFullName());
+                    }
                 }
             }
         }

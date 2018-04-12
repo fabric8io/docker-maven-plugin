@@ -1,10 +1,8 @@
 package io.fabric8.maven.docker.config;
 
-import java.awt.*;
 import java.io.File;
 import java.io.Serializable;
 import java.util.*;
-import java.util.List;
 
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -47,7 +45,7 @@ public class BuildImageConfiguration implements Serializable {
      * How interpolation of a dockerfile should be performed
      */
     @Parameter
-    private String filter = DEFAULT_FILTER;
+    private String filter;
 
     /**
      * Base Image
@@ -83,13 +81,13 @@ public class BuildImageConfiguration implements Serializable {
     private List<String> runCmds;
 
     @Parameter
-    private String cleanup = DEFAULT_CLEANUP;
+    private String cleanup;
 
     @Parameter
-    private boolean nocache = false;
+    private Boolean nocache;
 
     @Parameter
-    private boolean optimise = false;
+    private Boolean optimise;
 
     @Parameter
     private List<String> volumes;
@@ -129,7 +127,7 @@ public class BuildImageConfiguration implements Serializable {
     private AssemblyConfiguration assembly;
 
     @Parameter
-    private boolean skip = false;
+    private Boolean skip;
 
     @Parameter
     private ArchiveCompression compression = ArchiveCompression.none;
@@ -154,7 +152,23 @@ public class BuildImageConfiguration implements Serializable {
         return dockerArchiveFile;
     }
 
+    public String getDockerFileRaw() {
+        return dockerFile;
+    }
+
+    public String getDockerArchiveRaw() {
+        return dockerArchive;
+    }
+
+    public String getDockerFileDirRaw() {
+        return dockerFileDir;
+    }
+
     public String getFilter() {
+        return filter != null ? filter : DEFAULT_FILTER;
+    }
+
+    public String getFilterRaw() {
         return filter;
     }
 
@@ -221,19 +235,35 @@ public class BuildImageConfiguration implements Serializable {
         return command;
     }
 
+    public String getCleanup() {
+        return cleanup;
+    }
+
     public CleanupMode cleanupMode() {
-        return CleanupMode.parse(cleanup);
+        return CleanupMode.parse(cleanup != null ? cleanup : DEFAULT_CLEANUP);
     }
 
     public boolean nocache() {
-        return nocache;
+        return nocache != null ? nocache : false;
     }
 
     public boolean optimise() {
-        return optimise;
+        return optimise != null ? optimise : false;
     }
 
     public boolean skip() {
+        return skip != null ? skip : false;
+    }
+
+    public Boolean getNoCache() {
+        return nocache;
+    }
+
+    public Boolean getOptimise() {
+        return optimise;
+    }
+
+    public Boolean getSkip() {
         return skip;
     }
 
@@ -305,11 +335,7 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder filter(String filter) {
-            if (filter == null) {
-                config.filter = DEFAULT_FILTER;
-            } else {
-                config.filter = filter;
-            }
+            config.filter = filter;
             return this;
         }
 
@@ -395,11 +421,7 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder cleanup(String cleanup) {
-            if (cleanup == null) {
-                config.cleanup = DEFAULT_CLEANUP;
-            } else {
-                config.cleanup = cleanup;
-            }
+            config.cleanup = cleanup;
             return this;
         }
 
@@ -412,17 +434,13 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder nocache(String nocache) {
-            if (nocache != null) {
-                config.nocache = Boolean.valueOf(nocache);
-            }
+        public Builder nocache(Boolean nocache) {
+            config.nocache = nocache;
             return this;
         }
 
-        public Builder optimise(String optimise) {
-            if (optimise != null) {
-                config.optimise = Boolean.valueOf(optimise);
-            }
+        public Builder optimise(Boolean optimise) {
+            config.optimise = optimise;
             return this;
         }
 
@@ -443,10 +461,8 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder skip(String skip) {
-            if (skip != null) {
-                config.skip = Boolean.valueOf(skip);
-            }
+        public Builder skip(Boolean skip) {
+            config.skip = skip;
             return this;
         }
 

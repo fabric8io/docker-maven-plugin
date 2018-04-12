@@ -145,21 +145,14 @@ public class StartMojo extends AbstractDockerMojo {
                     // Move from waiting to starting status
                     imagesStarting.add(image);
                     imagesWaitingToStart.remove(image);
+                    
+                    if (!startParallel) {
+                        waitForStartedContainer(hub, containerStartupService, startedContainerAliases, imagesStarting);
+                    }
                 }
 
-                // Wait for the next container to finish startup
-                final Future<StartedContainer> startedContainerFuture = containerStartupService.take();
-                try {
-                    final StartedContainer startedContainer = startedContainerFuture.get();
-                    final ImageConfiguration imageConfig = startedContainer.imageConfig;
-
-                    updateAliasesSet(startedContainerAliases, imageConfig.getAlias());
-                    exposeContainerProps(hub.getQueryService(), startedContainer);
-
-                    // All done with this image
-                    imagesStarting.remove(imageConfig);
-                } catch (ExecutionException e) {
-                    rethrowCause(e);
+                if (startParallel) {
+                    waitForStartedContainer(hub, containerStartupService, startedContainerAliases, imagesStarting);
                 }
             }
 
@@ -184,6 +177,25 @@ public class StartMojo extends AbstractDockerMojo {
                 log.error("Error occurred during container startup, shutting down...");
                 runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getPomLabel());
             }
+        }
+    }
+
+    private void waitForStartedContainer(final ServiceHub hub,
+            final ExecutorCompletionService<StartedContainer> containerStartupService,
+            final Set<String> startedContainerAliases, final Queue<ImageConfiguration> imagesStarting)
+            throws InterruptedException, DockerAccessException, IOException, ExecException {
+        final Future<StartedContainer> startedContainerFuture = containerStartupService.take();
+        try {
+            final StartedContainer startedContainer = startedContainerFuture.get();
+            final ImageConfiguration imageConfig = startedContainer.imageConfig;
+
+            updateAliasesSet(startedContainerAliases, imageConfig.getAlias());
+            exposeContainerProps(hub.getQueryService(), startedContainer);
+
+            // All done with this image
+            imagesStarting.remove(imageConfig);
+        } catch (ExecutionException e) {
+            rethrowCause(e);
         }
     }
 
@@ -361,7 +373,7 @@ public class StartMojo extends AbstractDockerMojo {
         if (runConfig != null) {
             LogConfiguration logConfig = runConfig.getLogConfiguration();
             if (logConfig != null) {
-                return logConfig.isEnabled();
+                return Boolean.TRUE == logConfig.isEnabled();
             } else {
                 // Default is to show logs if "follow" is true
                 return follow;

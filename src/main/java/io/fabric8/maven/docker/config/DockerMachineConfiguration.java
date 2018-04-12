@@ -3,11 +3,7 @@ package io.fabric8.maven.docker.config;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.maven.plugin.PluginParameterExpressionEvaluator;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.component.annotations.Component;
-import org.codehaus.plexus.component.annotations.Configuration;
 
 public class DockerMachineConfiguration implements Serializable {
 

@@ -199,8 +199,8 @@ public class ContainerTracker {
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
-            this.shutdownGracePeriod = waitConfig != null ? waitConfig.getShutdown() : 0;
-            this.killGracePeriod = waitConfig != null ? waitConfig.getKill() : 0;
+            this.shutdownGracePeriod = waitConfig != null && waitConfig.getShutdown() != null ? waitConfig.getShutdown() : 0;
+            this.killGracePeriod = waitConfig != null && waitConfig.getKill() != null ? waitConfig.getKill() : 0;
             if (waitConfig != null && waitConfig.getExec() != null) {
                 this.preStop = waitConfig.getExec().getPreStop();
                 this.breakOnError = waitConfig.getExec().isBreakOnError();

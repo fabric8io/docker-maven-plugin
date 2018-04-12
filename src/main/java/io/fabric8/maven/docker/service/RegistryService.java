@@ -37,11 +37,12 @@ public class RegistryService {
      * @param imageConfigs images to push (but only if they have a build configuration)
      * @param retries how often to retry
      * @param registryConfig a global registry configuration
+     * @param skipTag flag to skip pushing tagged images
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
     public void pushImages(Collection<ImageConfiguration> imageConfigs,
-                           int retries, RegistryConfig registryConfig) throws DockerAccessException, MojoExecutionException {
+                           int retries, RegistryConfig registryConfig, boolean skipTag) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
@@ -58,9 +59,11 @@ public class RegistryService {
                 docker.pushImage(name, authConfig, configuredRegistry, retries);
                 log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
-                for (String tag : imageConfig.getBuildConfiguration().getTags()) {
-                    if (tag != null) {
-                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
+                if (!skipTag) {
+                    for (String tag : imageConfig.getBuildConfiguration().getTags()) {
+                        if (tag != null) {
+                            docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
+                        }
                     }
                 }
             }

@@ -20,6 +20,8 @@ import java.util.*;
 
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**
@@ -30,6 +32,9 @@ import org.apache.maven.shared.utils.StringUtils;
  * @since 17/05/16
  */
 public class ConfigHelper {
+    // Property which can be set to activate externalConfiguration through properties.
+    // Only works for single image project.
+    public static final String EXTERNALCONFIG_ACTIVATION_PROPERTY = "docker.imagePropertyConfiguration";
 
     private ConfigHelper() {}
 
@@ -59,6 +64,22 @@ public class ConfigHelper {
                         StringUtils.join(imageNames.iterator(), ","), imageNameFilter);
         }
         return filtered;
+    }
+
+    public static void validateExternalPropertyActivation(MavenProject project, List<ImageConfiguration> images) throws MojoFailureException {
+        String prop = getExternalConfigActivationProperty(project);
+        if(prop == null) {
+            return;
+        }
+
+        if(images.size() > 1) {
+            throw new MojoFailureException("Configuration error: Cannot use property "+EXTERNALCONFIG_ACTIVATION_PROPERTY+" on projects with multiple images.");
+        }
+    }
+
+    public static String getExternalConfigActivationProperty(MavenProject project) {
+        Properties properties = EnvUtil.getPropertiesWithSystemOverrides(project);
+        return properties.getProperty(EXTERNALCONFIG_ACTIVATION_PROPERTY);
     }
 
     /**

@@ -22,7 +22,13 @@ public class PushMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.skip.push", defaultValue = "false")
     private boolean skipPush;
-
+    
+    /** 
+     * Skip building tags
+     */
+    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    private boolean skipTag;
+    
     @Parameter(property = "docker.push.retries", defaultValue = "0")
     private int retries;
 
@@ -35,6 +41,6 @@ public class PushMojo extends AbstractDockerMojo {
             return;
         }
 
-        hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry));
+        hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
     }
 }

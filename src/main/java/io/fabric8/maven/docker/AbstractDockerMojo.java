@@ -1,13 +1,12 @@
 package io.fabric8.maven.docker;
 
 import java.io.File;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -209,6 +208,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
+            ConfigHelper.validateExternalPropertyActivation(project, images);
+
             // The 'real' images configuration to use (configured images + externally resolved images)
             this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
             DockerAccess access = null;
@@ -278,7 +279,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return now;
     }
 
-    // Get the referenc date for the build. By default this is picked up
+    // Get the reference date for the build. By default this is picked up
     // from an existing build date file. If this does not exist, the current date is used.
     protected Date getReferenceDate() throws MojoExecutionException {
         Date referenceDate = EnvUtil.loadTimestamp(getBuildTimestampFile());
@@ -313,6 +314,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
            filter,                   // A filter which image to process
             this);                     // customizer (can be overwritten by a subclass)
 
+        // Check for simple Dockerfile mode
+        if (resolvedImages.isEmpty()) {
+            File topDockerfile = new File(project.getBasedir(),"Dockerfile");
+            if (topDockerfile.exists()) {
+                resolvedImages.add(createSimpleDockerfileConfig(topDockerfile));
+            }
+        }
         // Initialize configuration and detect minimal API version
         return ConfigHelper.initAndValidate(resolvedImages, apiVersion, new ImageNameFormatter(project, buildTimeStamp), log);
     }
@@ -323,7 +331,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
         return imageConfigs;
     }
-
 
    /**
      * Override this if your mojo doesnt require access to a Docker host (like creating and attaching
@@ -405,5 +412,24 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 userProperties.setProperty(key, value);
             }
         };
+    }
+
+    private ImageConfiguration createSimpleDockerfileConfig(File dockerFile) {
+        // No configured name, so create one from maven GAV
+        String name = EnvUtil.getPropertiesWithSystemOverrides(project).getProperty("docker.name");
+        if (name == null) {
+            // Default name group/artifact:version (or 'latest' if SNAPSHOT)
+            name = "%g/%a:%l";
+        }
+
+        BuildImageConfiguration buildConfig =
+            new BuildImageConfiguration.Builder()
+                .dockerFile(dockerFile.getPath())
+                .build();
+
+        return new ImageConfiguration.Builder()
+            .name(name)
+            .buildConfig(buildConfig)
+            .build();
     }
 }
