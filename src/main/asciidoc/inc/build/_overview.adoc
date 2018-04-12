@@ -40,14 +40,14 @@ If this directory contains a `.maven-dockerinclude` file, then it is used for in
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 
 [[simple-dockerfile-build]]
-.Simple Dockerfile mode
+.Simple Dockerfile build
 
 When only a single image should be built with a Dockerfile no XML configuration is needed at all.
 All what need to be done is to place a `Dockerfile` into the top-level module directory, alongside to `pom.xml`.
-You can still configure <<global-configuration, global aspect>> in the plugin configuration, but as soon as you add an `<image>` in the XML configuration, you need to configure also the build explicitly.
+You can still configure <<global-configuration, global aspects>> in the plugin configuration, but as soon as you add an `<image>` in the XML configuration, you need to configure also the build explicitly.
 
-The image name is by default set from the Maven coordinates: `${project.groupId}/${project.artifactId}:${project.version}`
-This name can be overwritten with a property `docker.name` which can also hold placeholders as described in <<image-name-placeholders,Name placeholders>>.
+The image name is by default set from the Maven coordinates (`%g/%a:%l`, see <<image-name-placeholders,Name Placeholders>> for an explanation of the params which are essentially the Maven GAV)
+This name can be set with the property `docker.name`.
 
 [[build-filtering]]
 .Filtering
