@@ -102,7 +102,7 @@ public class DockerAssemblyManager {
      * @return file holding the path to the created assembly tar file
      * @throws MojoExecutionException
      */
-    public File createDockerTarArchive(String imageName, MojoParameters params, final BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
+    public File createDockerTarArchive(String imageName, final MojoParameters params, final BuildImageConfiguration buildConfig, Logger log, ArchiverCustomizer finalCustomizer)
             throws MojoExecutionException {
 
         final BuildDirs buildDirs = createBuildDirs(imageName, params);
@@ -131,7 +131,7 @@ public class DockerAssemblyManager {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
                         DefaultFileSet fileSet = DefaultFileSet.fileSet(dockerFile.getParentFile());
-                        addDockerIgnoreIfPresent(fileSet);
+                        addDockerIncludesExcludesIfPresent(fileSet, params);
                         // Exclude non-interpolated dockerfile from source tree
                         // Interpolated Dockerfile is already added as it was created into the output directory when
                         // using dir dir mode
@@ -322,28 +322,33 @@ public class DockerAssemblyManager {
         }
     }
 
-    private void addDockerIgnoreIfPresent(DefaultFileSet fileSet) throws IOException {
+    private void addDockerIncludesExcludesIfPresent(DefaultFileSet fileSet, MojoParameters params) throws IOException {
         File directory = fileSet.getDirectory();
-        addDockerExcludes(fileSet, directory);
-        addDockerIncludes(fileSet, directory);
+        addDockerExcludes(fileSet, params);
+        addDockerIncludes(fileSet);
     }
 
-    private void addDockerExcludes(DefaultFileSet fileSet, File directory) throws IOException {
+    private void addDockerExcludes(DefaultFileSet fileSet, MojoParameters params) throws IOException {
+        File directory = fileSet.getDirectory();
+        List<String> excludes = new ArrayList<>();
+        // Output directory will be always excluded
+        excludes.add(params.getOutputDirectory() + "/**");
         for (String file : new String[] { DOCKER_EXCLUDE, DOCKER_IGNORE } ) {
             File dockerIgnore = new File(directory, file);
             if (dockerIgnore.exists()) {
-                ArrayList<String> excludes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
+                excludes.addAll(Arrays.asList(FileUtils.fileReadArray(dockerIgnore)));
                 excludes.add(DOCKER_IGNORE);
-                fileSet.setExcludes(excludes.toArray(new String[excludes.size()]));
             }
         }
+        fileSet.setExcludes(excludes.toArray(new String[0]));
     }
 
-    private void addDockerIncludes(DefaultFileSet fileSet, File directory) throws IOException {
+    private void addDockerIncludes(DefaultFileSet fileSet) throws IOException {
+        File directory = fileSet.getDirectory();
         File dockerInclude = new File(directory, DOCKER_INCLUDE);
         if (dockerInclude.exists()) {
             ArrayList<String> includes = new ArrayList<>(Arrays.asList(FileUtils.fileReadArray(dockerInclude)));
-            fileSet.setIncludes(includes.toArray(new String[includes.size()]));
+            fileSet.setIncludes(includes.toArray(new String[0]));
         }
     }
 

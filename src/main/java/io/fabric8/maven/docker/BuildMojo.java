@@ -44,54 +44,13 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         if (skipBuild) {
             return;
         }
-        List<ImageConfiguration> resolvedImages = getResolvedImages();
-
-        if (resolvedImages.isEmpty()) {
-            resolvedImages = addAutoDockerfileConfigIfFound();
-        }
 
         // Iterate over all the ImageConfigurations and process one by one
-        for (ImageConfiguration imageConfig : resolvedImages) {
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
             processImageConfig(hub, imageConfig);
         }
     }
 
-    private List<ImageConfiguration> addAutoDockerfileConfigIfFound() {
-        String dockerFile = findDefaultDockerFile();
-        if (dockerFile != null) {
-            // No configured name, so create one from maven GAV
-            if (name == null) {
-                name = project.getGroupId() + "/" + project.getArtifactId() + ":" +
-                       project.getVersion();
-            }
-            BuildImageConfiguration buildConfig =
-                new BuildImageConfiguration.Builder()
-                    .dockerFile(dockerFile)
-                    .build();
-            buildConfig.initAndValidate(log);
-            ImageConfiguration imageConfiguration = new ImageConfiguration.Builder()
-                    .name(name)
-                    .buildConfig(buildConfig)
-                    .build();
-            return Collections.singletonList(imageConfiguration);
-        }
-        return Collections.emptyList();
-    }
-
-    /**
-     * Fetch the location of docker file in case of simple configuration
-     *
-     * @return directory containing the Dockerfile
-     */
-    private String findDefaultDockerFile() {
-        String baseDir = project.getBasedir().getPath();
-        for (String tryPath : new String[] { baseDir + "/Dockerfile", baseDir + "/src/main/docker/Dockerfile"} ) {
-            if (new File(tryPath).exists()) {
-                return tryPath;
-            }
-        }
-        return null;
-    }
 
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
             throws MojoExecutionException, DockerAccessException {
@@ -110,7 +69,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     // We ignore an already existing date file and always return the current date
     @Override
-    protected Date getReferenceDate() throws MojoExecutionException {
+    protected Date getReferenceDate() {
         return new Date();
     }
 
