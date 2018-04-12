@@ -315,7 +315,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             this);                     // customizer (can be overwritten by a subclass)
 
         // Check for simple Dockerfile mode
-        if (resolvedImages.size() == 0) {
+        if (resolvedImages.isEmpty()) {
             File topDockerfile = new File(project.getBasedir(),"Dockerfile");
             if (topDockerfile.exists()) {
                 resolvedImages.add(createSimpleDockerfileConfig(topDockerfile));

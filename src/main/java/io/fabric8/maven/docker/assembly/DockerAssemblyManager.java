@@ -323,7 +323,6 @@ public class DockerAssemblyManager {
     }
 
     private void addDockerIncludesExcludesIfPresent(DefaultFileSet fileSet, MojoParameters params) throws IOException {
-        File directory = fileSet.getDirectory();
         addDockerExcludes(fileSet, params);
         addDockerIncludes(fileSet);
     }
