@@ -55,6 +55,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
+        assertEquals(config.getContextDir(),new File("src/docker"));
     }
 
     @Test
@@ -65,6 +66,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
+        assertEquals(config.getContextDir(),new File("src/docker"));
     }
 
     @Test
@@ -85,6 +87,37 @@ public class BuildImageConfigurationTest {
                 dockerFileDir("/tmp/").
                 dockerFile("/Dockerfile").build();
         config.initAndValidate(logger);
+    }
+
+    @Test
+    public void contextDir() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        contextDir("target").build();
+        config.initAndValidate(logger);
+        assertEquals(new File("target"), config.getContextDir());
+    }
+
+    @Test
+    public void contextDirAndDockerfile() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        dockerFile("src/docker/Dockerfile").
+                        contextDir("target").build();
+        config.initAndValidate(logger);
+        assertEquals(new File("src/docker/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target"), config.getContextDir());
+    }
+
+    @Test
+    public void contextDirAndDockerfileDir() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        dockerFileDir("src/docker").
+                        contextDir("target").build();
+        config.initAndValidate(logger);
+        assertEquals(new File("src/docker/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target"), config.getContextDir());
     }
 
     @Test

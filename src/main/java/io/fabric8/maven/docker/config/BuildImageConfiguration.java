@@ -19,6 +19,13 @@ public class BuildImageConfiguration implements Serializable {
     public static final String DEFAULT_CLEANUP = "try";
 
     /**
+     * Directory is used as build context.
+     * If not specified, dockerfile's parent directory is used as build context.
+     */
+    @Parameter
+    private String contextDir;
+
+    /**
      * Directory holding an external Dockerfile which is used to build the
      * image. This Dockerfile will be enriched by the addition build configuration
      */
@@ -26,7 +33,7 @@ public class BuildImageConfiguration implements Serializable {
     private String dockerFileDir;
 
     /**
-     * Path to a dockerfile to use. Its parent directory is used as build context (i.e. as <code>dockerFileDir</code>).
+     * Path to a dockerfile to use.
      * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly givem
      * <code>dockerFileDir</code>
      */
@@ -148,6 +155,14 @@ public class BuildImageConfiguration implements Serializable {
 
     public boolean isDockerFileMode() {
         return dockerFileFile != null;
+    }
+
+    public File getContextDir() {
+        return contextDir != null ? new File(contextDir) : getDockerFile().getParentFile();
+    }
+
+    public String getContextDirRaw() {
+        return contextDir;
     }
 
     public File getDockerFile() {
@@ -306,6 +321,10 @@ public class BuildImageConfiguration implements Serializable {
         return args;
     }
 
+    public File getAbsoluteContextDirPath(MojoParameters mojoParams) {
+        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getContextDir().getPath());
+    }
+
     public File getAbsoluteDockerFilePath(MojoParameters mojoParams) {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
     }
@@ -327,6 +346,11 @@ public class BuildImageConfiguration implements Serializable {
             } else {
                 this.config = DeepCopy.copy(that);
             }
+        }
+
+        public Builder contextDir(String dir) {
+            config.contextDir = dir;
+            return this;
         }
 
         public Builder dockerFileDir(String dir) {

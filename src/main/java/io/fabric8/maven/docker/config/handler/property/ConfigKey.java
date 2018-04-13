@@ -47,6 +47,7 @@ public enum ConfigKey {
     NOCACHE,
     OPTIMISE,
     CMD,
+    CONTEXT_DIR,
     DEPENDS_ON,
     DOMAINNAME,
     DNS,
