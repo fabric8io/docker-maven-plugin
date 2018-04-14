@@ -374,6 +374,15 @@ public class EnvUtil {
         return System.getenv("DOCKER_REGISTRY");
     }
 
+    // sometimes registries might be specified with https? schema, sometimes not
+    public static String ensureRegistryHttpUrl(String registry) {
+        if (registry.toLowerCase().startsWith("http")) {
+            return registry;
+        }
+        // Default to https:// schema
+        return "https://" + registry;
+    }
+
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
         return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
     }

@@ -174,14 +174,14 @@ public class EnvUtilTest {
 
 
     }
-    
+
     @Test
     public void isValidWindowsFileName() {
-    	
+
     	assertFalse(EnvUtil.isValidWindowsFileName("/Dockerfile"));
     	assertTrue(EnvUtil.isValidWindowsFileName("Dockerfile"));
     	assertFalse(EnvUtil.isValidWindowsFileName("Dockerfile/"));
-    }    
+    }
 
     private Properties getTestProperties(String ... vals) {
         Properties ret = new Properties();
@@ -192,4 +192,18 @@ public class EnvUtilTest {
     }
 
     private Object $(Object ... o) { return o; }
+
+    @Test
+    public void ensureRegistryHttpUrl() {
+        String[] data = {
+            "https://index.docker.io/v1/", "https://index.docker.io/v1/",
+            "index.docker.io/v1/", "https://index.docker.io/v1/",
+            "http://index.docker.io/v1/", "http://index.docker.io/v1/",
+            "registry.fuse-ignite.openshift.com", "https://registry.fuse-ignite.openshift.com"
+        };
+
+        for (int i = 0; i < data.length; i +=2) {
+            assertEquals(">> " + data[i], data[i+1], EnvUtil.ensureRegistryHttpUrl(data[i]));
+        }
+    }
 }

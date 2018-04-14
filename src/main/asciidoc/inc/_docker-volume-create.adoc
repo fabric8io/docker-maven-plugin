@@ -30,7 +30,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 ----
 
 [[volume-create-configuration]]
-=== Configuration
+.Configuration
 
 The following options are available when creating volumes:
 
