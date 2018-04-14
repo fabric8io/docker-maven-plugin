@@ -38,7 +38,7 @@ public class CredentialHelperClient {
     public AuthConfig getAuthConfig(String registryToLookup) throws MojoExecutionException {
         try {
             final GetCommand getCommand = new GetCommand();
-            return toAuthConfig(getCommand.getCredentialNode("https://" + registryToLookup));
+            return toAuthConfig(getCommand.getCredentialNode(EnvUtil.ensureRegistryHttpUrl(registryToLookup)));
         } catch (IOException e) {
             throw new MojoExecutionException("Error getting the credentials for " + registryToLookup + " from the configured credential helper",e);
         }
@@ -69,7 +69,7 @@ public class CredentialHelperClient {
 
         @Override
         protected void processLine(String line) {
-            log.info("Credentials helper reply for \"%s\" is %s",CredentialHelperClient.this.credentialHelperName,line);
+            log.verbose("Credentials helper reply for \"%s\" is %s",CredentialHelperClient.this.credentialHelperName,line);
             version = line;
         }
 

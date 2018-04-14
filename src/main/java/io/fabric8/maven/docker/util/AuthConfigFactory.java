@@ -355,7 +355,7 @@ public class AuthConfigFactory {
         if (auths.has(registryToLookup)) {
             return auths.getJSONObject(registryToLookup);
         }
-        String registryWithScheme = "https://" + registryToLookup;
+        String registryWithScheme = EnvUtil.ensureRegistryHttpUrl(registryToLookup);
         if (auths.has(registryWithScheme)) {
             return auths.getJSONObject(registryWithScheme);
         }
