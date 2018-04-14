@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.25.1,</span>
-<span id="revdate">2018-04-12</span>
+<span id="revnumber">version 0.25.2,</span>
+<span id="revdate">2018-04-14</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -573,16 +573,8 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#docker:logs">5.7. <strong>docker:logs</strong></a></li>
 <li><a href="#docker:source">5.8. <strong>docker:source</strong></a></li>
 <li><a href="#docker:save">5.9. <strong>docker:save</strong></a></li>
-<li><a href="#docker:volume-create">5.10. <strong>docker:volume-create</strong></a>
-<ul class="sectlevel3">
-<li><a href="#volume-create-configuration">5.10.1. Configuration</a></li>
-</ul>
-</li>
-<li><a href="#docker:volume-remove">5.11. <strong>docker:volume-remove</strong></a>
-<ul class="sectlevel3">
-<li><a href="#volume-remove-configuration">5.11.1. Configuration</a></li>
-</ul>
-</li>
+<li><a href="#docker:volume-create">5.10. <strong>docker:volume-create</strong></a></li>
+<li><a href="#docker:volume-remove">5.11. <strong>docker:volume-remove</strong></a></li>
 </ul>
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
@@ -848,7 +840,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.25.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.25.2<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1500,14 +1492,14 @@ The files of the assembly are stored in a build context relative directory <code
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
 </div>
 <div id="simple-dockerfile-build" class="paragraph">
-<div class="title">Simple Dockerfile mode</div>
+<div class="title">Simple Dockerfile build</div>
 <p>When only a single image should be built with a Dockerfile no XML configuration is needed at all.
 All what need to be done is to place a <code>Dockerfile</code> into the top-level module directory, alongside to <code>pom.xml</code>.
-You can still configure <a href="#global-configuration">global aspect</a> in the plugin configuration, but as soon as you add an <code>&lt;image&gt;</code> in the XML configuration, you need to configure also the build explicitly.</p>
+You can still configure <a href="#global-configuration">global aspects</a> in the plugin configuration, but as soon as you add an <code>&lt;image&gt;</code> in the XML configuration, you need to configure also the build explicitly.</p>
 </div>
 <div class="paragraph">
-<p>The image name is by default set from the Maven coordinates: <code>${project.groupId}/${project.artifactId}:${project.version}</code>
-This name can be overwritten with a property <code>docker.name</code> which can also hold placeholders as described in <a href="#image-name-placeholders">Name placeholders</a>.</p>
+<p>The image name is by default set from the Maven coordinates (<code>%g/%a:%l</code>, see <a href="#image-name-placeholders">Name Placeholders</a> for an explanation of the params which are essentially the Maven GAV)
+This name can be set with the property <code>docker.name</code>.</p>
 </div>
 <div id="build-filtering" class="paragraph">
 <div class="title">Filtering</div>
@@ -3814,9 +3806,8 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="volume-create-configuration">5.10.1. Configuration</h4>
-<div class="paragraph">
+<div id="volume-create-configuration" class="paragraph">
+<div class="title">Configuration</div>
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
@@ -3851,7 +3842,6 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </tbody>
 </table>
 </div>
-</div>
 <div class="sect2">
 <h3 id="docker:volume-remove">5.11. <strong>docker:volume-remove</strong></h3>
 <div class="paragraph">
@@ -3877,9 +3867,8 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="volume-remove-configuration">5.11.1. Configuration</h4>
-<div class="paragraph">
+<div id="volume-remove-configuration" class="paragraph">
+<div class="title">Configuration</div>
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
@@ -3901,7 +3890,6 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 </tr>
 </tbody>
 </table>
-</div>
 </div>
 </div>
 </div>
@@ -5013,8 +5001,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.25.1<br>
-Last updated 2018-04-12 11:06:45 UTC
+Version 0.25.2<br>
+Last updated 2018-04-14 08:03:09 UTC
 </div>
 </div>
 </body>
