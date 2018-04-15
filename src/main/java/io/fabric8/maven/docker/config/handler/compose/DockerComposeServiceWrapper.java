@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.config.handler.compose;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.VolumeBindingUtil;
@@ -172,22 +173,35 @@ class DockerComposeServiceWrapper {
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
-            return new NetworkConfig(NetworkConfig.Mode.custom, name);
+            return new NetworkConfig(NetworkConfig.Mode.custom, toJoin.get(0));
         } else if (networks instanceof Map) {
             Map<String,Object> toJoin = (Map<String, Object>) networks;
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
             String custom = toJoin.keySet().iterator().next();
-            NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
+            final NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
             Object aliases = toJoin.get(custom);
             if (aliases != null) {
-                if (!(aliases instanceof List)) {
-                    throwIllegalArgumentException("'networks:' Aliases must be given as a list of string");
-                }
-                for (String alias : (List<String>) aliases) {
-                    ret.addAlias(alias);
-                }
+            	if(aliases instanceof List) {
+                    for (String alias : (List<String>) aliases) {
+                        ret.addAlias(alias);
+                    }
+            	} else if(aliases instanceof LinkedHashMap) {
+            		LinkedHashMap<String, ArrayList<String>> map = (LinkedHashMap<String, ArrayList<String>>)aliases;
+            		if(map.containsKey("aliases")) {
+            			map.get("aliases").forEach(new Consumer<String>() {
+							@Override
+							public void accept(String t) {
+								ret.addAlias(t);
+							}
+						});
+            		} else {
+            			throwIllegalArgumentException("'networks:' Aliases must be given as a linked has map of strings. 'aliases' key not founded");
+            		}
+            	} else {
+            		throwIllegalArgumentException("'networks:' Aliases must be given as a list of string ");
+            	}                
             }
             return ret;
         } else {

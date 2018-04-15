@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
@@ -38,187 +39,225 @@ import static org.junit.Assert.fail;
  */
 public class DockerComposeConfigHandlerTest {
 
-    @Injectable
-    ImageConfiguration unresolved;
+	@Injectable
+	ImageConfiguration unresolved;
 
-    @Mocked
-    MavenProject project;
+	@Mocked
+	MavenProject project;
 
-    @Mocked
-    MavenSession session;
+	@Mocked
+	MavenSession session;
 
-    @Mocked
-    MavenReaderFilter readerFilter;
+	@Mocked
+	MavenReaderFilter readerFilter;
 
-    private DockerComposeConfigHandler handler;
+	private DockerComposeConfigHandler handler;
 
-    @Before
-    public void setUp() throws Exception {
-        handler = new DockerComposeConfigHandler();
-        handler.readerFilter = readerFilter;
-    }
+	@Before
+	public void setUp() throws Exception {
+		handler = new DockerComposeConfigHandler();
+		handler.readerFilter = readerFilter;
+	}
 
+	@Test
+	public void simple() throws IOException, MavenFilteringException {
+		setupComposeExpectations("docker-compose.yml");
+		List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+		assertEquals(1, configs.size());
+		validateRunConfiguration(configs.get(0).getRunConfiguration());
+	}
 
-    @Test
-    public void simple() throws IOException, MavenFilteringException {
-        setupComposeExpectations("docker-compose.yml");
-        List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
-        assertEquals(1, configs.size());
-        validateRunConfiguration(configs.get(0).getRunConfiguration());
-    }
+	@Test
+	public void networkAliases() throws IOException, MavenFilteringException {
+		setupComposeExpectations("docker-compose-network-aliases.yml");
+		List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
+		
+		// Service 1 has 1 network (network1) with 2 aliases (alias1, alias2)
+		NetworkConfig netSvc = configs.get(0).getRunConfiguration().getNetworkingConfig();
+		assertEquals("network1", netSvc.getName());
+		assertEquals(2, netSvc.getAliases().size());
+		assertEquals("alias1", netSvc.getAliases().get(0));
+		assertEquals("alias2", netSvc.getAliases().get(1));
 
-    @Test
-    public void positiveVersionTest() throws IOException, MavenFilteringException {
-        for (String composeFile : new String[] { "version/compose-version-2.yml", "version/compose-version-2x.yml"} ) {
-            setupComposeExpectations(composeFile);
-            assertNotNull(handler.resolve(unresolved, project, session));
-        }
+		// Service 2 has 1 network (network1) with no aliases
+		netSvc = configs.get(1).getRunConfiguration().getNetworkingConfig();
+		assertEquals("network1", netSvc.getName());
+		assertEquals(0, netSvc.getAliases().size());
 
-    }
+		// Service 3 has 1 network (network1) with 1 aliase (alias1)
+		netSvc = configs.get(2).getRunConfiguration().getNetworkingConfig();
+		assertEquals("network1", netSvc.getName());
+		assertEquals(1, netSvc.getAliases().size());
+		assertEquals("alias1", netSvc.getAliases().get(0));
+}
 
-    @Test
-    public void negativeVersionTest() throws IOException, MavenFilteringException {
-        for (String composeFile : new String[] { "version/compose-wrong-version.yml", "version/compose-no-version.yml"} ) {
-            try {
-                setupComposeExpectations(composeFile);
-                handler.resolve(unresolved, project, session);
-                fail();
-            } catch (ExternalConfigHandlerException exp) {
-                assertTrue(exp.getMessage().contains(("2.x")));
-            }
-        }
+	@Test
+	public void positiveVersionTest() throws IOException, MavenFilteringException {
+		for (String composeFile : new String[] { "version/compose-version-2.yml", "version/compose-version-2x.yml" }) {
+			setupComposeExpectations(composeFile);
+			assertNotNull(handler.resolve(unresolved, project, session));
+		}
 
-    }
+	}
 
-    private void setupComposeExpectations(final String file) throws IOException, MavenFilteringException {
-        new Expectations() {{
-            final File input = getAsFile("/compose/" + file);
+	@Test
+	public void negativeVersionTest() throws IOException, MavenFilteringException {
+		for (String composeFile : new String[] { "version/compose-wrong-version.yml",
+				"version/compose-no-version.yml" }) {
+			try {
+				setupComposeExpectations(composeFile);
+				handler.resolve(unresolved, project, session);
+				fail();
+			} catch (ExternalConfigHandlerException exp) {
+				assertTrue(exp.getMessage().contains(("2.x")));
+			}
+		}
 
-            unresolved.getExternalConfig();
-            result = new HashMap<String,String>() {{
-                put("composeFile", input.getAbsolutePath());
-                // provide a base directory that actually exists, so that relative paths referenced by the
-                // docker-compose.yaml file can be resolved
-                // (note: this is different than the directory returned by 'input.getParent()')
-                URL baseResource = this.getClass().getResource("/");
-                String baseDir = baseResource.getFile();
-                assertNotNull("Classpath resource '/' does not have a File: '" + baseResource, baseDir);
-                assertTrue("Classpath resource '/' does not resolve to a File: '" + new File(baseDir) + "' does not exist.", new File(baseDir).exists());
-                put("basedir", baseDir);
-            }};
+	}
 
-            readerFilter.filter((MavenReaderFilterRequest) any);
-            result = new FileReader(input);
-        }};
-    }
+	private void setupComposeExpectations(final String file) throws IOException, MavenFilteringException {
+		new Expectations() {
+			{
+				final File input = getAsFile("/compose/" + file);
 
-    private File getAsFile(String resource) throws IOException {
-        File tempFile = File.createTempFile("compose",".yml");
-        InputStream is = getClass().getResourceAsStream(resource);
-        FileUtils.copyInputStreamToFile(is,tempFile);
-        return tempFile;
-    }
+				unresolved.getExternalConfig();
+				result = new HashMap<String, String>() {
+					{
+						put("composeFile", input.getAbsolutePath());
+						// provide a base directory that actually exists, so that relative paths
+						// referenced by the
+						// docker-compose.yaml file can be resolved
+						// (note: this is different than the directory returned by 'input.getParent()')
+						URL baseResource = this.getClass().getResource("/");
+						String baseDir = baseResource.getFile();
+						assertNotNull("Classpath resource '/' does not have a File: '" + baseResource, baseDir);
+						assertTrue("Classpath resource '/' does not resolve to a File: '" + new File(baseDir)
+								+ "' does not exist.", new File(baseDir).exists());
+						put("basedir", baseDir);
+					}
+				};
 
+				readerFilter.filter((MavenReaderFilterRequest) any);
+				result = new FileReader(input);
+			}
+		};
+	}
 
-     void validateRunConfiguration(RunImageConfiguration runConfig) {
+	private File getAsFile(String resource) throws IOException {
+		File tempFile = File.createTempFile("compose", ".yml");
+		InputStream is = getClass().getResourceAsStream(resource);
+		FileUtils.copyInputStreamToFile(is, tempFile);
+		return tempFile;
+	}
 
-        validateVolumeConfig(runConfig.getVolumeConfiguration());
+	void validateRunConfiguration(RunImageConfiguration runConfig) {
 
-        assertEquals(a("CAP"), runConfig.getCapAdd());
-        assertEquals(a("CAP"), runConfig.getCapDrop());
-        assertEquals("command.sh", runConfig.getCmd().getShell());
-        assertEquals(a("8.8.8.8"), runConfig.getDns());
-        assertEquals(a("example.com"), runConfig.getDnsSearch());
-        assertEquals("domain.com", runConfig.getDomainname());
-        assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
-        assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
-        assertEquals("subdomain", runConfig.getHostname());
-        assertEquals(a("redis","link1"), runConfig.getLinks());
-        assertEquals((Long) 1L, runConfig.getMemory());
-        assertEquals((Long) 1L, runConfig.getMemorySwap());
-        assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());
-        assertEquals(null,runConfig.getEnvPropertyFile());
+		validateVolumeConfig(runConfig.getVolumeConfiguration());
 
-        assertEquals(null, runConfig.getPortPropertyFile());
-        assertEquals(a("8081:8080"), runConfig.getPorts());
-        assertEquals(true, runConfig.getPrivileged());
-        assertEquals("tomcat", runConfig.getUser());
-        assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
-        assertEquals("foo", runConfig.getWorkingDir());
+		assertEquals(a("CAP"), runConfig.getCapAdd());
+		assertEquals(a("CAP"), runConfig.getCapDrop());
+		assertEquals("command.sh", runConfig.getCmd().getShell());
+		assertEquals(a("8.8.8.8"), runConfig.getDns());
+		assertEquals(a("example.com"), runConfig.getDnsSearch());
+		assertEquals("domain.com", runConfig.getDomainname());
+		assertEquals("entrypoint.sh", runConfig.getEntrypoint().getShell());
+		assertEquals(a("localhost:127.0.0.1"), runConfig.getExtraHosts());
+		assertEquals("subdomain", runConfig.getHostname());
+		assertEquals(a("redis", "link1"), runConfig.getLinks());
+		assertEquals((Long) 1L, runConfig.getMemory());
+		assertEquals((Long) 1L, runConfig.getMemorySwap());
+		assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());
+		assertEquals(null, runConfig.getEnvPropertyFile());
 
-        validateEnv(runConfig.getEnv());
+		assertEquals(null, runConfig.getPortPropertyFile());
+		assertEquals(a("8081:8080"), runConfig.getPorts());
+		assertEquals(true, runConfig.getPrivileged());
+		assertEquals("tomcat", runConfig.getUser());
+		assertEquals(a("from"), runConfig.getVolumeConfiguration().getFrom());
+		assertEquals("foo", runConfig.getWorkingDir());
 
-        // not sure it's worth it to implement 'equals/hashcode' for these
-        RestartPolicy policy = runConfig.getRestartPolicy();
-        assertEquals("on-failure", policy.getName());
-        assertEquals(1, policy.getRetry());
-    }
+		validateEnv(runConfig.getEnv());
 
-    /**
-     * Validates the {@link RunVolumeConfiguration} by asserting that:
-     * <ul>
-     *     <li>absolute host paths remain absolute</li>
-     *     <li>access controls are preserved</li>
-     *     <li>relative host paths are resolved to absolute paths correctly</li>
-     * </ul>
-     * @param toValidate the {@code RunVolumeConfiguration} being validated
-     */
-    void validateVolumeConfig(RunVolumeConfiguration toValidate) {
-        final int expectedBindCnt = 4;
-        final List<String> binds = toValidate.getBind();
-        assertEquals("Expected " + expectedBindCnt + " bind statements", expectedBindCnt, binds.size());
+		// not sure it's worth it to implement 'equals/hashcode' for these
+		RestartPolicy policy = runConfig.getRestartPolicy();
+		assertEquals("on-failure", policy.getName());
+		assertEquals(1, policy.getRetry());
+	}
 
-        assertEquals(a("/foo", "/tmp:/tmp:rw", "namedvolume:/volume:ro"), binds.subList(0, expectedBindCnt - 1));
+	/**
+	 * Validates the {@link RunVolumeConfiguration} by asserting that:
+	 * <ul>
+	 * <li>absolute host paths remain absolute</li>
+	 * <li>access controls are preserved</li>
+	 * <li>relative host paths are resolved to absolute paths correctly</li>
+	 * </ul>
+	 * 
+	 * @param toValidate
+	 *            the {@code RunVolumeConfiguration} being validated
+	 */
+	void validateVolumeConfig(RunVolumeConfiguration toValidate) {
+		final int expectedBindCnt = 4;
+		final List<String> binds = toValidate.getBind();
+		assertEquals("Expected " + expectedBindCnt + " bind statements", expectedBindCnt, binds.size());
 
-        // The docker-compose.yml used for testing contains a volume binding string that uses relative paths in the
-        // host portion.  Insure that the relative portion has been resolved properly.
-        String relativeBindString = binds.get(expectedBindCnt - 1);
-        assertHostBindingExists(relativeBindString);
-    }
+		assertEquals(a("/foo", "/tmp:/tmp:rw", "namedvolume:/volume:ro"), binds.subList(0, expectedBindCnt - 1));
 
-    /**
-     * Parses the supplied binding string for the host portion, and insures the host portion actually exists on the
-     * filesystem.  Note this method is designed to accommodate both Windows-style and *nix-style absolute paths.
-     * <p>
-     * The {@code docker-compose.yml} used for testing contains volume binding strings which are <em>relative</em>.
-     * When the {@link RunVolumeConfiguration} is built, relative paths in the host portion of the binding string are
-     * resolved to absolute paths.  This method expects a binding string that has already had its relative paths
-     * <em>resolved</em> to absolute paths.  It parses the host portion of the binding string, and asserts that the path
-     * exists on the system.
-     * </p>
-     *
-     *
-     * @param bindString a volume binding string that contains a host portion that is expected to exist on the local
-     *                   system
-     */
-    private void assertHostBindingExists(String bindString) {
-//        System.err.println(">>>> " + bindString);
+		// The docker-compose.yml used for testing contains a volume binding string that
+		// uses relative paths in the
+		// host portion. Insure that the relative portion has been resolved properly.
+		String relativeBindString = binds.get(expectedBindCnt - 1);
+		assertHostBindingExists(relativeBindString);
+	}
 
-        // Extract the host-portion of the volume binding string, accounting for windows platform paths and unix style
-        // paths.  For example:
-        // C:\Users\foo\Documents\workspaces\docker-maven-plugin\target\test-classes\compose\version:/tmp/version
-        // and
-        // /Users/foo/workspaces/docker-maven-plugin/target/test-classes/compose/version:/tmp/version
+	/**
+	 * Parses the supplied binding string for the host portion, and insures the host
+	 * portion actually exists on the filesystem. Note this method is designed to
+	 * accommodate both Windows-style and *nix-style absolute paths.
+	 * <p>
+	 * The {@code docker-compose.yml} used for testing contains volume binding
+	 * strings which are <em>relative</em>. When the {@link RunVolumeConfiguration}
+	 * is built, relative paths in the host portion of the binding string are
+	 * resolved to absolute paths. This method expects a binding string that has
+	 * already had its relative paths <em>resolved</em> to absolute paths. It parses
+	 * the host portion of the binding string, and asserts that the path exists on
+	 * the system.
+	 * </p>
+	 *
+	 *
+	 * @param bindString
+	 *            a volume binding string that contains a host portion that is
+	 *            expected to exist on the local system
+	 */
+	private void assertHostBindingExists(String bindString) {
+		// System.err.println(">>>> " + bindString);
 
-        File file = null;
-        if (bindString.indexOf(":") > 1) {
-            // a unix-style path
-            file = new File(bindString.substring(0, bindString.indexOf(":")));
-        } else {
-            // a windows-style path with a drive letter
-            file = new File(bindString.substring(0, bindString.indexOf(":", 2)));
-        }
-        assertTrue("The file '" + file + "' parsed from the volume binding string '" + bindString + "' does not exist!", file.exists());
-    }
+		// Extract the host-portion of the volume binding string, accounting for windows
+		// platform paths and unix style
+		// paths. For example:
+		// C:\Users\foo\Documents\workspaces\docker-maven-plugin\target\test-classes\compose\version:/tmp/version
+		// and
+		// /Users/foo/workspaces/docker-maven-plugin/target/test-classes/compose/version:/tmp/version
 
-    protected void validateEnv(Map<String, String> env) {
-        assertEquals(2, env.size());
-        assertEquals("name", env.get("NAME"));
-        assertEquals("true", env.get("BOOL"));
-    }
+		File file = null;
+		if (bindString.indexOf(":") > 1) {
+			// a unix-style path
+			file = new File(bindString.substring(0, bindString.indexOf(":")));
+		} else {
+			// a windows-style path with a drive letter
+			file = new File(bindString.substring(0, bindString.indexOf(":", 2)));
+		}
+		assertTrue("The file '" + file + "' parsed from the volume binding string '" + bindString + "' does not exist!",
+				file.exists());
+	}
 
-    protected List<String> a(String ... args) {
-        return Arrays.asList(args);
-    }
+	protected void validateEnv(Map<String, String> env) {
+		assertEquals(2, env.size());
+		assertEquals("name", env.get("NAME"));
+		assertEquals("true", env.get("BOOL"));
+	}
+
+	protected List<String> a(String... args) {
+		return Arrays.asList(args);
+	}
 
 }
