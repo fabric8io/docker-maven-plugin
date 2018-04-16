@@ -7,5 +7,5 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 after_script:
   - env
-  - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=fabric8 -Dsonar.login=${SONAR_TOKEN}"
+  - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONAR_TOKEN}"
   
