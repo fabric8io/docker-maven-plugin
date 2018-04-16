@@ -6,7 +6,7 @@ package io.fabric8.maven.docker.config.handler.property;
  *
  * @author Johan Ström
  */
-enum PropertyMode {
+public enum PropertyMode {
     Only,
     Override,
     Fallback,

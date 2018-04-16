@@ -152,7 +152,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Container hostname
 
 | *docker.imagePropertyConfiguration*
-| Special property to activate property configuration without altering XML file (see <<combining-property-config,Combining property and XML config>>).
+| Special property to activate property configuration without altering XML file (see <<combining-property-config-externally,Activating property configuration externally>>).
 
 | *docker.imagePullPolicy.build*
 | Specific pull policy used when building images. See <<image-pull-policy,imagePullPolicy>> for the possible values.
@@ -327,12 +327,22 @@ configuration (since version 0.25.0), which can have one of the following values
 | Effectively disable properties, same as not specifying the `<external>` section at all.
 |===
 
-For single-image configurations it is also possible to active property
-configuration by setting the property `docker.imagePropertyConfiguration` to a
-valid `property mode`, without adding a `<external>` section.
-This will use properties with default prefix.
-This can be useful if most of configuration is specified in XML/POM file, but there
-is need to override certain configuration values without altering the POM file.
+[[combining-property-config-externally]]
+.Activating property configuration externally
+It also possible to activate property configuration by setting the property `docker.imagePropertyConfiguration` to a
+valid `property mode`, without adding an `<external>` section.
+This will use any properties with default prefix.
+This can be useful if most of the configuration is specified in XML/POM file, but there
+is need to override certain configuration values without altering the POM file (by i.e. adding this to a parent POM or
+global settings.xml).
+
+If set globally (i.e. parent POM), but not wanted locally, the property could be overriden to `skip` to disabled it.
+Note that settings.xml properties take precedence over any properties defined in pom.xml.
+
+For configurations with multiple images, using this property will produce an error. All images would use the docker prefix,
+they would all be given the same configuration, and that is probably not intended.
+This error can be avoided by adding an explicit <external> configuration element with an alternative <prefix> to all
+images (or at least all but one).
 
 .Merging POM and property values
 For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment
