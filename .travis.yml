@@ -2,9 +2,9 @@ language: java
 jdk:
   - oraclejdk8
 script:
-  - mvn test -B
+  - mvn test -B -Pjacoco
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 after_script:
-  - "[[ $TRAVIS_PULL_REQUEST == false ]] && mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=fabric8 -Dsonar.login=${SONAR_TOKEN}"
+  - "[ x$TRAVIS_PULL_REQUEST = x ] && mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=fabric8 -Dsonar.login=${SONAR_TOKEN}"
   
