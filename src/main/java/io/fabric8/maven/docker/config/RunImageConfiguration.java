@@ -1,14 +1,16 @@
 package io.fabric8.maven.docker.config;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
+import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author roland
@@ -113,7 +115,20 @@ public class RunImageConfiguration implements Serializable {
     private List<String> ports;
 
     @Parameter
+    @Deprecated
     private NamingStrategy namingStrategy;
+
+    /**
+     * A pattern to define the naming of the container where
+     *
+     * - %a for the "alias" mode
+     * - %n for the image name
+     * - %t for a timestamp
+     * - %i for an increasing index of container names
+     *
+     */
+    @Parameter
+    private String containerNamePattern;
 
     /**
      * Property key part used to expose the container ip when running.
@@ -301,6 +316,7 @@ public class RunImageConfiguration implements Serializable {
     }
 
     // Naming scheme for how to name container
+    @Deprecated // for backward compatibility
     public enum NamingStrategy {
         /**
          * No extra naming
@@ -312,13 +328,15 @@ public class RunImageConfiguration implements Serializable {
         alias
     }
 
-    public NamingStrategy getNamingStrategy() {
-        return namingStrategy == null ? NamingStrategy.none : namingStrategy;
+    public NamingConfiguration calcualteNamingConfiguration(final Date buildTimestamp,
+                                                            final Collection<Container> existingContainers,
+                                                            final String imageName,
+                                                            final String nameAlias) {
+        return NamingConfiguration.create(containerNamePattern, namingStrategy, imageName, nameAlias, buildTimestamp, existingContainers);
     }
 
     public NamingStrategy getNamingStrategyRaw() {
         return namingStrategy;
-
     }
 
     public String getExposedPropertyKey() {
@@ -520,6 +538,7 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        @Deprecated
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
@@ -527,6 +546,7 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        @Deprecated
         public Builder namingStrategy(NamingStrategy namingStrategy) {
             config.namingStrategy = namingStrategy;
             return this;

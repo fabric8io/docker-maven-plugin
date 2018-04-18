@@ -1,16 +1,18 @@
 package io.fabric8.maven.docker.config;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugins.annotations.Parameter;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author roland
@@ -147,6 +149,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
     public String getRegistry() {
         return registry;
+    }
+
+    public NamingConfiguration calculateNamingConfiguration(final Date buildTimestamp, final List<Container> existingContainers) {
+        return getRunConfiguration().calcualteNamingConfiguration(buildTimestamp, existingContainers, getName(), getAlias());
     }
 
     @Override

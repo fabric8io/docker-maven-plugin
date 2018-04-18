@@ -8,20 +8,43 @@ package io.fabric8.maven.docker;
  * the License.
  */
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
-
 import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NamingConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.service.*;
+import io.fabric8.maven.docker.service.ImagePullManager;
+import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.service.RunService;
+import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.codehaus.plexus.util.StringUtils;
+
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -138,7 +161,7 @@ public class StartMojo extends AbstractDockerMojo {
                     // Move from waiting to starting status
                     imagesStarting.add(image);
                     imagesWaitingToStart.remove(image);
-                    
+
                     if (!startParallel) {
                         waitForStartedContainer(hub, containerStartupService, startedContainerAliases, imagesStarting);
                     }
@@ -241,18 +264,21 @@ public class StartMojo extends AbstractDockerMojo {
     private void startImage(final ImageConfiguration image,
                             final ServiceHub hub,
                             final ExecutorCompletionService<StartedContainer> startingContainers,
-                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) {
+                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) throws MojoExecutionException, DockerAccessException {
 
         final RunService runService = hub.getRunService();
+        final QueryService queryService = hub.getQueryService();
         final Properties projProperties = project.getProperties();
         final RunImageConfiguration runConfig = image.getRunConfiguration();
+        final NamingConfiguration namingConfiguration = image.calculateNamingConfiguration(getBuildTimestamp(),
+                queryService.getContainersForImage(image.getName()));
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         startingContainers.submit(new Callable<StartedContainer>() {
             @Override
             public StartedContainer call() throws Exception {
-                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir());
+                final String containerId = runService.createAndStartContainer(image, namingConfiguration, portMapping, getPomLabel(), projProperties, project.getBasedir());
 
                 // Update port-mapping writer
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());

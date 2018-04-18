@@ -1,21 +1,12 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NamingConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.util.Logger;
@@ -23,10 +14,20 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.PomLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Watch service for monitoring changes and restarting containers
@@ -235,8 +236,11 @@ public class WatchService {
                 }
                 runService.stopPreviouslyStartedContainer(id, false, false);
 
+                final NamingConfiguration namingConfiguration = imageConfig.calculateNamingConfiguration(watcher.getWatchContext().getBuildTimestamp(),
+                        queryService.getContainersForImage(imageConfig.getName()));
+
                 // Start new one
-                watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
+                watcher.setContainerId(runService.createAndStartContainer(imageConfig, namingConfiguration, mappedPorts, watcher.getWatchContext().getPomLabel(),
                         watcher.getWatchContext().getMojoParameters().getProject().getProperties(),
                         watcher.getWatchContext().getMojoParameters().getProject().getBasedir()));
             }
@@ -397,6 +401,8 @@ public class WatchService {
 
         private Task<ImageWatcher> containerRestarter;
 
+        private Date buildTimestamp;
+
         public WatchContext() {
         }
 
@@ -446,6 +452,10 @@ public class WatchService {
 
         public Task<ImageWatcher> getContainerRestarter() {
             return containerRestarter;
+        }
+
+        public Date getBuildTimestamp() {
+            return buildTimestamp;
         }
 
         public static class Builder {
@@ -517,6 +527,11 @@ public class WatchService {
 
             public Builder autoCreateCustomNetworks(boolean autoCreateCustomNetworks) {
                 context.autoCreateCustomNetworks = autoCreateCustomNetworks;
+                return this;
+            }
+
+            public Builder buildTimestamp(Date buildTimestamp) {
+                context.buildTimestamp = buildTimestamp;
                 return this;
             }
 

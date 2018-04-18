@@ -86,6 +86,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
                 .removeVolumes(removeVolumes)
+                .buildTimestamp(getBuildTimestamp())
                 .pomLabel(getPomLabel())
                 .mojoParameters(createMojoParameters())
                 .build();
