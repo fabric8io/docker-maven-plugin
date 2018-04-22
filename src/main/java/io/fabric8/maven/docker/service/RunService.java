@@ -537,4 +537,40 @@ public class RunService {
 
         return waited;
     }
+
+    /**
+     * Creates a Volume if a volume is referred to during startup in bind mount mapping and
+     * a VolumeConfiguration exists
+     *
+     * @param hub Service hub
+     * @param volumeBinds volume binds present in ImageConfiguration
+     * @param volumesConfigs VolumeConfigs present
+     * @return List of volumes created
+     * @throws DockerAccessException
+     */
+    public List<String> createVolumesAsPerVolumeBinds(ServiceHub hub, List<String> volumeBinds, List<VolumeConfiguration> volumesConfigs)
+            throws DockerAccessException {
+        Map<String, Integer> indexMap = new HashMap();
+        List<String> volumesCreated = new ArrayList<>();
+
+        for(Integer index = 0; index < volumesConfigs.size(); index++) {
+            indexMap.put(volumesConfigs.get(index).getName(), index);
+        }
+
+        for(String volumeBind : volumeBinds) {
+            if(volumeBind.contains(":")) {
+                volumeBind = volumeBind.substring(0, volumeBind.indexOf(':'));
+            }
+            Integer volumeConfigIndex = indexMap.get(volumeBind);
+            if(volumeConfigIndex != null && volumeConfigIndex >= 0 && volumeConfigIndex < volumesConfigs.size()) {
+                VolumeConfiguration aVolumeConfig = volumesConfigs.get(volumeConfigIndex);
+                hub.getVolumeService().createVolume(aVolumeConfig);
+                volumesCreated.add(aVolumeConfig.getName());
+            } else {
+                log.warn("No volumeBind found with name : " + volumeBind + " " + indexMap.toString());
+            }
+        }
+
+        return volumesCreated;
+    }
 }

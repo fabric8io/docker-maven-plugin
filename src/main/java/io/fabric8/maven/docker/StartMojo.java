@@ -343,6 +343,11 @@ public class StartMojo extends AbstractDockerMojo {
                                                          queryService.hasImage(imageConfig.getName()));
 
             NetworkConfig config = runConfig.getNetworkingConfig();
+            RunVolumeConfiguration runVolumeConfig = runConfig.getVolumeConfiguration();
+            if(!runVolumeConfig.getBind().isEmpty()) {
+                List<VolumeConfiguration> volumes = getVolumes();
+                runService.createVolumesAsPerVolumeBinds(hub, runVolumeConfig.getBind(), volumes);
+            }
             if (autoCreateCustomNetworks && config.isCustomNetwork()) {
                 runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
             }
