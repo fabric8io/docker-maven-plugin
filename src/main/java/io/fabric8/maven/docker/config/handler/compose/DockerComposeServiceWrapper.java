@@ -190,12 +190,9 @@ class DockerComposeServiceWrapper {
             	} else if(aliases instanceof LinkedHashMap) {
             		LinkedHashMap<String, ArrayList<String>> map = (LinkedHashMap<String, ArrayList<String>>)aliases;
             		if(map.containsKey("aliases")) {
-            			map.get("aliases").forEach(new Consumer<String>() {
-							@Override
-							public void accept(String t) {
-								ret.addAlias(t);
-							}
-						});
+            			for(String alias : map.get("aliases")) {
+            				ret.addAlias(alias);
+            			}
             		} else {
             			throwIllegalArgumentException("'networks:' Aliases must be given as a linked has map of strings. 'aliases' key not founded");
             		}
