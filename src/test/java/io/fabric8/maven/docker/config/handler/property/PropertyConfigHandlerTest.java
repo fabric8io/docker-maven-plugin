@@ -385,6 +385,29 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testBuildFromDockerFileMerged() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .name("myimage")
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .buildConfig(new BuildImageConfiguration.Builder()
+                        .dockerFile("/some/path")
+                        .build()
+                )
+                .build();
+
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration, props()
+        );
+
+        assertEquals(1, configs.size());
+
+        BuildImageConfiguration buildConfiguration = configs.get(0).getBuildConfiguration();
+        assertNotNull(buildConfiguration);
+        buildConfiguration.initAndValidate(null);
+        assertEquals("/some/path", buildConfiguration.getDockerFile().getAbsolutePath().toString());
+    }
+
+    @Test
     public void testEnvAndLabels() throws Exception {
         List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
