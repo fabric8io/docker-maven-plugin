@@ -330,19 +330,20 @@ configuration (since version 0.25.0), which can have one of the following values
 [[combining-property-config-externally]]
 .Activating property configuration externally
 It also possible to activate property configuration by setting the property `docker.imagePropertyConfiguration` to a
-valid `property mode`, without adding an `<external>` section.
-This will use any properties with default prefix.
+valid `property mode`, without adding an `<external>` section. The plugin will then use any properties with default `docker.` prefix.
 This can be useful if most of the configuration is specified in XML/POM file, but there
-is need to override certain configuration values without altering the POM file (by i.e. adding this to a parent POM or
+is need to override certain configuration values without altering the POM file (instead add this to a parent POM or
 global settings.xml).
 
-If set globally (i.e. parent POM), but not wanted locally, the property could be overriden to `skip` to disabled it.
-Note that settings.xml properties take precedence over any properties defined in pom.xml.
+If set in parent POM, but not wanted in specific project, the property could be overriden locally with the value `skip`
+to disabled property configuration for that particular project.
+If set in settings.xml however, by Maven design, that value will always take precedence over any properties defined in
+pom.xml.
 
-For configurations with multiple images, using this property will produce an error. All images would use the docker prefix,
-they would all be given the same configuration, and that is probably not intended.
+For configurations with multiple images, using this property will produce an error. All images would then
+use the same `docker.` property prefix, resulting in multiple identical configurations.
 This error can be avoided by adding an explicit <external> configuration element with an alternative <prefix> to all
-images (or at least all but one).
+images (or at least all but one). Since they then have different prefixes, it would be OK.
 
 .Merging POM and property values
 For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment
