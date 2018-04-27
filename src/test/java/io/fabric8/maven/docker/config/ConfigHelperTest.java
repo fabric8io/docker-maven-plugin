@@ -69,8 +69,7 @@ public class ConfigHelperTest {
             ConfigHelper.validateExternalPropertyActivation(project, images);
             fail();
         }catch(MojoFailureException ex) {
-            assertEquals("Configuration error: Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images without explicit image external configuration.",
-                    ex.getMessage());
+            assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
         }
 
         // When one of the images are configured externally from other source, it is OK with two images.
@@ -93,8 +92,7 @@ public class ConfigHelperTest {
             ConfigHelper.validateExternalPropertyActivation(project, images);
             fail();
         }catch(MojoFailureException ex) {
-            assertEquals("Configuration error: Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images without explicit image external configuration.",
-                    ex.getMessage());
+            assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
         }
 
         // With no external properly, it works.
