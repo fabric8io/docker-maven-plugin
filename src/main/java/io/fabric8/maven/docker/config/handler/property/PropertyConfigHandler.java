@@ -348,9 +348,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             return true;
         }
 
-        if(!DEFAULT_PREFIX.equals(getPrefix(externalConfig)))
+        if(externalConfig.get("prefix") != null)
         {
-            // This image uses a non-default prefix
+            // This image has a specified prefix. If multiple images have explicitly set docker. as prefix we
+            // assume user know what they are doing and allow it.
             return true;
         }
 

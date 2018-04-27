@@ -340,10 +340,13 @@ to disabled property configuration for that particular project.
 If set in settings.xml however, by Maven design, that value will always take precedence over any properties defined in
 pom.xml.
 
-For configurations with multiple images, using this property will produce an error. All images would then
-use the same `docker.` property prefix, resulting in multiple identical configurations.
-This error can be avoided by adding an explicit <external> configuration element with an alternative <prefix> to all
-images (or at least all but one). Since they then have different prefixes, it would be OK.
+For configurations with multiple images, using this property will by default produce an error. All images would then
+use the same `docker` property prefix, resulting in multiple identical configurations.
+This can be overruled by adding an explicit <external> configuration element with an explicit <prefix> to all
+images (or at least all but one). Normally you'd want to use different prefix for each image, but if explicitly set
+it does allow you to use the same prefix (even `docker`) on all images. This is useful in case you just want to share
+a few properties. This only makes sense when `property mode` is _override_ or _fallback_ and image-specific configuration
+are defined in the POM configuration.
 
 .Merging POM and property values
 For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment

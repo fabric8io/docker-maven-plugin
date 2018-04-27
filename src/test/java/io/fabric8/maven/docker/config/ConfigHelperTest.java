@@ -79,9 +79,9 @@ public class ConfigHelperTest {
 
         ConfigHelper.validateExternalPropertyActivation(project, images);
 
-        // Or if prefix is non-default
+        // Or if prefix is set explicitly
         externalConfig.put("type", "properties");
-        externalConfig.put("prefix", "docker2");
+        externalConfig.put("prefix", "docker");
 
         ConfigHelper.validateExternalPropertyActivation(project, images);
 
