@@ -690,10 +690,11 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     private void makeExternalConfigUse(PropertyMode mode) {
         Map<String, String> externalConfig = imageConfiguration.getExternalConfig();
         externalConfig.put("type", "properties");
-        if(mode != null)
+        if(mode != null) {
             externalConfig.put("mode", mode.name());
-        else
+        } else {
             externalConfig.remove("mode");
+        }
     }
 
     private List<ImageConfiguration> resolveImage(ImageConfiguration image, final Properties properties) {

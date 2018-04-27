@@ -338,16 +338,21 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     public static boolean canCoexistWithOtherPropertyConfiguredImages(Map<String, String> externalConfig) {
-        if(externalConfig == null || externalConfig.isEmpty())
+        if(externalConfig == null || externalConfig.isEmpty()) {
             return false;
+        }
 
         if(!TYPE_NAME.equals(externalConfig.get("type")))
+        {
             // This images loads config from something totally different
             return true;
+        }
 
         if(!DEFAULT_PREFIX.equals(getPrefix(externalConfig)))
+        {
             // This image uses a non-default prefix
             return true;
+        }
 
         return false;
     }
