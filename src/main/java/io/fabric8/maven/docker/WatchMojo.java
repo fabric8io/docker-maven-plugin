@@ -16,11 +16,11 @@ package io.fabric8.maven.docker;/*
  */
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.NamingStrategy;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -66,6 +66,19 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
     protected boolean autoCreateCustomNetworks;
 
+    /**
+     * Default value for the naming strategy for containers.
+     */
+    @Parameter(property = "docker.namingStrategy", defaultValue = "auto")
+    protected NamingStrategy namingStrategy;
+
+    /**
+     * Container prefix for the naming strategy auto, the final container name will be
+     * &lt;prefix&gt;_&lt;image name&gt;
+     */
+    @Parameter(property = "docker.containerPrefix", defaultValue = "${project.name}")
+    protected String containerPrefix;
+
     @Override
     protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
                                                                        MojoExecutionException {
@@ -83,6 +96,8 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .watchPostGoal(watchPostGoal)
                 .watchPostExec(watchPostExec)
                 .autoCreateCustomNetworks(autoCreateCustomNetworks)
+                .defaultNamingStrategy(namingStrategy)
+                .containerPrefix(containerPrefix)
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
                 .removeVolumes(removeVolumes)

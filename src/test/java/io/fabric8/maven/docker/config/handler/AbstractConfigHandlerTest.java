@@ -1,13 +1,14 @@
 package io.fabric8.maven.docker.config.handler;
 
-import static org.junit.Assert.assertEquals;
+import io.fabric8.maven.docker.config.NamingStrategy;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractConfigHandlerTest {
 
@@ -17,7 +18,7 @@ public abstract class AbstractConfigHandlerTest {
 
     protected abstract String getEnvPropertyFile();
     
-    protected abstract RunImageConfiguration.NamingStrategy getRunNamingStrategy();
+    protected abstract NamingStrategy getRunNamingStrategy();
     
     protected abstract void validateEnv(Map<String, String> env);
     

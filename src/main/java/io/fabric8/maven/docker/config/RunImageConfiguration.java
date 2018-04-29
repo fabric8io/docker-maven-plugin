@@ -1,14 +1,13 @@
 package io.fabric8.maven.docker.config;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author roland
@@ -300,20 +299,8 @@ public class RunImageConfiguration implements Serializable {
         return tmpfs;
     }
 
-    // Naming scheme for how to name container
-    public enum NamingStrategy {
-        /**
-         * No extra naming
-         */
-        none,
-        /**
-         * Use the alias as defined in the configuration
-         */
-        alias
-    }
-
     public NamingStrategy getNamingStrategy() {
-        return namingStrategy == null ? NamingStrategy.none : namingStrategy;
+        return namingStrategy;
     }
 
     public NamingStrategy getNamingStrategyRaw() {

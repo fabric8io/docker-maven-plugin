@@ -8,24 +8,47 @@ package io.fabric8.maven.docker;
  * the License.
  */
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
-
 import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NamingStrategy;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.service.*;
+import io.fabric8.maven.docker.service.ImagePullManager;
+import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.service.RunService;
+import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
+
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -72,6 +95,19 @@ public class StartMojo extends AbstractDockerMojo {
      */
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
     protected boolean autoCreateCustomNetworks;
+
+    /**
+     * Default value for the naming strategy for containers.
+     */
+    @Parameter(property = "docker.namingStrategy", defaultValue = "auto")
+    protected NamingStrategy namingStrategy;
+
+    /**
+     * Container prefix for the naming strategy auto, the final container name will be
+     * &lt;prefix&gt;_&lt;image name&gt;
+     */
+    @Parameter(property = "docker.containerPrefix", defaultValue = "${project.name}")
+    protected String containerPrefix;
 
     // property file to write out with port mappings
     @Parameter
@@ -256,7 +292,7 @@ public class StartMojo extends AbstractDockerMojo {
         startingContainers.submit(new Callable<StartedContainer>() {
             @Override
             public StartedContainer call() throws Exception {
-                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir());
+                final String containerId = runService.createAndStartContainer(image, portMapping, namingStrategy, containerPrefix, getPomLabel(), projProperties, project.getBasedir());
 
                 // Update port-mapping writer
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());

@@ -500,10 +500,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testNamingScheme() throws Exception  {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NAMING_STRATEGY), RunImageConfiguration.NamingStrategy.alias.toString() };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NAMING_STRATEGY), NamingStrategy.alias.toString() };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(RunImageConfiguration.NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());
+        assertEquals(NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());
     }
 
     @Test
@@ -685,8 +685,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Override
-    protected RunImageConfiguration.NamingStrategy getRunNamingStrategy() {
-        return RunImageConfiguration.NamingStrategy.none;
+    protected NamingStrategy getRunNamingStrategy() {
+        return NamingStrategy.none;
     }
 
     @Override
@@ -798,7 +798,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
-        Assert.assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());
+        Assert.assertEquals(NamingStrategy.none, runConfig.getNamingStrategy());
         assertEquals("/tmp/envProps.txt",runConfig.getEnvPropertyFile());
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
         assertEquals(a("8081:8080"), runConfig.getPorts());
