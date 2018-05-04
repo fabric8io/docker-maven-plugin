@@ -2,10 +2,10 @@ package io.fabric8.maven.docker.config.handler.compose;
 
 import java.io.File;
 import java.util.*;
-import java.util.function.Consumer;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.util.VolumeBindingUtil;
+
 
 class DockerComposeServiceWrapper {
 
@@ -16,14 +16,15 @@ class DockerComposeServiceWrapper {
     private final File baseDir;
 
     DockerComposeServiceWrapper(String serviceName, File composeFile, Map<String, Object> serviceDefinition,
-            ImageConfiguration enclosingImageConfig, File baseDir) {
+                                ImageConfiguration enclosingImageConfig, File baseDir) {
         this.name = serviceName;
         this.composeFile = composeFile;
         this.configuration = serviceDefinition;
         this.enclosingImageConfig = enclosingImageConfig;
 
         if (!baseDir.isAbsolute()) {
-            throw new IllegalArgumentException("Expected the base directory '" + baseDir + "' to be an absolute path.");
+            throw new IllegalArgumentException(
+                    "Expected the base directory '" + baseDir + "' to be an absolute path.");
         }
         this.baseDir = baseDir;
     }
@@ -53,7 +54,7 @@ class DockerComposeServiceWrapper {
         if (build instanceof String) {
             return (String) build;
         }
-        if (!(build instanceof Map)) {
+        if (! (build instanceof Map)) {
             throwIllegalArgumentException("build:' must be either a String or a Map");
         }
         Map<String, String> buildConfig = (Map<String, String>) build;
@@ -119,8 +120,7 @@ class DockerComposeServiceWrapper {
     }
 
     Map<String, String> getEnvironment() {
-        // TODO: load the env files from compose as given with env_file and add them all
-        // to the map
+        // TODO: load the env files from compose as given with env_file and add them all to the map
         return asMap("environment");
     }
 
@@ -152,8 +152,10 @@ class DockerComposeServiceWrapper {
             throwIllegalArgumentException("'logging' has to be a map and not " + logConfig.getClass());
         }
         Map<String, Object> config = (Map<String, Object>) logConfig;
-        return new LogConfiguration.Builder().logDriverName((String) config.get("driver"))
-                .logDriverOpts((Map<String, String>) config.get("options")).build();
+        return new LogConfiguration.Builder()
+            .logDriverName((String) config.get("driver"))
+            .logDriverOpts((Map<String, String>) config.get("options"))
+            .build();
     }
 
     NetworkConfig getNetworkConfig() {
@@ -172,12 +174,12 @@ class DockerComposeServiceWrapper {
             }
             return new NetworkConfig(NetworkConfig.Mode.custom, toJoin.get(0));
         } else if (networks instanceof Map) {
-            Map<String, Object> toJoin = (Map<String, Object>) networks;
+            Map<String,Object> toJoin = (Map<String, Object>) networks;
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
             String custom = toJoin.keySet().iterator().next();
-            final NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
+            NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
             Object aliases = toJoin.get(custom);
             if (aliases != null) {
                 if (aliases instanceof List) {
@@ -214,12 +216,12 @@ class DockerComposeServiceWrapper {
             String port = fromYml.get(i);
             if (port.contains(":")) {
                 ports.add(port);
-            } else {
+            }
+            else {
                 /*
-                 * docker-compose allows just the port number which triggers a random port and
-                 * the plugin does not, so construct a property name to mimic the required
-                 * behavior. names will always based on position, and not the number of times we
-                 * create the string.
+                 * docker-compose allows just the port number which triggers a random port and the plugin does not, so construct a property
+                 * name to mimic the required behavior. names will always based on position, and not the number of times we create the
+                 * string.
                  */
                 ports.add(String.format("%s_port_%s:%s", getAlias(), i + 1, port));
             }
@@ -247,8 +249,7 @@ class DockerComposeServiceWrapper {
             } else if (val instanceof Integer) {
                 ret.add(new UlimitConfig(ulimit, (Integer) val, null));
             } else {
-                throwIllegalArgumentException(
-                        "'ulimits:' invalid limit value " + val + " (class : " + val.getClass() + ")");
+                throwIllegalArgumentException("'ulimits:' invalid limit value " + val + " (class : " + val.getClass() + ")");
             }
         }
         return ret;
@@ -307,7 +308,8 @@ class DockerComposeServiceWrapper {
         if (restart.contains(":")) {
             String[] parts = restart.split("\\:", 2);
             builder.name(parts[0]).retry(Integer.valueOf(parts[1]));
-        } else {
+        }
+        else {
             builder.name(restart);
         }
 
@@ -403,8 +405,7 @@ class DockerComposeServiceWrapper {
         } else if (command instanceof List) {
             return new Arguments((List<String>) command);
         } else {
-            throwIllegalArgumentException(
-                    String.format("'%s' must be either String or List but not %s", label, command.getClass()));
+            throwIllegalArgumentException(String.format("'%s' must be either String or List but not %s", label, command.getClass()));
             return null;
         }
     }
@@ -423,3 +424,4 @@ class DockerComposeServiceWrapper {
     }
 
 }
+
