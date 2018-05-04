@@ -172,7 +172,7 @@ class DockerComposeServiceWrapper {
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
-            return new NetworkConfig(NetworkConfig.Mode.custom, name);
+            return new NetworkConfig(NetworkConfig.Mode.custom, toJoin.get(0));
         } else if (networks instanceof Map) {
             Map<String,Object> toJoin = (Map<String, Object>) networks;
             if (toJoin.size() > 1) {
@@ -182,11 +182,22 @@ class DockerComposeServiceWrapper {
             NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
             Object aliases = toJoin.get(custom);
             if (aliases != null) {
-                if (!(aliases instanceof List)) {
-                    throwIllegalArgumentException("'networks:' Aliases must be given as a list of string");
-                }
-                for (String alias : (List<String>) aliases) {
-                    ret.addAlias(alias);
+                if (aliases instanceof List) {
+                    for (String alias : (List<String>) aliases) {
+                        ret.addAlias(alias);
+                    }
+                } else if (aliases instanceof LinkedHashMap) {
+                    LinkedHashMap<String, ArrayList<String>> map = (LinkedHashMap<String, ArrayList<String>>) aliases;
+                    if (map.containsKey("aliases")) {
+                        for (String alias : map.get("aliases")) {
+                            ret.addAlias(alias);
+                        }
+                    } else {
+                        throwIllegalArgumentException(
+                                "'networks:' Aliases must be given as a linked has map of strings. 'aliases' key not founded");
+                    }
+                } else {
+                    throwIllegalArgumentException("'networks:' Aliases must be given as a list of string ");
                 }
             }
             return ret;
