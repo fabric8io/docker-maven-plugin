@@ -174,6 +174,9 @@ This plugin supports also Docker machine (which must be installed locally, of co
 | *autoCreate*
 | if set to `true` then a Docker machine will automatically created. Default is `false`.
 
+| *regenerateCertsAfterStart*
+| if set to `true` then certificates will be regenerated after starting the Docker Machine.  This is useful if using the AWS EC2 driver, which will assign machines new IP addresses after each start.  Default is `false`.
+
 | *createOptions*
 | Map with options for Docker machine when auto-creating a machine. See the docker machine documentation for possible options.
 |===
