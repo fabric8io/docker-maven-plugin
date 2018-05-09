@@ -400,13 +400,6 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder entrypoint(String entrypoint) {
-            if (entrypoint != null) {
-                config.entrypoint = new Arguments(entrypoint);
-            }
-            return this;
-        }
-
         public Builder entrypoint(Arguments args) {
             config.entrypoint = args;
             return this;

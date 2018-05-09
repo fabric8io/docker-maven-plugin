@@ -96,9 +96,9 @@ public class HealthCheckConfiguration implements Serializable {
             return this;
         }
 
-        public Builder cmd(String command) {
+        public Builder cmd(Arguments command) {
             if (command != null) {
-                config.cmd = new Arguments(command);
+                config.cmd = command;
             }
             return this;
         }

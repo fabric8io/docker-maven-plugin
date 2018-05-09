@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.HealthCheckConfiguration;
-import io.fabric8.maven.docker.config.HealthCheckMode;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -182,7 +179,7 @@ public class DockerFileBuilderTest {
 
     @Test
     public void testHealthCheckCmdParams() {
-        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd("echo hello").interval("5s").timeout("3s").startPeriod("30s").retries(4).build();
+        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd(new Arguments("echo hello")).interval("5s").timeout("3s").startPeriod("30s").retries(4).build();
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
         assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --start-period=30s --retries=4 CMD echo hello"));
     }

@@ -263,7 +263,7 @@ public class RunServiceTest {
                         .memorySwap(1L)
                         .env(env())
                         .cmd("date")
-                        .entrypoint("entrypoint")
+                        .entrypoint(new Arguments("entrypoint"))
                         .extraHosts(extraHosts())
                         .ulimits(ulimits())
                         .workingDir("/foo")

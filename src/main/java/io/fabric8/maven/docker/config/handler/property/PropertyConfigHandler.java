@@ -20,9 +20,12 @@ import java.util.*;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
+import com.google.common.base.Function;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.CollectionUtils;
+
+import javax.annotation.Nullable;
 
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 
@@ -220,13 +223,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return ret;
     }
 
-    private String extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
-        String rawAlternative = null;
-        if (alternative != null) {
-            rawAlternative = alternative.getShell();
-        }
-
-        return valueProvider.getString(configKey, rawAlternative);
+    private Arguments extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
+        return valueProvider.getObject(configKey, alternative, new Function<String, Arguments>() {
+            @Override
+            public Arguments apply(@Nullable String raw) {
+                return raw != null ? new Arguments(raw) : null;
+            }
+        });
     }
 
     private RestartPolicy extractRestartPolicy(RestartPolicy config, ValueProvider valueProvider) {
