@@ -13,8 +13,8 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
-import org.apache.maven.plugin.assembly.utils.InterpolationConstants;
+import org.apache.maven.plugins.assembly.AssemblerConfigurationSource;
+import org.apache.maven.plugins.assembly.utils.InterpolationConstants;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
@@ -203,12 +203,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     // X
     @Override
-    public String getClassifier() {
-        return null;
-    }
-
-    // X
-    @Override
     public List<String> getFilters() {
         return Collections.emptyList();
     }
@@ -232,18 +226,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     // X
     @Override
-    public String getDescriptorId() {
-        return null;
-    }
-
-    // X
-    @Override
-    public String getDescriptor() {
-        return null;
-    }
-
-    // X
-    @Override
     public String getTarLongFileMode() {
         return assemblyConfig.getTarLongFileMode() == null ? "warn" : assemblyConfig.getTarLongFileMode();
     }
@@ -252,12 +234,6 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     @Override
     public File getSiteDirectory() {
         return null;
-    }
-
-    // X
-    @Override
-    public boolean isSiteIncluded() {
-        return false;
     }
 
     // X

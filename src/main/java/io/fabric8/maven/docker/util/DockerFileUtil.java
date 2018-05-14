@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.maven.plugin.assembly.interpolation.AssemblyInterpolator;
-import org.apache.maven.plugin.assembly.io.DefaultAssemblyReader;
+import org.apache.maven.plugins.assembly.interpolation.AssemblyInterpolator;
+import org.apache.maven.plugins.assembly.io.DefaultAssemblyReader;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 
 import io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSource;
@@ -112,10 +112,11 @@ public class DockerFileUtil {
         }
 
         DockerAssemblyConfigurationSource configSource = new DockerAssemblyConfigurationSource(params, null, null);
-        // Patterned after org.apache.maven.plugin.assembly.interpolation.AssemblyExpressionEvaluator
+        // Patterned after org.apache.maven.plugins.assembly.interpolation.AssemblyExpressionEvaluator
         return AssemblyInterpolator
                 .fullInterpolator(params.getProject(),
-                        DefaultAssemblyReader.createProjectInterpolator(params.getProject()), configSource)
+                        DefaultAssemblyReader.createProjectInterpolator(params.getProject())
+                          .withExpressionMarkers(delimiters[0], delimiters[1]), configSource)
                 .withExpressionMarkers(delimiters[0], delimiters[1]);
     }
 

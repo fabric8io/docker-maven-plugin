@@ -3,7 +3,7 @@ package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
 
-import org.apache.maven.plugin.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.annotations.Parameter;
 
 public class AssemblyConfiguration implements Serializable {

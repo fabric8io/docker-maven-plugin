@@ -21,14 +21,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
-import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
-import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
-import org.apache.maven.plugin.assembly.archive.AssemblyArchiver;
-import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
-import org.apache.maven.plugin.assembly.io.AssemblyReadException;
-import org.apache.maven.plugin.assembly.io.AssemblyReader;
-import org.apache.maven.plugin.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.AssemblerConfigurationSource;
+import org.apache.maven.plugins.assembly.InvalidAssemblerConfigurationException;
+import org.apache.maven.plugins.assembly.archive.ArchiveCreationException;
+import org.apache.maven.plugins.assembly.archive.AssemblyArchiver;
+import org.apache.maven.plugins.assembly.format.AssemblyFormattingException;
+import org.apache.maven.plugins.assembly.io.AssemblyReadException;
+import org.apache.maven.plugins.assembly.io.AssemblyReader;
+import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -253,7 +253,7 @@ public class DockerAssemblyManager {
             MappingTrackArchiver ta = (MappingTrackArchiver) trackArchiver;
             ta.init(log, assemblyName);
             assembly.setId("tracker");
-            assemblyArchiver.createArchive(assembly, assemblyName, "track", source, false);
+            assemblyArchiver.createArchive(assembly, assemblyName, "track", source, false, null);
             return ta.getAssemblyFiles(mojoParams.getSession());
         }
     }
@@ -463,7 +463,7 @@ public class DockerAssemblyManager {
         try {
             originalArtifactFile = ensureThatArtifactFileIsSet(params.getProject());
             assembly.setId("docker");
-            assemblyArchiver.createArchive(assembly, assemblyConfig.getName(), buildMode.getExtension(), source, false);
+            assemblyArchiver.createArchive(assembly, assemblyConfig.getName(), buildMode.getExtension(), source, false, null);
         } catch (ArchiveCreationException | AssemblyFormattingException e) {
             String error = "Failed to create assembly for docker image " +
                            " (with mode '" + buildMode + "'): " + e.getMessage() + ".";
