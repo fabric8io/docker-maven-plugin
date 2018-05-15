@@ -21,6 +21,9 @@ The healtcheck configuration can have the following options
 | *retries*
 | How many retries should be performed before the container is to be considered unhealthy.
 
+| *startPeriod*
+| Initialization time for containers that need time to bootstrap. Probe failure during that period will not be counted towards the maximum number of retries. However, if a health check succeeds during the start period, the container is considered started and all consecutive failures will be counted towards the maximum number of retries. Given in seconds, but another time unit can be appended.
+
 | *timeout*
 | Timeout after which healthckeck should be stopped and considered to have failed. Given in seconds, but another time unit can be appended.
 |===
@@ -35,6 +38,8 @@ The following example queries an URL every 10s as an healthcheck:
   <interval>5m</interval>
   <!-- Fail if no response after 3 seconds -->
   <timeout>3s</timeout>
+  <!-- Allow 30 minutes for the container to start before being flagged as unhealthy -->
+  <startPeriod>30m</startPeriod>
   <!-- Fail 3 times until the container is considerd unhealthy -->
   <retries>3</retries>
   <!-- Command to execute in shell form -->

@@ -182,9 +182,9 @@ public class DockerFileBuilderTest {
 
     @Test
     public void testHealthCheckCmdParams() {
-        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd("echo hello").interval("5s").timeout("3s").retries(4).build();
+        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd("echo hello").interval("5s").timeout("3s").startPeriod("30s").retries(4).build();
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --retries=4 CMD echo hello"));
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --start-period=30s --retries=4 CMD echo hello"));
     }
 
     @Test
