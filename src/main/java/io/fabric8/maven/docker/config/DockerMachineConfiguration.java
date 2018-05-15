@@ -9,6 +9,7 @@ public class DockerMachineConfiguration implements Serializable {
 
     public static final String DOCKER_MACHINE_NAME_PROP = "docker.machine.name";
     public static final String DOCKER_MACHINE_AUTO_CREATE_PROP = "docker.machine.autoCreate";
+    public static final String DOCKER_MACHINE_REGENERATE_CERTS_AFTER_START_PROP = "docker.machine.regenerateCertsAfterStart";
 
     /**
      * Name of the docker-machine
@@ -23,6 +24,12 @@ public class DockerMachineConfiguration implements Serializable {
     private Boolean autoCreate = Boolean.FALSE;
 
     /**
+     * Should the docker-machine's certificates be regenerated after starting?
+     */
+    @Parameter
+    private Boolean regenerateCertsAfterStart = Boolean.FALSE;
+
+    /**
      * When creating a docker-machine, the map of createOptions for the driver.
      * Do not include the '--' portion of the option name.  For options without values, leave the value text empty.
      * e.g. --virtualbox-cpu-count 1 --virtualbox-no-share would be written as:<code>
@@ -35,9 +42,10 @@ public class DockerMachineConfiguration implements Serializable {
 
     public DockerMachineConfiguration() {}
 
-    public DockerMachineConfiguration(String name, String autoCreate) {
+    public DockerMachineConfiguration(String name, String autoCreate, String regenerateCertsAfterStart) {
         this.name = name;
         this.autoCreate = autoCreate != null ? Boolean.parseBoolean(autoCreate) : Boolean.FALSE;
+        this.regenerateCertsAfterStart = regenerateCertsAfterStart != null ? Boolean.parseBoolean(regenerateCertsAfterStart) : Boolean.FALSE;
     }
 
     public String getName() {
@@ -48,12 +56,16 @@ public class DockerMachineConfiguration implements Serializable {
         return autoCreate;
     }
 
+    public Boolean getRegenerateCertsAfterStart() {
+        return regenerateCertsAfterStart;
+    }
+
     public Map<String, String> getCreateOptions() {
         return createOptions;
     }
 
     @Override
     public String toString() {
-        return "MachineConfiguration [name=" + name + ", autoCreate=" + autoCreate + ", createOptions=" + createOptions + "]";
+        return "MachineConfiguration [name=" + name + ", autoCreate=" + autoCreate + ",regenerateCertsAfterStart=" + regenerateCertsAfterStart + ", createOptions=" + createOptions + "]";
     }
 }

@@ -83,7 +83,8 @@ public class DockerAccessFactory {
             if (projectProps.containsKey(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP)) {
                 config = new DockerMachineConfiguration(
                     projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_NAME_PROP),
-                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP));
+                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_AUTO_CREATE_PROP),
+                    projectProps.getProperty(DockerMachineConfiguration.DOCKER_MACHINE_REGENERATE_CERTS_AFTER_START_PROP));
             }
         }
 
