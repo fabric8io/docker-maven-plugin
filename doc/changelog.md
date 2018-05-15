@@ -4,6 +4,7 @@
   - Always create missing target directory for docker:save (#1013)
   - Update assembly plugin to 3.1.0 (#1021)
   - Add option for regenerating certificates after starting Docker Machine (#1019)
+  - Add `startPeriod` to `healthCheck` (#961)
   
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
