@@ -145,6 +145,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.healthcheck.retries*
 | Number of retries for how often to retry a healthcheck until it is considered to have failed
 
+| *docker.healthcheck.startPeriod*
+| Initialization time for containers that need time to bootstrap. Probe failure during that period will not be counted towards the maximum number of retries. However, if a health check succeeds during the start period, the container is considered started and all consecutive failures will be counted towards the maximum number of retries. (in seconds or with a given time unit)
+
 | *docker.healthcheck.timeout*
 | Timeout after which a healthcheck command is considered to be failed (in seconds or with a given time unit)
 

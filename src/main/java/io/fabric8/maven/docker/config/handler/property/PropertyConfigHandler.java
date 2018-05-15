@@ -195,6 +195,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             return new HealthCheckConfiguration.Builder()
                     .interval(valueProvider.getString(HEALTHCHECK_INTERVAL, config == null ? null : config.getInterval()))
                     .timeout(valueProvider.getString(HEALTHCHECK_TIMEOUT, config == null ? null : config.getTimeout()))
+                    .startPeriod(valueProvider.getString(HEALTHCHECK_START_PERIOD, config == null ? null : config.getStartPeriod()))
                     .retries(valueProvider.getInteger(HEALTHCHECK_RETRIES, config == null ? null : config.getRetries()))
                     .mode(valueProvider.getString(HEALTHCHECK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
                     .cmd(extractArguments(valueProvider, HEALTHCHECK_CMD, config == null ? null : config.getCmd()))

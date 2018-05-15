@@ -64,6 +64,7 @@ public enum ConfigKey {
     HEALTHCHECK_MODE("healthcheck.mode"),
     HEALTHCHECK_INTERVAL("healthcheck.interval"),
     HEALTHCHECK_TIMEOUT("healthcheck.timeout"),
+    HEALTHCHECK_START_PERIOD("healthcheck.startPeriod"),
     HEALTHCHECK_RETRIES("healthcheck.retries"),
     HEALTHCHECK_CMD("healthcheck.cmd"),
     HOSTNAME,
