@@ -129,7 +129,6 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 project,
                 Collections.<String>emptyList(),
                 false,
-                null,
                 session,
                 null);
         //request.setEscapeString("$");
