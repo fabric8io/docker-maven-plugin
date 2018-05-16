@@ -16,31 +16,14 @@
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <version>0.25-SNAPSHOT</version>
-      </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.1.0</version>
-        <executions>
-          <execution>
-            <id>extract-run-java-sh</id>
-            <phase>package</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>io.fabric8</groupId>
-                  <artifactId>run-java-sh</artifactId>
-                  <version>1.2.0</version>
-                  <includes>**/run-java.sh</includes>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>run-java-sh</artifactId>
+            <version>1.2-SNAPSHOT</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>

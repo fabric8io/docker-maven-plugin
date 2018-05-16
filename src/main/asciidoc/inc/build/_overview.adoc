@@ -1,6 +1,6 @@
 
 [[build-overview]]
-There are two different modes how Images can be built:
+There are two different modes how images can be built:
 
 .Inline plugin configuration
 With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <<external-configuration,External configuration>>. The XML configuration syntax is recommended because of its more structured and typed nature.
@@ -86,3 +86,62 @@ The following example uses a Dockerfile in the directory
  ...
 </plugin>
 ----
+
+[[build-plugin]]
+.Build Plugins
+
+This plugin supports so call *dmp-plugins* which are used during the build phase.
+dmp-plugins are enabled by just declaring a dependency in the plugin declaration:
+
+[source, xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>docker-maven-plugin</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>run-java-sh</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+  </dependencies>
+</plugin>
+----
+
+These plugins contain a descriptor `META-INF/maven/io.fabric8/dmp-plugin` with class names, line-by-line:
+
+[source]
+----
+io.fabric8.runsh.RunShLoader
+----
+
+During a build with `docker:build`, those classes are loaded and certain fixed method are called.
+
+The following methods are supported:
+
+[[build-plugin-methods]]
+[cols="1,5"]
+|===
+| Method | Description
+
+| *addExtraFiles*
+| A _static_ method called by dmp with a single `File` argument. This will point to a directory `docker-extra` which can be referenced easily by a Dockerfile or an assembly. A dmp plugin typically will create an own subdirectory to avoid a clash with other dmp-plugins.
+|===
+
+If a configured plugin does not provide method of this name and signature, then it will be simply ignored.
+Also, no interface needs to be implemented to keep the coupling low.
+
+The following official dmp-plugins are known and supported:
+
+[[build-plugins-official]]
+[cols="1,1,5"]
+|===
+| Name | G,A | Description
+
+| https://github.com/fabric8io-images/run-java[run-java.sh]
+| `fabric8.io`, `run-java`
+| General purpose startup script fo running Java applications. The dmp plugin creates a `target/docker-extra/run-java/run-java.sh` which can be included in a Dockerfile (see the example above). See the https://github.com/fabric8io-images/run-java[run-java.sh Documentation] for more details.
+|===
+
+Check out `samples/run-java` for a fully working example.
