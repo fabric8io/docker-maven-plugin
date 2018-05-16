@@ -2,7 +2,7 @@
 
 * **0.25-SNAPSHOT**
   - Always create missing target directory for docker:save (#1013)
-  - d-m-p plugins for adding extra files introduced
+  - d-m-p plugins for adding extra files introduced. See documentation for more information.
   - Update assembly plugin to 3.1.0 (#1021)
   - Add option for regenerating certificates after starting Docker Machine (#1019)
   - Add `startPeriod` to `healthCheck` (#961)
