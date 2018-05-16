@@ -205,6 +205,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
             authConfigFactory.setLog(log);
+            imageConfigResolver.setLog(log);
 
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 

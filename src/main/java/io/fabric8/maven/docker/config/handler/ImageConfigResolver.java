@@ -21,6 +21,7 @@ import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.compose.DockerComposeConfigHandler;
 import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.annotations.Component;
@@ -51,6 +52,8 @@ public class ImageConfigResolver implements Initializable {
     @Requirement(role = DockerComposeConfigHandler.class)
     private ExternalConfigHandler dockerComposeConfigHandler;
 
+    private Logger log;
+
     @Override
     public void initialize() throws InitializationException {
         this.registry = new HashMap<>();
@@ -59,6 +62,10 @@ public class ImageConfigResolver implements Initializable {
                 registry.put(handler.getType(), handler);
             }
         }
+    }
+
+    public void setLog(Logger log) {
+        this.log = log;
     }
 
     /**
@@ -108,6 +115,12 @@ public class ImageConfigResolver implements Initializable {
             externalConfig.put("type", propertyConfigHandler.getType());
             externalConfig.put("mode", mode);
             unresolvedConfig.setExternalConfiguration(externalConfig);
+
+            log.verbose("Global %s=%s property activates property configuration for image", ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, mode);
+        }
+        else
+        {
+            log.verbose("Ignoring %s=%s property, image has <external> in POM which takes precedence", ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, mode);
         }
     }
 }

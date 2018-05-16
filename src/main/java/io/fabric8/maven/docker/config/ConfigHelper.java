@@ -18,6 +18,8 @@ package io.fabric8.maven.docker.config;
 
 import java.util.*;
 
+import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;
+import io.fabric8.maven.docker.config.handler.property.PropertyMode;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoFailureException;
@@ -72,14 +74,38 @@ public class ConfigHelper {
             return;
         }
 
-        if(images.size() > 1) {
-            throw new MojoFailureException("Configuration error: Cannot use property "+EXTERNALCONFIG_ACTIVATION_PROPERTY+" on projects with multiple images.");
+        if(images.size() == 1) {
+            return;
+        }
+
+        // With more than one image, externally activating propertyConfig get's tricky. We can only allow it to affect
+        // one single image. Go through each image and check if they will be controlled by default properties.
+        // If more than one image matches, fail.
+        int imagesWithoutExternalConfig = 0;
+        for (ImageConfiguration image : images) {
+            if(PropertyConfigHandler.canCoexistWithOtherPropertyConfiguredImages(image.getExternalConfig())) {
+                continue;
+            }
+
+            // else, it will be affected by the external property.
+            imagesWithoutExternalConfig++;
+        }
+
+        if(imagesWithoutExternalConfig > 1) {
+            throw new MojoFailureException("Configuration error: Cannot use property "+EXTERNALCONFIG_ACTIVATION_PROPERTY+" on projects with multiple images without explicit image external configuration.");
         }
     }
 
     public static String getExternalConfigActivationProperty(MavenProject project) {
         Properties properties = EnvUtil.getPropertiesWithSystemOverrides(project);
-        return properties.getProperty(EXTERNALCONFIG_ACTIVATION_PROPERTY);
+        String value = properties.getProperty(EXTERNALCONFIG_ACTIVATION_PROPERTY);
+
+        // This can be used to disable in a more "local" context, if set globally
+        if(PropertyMode.Skip.name().equalsIgnoreCase(value)) {
+            return null;
+        }
+
+        return value;
     }
 
     /**

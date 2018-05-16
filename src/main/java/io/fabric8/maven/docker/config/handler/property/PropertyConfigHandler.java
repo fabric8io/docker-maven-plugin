@@ -37,9 +37,12 @@ import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 // @Component(role = ExternalConfigHandler.class)
 public class PropertyConfigHandler implements ExternalConfigHandler {
 
+    public static final String TYPE_NAME = "properties";
+    public static final String DEFAULT_PREFIX = "docker";
+
     @Override
     public String getType() {
-        return "properties";
+        return TYPE_NAME;
     }
 
     @Override
@@ -48,7 +51,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         Map<String, String> externalConfig = fromConfig.getExternalConfig();
         String prefix = getPrefix(externalConfig);
         Properties properties = EnvUtil.getPropertiesWithSystemOverrides(project);
-        PropertyMode propertyMode = PropertyMode.parse(externalConfig.get("mode"));
+        PropertyMode propertyMode = getMode(externalConfig);
         ValueProvider valueProvider = new ValueProvider(prefix, properties, propertyMode);
 
         RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
@@ -60,7 +63,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
         }
-        
+
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
@@ -322,11 +325,36 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private String getPrefix(Map<String, String> externalCconfig) {
-        String prefix = externalCconfig.get("prefix");
+    private static String getPrefix(Map<String, String> externalConfig) {
+        String prefix = externalConfig.get("prefix");
         if (prefix == null) {
-            prefix = "docker";
+            prefix = DEFAULT_PREFIX;
         }
         return prefix;
+    }
+
+    private static PropertyMode getMode(Map<String, String> externalConfig) {
+        return PropertyMode.parse(externalConfig.get("mode"));
+    }
+
+    public static boolean canCoexistWithOtherPropertyConfiguredImages(Map<String, String> externalConfig) {
+        if(externalConfig == null || externalConfig.isEmpty()) {
+            return false;
+        }
+
+        if(!TYPE_NAME.equals(externalConfig.get("type")))
+        {
+            // This images loads config from something totally different
+            return true;
+        }
+
+        if(externalConfig.get("prefix") != null)
+        {
+            // This image has a specified prefix. If multiple images have explicitly set docker. as prefix we
+            // assume user know what they are doing and allow it.
+            return true;
+        }
+
+        return false;
     }
 }

@@ -16,9 +16,7 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import io.fabric8.maven.docker.util.AnsiLogger;
 import org.apache.maven.plugin.MojoFailureException;
@@ -71,10 +69,38 @@ public class ConfigHelperTest {
             ConfigHelper.validateExternalPropertyActivation(project, images);
             fail();
         }catch(MojoFailureException ex) {
-            assertTrue(ex.getMessage().contains("Configuration error: Cannot use property"));
+            assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
         }
 
+        // When one of the images are configured externally from other source, it is OK with two images.
+        Map<String, String> externalConfig = new HashMap<>();
+        images.get(0).setExternalConfiguration(externalConfig);
+        externalConfig.put("type", "othermagic");
+
+        ConfigHelper.validateExternalPropertyActivation(project, images);
+
+        // Or if prefix is set explicitly
+        externalConfig.put("type", "properties");
+        externalConfig.put("prefix", "docker");
+
+        ConfigHelper.validateExternalPropertyActivation(project, images);
+
+        // But with default prefix it fails
+        externalConfig.remove("prefix");
+
+        try {
+            ConfigHelper.validateExternalPropertyActivation(project, images);
+            fail();
+        }catch(MojoFailureException ex) {
+            assertTrue(ex.getMessage().contains("Cannot use property " + ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY + " on projects with multiple images"));
+        }
+
+        // With no external properly, it works.
         project.getProperties().clear();
+        ConfigHelper.validateExternalPropertyActivation(project, images);
+
+        // And if explicitly set to "skip" it works too.
+        project.getProperties().put(ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, "skip");
         ConfigHelper.validateExternalPropertyActivation(project, images);
     }
 
