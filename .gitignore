@@ -7,3 +7,4 @@ target/
 .settings
 .*.md.html
 temp
+/.metadata/
