@@ -348,6 +348,8 @@ it does allow you to use the same prefix (even `docker`) on all images. This is 
 a few properties. This only makes sense when `property mode` is _override_ or _fallback_ and image-specific configuration
 are defined in the POM configuration.
 
+For examples, see <<externally-property-config-example, here>>
+
 .Merging POM and property values
 For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment
 we might want to inject a `http_proxy` environment variable, but we do not want to add this to the POM file.
@@ -405,6 +407,8 @@ For example, to not merge ports, set `docker.ports._combine=replace`, and to ena
 </build>
 ----
 
+
+[[externally-property-config-example]]
 .Example, combining properties and XML/POM configuration
 [source,xml]
 ----
@@ -452,3 +456,101 @@ If instead built with `mvn docker:build -Pdocker.from=console/tomcat:8.0 -Ddocke
 
 If `-Ddocker.labels.status=beta` is added, the image would be given two labels: `status=beta` and `software=tomcat`.
 If `-Ddocker.labels._combine=replace` is added, the image would be given one label only: `status=beta`.
+
+
+.Example, external activation of property configuration, single image
+
+Global ~/.m2/settings.xml file:
+[source,xml]
+----
+<profiles>
+  <profile>
+    <id>http-proxy</id>
+    <properties>
+      <docker.buildArg.http_proxy>http://proxy.example.com:8080</docker.buildArg.http_proxy>
+      <docker.runArg.http_proxy>http://proxy.example.com:8080</docker.runArg.http_proxy>
+      <docker.imagePropertyConfiguration>override</docker.imagePropertyConfiguration>
+    </properties>
+  </profile>
+</profiles>
+----
+
+[source,xml]
+----
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <name>jolokia/demo</name>
+            <alias>service</alias>
+            <build>
+              <from>consol/tomcat:7.0</from>
+            </build>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+When the plugin is executed, on a machine with the given settings.xml, the plugin will see the `docker.imagePropertyConfiguration` configuration and enable
+the property merging feature. When building, it will inject the http_proxy build ARG, and when running, it will inject the http_proxy ENV variable.
+The rest of the configuration will be sourced from the XML, unless the Maven project has any other `docker.*` properties defined.
+
+
+.Example, external activation of property configuration, two images
+Using the same global ~/.m2/settings.xml file as in previous example, but with two image definitions and no extra configuration will cause
+an error, saying that you cannot use property docker.imagePropertyConfiguration on projects with multiple images.
+
+By adding an explicit external configuration directive with the same prefix in both images, this error is disabled.
+
+[source,xml]
+----
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <external>
+              <type>properties</type>
+              <prefix>docker</prefix>
+              <mode>override</mode>
+            </external>
+
+            <name>jolokia/demo</name>
+            <alias>service</alias>
+            <build>
+              <from>consol/tomcat:7.0</from>
+            </build>
+          </image>
+
+          <image>
+            <external>
+              <type>properties</type>
+              <prefix>docker</prefix>
+              <mode>override</mode>
+            </external>
+
+            <name>jolokia/demo2</name>
+            <alias>service2</alias>
+            <build>
+              <from>consol/tomcat:7.0</from>
+            </build>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+The behaviour will now be same as previous example.
+Note that you must explicitly state `<mode>override</mode>`, otherwise it will use the default `only`.
