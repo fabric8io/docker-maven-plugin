@@ -5,6 +5,7 @@
   - Update assembly plugin to 3.1.0 (#1021)
   - Add option for regenerating certificates after starting Docker Machine (#1019)
   - Add `startPeriod` to `healthCheck` (#961)
+  - Unbreak setting of entrypoint in `exec` form when property mode is enabled (#1020)
   
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
