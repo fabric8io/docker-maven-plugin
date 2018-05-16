@@ -389,6 +389,51 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
     }
 
+    @Test
+    public void testLogFile() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .log(new LogConfiguration.Builder().file("myfile").build())
+                        .build()
+                )
+                .build();
+
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo")
+        );
+
+        assertEquals(1, configs.size());
+
+        RunImageConfiguration runConfiguration = configs.get(0).getRunConfiguration();
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
+        assertEquals("myfile", runConfiguration.getLogConfiguration().getFileLocation());
+
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .build()
+                )
+                .build();
+
+        configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo",
+                        "docker.log.file", "myfilefromprop")
+        );
+
+        assertEquals(1, configs.size());
+
+        runConfiguration = configs.get(0).getRunConfiguration();
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
+        assertEquals("myfilefromprop", runConfiguration.getLogConfiguration().getFileLocation());
+    }
+
     private RunImageConfiguration getRunImageConfiguration(List<ImageConfiguration> configs) {
         assertEquals(1, configs.size());
         return configs.get(0).getRunConfiguration();
