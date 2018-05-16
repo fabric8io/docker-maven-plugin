@@ -1,10 +1,16 @@
 package io.fabric8.maven.docker.service;
 
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -84,6 +90,18 @@ public class QueryService {
      */
     public String getContainerName(String containerId) throws DockerAccessException {
         return getMandatoryContainer(containerId).getName();
+    }
+
+    public String calculateContainerName(ImageConfiguration image, Date timestamp, String defaultContainerNamePattern) throws DockerAccessException {
+        String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
+        Collection<Container> existingContainers = getContainersForImage(image.getName());
+        return ContainerNamingUtil.calculateContainerName(containerNamePattern, image.getName(), image.getAlias(), timestamp, extractContainerNames(existingContainers));
+    }
+
+    public String calculateLastContainerName(ImageConfiguration image, Date timestamp, String defaultContainerNamePattern) throws DockerAccessException {
+        String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
+        Collection<Container> existingContainers = getContainersForImage(image.getName());
+        return ContainerNamingUtil.calculateLastContainerName(containerNamePattern, image.getName(), image.getAlias(), timestamp, extractContainerNames(existingContainers));
     }
 
     /**
@@ -167,4 +185,29 @@ public class QueryService {
     public boolean hasImage(String name) throws DockerAccessException {
         return docker.hasImage(name);
     }
+
+
+    // ==============================================================================
+
+    private Set<String> extractContainerNames(final Collection<Container> existingContainers) {
+        final ImmutableSet.Builder<String> containerNamesBuilder = ImmutableSet.builder();
+        for (final Container container : existingContainers) {
+            containerNamesBuilder.add(container.getName());
+        }
+        return containerNamesBuilder.build();
+    }
+
+    private String extractContainerNamePattern(ImageConfiguration image, String defaultContainerNamePattern) {
+        RunImageConfiguration runConfig = image.getRunConfiguration();
+        if (runConfig != null) {
+            if (runConfig.getContainerNamePattern() != null) {
+                return runConfig.getContainerNamePattern();
+            }
+            if (runConfig.getNamingStrategy() == RunImageConfiguration.NamingStrategy.alias) {
+                return "%a";
+            }
+        }
+        return defaultContainerNamePattern;
+    }
+
 }

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.config;
 
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
@@ -149,10 +150,6 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
     public String getRegistry() {
         return registry;
-    }
-
-    public NamingConfiguration calculateNamingConfiguration(final Date buildTimestamp, final List<Container> existingContainers) {
-        return getRunConfiguration().calcualteNamingConfiguration(buildTimestamp, existingContainers, getName(), getAlias());
     }
 
     @Override

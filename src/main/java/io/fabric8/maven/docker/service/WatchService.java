@@ -6,7 +6,7 @@ import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NamingConfiguration;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.util.Logger;
@@ -16,6 +16,7 @@ import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 
 import java.io.File;
@@ -236,13 +237,17 @@ public class WatchService {
                 }
                 runService.stopPreviouslyStartedContainer(id, false, false);
 
-                final NamingConfiguration namingConfiguration = imageConfig.calculateNamingConfiguration(watcher.getWatchContext().getBuildTimestamp(),
-                        queryService.getContainersForImage(imageConfig.getName()));
-
                 // Start new one
-                watcher.setContainerId(runService.createAndStartContainer(imageConfig, namingConfiguration, mappedPorts, watcher.getWatchContext().getPomLabel(),
-                        watcher.getWatchContext().getMojoParameters().getProject().getProperties(),
-                        watcher.getWatchContext().getMojoParameters().getProject().getBasedir()));
+                WatchContext ctx = watcher.getWatchContext();
+                MavenProject project = ctx.getMojoParameters().getProject();
+                watcher.setContainerId(
+                    runService.createAndStartContainer(
+                        imageConfig,
+                        mappedPorts,
+                        ctx.getPomLabel(),
+                        project.getProperties(),
+                        project.getBasedir(),
+                        ctx.getBuildTimestamp()));
             }
         };
     }

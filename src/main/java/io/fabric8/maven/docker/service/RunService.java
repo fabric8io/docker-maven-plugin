@@ -27,7 +27,6 @@ import io.fabric8.maven.docker.access.NetworkCreateConfig;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NamingConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
@@ -48,6 +47,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -122,22 +122,23 @@ public class RunService {
      * Create and start a container with the given image configuration.
      * @param imageConfig image configuration holding the run information and the image name
      * @param portMapping container port mapping
-     * @param mavenProps properties to fill in with dynamically assigned ports
      * @param pomLabel label to tag the started container with
      *
+     * @param mavenProps properties to fill in with dynamically assigned ports
+     * @param buildTimestamp date which should be used as the timestamp when calculating container names
      * @return the container id
      *
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
-                                          NamingConfiguration namingConfiguration,
                                           PortMapping portMapping,
                                           PomLabel pomLabel,
                                           Properties mavenProps,
-                                          File baseDir) throws DockerAccessException {
+                                          File baseDir,
+                                          Date buildTimestamp) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
-        String containerName = namingConfiguration.calculateContainerName();
+        String containerName = queryService.calculateContainerName(imageConfig, buildTimestamp, null);
         ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps, baseDir);
 
         String id = docker.createContainer(config, containerName);

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.config;
 
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -328,13 +329,6 @@ public class RunImageConfiguration implements Serializable {
         alias
     }
 
-    public NamingConfiguration calcualteNamingConfiguration(final Date buildTimestamp,
-                                                            final Collection<Container> existingContainers,
-                                                            final String imageName,
-                                                            final String nameAlias) {
-        return NamingConfiguration.create(containerNamePattern, namingStrategy, imageName, nameAlias, buildTimestamp, existingContainers);
-    }
-
     public NamingStrategy getNamingStrategyRaw() {
         return namingStrategy;
     }
@@ -365,6 +359,14 @@ public class RunImageConfiguration implements Serializable {
 
     public String getImagePullPolicy() {
         return imagePullPolicy;
+    }
+
+    public String getContainerNamePattern() {
+        return containerNamePattern;
+    }
+
+    public NamingStrategy getNamingStrategy() {
+        return namingStrategy;
     }
 
     // ======================================================================================

@@ -3,7 +3,7 @@ package io.fabric8.maven.docker;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NamingConfiguration;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
@@ -76,11 +76,10 @@ public class StopMojo extends AbstractDockerMojo {
     private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException, ExecException, MojoExecutionException {
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, pomLabel);
         for (ImageConfiguration image : getResolvedImages()) {
-            final NamingConfiguration namingConfiguration = image.calculateNamingConfiguration(getBuildTimestamp(),
-                    queryService.getContainersForImage(image.getName()));
 
             for (Container container : queryService.getContainersForImage(image.getName())) {
-                if (shouldStopContainer(container, namingConfiguration)) {
+                String lastContainerName = queryService.calculateLastContainerName(image, getBuildTimestamp(), null);
+                if (shouldStopContainer(container, lastContainerName)) {
                     runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
                 }
             }
@@ -88,12 +87,11 @@ public class StopMojo extends AbstractDockerMojo {
         runService.removeCustomNetworks(networksToRemove);
     }
 
-    private boolean shouldStopContainer(Container container, NamingConfiguration namingConfiguration) {
+    private boolean shouldStopContainer(Container container, String lastContainerName) {
         if (isStopAllContainers()) {
             return true;
         }
-
-        return container.getName().equals(namingConfiguration.calculateLastContainerName());
+        return container.getName().equals(lastContainerName);
     }
 
     private boolean isStopAllContainers() {
@@ -113,8 +111,6 @@ public class StopMojo extends AbstractDockerMojo {
         Set<Network> networks = queryService.getNetworks();
 
         for (ImageConfiguration image : getResolvedImages()) {
-            final NamingConfiguration namingConfiguration = image.calculateNamingConfiguration(getBuildTimestamp(),
-                    queryService.getContainersForImage(image.getName()));
 
             final NetworkConfig config = image.getRunConfiguration().getNetworkingConfig();
             if (config.isCustomNetwork()) {
@@ -122,7 +118,8 @@ public class StopMojo extends AbstractDockerMojo {
                 if (network != null) {
                     customNetworks.add(network);
                     for (Container container : queryService.getContainersForImage(image.getName())) {
-                        if (!shouldStopContainer(container, namingConfiguration)) {
+                        String lastContainerName = queryService.calculateLastContainerName(image, getBuildTimestamp(), null);
+                        if (!shouldStopContainer(container, lastContainerName)) {
                             // it's sill in use don't collect it
                             customNetworks.remove(network);
                         }

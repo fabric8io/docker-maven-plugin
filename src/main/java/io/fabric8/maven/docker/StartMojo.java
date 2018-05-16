@@ -12,7 +12,7 @@ import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.NamingConfiguration;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
@@ -270,15 +270,13 @@ public class StartMojo extends AbstractDockerMojo {
         final QueryService queryService = hub.getQueryService();
         final Properties projProperties = project.getProperties();
         final RunImageConfiguration runConfig = image.getRunConfiguration();
-        final NamingConfiguration namingConfiguration = image.calculateNamingConfiguration(getBuildTimestamp(),
-                queryService.getContainersForImage(image.getName()));
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         startingContainers.submit(new Callable<StartedContainer>() {
             @Override
             public StartedContainer call() throws Exception {
-                final String containerId = runService.createAndStartContainer(image, namingConfiguration, portMapping, getPomLabel(), projProperties, project.getBasedir());
+                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir(), getBuildTimestamp());
 
                 // Update port-mapping writer
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
