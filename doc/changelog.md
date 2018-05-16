@@ -9,6 +9,7 @@
   - Unbreak setting of entrypoint in `exec` form when property mode is enabled (#1020)
   - Fix enabling of log configuration (#1010)
   - Add possiblity to use `docker.imagePropertyConfiguration` with multipe images (#1001)
+  - Fix network aliases management for docker-compose mode (#1000)
 
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
