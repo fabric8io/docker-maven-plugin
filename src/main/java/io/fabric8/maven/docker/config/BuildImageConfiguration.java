@@ -413,9 +413,9 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder cmd(String cmd) {
+        public Builder cmd(Arguments cmd) {
             if (cmd != null) {
-                config.cmd = new Arguments(cmd);
+                config.cmd = cmd;
             }
             return this;
         }
@@ -444,9 +444,9 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder entryPoint(String entryPoint) {
+        public Builder entryPoint(Arguments entryPoint) {
             if (entryPoint != null) {
-                config.entryPoint = new Arguments(entryPoint);
+                config.entryPoint = entryPoint;
             }
             return this;
         }
