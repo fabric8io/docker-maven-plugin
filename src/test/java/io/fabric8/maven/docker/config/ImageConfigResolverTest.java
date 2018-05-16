@@ -19,6 +19,8 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.util.Logger;
+import mockit.Mocked;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.InitializationException;
@@ -36,11 +38,15 @@ public class ImageConfigResolverTest {
 
     private ImageConfigResolver resolver;
 
+    @Mocked
+    private Logger log;
+
     @Before
     public void setUp() throws Exception {
         resolver = new ImageConfigResolver();
         ReflectionUtils.setVariableValueInObject(resolver, "propertyConfigHandler", new TestHandler(3));
         resolver.initialize();
+        resolver.setLog(log);
     }
 
     @Test
