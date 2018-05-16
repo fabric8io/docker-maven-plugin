@@ -11,7 +11,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class LogConfiguration implements Serializable {
 
-    public static final LogConfiguration DEFAULT = new LogConfiguration(false, null, null, null, null, null);
+    public static final LogConfiguration DEFAULT = new LogConfiguration(null, null, null, null, null, null);
 
     @Parameter(defaultValue = "true")
     private Boolean enabled;
@@ -58,6 +58,25 @@ public class LogConfiguration implements Serializable {
         return enabled;
     }
 
+    /**
+     * If explicitly enabled, or configured in any way and NOT explicitly disabled, return true.
+     *
+     * @return
+     */
+    public boolean isActivated() {
+        return enabled == Boolean.TRUE ||
+                (enabled != Boolean.FALSE && !isBlank());
+    }
+
+    /**
+     * Returns true if all options (except enabled) are null, used to decide value of enabled.
+     *
+     * @return
+     */
+    private boolean isBlank() {
+        return prefix == null && date == null && color == null && file == null && driver == null;
+    }
+
     public String getFileLocation() {
         return file;
     }
@@ -95,11 +114,11 @@ public class LogConfiguration implements Serializable {
     // =============================================================================
 
     public static class Builder {
-        private Boolean enabled = true;
+        private Boolean enabled;
         private String prefix, date, color, file;
         private Map<String, String> driverOpts;
         private String driverName;
-        public Builder enabled(boolean enabled) {
+        public Builder enabled(Boolean enabled) {
             this.enabled = enabled;
             return this;
         }
@@ -132,15 +151,6 @@ public class LogConfiguration implements Serializable {
         public Builder logDriverOpts(Map<String, String> logOpts) {
             this.driverOpts = logOpts;
             return this;
-        }
-
-        /**
-         * Returns true if all options (except enabled) are null, used to decide value of enabled.
-         *
-         * @return
-         */
-        public boolean isBlank() {
-            return prefix == null && date == null && color == null && file == null && driverName == null && driverOpts == null;
         }
 
         public LogConfiguration build() {

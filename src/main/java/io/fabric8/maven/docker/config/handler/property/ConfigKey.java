@@ -75,6 +75,7 @@ public enum ConfigKey {
     LOG_ENABLED("log.enabled"),
     LOG_PREFIX("log.prefix"),
     LOG_DATE("log.date"),
+    LOG_FILE("log.file"),
     LOG_COLOR("log.color"),
     LOG_DRIVER_NAME("log.driver.name"),
     LOG_DRIVER_OPTS("log.driver.opts"),

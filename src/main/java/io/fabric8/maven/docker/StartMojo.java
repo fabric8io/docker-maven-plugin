@@ -12,19 +12,15 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-import com.google.common.util.concurrent.MoreExecutors;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.ExecException;
-import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.access.*;
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.*;
 import io.fabric8.maven.docker.util.StartOrderResolver;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.*;
 import org.codehaus.plexus.util.StringUtils;
 
 
@@ -370,7 +366,7 @@ public class StartMojo extends AbstractDockerMojo {
         if (runConfig != null) {
             LogConfiguration logConfig = runConfig.getLogConfiguration();
             if (logConfig != null) {
-                return Boolean.TRUE == logConfig.isEnabled();
+                return logConfig.isActivated();
             } else {
                 // Default is to show logs if "follow" is true
                 return follow;

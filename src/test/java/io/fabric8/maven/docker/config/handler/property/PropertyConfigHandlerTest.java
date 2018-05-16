@@ -272,7 +272,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(1, configs.size());
 
         RunImageConfiguration runConfiguration = configs.get(0).getRunConfiguration();
-        assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertFalse(runConfiguration.getLogConfiguration().isActivated());
 
         // If any log property is set, enabled shall be true by default
         configs = resolveImage(
@@ -283,7 +284,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         );
 
         runConfiguration = getRunImageConfiguration(configs);
-        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("green", runConfiguration.getLogConfiguration().getColor());
 
 
@@ -303,7 +305,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         );
 
         runConfiguration = getRunImageConfiguration(configs);
-        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
 
 
@@ -316,7 +319,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         );
 
         runConfiguration = getRunImageConfiguration(configs);
-        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("yellow", runConfiguration.getLogConfiguration().getColor());
 
 
@@ -330,7 +334,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         );
 
         runConfiguration = getRunImageConfiguration(configs);
-        assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
     }
 
@@ -354,6 +359,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         RunImageConfiguration runConfiguration = getRunImageConfiguration(configs);
         assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
 
         // Explicitly disabled
@@ -368,6 +374,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         runConfiguration = getRunImageConfiguration(configs);
         assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertFalse(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("yellow", runConfiguration.getLogConfiguration().getColor());
 
 
@@ -388,6 +395,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         runConfiguration = getRunImageConfiguration(configs);
         assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertFalse(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
 
         // Enabled by property, with override
@@ -401,6 +409,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         runConfiguration = getRunImageConfiguration(configs);
         assertTrue(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
 
         // Disabled with property too
@@ -413,7 +422,53 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         runConfiguration = getRunImageConfiguration(configs);
         assertFalse(runConfiguration.getLogConfiguration().isEnabled());
+        assertFalse(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
+    }
+
+    @Test
+    public void testLogFile() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .log(new LogConfiguration.Builder().file("myfile").build())
+                        .build()
+                )
+                .build();
+
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo")
+        );
+
+        assertEquals(1, configs.size());
+
+        RunImageConfiguration runConfiguration = configs.get(0).getRunConfiguration();
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
+        assertEquals("myfile", runConfiguration.getLogConfiguration().getFileLocation());
+
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(externalConfigMode(PropertyMode.Override))
+                .runConfig(new RunImageConfiguration.Builder()
+                        .build()
+                )
+                .build();
+
+        configs = resolveImage(
+                imageConfiguration, props(
+                        "docker.from", "base",
+                        "docker.name", "demo",
+                        "docker.log.file", "myfilefromprop")
+        );
+
+        assertEquals(1, configs.size());
+
+        runConfiguration = configs.get(0).getRunConfiguration();
+        assertNull(runConfiguration.getLogConfiguration().isEnabled());
+        assertTrue(runConfiguration.getLogConfiguration().isActivated());
+        assertEquals("myfilefromprop", runConfiguration.getLogConfiguration().getFileLocation());
     }
 
     private RunImageConfiguration getRunImageConfiguration(List<ImageConfiguration> configs) {
