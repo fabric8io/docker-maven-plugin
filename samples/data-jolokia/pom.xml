@@ -22,12 +22,12 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.25.2</version>
+    <version>0.26.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-data-jolokia</artifactId>
-  <version>0.25.2</version>
+  <version>0.26.0</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
