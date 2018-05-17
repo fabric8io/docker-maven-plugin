@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.25.2,</span>
-<span id="revdate">2018-04-14</span>
+<span id="revnumber">version 0.26.0,</span>
+<span id="revdate">2018-05-17</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -840,7 +840,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.25.2<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.26.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1195,6 +1195,10 @@ If set to <code>true</code> this plugin won&#8217;t remove any tags with <code>d
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> then a Docker machine will automatically created. Default is <code>false</code>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>regenerateCertsAfterStart</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> then certificates will be regenerated after starting the Docker Machine.  This is useful if using the AWS EC2 driver, which will assign machines new IP addresses after each start.  Default is <code>false</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>createOptions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map with options for Docker machine when auto-creating a machine. See the docker machine documentation for possible options.</p></td>
 </tr>
@@ -1434,7 +1438,7 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <code>docker.filter</code>) is set, only the images contained in this variable (comma separated) will be built.</p>
 </div>
 <div id="build-overview" class="paragraph">
-<p>There are two different modes how Images can be built:</p>
+<p>There are two different modes how images can be built:</p>
 </div>
 <div class="paragraph">
 <div class="title">Inline plugin configuration</div>
@@ -1542,6 +1546,90 @@ For replacing other data in other files targeted for the Docker image, please us
  ...
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
 </div>
+</div>
+<div id="build-plugin" class="paragraph">
+<div class="title">Build Plugins</div>
+<p>This plugin supports so call <strong>dmp-plugins</strong> which are used during the build phase.
+dmp-plugins are enabled by just declaring a dependency in the plugin declaration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+
+  <span class="tag">&lt;dependencies&gt;</span>
+    <span class="tag">&lt;dependency&gt;</span>
+      <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+      <span class="tag">&lt;artifactId&gt;</span>run-java-sh<span class="tag">&lt;/artifactId&gt;</span>
+      <span class="tag">&lt;version&gt;</span>1.2.1<span class="tag">&lt;/version&gt;</span>
+    <span class="tag">&lt;/dependency&gt;</span>
+  <span class="tag">&lt;/dependencies&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>These plugins contain a descriptor <code>META-INF/maven/io.fabric8/dmp-plugin</code> with class names, line-by-line:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>io.fabric8.runsh.RunShLoader</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>During a build with <code>docker:build</code>, those classes are loaded and certain fixed method are called.</p>
+</div>
+<div class="paragraph">
+<p>The following methods are supported:</p>
+</div>
+<table id="build-plugin-methods" class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Method</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>addExtraFiles</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A <em>static</em> method called by dmp with a single <code>File</code> argument. This will point to a directory <code>docker-extra</code> which can be referenced easily by a Dockerfile or an assembly. A dmp plugin typically will create an own subdirectory to avoid a clash with other dmp-plugins.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If a configured plugin does not provide method of this name and signature, then it will be simply ignored.
+Also, no interface needs to be implemented to keep the coupling low.</p>
+</div>
+<div class="paragraph">
+<p>The following official dmp-plugins are known and supported:</p>
+</div>
+<table id="build-plugins-official" class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 71.4286%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">G,A</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://github.com/fabric8io-images/run-java">run-java.sh</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.io</code>, <code>run-java</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose startup script fo running Java applications. The dmp plugin creates a <code>target/docker-extra/run-java/run-java.sh</code> which can be included in a Dockerfile (see the example above). See the <a href="https://github.com/fabric8io-images/run-java">run-java.sh Documentation</a> for more details.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Check out <code>samples/run-java</code> for a fully working example.</p>
 </div>
 <div class="sect3">
 <h4 id="build-configuration">5.1.1. Configuration</h4>
@@ -2188,6 +2276,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock">How many retries should be performed before the container is to be considered unhealthy.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>startPeriod</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initialization time for containers that need time to bootstrap. Probe failure during that period will not be counted towards the maximum number of retries. However, if a health check succeeds during the start period, the container is considered started and all consecutive failures will be counted towards the maximum number of retries. Given in seconds, but another time unit can be appended.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>timeout</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Timeout after which healthckeck should be stopped and considered to have failed. Given in seconds, but another time unit can be appended.</p></td>
 </tr>
@@ -2204,6 +2296,8 @@ useful when using predefined Docker arguments for setting proxies transparently.
   <span class="tag">&lt;interval&gt;</span>5m<span class="tag">&lt;/interval&gt;</span>
   <span class="comment">&lt;!-- Fail if no response after 3 seconds --&gt;</span>
   <span class="tag">&lt;timeout&gt;</span>3s<span class="tag">&lt;/timeout&gt;</span>
+  <span class="comment">&lt;!-- Allow 30 minutes for the container to start before being flagged as unhealthy --&gt;</span>
+  <span class="tag">&lt;startPeriod&gt;</span>30m<span class="tag">&lt;/startPeriod&gt;</span>
   <span class="comment">&lt;!-- Fail 3 times until the container is considerd unhealthy --&gt;</span>
   <span class="tag">&lt;retries&gt;</span>3<span class="tag">&lt;/retries&gt;</span>
   <span class="comment">&lt;!-- Command to execute in shell form --&gt;</span>
@@ -4109,6 +4203,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of retries for how often to retry a healthcheck until it is considered to have failed</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.startPeriod</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initialization time for containers that need time to bootstrap. Probe failure during that period will not be counted towards the maximum number of retries. However, if a health check succeeds during the start period, the container is considered started and all consecutive failures will be counted towards the maximum number of retries. (in seconds or with a given time unit)</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.healthcheck.timeout</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Timeout after which a healthcheck command is considered to be failed (in seconds or with a given time unit)</p></td>
 </tr>
@@ -4118,7 +4216,7 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.imagePropertyConfiguration</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Special property to activate property configuration without altering XML file (see <a href="#combining-property-config">Combining property and XML config</a>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Special property to activate property configuration without altering XML file (see <a href="#combining-property-config-externally">Activating property configuration externally</a>).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.imagePullPolicy.build</strong></p></td>
@@ -4352,13 +4450,31 @@ configuration (since version 0.25.0), which can have one of the following values
 </tr>
 </tbody>
 </table>
+<div id="combining-property-config-externally" class="paragraph">
+<div class="title">Activating property configuration externally</div>
+<p>It also possible to activate property configuration by setting the property <code>docker.imagePropertyConfiguration</code> to a
+valid <code>property mode</code>, without adding an <code>&lt;external&gt;</code> section. The plugin will then use any properties with default <code>docker.</code> prefix.
+This can be useful if most of the configuration is specified in XML/POM file, but there
+is need to override certain configuration values without altering the POM file (instead add this to a parent POM or
+global settings.xml).</p>
+</div>
 <div class="paragraph">
-<p>For single-image configurations it is also possible to active property
-configuration by setting the property <code>docker.imagePropertyConfiguration</code> to a
-valid <code>property mode</code>, without adding a <code>&lt;external&gt;</code> section.
-This will use properties with default prefix.
-This can be useful if most of configuration is specified in XML/POM file, but there
-is need to override certain configuration values without altering the POM file.</p>
+<p>If set in parent POM, but not wanted in specific project, the property could be overriden locally with the value <code>skip</code>
+to disabled property configuration for that particular project.
+If set in settings.xml however, by Maven design, that value will always take precedence over any properties defined in
+pom.xml.</p>
+</div>
+<div class="paragraph">
+<p>For configurations with multiple images, using this property will by default produce an error. All images would then
+use the same <code>docker</code> property prefix, resulting in multiple identical configurations.
+This can be overruled by adding an explicit &lt;external&gt; configuration element with an explicit &lt;prefix&gt; to all
+images (or at least all but one). Normally you&#8217;d want to use different prefix for each image, but if explicitly set
+it does allow you to use the same prefix (even <code>docker</code>) on all images. This is useful in case you just want to share
+a few properties. This only makes sense when <code>property mode</code> is <em>override</em> or <em>fallback</em> and image-specific configuration
+are defined in the POM configuration.</p>
+</div>
+<div class="paragraph">
+<p>For examples, see <a href="#externally-property-config-example">here</a></p>
 </div>
 <div class="paragraph">
 <div class="title">Merging POM and property values</div>
@@ -4435,7 +4551,7 @@ For example, to not merge ports, set <code>docker.ports._combine=replace</code>,
 <span class="tag">&lt;/build&gt;</span></code></pre>
 </div>
 </div>
-<div class="listingblock">
+<div id="externally-property-config-example" class="listingblock">
 <div class="title">Example, combining properties and XML/POM configuration</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;properties&gt;</span>
@@ -4484,6 +4600,107 @@ If instead built with <code>mvn docker:build -Pdocker.from=console/tomcat:8.0 -D
 <div class="paragraph">
 <p>If <code>-Ddocker.labels.status=beta</code> is added, the image would be given two labels: <code>status=beta</code> and <code>software=tomcat</code>.
 If <code>-Ddocker.labels._combine=replace</code> is added, the image would be given one label only: <code>status=beta</code>.</p>
+</div>
+<div class="paragraph">
+<div class="title">Example, external activation of property configuration, single image</div>
+<p>Global ~/.m2/settings.xml file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;profiles&gt;</span>
+  <span class="tag">&lt;profile&gt;</span>
+    <span class="tag">&lt;id&gt;</span>http-proxy<span class="tag">&lt;/id&gt;</span>
+    <span class="tag">&lt;properties&gt;</span>
+      <span class="tag">&lt;docker.buildArg.http_proxy&gt;</span>http://proxy.example.com:8080<span class="tag">&lt;/docker.buildArg.http_proxy&gt;</span>
+      <span class="tag">&lt;docker.runArg.http_proxy&gt;</span>http://proxy.example.com:8080<span class="tag">&lt;/docker.runArg.http_proxy&gt;</span>
+      <span class="tag">&lt;docker.imagePropertyConfiguration&gt;</span>override<span class="tag">&lt;/docker.imagePropertyConfiguration&gt;</span>
+    <span class="tag">&lt;/properties&gt;</span>
+  <span class="tag">&lt;/profile&gt;</span>
+<span class="tag">&lt;/profiles&gt;</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
+  <span class="tag">&lt;plugins&gt;</span>
+    <span class="tag">&lt;plugin&gt;</span>
+      <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+      <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+      <span class="tag">&lt;configuration&gt;</span>
+        <span class="tag">&lt;images&gt;</span>
+          <span class="tag">&lt;image&gt;</span>
+            <span class="tag">&lt;name&gt;</span>jolokia/demo<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+            <span class="tag">&lt;build&gt;</span>
+              <span class="tag">&lt;from&gt;</span>consol/tomcat:7.0<span class="tag">&lt;/from&gt;</span>
+            <span class="tag">&lt;/build&gt;</span>
+          <span class="tag">&lt;/image&gt;</span>
+        <span class="tag">&lt;/images&gt;</span>
+      <span class="tag">&lt;/configuration&gt;</span>
+    <span class="tag">&lt;/plugin&gt;</span>
+  <span class="tag">&lt;/plugins&gt;</span>
+<span class="tag">&lt;/build&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the plugin is executed, on a machine with the given settings.xml, the plugin will see the <code>docker.imagePropertyConfiguration</code> configuration and enable
+the property merging feature. When building, it will inject the http_proxy build ARG, and when running, it will inject the http_proxy ENV variable.
+The rest of the configuration will be sourced from the XML, unless the Maven project has any other <code>docker.*</code> properties defined.</p>
+</div>
+<div class="paragraph">
+<div class="title">Example, external activation of property configuration, two images</div>
+<p>Using the same global ~/.m2/settings.xml file as in previous example, but with two image definitions and no extra configuration will cause
+an error, saying that you cannot use property docker.imagePropertyConfiguration on projects with multiple images.</p>
+</div>
+<div class="paragraph">
+<p>By adding an explicit external configuration directive with the same prefix in both images, this error is disabled.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;build&gt;</span>
+  <span class="tag">&lt;plugins&gt;</span>
+    <span class="tag">&lt;plugin&gt;</span>
+      <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+      <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+      <span class="tag">&lt;configuration&gt;</span>
+        <span class="tag">&lt;images&gt;</span>
+          <span class="tag">&lt;image&gt;</span>
+            <span class="tag">&lt;external&gt;</span>
+              <span class="tag">&lt;type&gt;</span>properties<span class="tag">&lt;/type&gt;</span>
+              <span class="tag">&lt;prefix&gt;</span>docker<span class="tag">&lt;/prefix&gt;</span>
+              <span class="tag">&lt;mode&gt;</span>override<span class="tag">&lt;/mode&gt;</span>
+            <span class="tag">&lt;/external&gt;</span>
+
+            <span class="tag">&lt;name&gt;</span>jolokia/demo<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+            <span class="tag">&lt;build&gt;</span>
+              <span class="tag">&lt;from&gt;</span>consol/tomcat:7.0<span class="tag">&lt;/from&gt;</span>
+            <span class="tag">&lt;/build&gt;</span>
+          <span class="tag">&lt;/image&gt;</span>
+
+          <span class="tag">&lt;image&gt;</span>
+            <span class="tag">&lt;external&gt;</span>
+              <span class="tag">&lt;type&gt;</span>properties<span class="tag">&lt;/type&gt;</span>
+              <span class="tag">&lt;prefix&gt;</span>docker<span class="tag">&lt;/prefix&gt;</span>
+              <span class="tag">&lt;mode&gt;</span>override<span class="tag">&lt;/mode&gt;</span>
+            <span class="tag">&lt;/external&gt;</span>
+
+            <span class="tag">&lt;name&gt;</span>jolokia/demo2<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;alias&gt;</span>service2<span class="tag">&lt;/alias&gt;</span>
+            <span class="tag">&lt;build&gt;</span>
+              <span class="tag">&lt;from&gt;</span>consol/tomcat:7.0<span class="tag">&lt;/from&gt;</span>
+            <span class="tag">&lt;/build&gt;</span>
+          <span class="tag">&lt;/image&gt;</span>
+        <span class="tag">&lt;/images&gt;</span>
+      <span class="tag">&lt;/configuration&gt;</span>
+    <span class="tag">&lt;/plugin&gt;</span>
+  <span class="tag">&lt;/plugins&gt;</span>
+<span class="tag">&lt;/build&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The behaviour will now be same as previous example.
+Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</code>, otherwise it will use the default <code>only</code>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -5001,8 +5218,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.25.2<br>
-Last updated 2018-04-14 08:03:09 UTC
+Version 0.26.0<br>
+Last updated 2018-05-17 01:03:36 UTC
 </div>
 </div>
 </body>
