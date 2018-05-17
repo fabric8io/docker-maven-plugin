@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.25.0** (2018-05-16)
+* **0.26.0** (2018-05-16)
   - Always create missing target directory for docker:save ([#1013](https://github.com/fabric8io/docker-maven-plugin/issues/1013))
   - d-m-p plugins for adding extra files introduced. See documentation for more information.
   - Update assembly plugin to 3.1.0 ([#1021](https://github.com/fabric8io/docker-maven-plugin/issues/1021))
