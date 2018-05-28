@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -381,6 +382,14 @@ public class EnvUtil {
         }
         // Default to https:// schema
         return "https://" + registry;
+    }
+
+    // extract first part of registry URL contains hostname
+    public static String extractHostnameRegistryUrl(String registry) {
+        if (!registry.contains("/")) {
+            return registry;
+        }
+        return StringUtils.substringBeforeLast(registry, "/");
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {

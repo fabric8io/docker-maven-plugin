@@ -109,8 +109,37 @@ public class AuthConfigFactoryTest {
             @Override
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 checkDockerAuthLogin(homeDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
+                checkDockerAuthLogin(homeDir,"localhost","localhost");
                 checkDockerAuthLogin(homeDir,"localhost:5000","localhost:5000");
                 checkDockerAuthLogin(homeDir,"https://localhost:5000","localhost:5000");
+                checkDockerAuthLogin(homeDir,"http://localhost:5000","http://localhost:5000");
+                checkDockerAuthLogin(homeDir,"https://localhost:5000","https://localhost:5000");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerAuthLoginHostname() throws Exception {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                checkDockerAuthLogin(homeDir,"eu.gcr.io","eu.gcr.io/awesome-project");
+                checkDockerAuthLogin(homeDir,"https://eu.gcr.io","eu.gcr.io/awesome-project");
+                checkDockerAuthLogin(homeDir,"http://eu.gcr.io","http://eu.gcr.io/awesome-project");
+                checkDockerAuthLogin(homeDir,"https://eu.gcr.io","https://eu.gcr.io/awesome-project");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerAuthLoginHostnameWithPort() throws Exception {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                checkDockerAuthLogin(homeDir,"eu.some-reg.io:5000","eu.some-reg.io:5000/awesome-project");
+                checkDockerAuthLogin(homeDir,"https://eu.some-reg.io:5000","eu.some-reg.io:5000/awesome-project");
+                checkDockerAuthLogin(homeDir,"http://eu.some-reg.io:5000","http://eu.some-reg.io:5000/awesome-project");
+                checkDockerAuthLogin(homeDir,"https://eu.some-reg.io:5000","https://eu.some-reg.io:5000/awesome-project");
             }
         });
     }
