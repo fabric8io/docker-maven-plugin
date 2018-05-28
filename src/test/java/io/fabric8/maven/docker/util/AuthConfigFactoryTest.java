@@ -18,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.sonatype.plexus.components.sec.dispatcher.DefaultSecDispatcher;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import java.io.File;
@@ -102,6 +103,41 @@ public class AuthConfigFactoryTest {
         }
     }
 
+    @Test
+    public void testSystemPropertyWitEncryptedPassword(@Mocked final DefaultSecDispatcher defaultSecDispatcher) throws Exception {
+        System.setProperty("docker.push.username","roland");
+        System.setProperty("docker.push.password", "{EnCRyp+3d}");
+        System.setProperty("docker.push.email", "roland@jolokia.org");
+        new Expectations() {{
+            container.lookup(SecDispatcher.ROLE, "maven");
+            result = defaultSecDispatcher;
+            defaultSecDispatcher.decrypt("{EnCRyp+3d}");
+            result = "secret";
+        }};
+        try {
+            AuthConfig config = factory.createAuthConfig(true, false, null, settings, null, null);
+            verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+        } finally {
+            System.clearProperty("docker.push.username");
+            System.clearProperty("docker.push.password");
+            System.clearProperty("docker.push.email");
+        }
+    }
+
+    @Test
+    public void testSystemPropertyWithJsonKeyPassword() throws Exception {
+        System.setProperty("docker.push.username","roland");
+        System.setProperty("docker.push.password", "{\"iam\":\"json\"}");
+        System.setProperty("docker.push.email", "roland@jolokia.org");
+        try {
+            AuthConfig config = factory.createAuthConfig(true, false, null, settings, null, null);
+            verifyAuthConfig(config,"roland","{\"iam\":\"json\"}","roland@jolokia.org");
+        } finally {
+            System.clearProperty("docker.push.username");
+            System.clearProperty("docker.push.password");
+            System.clearProperty("docker.push.email");
+        }
+    }
 
     @Test
     public void testDockerAuthLogin() throws Exception {
