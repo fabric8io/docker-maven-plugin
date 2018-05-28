@@ -386,7 +386,7 @@ public class EnvUtil {
 
     // extract first part of registry URL contains hostname
     public static String extractHostnameRegistryUrl(String registry) {
-        if (!registry.contains("/")) {
+        if (registry == null || !registry.contains("/")) {
             return registry;
         }
         return StringUtils.substringBeforeLast(registry, "/");
