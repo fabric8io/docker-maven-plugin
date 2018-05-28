@@ -228,8 +228,9 @@ public class AuthConfigFactory {
             if (!props.containsKey(passwordKey)) {
                 throw new MojoExecutionException("No " + passwordKey + " provided for username " + props.getProperty(userKey));
             }
+            String password = props.getProperty(passwordKey);
             return new AuthConfig(props.getProperty(userKey),
-                                  decrypt(props.getProperty(passwordKey)),
+                                  EnvUtil.isJsonObject(password) ? password : decrypt(password),
                                   props.getProperty(lookupMode.asSysProperty(AUTH_EMAIL)),
                                   props.getProperty(lookupMode.asSysProperty(AUTH_AUTHTOKEN)));
         } else {

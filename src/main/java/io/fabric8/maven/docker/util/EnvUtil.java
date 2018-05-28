@@ -14,6 +14,8 @@ import com.google.common.collect.Lists;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -462,6 +464,15 @@ public class EnvUtil {
         Matcher matcher = pattern.matcher(filename);
         boolean isMatch = matcher.matches();
         return isMatch;
+    }
+
+    public static boolean isJsonObject(String test) {
+        try {
+            new JSONObject(test);
+        } catch (JSONException ex) {
+            return false;
+        }
+        return true;
     }
 
 }
