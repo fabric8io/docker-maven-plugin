@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  doc:
+- doc:
     filters:
       branches:
         only: dmp.fabric8.io
