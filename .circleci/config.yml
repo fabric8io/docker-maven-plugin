@@ -1,9 +1,5 @@
-version: 2
 jobs:
 - doc:
-    filters:
-      branches:
-        only: dmp.fabric8.io
     working_directory: ~/fabric8io/docker-maven-plugin
     docker:
     - image: circleci/node:8-browsers
@@ -13,3 +9,12 @@ jobs:
       - git config --global user.email "circleci@fabric8.io"
       - git config --global user.name "CircleCI"
     - run: ./doc/ci-docs.sh
+
+workflows:
+  version: 2
+  all:
+    jobs:
+      - doc:
+          filters:
+            branches:
+              only: dmp.fabric8.io
