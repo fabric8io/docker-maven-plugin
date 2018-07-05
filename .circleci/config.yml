@@ -1,3 +1,4 @@
+version: 2
 jobs:
 - doc:
     working_directory: ~/fabric8io/dmp-docs
