@@ -53,7 +53,7 @@ public class AuthConfigFactoryTest {
 
     private boolean isPush = true;
 
-    public static final class MockSecDispatcher extends MockUp<SecDispatcher> {
+    public static final class MockSecDispatcher implements SecDispatcher {
         @Mock
         public String decrypt(String password) {
             return password;
@@ -68,7 +68,7 @@ public class AuthConfigFactoryTest {
 
     @Before
     public void containerSetup() throws ComponentLookupException {
-        final SecDispatcher secDispatcher = new MockSecDispatcher().getMockInstance();
+        final SecDispatcher secDispatcher = new MockSecDispatcher();
         new Expectations() {{
             container.lookup(SecDispatcher.ROLE, "maven"); minTimes = 0; result = secDispatcher;
 
