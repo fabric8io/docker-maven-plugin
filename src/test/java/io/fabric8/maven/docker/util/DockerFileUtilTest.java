@@ -25,6 +25,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -98,12 +99,11 @@ public class DockerFileUtilTest {
         projectProperties.put("ext", "png");
 
         Settings settings = new Settings();
-        ArtifactRepository localRepository = new MockUp<ArtifactRepository>() {
-            @Mock
+        ArtifactRepository localRepository = new MavenArtifactRepository() {
             public String getBasedir() {
                 return "repository";
             }
-        }.getMockInstance();
+        };
         @SuppressWarnings("deprecation")
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
         session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue
