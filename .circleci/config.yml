@@ -1,11 +1,10 @@
-
 version: 2
 
 jobs:
-
   # Build Website
   doc:
     working_directory: ~/fabric8io/dmp-docs
+    docker:
     - image: circleci/node:8-browsers
     steps:
     - checkout
@@ -33,8 +32,8 @@ workflows:
   version: 2
   all:
     jobs:
-      - doc:
-          filters:
-            branches:
-              only: dmp.fabric8.io
-      - build
+    - doc:
+        filters:
+          branches:
+            only: dmp.fabric8.io
+    - build
