@@ -1,7 +1,6 @@
 jobs:
 - doc:
-    working_directory: ~/fabric8io/docker-maven-plugin
-    docker:
+    working_directory: ~/fabric8io/dmp-docs
     - image: circleci/node:8-browsers
     steps:
     - checkout
@@ -9,6 +8,19 @@ jobs:
       - git config --global user.email "circleci@fabric8.io"
       - git config --global user.name "CircleCI"
     - run: ./doc/ci-docs.sh
+- build:
+    working_directory: ~/fabric8io/docker-maven-plugin
+    docker:
+    - image: circleci/openjdk:8-node-browsers
+    steps:
+    - checkout
+    - restore_cache:
+        key: dmp-{{ checksum "pom.xml" }}
+    - run: mvn install
+    - save_cache:
+        key: dmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
 
 workflows:
   version: 2
@@ -18,3 +30,4 @@ workflows:
           filters:
             branches:
               only: dmp.fabric8.io
+      - build
