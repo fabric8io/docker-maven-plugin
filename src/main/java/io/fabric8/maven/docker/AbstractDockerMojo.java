@@ -316,12 +316,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             this);                     // customizer (can be overwritten by a subclass)
 
         // Check for simple Dockerfile mode
-        if (resolvedImages.isEmpty()) {
-            File topDockerfile = new File(project.getBasedir(),"Dockerfile");
-            if (topDockerfile.exists()) {
+        File topDockerfile = new File(project.getBasedir(),"Dockerfile");
+        if (topDockerfile.exists()) {
+            if (resolvedImages.isEmpty()) {
                 resolvedImages.add(createSimpleDockerfileConfig(topDockerfile));
+            } else if (resolvedImages.size() == 1 && resolvedImages.get(0).getBuildConfiguration() == null) {
+                resolvedImages.set(0, addSimpleDockerfileConfig(resolvedImages.get(0), topDockerfile));
             }
         }
+
         // Initialize configuration and detect minimal API version
         return ConfigHelper.initAndValidate(resolvedImages, apiVersion, new ImageNameFormatter(project, buildTimeStamp), log);
     }
@@ -433,4 +436,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             .buildConfig(buildConfig)
             .build();
     }
+
+    private ImageConfiguration addSimpleDockerfileConfig(ImageConfiguration image, File dockerfile) {
+        BuildImageConfiguration buildConfig =
+            new BuildImageConfiguration.Builder()
+                .dockerFile(dockerfile.getPath())
+                .build();
+        return new ImageConfiguration.Builder(image).buildConfig(buildConfig).build();
+    }
+
+
 }
