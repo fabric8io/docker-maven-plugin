@@ -39,13 +39,13 @@ jobs:
         key: dmp-sonar-pr-{{ checksum "pom.xml" }}
     - run: |
         if [ -n "${CIRCLE_PR_NUMBER}" ]; then
-          mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
+          mvn -X clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
              -Dsonar.analysis.mode=preview \
              -Dsonar.github.pullRequest=${CIRCLE_PR_NUMBER} \
              -Dsonar.github.repository=fabric8io/docker-maven-plugin \
              -Dsonar.github.oauth=${GITHUB_COMMENT_TOKEN} \
              -Dsonar.host.url=https://sonarcloud.io \
-             -Dsonar.login=${SONARQUBE_TOKEN} \
+             -Dsonar.login=${SONARQUBE_TOKEN}
         else
           echo "No Sonar PR analysis as this is not a pull request"
         fi
@@ -81,9 +81,7 @@ workflows:
           branches:
             only: dmp.fabric8.io
     - build
-    - sonar-pr:
-        requires:
-        - build
+    - sonar-pr
     - sonar:
         filters:
           branches:
