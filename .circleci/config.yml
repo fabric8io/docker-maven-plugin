@@ -22,9 +22,24 @@ jobs:
     - checkout
     - restore_cache:
         key: dmp-{{ checksum "pom.xml" }}
-    - run: mvn install
+    - run: mvn install -Pjacoco
+    - run: bash <(curl -s https://codecov.io/bash)
     - save_cache:
         key: dmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
+
+  sonar:
+    working_directory: ~/fabric8io/dmp-sonar
+    docker:
+    - image: circleci/openjdk:8-node-browsers
+    steps:
+    - checkout
+    - restore_cache:
+        key: dmp-sonar-{{ checksum "pom.xml" }}
+    - run: mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${SONAR_TOKEN}
+    - save_cache:
+        key: dmp-sonar-{{ checksum "pom.xml" }}
         paths:
         - ~/.m2
 
