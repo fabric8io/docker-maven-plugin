@@ -37,6 +37,7 @@ jobs:
     - checkout
     - restore_cache:
         key: dmp-sonar-pr-{{ checksum "pom.xml" }}
+    - run: env
     - run: |
         if [ -n "${CIRCLE_PR_NUMBER}" ]; then
           mvn -X clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
