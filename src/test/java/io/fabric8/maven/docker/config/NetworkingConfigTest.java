@@ -51,7 +51,7 @@ public class NetworkingConfigTest {
                         config.getStandardMode("fail");
                         fail("Test " + i % 8);
                     } catch (IllegalArgumentException exp) {
-
+                        // expected
                     }
                 }
                 assertEquals(Boolean.parseBoolean((String) data[i + 4]), config.isStandardNetwork());
