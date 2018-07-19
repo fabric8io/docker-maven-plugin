@@ -496,7 +496,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         BuildImageConfiguration buildConfiguration = configs.get(0).getBuildConfiguration();
         assertNotNull(buildConfiguration);
         buildConfiguration.initAndValidate(null);
-        assertEquals("/some/path", buildConfiguration.getDockerFile().getAbsolutePath().toString());
+        assertEquals("/some/path", buildConfiguration.getDockerFile().getAbsolutePath());
     }
 
     @Test

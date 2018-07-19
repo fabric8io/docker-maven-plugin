@@ -21,7 +21,7 @@
           <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>run-java-sh</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.2</version>
           </dependency>
         </dependencies>
       </plugin>

@@ -456,12 +456,11 @@ public class EnvUtil {
             "  $                              # and end of string                 \n" +
             ")                                # End negative lookahead assertion. \n" +
             "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F\\ .]  # Last char is not a space or dot.  \n" +
+            "[^<>:\"/\\\\|?*\\x00-\\x1F .]    # Last char is not a space or dot.  \n" +
             "$                                # Anchor to end of string.            ",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
         Matcher matcher = pattern.matcher(filename);
-        boolean isMatch = matcher.matches();
-        return isMatch;
+        return matcher.matches();
     }
 
 }

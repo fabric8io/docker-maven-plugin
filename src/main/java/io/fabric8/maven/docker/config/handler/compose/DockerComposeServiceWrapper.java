@@ -317,7 +317,7 @@ class DockerComposeServiceWrapper {
 
         RestartPolicy.Builder builder = new RestartPolicy.Builder();
         if (restart.contains(":")) {
-            String[] parts = restart.split("\\:", 2);
+            String[] parts = restart.split(":", 2);
             builder.name(parts[0]).retry(Integer.valueOf(parts[1]));
         }
         else {

@@ -29,6 +29,7 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.configuration.PlexusConfiguration;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.eclipse.aether.RepositorySystemSession;
 
 /**
  * A service for executing goals on configured plugins.
@@ -38,11 +39,6 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
  *
  * @author roland
  * @since 01/07/15
- */
-
-
-/**
- * Service for calling other plugin goals
  */
 public class MojoExecutionService {
 
@@ -100,18 +96,18 @@ public class MojoExecutionService {
     }
 
     PluginDescriptor getPluginDescriptor(MavenProject project, Plugin plugin)
-        throws PluginResolutionException, PluginDescriptorParsingException, InvalidPluginDescriptorException, PluginNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, MojoFailureException {
+        throws InvocationTargetException, IllegalAccessException, MojoFailureException {
 
         try {
             Method loadPlugin = pluginManager.getClass().getMethod("loadPluginDescriptor",
                                                             plugin.getClass(),
                                                             project.getClass(),
                                                             session.getClass());
-            return (PluginDescriptor) loadPlugin.invoke(plugin, project, session);
+            return (PluginDescriptor) loadPlugin.invoke(pluginManager, plugin, project, session);
         } catch (NoSuchMethodException exp) {
             try {
                 // Fallback for older Maven versions
-                Object repositorySession = session.getRepositorySession();
+                RepositorySystemSession repositorySession = session.getRepositorySession();
                 Method loadPlugin = pluginManager.getClass().getMethod("loadPlugin",
                                                                        plugin.getClass(),
                                                                        project.getRemotePluginRepositories().getClass(),
