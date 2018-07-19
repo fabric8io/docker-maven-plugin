@@ -127,12 +127,24 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginIgnoreAuthWhenCredentialHelperAvailable() throws MojoExecutionException, IOException {
+    public void testDockerLoginFallsBackToAuthWhenCredentialHelperDoesNotMatchDomain() throws MojoExecutionException, IOException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
-                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","localhost:5000");
+                verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginNoAuthConfigFoundWhenCredentialHelperDoesNotMatchDomainOrAuth() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","does-not-exist-either:5000");
                 assertNull(config);
             }
         });
