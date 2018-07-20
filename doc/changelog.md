@@ -1,9 +1,9 @@
 # ChangeLog
 
-* **0.26.1**
+* **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
   - Sample added for how to use run-java-sh in simple dockerfile mode
-  - Allow both cred helpers and auth in Docker config (#1041)
+  - Allow both cred helpers and auth in Docker config ([#1041](https://github.com/fabric8io/docker-maven-plugin/issues/1041))
 
 * **0.26.0** (2018-05-16)
   - Always create missing target directory for docker:save ([#1013](https://github.com/fabric8io/docker-maven-plugin/issues/1013))
