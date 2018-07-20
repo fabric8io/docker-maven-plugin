@@ -30,6 +30,20 @@ public class ContainerDetailsTest {
         thenMappingMatches("custom1","1.2.3.4","custom2","5.6.7.8");
     }
 
+    @Test
+    public void testEmptyNetworkSettings() {
+        givenNetworkSettings();
+
+
+        whenCreateContainer();
+
+        thenMappingIsNull();
+    }
+
+    private void thenMappingIsNull() {
+        assertNull(container.getCustomNetworkIpAddresses());
+    }
+
     private void thenMappingMatches(String ... args) {
         Map<String,String> addresses = container.getCustomNetworkIpAddresses();
         for (int i = 0; i < args.length; i+=2) {
