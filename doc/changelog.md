@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.26.1**
+  - Fix NPE when no networks are configured (#1055)
+  
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
   - Sample added for how to use run-java-sh in simple dockerfile mode
