@@ -2,7 +2,7 @@
 
 * **0.26.1**
   - Fix NPE when no networks are configured (#1055)
-  
+
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
   - Sample added for how to use run-java-sh in simple dockerfile mode
@@ -16,7 +16,7 @@
   - Add `startPeriod` to `healthCheck` ([#961](https://github.com/fabric8io/docker-maven-plugin/issues/961))
   - Unbreak setting of entrypoint in `exec` form when property mode is enabled ([#1020](https://github.com/fabric8io/docker-maven-plugin/issues/1020))
   - Fix enabling of log configuration ([#1010](https://github.com/fabric8io/docker-maven-plugin/issues/1010))
-  - Add possiblity to use `docker.imagePropertyConfiguration` with multipe images ([#1001](https://github.com/fabric8io/docker-maven-plugin/issues/1001))
+  - Add possibility to use `docker.imagePropertyConfiguration` with multiple images ([#1001](https://github.com/fabric8io/docker-maven-plugin/issues/1001))
   - Fix network aliases management for docker-compose mode ([#1000](https://github.com/fabric8io/docker-maven-plugin/issues/1000))
 
 * **0.25.2** (2018-04-14)
