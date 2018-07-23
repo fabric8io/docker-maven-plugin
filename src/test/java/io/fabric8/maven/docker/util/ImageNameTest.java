@@ -151,7 +151,7 @@ public class ImageNameTest {
             try {
                 new ImageName(i);
                 fail(String.format("Name '%s' should fail",i));
-            } catch (IllegalArgumentException exp) {};
+            } catch (IllegalArgumentException exp) { /* expected */};
         }
 
         String[] legal = {

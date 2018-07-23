@@ -323,7 +323,6 @@ public class AuthConfigFactory {
             if (dockerConfig.has("credsStore")) {
                 return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.getString("credsStore"));
             }
-            return null;
         }
 
         if (dockerConfig.has("auths")) {

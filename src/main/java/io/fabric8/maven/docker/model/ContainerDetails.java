@@ -91,22 +91,28 @@ public class ContainerDetails implements Container {
         if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
             JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
             if (networkSettings.has(NETWORKS) && !networkSettings.isNull(NETWORKS)) {
-                JSONObject networks = networkSettings.getJSONObject(NETWORKS);
-                JSONArray keys = networks.names();
-
-                Map<String, String> results = new HashMap<>();
-                for (int i = 0; i < keys.length(); i++) {
-                    String key = keys.getString(i);
-                    JSONObject net = networks.getJSONObject(key);
-                    if (net.has(IP) && !net.isNull(IP)) {
-                        results.put(key, net.getString(IP));
-                    }
-                }
-
-                return results;
+                return extractNetworks(networkSettings);
             }
         }
         return null;
+    }
+
+    private Map<String, String> extractNetworks(JSONObject networkSettings) {
+        JSONObject networks = networkSettings.getJSONObject(NETWORKS);
+        JSONArray keys = networks.names();
+        if (keys == null || keys.length() == 0) {
+            return null;
+        }
+        Map<String, String> results = new HashMap<>();
+        for (int i = 0; i < keys.length(); i++) {
+            String key = keys.getString(i);
+            JSONObject net = networks.getJSONObject(key);
+            if (net.has(IP) && !net.isNull(IP)) {
+                results.put(key, net.getString(IP));
+            }
+        }
+
+        return results;
     }
 
     @Override
