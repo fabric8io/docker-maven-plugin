@@ -364,7 +364,7 @@ public class EnvUtil {
      * @param checkFirst list of registries to check
      * @return registry found or null if none.
      */
-    public static String fistRegistryOf(String ... checkFirst) {
+    public static String firstRegistryOf(String ... checkFirst) {
         for (String registry : checkFirst) {
             if (registry != null) {
                 return registry;
