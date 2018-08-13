@@ -280,7 +280,7 @@ public class BuildService {
 
         public static class Builder {
 
-            private BuildContext context = new BuildContext();
+            private BuildContext context;
 
             public Builder() {
                 this.context = new BuildContext();
