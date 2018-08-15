@@ -60,7 +60,6 @@ public class ContainerDetails implements Container {
 
     @Override
     public String getImage() {
-        // ID: json.optString("Image");
         return json.optJSONObject(CONFIG).optString(IMAGE);
     }
 

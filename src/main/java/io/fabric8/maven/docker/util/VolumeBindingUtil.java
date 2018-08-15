@@ -1,11 +1,12 @@
 package io.fabric8.maven.docker.util;
 
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.model.JsonParsingException;
 
 import static io.fabric8.maven.docker.util.DockerPathUtil.resolveAbsolutely;
 
@@ -179,7 +180,7 @@ public class VolumeBindingUtil {
             try {
                 localPath = resolvedFile.getCanonicalFile().getAbsolutePath();
             } catch (IOException e) {
-                throw new RuntimeException("Unable to canonicalize '" + resolvedFile + "'");
+                throw new JsonParsingException("Unable to canonicalize '" + resolvedFile + "'");
             }
         }
 

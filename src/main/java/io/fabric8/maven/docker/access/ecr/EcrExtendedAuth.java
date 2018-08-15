@@ -98,7 +98,7 @@ public class EcrExtendedAuth {
         return HttpClients.custom().useSystemProperties().build();
     }
 
-    private JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException, JSONException {
+    private JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
         try {
             CloseableHttpResponse response = client.execute(request);
             int statusCode = response.getStatusLine().getStatusCode();

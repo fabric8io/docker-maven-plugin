@@ -342,13 +342,13 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JSONObject auths) throws JSONException {
+    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JSONObject auths) {
         JSONObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
         String auth = credentials.optString("auth");
-        String email = credentials.has("email") ? credentials.optString("email") : null;
+        String email = credentials.has(AUTH_EMAIL) ? credentials.optString(AUTH_EMAIL) : null;
         return new AuthConfig(auth,email);
     }
 
