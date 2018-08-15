@@ -115,7 +115,7 @@ public class AuthConfigFactory {
             }
             try {
                 return extendedAuthentication(ret, registry);
-            } catch (IOException | JSONException e) {
+            } catch (IOException e) {
                 throw new MojoExecutionException(e.getMessage(), e);
             }
         }
@@ -147,7 +147,7 @@ public class AuthConfigFactory {
      * @throws IOException
      * @throws MojoExecutionException
      */
-    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException, JSONException {
+    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException {
         EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry);
         if (ecr.isAwsRegistry()) {
             return ecr.extendedAuth(standardAuthConfig);
