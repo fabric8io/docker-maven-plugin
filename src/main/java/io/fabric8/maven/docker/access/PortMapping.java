@@ -1,16 +1,26 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.EnvUtil;
-import org.json.JSONArray;
-import org.json.JSONObject;
+
+import static io.fabric8.maven.docker.util.JsonUtils.put;
 
 /**
  * Entity holding port mappings which can be set through the configuration.
@@ -133,16 +143,16 @@ public class PortMapping {
                 Integer hostPort = entry.getValue();
 
                 JSONObject o = new JSONObject();
-                o.put("HostPort", hostPort != null ? hostPort.toString() : "");
+                put(o,"HostPort", hostPort != null ? hostPort.toString() : "");
 
                 if (bindToMap.containsKey(containerPortSpec)) {
-                    o.put("HostIp", bindToMap.get(containerPortSpec));
+                    put(o,"HostIp", bindToMap.get(containerPortSpec));
                 }
 
                 JSONArray array = new JSONArray();
                 array.put(o);
 
-                portBindings.put(containerPortSpec, array);
+                put(portBindings, containerPortSpec, array);
             }
             return portBindings;
         } else {
@@ -170,17 +180,17 @@ public class PortMapping {
                                                     " doesn't contain protocol part and doesn't match "
                                                     + PROTOCOL_SPLIT_PATTERN);
                 }
-                mapping.put("containerPort", Integer.parseInt(matcher.group(1)));
+                put(mapping,"containerPort", Integer.parseInt(matcher.group(1)));
                 if (matcher.group(2) != null) {
-                    mapping.put("protocol", matcher.group(2));
+                    put(mapping,"protocol", matcher.group(2));
                 }
                 Integer hostPort = entry.getValue();
                 if (hostPort != null) {
-                    mapping.put("hostPort", hostPort);
+                    put(mapping,"hostPort", hostPort);
                 }
 
                 if (bindToMap.containsKey(containerPortSpec)) {
-                    mapping.put("hostIP", bindToMap.get(containerPortSpec));
+                    put(mapping,"hostIP", bindToMap.get(containerPortSpec));
                 }
                 ret.put(mapping);
             }

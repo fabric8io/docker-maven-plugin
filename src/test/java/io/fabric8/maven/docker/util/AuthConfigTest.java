@@ -8,6 +8,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
 import static org.junit.Assert.*;
 
 /**
@@ -41,10 +42,10 @@ public class AuthConfigTest {
 
     private void check(AuthConfig config) {
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
-        JSONObject data = new JSONObject(header);
-        assertEquals("roland",data.getString("username"));
-        assertEquals("secret",data.getString("password"));
-        assertEquals("roland@jolokia.org",data.getString("email"));
+        JSONObject data = toJSONObject(header);
+        assertEquals("roland",data.optString("username"));
+        assertEquals("secret",data.optString("password"));
+        assertEquals("roland@jolokia.org",data.optString("email"));
         assertFalse(data.has("auth"));
     }
 }

@@ -12,6 +12,8 @@ import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.hamcrest.Matchers;
 import io.fabric8.maven.docker.access.AuthConfig;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -107,7 +110,7 @@ public class AuthConfigFactoryTest {
     public void testDockerAuthLogin() throws Exception {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 checkDockerAuthLogin(homeDir,AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY,null);
                 checkDockerAuthLogin(homeDir,"localhost:5000","localhost:5000");
                 checkDockerAuthLogin(homeDir,"https://localhost:5000","localhost:5000");
@@ -116,7 +119,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginNoConfig() throws MojoExecutionException, IOException {
+    public void testDockerLoginNoConfig() throws MojoExecutionException, IOException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File dir) throws IOException, MojoExecutionException {
@@ -127,10 +130,10 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginFallsBackToAuthWhenCredentialHelperDoesNotMatchDomain() throws MojoExecutionException, IOException {
+    public void testDockerLoginFallsBackToAuthWhenCredentialHelperDoesNotMatchDomain() throws MojoExecutionException, IOException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
                 AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","localhost:5000");
                 verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
@@ -139,10 +142,10 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginNoAuthConfigFoundWhenCredentialHelperDoesNotMatchDomainOrAuth() throws MojoExecutionException, IOException {
+    public void testDockerLoginNoAuthConfigFoundWhenCredentialHelperDoesNotMatchDomainOrAuth() throws MojoExecutionException, IOException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
                 AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","does-not-exist-either:5000");
                 assertNull(config);
@@ -151,10 +154,10 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginSelectCredentialHelper() throws MojoExecutionException, IOException {
+    public void testDockerLoginSelectCredentialHelper() throws MojoExecutionException, IOException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
@@ -167,10 +170,10 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginSelectCredentialsStore() throws MojoExecutionException, IOException {
+    public void testDockerLoginSelectCredentialsStore() throws MojoExecutionException, IOException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
@@ -183,10 +186,10 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginDefaultToCredentialsStore() throws MojoExecutionException, IOException {
+    public void testDockerLoginDefaultToCredentialsStore() throws MojoExecutionException, IOException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
@@ -198,7 +201,7 @@ public class AuthConfigFactoryTest {
         });
     }
 
-    private void executeWithTempHomeDir(HomeDirExecutor executor) throws IOException, MojoExecutionException {
+    private void executeWithTempHomeDir(HomeDirExecutor executor) throws IOException, MojoExecutionException, JSONException {
         String userHome = System.getProperty("user.home");
         try {
             File tempDir = Files.createTempDirectory("d-m-p").toFile();
@@ -211,11 +214,11 @@ public class AuthConfigFactoryTest {
     }
 
     interface HomeDirExecutor {
-        void exec(File dir) throws IOException, MojoExecutionException;
+        void exec(File dir) throws IOException, MojoExecutionException, JSONException;
     }
 
     private void checkDockerAuthLogin(File homeDir,String configRegistry,String lookupRegistry)
-            throws IOException, MojoExecutionException {
+            throws IOException, MojoExecutionException, JSONException {
         writeDockerConfigJson(createDockerConfig(homeDir), "roland", "secret", "roland@jolokia.org", configRegistry);
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", lookupRegistry);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
@@ -229,23 +232,30 @@ public class AuthConfigFactoryTest {
     }
 
     private void writeDockerConfigJson(File dockerDir, String user, String password,
-                                       String email, String registry) throws IOException {
+                                       String email, String registry) throws IOException, JSONException {
         File configFile = new File(dockerDir,"config.json");
 
         JSONObject config = new JSONObject();
         addAuths(config,user,password,email,registry);
 
         try (Writer writer = new FileWriter(configFile)){
-            config.write(writer);
+            writer.write(config.toString());
         }
     }
 
-    private void writeDockerConfigJson(File dockerDir,String credsStore,Map<String,String> credHelpers) throws IOException {
+    private void writeDockerConfigJson(File dockerDir,String credsStore,Map<String,String> credHelpers) throws IOException, JSONException {
         File configFile = new File(dockerDir,"config.json");
 
         JSONObject config = new JSONObject();
         if (!credHelpers.isEmpty()){
-            config.put("credHelpers",credHelpers);
+            JSONObject credHelpersJson = new JSONObject();
+
+            for(Map.Entry<String, String> entry : credHelpers.entrySet())
+            {
+                credHelpersJson.put(entry.getKey(), entry.getValue());
+            }
+
+            config.put("credHelpers", credHelpersJson);
         }
 
         if (credsStore!=null) {
@@ -255,11 +265,11 @@ public class AuthConfigFactoryTest {
         addAuths(config,"roland","secret","roland@jolokia.org", "localhost:5000");
 
         try (Writer writer = new FileWriter(configFile)){
-            config.write(writer);
+            writer.write(config.toString());
         }
     }
 
-    private void addAuths(JSONObject config,String user,String password,String email,String registry) {
+    private void addAuths(JSONObject config,String user,String password,String email,String registry) throws JSONException {
         JSONObject auths = new JSONObject();
         JSONObject value = new JSONObject();
         value.put("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
@@ -272,7 +282,7 @@ public class AuthConfigFactoryTest {
     public void testOpenShiftConfigFromPluginConfig() throws Exception {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 createOpenShiftConfig(homeDir,"openshift_simple_config.yaml");
                 Map<String,String> authConfigMap = new HashMap<>();
                 authConfigMap.put("useOpenShiftAuth","true");
@@ -288,7 +298,7 @@ public class AuthConfigFactoryTest {
             System.setProperty("docker.useOpenShiftAuth","true");
             executeWithTempHomeDir(new HomeDirExecutor() {
                 @Override
-                public void exec(File homeDir) throws IOException, MojoExecutionException {
+                public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                     createOpenShiftConfig(homeDir, "openshift_simple_config.yaml");
                     AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", null);
                     verifyAuthConfig(config, "admin", "token123", null);
@@ -358,7 +368,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromPluginConfiguration() throws MojoExecutionException {
+    public void testFromPluginConfiguration() throws MojoExecutionException, JSONException {
         Map pluginConfig = new HashMap();
         pluginConfig.put("username", "roland");
         pluginConfig.put("password", "secret");
@@ -369,7 +379,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromPluginConfigurationPull() throws MojoExecutionException {
+    public void testFromPluginConfigurationPull() throws MojoExecutionException, JSONException {
         Map pullConfig = new HashMap();
         pullConfig.put("username", "roland");
         pullConfig.put("password", "secret");
@@ -391,7 +401,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromSettingsSimple() throws MojoExecutionException {
+    public void testFromSettingsSimple() throws MojoExecutionException, JSONException {
         setupServers();
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", "test.org");
         assertNotNull(config);
@@ -399,7 +409,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromSettingsDefault() throws MojoExecutionException {
+    public void testFromSettingsDefault() throws MojoExecutionException, JSONException {
         setupServers();
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "fabric8io", "test.org");
         assertNotNull(config);
@@ -407,7 +417,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromSettingsDefault2() throws MojoExecutionException {
+    public void testFromSettingsDefault2() throws MojoExecutionException, JSONException {
         setupServers();
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "tanja", null);
         assertNotNull(config);
@@ -415,16 +425,15 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testWrongUserName() throws IOException, MojoExecutionException {
+    public void testWrongUserName() throws IOException, MojoExecutionException, JSONException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
-            public void exec(File homeDir) throws IOException, MojoExecutionException {
+            public void exec(File homeDir) throws IOException, MojoExecutionException, JSONException {
                 setupServers();
                 assertNull(factory.createAuthConfig(isPush,false,null,settings,"roland","another.repo.org"));
             }
         });
     }
-
 
     private void setupServers() {
         new Expectations() {{
@@ -454,8 +463,8 @@ public class AuthConfigFactoryTest {
         };
     }
 
-    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
-        JSONObject params = new JSONObject(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())));
+    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) throws JSONException {
+        JSONObject params = toJSONObject(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())));
         assertEquals(username,params.get("username"));
         assertEquals(password,params.get("password"));
         if (email != null) {

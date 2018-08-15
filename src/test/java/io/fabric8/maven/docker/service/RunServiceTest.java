@@ -1,24 +1,42 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.*;
-
-import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.wait.WaitUtil;
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.config.*;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import mockit.*;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.log.LogOutputSpec;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
+import mockit.Mocked;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
@@ -317,12 +335,12 @@ public class RunServiceTest {
         config.addAlias("net-alias");
         return config;
     }
-    private void thenContainerConfigIsValid() throws IOException {
+    private void thenContainerConfigIsValid() throws IOException, JSONException {
         String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
         JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
     }
 
-    private void thenStartConfigIsValid() throws IOException {
+    private void thenStartConfigIsValid() throws IOException, JSONException {
         String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
         JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
     }

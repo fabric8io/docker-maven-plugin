@@ -1,8 +1,12 @@
 package io.fabric8.maven.docker.service;
 
+import org.json.JSONObject;
+
 import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.util.AutoPullMode;
-import org.json.JSONObject;
+
+import static io.fabric8.maven.docker.util.JsonUtils.put;
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
 
 /**
  * Simple interface for a ImagePullCache manager, to load and persist the cache.
@@ -92,7 +96,7 @@ public class ImagePullManager {
         }
 
         public ImagePullCache(String json) {
-            cache = json != null ? new JSONObject(json) : new JSONObject();
+            cache = json != null ? toJSONObject(json) : new JSONObject();
         }
 
         public boolean has(String imageName) {
@@ -100,7 +104,7 @@ public class ImagePullManager {
         }
 
         public ImagePullCache add(String image) {
-            cache.put(image, Boolean.TRUE);
+            put(cache, image, Boolean.TRUE);
             return this;
         }
 

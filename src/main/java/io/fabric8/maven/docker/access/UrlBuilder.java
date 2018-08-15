@@ -1,12 +1,18 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.*;
-
-import io.fabric8.maven.docker.util.ImageName;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeSet;
+
+import io.fabric8.maven.docker.util.ImageName;
+
+import static io.fabric8.maven.docker.util.JsonUtils.put;
 
 public final class UrlBuilder {
 
@@ -218,7 +224,7 @@ public final class UrlBuilder {
            for (int i = 0; i < filter.length; i +=2) {
                JSONArray value = new JSONArray();
                value.put(filter[i+1]);
-               filters.put(filter[i],value);
+               put(filters, filter[i],value);
            }
            builder.p("filters",filters.toString());
        }

@@ -21,39 +21,39 @@ public class ExecDetails {
     }
 
     public boolean isRunning() {
-        return json.getBoolean(RUNNING);
+        return json.optBoolean(RUNNING);
     }
 
     public Integer getExitCode() {
         if (isRunning()) {
             return null;
         }
-        return json.getInt(EXIT_CODE);
+        return json.optInt(EXIT_CODE);
     }
 
     public String getEntryPoint() {
         if (!json.has(PROCESS_CONFIG)) {
             return null;
         }
-        JSONObject processConfig = json.getJSONObject(PROCESS_CONFIG);
+        JSONObject processConfig = json.optJSONObject(PROCESS_CONFIG);
         if (!processConfig.has(ENTRY_POINT)) {
             return null;
         }
-        return processConfig.getString(ENTRY_POINT);
+        return processConfig.optString(ENTRY_POINT);
     }
 
     public String[] getArguments() {
         if (!json.has(PROCESS_CONFIG)) {
             return null;
         }
-        JSONObject processConfig = json.getJSONObject(PROCESS_CONFIG);
+        JSONObject processConfig = json.optJSONObject(PROCESS_CONFIG);
         if (!processConfig.has(ARGUMENTS)) {
             return null;
         }
-        JSONArray arguments = processConfig.getJSONArray(ARGUMENTS);
+        JSONArray arguments = processConfig.optJSONArray(ARGUMENTS);
         String[] result = new String[arguments.length()];
         for (int i = 0; i < arguments.length(); i++) {
-            result[i] = arguments.getString(i);
+            result[i] = arguments.optString(i);
         }
         return result;
     }

@@ -1,15 +1,25 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /*
  * 
@@ -52,7 +62,7 @@ public class ContainerCreateConfigTest {
     }
 
     @Test
-    public void testEnvironmentEmptyPropertiesFile() {
+    public void testEnvironmentEmptyPropertiesFile() throws JSONException {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         cc.environment(null, getEnvMap(),Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
@@ -60,7 +70,7 @@ public class ContainerCreateConfigTest {
     }
 
     @Test
-    public void testBind() {
+    public void testBind() throws JSONException {
         String[] testData = new String[] {
             "c:\\this\\is\\my\\path:/data", "/data",
             "/home/user:/user", "/user",
@@ -69,7 +79,7 @@ public class ContainerCreateConfigTest {
             ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
             cc.binds(Arrays.asList(testData[i]));
 
-            JSONObject volumes = (JSONObject) new JSONObject(cc.toJson()).get("Volumes");
+            JSONObject volumes = (JSONObject) toJSONObject(cc.toJson()).get("Volumes");
             assertEquals(1, volumes.length());
             assertTrue(volumes.has(testData[i+1]));
         }
@@ -80,12 +90,12 @@ public class ContainerCreateConfigTest {
     public void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(null,null,Collections.<String, String>emptyMap());
-        JSONObject config = new JSONObject(cc.toJson());
+        JSONObject config = toJSONObject(cc.toJson());
         assertFalse(config.has("Env"));
     }
 
     @Test
-    public void testEnvNoMap() throws IOException {
+    public void testEnvNoMap() throws IOException, JSONException {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(copyPropsToFile(),null,Collections.<String, String>emptyMap());
         JSONArray env = getEnvArray(cc);
@@ -101,8 +111,8 @@ public class ContainerCreateConfigTest {
     }
 
 
-    private JSONArray getEnvArray(ContainerCreateConfig cc) {
-        JSONObject config = new JSONObject(cc.toJson());
+    private JSONArray getEnvArray(ContainerCreateConfig cc) throws JSONException {
+        JSONObject config = toJSONObject(cc.toJson());
         return (JSONArray) config.get("Env");
     }
 
@@ -116,7 +126,7 @@ public class ContainerCreateConfigTest {
     private List<String> convertToList(JSONArray env) {
         List<String> envAsString = new ArrayList<>();
         for (int i = 0; i < env.length(); i++) {
-            envAsString.add(env.getString(i));
+            envAsString.add(env.optString(i));
         }
         return envAsString;
     }

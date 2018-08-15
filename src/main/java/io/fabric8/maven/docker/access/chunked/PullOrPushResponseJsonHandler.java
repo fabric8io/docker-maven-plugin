@@ -30,9 +30,9 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
     private void logInfoMessage(JSONObject json) {
         String value;
         if (json.has("stream")) {
-            value = json.getString("stream").replaceFirst("\n$", "");
+            value = json.optString("stream").replaceFirst("\n$", "");
         } else if (json.has("status")) {
-            value = json.getString("status");
+            value = json.optString("status");
         } else {
             value = json.toString();
         }
@@ -40,13 +40,13 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
     }
 
     private void throwDockerAccessException(JSONObject json) throws DockerAccessException {
-        String msg = json.getString("error").trim();
-        String details = json.getJSONObject("errorDetail").getString("message").trim();
+        String msg = json.optString("error").trim();
+        String details = json.optJSONObject("errorDetail").optString("message").trim();
         throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
     }
 
     private String getStringOrEmpty(JSONObject json, String what) {
-        return json.has(what) ? json.getString(what) : "";
+        return json.has(what) ? json.optString(what) : "";
     }
 
     @Override

@@ -57,8 +57,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
         BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider);
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
-        String name = valueProvider.getString(NAME, fromConfig.getName());
-        String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
+        String name = valueProvider.optString(NAME, fromConfig.getName());
+        String alias = valueProvider.optString(ALIAS, fromConfig.getAlias());
 
         if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
@@ -76,10 +76,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
     private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider) {
-        return valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
+        return valueProvider.optString(FROM, config == null ? null : config.getFrom()) != null ||
                 valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null ||
-                valueProvider.getString(DOCKER_FILE, config == null || config.getDockerFileRaw() == null ? null : config.getDockerFileRaw()) != null ||
-                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null;
+                valueProvider.optString(DOCKER_FILE, config == null || config.getDockerFileRaw() == null ? null : config.getDockerFileRaw()) != null ||
+                valueProvider.optString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null;
     }
 
 
@@ -91,9 +91,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
         return new BuildImageConfiguration.Builder()
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
-                .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanup()))
-                .nocache(valueProvider.getBoolean(NOCACHE, config == null ? null : config.getNoCache()))
-                .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
+                .cleanup(valueProvider.optString(CLEANUP, config == null ? null : config.getCleanup()))
+                .nocache(valueProvider.optBoolean(NOCACHE, config == null ? null : config.getNoCache()))
+                .optimise(valueProvider.optBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
                 .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
                 .assembly(extractAssembly(config == null ? null : config.getAssemblyConfiguration(), valueProvider))
                 .env(CollectionUtils.mergeMaps(
@@ -104,21 +104,21 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .labels(valueProvider.getMap(LABELS, config == null ? null : config.getLabels()))
                 .ports(extractPortValues(config == null ? null : config.getPorts(), valueProvider))
                 .runCmds(valueProvider.getList(RUN, config == null ? null : config.getRunCmds()))
-                .from(valueProvider.getString(FROM, config == null ? null : config.getFrom()))
+                .from(valueProvider.optString(FROM, config == null ? null : config.getFrom()))
                 .fromExt(valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()))
-                .registry(valueProvider.getString(REGISTRY, config == null ? null : config.getRegistry()))
+                .registry(valueProvider.optString(REGISTRY, config == null ? null : config.getRegistry()))
                 .volumes(valueProvider.getList(VOLUMES, config == null ? null : config.getVolumes()))
                 .tags(valueProvider.getList(TAGS, config == null ? null : config.getTags()))
-                .maintainer(valueProvider.getString(MAINTAINER, config == null ? null : config.getMaintainer()))
-                .workdir(valueProvider.getString(WORKDIR, config == null ? null : config.getWorkdir()))
-                .skip(valueProvider.getBoolean(SKIP_BUILD, config == null ? null : config.getSkip()))
-                .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_BUILD, config == null ? null : config.getImagePullPolicy()))
-                .dockerArchive(valueProvider.getString(DOCKER_ARCHIVE, config == null ? null : config.getDockerArchiveRaw()))
-                .dockerFile(valueProvider.getString(DOCKER_FILE, config == null ? null : config.getDockerFileRaw()))
-                .dockerFileDir(valueProvider.getString(DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDirRaw()))
+                .maintainer(valueProvider.optString(MAINTAINER, config == null ? null : config.getMaintainer()))
+                .workdir(valueProvider.optString(WORKDIR, config == null ? null : config.getWorkdir()))
+                .skip(valueProvider.optBoolean(SKIP_BUILD, config == null ? null : config.getSkip()))
+                .imagePullPolicy(valueProvider.optString(IMAGE_PULL_POLICY_BUILD, config == null ? null : config.getImagePullPolicy()))
+                .dockerArchive(valueProvider.optString(DOCKER_ARCHIVE, config == null ? null : config.getDockerArchiveRaw()))
+                .dockerFile(valueProvider.optString(DOCKER_FILE, config == null ? null : config.getDockerFileRaw()))
+                .dockerFileDir(valueProvider.optString(DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDirRaw()))
                 .buildOptions(valueProvider.getMap(BUILD_OPTIONS, config == null ? null : config.getBuildOptions()))
-                .filter(valueProvider.getString(FILTER, config == null ? null : config.getFilterRaw()))
-                .user(valueProvider.getString(USER, config == null ? null : config.getUser()))
+                .filter(valueProvider.optString(FILTER, config == null ? null : config.getFilterRaw()))
+                .user(valueProvider.optString(USER, config == null ? null : config.getUser()))
                 .healthCheck(extractHealthCheck(config == null ? null : config.getHealthCheck(), valueProvider))
                 .build();
     }
@@ -136,36 +136,36 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
                 .dns(valueProvider.getList(DNS, config == null ? null : config.getDns()))
                 .dependsOn(valueProvider.getList(DEPENDS_ON, config == null ? null : config.getDependsOn()))
-                .net(valueProvider.getString(NET, config == null ? null : config.getNetRaw()))
+                .net(valueProvider.optString(NET, config == null ? null : config.getNetRaw()))
                 .network(extractNetworkConfig(config == null ? null : config.getNetworkingConfig(), valueProvider))
                 .dnsSearch(valueProvider.getList(DNS_SEARCH, config == null ? null : config.getDnsSearch()))
-                .domainname(valueProvider.getString(DOMAINNAME, config == null ? null : config.getDomainname()))
+                .domainname(valueProvider.optString(DOMAINNAME, config == null ? null : config.getDomainname()))
                 .entrypoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntrypoint()))
                 .env(CollectionUtils.mergeMaps(
                         valueProvider.getMap(ENV_RUN, config == null ? null : config.getEnv()),
                         valueProvider.getMap(ENV, Collections.<String, String>emptyMap())
                 ))
                 .labels(valueProvider.getMap(LABELS, config == null ? null : config.getLabels()))
-                .envPropertyFile(valueProvider.getString(ENV_PROPERTY_FILE, config == null ? null : config.getEnvPropertyFile()))
+                .envPropertyFile(valueProvider.optString(ENV_PROPERTY_FILE, config == null ? null : config.getEnvPropertyFile()))
                 .extraHosts(valueProvider.getList(EXTRA_HOSTS, config == null ? null : config.getExtraHosts()))
-                .hostname(valueProvider.getString(HOSTNAME, config == null ? null : config.getHostname()))
+                .hostname(valueProvider.optString(HOSTNAME, config == null ? null : config.getHostname()))
                 .links(valueProvider.getList(LINKS, config == null ? null : config.getLinks()))
                 .memory(valueProvider.getLong(MEMORY, config == null ? null : config.getMemory()))
                 .memorySwap(valueProvider.getLong(MEMORY_SWAP, config == null ? null : config.getMemorySwap()))
-                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategyRaw() == null ? null : config.getNamingStrategyRaw().name()))
-                .exposedPropertyKey(valueProvider.getString(EXPOSED_PROPERTY_KEY, config == null ? null : config.getExposedPropertyKey()))
-                .portPropertyFile(valueProvider.getString(PORT_PROPERTY_FILE, config == null ? null : config.getPortPropertyFile()))
+                .namingStrategy(valueProvider.optString(NAMING_STRATEGY, config == null || config.getNamingStrategyRaw() == null ? null : config.getNamingStrategyRaw().name()))
+                .exposedPropertyKey(valueProvider.optString(EXPOSED_PROPERTY_KEY, config == null ? null : config.getExposedPropertyKey()))
+                .portPropertyFile(valueProvider.optString(PORT_PROPERTY_FILE, config == null ? null : config.getPortPropertyFile()))
                 .ports(valueProvider.getList(PORTS, config == null ? null : config.getPorts()))
                 .shmSize(valueProvider.getLong(SHMSIZE, config == null ? null : config.getShmSize()))
-                .privileged(valueProvider.getBoolean(PRIVILEGED, config == null ? null : config.getPrivileged()))
+                .privileged(valueProvider.optBoolean(PRIVILEGED, config == null ? null : config.getPrivileged()))
                 .restartPolicy(extractRestartPolicy(config == null ? null : config.getRestartPolicy(), valueProvider))
-                .user(valueProvider.getString(USER, config == null ? null : config.getUser()))
-                .workingDir(valueProvider.getString(WORKING_DIR, config == null ? null : config.getWorkingDir()))
+                .user(valueProvider.optString(USER, config == null ? null : config.getUser()))
+                .workingDir(valueProvider.optString(WORKING_DIR, config == null ? null : config.getWorkingDir()))
                 .log(extractLogConfig(config == null ? null : config.getLogConfiguration(), valueProvider))
                 .wait(extractWaitConfig(config == null ? null : config.getWaitConfiguration(), valueProvider))
                 .volumes(extractVolumeConfig(config == null ? null : config.getVolumeConfiguration(), valueProvider))
-                .skip(valueProvider.getBoolean(SKIP_RUN, config == null ? null : config.getSkip()))
-                .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_RUN, config == null ? null : config.getImagePullPolicy()))
+                .skip(valueProvider.optBoolean(SKIP_RUN, config == null ? null : config.getSkip()))
+                .imagePullPolicy(valueProvider.optString(IMAGE_PULL_POLICY_RUN, config == null ? null : config.getImagePullPolicy()))
                 .ulimits(extractUlimits(config == null ? null : config.getUlimits(), valueProvider))
                 .tmpfs(valueProvider.getList(TMPFS, config == null ? null : config.getTmpfs()))
                 .build();
@@ -173,8 +173,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private NetworkConfig extractNetworkConfig(NetworkConfig config, ValueProvider valueProvider) {
         return new NetworkConfig.Builder()
-            .mode(valueProvider.getString(NETWORK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
-            .name(valueProvider.getString(NETWORK_NAME, config == null ? null : config.getName()))
+            .mode(valueProvider.optString(NETWORK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
+            .name(valueProvider.optString(NETWORK_NAME, config == null ? null : config.getName()))
             .aliases(valueProvider.getList(NETWORK_ALIAS, config == null ? null : config.getAliases()))
             .build();
     }
@@ -182,16 +182,16 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     @SuppressWarnings("deprecation")
     private AssemblyConfiguration extractAssembly(AssemblyConfiguration config, ValueProvider valueProvider) {
         return new AssemblyConfiguration.Builder()
-                .targetDir(valueProvider.getString(ASSEMBLY_BASEDIR, config == null ? null : config.getTargetDir()))
-                .descriptor(valueProvider.getString(ASSEMBLY_DESCRIPTOR, config == null ? null : config.getDescriptor()))
-                .descriptorRef(valueProvider.getString(ASSEMBLY_DESCRIPTOR_REF, config == null ? null : config.getDescriptorRef()))
-                .dockerFileDir(valueProvider.getString(ASSEMBLY_DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDir()))
-                .exportBasedir(valueProvider.getBoolean(ASSEMBLY_EXPORT_BASEDIR, config == null ? null : config.getExportTargetDir()))
-                .ignorePermissions(valueProvider.getBoolean(ASSEMBLY_IGNORE_PERMISSIONS, config == null ? null : config.getIgnorePermissions()))
-                .permissions(valueProvider.getString(ASSEMBLY_PERMISSIONS, config == null ? null : config.getPermissionsRaw()))
-                .user(valueProvider.getString(ASSEMBLY_USER, config == null ? null : config.getUser()))
-                .mode(valueProvider.getString(ASSEMBLY_MODE, config == null ? null : config.getModeRaw()))
-                .tarLongFileMode(valueProvider.getString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()))
+                .targetDir(valueProvider.optString(ASSEMBLY_BASEDIR, config == null ? null : config.getTargetDir()))
+                .descriptor(valueProvider.optString(ASSEMBLY_DESCRIPTOR, config == null ? null : config.getDescriptor()))
+                .descriptorRef(valueProvider.optString(ASSEMBLY_DESCRIPTOR_REF, config == null ? null : config.getDescriptorRef()))
+                .dockerFileDir(valueProvider.optString(ASSEMBLY_DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDir()))
+                .exportBasedir(valueProvider.optBoolean(ASSEMBLY_EXPORT_BASEDIR, config == null ? null : config.getExportTargetDir()))
+                .ignorePermissions(valueProvider.optBoolean(ASSEMBLY_IGNORE_PERMISSIONS, config == null ? null : config.getIgnorePermissions()))
+                .permissions(valueProvider.optString(ASSEMBLY_PERMISSIONS, config == null ? null : config.getPermissionsRaw()))
+                .user(valueProvider.optString(ASSEMBLY_USER, config == null ? null : config.getUser()))
+                .mode(valueProvider.optString(ASSEMBLY_MODE, config == null ? null : config.getModeRaw()))
+                .tarLongFileMode(valueProvider.optString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()))
                 .build();
     }
 
@@ -199,11 +199,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         Map<String, String> healthCheckProperties = valueProvider.getMap(HEALTHCHECK, Collections.<String, String>emptyMap());
         if (healthCheckProperties != null && healthCheckProperties.size() > 0) {
             return new HealthCheckConfiguration.Builder()
-                    .interval(valueProvider.getString(HEALTHCHECK_INTERVAL, config == null ? null : config.getInterval()))
-                    .timeout(valueProvider.getString(HEALTHCHECK_TIMEOUT, config == null ? null : config.getTimeout()))
-                    .startPeriod(valueProvider.getString(HEALTHCHECK_START_PERIOD, config == null ? null : config.getStartPeriod()))
+                    .interval(valueProvider.optString(HEALTHCHECK_INTERVAL, config == null ? null : config.getInterval()))
+                    .timeout(valueProvider.optString(HEALTHCHECK_TIMEOUT, config == null ? null : config.getTimeout()))
+                    .startPeriod(valueProvider.optString(HEALTHCHECK_START_PERIOD, config == null ? null : config.getStartPeriod()))
                     .retries(valueProvider.getInteger(HEALTHCHECK_RETRIES, config == null ? null : config.getRetries()))
-                    .mode(valueProvider.getString(HEALTHCHECK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
+                    .mode(valueProvider.optString(HEALTHCHECK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
                     .cmd(extractArguments(valueProvider, HEALTHCHECK_CMD, config == null ? null : config.getCmd()))
                     .build();
         } else {
@@ -237,52 +237,52 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
     private RestartPolicy extractRestartPolicy(RestartPolicy config, ValueProvider valueProvider) {
         return new RestartPolicy.Builder()
-                .name(valueProvider.getString(RESTART_POLICY_NAME, config == null ? null : config.getName()))
-                .retry(valueProvider.getInt(RESTART_POLICY_RETRY, config == null || config.getRetry() == 0 ? null : config.getRetry()))
+                .name(valueProvider.optString(RESTART_POLICY_NAME, config == null ? null : config.getName()))
+                .retry(valueProvider.optInt(RESTART_POLICY_RETRY, config == null || config.getRetry() == 0 ? null : config.getRetry()))
                 .build();
     }
 
     private LogConfiguration extractLogConfig(LogConfiguration config, ValueProvider valueProvider) {
         LogConfiguration.Builder builder = new LogConfiguration.Builder()
-            .color(valueProvider.getString(LOG_COLOR, config == null ? null : config.getColor()))
-            .date(valueProvider.getString(LOG_DATE, config == null ? null : config.getDate()))
-            .file(valueProvider.getString(LOG_FILE, config == null ? null : config.getFileLocation()))
-            .prefix(valueProvider.getString(LOG_PREFIX, config == null ? null : config.getPrefix()))
-            .logDriverName(valueProvider.getString(LOG_DRIVER_NAME, config == null || config.getDriver() == null ? null : config.getDriver().getName()))
+            .color(valueProvider.optString(LOG_COLOR, config == null ? null : config.getColor()))
+            .date(valueProvider.optString(LOG_DATE, config == null ? null : config.getDate()))
+            .file(valueProvider.optString(LOG_FILE, config == null ? null : config.getFileLocation()))
+            .prefix(valueProvider.optString(LOG_PREFIX, config == null ? null : config.getPrefix()))
+            .logDriverName(valueProvider.optString(LOG_DRIVER_NAME, config == null || config.getDriver() == null ? null : config.getDriver().getName()))
             .logDriverOpts(valueProvider.getMap(LOG_DRIVER_OPTS, config == null || config.getDriver() == null ? null : config.getDriver().getOpts()));
 
         Boolean configEnabled = config != null ? config.isEnabled() : null;
-        Boolean enabled = valueProvider.getBoolean(LOG_ENABLED, configEnabled);
+        Boolean enabled = valueProvider.optBoolean(LOG_ENABLED, configEnabled);
         builder.enabled(enabled);
         return builder.build();
     }
 
     private WaitConfiguration extractWaitConfig(WaitConfiguration config, ValueProvider valueProvider) {
-        String url = valueProvider.getString(WAIT_HTTP_URL, config == null ? null : config.getUrl());
+        String url = valueProvider.optString(WAIT_HTTP_URL, config == null ? null : config.getUrl());
         if (url == null) {
             // Fallback to deprecated old URL
-            url = valueProvider.getString(WAIT_URL, config == null ? null : config.getUrl());
+            url = valueProvider.optString(WAIT_URL, config == null ? null : config.getUrl());
         }
         WaitConfiguration.ExecConfiguration exec = config == null ? null : config.getExec();
         WaitConfiguration.TcpConfiguration tcp = config == null ? null : config.getTcp();
         WaitConfiguration.HttpConfiguration http = config == null ? null : config.getHttp();
 
         return new WaitConfiguration.Builder()
-                .time(valueProvider.getInt(WAIT_TIME, config == null ? null : config.getTime()))
-                .healthy(valueProvider.getBoolean(WAIT_HEALTHY, config == null ? null : config.getHealthy()))
+                .time(valueProvider.optInt(WAIT_TIME, config == null ? null : config.getTime()))
+                .healthy(valueProvider.optBoolean(WAIT_HEALTHY, config == null ? null : config.getHealthy()))
                 .url(url)
-                .preStop(valueProvider.getString(WAIT_EXEC_PRE_STOP, exec == null ? null : exec.getPreStop()))
-                .postStart(valueProvider.getString(WAIT_EXEC_POST_START, exec == null ? null : exec.getPostStart()))
-                .breakOnError(valueProvider.getBoolean(WAIT_EXEC_BREAK_ON_ERROR, exec == null ? null : exec.isBreakOnError()))
-                .method(valueProvider.getString(WAIT_HTTP_METHOD, http == null ? null : http.getMethod()))
-                .status(valueProvider.getString(WAIT_HTTP_STATUS, http == null ? null : http.getStatus()))
-                .log(valueProvider.getString(WAIT_LOG, config == null ? null : config.getLog()))
+                .preStop(valueProvider.optString(WAIT_EXEC_PRE_STOP, exec == null ? null : exec.getPreStop()))
+                .postStart(valueProvider.optString(WAIT_EXEC_POST_START, exec == null ? null : exec.getPostStart()))
+                .breakOnError(valueProvider.optBoolean(WAIT_EXEC_BREAK_ON_ERROR, exec == null ? null : exec.isBreakOnError()))
+                .method(valueProvider.optString(WAIT_HTTP_METHOD, http == null ? null : http.getMethod()))
+                .status(valueProvider.optString(WAIT_HTTP_STATUS, http == null ? null : http.getStatus()))
+                .log(valueProvider.optString(WAIT_LOG, config == null ? null : config.getLog()))
                 .kill(valueProvider.getInteger(WAIT_KILL, config == null ? null : config.getKill()))
                 .exit(valueProvider.getInteger(WAIT_EXIT, config == null ? null : config.getExit()))
                 .shutdown(valueProvider.getInteger(WAIT_SHUTDOWN, config == null ? null : config.getShutdown()))
-                .tcpHost(valueProvider.getString(WAIT_TCP_HOST, tcp == null ? null : tcp.getHost()))
+                .tcpHost(valueProvider.optString(WAIT_TCP_HOST, tcp == null ? null : tcp.getHost()))
                 .tcpPorts(valueProvider.getIntList(WAIT_TCP_PORT, tcp == null ? null : tcp.getPorts()))
-                .tcpMode(valueProvider.getString(WAIT_TCP_MODE, tcp == null || tcp.getMode() == null ? null : tcp.getMode().name()))
+                .tcpMode(valueProvider.optString(WAIT_TCP_MODE, tcp == null || tcp.getMode() == null ? null : tcp.getMode().name()))
                 .build();
     }
 
@@ -291,9 +291,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
         return new WatchImageConfiguration.Builder()
                 .interval(valueProvider.getInteger(WATCH_INTERVAL, config == null ? null : config.getIntervalRaw()))
-                .postGoal(valueProvider.getString(WATCH_POSTGOAL, config == null ? null : config.getPostGoal()))
-                .postExec(valueProvider.getString(WATCH_POSTEXEC, config == null ? null : config.getPostExec()))
-                .mode(valueProvider.getString(WATCH_POSTGOAL, config == null || config.getMode() == null ? null : config.getMode().name()))
+                .postGoal(valueProvider.optString(WATCH_POSTGOAL, config == null ? null : config.getPostGoal()))
+                .postExec(valueProvider.optString(WATCH_POSTEXEC, config == null ? null : config.getPostExec()))
+                .mode(valueProvider.optString(WATCH_POSTGOAL, config == null || config.getMode() == null ? null : config.getMode().name()))
                 .build();
     }
 

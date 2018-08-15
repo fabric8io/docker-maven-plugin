@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -22,10 +24,13 @@ import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.yaml.snakeyaml.Yaml;
+
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -110,13 +115,18 @@ public class AuthConfigFactory {
             }
             try {
                 return extendedAuthentication(ret, registry);
-            } catch (IOException e) {
+            } catch (IOException | JSONException e) {
                 throw new MojoExecutionException(e.getMessage(), e);
             }
         }
 
-        // Finally check ~/.docker/config.json
-        ret = getAuthConfigFromDockerConfig(registry);
+        try {
+            // Finally check ~/.docker/config.json
+            ret = getAuthConfigFromDockerConfig(registry);
+        } catch (IOException | JSONException e) {
+            log.debug("AuthConfig: no credentials found");
+        }
+
         if (ret != null) {
             log.debug("AuthConfig: credentials from ~.docker/config.json");
             return ret;
@@ -137,7 +147,7 @@ public class AuthConfigFactory {
      * @throws IOException
      * @throws MojoExecutionException
      */
-    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException {
+    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException, JSONException {
         EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry);
         if (ecr.isAwsRegistry()) {
             return ecr.extendedAuth(standardAuthConfig);
@@ -306,7 +316,7 @@ public class AuthConfigFactory {
         return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
     }
 
-    private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException, IOException, JSONException {
         JSONObject dockerConfig = readDockerConfig();
         if (dockerConfig == null) {
             return null;
@@ -317,28 +327,28 @@ public class AuthConfigFactory {
             if (dockerConfig.has("credHelpers")) {
                 final JSONObject credHelpers = dockerConfig.getJSONObject("credHelpers");
                 if (credHelpers.has(registryToLookup)) {
-                    return extractAuthConfigFromCredentialsHelper(registryToLookup, credHelpers.getString(registryToLookup));
+                    return extractAuthConfigFromCredentialsHelper(registryToLookup, credHelpers.optString(registryToLookup));
                 }
             }
             if (dockerConfig.has("credsStore")) {
-                return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.getString("credsStore"));
+                return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.optString("credsStore"));
             }
         }
 
         if (dockerConfig.has("auths")) {
-            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.getJSONObject("auths"));
+            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.optJSONObject("auths"));
         }
 
         return null;
     }
 
-    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JSONObject auths) {
+    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JSONObject auths) throws JSONException {
         JSONObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
-        String auth = credentials.getString("auth");
-        String email = credentials.has("email") ? credentials.getString("email") : null;
+        String auth = credentials.optString("auth");
+        String email = credentials.has("email") ? credentials.optString("email") : null;
         return new AuthConfig(auth,email);
     }
 
@@ -352,11 +362,11 @@ public class AuthConfigFactory {
 
     private JSONObject getCredentialsNode(JSONObject auths,String registryToLookup) {
         if (auths.has(registryToLookup)) {
-            return auths.getJSONObject(registryToLookup);
+            return auths.optJSONObject(registryToLookup);
         }
         String registryWithScheme = EnvUtil.ensureRegistryHttpUrl(registryToLookup);
         if (auths.has(registryWithScheme)) {
-            return auths.getJSONObject(registryWithScheme);
+            return auths.optJSONObject(registryWithScheme);
         }
         return null;
     }
@@ -413,9 +423,9 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private JSONObject readDockerConfig() {
+    private JSONObject readDockerConfig() throws IOException {
         Reader reader = getFileReaderFromHomeDir(".docker/config.json");
-        return reader != null ? new JSONObject(new JSONTokener(reader)) : null;
+        return reader != null ? toJSONObject(new JSONTokener(IOUtils.toString(reader))) : null;
     }
 
     private Map<String,?> readKubeConfig() {

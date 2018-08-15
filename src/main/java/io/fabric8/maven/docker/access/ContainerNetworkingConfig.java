@@ -1,8 +1,11 @@
 package io.fabric8.maven.docker.access;
 
-import io.fabric8.maven.docker.config.NetworkConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import io.fabric8.maven.docker.config.NetworkConfig;
+
+import static io.fabric8.maven.docker.util.JsonUtils.put;
 
 public class ContainerNetworkingConfig {
 
@@ -16,12 +19,12 @@ public class ContainerNetworkingConfig {
      */
     public ContainerNetworkingConfig aliases(NetworkConfig config) {
         JSONObject endPoints = new JSONObject();
-        endPoints.put("Aliases",new JSONArray(config.getAliases()));
+        put(endPoints,"Aliases",new JSONArray(config.getAliases()));
 
         JSONObject endpointConfigMap = new JSONObject();
-        endpointConfigMap.put(config.getCustomNetwork(), endPoints);
+        put(endpointConfigMap, config.getCustomNetwork(), endPoints);
 
-        networkingConfig.put("EndpointsConfig", endpointConfigMap);
+        put(networkingConfig, "EndpointsConfig", endpointConfigMap);
         return this;
     }
 
