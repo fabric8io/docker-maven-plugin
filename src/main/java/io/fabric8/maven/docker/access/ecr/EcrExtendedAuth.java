@@ -10,7 +10,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -79,7 +78,7 @@ public class EcrExtendedAuth {
      * @throws IOException
      * @throws MojoExecutionException
      */
-    public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException, MojoExecutionException, JSONException {
+    public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException, MojoExecutionException {
         JSONObject jo = getAuthorizationToken(localCredentials);
 
         JSONArray authorizationDatas = jo.optJSONArray("authorizationData");
@@ -89,7 +88,7 @@ public class EcrExtendedAuth {
         return new AuthConfig(authorizationToken, "none");
     }
 
-    private JSONObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException, JSONException {
+    private JSONObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
         HttpPost request = createSignedRequest(localCredentials, new Date());
         return executeRequest(createClient(), request);
     }

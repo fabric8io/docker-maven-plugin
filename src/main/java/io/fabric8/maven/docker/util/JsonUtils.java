@@ -8,12 +8,19 @@ import org.json.JSONTokener;
 import io.fabric8.maven.docker.model.JsonParsingException;
 
 public class JsonUtils {
+    private static final String ERROR_PUT = "Error putting key: %sttvalue: %s";
+    private static final String ERROR_GET = "Error getting key: %s";
+    private static final String ERROR_JOINING = "Error joining: %s";
+    private static final String ERROR_CREATING = "Error creating %s";
+
+    private JsonUtils() {}
+
     public static final void putNonNull(JSONObject ret, String key, String value) {
         if (value != null) {
             try {
                 ret.put(key,value);
             } catch (JSONException e) {
-                throw new JsonParsingException("Error putting key: " + key + "\tvalue: " + value, e );
+                throw new JsonParsingException(String.format(ERROR_PUT, key, value), e );
             }
         }
     }
@@ -22,7 +29,7 @@ public class JsonUtils {
         try {
             ret.put(key,value);
         } catch (JSONException e) {
-            throw new JsonParsingException("Error putting key: " + key + "\tvalue: " + value, e );
+            throw new JsonParsingException(String.format(ERROR_PUT, key, value), e );
         }
     }
 
@@ -30,7 +37,7 @@ public class JsonUtils {
         try {
             return ret.get(key);
         } catch (JSONException e) {
-            throw new JsonParsingException("Error getting key: " + key, e );
+            throw new JsonParsingException(String.format(ERROR_GET, key), e );
         }
     }
 
@@ -38,7 +45,7 @@ public class JsonUtils {
         try {
             return joinMe.join(separator);
         } catch (JSONException e) {
-            throw new JsonParsingException("Error joining: " + joinMe, e );
+            throw new JsonParsingException(String.format(ERROR_JOINING, joinMe), e );
         }
     }
 
@@ -46,7 +53,7 @@ public class JsonUtils {
         try {
             return new JSONObject(json);
         } catch (JSONException e) {
-            throw new JsonParsingException("Error creating: " + json, e );
+            throw new JsonParsingException(String.format(ERROR_CREATING, json), e );
         }
     }
 
@@ -54,7 +61,7 @@ public class JsonUtils {
         try {
             return new JSONObject(json);
         } catch (JSONException e) {
-            throw new JsonParsingException("Error creating: " + json, e );
+            throw new JsonParsingException(String.format(ERROR_CREATING, json), e );
         }
     }
 
@@ -62,7 +69,7 @@ public class JsonUtils {
         try {
             return new JSONArray(json);
         } catch (JSONException e) {
-            throw new JsonParsingException("Error creating: " + json, e );
+            throw new JsonParsingException(String.format(ERROR_CREATING, json), e );
         }
     }
 }
