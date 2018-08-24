@@ -78,12 +78,12 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                                                                        MojoExecutionException {
 
         BuildService.BuildContext buildContext = getBuildContext();
-        WatchService.WatchContext watchContext = getWatchContext();
+        WatchService.WatchContext watchContext = getWatchContext(hub);
 
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
     }
 
-    protected WatchService.WatchContext getWatchContext() throws MojoExecutionException {
+    protected WatchService.WatchContext getWatchContext(ServiceHub hub) throws MojoExecutionException {
         return new WatchService.WatchContext.Builder()
                 .watchInterval(watchInterval)
                 .watchMode(watchMode)
@@ -97,7 +97,19 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .buildTimestamp(getBuildTimestamp())
                 .pomLabel(getPomLabel())
                 .mojoParameters(createMojoParameters())
+                .follow(follow())
+                .showLogs(showLogs())
+                .serviceHubFactory(serviceHubFactory)
+                .hub(hub)
+                .dispatcher(getLogDispatcher(hub))
                 .build();
     }
 
+    private String showLogs() {
+        return System.getProperty("docker.showLogs");
+    }
+
+    private boolean follow() {
+        return Boolean.valueOf(System.getProperty("docker.follow", "false"));
+    }
 }

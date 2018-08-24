@@ -19,6 +19,8 @@ import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.service.helper.RunConfigurationExecutionHelper;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.PomLabel;
@@ -237,17 +239,23 @@ public class WatchService {
                 runService.stopPreviouslyStartedContainer(id, false, false);
 
                 // Start new one
-                WatchContext ctx = watcher.getWatchContext();
-                MavenProject project = ctx.getMojoParameters().getProject();
-                watcher.setContainerId(
-                    runService.createAndStartContainer(
-                        imageConfig,
-                        mappedPorts,
-                        ctx.getPomLabel(),
-                        project.getProperties(),
-                        project.getBasedir(),
-                        ctx.getContainerNamePattern(),
-                        ctx.getBuildTimestamp()));
+                RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
+                        .dispatcher(watcher.watchContext.dispatcher)
+                        .follow(watcher.watchContext.follow)
+                        .log(log)
+                        .portMapping(mappedPorts)
+                        .pomLabel(watcher.watchContext.pomLabel)
+                        .project(watcher.watchContext.mojoParameters.getProject())
+                        .imageConfig(imageConfig)
+                        .serviceHub(watcher.watchContext.hub)
+                        .serviceHubFactory(watcher.watchContext.serviceHubFactory)
+                        .showLogs(watcher.watchContext.showLogs)
+                        .runService(runService)
+                        .build();
+
+                String containerId = helper.executeRunConfiguration();
+
+                watcher.setContainerId(containerId);
             }
         };
     }
@@ -406,6 +414,12 @@ public class WatchService {
 
         private Task<ImageWatcher> containerRestarter;
 
+        private transient ServiceHub hub;
+        private transient ServiceHubFactory serviceHubFactory;
+        private transient LogDispatcher dispatcher;
+        private boolean follow;
+        private String showLogs;
+
         private Date buildTimestamp;
 
         private String containerNamePattern;
@@ -541,6 +555,31 @@ public class WatchService {
                 return this;
             }
 
+            public Builder follow(boolean follow) {
+                context.follow = follow;
+                return this;
+            }
+
+            public Builder showLogs(String showLogs) {
+                context.showLogs = showLogs;
+                return this;
+            }
+
+            public Builder hub(ServiceHub hub){
+                context.hub = hub;
+                return this;
+            }
+
+            public Builder serviceHubFactory(ServiceHubFactory serviceHubFactory){
+                context.serviceHubFactory = serviceHubFactory;
+                return this;
+            }
+
+            public Builder dispatcher(LogDispatcher dispatcher){
+                context.dispatcher = dispatcher;
+                return this;
+            }
+
             public Builder buildTimestamp(Date buildTimestamp) {
                 context.buildTimestamp = buildTimestamp;
                 return this;
@@ -555,8 +594,6 @@ public class WatchService {
             public WatchContext build() {
                 return context;
             }
-
         }
     }
-
 }
