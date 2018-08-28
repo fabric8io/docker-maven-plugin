@@ -10,7 +10,9 @@ import java.util.Map;
 public class GsonBridge {
     private static final Gson GSON = new Gson();
 
-    private GsonBridge() {}
+    private GsonBridge() {
+        // Empty Constructor
+    }
 
     public static final JsonObject toJsonObject(String json) {
         return GSON.fromJson(json, JsonObject.class);
