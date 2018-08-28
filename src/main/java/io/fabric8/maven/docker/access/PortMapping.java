@@ -165,38 +165,41 @@ public class PortMapping {
      */
     public JsonArray toJson() {
         Map<String, Integer> portMap = getContainerPortToHostPortMap();
-        if (!portMap.isEmpty()) {
-            JsonArray ret = new JsonArray();
-            Map<String, String> bindToMap = getBindToHostMap();
-
-            for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
-                JsonObject mapping = new JsonObject();
-                String containerPortSpec = entry.getKey();
-                Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(entry.getKey());
-                if (!matcher.matches()) {
-                    throw new IllegalStateException("Internal error: " + entry.getKey() +
-                                                    " doesn't contain protocol part and doesn't match "
-                                                    + PROTOCOL_SPLIT_PATTERN);
-                }
-                mapping.addProperty("containerPort", Integer.parseInt(matcher.group(1)));
-                if (matcher.group(2) != null) {
-                    mapping.addProperty("protocol", matcher.group(2));
-                }
-                Integer hostPort = entry.getValue();
-                if (hostPort != null) {
-                    mapping.addProperty("hostPort", hostPort);
-                }
-
-                if (bindToMap.containsKey(containerPortSpec)) {
-                    mapping.addProperty("hostIP", bindToMap.get(containerPortSpec));
-                }
-
-                ret.add(mapping);
-            }
-            return ret;
-        } else {
+        if (portMap.isEmpty()) {
             return null;
         }
+
+        JsonArray ret = new JsonArray();
+        Map<String, String> bindToMap = getBindToHostMap();
+
+        for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
+            JsonObject mapping = new JsonObject();
+            String containerPortSpec = entry.getKey();
+            Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(entry.getKey());
+            if (!matcher.matches()) {
+                throw new IllegalStateException("Internal error: " + entry.getKey() +
+                                                " doesn't contain protocol part and doesn't match "
+                                                + PROTOCOL_SPLIT_PATTERN);
+            }
+
+            mapping.addProperty("containerPort", Integer.parseInt(matcher.group(1)));
+            if (matcher.group(2) != null) {
+                mapping.addProperty("protocol", matcher.group(2));
+            }
+
+            Integer hostPort = entry.getValue();
+            if (hostPort != null) {
+                mapping.addProperty("hostPort", hostPort);
+            }
+
+            if (bindToMap.containsKey(containerPortSpec)) {
+                mapping.addProperty("hostIP", bindToMap.get(containerPortSpec));
+            }
+
+            ret.add(mapping);
+        }
+
+        return ret;
     }
 
     // ==========================================================================================================
