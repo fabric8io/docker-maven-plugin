@@ -1,14 +1,17 @@
 package io.fabric8.maven.docker.util;
 
+import com.google.gson.JsonObject;
+
+import org.apache.commons.codec.binary.Base64;
+import org.junit.Test;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
-import org.apache.commons.codec.binary.Base64;
-import org.json.JSONObject;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author roland
@@ -41,10 +44,10 @@ public class AuthConfigTest {
 
     private void check(AuthConfig config) {
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
-        JSONObject data = new JSONObject(header);
-        assertEquals("roland",data.getString("username"));
-        assertEquals("secret",data.getString("password"));
-        assertEquals("roland@jolokia.org",data.getString("email"));
+        JsonObject data = GsonBridge.toJsonObject(header);
+        assertEquals("roland",data.get("username").getAsString());
+        assertEquals("secret",data.get("password").getAsString());
+        assertEquals("roland@jolokia.org",data.get("email").getAsString());
         assertFalse(data.has("auth"));
     }
 }

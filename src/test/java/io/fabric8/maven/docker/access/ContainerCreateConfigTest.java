@@ -1,15 +1,26 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import io.fabric8.maven.docker.util.GsonBridge;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /*
  * 
@@ -39,9 +50,9 @@ public class ContainerCreateConfigTest {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         Map<String, String> envMap = getEnvMap();
         cc.environment(copyPropsToFile(), envMap, Collections.<String, String>emptyMap());
-        JSONArray env = getEnvArray(cc);
+        JsonArray env = getEnvArray(cc);
         assertNotNull(env);
-        assertEquals(6, env.length());
+        assertEquals(6, env.size());
         List<String> envAsString = convertToList(env);
         assertTrue(envAsString.contains("JAVA_OPTS=-Xmx512m"));
         assertTrue(envAsString.contains("TEST_SERVICE=SECURITY"));
@@ -55,8 +66,8 @@ public class ContainerCreateConfigTest {
     public void testEnvironmentEmptyPropertiesFile() {
         ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
         cc.environment(null, getEnvMap(),Collections.<String, String>emptyMap());
-        JSONArray env = getEnvArray(cc);
-        assertEquals(5, env.length());
+        JsonArray env = getEnvArray(cc);
+        assertEquals(5, env.size());
     }
 
     @Test
@@ -69,8 +80,8 @@ public class ContainerCreateConfigTest {
             ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
             cc.binds(Arrays.asList(testData[i]));
 
-            JSONObject volumes = (JSONObject) new JSONObject(cc.toJson()).get("Volumes");
-            assertEquals(1, volumes.length());
+            JsonObject volumes = (JsonObject) GsonBridge.toJsonObject(cc.toJson()).get("Volumes");
+            assertEquals(1, volumes.size());
             assertTrue(volumes.has(testData[i+1]));
         }
     }
@@ -80,7 +91,7 @@ public class ContainerCreateConfigTest {
     public void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(null,null,Collections.<String, String>emptyMap());
-        JSONObject config = new JSONObject(cc.toJson());
+        JsonObject config = GsonBridge.toJsonObject(cc.toJson());
         assertFalse(config.has("Env"));
     }
 
@@ -88,8 +99,8 @@ public class ContainerCreateConfigTest {
     public void testEnvNoMap() throws IOException {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(copyPropsToFile(),null,Collections.<String, String>emptyMap());
-        JSONArray env = getEnvArray(cc);
-        assertEquals(2, env.length());
+        JsonArray env = getEnvArray(cc);
+        assertEquals(2, env.size());
         List<String> envAsString = convertToList(env);
         assertTrue(envAsString.contains("EXTERNAL_ENV=TRUE"));
     }
@@ -101,9 +112,9 @@ public class ContainerCreateConfigTest {
     }
 
 
-    private JSONArray getEnvArray(ContainerCreateConfig cc) {
-        JSONObject config = new JSONObject(cc.toJson());
-        return (JSONArray) config.get("Env");
+    private JsonArray getEnvArray(ContainerCreateConfig cc) {
+        JsonObject config = GsonBridge.toJsonObject(cc.toJson());
+        return (JsonArray) config.get("Env");
     }
 
     private String copyPropsToFile() throws IOException {
@@ -113,10 +124,10 @@ public class ContainerCreateConfigTest {
     }
 
 
-    private List<String> convertToList(JSONArray env) {
+    private List<String> convertToList(JsonArray env) {
         List<String> envAsString = new ArrayList<>();
-        for (int i = 0; i < env.length(); i++) {
-            envAsString.add(env.getString(i));
+        for (int i = 0; i < env.size(); i++) {
+            envAsString.add(env.get(i).getAsString());
         }
         return envAsString;
     }

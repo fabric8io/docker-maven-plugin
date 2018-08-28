@@ -1,15 +1,23 @@
 package io.fabric8.maven.docker.access;
 
-import java.util.*;
+import com.google.gson.JsonArray;
+
+import org.apache.commons.text.StrSubstitutor;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import io.fabric8.maven.docker.model.Container;
-import org.apache.commons.text.StrSubstitutor;
-import org.json.JSONArray;
-import org.junit.*;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONParser;
+import io.fabric8.maven.docker.util.GsonBridge;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
@@ -201,8 +209,8 @@ public class PortMappingTest {
     }
 
     private void thenAssertJsonEquals(String json) {
-        JSONArray jsonArray = (JSONArray) JSONParser.parseJSON(json);
-        JSONAssert.assertEquals(jsonArray,mapping.toJson(), true);
+        JsonArray jsonArray = GsonBridge.toJsonArray(json);
+        assertEquals(jsonArray, mapping.toJson().getAsJsonArray());
     }
 
     private void givenADockerHostAddress(String host) {

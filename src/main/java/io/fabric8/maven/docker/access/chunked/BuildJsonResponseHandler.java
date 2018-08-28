@@ -1,8 +1,9 @@
 package io.fabric8.maven.docker.access.chunked;
 
-import io.fabric8.maven.docker.util.Logger;
+import com.google.gson.JsonObject;
+
 import io.fabric8.maven.docker.access.DockerAccessException;
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.Logger;
 
 public class BuildJsonResponseHandler implements EntityStreamReaderUtil.JsonEntityResponseHandler {
 
@@ -13,22 +14,22 @@ public class BuildJsonResponseHandler implements EntityStreamReaderUtil.JsonEnti
     }
     
     @Override
-    public void process(JSONObject json) throws DockerAccessException {
+    public void process(JsonObject json) throws DockerAccessException {
         if (json.has("error")) {
-            String msg = json.getString("error");
+            String msg = json.get("error").getAsString();
             String detailMsg = "";
             if (json.has("errorDetail")) {
-                JSONObject details = json.getJSONObject("errorDetail");
-                detailMsg = details.getString("message");
+                JsonObject details = json.getAsJsonObject("errorDetail");
+                detailMsg = details.get("message").getAsString();
             }
             throw new DockerAccessException("%s %s", json.get("error"),
                     (msg.equals(detailMsg) || "".equals(detailMsg) ? "" : "(" + detailMsg + ")"));
         } else if (json.has("stream")) {
-            String message = json.getString("stream");
+            String message = json.get("stream").getAsString();
             log.verbose("%s", message.trim());
         } else if (json.has("status")) {
-            String status = json.getString("status").trim();
-            String id = json.has("id") ? json.getString("id") : null;
+            String status = json.get("status").getAsString().trim();
+            String id = json.has("id") ? json.get("id").getAsString() : null;
             if (status.matches("^.*(Download|Pulling).*")) {
                 log.info("  %s%s",id != null ? id + " " : "",status);
             }

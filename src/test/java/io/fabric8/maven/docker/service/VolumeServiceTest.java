@@ -1,21 +1,24 @@
 package io.fabric8.maven.docker.service;
 
 
+import com.google.gson.JsonObject;
+
+import org.junit.Test;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.util.GsonBridge;
 import mockit.Delegate;
 import mockit.Expectations;
 import mockit.Mocked;
-import org.json.JSONObject;
-import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONParser;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  *  Basic Unit Tests for {@link VolumeService}
@@ -60,8 +63,8 @@ public class VolumeServiceTest {
          docker.createVolume(with(new Delegate<VolumeCreateConfig>() {
             void check(VolumeCreateConfig vcc) {
                assertThat(vcc.getName(), is("testVolume"));
-               JSONObject vccJson = (JSONObject) JSONParser.parseJSON(vcc.toJson());
-               assertEquals(vccJson.get("Driver"), "test");
+               JsonObject vccJson = GsonBridge.toJsonObject(vcc.toJson());
+               assertEquals(vccJson.get("Driver").getAsString(), "test");
             }
          })); result = "testVolume";
       }};

@@ -1,5 +1,8 @@
 package io.fabric8.maven.docker.access;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -9,27 +12,26 @@ import java.util.Map;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.util.EnvUtil;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.GsonBridge;
 
 public class ContainerHostConfig {
 
-    final JSONObject startConfig = new JSONObject();
+    final JsonObject startConfig = new JsonObject();
 
     public ContainerHostConfig() {}
 
     public ContainerHostConfig binds(List<String> bind) {
         if (bind != null && !bind.isEmpty()) {
-            JSONArray binds = new JSONArray();
+            JsonArray binds = new JsonArray();
 
             for (String volume : bind) {
                 volume = EnvUtil.fixupPath(volume);
 
                 if (volume.contains(":")) {
-                    binds.put(volume);
+                    binds.add(volume);
                 }
             }
-            startConfig.put("Binds", binds);
+            startConfig.add("Binds", binds);
         }
         return this;
     }
@@ -92,23 +94,23 @@ public class ContainerHostConfig {
 
     public ContainerHostConfig ulimits(List<UlimitConfig> ulimitsConfig) {
     	if (ulimitsConfig != null && ulimitsConfig.size() > 0) {
-            JSONArray ulimits = new JSONArray();
+            JsonArray ulimits = new JsonArray();
             for (UlimitConfig ulimit : ulimitsConfig) {
-                JSONObject ulimitConfigJson = new JSONObject();
-                ulimitConfigJson.put("Name", ulimit.getName());
+                JsonObject ulimitConfigJson = new JsonObject();
+                ulimitConfigJson.addProperty("Name", ulimit.getName());
                 addIfNotNull(ulimitConfigJson, "Hard", ulimit.getHard());
                 addIfNotNull(ulimitConfigJson, "Soft", ulimit.getSoft());
-                ulimits.put(ulimitConfigJson);
+                ulimits.add(ulimitConfigJson);
             }
 
-            startConfig.put("Ulimits", ulimits);
+            startConfig.add("Ulimits", ulimits);
         }
         return this;
     }
 
-    private void addIfNotNull(JSONObject json, String key, Integer value) {
+    private void addIfNotNull(JsonObject json, String key, Integer value) {
         if (value != null) {
-            json.put(key, value);
+            json.addProperty(key, value);
         }
     }
 
@@ -117,9 +119,9 @@ public class ContainerHostConfig {
     }
 
     public ContainerHostConfig portBindings(PortMapping portMapping) {
-        JSONObject portBindings = portMapping.toDockerPortBindingsJson();
+        JsonObject portBindings = portMapping.toDockerPortBindingsJson();
         if (portBindings != null) {
-            startConfig.put("PortBindings", portBindings);
+            startConfig.add("PortBindings", portBindings);
         }
         return this;
     }
@@ -130,16 +132,16 @@ public class ContainerHostConfig {
 
     public ContainerHostConfig tmpfs(List<String> mounts) {
         if (mounts != null && mounts.size() > 0) {
-            JSONObject tmpfs = new JSONObject();
+            JsonObject tmpfs = new JsonObject();
             for (String mount : mounts) {
                 int idx = mount.indexOf(':');
                 if (idx > -1) {
-                    tmpfs.put(mount.substring(0,idx),mount.substring(idx+1));
+                    tmpfs.addProperty(mount.substring(0,idx), mount.substring(idx+1));
                 } else {
-                    tmpfs.put(mount, "");
+                    tmpfs.addProperty(mount, "");
                 }
             }
-            startConfig.put("Tmpfs", tmpfs);
+            startConfig.add("Tmpfs", tmpfs);
         }
         return this;
     }
@@ -150,11 +152,11 @@ public class ContainerHostConfig {
 
     public ContainerHostConfig restartPolicy(String name, int retry) {
         if (name != null) {
-            JSONObject policy = new JSONObject();
-            policy.put("Name", name);
-            policy.put("MaximumRetryCount", retry);
+            JsonObject policy = new JsonObject();
+            policy.addProperty("Name", name);
+            policy.addProperty("MaximumRetryCount", retry);
 
-            startConfig.put("RestartPolicy", policy);
+            startConfig.add("RestartPolicy", policy);
         }
         return this;
     }
@@ -163,19 +165,19 @@ public class ContainerHostConfig {
         if (logConfig != null) {
             LogConfiguration.LogDriver logDriver = logConfig.getDriver();
             if (logDriver != null) {
-                JSONObject logConfigJson = new JSONObject();
-                logConfigJson.put("Type", logDriver.getName());
+                JsonObject logConfigJson = new JsonObject();
+                logConfigJson.addProperty("Type", logDriver.getName());
 
                 Map<String,String> opts = logDriver.getOpts();
                 if (opts != null && opts.size() > 0) {
-                    JSONObject config = new JSONObject();
+                    JsonObject config = new JsonObject();
                     for (Map.Entry<String, String> logOpt : opts.entrySet()) {
-                        config.put(logOpt.getKey(), logOpt.getValue());
+                        config.addProperty(logOpt.getKey(), logOpt.getValue());
                     }
-                    logConfigJson.put("Config", config);
+                    logConfigJson.add("Config", config);
                 }
 
-                startConfig.put("LogConfig", logConfigJson);
+                startConfig.add("LogConfig", logConfigJson);
             }
         }
         return this;
@@ -190,22 +192,35 @@ public class ContainerHostConfig {
         return startConfig.toString();
     }
 
-    public Object toJsonObject() {
+    public JsonObject toJsonObject() {
         return startConfig;
     }
 
     ContainerHostConfig addAsArray(String propKey, List<String> props) {
         if (props != null) {
-            startConfig.put(propKey, new JSONArray(props));
+            startConfig.add(propKey, GsonBridge.toJsonArray(props));
         }
         return this;
     }
 
-    private ContainerHostConfig add(String name, Object value) {
+    private ContainerHostConfig add(String name, String value) {
         if (value != null) {
-            startConfig.put(name, value);
+            startConfig.addProperty(name, value);
         }
         return this;
     }
 
+    private ContainerHostConfig add(String name, Boolean value) {
+        if (value != null) {
+            startConfig.addProperty(name, value);
+        }
+        return this;
+    }
+
+    private ContainerHostConfig add(String name, Long value) {
+        if (value != null) {
+            startConfig.addProperty(name, value);
+        }
+        return this;
+    }
 }
