@@ -18,9 +18,8 @@ public class EntityStreamReaderUtil {
 
     public static void processJsonStream(JsonEntityResponseHandler handler, InputStream stream) throws IOException {
         handler.start();
-        try {
+        try(JsonReader json = new JsonReader(new InputStreamReader(stream))) {
             JsonParser parser = new JsonParser();
-            JsonReader json = new JsonReader(new InputStreamReader(stream));
 
             json.setLenient(true);
             while (json.peek() != JsonToken.END_DOCUMENT) {
