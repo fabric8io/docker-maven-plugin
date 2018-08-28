@@ -64,7 +64,7 @@ public class VolumeServiceTest {
             void check(VolumeCreateConfig vcc) {
                assertThat(vcc.getName(), is("testVolume"));
                JsonObject vccJson = GsonBridge.toJsonObject(vcc.toJson());
-               assertEquals(vccJson.get("Driver").getAsString(), "test");
+               assertEquals("test", vccJson.get("Driver").getAsString());
             }
          })); result = "testVolume";
       }};
