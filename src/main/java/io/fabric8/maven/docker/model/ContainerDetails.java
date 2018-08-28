@@ -106,7 +106,7 @@ public class ContainerDetails implements Container {
     private Map<String, String> extractNetworks(JsonObject networkSettings) {
         JsonObject networks = networkSettings.getAsJsonObject(NETWORKS);
         Set<String> keys = networks.keySet();
-        if (keys == null || keys.size() == 0) {
+        if (keys == null || keys.isEmpty()) {
             return null;
         }
         Map<String, String> results = new HashMap<>();

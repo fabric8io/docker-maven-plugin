@@ -342,7 +342,7 @@ public class AuthConfigFactory {
             return null;
         }
         String auth = credentials.get("auth").getAsString();
-        String email = credentials.has("email") ? credentials.get("email").getAsString() : null;
+        String email = credentials.has(AUTH_EMAIL) ? credentials.get(AUTH_EMAIL).getAsString() : null;
         return new AuthConfig(auth,email);
     }
 
@@ -482,7 +482,7 @@ public class AuthConfigFactory {
         return new AuthConfig(
                 server.getUsername(),
                 decrypt(server.getPassword()),
-                extractFromServerConfiguration(server.getConfiguration(), "email"),
+                extractFromServerConfiguration(server.getConfiguration(), AUTH_EMAIL),
                 extractFromServerConfiguration(server.getConfiguration(), "auth")
         );
     }

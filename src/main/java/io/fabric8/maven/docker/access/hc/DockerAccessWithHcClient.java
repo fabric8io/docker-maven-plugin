@@ -299,7 +299,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
             for (int i = 0; i < array.size(); i++) {
                 JsonObject element = array.get(i).getAsJsonObject();
-                if (image.equals(element.get("Image"))) {
+                if (image.equals(element.get("Image").getAsString())) {
                     containers.add(new ContainersListElement(element));
                 }
             }
