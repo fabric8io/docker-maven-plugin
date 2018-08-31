@@ -79,7 +79,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
                 valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null ||
                 valueProvider.getString(DOCKER_FILE, config == null || config.getDockerFileRaw() == null ? null : config.getDockerFileRaw()) != null ||
-                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null;
+                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null ||
+                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerFileDirRaw() == null ? null : config.getDockerFileDirRaw()) != null ;
     }
 
 
