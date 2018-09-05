@@ -15,6 +15,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
+import java.io.File;
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
@@ -55,7 +56,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         ValueProvider valueProvider = new ValueProvider(prefix, properties, propertyMode);
 
         RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
-        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider);
+        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider, project);
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
@@ -75,18 +76,24 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
-    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider) {
-        return valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
+    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider, MavenProject project) {
+
+        boolean buildConfigured = valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
                 valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null ||
                 valueProvider.getString(DOCKER_FILE, config == null || config.getDockerFileRaw() == null ? null : config.getDockerFileRaw()) != null ||
                 valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null ||
                 valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerFileDirRaw() == null ? null : config.getDockerFileDirRaw()) != null ;
+        if (buildConfigured) {
+            return true;
+        }
+        // Simple Dockerfile mode
+        return new File(project.getBasedir(),"Dockerfile").exists();
     }
 
 
-    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider) {
+    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider, MavenProject project) {
         BuildImageConfiguration config = fromConfig.getBuildConfiguration();
-        if (!buildConfigured(config, valueProvider)) {
+        if (!buildConfigured(config, valueProvider, project)) {
             return null;
         }
 
@@ -129,7 +136,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         if (config.isDefault()) {
             config = null;
         }
-        
+
         return new RunImageConfiguration.Builder()
                 .capAdd(valueProvider.getList(CAP_ADD, config == null ? null : config.getCapAdd()))
                 .capDrop(valueProvider.getList(CAP_DROP, config == null ? null : config.getCapDrop()))
