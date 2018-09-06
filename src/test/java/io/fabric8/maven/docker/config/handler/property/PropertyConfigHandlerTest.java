@@ -817,6 +817,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         //when(project.getProperties()).thenReturn(properties);
         new Expectations() {{
             project.getProperties(); result = properties;
+            project.getBasedir(); minTimes = 0; maxTimes = 1; result = new File("./");
         }};
 
         return configHandler.resolve(imageConfiguration, project, null);
