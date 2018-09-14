@@ -1,4 +1,6 @@
 # ChangeLog
+* **0.26.2**
+  - Respect DOCKER_CONFIG, KUBECONFIG (#1083)
 
 * **0.26.1**
   - Fix NPE when no networks are configured (#1055)

@@ -68,7 +68,7 @@ The most _secure_ way is to rely on docker's credential store or credential help
 from an external credentials store, such as the native keychain of the operating system. Follow the instruction on
 https://docs.docker.com/engine/reference/commandline/login/#credentials-store[the docker login documentation].
 
-As a final fallback, this plugin consults `~/.docker/config.json` and reads credentials stored directly within this
+As a final fallback, this plugin consults `$DOCKER_CONFIG/config.json` and reads credentials stored directly within this
 file. This unsafe behavior happened when connecting to a registry with the command `docker login` from the command line
 with older versions of docker (pre 1.13.0) or when docker is not configured to use a
 https://docs.docker.com/engine/reference/commandline/login/#credentials-store[credential store].

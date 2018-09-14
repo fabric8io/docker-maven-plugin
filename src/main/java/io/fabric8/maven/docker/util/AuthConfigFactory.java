@@ -414,12 +414,16 @@ public class AuthConfigFactory {
     }
 
     private JSONObject readDockerConfig() {
-        Reader reader = getFileReaderFromHomeDir(".docker/config.json");
+        String dockerConfig = System.getenv("DOCKER_CONFIG");
+        
+        Reader reader = dockerConfig == null
+                    ? getFileReaderFromDir(new File(getHomeDir(),".docker/config.json"))
+                    : getFileReaderFromDir(new File(dockerConfig,"config.json"));
         return reader != null ? new JSONObject(new JSONTokener(reader)) : null;
     }
 
     private Map<String,?> readKubeConfig() {
-        Reader reader = getFileReaderFromHomeDir(".kube/config");
+        Reader reader = getFileReaderFromDir(new File(getHomeDir(),".kube/config"));
         if (reader != null) {
             Yaml ret = new Yaml();
             return (Map<String, ?>) ret.load(reader);
@@ -427,8 +431,7 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private Reader getFileReaderFromHomeDir(String path) {
-        File file = new File(getHomeDir(),path);
+    private Reader getFileReaderFromDir(File file) {        
         if (file.exists() && file.length() != 0) {
             try {
                 return new FileReader(file);
