@@ -43,8 +43,8 @@ public class AuthConfigTest {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used
         assertEquals(
-                config.toHeaderValue(),
-                "eyJwYXNzd29yZCI6IiM-c2VjcmV0ISIsImVtYWlsIjoicm9sYW5kQGpvbG9raWEub3JnIiwidXNlcm5hbWUiOiJyb2xhbmQifQ=="
+                "eyJwYXNzd29yZCI6IiM-c2VjcmV0ISIsImVtYWlsIjoicm9sYW5kQGpvbG9raWEub3JnIiwidXNlcm5hbWUiOiJyb2xhbmQifQ==",
+                config.toHeaderValue()
         );
 
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
