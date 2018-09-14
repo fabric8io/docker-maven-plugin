@@ -3,6 +3,8 @@ package io.fabric8.maven.docker.util;
 import java.io.File;
 import java.io.IOException;
 
+import io.fabric8.maven.docker.model.JsonParsingException;
+
 /**
  * Docker path resolution and manipulation utility methods.
  * <p>
@@ -51,7 +53,7 @@ public class DockerPathUtil {
         try {
             return toCanonicalize.getCanonicalFile();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to canonicalize the file path '" + toCanonicalize + "'");
+            throw new JsonParsingException("Unable to canonicalize the file path '" + toCanonicalize + "'");
         }
     }
 }

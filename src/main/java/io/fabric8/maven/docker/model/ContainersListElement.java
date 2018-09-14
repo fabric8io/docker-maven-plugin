@@ -1,9 +1,14 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.*;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import static io.fabric8.maven.docker.util.JsonUtils.get;
 
 public class ContainersListElement implements Container {
 
@@ -30,18 +35,18 @@ public class ContainersListElement implements Container {
 
     @Override
     public long getCreated() {
-        return json.getLong(CREATED);
+        return json.optLong(CREATED);
     }
 
     @Override
     public String getId() {
         // only need first 12 to id a container
-        return json.getString(ID).substring(0, 12);
+        return json.optString(ID).substring(0, 12);
     }
 
     @Override
     public String getImage() {
-        return json.getString(IMAGE);
+        return json.optString(IMAGE);
     }
 
     @Override
@@ -50,15 +55,15 @@ public class ContainersListElement implements Container {
            return Collections.emptyMap();
        }
 
-        return mapLabels(json.getJSONObject(LABELS));
+        return mapLabels(json.optJSONObject(LABELS));
     }
 
     @Override
     public String getName() {
         if (json.has(NAMES)) {
-            JSONArray names = json.getJSONArray(NAMES);
+            JSONArray names = json.optJSONArray(NAMES);
             for (int i = 0; i < names.length(); i++) {
-                String name = names.getString(i);
+                String name = names.optString(i);
                 if (name.startsWith(SLASH)) {
                     name = name.substring(1);
                 }
@@ -79,7 +84,7 @@ public class ContainersListElement implements Container {
             return Collections.emptyMap();
         }
 
-        return mapPortBindings(json.getJSONArray(PORTS));
+        return mapPortBindings(json.optJSONArray(PORTS));
     }
 
     @Override
@@ -96,7 +101,7 @@ public class ContainersListElement implements Container {
 
     @Override
     public boolean isRunning() {
-        String status = json.getString(STATUS);
+        String status = json.optString(STATUS);
         return status.toLowerCase().contains(UP);
     }
 
@@ -110,14 +115,14 @@ public class ContainersListElement implements Container {
         PortBinding binding = null;
 
         if (object.has(PUBLIC_PORT) && object.has(IP)) {
-            binding = new PortBinding(object.getInt(PUBLIC_PORT), object.getString(IP));
+            binding = new PortBinding(object.optInt(PUBLIC_PORT), object.optString(IP));
         }
 
         return binding;
     }
 
     private String createPortKey(JSONObject object) {
-        return String.format("%s/%s", object.getInt(PRIVATE_PORT), object.getString(TYPE));
+        return String.format("%s/%s", object.optInt(PRIVATE_PORT), object.optString(TYPE));
     }
 
     private Map<String, String> mapLabels(JSONObject labels) {
@@ -127,7 +132,7 @@ public class ContainersListElement implements Container {
         Iterator<String> iterator = labels.keys();
         while (iterator.hasNext()) {
             String key = iterator.next();
-            mapped.put(key, labels.get(key).toString());
+            mapped.put(key, get(labels, key).toString());
         }
 
         return mapped;
@@ -138,7 +143,7 @@ public class ContainersListElement implements Container {
         Map<String, PortBinding> portBindings = new HashMap<>(length);
 
         for (int i = 0; i < length; i++) {
-            JSONObject object = ports.getJSONObject(i);
+            JSONObject object = ports.optJSONObject(i);
             portBindings.put(createPortKey(object), createPortBinding(object));
         }
 

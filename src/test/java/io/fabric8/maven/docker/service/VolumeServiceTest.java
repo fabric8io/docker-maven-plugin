@@ -1,6 +1,11 @@
 package io.fabric8.maven.docker.service;
 
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONParser;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,12 +15,10 @@ import io.fabric8.maven.docker.config.VolumeConfiguration;
 import mockit.Delegate;
 import mockit.Expectations;
 import mockit.Mocked;
-import org.json.JSONObject;
-import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONParser;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  *  Basic Unit Tests for {@link VolumeService}
@@ -58,7 +61,7 @@ public class VolumeServiceTest {
          // Use a 'delegate' to verify the argument given directly. No need
          // for an 'intermediate' return method in the service just to check this.
          docker.createVolume(with(new Delegate<VolumeCreateConfig>() {
-            void check(VolumeCreateConfig vcc) {
+            void check(VolumeCreateConfig vcc) throws JSONException {
                assertThat(vcc.getName(), is("testVolume"));
                JSONObject vccJson = (JSONObject) JSONParser.parseJSON(vcc.toJson());
                assertEquals(vccJson.get("Driver"), "test");

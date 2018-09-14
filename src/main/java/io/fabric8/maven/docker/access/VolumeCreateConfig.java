@@ -1,8 +1,10 @@
 package io.fabric8.maven.docker.access;
 
+import org.json.JSONObject;
+
 import java.util.Map;
 
-import org.json.JSONObject;
+import static io.fabric8.maven.docker.util.JsonUtils.put;
 
 public class VolumeCreateConfig
 {
@@ -31,7 +33,7 @@ public class VolumeCreateConfig
     }
 
     public String getName() {
-        return createConfig.getString("Name");
+        return createConfig.optString("Name");
     }
 
     /**
@@ -47,7 +49,7 @@ public class VolumeCreateConfig
 
     private VolumeCreateConfig add(String name, Object value) {
         if (value != null) {
-            createConfig.put(name, value);
+            put(createConfig, name, value);
         }
         return this;
     }

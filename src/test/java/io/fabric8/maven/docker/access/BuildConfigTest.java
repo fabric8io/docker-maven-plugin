@@ -15,11 +15,11 @@ package io.fabric8.maven.docker.access;/*
  * limitations under the License.
  */
 
-import java.util.Collections;
-import java.util.Map;
-
 import org.json.JSONObject;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 

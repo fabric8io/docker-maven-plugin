@@ -1,10 +1,36 @@
 package io.fabric8.maven.docker.access.hc;
 
-import java.io.*;
-import java.net.URI;
-import java.util.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.ResponseHandler;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import io.fabric8.maven.docker.access.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.OutputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.BuildOptions;
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.NetworkCreateConfig;
+import io.fabric8.maven.docker.access.UrlBuilder;
+import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
 import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
 import io.fabric8.maven.docker.access.chunked.PullOrPushResponseJsonHandler;
@@ -21,16 +47,27 @@ import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.DefaultLogCallback;
 import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.model.*;
-import io.fabric8.maven.docker.util.*;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ResponseHandler;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.ContainerDetails;
+import io.fabric8.maven.docker.model.ContainersListElement;
+import io.fabric8.maven.docker.model.ExecDetails;
+import io.fabric8.maven.docker.model.Network;
+import io.fabric8.maven.docker.model.NetworksListElement;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.Timestamp;
 
-import static java.net.HttpURLConnection.*;
+import static io.fabric8.maven.docker.util.JsonUtils.get;
+import static io.fabric8.maven.docker.util.JsonUtils.put;
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONArray;
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
@@ -99,8 +136,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try {
             String url = urlBuilder.version();
             String response = delegate.get(url, 200);
-            JSONObject info = new JSONObject(response);
-            return info.getString("ApiVersion");
+            JSONObject info = toJSONObject(response);
+            return info.optString("ApiVersion");
         } catch (Exception e) {
             throw new DockerAccessException(e, "Cannot extract API version from server %s", urlBuilder.getBaseUrl());
         }
@@ -110,9 +147,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void startExecContainer(String containerId, LogOutputSpec outputSpec) throws DockerAccessException {
         try {
             String url = urlBuilder.startExecContainer(containerId);
-            JSONObject request = new JSONObject();
-            request.put("Detach", false);
-            request.put("Tty", true);
+            JSONObject request = toJSONObject(url);
+            put(request,"Detach", false);
+            put(request,"Tty", true);
 
             delegate.post(url, request.toString(), createExecResponseHandler(outputSpec), HTTP_OK);
         } catch (Exception e) {
@@ -147,22 +184,22 @@ public class DockerAccessWithHcClient implements DockerAccess {
     @Override
     public String createExecContainer(String containerId, Arguments arguments) throws DockerAccessException {
         String url = urlBuilder.createExecContainer(containerId);
-        JSONObject request = new JSONObject();
-        request.put("Tty", true);
-        request.put("AttachStdin", false);
-        request.put("AttachStdout", true);
-        request.put("AttachStderr", true);
-        request.put("Cmd", arguments.getExec());
+        JSONObject request = toJSONObject(url);
+        put(request, "Tty", true);
+        put(request,"AttachStdin", false);
+        put(request,"AttachStdout", true);
+        put(request,"AttachStderr", true);
+        put(request,"Cmd", arguments.getExec());
 
         String execJsonRequest = request.toString();
         try {
             String response = delegate.post(url, execJsonRequest, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
-            JSONObject json = new JSONObject(response);
+            JSONObject json = toJSONObject(response);
             if (json.has("Warnings")) {
                 logWarnings(json);
             }
 
-            return json.getString("Id");
+            return json.optString("Id");
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to exec [%s] on container [%s]", request.toString(),
                                             containerId);
@@ -180,11 +217,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.createContainer(containerName);
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
-            JSONObject json = new JSONObject(response);
+            JSONObject json = toJSONObject(response);
             logWarnings(json);
 
             // only need first 12 to id a container
-            return json.getString("Id").substring(0, 12);
+            return json.optString("Id").substring(0, 12);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to create container for [%s]",
                                             containerConfig.getImageName());
@@ -260,12 +297,12 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
         try {
             String response = delegate.get(url, HTTP_OK);
-            JSONArray array = new JSONArray(response);
+            JSONArray array = toJSONArray(response);
             List<Container> containers = new ArrayList<>();
 
             for (int i = 0; i < array.length(); i++) {
-                JSONObject element = array.getJSONObject(i);
-                if (image.equals(element.getString("Image"))) {
+                JSONObject element = array.optJSONObject(i);
+                if (image.equals(element.optString("Image"))) {
                     containers.add(new ContainersListElement(element));
                 }
             }
@@ -281,7 +318,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
         } else {
-            return new ContainerDetails(new JSONObject(response.getBody()));
+            return new ContainerDetails(toJSONObject(response.getBody()));
         }
     }
 
@@ -291,7 +328,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
         } else {
-            return new ExecDetails(new JSONObject(response.getBody()));
+            return new ExecDetails(toJSONObject(response.getBody()));
         }
     }
 
@@ -329,8 +366,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
         }
-        JSONObject imageDetails = new JSONObject(response.getBody());
-        return imageDetails.getString("Id").substring(0, 12);
+        JSONObject imageDetails = toJSONObject(response.getBody());
+        return imageDetails.optString("Id").substring(0, 12);
     }
 
     private HttpBodyAndStatus inspectImage(String name) throws DockerAccessException {
@@ -449,7 +486,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.deleteImage(image, force);
             HttpBodyAndStatus response = delegate.delete(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
             if (log.isDebugEnabled()) {
-                logRemoveResponse(new JSONArray(response.getBody()));
+                logRemoveResponse(toJSONArray(response.getBody()));
             }
 
             return response.getStatusCode() == HTTP_OK;
@@ -464,11 +501,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
         try {
             String response = delegate.get(url, HTTP_OK);
-            JSONArray array = new JSONArray(response);
+            JSONArray array = toJSONArray(response);
             List<Network> networks = new ArrayList<>(array.length());
 
             for (int i = 0; i < array.length(); i++) {
-                networks.add(new NetworksListElement(array.getJSONObject(i)));
+                networks.add(new NetworksListElement(array.optJSONObject(i)));
             }
 
             return networks;
@@ -487,13 +524,13 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             log.debug(response);
-            JSONObject json = new JSONObject(response);
+            JSONObject json = toJSONObject(response);
             if (json.has("Warnings")) {
                 logWarnings(json);
             }
 
             // only need first 12 to id a container
-            return json.getString("Id").substring(0, 12);
+            return json.optString("Id").substring(0, 12);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to create network for [%s]",
                     networkConfig.getName());
@@ -527,10 +564,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
                                   createJson,
                                   new ApacheHttpClientDelegate.BodyResponseHandler(),
                                   HTTP_CREATED);
-            JSONObject json = new JSONObject(response);
+            JSONObject json = toJSONObject(response);
             logWarnings(json);
 
-            return json.getString("Name");
+            return json.optString("Name");
         }
         catch (IOException e)
         {
@@ -631,11 +668,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private void logWarnings(JSONObject body) {
         if (body.has("Warnings")) {
-            Object warningsObj = body.get("Warnings");
+            Object warningsObj = get(body, "Warnings");
             if (warningsObj != JSONObject.NULL) {
                 JSONArray warnings = (JSONArray) warningsObj;
                 for (int i = 0; i < warnings.length(); i++) {
-                    log.warn(warnings.getString(i));
+                    log.warn(warnings.optString(i));
                 }
             }
         }
@@ -644,9 +681,12 @@ public class DockerAccessWithHcClient implements DockerAccess {
     // Callback for processing response chunks
     private void logRemoveResponse(JSONArray logElements) {
         for (int i = 0; i < logElements.length(); i++) {
-            JSONObject entry = logElements.getJSONObject(i);
-            for (Object key : entry.keySet()) {
-                log.debug("%s: %s", key, entry.get(key.toString()));
+            JSONObject entry = logElements.optJSONObject(i);
+
+            Iterator<String> iterator = entry.keys();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                log.debug("%s: %s", key, entry.opt(key));
             }
         }
     }
@@ -668,7 +708,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
         public Object handleResponse(HttpResponse response) throws IOException {
             try (InputStream stream = response.getEntity().getContent()) {
                 // Parse text as json
-                EntityStreamReaderUtil.processJsonStream(handler, stream);
+                try {
+                    EntityStreamReaderUtil.processJsonStream(handler, stream);
+                } catch (JSONException e) {
+                    throw new IOException(e);
+                }
             }
             return null;
         }

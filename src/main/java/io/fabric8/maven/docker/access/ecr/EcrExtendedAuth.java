@@ -1,13 +1,6 @@
 package io.fabric8.maven.docker.access.ecr;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -20,8 +13,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
+
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
 
 /**
  * Exchange local stored credentials for temporary ecr credentials
@@ -78,9 +81,9 @@ public class EcrExtendedAuth {
     public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException, MojoExecutionException {
         JSONObject jo = getAuthorizationToken(localCredentials);
 
-        JSONArray authorizationDatas = jo.getJSONArray("authorizationData");
-        JSONObject authorizationData = authorizationDatas.getJSONObject(0);
-        String authorizationToken = authorizationData.getString("authorizationToken");
+        JSONArray authorizationDatas = jo.optJSONArray("authorizationData");
+        JSONObject authorizationData = authorizationDatas.optJSONObject(0);
+        String authorizationToken = authorizationData.optString("authorizationToken");
 
         return new AuthConfig(authorizationToken, "none");
     }
@@ -105,7 +108,7 @@ public class EcrExtendedAuth {
 
             HttpEntity entity = response.getEntity();
             Reader jr = new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8);
-            return new JSONObject(new JSONTokener(jr));
+            return toJSONObject(new JSONTokener(IOUtils.toString(jr)));
         }
         finally {
             client.close();

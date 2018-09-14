@@ -3,6 +3,8 @@ package io.fabric8.maven.docker.util;
 import java.io.File;
 import java.io.IOException;
 
+import io.fabric8.maven.docker.model.JsonParsingException;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -148,7 +150,7 @@ public class PathTestUtil {
             }
             return tmpFile.getCanonicalFile();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to create or canonicalize temporary directory");
+            throw new JsonParsingException("Unable to create or canonicalize temporary directory");
         }
     }
 

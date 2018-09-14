@@ -17,23 +17,23 @@ public class NetworksListElement implements Network {
 
     @Override
     public String getName() {
-        return json.getString(NAME);
+        return json.optString(NAME);
     }
 
     @Override
     public String getDriver() {
-        return json.getString(DRIVER);
+        return json.optString(DRIVER);
     }
 
     @Override
     public String getScope() {
-        return json.getString(SCOPE);
+        return json.optString(SCOPE);
     }
 
     @Override
     public String getId() {
         // only need first 12 to id a network
-        return json.getString(ID).substring(0, 12);
+        return json.optString(ID).substring(0, 12);
     }
 
 }

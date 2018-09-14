@@ -1,10 +1,12 @@
 package io.fabric8.maven.docker.access;
 
+import org.apache.commons.codec.binary.Base64;
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
-import org.json.JSONObject;
+import static io.fabric8.maven.docker.util.JsonUtils.putNonNull;
 
 /**
  * Configuration object holding auth information for
@@ -79,16 +81,11 @@ public class AuthConfig {
         putNonNull(ret, "password", password);
         putNonNull(ret, "email", email);
         putNonNull(ret, "auth", auth);
+
         try {
             return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
             return Base64.encodeBase64String(ret.toString().getBytes());
-        }
-    }
-
-    private void putNonNull(JSONObject ret, String key, String value) {
-        if (value != null) {
-            ret.put(key,value);
         }
     }
 }

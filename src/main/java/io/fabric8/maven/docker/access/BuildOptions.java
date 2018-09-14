@@ -15,10 +15,10 @@ package io.fabric8.maven.docker.access;/*
  * limitations under the License.
  */
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.json.JSONObject;
 
 /**
  * @author roland

@@ -1,5 +1,12 @@
 package integration;
 
+import com.google.common.collect.Lists;
+
+import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -17,16 +24,10 @@ import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
+import io.fabric8.maven.docker.model.JsonParsingException;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
-
-import com.google.common.collect.Lists;
-
-import org.apache.maven.plugin.logging.SystemStreamLog;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -114,7 +115,7 @@ public class DockerAccessIT {
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             logger.error(e.getMessage());
-            throw new RuntimeException();
+            throw new JsonParsingException();
         }
     }
 

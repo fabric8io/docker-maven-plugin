@@ -10,7 +10,7 @@ import static io.fabric8.maven.docker.util.EnvUtil.*;
  * Helper to extract values from a set of Properties, potentially mixing it up with XML-based configuration based on the
  * {@link PropertyMode} setting.
  *
- * Obtaining a value is done via data-type specific methods (such as {@link #getString}). The ConfigKey parameter
+ * Obtaining a value is done via data-type specific methods (such as {@link #optString}). The ConfigKey parameter
  * tells us which property to look for, and how to handle combination of multiple values.
  *
  * For {@link PropertyMode#Only} we only look at the properties, ignoring any config value.
@@ -66,7 +66,7 @@ public class ValueProvider {
         booleanValueExtractor = new BooleanValueExtractor();
     }
 
-    public String getString(ConfigKey key, String fromConfig) {
+    public String optString(ConfigKey key, String fromConfig) {
         return stringValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 
@@ -74,7 +74,7 @@ public class ValueProvider {
         return intValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 
-    public int getInt(ConfigKey key, Integer fromConfig) {
+    public int optInt(ConfigKey key, Integer fromConfig) {
         Integer integer = getInteger(key, fromConfig);
         if(integer == null) {
             return 0;
@@ -86,7 +86,7 @@ public class ValueProvider {
         return longValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 
-    public Boolean getBoolean(ConfigKey key, Boolean fromConfig) {
+    public Boolean optBoolean(ConfigKey key, Boolean fromConfig) {
         return booleanValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 

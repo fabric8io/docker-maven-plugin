@@ -1,10 +1,12 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import io.fabric8.maven.docker.util.DockerPathUtil;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
+
+import io.fabric8.maven.docker.model.JsonParsingException;
+import io.fabric8.maven.docker.util.DockerPathUtil;
 
 /**
  * Path-resolution methods
@@ -36,7 +38,7 @@ class ComposeUtils {
         try {
             return toCanonicalize.getCanonicalFile();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to canonicalize the resolved docker-compose file path '" + toCanonicalize + "'");
+            throw new JsonParsingException("Unable to canonicalize the resolved docker-compose file path '" + toCanonicalize + "'");
         }
     }
 

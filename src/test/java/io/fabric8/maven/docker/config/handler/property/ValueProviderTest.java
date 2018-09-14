@@ -24,45 +24,45 @@ public class ValueProviderTest {
     @Test
     public void testGetString_Only() {
         configure(PropertyMode.Only);
-        assertEquals(null, provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals(null, provider.getString(ConfigKey.NAME, "ignored"));
+        assertEquals(null, provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals(null, provider.optString(ConfigKey.NAME, "ignored"));
 
         props.put("docker.name", "myname");
-        assertEquals("myname", provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("myname", provider.getString(ConfigKey.NAME, "ignored"));
+        assertEquals("myname", provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("myname", provider.optString(ConfigKey.NAME, "ignored"));
     }
 
     @Test
     public void testGetString_Skip() {
         configure(PropertyMode.Skip);
-        assertEquals(null, provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("fromconfig", provider.getString(ConfigKey.NAME, "fromconfig"));
+        assertEquals(null, provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("fromconfig", provider.optString(ConfigKey.NAME, "fromconfig"));
 
         props.put("docker.name", "ignored");
-        assertEquals(null, provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("fromconfig", provider.getString(ConfigKey.NAME, "fromconfig"));
+        assertEquals(null, provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("fromconfig", provider.optString(ConfigKey.NAME, "fromconfig"));
     }
 
     @Test
     public void testGetString_Fallback() {
         configure(PropertyMode.Fallback);
-        assertEquals(null, provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("fromconfig", provider.getString(ConfigKey.NAME, "fromconfig"));
+        assertEquals(null, provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("fromconfig", provider.optString(ConfigKey.NAME, "fromconfig"));
 
         props.put("docker.name", "fromprop");
-        assertEquals("fromprop", provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("fromconfig", provider.getString(ConfigKey.NAME, "fromconfig"));
+        assertEquals("fromprop", provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("fromconfig", provider.optString(ConfigKey.NAME, "fromconfig"));
     }
 
     @Test
     public void testGetString_Override() {
         configure(PropertyMode.Override);
-        assertEquals(null, provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("fromconfig", provider.getString(ConfigKey.NAME, "fromconfig"));
+        assertEquals(null, provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("fromconfig", provider.optString(ConfigKey.NAME, "fromconfig"));
 
         props.put("docker.name", "fromprop");
-        assertEquals("fromprop", provider.getString(ConfigKey.NAME, (String)null));
-        assertEquals("fromprop", provider.getString(ConfigKey.NAME, "fromconfig"));
+        assertEquals("fromprop", provider.optString(ConfigKey.NAME, (String)null));
+        assertEquals("fromprop", provider.optString(ConfigKey.NAME, "fromconfig"));
     }
 
 

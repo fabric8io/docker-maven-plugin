@@ -1,13 +1,18 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.Map;
-
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.Map;
+
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ContainerDetailsTest {
 
@@ -21,7 +26,7 @@ public class ContainerDetailsTest {
     }
 
     @Test
-    public void testCustomNetworkIpAddresses() {
+    public void testCustomNetworkIpAddresses() throws JSONException {
         givenNetworkSettings("custom1","1.2.3.4","custom2","5.6.7.8");
 
         whenCreateContainer();
@@ -31,7 +36,7 @@ public class ContainerDetailsTest {
     }
 
     @Test
-    public void testEmptyNetworkSettings() {
+    public void testEmptyNetworkSettings() throws JSONException {
         givenNetworkSettings();
 
 
@@ -55,7 +60,7 @@ public class ContainerDetailsTest {
         assertEquals(container.getCustomNetworkIpAddresses().size(), size);
     }
 
-    private void givenNetworkSettings(String ... args) {
+    private void givenNetworkSettings(String ... args) throws JSONException {
         JSONObject networkSettings = new JSONObject();
         JSONObject networks = new JSONObject();
         for (int i = 0; i < args.length; i+=2) {
@@ -68,7 +73,7 @@ public class ContainerDetailsTest {
     }
 
     @Test
-    public void testContainerWithMappedPorts() {
+    public void testContainerWithMappedPorts() throws JSONException {
         givenAContainerWithMappedPorts();
 
         whenCreateContainer();
@@ -79,7 +84,7 @@ public class ContainerDetailsTest {
     }
 
     @Test
-    public void testContainerWithPorts() {
+    public void testContainerWithPorts() throws JSONException {
         givenAContainerWithPorts();
         whenCreateContainer();
 
@@ -89,14 +94,14 @@ public class ContainerDetailsTest {
     }
 
     @Test
-    public void testContainerWithoutPorts() {
+    public void testContainerWithoutPorts() throws JSONException {
         givenAContainerWithoutPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(0);
     }
 
     @Test
-    public void testContainerWithLabels() {
+    public void testContainerWithLabels() throws JSONException {
         givenAContainerWithLabels();
         whenCreateContainer();
         thenLabelsSizeIs(2);
@@ -109,7 +114,7 @@ public class ContainerDetailsTest {
         assertEquals(value, container.getLabels().get(key));
     }
 
-    private void givenAContainerWithLabels() {
+    private void givenAContainerWithLabels() throws JSONException {
         JSONObject labels = new JSONObject();
         labels.put("key1", "value1");
         labels.put("key2", "value2");
@@ -127,7 +132,7 @@ public class ContainerDetailsTest {
         thenValidateContainer();
     }
 
-    private JSONArray createHostIpAndPort(int port, String ip) {
+    private JSONArray createHostIpAndPort(int port, String ip) throws JSONException {
         JSONObject object = new JSONObject();
 
         object.put(ContainerDetails.HOST_IP, ip);
@@ -139,7 +144,7 @@ public class ContainerDetailsTest {
         return array;
     }
 
-    private JSONObject createPortsObject() {
+    private JSONObject createPortsObject() throws JSONException {
         JSONObject ports = new JSONObject();
         JSONObject networkSettings = new JSONObject();
 
@@ -149,30 +154,30 @@ public class ContainerDetailsTest {
         return ports;
     }
 
-    private void givenAContainerWithPorts() {
+    private void givenAContainerWithPorts() throws JSONException {
         JSONObject ports = createPortsObject();
 
         ports.put("80/tcp", JSONObject.NULL);
         ports.put("52/udp", JSONObject.NULL);
     }
 
-    private void givenAContainerWithMappedPorts() {
+    private void givenAContainerWithMappedPorts() throws JSONException {
         JSONObject ports = createPortsObject();
 
         ports.put("80/tcp", createHostIpAndPort(32771, "0.0.0.0"));
         ports.put("52/udp", createHostIpAndPort(32772, "1.2.3.4"));
     }
 
-    private void givenAContainerWithoutPorts() {
+    private void givenAContainerWithoutPorts() throws JSONException {
         json.put(ContainerDetails.NETWORK_SETTINGS, JSONObject.NULL);
     }
 
-    private void givenContainerData() {
+    private void givenContainerData() throws JSONException {
         json.put(ContainerDetails.CREATED, "2015-01-06T15:47:31.485331387Z");
         json.put(ContainerDetails.ID, "1234AF1234AF");
         json.put(ContainerDetails.NAME, "/milkman-kindness");
-        json.put(ContainerDetails.CONFIG, new JSONObject("{ 'Image': '9876CE'}"));
-        json.put(ContainerDetails.STATE, new JSONObject("{'Running' : true }"));
+        json.put(ContainerDetails.CONFIG, toJSONObject("{ 'Image': '9876CE'}"));
+        json.put(ContainerDetails.STATE, toJSONObject("{'Running' : true }"));
         json.put(ContainerDetails.NETWORK_SETTINGS, JSONObject.NULL);
     }
 

@@ -1,14 +1,19 @@
 package io.fabric8.maven.docker.access;
 
-import java.util.*;
-
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONParser;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,7 +41,7 @@ public class ContainerHostConfigTest {
     }
 
     @Test
-    public void testUlimits() {
+    public void testUlimits() throws JSONException {
         Object data[] = {
             "{Ulimits: [{Name:bla, Hard:2048, Soft: 1024}]}", "bla", 2048, 1024,
             "{Ulimits: [{Name:bla, Soft: 1024}]}", "bla", null, 1024,

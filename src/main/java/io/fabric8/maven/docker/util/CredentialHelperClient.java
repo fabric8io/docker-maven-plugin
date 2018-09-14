@@ -2,14 +2,18 @@ package io.fabric8.maven.docker.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.util.ExternalCommand;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.IOException;
 import java.util.List;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.util.ExternalCommand;
+
+import static io.fabric8.maven.docker.util.JsonUtils.toJSONObject;
 
 public class CredentialHelperClient {
 
@@ -48,8 +52,8 @@ public class CredentialHelperClient {
         if (credential == null) {
             return null;
         }
-        String password = credential.getString(CredentialHelperClient.SECRET_KEY);
-        String userKey = credential.getString(CredentialHelperClient.USERNAME_KEY);
+        String password = credential.optString(CredentialHelperClient.SECRET_KEY);
+        String userKey = credential.optString(CredentialHelperClient.USERNAME_KEY);
         return new AuthConfig(userKey,password, null,null);
     }
 
@@ -111,7 +115,8 @@ public class CredentialHelperClient {
                     throw ex;
                 }
             }
-            JSONObject credentials = new JSONObject(new JSONTokener(Joiner.on('\n').join(reply)));
+
+            JSONObject credentials = toJSONObject(new JSONTokener(Joiner.on('\n').join(reply)));
             if (!credentials.has(SECRET_KEY) || !credentials.has(USERNAME_KEY)) {
                 return null;
             }

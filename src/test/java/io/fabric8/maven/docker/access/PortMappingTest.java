@@ -1,15 +1,24 @@
 package io.fabric8.maven.docker.access;
 
-import java.util.*;
-
-import io.fabric8.maven.docker.model.Container;
 import org.apache.commons.text.StrSubstitutor;
 import org.json.JSONArray;
-import org.junit.*;
+import org.json.JSONException;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONParser;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import io.fabric8.maven.docker.model.Container;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
@@ -194,13 +203,13 @@ public class PortMappingTest {
     }
 
     @Test
-    public void testToJson() {
+    public void testToJson() throws JSONException {
         givenAPortMapping("49000:8080/udp", "127.0.0.1:49001:8081");
         thenAssertJsonEquals("[{ hostPort: 49000, containerPort: 8080, protocol: udp }," +
                              " { hostIP: '127.0.0.1', hostPort: 49001, containerPort: 8081, protocol: tcp}]");
     }
 
-    private void thenAssertJsonEquals(String json) {
+    private void thenAssertJsonEquals(String json) throws JSONException {
         JSONArray jsonArray = (JSONArray) JSONParser.parseJSON(json);
         JSONAssert.assertEquals(jsonArray,mapping.toJson(), true);
     }

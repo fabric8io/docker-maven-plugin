@@ -1,13 +1,15 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.Collections;
-
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ContainerListElementTest {
 
@@ -21,7 +23,7 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContaierWithMappedPorts() {
+    public void testContaierWithMappedPorts() throws JSONException {
         givenAContainerWithMappedPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(2);
@@ -30,7 +32,7 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContaierWithPorts() {
+    public void testContaierWithPorts() throws JSONException {
         givenAContaierWithPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(2);
@@ -39,7 +41,7 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContainerWithLabels() {
+    public void testContainerWithLabels() throws JSONException {
         givenAContainerWithLabels();
         whenCreateContainer();
         thenLabelsSizeIs(2);
@@ -48,14 +50,14 @@ public class ContainerListElementTest {
     }
 
     @Test
-    public void testContainerWithoutLabels() {
+    public void testContainerWithoutLabels()throws JSONException {
         givenContainerData();
         whenCreateContainer();
         thenLabelsSizeIs(0);
     }
 
     @Test
-    public void testContainerWithoutPorts() {
+    public void testContainerWithoutPorts() throws JSONException {
         givenAContainerWithoutPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(0);
@@ -73,11 +75,11 @@ public class ContainerListElementTest {
         new ContainersListElement(new JSONObject()).getName();
     }
 
-    private void addToArray(JSONArray array, int index, String key, Object value) {
-        array.getJSONObject(index).put(key, value);
+    private void addToArray(JSONArray array, int index, String key, Object value) throws JSONException {
+        array.optJSONObject(index).put(key, value);
     }
 
-    private JSONObject createPortData(int port, String type) {
+    private JSONObject createPortData(int port, String type) throws JSONException {
         JSONObject ports = new JSONObject();
         ports.put("PrivatePort", port);
         ports.put(ContainersListElement.TYPE, type);
@@ -85,13 +87,13 @@ public class ContainerListElementTest {
         return ports;
     }
 
-    private void givenAContaierWithPorts() {
-        json.append(ContainersListElement.PORTS, createPortData(80, "tcp"));
-        json.append(ContainersListElement.PORTS, createPortData(52, "udp"));
+    private void givenAContaierWithPorts() throws JSONException {
+        json.accumulate(ContainersListElement.PORTS, createPortData(80, "tcp"));
+        json.accumulate(ContainersListElement.PORTS, createPortData(52, "udp"));
     }
 
 
-    private void givenAContainerWithLabels() {
+    private void givenAContainerWithLabels() throws JSONException {
         JSONObject labels = new JSONObject();
         labels.put("key1", "value1");
         labels.put("key2", "value2");
@@ -99,10 +101,10 @@ public class ContainerListElementTest {
         json.put(ContainerDetails.LABELS, labels);
     }
 
-    private void givenAContainerWithMappedPorts() {
+    private void givenAContainerWithMappedPorts() throws JSONException {
         givenAContaierWithPorts();
 
-        JSONArray array = json.getJSONArray(ContainersListElement.PORTS);
+        JSONArray array = json.optJSONArray(ContainersListElement.PORTS);
 
         addToArray(array, 0, ContainersListElement.IP, "0.0.0.0");
         addToArray(array, 0, ContainersListElement.PUBLIC_PORT, 32771);
@@ -111,11 +113,11 @@ public class ContainerListElementTest {
         addToArray(array, 1, ContainersListElement.PUBLIC_PORT, 32772);
     }
 
-    private void givenAContainerWithoutPorts() {
-        json.put("Ports", Collections.emptyList());
+    private void givenAContainerWithoutPorts() throws JSONException {
+        json.put("Ports", new JSONArray());
     }
 
-    private void givenContainerData() {
+    private void givenContainerData() throws JSONException {
         json.put(ContainersListElement.CREATED,1420559251485L);
         json.put(ContainersListElement.ID, "1234AF1234AF");
         json.put(ContainersListElement.IMAGE, "9876CE");

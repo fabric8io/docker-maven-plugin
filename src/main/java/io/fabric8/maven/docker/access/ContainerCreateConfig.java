@@ -1,13 +1,22 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.*;
-import java.util.*;
-
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.config.Arguments;
 import org.apache.commons.text.StrSubstitutor;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.util.EnvUtil;
+
+import static io.fabric8.maven.docker.util.JsonUtils.put;
 
 public class ContainerCreateConfig {
 
@@ -15,7 +24,7 @@ public class ContainerCreateConfig {
     private final String imageName;
     public ContainerCreateConfig(String imageName) {
         this.imageName = imageName;
-        createConfig.put("Image", imageName);
+        put(createConfig, "Image", imageName);
     }
 
     public ContainerCreateConfig binds(List<String> volumes) {
@@ -23,17 +32,17 @@ public class ContainerCreateConfig {
             JSONObject extractedVolumes = new JSONObject();
 
             for (String volume : volumes) {
-                extractedVolumes.put(extractContainerPath(volume),
-                                     new JSONObject());
+                put(extractedVolumes, extractContainerPath(volume),
+                        new JSONObject());
             }
-            createConfig.put("Volumes", extractedVolumes);
+            put(createConfig, "Volumes", extractedVolumes);
         }
         return this;
     }
 
     public ContainerCreateConfig command(Arguments command) {
         if (command != null) {
-            createConfig.put("Cmd", new JSONArray(command.asStrings()));
+            put(createConfig, "Cmd", new JSONArray(command.asStrings()));
         }
         return this;
     }
@@ -44,7 +53,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig entrypoint(Arguments entrypoint) {
         if (entrypoint != null) {
-            createConfig.put("Entrypoint", new JSONArray(entrypoint.asStrings()));
+            put(createConfig, "Entrypoint", new JSONArray(entrypoint.asStrings()));
         }
         return this;
     }
@@ -80,7 +89,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig labels(Map<String,String> labels) {
         if (labels != null && labels.size() > 0) {
-            createConfig.put("Labels", new JSONObject(labels));
+            put(createConfig, "Labels", new JSONObject(labels));
         }
         return this;
     }
@@ -89,9 +98,9 @@ public class ContainerCreateConfig {
         if (portSpecs != null && portSpecs.size() > 0) {
             JSONObject exposedPorts = new JSONObject();
             for (String portSpec : portSpecs) {
-                exposedPorts.put(portSpec, new JSONObject());
+                put(exposedPorts, portSpec, new JSONObject());
             }
-            createConfig.put("ExposedPorts", exposedPorts);
+            put(createConfig, "ExposedPorts", exposedPorts);
         }
         return this;
     }
@@ -133,7 +142,7 @@ public class ContainerCreateConfig {
 
     private ContainerCreateConfig add(String name, Object value) {
         if (value != null) {
-            createConfig.put(name, value);
+            put(createConfig, name, value);
         }
         return this;
     }
@@ -160,7 +169,7 @@ public class ContainerCreateConfig {
             }
             containerEnv.put(key + "=" + value);
         }
-        createConfig.put("Env", containerEnv);
+        put(createConfig, "Env", containerEnv);
     }
 
     private void addPropertiesFromFile(String envPropsFile, Properties envProps) {
