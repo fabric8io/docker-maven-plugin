@@ -80,10 +80,23 @@ public class AuthConfig {
         putNonNull(ret, "email", email);
         putNonNull(ret, "auth", auth);
         try {
-            return Base64.encodeBase64String(ret.toString().getBytes("UTF-8"));
+            return encodeBase64ChunkedURLSafeString(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            return Base64.encodeBase64String(ret.toString().getBytes());
+            return encodeBase64ChunkedURLSafeString(ret.toString().getBytes());
         }
+    }
+
+    /**
+     * Encodes the given binaryData in a format that is compatible with the Docker Engine API.
+     * That is, base64 encoded, padded, and URL safe.
+     *
+     * @param binaryData data to encode
+     * @return encoded data
+     */
+    private String encodeBase64ChunkedURLSafeString(final byte[] binaryData) {
+        return Base64.encodeBase64String(binaryData)
+                .replace('+', '-')
+                .replace('_', '/');
     }
 
     private void putNonNull(JSONObject ret, String key, String value) {
