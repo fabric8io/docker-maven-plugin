@@ -96,7 +96,7 @@ public class AuthConfig {
     private String encodeBase64ChunkedURLSafeString(final byte[] binaryData) {
         return Base64.encodeBase64String(binaryData)
                 .replace('+', '-')
-                .replace('_', '/');
+                .replace('/', '_');
     }
 
     private void putNonNull(JSONObject ret, String key, String value) {
