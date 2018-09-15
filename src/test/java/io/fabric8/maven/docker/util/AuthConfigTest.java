@@ -21,7 +21,7 @@ public class AuthConfigTest {
     public void simpleConstructor() {
         Map<String,String> map = new HashMap<String,String>();
         map.put("username","roland");
-        map.put("password","#>secret!");
+        map.put("password","#>secrets??");
         map.put("email","roland@jolokia.org");
         AuthConfig config = new AuthConfig(map);
         check(config);
@@ -29,13 +29,13 @@ public class AuthConfigTest {
 
     @Test
     public void mapConstructor() {
-        AuthConfig config = new AuthConfig("roland","#>secret!","roland@jolokia.org",null);
+        AuthConfig config = new AuthConfig("roland","#>secrets??","roland@jolokia.org",null);
         check(config);
     }
 
     @Test
     public void dockerLoginConstructor() {
-        AuthConfig config = new AuthConfig(Base64.encodeBase64String("roland:#>secret!".getBytes()),"roland@jolokia.org");
+        AuthConfig config = new AuthConfig(Base64.encodeBase64String("roland:#>secrets??".getBytes()),"roland@jolokia.org");
         check(config);
     }
 
@@ -43,7 +43,7 @@ public class AuthConfigTest {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used
         assertEquals(
-                "eyJwYXNzd29yZCI6IiM-c2VjcmV0ISIsImVtYWlsIjoicm9sYW5kQGpvbG9raWEub3JnIiwidXNlcm5hbWUiOiJyb2xhbmQifQ==",
+                "eyJwYXNzd29yZCI6IiM-c2VjcmV0cz8_IiwiZW1haWwiOiJyb2xhbmRAam9sb2tpYS5vcmciLCJ1c2VybmFtZSI6InJvbGFuZCJ9",
                 config.toHeaderValue()
         );
 
@@ -51,7 +51,7 @@ public class AuthConfigTest {
 
         JSONObject data = new JSONObject(header);
         assertEquals("roland",data.getString("username"));
-        assertEquals("#>secret!",data.getString("password"));
+        assertEquals("#>secrets??",data.getString("password"));
         assertEquals("roland@jolokia.org",data.getString("email"));
         assertFalse(data.has("auth"));
     }
