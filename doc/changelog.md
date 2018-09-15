@@ -2,6 +2,7 @@
 
 * **0.26.1**
   - Fix NPE when no networks are configured (#1055)
+  - Fix Base64 encoding for X-Registry-Auth used for Docker authentication (#1084)
 
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
