@@ -423,7 +423,11 @@ public class AuthConfigFactory {
     }
 
     private Map<String,?> readKubeConfig() {
-        Reader reader = getFileReaderFromDir(new File(getHomeDir(),".kube/config"));
+        String kubeConfig = System.getenv("KUBECONFIG");
+
+        Reader reader = kubeConfig == null
+                ? getFileReaderFromDir(new File(getHomeDir(),".kube/config"))
+                : getFileReaderFromDir(new File(kubeConfig,"config"));
         if (reader != null) {
             Yaml ret = new Yaml();
             return (Map<String, ?>) ret.load(reader);
