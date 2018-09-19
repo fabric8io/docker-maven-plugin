@@ -20,15 +20,15 @@ public class VolumeCreateMojo extends AbstractDockerMojo {
 
     @Override
     protected void executeInternal(ServiceHub serviceHub) throws DockerAccessException, MojoExecutionException {
+        if (getVolumes() == null) {
+            log.info("No volume configuration found.");
+            return;
+        }
         VolumeService volService = serviceHub.getVolumeService();
 
-        if (getVolumes() != null) {
-            for (VolumeConfiguration volume : getVolumes()) {
-                log.info("Creating volume '%s'", volume.getName());
-                volService.createVolume(volume);
-            }
-        } else {
-            log.info("No volume configuration found.");
+        for (VolumeConfiguration volume : getVolumes()) {
+            log.info("Creating volume '%s'", volume.getName());
+            volService.createVolume(volume);
         }
     }
 
