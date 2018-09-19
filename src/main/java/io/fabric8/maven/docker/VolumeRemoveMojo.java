@@ -23,9 +23,13 @@ public class VolumeRemoveMojo extends AbstractDockerMojo {
          throws DockerAccessException, MojoExecutionException  {
       VolumeService volService = serviceHub.getVolumeService();
 
-      for ( VolumeConfiguration volume : getVolumes()) {
-         log.info("Removing volume %s", volume.getName());
-         volService.removeVolume(volume.getName());
+      if(getVolumes() != null){
+         for ( VolumeConfiguration volume : getVolumes()) {
+            log.info("Removing volume %s", volume.getName());
+            volService.removeVolume(volume.getName());
+         }
+      }else{
+         log.info("No volume configuration found.");
       }
    }
 

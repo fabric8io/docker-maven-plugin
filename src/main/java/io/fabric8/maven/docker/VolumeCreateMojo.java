@@ -10,22 +10,26 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
 /**
- *  Mojo to create named volumes, useful for preparing integration tests
+ * Mojo to create named volumes, useful for preparing integration tests
  *
- *  @author Tom Burton
- *  @version Dec 15, 2016
+ * @author Tom Burton
+ * @version Dec 15, 2016
  */
 @Mojo(name = "volume-create", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class VolumeCreateMojo extends AbstractDockerMojo {
 
-   @Override
-   protected void executeInternal(ServiceHub serviceHub) throws DockerAccessException, MojoExecutionException {
-      VolumeService volService = serviceHub.getVolumeService();
+    @Override
+    protected void executeInternal(ServiceHub serviceHub) throws DockerAccessException, MojoExecutionException {
+        VolumeService volService = serviceHub.getVolumeService();
 
-      for (VolumeConfiguration volume : getVolumes()) {
-         log.info("Creating volume '%s'", volume.getName());
-         volService.createVolume(volume);
-      }
-   }
+        if (getVolumes() != null) {
+            for (VolumeConfiguration volume : getVolumes()) {
+                log.info("Creating volume '%s'", volume.getName());
+                volService.createVolume(volume);
+            }
+        } else {
+            log.info("No volume configuration found.");
+        }
+    }
 
 }
