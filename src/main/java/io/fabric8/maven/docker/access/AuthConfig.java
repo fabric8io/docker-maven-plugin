@@ -27,9 +27,9 @@ public class AuthConfig {
 
     public AuthConfig(Map<String,String> params) {
         this(params.get("username"),
-             params.get("password"),
-             params.get("email"),
-             params.get("auth"));
+                params.get("password"),
+                params.get("email"),
+                params.get("auth"));
     }
 
     public AuthConfig(String username, String password, String email, String auth) {
@@ -86,7 +86,7 @@ public class AuthConfig {
             return encodeBase64ChunkedURLSafeString(ret.toString().getBytes());
         }
     }
-  
+
     /**
      * Encodes the given binaryData in a format that is compatible with the Docker Engine API.
      * That is, base64 encoded, padded, and URL safe.
@@ -100,7 +100,7 @@ public class AuthConfig {
                 .replace('/', '_');
     }
 
-    private void putNonNull(JSONObject ret, String key, String value) {
+    private void putNonNull(JsonObject ret, String key, String value) {
         if (value != null) {
             ret.addProperty(key,value);
         }

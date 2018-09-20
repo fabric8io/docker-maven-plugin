@@ -46,16 +46,16 @@ public class AuthConfigTest {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used
         assertEquals(
-                "eyJwYXNzd29yZCI6IiM-c2VjcmV0cz8_IiwiZW1haWwiOiJyb2xhbmRAam9sb2tpYS5vcmciLCJ1c2VybmFtZSI6InJvbGFuZCJ9",
+                "eyJ1c2VybmFtZSI6InJvbGFuZCIsInBhc3N3b3JkIjoiIz5zZWNyZXRzPz8iLCJlbWFpbCI6InJvbGFuZEBqb2xva2lhLm9yZyJ9",
                 config.toHeaderValue()
         );
 
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
 
         JsonObject data = GsonBridge.toJsonObject(header);
-        assertEquals("roland",data.getString("username"));
-        assertEquals("#>secrets??",data.getString("password"));
-        assertEquals("roland@jolokia.org",data.getString("email"));
+        assertEquals("roland",data.get("username").getAsString());
+        assertEquals("#>secrets??",data.get("password").getAsString());
+        assertEquals("roland@jolokia.org",data.get("email").getAsString());
         assertFalse(data.has("auth"));
     }
 }
