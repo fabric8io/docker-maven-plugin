@@ -176,6 +176,8 @@ Some docker registries require additional steps to authenticate.
 link:https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html[Amazon ECR] requires using an IAM access key to obtain temporary docker login credentials.
 The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _<awsAccountId>_ *.dkr.ecr.* _<awsRegion>_ *.amazonaws.com*, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set true.
 
+Note that for an ECR repository with URI `123456789012.dkr.ecr.eu-west-1.amazonaws.com/example/image` the d-m-p's `docker.registry` should be set to `123456789012.dkr.ecr.eu-west-1.amazonaws.com` and `example/image` is the `<name>` of the image.
+
 You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
 In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
