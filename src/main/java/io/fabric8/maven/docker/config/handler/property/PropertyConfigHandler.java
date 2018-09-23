@@ -17,6 +17,7 @@ package io.fabric8.maven.docker.config.handler.property;/*
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Supplier;
 
 import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
@@ -75,17 +76,31 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .build());
     }
 
+    private boolean isStringValueNull(ValueProvider valueProvider, BuildImageConfiguration config, ConfigKey key, Supplier<String> supplier) {
+        return valueProvider.getString(key, config == null ? null : supplier.get()) != null;
+    }
     // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
     private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider, MavenProject project) {
 
-        boolean buildConfigured = valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
-                valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null ||
-                valueProvider.getString(DOCKER_FILE, config == null || config.getDockerFileRaw() == null ? null : config.getDockerFileRaw()) != null ||
-                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null ||
-                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerFileDirRaw() == null ? null : config.getDockerFileDirRaw()) != null ;
-        if (buildConfigured) {
+
+        if (isStringValueNull(valueProvider, config, FROM, () -> {  return config.getFrom(); })) {
             return true;
         }
+
+        if (valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null) {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE, () -> { return config.getDockerFileRaw(); }))  {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_ARCHIVE, () -> { return config.getDockerArchiveRaw(); })) {
+            return true;
+        }
+
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> { return config.getDockerFileDirRaw(); })) {
+            return true;
+        }
+
         // Simple Dockerfile mode
         return new File(project.getBasedir(),"Dockerfile").exists();
     }
