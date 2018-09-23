@@ -16,18 +16,31 @@ package io.fabric8.maven.docker.config.handler.property;/*
  */
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.function.Supplier;
 
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
-import com.google.common.base.Function;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.CollectionUtils;
-
-import javax.annotation.Nullable;
 
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 
