@@ -83,21 +83,21 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider, MavenProject project) {
 
 
-        if (isStringValueNull(valueProvider, config, FROM, () -> {  return config.getFrom(); })) {
+        if (isStringValueNull(valueProvider, config, FROM, () -> config.getFrom())) {
             return true;
         }
 
         if (valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null) {
             return true;
         }
-        if (isStringValueNull(valueProvider, config, DOCKER_FILE, () -> { return config.getDockerFileRaw(); }))  {
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE, () -> config.getDockerFileRaw() ))  {
             return true;
         }
-        if (isStringValueNull(valueProvider, config, DOCKER_ARCHIVE, () -> { return config.getDockerArchiveRaw(); })) {
+        if (isStringValueNull(valueProvider, config, DOCKER_ARCHIVE, () -> config.getDockerArchiveRaw())) {
             return true;
         }
 
-        if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> { return config.getDockerFileDirRaw(); })) {
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> config.getDockerFileDirRaw())) {
             return true;
         }
 
@@ -250,12 +250,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private Arguments extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
-        return valueProvider.getObject(configKey, alternative, new Function<String, Arguments>() {
-            @Override
-            public Arguments apply(@Nullable String raw) {
-                return raw != null ? new Arguments(raw) : null;
-            }
-        });
+        return valueProvider.getObject(configKey, alternative, raw -> raw != null ? new Arguments(raw) : null);
     }
 
     private RestartPolicy extractRestartPolicy(RestartPolicy config, ValueProvider valueProvider) {
