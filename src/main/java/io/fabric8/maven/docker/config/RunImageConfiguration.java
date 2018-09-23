@@ -1,17 +1,14 @@
 package io.fabric8.maven.docker.config;
 
-import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.util.ContainerNamingUtil;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import javax.annotation.Nonnull;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author roland
@@ -115,6 +112,9 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private List<String> ports;
 
+    /**
+     * @deprecated 
+     */
     @Parameter
     @Deprecated
     private NamingStrategy namingStrategy;
@@ -316,6 +316,9 @@ public class RunImageConfiguration implements Serializable {
         return tmpfs;
     }
 
+    /**
+     * @deprecated
+     */
     // Naming scheme for how to name container
     @Deprecated // for backward compatibility
     public enum NamingStrategy {
@@ -327,10 +330,6 @@ public class RunImageConfiguration implements Serializable {
          * Use the alias as defined in the configuration
          */
         alias
-    }
-
-    public NamingStrategy getNamingStrategyRaw() {
-        return namingStrategy;
     }
 
     public String getExposedPropertyKey() {
@@ -540,6 +539,9 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        /**
+         * @deprecated
+         */
         @Deprecated
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
@@ -548,6 +550,9 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        /**
+         * @deprecated
+         */
         @Deprecated
         public Builder namingStrategy(NamingStrategy namingStrategy) {
             config.namingStrategy = namingStrategy;

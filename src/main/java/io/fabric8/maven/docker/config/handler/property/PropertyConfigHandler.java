@@ -188,7 +188,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .links(valueProvider.getList(LINKS, config == null ? null : config.getLinks()))
                 .memory(valueProvider.getLong(MEMORY, config == null ? null : config.getMemory()))
                 .memorySwap(valueProvider.getLong(MEMORY_SWAP, config == null ? null : config.getMemorySwap()))
-                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategyRaw() == null ? null : config.getNamingStrategyRaw().name()))
+                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategy() == null ? null : config.getNamingStrategy().name()))
                 .exposedPropertyKey(valueProvider.getString(EXPOSED_PROPERTY_KEY, config == null ? null : config.getExposedPropertyKey()))
                 .portPropertyFile(valueProvider.getString(PORT_PROPERTY_FILE, config == null ? null : config.getPortPropertyFile()))
                 .ports(valueProvider.getList(PORTS, config == null ? null : config.getPorts()))

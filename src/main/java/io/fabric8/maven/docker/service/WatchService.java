@@ -1,12 +1,22 @@
 package io.fabric8.maven.docker.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.util.Logger;
@@ -18,17 +28,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Watch service for monitoring changes and restarting containers

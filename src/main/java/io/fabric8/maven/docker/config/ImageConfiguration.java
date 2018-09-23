@@ -1,19 +1,16 @@
 package io.fabric8.maven.docker.config;
 
-import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.util.ContainerNamingUtil;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author roland

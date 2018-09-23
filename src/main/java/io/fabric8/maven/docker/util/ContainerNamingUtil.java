@@ -4,9 +4,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
-
-import com.google.common.base.Joiner;
 
 /**
  * @author marcus
@@ -17,6 +14,9 @@ public class ContainerNamingUtil {
     private static final String DEFAULT_NAMING_CONFIGURATION = "%n-%i";
 
     private static final String INDEX_PLACEHOLDER = "%i";
+
+    // class with only static methods
+    private ContainerNamingUtil() { }
 
     public static String calculateContainerName(final String containerNamePattern,
                                                 final String imageName,
