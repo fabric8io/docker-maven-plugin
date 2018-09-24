@@ -115,7 +115,7 @@ public class ContainerNamingUtilTest {
                                 null,
             new Date(123456),
             containers);
-        Assert.assertEquals(2, filtered.size());
+        Assert.assertEquals(1, filtered.size());
         Assert.assertEquals(container2, filtered.iterator().next());
     }
 
