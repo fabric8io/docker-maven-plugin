@@ -43,7 +43,7 @@ public class LogsMojo extends AbstractDockerMojo {
         for (ImageConfiguration image : getResolvedImages()) {
             String imageName = image.getName();
             if (logAll) {
-                for (Container container : queryService.getContainersForImage(imageName)) {
+                for (Container container : queryService.getContainersForImage(imageName, false)) {
                     doLogging(logDispatcher, image, container.getId());
                 }
             } else {

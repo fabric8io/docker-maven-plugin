@@ -9,18 +9,45 @@ package io.fabric8.maven.docker;
  */
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.config.*;
+import com.google.common.util.concurrent.MoreExecutors;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.service.*;
+import io.fabric8.maven.docker.service.ImagePullManager;
+import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.service.RunService;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.StartOrderResolver;
-import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 import org.codehaus.plexus.util.StringUtils;
 
 
@@ -62,6 +89,12 @@ public class StartMojo extends AbstractDockerMojo {
      */
     @Parameter(property = "docker.exposeContainerInfo")
     private String exposeContainerProps = "docker.container";
+
+    /**
+     * Naming pattern for how to name containers when started
+     */
+    @Parameter(property = "docker.containerNamePattern")
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
@@ -138,7 +171,7 @@ public class StartMojo extends AbstractDockerMojo {
                     // Move from waiting to starting status
                     imagesStarting.add(image);
                     imagesWaitingToStart.remove(image);
-                    
+
                     if (!startParallel) {
                         waitForStartedContainer(hub, containerStartupService, startedContainerAliases, imagesStarting);
                     }
@@ -252,7 +285,7 @@ public class StartMojo extends AbstractDockerMojo {
         startingContainers.submit(new Callable<StartedContainer>() {
             @Override
             public StartedContainer call() throws Exception {
-                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir());
+                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir(), containerNamePattern, getBuildTimestamp());
 
                 // Update port-mapping writer
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
