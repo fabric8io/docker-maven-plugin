@@ -69,10 +69,11 @@ public interface DockerAccess {
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
+     * @param all whether to fetch also stopped containers. If false only running containers are returned
      * @return list of <code>Container</code> objects or an empty list if none is found
      * @throws DockerAccessException if the request fails
      */
-    List<Container> getContainersForImage(String image) throws DockerAccessException;
+    List<Container> getContainersForImage(String image, boolean all) throws DockerAccessException;
 
     /**
      * Starts a previously set up exec instance (via {@link #createExecContainer(String, Arguments)} container

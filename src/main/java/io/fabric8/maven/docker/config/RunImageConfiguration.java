@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import javax.annotation.Nonnull;
 
 /**
  * @author roland
@@ -112,8 +112,24 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private List<String> ports;
 
+    /**
+     * @deprecated
+     */
     @Parameter
+    @Deprecated
     private NamingStrategy namingStrategy;
+
+    /**
+     * A pattern to define the naming of the container where
+     *
+     * - %a for the "alias" mode
+     * - %n for the image name
+     * - %t for a timestamp
+     * - %i for an increasing index of container names
+     *
+     */
+    @Parameter
+    private String containerNamePattern;
 
     /**
      * Property key part used to expose the container ip when running.
@@ -300,7 +316,11 @@ public class RunImageConfiguration implements Serializable {
         return tmpfs;
     }
 
+    /**
+     * @deprecated
+     */
     // Naming scheme for how to name container
+    @Deprecated // for backward compatibility, us containerNamePattern instead
     public enum NamingStrategy {
         /**
          * No extra naming
@@ -310,15 +330,6 @@ public class RunImageConfiguration implements Serializable {
          * Use the alias as defined in the configuration
          */
         alias
-    }
-
-    public NamingStrategy getNamingStrategy() {
-        return namingStrategy == null ? NamingStrategy.none : namingStrategy;
-    }
-
-    public NamingStrategy getNamingStrategyRaw() {
-        return namingStrategy;
-
     }
 
     public String getExposedPropertyKey() {
@@ -347,6 +358,18 @@ public class RunImageConfiguration implements Serializable {
 
     public String getImagePullPolicy() {
         return imagePullPolicy;
+    }
+
+    public String getContainerNamePattern() {
+        return containerNamePattern;
+    }
+
+    /**
+     * @deprecated use {@link #getContainerNamePattern} instead
+     */
+    @Deprecated
+    public NamingStrategy getNamingStrategy() {
+        return namingStrategy;
     }
 
     // ======================================================================================
@@ -520,6 +543,15 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder containerNamePattern(String pattern) {
+            config.containerNamePattern = pattern;
+            return this;
+        }
+
+        /**
+         * @deprecated use {@link #containerNamePattern} instead
+         */
+        @Deprecated
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
@@ -527,6 +559,10 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        /**
+         * @deprecated use {@link #containerNamePattern} instead
+         */
+        @Deprecated
         public Builder namingStrategy(NamingStrategy namingStrategy) {
             config.namingStrategy = namingStrategy;
             return this;

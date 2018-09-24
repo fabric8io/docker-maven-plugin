@@ -19,6 +19,14 @@ For tuning what should happen when stopping there are four global parameters whi
 |===
 | Element | Description | Parameter
 
+| *allContainers*
+| Stops and removes any container that matches an image defined in the current project's configuration. This was the default behavior of the plugin prior up to version 0.13.6
+| `docker.allContainers`
+
+| <<container-name, *containerNamePattern*>>
+| Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
+| `docker.containerNamePattern`
+
 | *keepContainer*
 | If set to `true` not destroy container after they have been stopped. Default is false.
 | `docker.keepContainer`
@@ -30,10 +38,6 @@ For tuning what should happen when stopping there are four global parameters whi
 | *removeVolumes*
 | If set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are true.
 | `docker.removeVolumes`
-
-| *allContainers*
-| Stops and removes any container that matches an image defined in the current project's configuration. This was the default behavior of the plugin prior up to version 0.13.6
-| `docker.allContainers`
 |===
 
 .Example
