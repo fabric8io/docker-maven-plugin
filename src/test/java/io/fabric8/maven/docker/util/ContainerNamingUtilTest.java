@@ -1,5 +1,7 @@
 package io.fabric8.maven.docker.util;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 
@@ -81,19 +83,40 @@ public class ContainerNamingUtilTest {
     }
 
     @Mocked
-    Container container;
+    Container container1;
+
+    @Mocked
+    Container container2;
 
     @Test
     public void testIndexAdvanced() {
         new Expectations() {{
-            container.getName(); result = "container-1";
+            container1.getName();result = "container-1";
         }};
         Assert.assertEquals("container-2",
                             ContainerNamingUtil.formatContainerName(
                                 imageConfiguration("jolokia/jolokia_demo","nameAlias", "container-%i"),
                                 null,
                                 new Date(123456),
-                                Collections.singleton(container)));
+                                Collections.singleton(container1)));
+    }
+
+
+    @Test
+    public void testContainersToStop() {
+        new Expectations() {{
+            container1.getName();result = "container-1";
+            container2.getName();result = "container-2";
+
+        }};
+        Collection<Container> containers = Arrays.asList(container1, container2);
+        Collection<Container> filtered = ContainerNamingUtil.getContainersToStop(
+            imageConfiguration("jolokia/jolokia_demo","nameAlias", "container-%i"),
+                                null,
+            new Date(123456),
+            containers);
+        Assert.assertEquals(filtered.size(),1);
+        Assert.assertEquals(filtered.iterator().next(),container2);
     }
 
     private ImageConfiguration imageConfiguration(String name, String alias, String containerNamePattern) {

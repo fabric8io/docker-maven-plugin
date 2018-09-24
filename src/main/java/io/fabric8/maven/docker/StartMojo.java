@@ -94,7 +94,7 @@ public class StartMojo extends AbstractDockerMojo {
      * Naming pattern for how to name containers when started
      */
     @Parameter(property = "docker.containerNamePattern")
-    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;;
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically

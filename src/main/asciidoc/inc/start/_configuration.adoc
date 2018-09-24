@@ -80,7 +80,7 @@ The `<run>` configuration element knows the following sub elements:
 | Total memory usage (memory + swap); use -1 to disable swap.
 
 | *namingStrategy*
-a| Naming strategy for how the container name is created:
+a| *This option is deprecated, please use a `containerNamePattern` instead* Naming strategy for how the container name is created:
 
 * *none* : uses randomly assigned names from docker (default)
 * *alias* : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists with this name.

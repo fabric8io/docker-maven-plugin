@@ -1,19 +1,13 @@
 package io.fabric8.maven.docker.service;
 
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.util.ContainerNamingUtil;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.access.DockerAccessException;
 
 /**
  * Query service for getting image and container information from the docker dameon
