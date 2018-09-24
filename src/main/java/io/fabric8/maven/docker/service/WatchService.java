@@ -246,6 +246,7 @@ public class WatchService {
                         ctx.getPomLabel(),
                         project.getProperties(),
                         project.getBasedir(),
+                        ctx.getContainerNamePattern(),
                         ctx.getBuildTimestamp()));
             }
         };
@@ -407,6 +408,8 @@ public class WatchService {
 
         private Date buildTimestamp;
 
+        private String containerNamePattern;
+
         public WatchContext() {
         }
 
@@ -462,9 +465,13 @@ public class WatchService {
             return buildTimestamp;
         }
 
+        public String getContainerNamePattern() {
+            return containerNamePattern;
+        }
+
         public static class Builder {
 
-            private WatchContext context = new WatchContext();
+            private WatchContext context;
 
             public Builder() {
                 this.context = new WatchContext();
@@ -538,6 +545,12 @@ public class WatchService {
                 context.buildTimestamp = buildTimestamp;
                 return this;
             }
+
+            public Builder containerNamePattern(String containerNamePattern) {
+                context.containerNamePattern = containerNamePattern;
+                return this;
+            }
+
 
             public WatchContext build() {
                 return context;

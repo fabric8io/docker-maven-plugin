@@ -21,6 +21,7 @@ import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
 
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -61,6 +62,12 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     private String watchPostExec;
 
     /**
+     * Naming pattern for how to name containers when started
+     */
+    @Parameter(property = "docker.containerNamePattern")
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
+
+    /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
@@ -86,6 +93,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
                 .removeVolumes(removeVolumes)
+                .containerNamePattern(containerNamePattern)
                 .buildTimestamp(getBuildTimestamp())
                 .pomLabel(getPomLabel())
                 .mojoParameters(createMojoParameters())

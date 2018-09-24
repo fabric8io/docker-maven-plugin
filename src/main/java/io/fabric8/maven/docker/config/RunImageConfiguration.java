@@ -113,7 +113,7 @@ public class RunImageConfiguration implements Serializable {
     private List<String> ports;
 
     /**
-     * @deprecated 
+     * @deprecated
      */
     @Parameter
     @Deprecated
@@ -320,7 +320,7 @@ public class RunImageConfiguration implements Serializable {
      * @deprecated
      */
     // Naming scheme for how to name container
-    @Deprecated // for backward compatibility
+    @Deprecated // for backward compatibility, us containerNamePattern instead
     public enum NamingStrategy {
         /**
          * No extra naming
@@ -364,6 +364,10 @@ public class RunImageConfiguration implements Serializable {
         return containerNamePattern;
     }
 
+    /**
+     * @deprecated use {@link #getContainerNamePattern} instead
+     */
+    @Deprecated
     public NamingStrategy getNamingStrategy() {
         return namingStrategy;
     }
@@ -539,8 +543,13 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder containerNamePattern(String pattern) {
+            config.containerNamePattern = pattern;
+            return this;
+        }
+
         /**
-         * @deprecated
+         * @deprecated use {@link #containerNamePattern} instead
          */
         @Deprecated
         public Builder namingStrategy(String namingStrategy) {
@@ -551,7 +560,7 @@ public class RunImageConfiguration implements Serializable {
         }
 
         /**
-         * @deprecated
+         * @deprecated use {@link #containerNamePattern} instead
          */
         @Deprecated
         public Builder namingStrategy(NamingStrategy namingStrategy) {

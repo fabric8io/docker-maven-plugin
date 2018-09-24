@@ -92,28 +92,17 @@ public class QueryService {
         return getMandatoryContainer(containerId).getName();
     }
 
-    public String calculateContainerName(ImageConfiguration image, Date timestamp, String defaultContainerNamePattern) throws DockerAccessException {
-        String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
-        Collection<Container> existingContainers = getContainersForImage(image.getName());
-        return ContainerNamingUtil.calculateContainerName(containerNamePattern, image.getName(), image.getAlias(), timestamp, extractContainerNames(existingContainers));
-    }
-
-    public String calculateLastContainerName(ImageConfiguration image, Date timestamp, String defaultContainerNamePattern) throws DockerAccessException {
-        String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
-        Collection<Container> existingContainers = getContainersForImage(image.getName());
-        return ContainerNamingUtil.calculateLastContainerName(containerNamePattern, image.getName(), image.getAlias(), timestamp, extractContainerNames(existingContainers));
-    }
-
     /**
      * Get all containers which are build from an image. By default only the last containers are considered but this
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
+     * @param all whether to fetch all containers
      * @return list of <code>Container</code> objects
      * @throws DockerAccessException if the request fails
      */
-    public List<Container> getContainersForImage(final String image) throws DockerAccessException {
-        return docker.getContainersForImage(image);
+    public List<Container> getContainersForImage(final String image, final boolean all) throws DockerAccessException {
+        return docker.getContainersForImage(image, all);
     }
 
     /**
@@ -138,7 +127,7 @@ public class QueryService {
         long newest = 0;
         Container result = null;
 
-        for (Container container : getContainersForImage(image)) {
+        for (Container container : getContainersForImage(image, false)) {
             long timestamp = container.getCreated();
 
             if (timestamp < newest) {
@@ -184,30 +173,6 @@ public class QueryService {
      */
     public boolean hasImage(String name) throws DockerAccessException {
         return docker.hasImage(name);
-    }
-
-
-    // ==============================================================================
-
-    private Set<String> extractContainerNames(final Collection<Container> existingContainers) {
-        final ImmutableSet.Builder<String> containerNamesBuilder = ImmutableSet.builder();
-        for (final Container container : existingContainers) {
-            containerNamesBuilder.add(container.getName());
-        }
-        return containerNamesBuilder.build();
-    }
-
-    private String extractContainerNamePattern(ImageConfiguration image, String defaultContainerNamePattern) {
-        RunImageConfiguration runConfig = image.getRunConfiguration();
-        if (runConfig != null) {
-            if (runConfig.getContainerNamePattern() != null) {
-                return runConfig.getContainerNamePattern();
-            }
-            if (runConfig.getNamingStrategy() == RunImageConfiguration.NamingStrategy.alias) {
-                return "%a";
-            }
-        }
-        return defaultContainerNamePattern;
     }
 
 }

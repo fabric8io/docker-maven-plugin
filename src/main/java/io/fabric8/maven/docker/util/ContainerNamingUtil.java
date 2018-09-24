@@ -1,9 +1,18 @@
 package io.fabric8.maven.docker.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.google.common.collect.ImmutableSet;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.model.Container;
 
 /**
  * @author marcus
@@ -11,31 +20,33 @@ import java.util.Set;
  */
 public class ContainerNamingUtil {
 
-    private static final String DEFAULT_NAMING_CONFIGURATION = "%n-%i";
-
     private static final String INDEX_PLACEHOLDER = "%i";
+
+    public static final String DEFAULT_CONTAINER_NAME_PATTERN = "%n-%i";
 
     // class with only static methods
     private ContainerNamingUtil() { }
 
-    public static String calculateContainerName(final String containerNamePattern,
-                                                final String imageName,
-                                                final String nameAlias,
-                                                final Date buildTimestamp,
-                                                final Set<String> existingContainers) {
+    public static String formatContainerName(final ImageConfiguration image,
+                                             final String defaultContainerNamePattern,
+                                             final Date buildTimestamp,
+                                             final Collection<Container> existingContainers) {
+
+        String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
+        Set<String> existingContainersNames = extractContainerNames(existingContainers);
 
         final String partiallyApplied =
             replacePlaceholders(
-                containerNamePattern != null ? containerNamePattern : DEFAULT_NAMING_CONFIGURATION,
-                imageName,
-                nameAlias,
+                containerNamePattern,
+                image.getName(),
+                image.getAlias(),
                 buildTimestamp);
 
 
         if (partiallyApplied.contains(INDEX_PLACEHOLDER)) {
             for (long i = 1; i < Long.MAX_VALUE; i++) {
                 final String withIndexApplied = partiallyApplied.replaceAll(INDEX_PLACEHOLDER, String.valueOf(i));
-                if (!existingContainers.contains(withIndexApplied)) {
+                if (!existingContainersNames.contains(withIndexApplied)) {
                     return withIndexApplied;
                 }
             }
@@ -45,23 +56,34 @@ public class ContainerNamingUtil {
         }
     }
 
-    public static String calculateLastContainerName(final String containerNamePattern,
-                                                    final String imageName,
-                                                    final String nameAlias,
-                                                    final Date buildTimestamp,
-                                                    final Set<String> existingContainers) {
+    /**
+     * Keep only the entry with the higest index if an indexed naming scheme for container has been chosen.
+     * @param image the image from which to the the container pattern
+     * @param buildTimestamp the timestamp for the build
+     * @param containers the list of existing containers
+     * @return a list with potentially lower indexed entries removed
+     */
+    public static Collection<Container> getContainersToStop(final ImageConfiguration image,
+                                                            final String defaultContainerNamePattern,
+                                                            final Date buildTimestamp,
+                                                            final Collection<Container> containers) {
+
+        String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
+
+        // Only special treatment for indexed container names
+        if (!containerNamePattern.contains(INDEX_PLACEHOLDER)) {
+            return containers;
+        }
 
         final String partiallyApplied =
-            replacePlaceholders(containerNamePattern,
-                                imageName,
-                                nameAlias,
-                                buildTimestamp);
+            replacePlaceholders(
+                containerNamePattern,
+                image.getName(),
+                image.getAlias(),
+                buildTimestamp);
 
-        if (partiallyApplied.contains(INDEX_PLACEHOLDER)) {
-            return applyLastIndex(existingContainers, partiallyApplied);
-        } else {
-            return partiallyApplied;
-        }
+        return keepOnlyLastIndexedContainer(containers, partiallyApplied);
+
     }
 
     // ========================================================================================================
@@ -79,23 +101,55 @@ public class ContainerNamingUtil {
     }
 
 
-    private static String applyLastIndex(Set<String> existingContainerNames, final String partiallyApplied) {
+    // Filter out any older indexed containernames, keeping only the last one (i.e. with the highest index)
+    private static Collection<Container> keepOnlyLastIndexedContainer(Collection<Container> existingContainers, final String partiallyApplied) {
 
-        String last = null;
-        for (long i = 1; i < Long.MAX_VALUE; i++) {
-            final String withIndexApplied = partiallyApplied.replaceAll(INDEX_PLACEHOLDER, String.valueOf(i));
-            if (last == null) {
-                last = withIndexApplied;
-            }
+        Collection<Container> result = new ArrayList<>(existingContainers);
 
-            if (!existingContainerNames.contains(withIndexApplied)) {
-                return last;
-            } else {
-                last = withIndexApplied;
-            }
+        // No index place holder, so nothing to filters
+        if (!partiallyApplied.contains(INDEX_PLACEHOLDER)) {
+            return result;
         }
 
-        return last;
+        Map<String,Container> containerMap = existingContainers.stream().collect(Collectors.toMap(Container::getName, Function.identity()));
+
+        Container last = null;
+        for (long i = 1; i < Long.MAX_VALUE; i++) {
+            final String withIndexApplied = partiallyApplied.replaceAll(INDEX_PLACEHOLDER, String.valueOf(i));
+            Container mapped = containerMap.get(withIndexApplied);
+            if (mapped != null) {
+                result.remove(mapped);
+                last = mapped;
+            } else {
+                // Readd last one removed (if any)
+                if (last != null) {
+                    result.add(last);
+                }
+                return result;
+            }
+        }
+        throw new IllegalStateException("Internal error: Cannot find a free container index slot in " + existingContainers);
+    }
+
+    private static Set<String> extractContainerNames(final Collection<Container> existingContainers) {
+        final ImmutableSet.Builder<String> containerNamesBuilder = ImmutableSet.builder();
+        for (final Container container : existingContainers) {
+            containerNamesBuilder.add(container.getName());
+        }
+        return containerNamesBuilder.build();
+    }
+
+    private static String extractContainerNamePattern(ImageConfiguration image, String defaultContainerNamePattern) {
+        RunImageConfiguration runConfig = image.getRunConfiguration();
+        if (runConfig != null) {
+            if (runConfig.getContainerNamePattern() != null) {
+                return runConfig.getContainerNamePattern();
+            }
+            if (runConfig.getNamingStrategy() == RunImageConfiguration.NamingStrategy.alias) {
+                return "%a";
+            }
+        }
+        return defaultContainerNamePattern != null ? defaultContainerNamePattern : DEFAULT_CONTAINER_NAME_PATTERN;
     }
 
     private static String cleanImageName(final String imageName) {

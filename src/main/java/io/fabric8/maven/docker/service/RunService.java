@@ -36,6 +36,7 @@ import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.Network;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.PomLabel;
@@ -125,6 +126,7 @@ public class RunService {
      * @param pomLabel label to tag the started container with
      *
      * @param mavenProps properties to fill in with dynamically assigned ports
+     * @param defaultContainerNamePattern pattern to use for naming containers. Can be null in which case a default pattern is used
      * @param buildTimestamp date which should be used as the timestamp when calculating container names
      * @return the container id
      *
@@ -135,10 +137,14 @@ public class RunService {
                                           PomLabel pomLabel,
                                           Properties mavenProps,
                                           File baseDir,
+                                          String defaultContainerNamePattern,
                                           Date buildTimestamp) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
-        String containerName = queryService.calculateContainerName(imageConfig, buildTimestamp, null);
+
+        Collection<Container> existingContainers = queryService.getContainersForImage(imageName, true);
+        String containerName = ContainerNamingUtil.formatContainerName(imageConfig, defaultContainerNamePattern, buildTimestamp, existingContainers);
+
         ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps, baseDir);
 
         String id = docker.createContainer(config, containerName);

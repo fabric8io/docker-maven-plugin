@@ -42,6 +42,7 @@ import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -88,6 +89,12 @@ public class StartMojo extends AbstractDockerMojo {
      */
     @Parameter(property = "docker.exposeContainerInfo")
     private String exposeContainerProps = "docker.container";
+
+    /**
+     * Naming pattern for how to name containers when started
+     */
+    @Parameter(property = "docker.containerNamePattern")
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;;
 
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
@@ -278,7 +285,7 @@ public class StartMojo extends AbstractDockerMojo {
         startingContainers.submit(new Callable<StartedContainer>() {
             @Override
             public StartedContainer call() throws Exception {
-                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir(), getBuildTimestamp());
+                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir(), containerNamePattern, getBuildTimestamp());
 
                 // Update port-mapping writer
                 portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
