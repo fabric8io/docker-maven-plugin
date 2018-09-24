@@ -115,8 +115,8 @@ public class ContainerNamingUtilTest {
                                 null,
             new Date(123456),
             containers);
-        Assert.assertEquals(filtered.size(),1);
-        Assert.assertEquals(filtered.iterator().next(),container2);
+        Assert.assertEquals(2, filtered.size());
+        Assert.assertEquals(container2, filtered.iterator().next());
     }
 
     private ImageConfiguration imageConfiguration(String name, String alias, String containerNamePattern) {
