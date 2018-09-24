@@ -354,8 +354,10 @@ public class RunService {
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
                 .logConfig(runConfig.getLogConfiguration())
                 .tmpfs(runConfig.getTmpfs())
-                .ulimits(runConfig.getUlimits());
-
+                .ulimits(runConfig.getUlimits())
+                .cpuShares(runConfig.getCpuShares())
+                .cpus(runConfig.getCpus())
+                .cpuSet(runConfig.getCpuSet());
         addVolumeConfig(config, runConfig, baseDir);
         addNetworkingConfig(config, runConfig);
 

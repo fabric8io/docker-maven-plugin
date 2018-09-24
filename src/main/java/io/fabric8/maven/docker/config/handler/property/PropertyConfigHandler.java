@@ -204,6 +204,9 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_RUN, config == null ? null : config.getImagePullPolicy()))
                 .ulimits(extractUlimits(config == null ? null : config.getUlimits(), valueProvider))
                 .tmpfs(valueProvider.getList(TMPFS, config == null ? null : config.getTmpfs()))
+                .cpuShares(valueProvider.getLong(CPUSHARES, config == null ? null : config.getCpuShares()))
+                .cpus(valueProvider.getLong(CPUS, config == null ? null : config.getCpus()))
+                .cpuSet(valueProvider.getString(CPUSET, config == null ? null : config.getCpuSet()))
                 .build();
     }
 
