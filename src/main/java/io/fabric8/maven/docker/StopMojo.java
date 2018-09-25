@@ -3,7 +3,6 @@ package io.fabric8.maven.docker;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,15 +10,14 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.PomLabel;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -56,6 +54,12 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter( property = "docker.sledgeHammer", defaultValue = "false" )
     private boolean sledgeHammer;
 
+    /**
+     * Naming pattern for how to name containers when started
+     */
+    @Parameter(property = "docker.containerNamePattern")
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
+
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException, ExecException {
         QueryService queryService = hub.getQueryService();
@@ -76,11 +80,17 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
-    private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException, ExecException {
+    private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException, ExecException, MojoExecutionException {
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, pomLabel);
         for (ImageConfiguration image : getResolvedImages()) {
-            for (Container container : getContainersToStop(queryService, image)) {
-                if (shouldStopContainer(container, pomLabel, image)) {
+
+            Collection<Container> existingContainers =
+                ContainerNamingUtil.getContainersToStop(image,
+                                                        containerNamePattern,
+                                                        getBuildTimestamp(),
+                                                        queryService.getContainersForImage(image.getName(), false));
+            for (Container container : existingContainers) {
+                if (shouldStopContainer(container, pomLabel)) {
                     runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
                 }
             }
@@ -88,28 +98,10 @@ public class StopMojo extends AbstractDockerMojo {
         runService.removeCustomNetworks(networksToRemove);
     }
 
-    // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
-    private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
-        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
-
-        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
-            Container container = queryService.getContainer(image.getAlias());
-            return container != null ? Collections.singletonList(container) : Collections.<Container>emptyList();
-        } else {
-            return queryService.getContainersForImage(image.getName());
-        }
-    }
-
-    private boolean shouldStopContainer(Container container, PomLabel pomLabel, ImageConfiguration image) {
+    private boolean shouldStopContainer(Container container, PomLabel pomLabel) {
         if (isStopAllContainers()) {
             return true;
         }
-
-        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
-        if (RunImageConfiguration.NamingStrategy.alias.equals(strategy)) {
-            return container.getName().equals(image.getAlias());
-        }
-
         String key = pomLabel.getKey();
         Map<String, String> labels = container.getLabels();
         return labels.containsKey(key) && pomLabel.equals(new PomLabel(labels.get(key)));
@@ -124,7 +116,7 @@ public class StopMojo extends AbstractDockerMojo {
         return startCalled != null && startCalled;
     }
 
-    private Set<Network> getNetworksToRemove(QueryService queryService, PomLabel pomLabel) throws DockerAccessException {
+    private Set<Network> getNetworksToRemove(QueryService queryService, PomLabel pomLabel) throws DockerAccessException, MojoExecutionException {
         if (!autoCreateCustomNetworks) {
             return Collections.emptySet();
         }
@@ -132,22 +124,29 @@ public class StopMojo extends AbstractDockerMojo {
         Set<Network> networks = queryService.getNetworks();
 
         for (ImageConfiguration image : getResolvedImages()) {
+
             final NetworkConfig config = image.getRunConfiguration().getNetworkingConfig();
-            if (config.isCustomNetwork()) {
-                Network network = getNetworkByName(networks, config.getCustomNetwork());
-                if (network != null) {
-                    customNetworks.add(network);
-                    for (Container container : getContainersToStop(queryService, image)) {
-                        if (!shouldStopContainer(container, pomLabel, image)) {
-                            // it's sill in use don't collect it
-                            customNetworks.remove(network);
-                        }
+            final Network network = getNetworkByName(networks, config.getCustomNetwork());
+
+            if (config.isCustomNetwork() && network != null) {
+                customNetworks.add(network);
+                Collection<Container> existingContainers =
+                    ContainerNamingUtil.getContainersToStop(image,
+                                                            containerNamePattern,
+                                                            getBuildTimestamp(),
+                                                            queryService.getContainersForImage(image.getName(), false));
+
+                for (Container container : existingContainers) {
+                    if (!shouldStopContainer(container, pomLabel)) {
+                        // it's sill in use don't collect it
+                        customNetworks.remove(network);
                     }
                 }
             }
         }
         return customNetworks;
     }
+
     private Network getNetworkByName(Set<Network> networks, String networkName) {
         for (Network network : networks) {
             if (networkName.equals(network.getName())) {

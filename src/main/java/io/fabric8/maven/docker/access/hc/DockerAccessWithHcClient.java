@@ -281,15 +281,15 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public List<Container> getContainersForImage(String image) throws DockerAccessException {
+    public List<Container> getContainersForImage(String image, boolean all) throws DockerAccessException {
         String url;
         String serverApiVersion = getServerApiVersion();
         if (EnvUtil.greaterOrEqualsVersion(serverApiVersion, "1.23")) {
             // For Docker >= 1.11 we can use a new filter when listing containers
-            url = urlBuilder.listContainers("ancestor",image);
+            url = urlBuilder.listContainers(all, "ancestor",image);
         } else {
             // For older versions (< Docker 1.11) we need to iterate over the containers.
-            url = urlBuilder.listContainers();
+            url = urlBuilder.listContainers(all);
         }
 
         try {

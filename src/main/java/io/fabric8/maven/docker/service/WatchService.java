@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,9 +24,9 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.PomLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -236,9 +237,17 @@ public class WatchService {
                 runService.stopPreviouslyStartedContainer(id, false, false);
 
                 // Start new one
-                watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
-                        watcher.getWatchContext().getMojoParameters().getProject().getProperties(),
-                        watcher.getWatchContext().getMojoParameters().getProject().getBasedir()));
+                WatchContext ctx = watcher.getWatchContext();
+                MavenProject project = ctx.getMojoParameters().getProject();
+                watcher.setContainerId(
+                    runService.createAndStartContainer(
+                        imageConfig,
+                        mappedPorts,
+                        ctx.getPomLabel(),
+                        project.getProperties(),
+                        project.getBasedir(),
+                        ctx.getContainerNamePattern(),
+                        ctx.getBuildTimestamp()));
             }
         };
     }
@@ -397,6 +406,10 @@ public class WatchService {
 
         private Task<ImageWatcher> containerRestarter;
 
+        private Date buildTimestamp;
+
+        private String containerNamePattern;
+
         public WatchContext() {
         }
 
@@ -448,9 +461,17 @@ public class WatchService {
             return containerRestarter;
         }
 
+        public Date getBuildTimestamp() {
+            return buildTimestamp;
+        }
+
+        public String getContainerNamePattern() {
+            return containerNamePattern;
+        }
+
         public static class Builder {
 
-            private WatchContext context = new WatchContext();
+            private WatchContext context;
 
             public Builder() {
                 this.context = new WatchContext();
@@ -519,6 +540,17 @@ public class WatchService {
                 context.autoCreateCustomNetworks = autoCreateCustomNetworks;
                 return this;
             }
+
+            public Builder buildTimestamp(Date buildTimestamp) {
+                context.buildTimestamp = buildTimestamp;
+                return this;
+            }
+
+            public Builder containerNamePattern(String containerNamePattern) {
+                context.containerNamePattern = containerNamePattern;
+                return this;
+            }
+
 
             public WatchContext build() {
                 return context;

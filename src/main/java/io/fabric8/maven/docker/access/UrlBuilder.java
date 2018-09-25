@@ -84,8 +84,8 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String listContainers(String ... filter) {
-        Builder builder = u("containers/json");
+    public String listContainers(boolean all, String ... filter) {
+        Builder builder = u("containers/json").p("all", all);
         addFilters(builder, filter);
         return builder.build();
     }
