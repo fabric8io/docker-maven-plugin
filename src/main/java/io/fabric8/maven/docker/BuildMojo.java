@@ -47,7 +47,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     protected boolean skipTag;
 
     @Override
-    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
+    protected void executeInternal(ServiceHub hub) throws IOException, MojoExecutionException {
         if (skipBuild) {
             return;
         }
@@ -62,7 +62,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     }
 
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
-            throws MojoExecutionException, DockerAccessException {
+            throws MojoExecutionException, IOException {
 
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
@@ -94,7 +94,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    private void processImageConfig(ServiceHub hub, ImageConfiguration aImageConfig) throws DockerAccessException, MojoExecutionException {
+    private void processImageConfig(ServiceHub hub, ImageConfiguration aImageConfig) throws IOException, MojoExecutionException {
         BuildImageConfiguration buildConfig = aImageConfig.getBuildConfiguration();
 
         if (buildConfig != null) {

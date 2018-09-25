@@ -47,7 +47,7 @@ public class RegistryService {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
             if (buildConfig != null) {
-                String configuredRegistry = EnvUtil.fistRegistryOf(
+                String configuredRegistry = EnvUtil.firstRegistryOf(
                     new ImageName(imageConfig.getName()).getRegistry(),
                     imageConfig.getRegistry(),
                     registryConfig.getRegistry());
@@ -94,7 +94,7 @@ public class RegistryService {
 
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
-        String actualRegistry = EnvUtil.fistRegistryOf(
+        String actualRegistry = EnvUtil.firstRegistryOf(
             imageName.getRegistry(),
             registryConfig.getRegistry());
         docker.pullImage(imageName.getFullName(),

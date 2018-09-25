@@ -15,11 +15,12 @@ package io.fabric8.maven.docker.access;/*
  * limitations under the License.
  */
 
+import org.junit.Test;
+
 import java.util.Collections;
 import java.util.Map;
 
-import org.json.JSONObject;
-import org.junit.Test;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 
@@ -63,7 +64,7 @@ public class BuildConfigTest {
     public void buildArgs() {
         Map<String,String> args = Collections.singletonMap("arg1","blub");
         BuildOptions opts = new BuildOptions().buildArgs(args);
-        assertEquals(new JSONObject(args).toString(), opts.getOptions().get("buildargs"));
+        assertEquals(JsonFactory.newJsonObject(args).toString(), opts.getOptions().get("buildargs"));
         opts = new BuildOptions().buildArgs(null);
         assertEquals(0, opts.getOptions().size());
 

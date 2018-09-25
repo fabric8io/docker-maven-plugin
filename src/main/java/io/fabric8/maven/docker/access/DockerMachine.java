@@ -159,7 +159,7 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
                 }
             }
             args.add(machine.getName());
-            return args.toArray(new String[args.size()]);
+            return args.toArray(new String[0]);
         }
 
         @Override

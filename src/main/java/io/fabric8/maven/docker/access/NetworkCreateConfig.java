@@ -1,14 +1,14 @@
 package io.fabric8.maven.docker.access;
 
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 public class NetworkCreateConfig {
-    final JSONObject createConfig = new JSONObject();
+    final JsonObject createConfig = new JsonObject();
     final String name;
 
     public NetworkCreateConfig(String name) {
         this.name = name;
-        createConfig.put("Name", name);
+        createConfig.addProperty("Name", name);
     }
 
     public String getName() {
