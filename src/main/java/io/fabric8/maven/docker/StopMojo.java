@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
@@ -81,7 +80,7 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
-    private void stopContainers(QueryService queryService, RunService runService, GavLabel gavLabel) throws IOException, ExecException, MojoExecutionException {
+    private void stopContainers(QueryService queryService, RunService runService, GavLabel gavLabel) throws IOException, ExecException {
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, gavLabel);
         for (ImageConfiguration image : getResolvedImages()) {
 

@@ -1,7 +1,10 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -13,9 +16,16 @@ import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.wait.*;
+import io.fabric8.maven.docker.wait.ExitCodeChecker;
+import io.fabric8.maven.docker.wait.HealthCheckChecker;
+import io.fabric8.maven.docker.wait.HttpPingChecker;
+import io.fabric8.maven.docker.wait.LogWaitChecker;
+import io.fabric8.maven.docker.wait.PreconditionFailedException;
+import io.fabric8.maven.docker.wait.TcpPortChecker;
+import io.fabric8.maven.docker.wait.WaitChecker;
+import io.fabric8.maven.docker.wait.WaitTimeoutException;
+import io.fabric8.maven.docker.wait.WaitUtil;
 import org.apache.commons.text.StrSubstitutor;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.shared.utils.StringUtils;
 
 /**

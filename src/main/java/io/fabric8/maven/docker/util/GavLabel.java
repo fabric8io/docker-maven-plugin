@@ -1,4 +1,3 @@
-package io.fabric8.maven.docker.util;
 /*
  *
  * Copyright 2014 Roland Huss
@@ -16,6 +15,8 @@ package io.fabric8.maven.docker.util;
  * limitations under the License.
  */
 
+
+package io.fabric8.maven.docker.util;
 /**
  * Label used to mark a container belonging to a certain build.
  *

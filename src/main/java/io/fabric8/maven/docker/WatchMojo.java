@@ -17,12 +17,10 @@ package io.fabric8.maven.docker;/*
 
 import java.io.IOException;
 
-import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
-
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;

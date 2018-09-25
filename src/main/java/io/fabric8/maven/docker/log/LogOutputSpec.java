@@ -97,7 +97,6 @@ public class LogOutputSpec {
     public static class Builder {
         private String prefix;
         private Ansi.Color color;
-        private String containerId;
         private DateTimeFormatter timeFormatter;
         private String file;
         private boolean useColor;
@@ -159,11 +158,6 @@ public class LogOutputSpec {
                             "http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html");
                 }
             }
-            return this;
-        }
-
-        public Builder containerId(String id) {
-            this.containerId = id;
             return this;
         }
 
