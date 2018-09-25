@@ -13,7 +13,7 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,8 +58,8 @@ public class ContainerHostConfigTest {
                 data[1].toString().contains("=") ?
                     new UlimitConfig((String) data[1]) :
                     new UlimitConfig((String) data[1], (Integer) data[2], (Integer) data[3])));
-            assertEquals(GsonBridge.toJsonObject((String) data[0]),
-                                    hc.toJsonObject());
+            assertEquals(JsonFactory.newJsonObject((String) data[0]),
+                         hc.toJsonObject());
         }
     }
 
@@ -89,7 +89,7 @@ public class ContainerHostConfigTest {
         for (int i = 0; i < data.length; i +=2) {
             ContainerHostConfig hc = new ContainerHostConfig();
             JsonObject result = hc.tmpfs(Arrays.asList(data[i])).toJsonObject();
-            JsonObject expected = GsonBridge.toJsonObject(data[i+1]);
+            JsonObject expected = JsonFactory.newJsonObject(data[i + 1]);
             assertEquals(expected, result);
         }
     }

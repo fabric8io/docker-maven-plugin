@@ -3,7 +3,7 @@ package io.fabric8.maven.docker.access;
 import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerNetworkingConfig {
 
@@ -17,7 +17,7 @@ public class ContainerNetworkingConfig {
      */
     public ContainerNetworkingConfig aliases(NetworkConfig config) {
         JsonObject endPoints = new JsonObject();
-        endPoints.add("Aliases", GsonBridge.toJsonArray(config.getAliases()));
+        endPoints.add("Aliases", JsonFactory.newJsonArray(config.getAliases()));
 
         JsonObject endpointConfigMap = new JsonObject();
         endpointConfigMap.add(config.getCustomNetwork(), endPoints);

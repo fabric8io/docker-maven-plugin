@@ -112,7 +112,7 @@ public class CredentialHelperClient {
                     throw ex;
                 }
             }
-            JsonObject credentials = GsonBridge.toJsonObject(Joiner.on('\n').join(reply));
+            JsonObject credentials = JsonFactory.newJsonObject(Joiner.on('\n').join(reply));
             if (!credentials.has(SECRET_KEY) || !credentials.has(USERNAME_KEY)) {
                 return null;
             }

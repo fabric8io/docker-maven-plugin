@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.util.AutoPullMode;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 /**
  * Simple interface for a ImagePullCache manager, to load and persist the cache.
@@ -94,7 +94,7 @@ public class ImagePullManager {
         }
 
         public ImagePullCache(String json) {
-            cache = json != null ? GsonBridge.toJsonObject(json) : new JsonObject();
+            cache = json != null ? JsonFactory.newJsonObject(json) : new JsonObject();
         }
 
         public boolean has(String imageName) {

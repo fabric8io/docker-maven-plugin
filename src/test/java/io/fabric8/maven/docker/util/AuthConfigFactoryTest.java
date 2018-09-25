@@ -259,7 +259,7 @@ public class AuthConfigFactoryTest {
 
         JsonObject config = new JsonObject();
         if (!credHelpers.isEmpty()){
-            config.add("credHelpers", GsonBridge.toJsonObject(credHelpers));
+            config.add("credHelpers", JsonFactory.newJsonObject(credHelpers));
         }
 
         if (credsStore!=null) {

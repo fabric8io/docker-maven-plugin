@@ -12,7 +12,7 @@ import java.util.Map;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerHostConfig {
 
@@ -198,7 +198,7 @@ public class ContainerHostConfig {
 
     ContainerHostConfig addAsArray(String propKey, List<String> props) {
         if (props != null) {
-            startConfig.add(propKey, GsonBridge.toJsonArray(props));
+            startConfig.add(propKey, JsonFactory.newJsonArray(props));
         }
         return this;
     }

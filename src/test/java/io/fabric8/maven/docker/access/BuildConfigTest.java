@@ -20,7 +20,7 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.Map;
 
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 
@@ -64,7 +64,7 @@ public class BuildConfigTest {
     public void buildArgs() {
         Map<String,String> args = Collections.singletonMap("arg1","blub");
         BuildOptions opts = new BuildOptions().buildArgs(args);
-        assertEquals(GsonBridge.toJsonObject(args).toString(), opts.getOptions().get("buildargs"));
+        assertEquals(JsonFactory.newJsonObject(args).toString(), opts.getOptions().get("buildargs"));
         opts = new BuildOptions().buildArgs(null);
         assertEquals(0, opts.getOptions().size());
 

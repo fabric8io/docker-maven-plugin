@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,7 +80,7 @@ public class ContainerCreateConfigTest {
             ContainerCreateConfig cc = new ContainerCreateConfig("testImage");
             cc.binds(Arrays.asList(testData[i]));
 
-            JsonObject volumes = (JsonObject) GsonBridge.toJsonObject(cc.toJson()).get("Volumes");
+            JsonObject volumes = (JsonObject) JsonFactory.newJsonObject(cc.toJson()).get("Volumes");
             assertEquals(1, volumes.size());
             assertTrue(volumes.has(testData[i+1]));
         }
@@ -91,7 +91,7 @@ public class ContainerCreateConfigTest {
     public void testNullEnvironment() {
         ContainerCreateConfig cc= new ContainerCreateConfig("testImage");
         cc.environment(null,null,Collections.<String, String>emptyMap());
-        JsonObject config = GsonBridge.toJsonObject(cc.toJson());
+        JsonObject config = JsonFactory.newJsonObject(cc.toJson());
         assertFalse(config.has("Env"));
     }
 
@@ -113,7 +113,7 @@ public class ContainerCreateConfigTest {
 
 
     private JsonArray getEnvArray(ContainerCreateConfig cc) {
-        JsonObject config = GsonBridge.toJsonObject(cc.toJson());
+        JsonObject config = JsonFactory.newJsonObject(cc.toJson());
         return (JsonArray) config.get("Env");
     }
 

@@ -32,7 +32,7 @@ import io.fabric8.maven.docker.config.UlimitConfig;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -338,12 +338,12 @@ public class RunServiceTest {
         return config;
     }
     private void thenContainerConfigIsValid() throws IOException {
-        JsonObject expectedConfig = GsonBridge.toJsonObject(loadFile("docker/containerCreateConfigAll.json"));
+        JsonObject expectedConfig = JsonFactory.newJsonObject(loadFile("docker/containerCreateConfigAll.json"));
         assertEquals(expectedConfig.toString(), containerConfig.toJson());
     }
 
     private void thenStartConfigIsValid() throws IOException {
-        JsonObject expectedHostConfig = GsonBridge.toJsonObject(loadFile("docker/containerHostConfigAll.json"));
+        JsonObject expectedHostConfig = JsonFactory.newJsonObject(loadFile("docker/containerHostConfigAll.json"));
         assertEquals(expectedHostConfig.toString(), startConfig.toJson());
     }
 

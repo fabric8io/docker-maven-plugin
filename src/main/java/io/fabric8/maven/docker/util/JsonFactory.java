@@ -7,22 +7,22 @@ import com.google.gson.JsonObject;
 import java.util.List;
 import java.util.Map;
 
-public class GsonBridge {
+public class JsonFactory {
     private static final Gson GSON = new Gson();
 
-    private GsonBridge() {
+    private JsonFactory() {
         // Empty Constructor
     }
 
-    public static final JsonObject toJsonObject(String json) {
+    public static JsonObject newJsonObject(String json) {
         return GSON.fromJson(json, JsonObject.class);
     }
 
-    public static final JsonArray toJsonArray(String json) {
+    public static JsonArray newJsonArray(String json) {
         return GSON.fromJson(json, JsonArray.class);
     }
 
-    public static final JsonArray toJsonArray(List<String> list) {
+    public static JsonArray newJsonArray(List<String> list) {
         final JsonArray jsonArray = new JsonArray();
 
         for(String element : list)
@@ -33,7 +33,7 @@ public class GsonBridge {
         return jsonArray;
     }
 
-    public static final JsonObject toJsonObject(Map<String,String> map) {
+    public static JsonObject newJsonObject(Map<String,String> map) {
         final JsonObject jsonObject = new JsonObject();
 
         for (Map.Entry<String, String> entry : map.entrySet()) {

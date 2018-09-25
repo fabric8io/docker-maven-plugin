@@ -11,7 +11,7 @@ import java.util.Map;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 import mockit.Delegate;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -63,7 +63,7 @@ public class VolumeServiceTest {
          docker.createVolume(with(new Delegate<VolumeCreateConfig>() {
             void check(VolumeCreateConfig vcc) {
                assertThat(vcc.getName(), is("testVolume"));
-               JsonObject vccJson = GsonBridge.toJsonObject(vcc.toJson());
+               JsonObject vccJson = JsonFactory.newJsonObject(vcc.toJson());
                assertEquals("test", vccJson.get("Driver").getAsString());
             }
          })); result = "testVolume";

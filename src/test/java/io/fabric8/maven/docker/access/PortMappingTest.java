@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -209,7 +209,7 @@ public class PortMappingTest {
     }
 
     private void thenAssertJsonEquals(String json) {
-        JsonArray jsonArray = GsonBridge.toJsonArray(json);
+        JsonArray jsonArray = JsonFactory.newJsonArray(json);
         assertEquals(jsonArray, mapping.toJson().getAsJsonArray());
     }
 

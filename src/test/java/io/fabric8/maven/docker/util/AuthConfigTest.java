@@ -52,7 +52,7 @@ public class AuthConfigTest {
 
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
 
-        JsonObject data = GsonBridge.toJsonObject(header);
+        JsonObject data = JsonFactory.newJsonObject(header);
         assertEquals("roland",data.get("username").getAsString());
         assertEquals("#>secrets??",data.get("password").getAsString());
         assertEquals("roland@jolokia.org",data.get("email").getAsString());

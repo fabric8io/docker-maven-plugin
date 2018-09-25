@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 
 import java.util.Map;
 
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class VolumeCreateConfig
 {
@@ -20,14 +20,14 @@ public class VolumeCreateConfig
 
     public VolumeCreateConfig opts(Map<String, String> opts) {
        if (opts != null && opts.size() > 0) {
-          add("DriverOpts", GsonBridge.toJsonObject(opts));
+          add("DriverOpts", JsonFactory.newJsonObject(opts));
        }
        return this;
     }
 
     public VolumeCreateConfig labels(Map<String,String> labels) {
         if (labels != null && labels.size() > 0) {
-           add("Labels", GsonBridge.toJsonObject(labels));
+           add("Labels", JsonFactory.newJsonObject(labels));
         }
         return this;
     }

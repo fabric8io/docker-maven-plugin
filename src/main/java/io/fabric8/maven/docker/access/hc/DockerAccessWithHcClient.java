@@ -54,7 +54,7 @@ import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.model.NetworksListElement;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
@@ -133,7 +133,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try {
             String url = urlBuilder.version();
             String response = delegate.get(url, 200);
-            JsonObject info = GsonBridge.toJsonObject(response);
+            JsonObject info = JsonFactory.newJsonObject(response);
             return info.get("ApiVersion").getAsString();
         } catch (Exception e) {
             throw new DockerAccessException(e, "Cannot extract API version from server %s", urlBuilder.getBaseUrl());
@@ -186,12 +186,12 @@ public class DockerAccessWithHcClient implements DockerAccess {
         request.addProperty("AttachStdin", false);
         request.addProperty("AttachStdout", true);
         request.addProperty("AttachStderr", true);
-        request.add("Cmd", GsonBridge.toJsonArray(arguments.getExec()));
+        request.add("Cmd", JsonFactory.newJsonArray(arguments.getExec()));
 
         String execJsonRequest = request.toString();
         try {
             String response = delegate.post(url, execJsonRequest, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
-            JsonObject json = GsonBridge.toJsonObject(response);
+            JsonObject json = JsonFactory.newJsonObject(response);
             if (json.has("Warnings")) {
                 logWarnings(json);
             }
@@ -214,7 +214,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.createContainer(containerName);
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
-            JsonObject json = GsonBridge.toJsonObject(response);
+            JsonObject json = JsonFactory.newJsonObject(response);
             logWarnings(json);
 
             // only need first 12 to id a container
@@ -294,7 +294,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
         try {
             String response = delegate.get(url, HTTP_OK);
-            JsonArray array = GsonBridge.toJsonArray(response);
+            JsonArray array = JsonFactory.newJsonArray(response);
             List<Container> containers = new ArrayList<>();
 
             for (int i = 0; i < array.size(); i++) {
@@ -315,7 +315,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
         } else {
-            return new ContainerDetails(GsonBridge.toJsonObject(response.getBody()));
+            return new ContainerDetails(JsonFactory.newJsonObject(response.getBody()));
         }
     }
 
@@ -325,7 +325,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
         } else {
-            return new ExecDetails(GsonBridge.toJsonObject(response.getBody()));
+            return new ExecDetails(JsonFactory.newJsonObject(response.getBody()));
         }
     }
 
@@ -363,7 +363,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
             return null;
         }
-        JsonObject imageDetails = GsonBridge.toJsonObject(response.getBody());
+        JsonObject imageDetails = JsonFactory.newJsonObject(response.getBody());
         return imageDetails.get("Id").getAsString().substring(0, 12);
     }
 
@@ -483,7 +483,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String url = urlBuilder.deleteImage(image, force);
             HttpBodyAndStatus response = delegate.delete(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
             if (log.isDebugEnabled()) {
-                logRemoveResponse(GsonBridge.toJsonArray(response.getBody()));
+                logRemoveResponse(JsonFactory.newJsonArray(response.getBody()));
             }
 
             return response.getStatusCode() == HTTP_OK;
@@ -498,7 +498,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
         try {
             String response = delegate.get(url, HTTP_OK);
-            JsonArray array = GsonBridge.toJsonArray(response);
+            JsonArray array = JsonFactory.newJsonArray(response);
             List<Network> networks = new ArrayList<>(array.size());
 
             for (int i = 0; i < array.size(); i++) {
@@ -521,7 +521,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             log.debug(response);
-            JsonObject json = GsonBridge.toJsonObject(response);
+            JsonObject json = JsonFactory.newJsonObject(response);
             if (json.has("Warnings")) {
                 logWarnings(json);
             }
@@ -561,7 +561,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                                   createJson,
                                   new ApacheHttpClientDelegate.BodyResponseHandler(),
                                   HTTP_CREATED);
-            JsonObject json = GsonBridge.toJsonObject(response);
+            JsonObject json = JsonFactory.newJsonObject(response);
             logWarnings(json);
 
             return json.get("Name").getAsString();

@@ -16,7 +16,7 @@ import java.util.Set;
 
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.GsonBridge;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerCreateConfig {
 
@@ -43,7 +43,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig command(Arguments command) {
         if (command != null) {
-            createConfig.add("Cmd", GsonBridge.toJsonArray(command.asStrings()));
+            createConfig.add("Cmd", JsonFactory.newJsonArray(command.asStrings()));
         }
         return this;
     }
@@ -54,7 +54,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig entrypoint(Arguments entrypoint) {
         if (entrypoint != null) {
-            createConfig.add("Entrypoint", GsonBridge.toJsonArray(entrypoint.asStrings()));
+            createConfig.add("Entrypoint", JsonFactory.newJsonArray(entrypoint.asStrings()));
         }
         return this;
     }
@@ -90,7 +90,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig labels(Map<String,String> labels) {
         if (labels != null && labels.size() > 0) {
-            createConfig.add("Labels", GsonBridge.toJsonObject(labels));
+            createConfig.add("Labels", JsonFactory.newJsonObject(labels));
         }
         return this;
     }
