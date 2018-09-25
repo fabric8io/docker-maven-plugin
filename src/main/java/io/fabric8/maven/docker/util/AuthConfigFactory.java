@@ -244,7 +244,7 @@ public class AuthConfigFactory {
         if (props.containsKey(useOpenAuthModeProp)) {
             boolean useOpenShift = Boolean.valueOf(props.getProperty(useOpenAuthModeProp));
             if (useOpenShift) {
-                return parseOpenShiftConfig(useOpenAuthModeProp);
+                return validateMandatoryOpenShiftLogin(parseOpenShiftConfig(), useOpenAuthModeProp);
             } else {
                 return null;
             }
@@ -254,7 +254,7 @@ public class AuthConfigFactory {
         Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfigMap);
         if (mapToCheck != null && mapToCheck.containsKey(AUTH_USE_OPENSHIFT_AUTH) &&
             Boolean.valueOf((String) mapToCheck.get(AUTH_USE_OPENSHIFT_AUTH))) {
-            return parseOpenShiftConfig(useOpenAuthModeProp);          
+                return validateMandatoryOpenShiftLogin(parseOpenShiftConfig(), useOpenAuthModeProp);
         } else {
             return null;
         }
@@ -363,51 +363,80 @@ public class AuthConfigFactory {
     }
 
     // Parse OpenShift config to get credentials, but return null if not found
-    private AuthConfig parseOpenShiftConfig(String useOpenAuthModeProp) throws MojoExecutionException {
+    private AuthConfig parseOpenShiftConfig() throws MojoExecutionException {
         Map kubeConfig = readKubeConfig();
-        if (kubeConfig != null) {
-            String currentContextName = (String) kubeConfig.get("current-context");
-            if (currentContextName != null) {
-                for (Map contextMap : (List<Map>) kubeConfig.get("contexts")) {
-                    if (currentContextName.equals(contextMap.get("name"))) {
-                        Map context = (Map) contextMap.get("context");
-                        if (context != null) {
-                            String userName = (String) context.get("user");
-                            if (userName != null) {
-                                List<Map> users = (List<Map>) kubeConfig.get("users");
-                                if (users != null) {
-                                    for (Map userMap : users) {
-                                        if (userName.equals(userMap.get("name"))) {
-                                            Map user = (Map) userMap.get("user");
-                                            if (user != null) {
-                                                String token = (String) user.get("token");
-                                                if (token != null) {
-                                                    // Strip off stuff after username
-                                                    Matcher matcher = Pattern.compile("^([^/]+).*$").matcher(userName);
-                                                    return new AuthConfig(matcher.matches() ? matcher.group(1) : userName,
-                                                                          token, null, null);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+        if (kubeConfig == null) {
+            return null;
+        }
+
+        String currentContextName = (String) kubeConfig.get("current-context");
+        if (currentContextName == null) {
+            return null;
+        }
+
+        for (Map contextMap : (List<Map>) kubeConfig.get("contexts")) {
+            if (currentContextName.equals(contextMap.get("name"))) {
+                return parseContext(kubeConfig, (Map) contextMap.get("context"));
             }
         }
-        // No user found
+
+        return null;
+    }
+
+    private AuthConfig parseContext(Map kubeConfig, Map context) {
+        if (context == null) {
+            return null;
+        }
+        String userName = (String) context.get("user");
+        if (userName == null) {
+            return null;
+        }
+
+        List<Map> users = (List<Map>) kubeConfig.get("users");
+        if (users == null) {
+            return null;
+        }
+
+        for (Map userMap : users) {
+            if (userName.equals(userMap.get("name"))) {
+                return parseUser(userName, (Map) userMap.get("user"));
+            }
+        }
+        return null;
+    }
+
+    private AuthConfig parseUser(String userName, Map user) {
+        if (user == null) {
+            return null;
+        }
+        String token = (String) user.get("token");
+        if (token == null) {
+            return null;
+        }
+
+        // Strip off stuff after username
+        Matcher matcher = Pattern.compile("^([^/]+).*$").matcher(userName);
+        return new AuthConfig(matcher.matches() ? matcher.group(1) : userName,
+                              token, null, null);
+    }
+
+    private AuthConfig validateMandatoryOpenShiftLogin(AuthConfig openShiftAuthConfig, String useOpenAuthModeProp) throws MojoExecutionException {
+        if (openShiftAuthConfig != null) {
+            return openShiftAuthConfig;
+        }
+        // No login found
         String kubeConfigEnv = System.getenv("KUBECONFIG");
         throw new MojoExecutionException(
             String.format("System property %s set, but not active user and/or token found in %s. " +
                           "Please use 'oc login' for connecting to OpenShift.",
                           useOpenAuthModeProp, kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
+
     }
+
 
     private JSONObject readDockerConfig() {
         String dockerConfig = System.getenv("DOCKER_CONFIG");
-        
+
         Reader reader = dockerConfig == null
                     ? getFileReaderFromDir(new File(getHomeDir(),".docker/config.json"))
                     : getFileReaderFromDir(new File(dockerConfig,"config.json"));
@@ -427,7 +456,7 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private Reader getFileReaderFromDir(File file) {        
+    private Reader getFileReaderFromDir(File file) {
         if (file.exists() && file.length() != 0) {
             try {
                 return new FileReader(file);
