@@ -363,7 +363,7 @@ public class AuthConfigFactory {
     }
 
     // Parse OpenShift config to get credentials, but return null if not found
-    private AuthConfig parseOpenShiftConfig() throws MojoExecutionException {
+    private AuthConfig parseOpenShiftConfig() {
         Map kubeConfig = readKubeConfig();
         if (kubeConfig == null) {
             return null;
