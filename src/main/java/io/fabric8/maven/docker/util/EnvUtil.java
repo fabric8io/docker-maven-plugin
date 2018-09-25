@@ -417,7 +417,7 @@ public class EnvUtil {
         }
     }
 
-    public static Date loadTimestamp(File tsFile) throws MojoExecutionException {
+    public static Date loadTimestamp(File tsFile) throws IOException {
         try {
             if (tsFile.exists()) {
                 String ts = FileUtils.fileRead(tsFile);
@@ -426,7 +426,7 @@ public class EnvUtil {
                 return null;
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Cannot read timestamp " + tsFile,e);
+            throw new IOException("Cannot read timestamp " + tsFile,e);
         }
     }
 

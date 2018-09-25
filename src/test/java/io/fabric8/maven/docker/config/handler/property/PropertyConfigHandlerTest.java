@@ -15,6 +15,12 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -518,7 +524,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         BuildImageConfiguration buildConfiguration = configs.get(0).getBuildConfiguration();
         assertNotNull(buildConfiguration);
         buildConfiguration.initAndValidate(null);
-        assertEquals("/some/path", buildConfiguration.getDockerFile().getAbsolutePath());
+
+        Path absolutePath = Paths.get(".").toAbsolutePath();
+        String expectedPath = absolutePath.getRoot() + "some" + File.separator + "path";
+        assertEquals(expectedPath, buildConfiguration.getDockerFile().getAbsolutePath());
     }
 
     @Test

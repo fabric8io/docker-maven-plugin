@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -29,12 +28,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.ImagePullManager;
@@ -42,6 +38,7 @@ import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -201,7 +198,7 @@ public class StartMojo extends AbstractDockerMojo {
             // Rollback if not all could be started
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getPomLabel());
+                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getGavLabel());
             }
         }
     }
@@ -271,47 +268,42 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private void startImage(final ImageConfiguration image,
+    private void startImage(final ImageConfiguration imageConfig,
                             final ServiceHub hub,
                             final ExecutorCompletionService<StartedContainer> startingContainers,
-                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) {
+                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) throws IOException {
 
         final RunService runService = hub.getRunService();
         final Properties projProperties = project.getProperties();
-        final RunImageConfiguration runConfig = image.getRunConfiguration();
+        final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
-        startingContainers.submit(new Callable<StartedContainer>() {
-            @Override
-            public StartedContainer call() throws Exception {
-                final String containerId = runService.createAndStartContainer(image, portMapping, getPomLabel(), projProperties, project.getBasedir(), containerNamePattern, getBuildTimestamp());
+        StartContainerExecutor startExecutor = new StartContainerExecutor.Builder()
+            .dispatcher(dispatcher)
+            .follow(follow)
+            .log(log)
+            .portMapping(portMapping)
+            .gavLabel(getGavLabel())
+            .projectProperties(project.getProperties())
+            .basedir(project.getBasedir())
+            .imageConfig(imageConfig)
+            .serviceHub(hub)
+            .logOutputSpecFactory(serviceHubFactory.getLogOutputSpecFactory())
+            .showLogs(showLogs)
+            .containerNamePattern(containerNamePattern)
+            .buildTimestamp(getBuildTimestamp())
+            .build();
 
-                // Update port-mapping writer
-                portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
+        startingContainers.submit(() -> {
 
-                if (showLogs(image)) {
-                    dispatcher.trackContainerLog(containerId,
-                            serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, image));
-                }
+            // Update port-mapping writer
+            portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
-                // Wait if requested
-                hub.getWaitService().wait(image, projProperties, containerId);
-                WaitConfiguration waitConfig = runConfig.getWaitConfiguration();
-                if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
-                    try {
-                        runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), image);
-                    } catch (ExecException exp) {
-                        if (waitConfig.getExec().isBreakOnError()) {
-                            throw exp;
-                        } else {
-                            log.warn("Cannot run postStart: %s", exp.getMessage());
-                        }
-                    }
-                }
 
-                return new StartedContainer(image, containerId);
-            }
+            String containerId = startExecutor.startContainers();
+
+            return new StartedContainer(imageConfig, containerId);
         });
     }
 
@@ -382,30 +374,6 @@ public class StartMojo extends AbstractDockerMojo {
             executorService = MoreExecutors.newDirectExecutorService();
         }
         return executorService;
-    }
-
-    protected boolean showLogs(ImageConfiguration imageConfig) {
-        if (showLogs != null) {
-            if (showLogs.equalsIgnoreCase("true")) {
-                return true;
-            } else if (showLogs.equalsIgnoreCase("false")) {
-                return false;
-            } else {
-                return ConfigHelper.matchesConfiguredImages(showLogs, imageConfig);
-            }
-        }
-
-        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-        if (runConfig != null) {
-            LogConfiguration logConfig = runConfig.getLogConfiguration();
-            if (logConfig != null) {
-                return logConfig.isActivated();
-            } else {
-                // Default is to show logs if "follow" is true
-                return follow;
-            }
-        }
-        return false;
     }
 
     // Expose ports as project properties
