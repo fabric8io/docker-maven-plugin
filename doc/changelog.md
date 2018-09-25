@@ -1,6 +1,4 @@
 # ChangeLog
-* **0.26.2**
-  - Respect DOCKER_CONFIG, KUBECONFIG (#1083)
 
 * **0.27-SNAPSHOT**
   - Jump to Java 8 as minimal Java version
@@ -9,6 +7,7 @@
   - Fix Base64 encoding for X-Registry-Auth used for Docker authentication (#1084)
   - Fix property configuration based's build detection (#1078)
   - Introduce container name patterns for naming containers (#931)
+  - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials (#1083)
 
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
