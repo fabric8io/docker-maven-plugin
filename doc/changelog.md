@@ -8,8 +8,9 @@
   - Fix property configuration based's build detection (#1078)
   - Introduce container name patterns for naming containers (#931)
   - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials (#1083)
-  - Change from org.json with Gson for less restrictive licensing (#1016) (#1064)z doc
+  - Change from org.json with Gson for less restrictive licensing (#1016) (#1064)
   - Fix missing actions in a watch restart (#1070)
+  - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
 
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
@@ -29,8 +30,7 @@
 
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
-  - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
-
+  
 * **0.25.1** (2018-04-12)
   - Fix regression which broke labels and env with space ([#988](https://github.com/fabric8io/docker-maven-plugin/issues/988))
   - Fix and enhanced zero-config Dockerfile mode
