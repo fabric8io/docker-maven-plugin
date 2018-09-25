@@ -115,6 +115,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.certPath")
     private String certPath;
 
+    /*
+    Skips SSL connection: If an SSL port (e.g. 2376) is provided on the docker
+    host but on that port only the unsecure daemon runs, still the plugin should be working
+    */
+    @Parameter(property = "docker.skipSSL", defaultValue = "false")
+    private boolean skipSSL;
+
     // Whether to use color
     @Parameter(property = "docker.useColor", defaultValue = "true")
     protected boolean useColor;
@@ -254,6 +261,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .minimalApiVersion(minimalApiVersion)
                 .projectProperties(project.getProperties())
                 .skipMachine(skipMachine)
+                .skipSSL(skipSSL)
                 .log(log)
                 .build();
     }

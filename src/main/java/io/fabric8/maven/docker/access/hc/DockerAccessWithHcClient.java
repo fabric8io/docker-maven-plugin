@@ -108,9 +108,11 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public DockerAccessWithHcClient(String apiVersion,
                                     String baseUrl,
                                     String certPath,
+                                    boolean skipSSL,
                                     int maxConnections,
                                     Logger log) throws IOException {
         this.log = log;
+
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
             throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp://, unix:// or npipe://");
@@ -122,6 +124,10 @@ public class DockerAccessWithHcClient implements DockerAccess {
         	this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
             this.urlBuilder = new UrlBuilder(NPIPE_URL, apiVersion);
         } else {
+            if (skipSSL && isSSL(baseUrl)) {
+                baseUrl = baseUrl.replaceAll("https://", "http://");
+                this.log.debug("The skipSSL property was set but an SSL-enabled baseURL was found. Replacing the https scheme by http. baseURL looks now like: %s", baseUrl);
+            }
             this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
             this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
@@ -707,4 +713,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return null;
         }
     }
+
+    public UrlBuilder getUrlBuilder() { return urlBuilder; }
 }

@@ -98,7 +98,7 @@ public class DockerAccessWinIT {
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             String certPath = createDockerConnectionDetector(logger).detectConnectionParameter(null, null).getCertPath();
-            return new DockerAccessWithHcClient("v" + DockerAccessFactory.API_VERSION, baseUrl, certPath, 1, logger);
+            return new DockerAccessWithHcClient("v" + DockerAccessFactory.API_VERSION, baseUrl, certPath, false, 1, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             logger.error(e.getMessage());
