@@ -38,7 +38,7 @@ import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.service.helper.RunConfigurationExecutionHelper;
+import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -198,7 +198,7 @@ public class StartMojo extends AbstractDockerMojo {
             // Rollback if not all could be started
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getPomLabel());
+                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getGavLabel());
             }
         }
     }
@@ -271,7 +271,7 @@ public class StartMojo extends AbstractDockerMojo {
     private void startImage(final ImageConfiguration imageConfig,
                             final ServiceHub hub,
                             final ExecutorCompletionService<StartedContainer> startingContainers,
-                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) {
+                            final PortMapping.PropertyWriteHelper portMappingPropertyWriteHelper) throws IOException {
 
         final RunService runService = hub.getRunService();
         final Properties projProperties = project.getProperties();
@@ -279,28 +279,29 @@ public class StartMojo extends AbstractDockerMojo {
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
+        StartContainerExecutor startExecutor = new StartContainerExecutor.Builder()
+            .dispatcher(dispatcher)
+            .follow(follow)
+            .log(log)
+            .portMapping(portMapping)
+            .gavLabel(getGavLabel())
+            .projectProperties(project.getProperties())
+            .basedir(project.getBasedir())
+            .imageConfig(imageConfig)
+            .serviceHub(hub)
+            .logOutputSpecFactory(serviceHubFactory.getLogOutputSpecFactory())
+            .showLogs(showLogs)
+            .containerNamePattern(containerNamePattern)
+            .buildTimestamp(getBuildTimestamp())
+            .build();
+
         startingContainers.submit(() -> {
 
             // Update port-mapping writer
             portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
-            RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
-                    .dispatcher(dispatcher)
-                    .follow(follow)
-                    .log(log)
-                    .portMapping(portMapping)
-                    .pomLabel(getPomLabel())
-                    .project(project)
-                    .imageConfig(imageConfig)
-                    .serviceHub(hub)
-                    .serviceHubFactory(serviceHubFactory)
-                    .showLogs(showLogs)
-                    .containerNamePattern(containerNamePattern)
-                    .buildTimestamp(getBuildTimestamp())
-                    .runService(runService)
-                    .build();
 
-            String containerId = helper.executeRunConfiguration();
+            String containerId = startExecutor.startContainers();
 
             return new StartedContainer(imageConfig, containerId);
         });

@@ -20,10 +20,10 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.helper.RunConfigurationExecutionHelper;
+import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -236,23 +236,23 @@ public class WatchService {
             runService.stopPreviouslyStartedContainer(id, false, false);
 
             // Start new one
-            RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
+            StartContainerExecutor helper = new StartContainerExecutor.Builder()
                     .dispatcher(watcher.watchContext.dispatcher)
                     .follow(watcher.watchContext.follow)
                     .log(log)
                     .portMapping(mappedPorts)
-                    .pomLabel(watcher.watchContext.pomLabel)
-                    .project(watcher.watchContext.mojoParameters.getProject())
+                    .gavLabel(watcher.watchContext.getGavLabel())
+                    .projectProperties(watcher.watchContext.mojoParameters.getProject().getProperties())
+                    .basedir(watcher.watchContext.mojoParameters.getProject().getBasedir())
                     .imageConfig(imageConfig)
                     .serviceHub(watcher.watchContext.hub)
-                    .serviceHubFactory(watcher.watchContext.serviceHubFactory)
+                    .logOutputSpecFactory(watcher.watchContext.serviceHubFactory.getLogOutputSpecFactory())
                     .showLogs(watcher.watchContext.showLogs)
-                    .runService(runService)
                     .containerNamePattern(watcher.watchContext.containerNamePattern)
                     .buildTimestamp(watcher.watchContext.buildTimestamp)
                     .build();
 
-            String containerId = helper.executeRunConfiguration();
+            String containerId = helper.startContainers();
 
             watcher.setContainerId(containerId);
         };
@@ -400,7 +400,7 @@ public class WatchService {
 
         private String watchPostExec;
 
-        private PomLabel pomLabel;
+        private GavLabel gavLabel;
 
         private boolean keepContainer;
 
@@ -449,8 +449,8 @@ public class WatchService {
             return watchPostExec;
         }
 
-        public PomLabel getPomLabel() {
-            return pomLabel;
+        public GavLabel getGavLabel() {
+            return gavLabel;
         }
 
         public boolean isKeepContainer() {
@@ -523,8 +523,8 @@ public class WatchService {
                 return this;
             }
 
-            public Builder pomLabel(PomLabel pomLabel) {
-                context.pomLabel = pomLabel;
+            public Builder pomLabel(GavLabel gavLabel) {
+                context.gavLabel = gavLabel;
                 return this;
             }
 

@@ -15,6 +15,8 @@ package io.fabric8.maven.docker;/*
  * limitations under the License.
  */
 
+import java.io.IOException;
+
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.service.BuildService;
@@ -74,7 +76,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     protected boolean autoCreateCustomNetworks;
 
     @Override
-    protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
+    protected synchronized void executeInternal(ServiceHub hub) throws IOException,
                                                                        MojoExecutionException {
 
         BuildService.BuildContext buildContext = getBuildContext();
@@ -83,7 +85,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
     }
 
-    protected WatchService.WatchContext getWatchContext(ServiceHub hub) throws MojoExecutionException {
+    protected WatchService.WatchContext getWatchContext(ServiceHub hub) throws IOException {
         return new WatchService.WatchContext.Builder()
                 .watchInterval(watchInterval)
                 .watchMode(watchMode)
@@ -95,7 +97,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .removeVolumes(removeVolumes)
                 .containerNamePattern(containerNamePattern)
                 .buildTimestamp(getBuildTimestamp())
-                .pomLabel(getPomLabel())
+                .pomLabel(getGavLabel())
                 .mojoParameters(createMojoParameters())
                 .follow(follow())
                 .showLogs(showLogs())

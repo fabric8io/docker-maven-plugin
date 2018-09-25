@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.util;
 /*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ package io.fabric8.maven.docker.util;
  * @author roland
  * @since 31/03/15
  */
-public class PomLabel {
+public class GavLabel {
 
     private String mavenCoordinates;
 
@@ -31,7 +31,7 @@ public class PomLabel {
      *
      * @param label label as stored with the container
      */
-    public PomLabel(String label) {
+    public GavLabel(String label) {
         String[] parts = label.split(":");
         if (parts.length != 3) {
             throw new IllegalArgumentException("Label '" + label +
@@ -48,7 +48,7 @@ public class PomLabel {
      * @param artifactId Maven artifact
      * @param version version
      */
-    public PomLabel(String groupId, String artifactId, String version) {
+    public GavLabel(String groupId, String artifactId, String version) {
         mavenCoordinates = groupId + ":" + artifactId + ":" + version;
     }
 
@@ -78,7 +78,7 @@ public class PomLabel {
             return false;
         }
 
-        return mavenCoordinates.equals(((PomLabel) o).mavenCoordinates);
+        return mavenCoordinates.equals(((GavLabel) o).mavenCoordinates);
     }
 
     @Override

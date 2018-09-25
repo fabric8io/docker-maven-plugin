@@ -28,9 +28,8 @@ import static org.fusesource.jansi.Ansi.ansi;
  */
 public class LogOutputSpec {
 
-    public static final LogOutputSpec DEFAULT = new LogOutputSpec("", YELLOW, false, null, null, null, true, true);
+    public static final LogOutputSpec DEFAULT = new LogOutputSpec("", YELLOW, false , null, null, true, true);
 
-    private final String containerId;
     private final boolean useColor;
     private final boolean logStdout;
     private final boolean fgBright;
@@ -45,12 +44,10 @@ public class LogOutputSpec {
     };
     private static int globalColorIdx = 0;
 
-    private LogOutputSpec(String prefix, Ansi.Color color, boolean fgBright, DateTimeFormatter timeFormatter,
-                          String containerId, String file, boolean useColor, boolean logStdout) {
+    private LogOutputSpec(String prefix, Ansi.Color color, boolean fgBright, DateTimeFormatter timeFormatter, String file, boolean useColor, boolean logStdout) {
         this.prefix = prefix;
         this.color = color;
         this.fgBright = fgBright;
-        this.containerId = containerId;
         this.timeFormatter = timeFormatter;
         this.file = file;
         this.useColor = useColor;
@@ -181,7 +178,7 @@ public class LogOutputSpec {
         }
 
         public LogOutputSpec build() {
-            return new LogOutputSpec(prefix, color, fgBright, timeFormatter, containerId, file, useColor, logStdout);
+            return new LogOutputSpec(prefix, color, fgBright, timeFormatter, file, useColor, logStdout);
         }
     }
 }

@@ -39,7 +39,7 @@ import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
@@ -123,9 +123,9 @@ public class RunService {
      * Create and start a container with the given image configuration.
      * @param imageConfig image configuration holding the run information and the image name
      * @param portMapping container port mapping
-     * @param pomLabel label to tag the started container with
+     * @param gavLabel label to tag the started container with
      *
-     * @param mavenProps properties to fill in with dynamically assigned ports
+     * @param properties properties to fill in with dynamically assigned ports
      * @param defaultContainerNamePattern pattern to use for naming containers. Can be null in which case a default pattern is used
      * @param buildTimestamp date which should be used as the timestamp when calculating container names
      * @return the container id
@@ -134,8 +134,8 @@ public class RunService {
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
                                           PortMapping portMapping,
-                                          PomLabel pomLabel,
-                                          Properties mavenProps,
+                                          GavLabel gavLabel,
+                                          Properties properties,
                                           File baseDir,
                                           String defaultContainerNamePattern,
                                           Date buildTimestamp) throws DockerAccessException {
@@ -145,10 +145,10 @@ public class RunService {
         Collection<Container> existingContainers = queryService.getContainersForImage(imageName, true);
         String containerName = ContainerNamingUtil.formatContainerName(imageConfig, defaultContainerNamePattern, buildTimestamp, existingContainers);
 
-        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps, baseDir);
+        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, gavLabel, properties, baseDir);
 
         String id = docker.createContainer(config, containerName);
-        startContainer(imageConfig, id, pomLabel);
+        startContainer(imageConfig, id, gavLabel);
 
         if (portMapping.needsPropertiesUpdate()) {
             updateMappedPortsAndAddresses(id, portMapping);
@@ -202,10 +202,10 @@ public class RunService {
     public void stopStartedContainers(boolean keepContainer,
                                       boolean removeVolumes,
                                       boolean removeCustomNetworks,
-                                      PomLabel pomLabel)
+                                      GavLabel gavLabel)
         throws DockerAccessException, ExecException {
         Set<Network> networksToRemove = new HashSet<>();
-        for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(pomLabel)) {
+        for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(gavLabel)) {
             collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
             shutdown(descriptor, keepContainer, removeVolumes);
         }
@@ -283,7 +283,7 @@ public class RunService {
 
     // visible for testing
     ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
-                                                PomLabel pomLabel, Properties mavenProps, File baseDir)
+                                                GavLabel gavLabel, Properties mavenProps, File baseDir)
             throws DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
@@ -294,7 +294,7 @@ public class RunService {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
-                    .labels(mergeLabels(runConfig.getLabels(), pomLabel))
+                    .labels(mergeLabels(runConfig.getLabels(), gavLabel))
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(runConfig, mappedPorts, baseDir));
             RunVolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
@@ -317,7 +317,7 @@ public class RunService {
         }
     }
 
-    private Map<String, String> mergeLabels(Map<String, String> labels, PomLabel runIdLabel) {
+    private Map<String, String> mergeLabels(Map<String, String> labels, GavLabel runIdLabel) {
         Map<String,String> ret = new HashMap<>();
         if (labels != null) {
             ret.putAll(labels);
@@ -426,10 +426,10 @@ public class RunService {
         return id;
     }
 
-    private void startContainer(ImageConfiguration imageConfig, String id, PomLabel pomLabel) throws DockerAccessException {
+    private void startContainer(ImageConfiguration imageConfig, String id, GavLabel gavLabel) throws DockerAccessException {
         log.info("%s: Start container %s",imageConfig.getDescription(), id);
         docker.startContainer(id);
-        tracker.registerContainer(id, imageConfig, pomLabel);
+        tracker.registerContainer(id, imageConfig, gavLabel);
     }
 
     private void updateMappedPortsAndAddresses(String containerId, PortMapping mappedPorts) throws DockerAccessException {

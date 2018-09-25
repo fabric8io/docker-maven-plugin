@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.service;
 
+import java.io.IOException;
 import java.util.*;
 
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -35,7 +36,7 @@ public class WaitService {
 
     // ========================================================================================================
 
-    public void wait(ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws MojoExecutionException {
+    public void wait(ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws IOException {
         List<WaitChecker> checkers = prepareWaitCheckers(imageConfig, projectProperties, containerId);
         int timeout = getTimeOut(imageConfig);
 
@@ -57,13 +58,13 @@ public class WaitService {
                                         imageConfig.getDescription(), exp.getWaited(),
                                         logLine);
             log.error(desc);
-            throw new MojoExecutionException(desc);
+            throw new IOException(desc);
         } catch (PreconditionFailedException exp) {
             String desc = String.format("%s: Container stopped with exit code %d unexpectedly after %d ms while waiting %s",
                                         imageConfig.getDescription(), precondition.getExitCode(), exp.getWaited(),
                                         logLine);
             log.error(desc);
-            throw new MojoExecutionException(desc);
+            throw new IOException(desc);
         }
     }
 
@@ -80,7 +81,7 @@ public class WaitService {
         return StringUtils.join(logOut.toArray(), " and ");
     }
 
-    private List<WaitChecker> prepareWaitCheckers(ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws MojoExecutionException {
+    private List<WaitChecker> prepareWaitCheckers(ImageConfiguration imageConfig, Properties projectProperties, String containerId) throws IOException {
         WaitConfiguration wait = getWaitConfiguration(imageConfig);
 
         if (wait == null) {
@@ -103,7 +104,7 @@ public class WaitService {
                 Container container = queryService.getMandatoryContainer(containerId);
                 checkers.add(getTcpWaitChecker(container, imageConfig.getDescription(), projectProperties, wait.getTcp()));
             } catch (DockerAccessException e) {
-                throw new MojoExecutionException("Unable to access container.", e);
+                throw new IOException("Unable to access container " + containerId, e);
             }
         }
 
@@ -144,7 +145,7 @@ public class WaitService {
     private WaitChecker getTcpWaitChecker(Container container,
                                           String imageConfigDesc,
                                           Properties projectProperties,
-                                          WaitConfiguration.TcpConfiguration tcpConfig) throws MojoExecutionException {
+                                          WaitConfiguration.TcpConfiguration tcpConfig) {
         List<Integer> ports = new ArrayList<>();
 
         List<Integer> portsConfigured = getTcpPorts(tcpConfig);
@@ -155,7 +156,7 @@ public class WaitService {
             for (int port : portsConfigured) {
                 Container.PortBinding binding = container.getPortBindings().get(port + "/tcp");
                 if (binding == null) {
-                    throw new MojoExecutionException(
+                    throw new IllegalArgumentException(
                         String.format("Cannot watch on port %d, since there is no network binding", port));
                 }
                 ports.add(binding.getHostPort());
@@ -170,10 +171,10 @@ public class WaitService {
         return new TcpPortChecker(host, ports);
     }
 
-    private List<Integer> getTcpPorts(WaitConfiguration.TcpConfiguration tcpConfig) throws MojoExecutionException {
+    private List<Integer> getTcpPorts(WaitConfiguration.TcpConfiguration tcpConfig) {
         List<Integer> portsConfigured = tcpConfig.getPorts();
         if (portsConfigured == null || portsConfigured.isEmpty()) {
-            throw new MojoExecutionException("TCP wait config given but no ports to wait on");
+            throw new IllegalArgumentException("TCP wait config given but no ports to wait on");
         }
         return portsConfigured;
     }

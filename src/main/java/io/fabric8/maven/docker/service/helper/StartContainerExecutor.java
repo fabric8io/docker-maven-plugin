@@ -1,54 +1,65 @@
 package io.fabric8.maven.docker.service.helper;
 
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.ExecException;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.*;
-import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.RunService;
-import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.service.ServiceHubFactory;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.PomLabel;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
-
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.Properties;
 
-public class RunConfigurationExecutionHelper {
+import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.Logger;
+
+public class StartContainerExecutor {
     private Logger log;
-    private ServiceHubFactory serviceHubFactory;
+    private LogOutputSpecFactory logOutputSpecFactory;
     private ServiceHub hub;
     private boolean follow;
     private String showLogs;
     private String containerNamePattern;
     private Date buildDate;
-    private MavenProject project;
+    private Properties projectProperties;
+    private File basedir;
     private ImageConfiguration imageConfig;
-    private PomLabel pomLabel;
+    private GavLabel gavLabel;
     private PortMapping portMapping;
     private LogDispatcher dispatcher;
-    private RunService runService;
 
-    private RunConfigurationExecutionHelper(){}
+    private StartContainerExecutor(){}
 
-    public String executeRunConfiguration() throws DockerAccessException, MojoExecutionException, ExecException {
-        final Properties projProperties = project.getProperties();
+    public String startContainers() throws IOException, ExecException {
+        final Properties projProperties = projectProperties;
 
-        final String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties, project.getBasedir(), containerNamePattern, buildDate);
+        final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
 
+        showLogsIfRequested(containerId);
+        waitAndPostExec(containerId, projProperties);
+
+        return containerId;
+    }
+
+    private void showLogsIfRequested(String containerId) {
         if (showLogs(imageConfig)) {
             dispatcher.trackContainerLog(containerId,
-                    serviceHubFactory.getLogOutputSpecFactory().createSpec(containerId, imageConfig));
+                                         logOutputSpecFactory.createSpec(containerId, imageConfig));
         }
+    }
 
+    private void waitAndPostExec(String containerId, Properties projProperties) throws IOException, ExecException {
         // Wait if requested
         hub.getWaitService().wait(imageConfig, projProperties, containerId);
         WaitConfiguration waitConfig = imageConfig.getRunConfiguration().getWaitConfiguration();
         if (waitConfig != null && waitConfig.getExec() != null && waitConfig.getExec().getPostStart() != null) {
             try {
-                runService.execInContainer(containerId, waitConfig.getExec().getPostStart(), imageConfig);
+                hub.getRunService().execInContainer(containerId, waitConfig.getExec().getPostStart(), imageConfig);
             } catch (ExecException exp) {
                 if (waitConfig.getExec().isBreakOnError()) {
                     throw exp;
@@ -57,11 +68,9 @@ public class RunConfigurationExecutionHelper {
                 }
             }
         }
-
-        return containerId;
     }
 
-    protected boolean showLogs(ImageConfiguration imageConfig) {
+    private boolean showLogs(ImageConfiguration imageConfig) {
         if (showLogs != null) {
             if (showLogs.equalsIgnoreCase("true")) {
                 return true;
@@ -86,10 +95,10 @@ public class RunConfigurationExecutionHelper {
     }
 
     public static class Builder {
-        private final RunConfigurationExecutionHelper helper;
+        private final StartContainerExecutor helper;
 
         public Builder(){
-            helper = new RunConfigurationExecutionHelper();
+            helper = new StartContainerExecutor();
         }
 
         public Builder log(Logger log) {
@@ -97,8 +106,8 @@ public class RunConfigurationExecutionHelper {
             return this;
         }
 
-        public Builder serviceHubFactory(ServiceHubFactory serviceHubFactory) {
-            helper.serviceHubFactory = serviceHubFactory;
+        public Builder logOutputSpecFactory(LogOutputSpecFactory factory) {
+            helper.logOutputSpecFactory = factory;
             return this;
         }
 
@@ -107,8 +116,13 @@ public class RunConfigurationExecutionHelper {
             return this;
         }
 
-        public Builder project(MavenProject project) {
-            helper.project = project;
+        public Builder projectProperties(Properties props) {
+            helper.projectProperties = props;
+            return this;
+        }
+
+        public Builder basedir(File dir) {
+            helper.basedir = dir;
             return this;
         }
 
@@ -144,8 +158,8 @@ public class RunConfigurationExecutionHelper {
             return this;
         }
 
-        public Builder pomLabel(PomLabel pomLabel) {
-            helper.pomLabel = pomLabel;
+        public Builder gavLabel(GavLabel gavLabel) {
+            helper.gavLabel = gavLabel;
             return this;
         }
 
@@ -154,12 +168,7 @@ public class RunConfigurationExecutionHelper {
             return this;
         }
 
-        public Builder runService(RunService runService) {
-            helper.runService = runService;
-            return this;
-        }
-
-        public RunConfigurationExecutionHelper build() {
+        public StartContainerExecutor build() {
             return helper;
         }
     }
