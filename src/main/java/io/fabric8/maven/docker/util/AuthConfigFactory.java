@@ -244,13 +244,7 @@ public class AuthConfigFactory {
         if (props.containsKey(useOpenAuthModeProp)) {
             boolean useOpenShift = Boolean.valueOf(props.getProperty(useOpenAuthModeProp));
             if (useOpenShift) {
-                AuthConfig ret = parseOpenShiftConfig();
-                if (ret == null) {
-                    throw new MojoExecutionException("System property " + useOpenAuthModeProp + " " +
-                                                     "set, but not active user and/or token found in ~/.config/kube. " +
-                                                     "Please use 'oc login' for connecting to OpenShift.");
-                }
-                return ret;
+                return parseOpenShiftConfig(useOpenAuthModeProp);
             } else {
                 return null;
             }
@@ -260,13 +254,7 @@ public class AuthConfigFactory {
         Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfigMap);
         if (mapToCheck != null && mapToCheck.containsKey(AUTH_USE_OPENSHIFT_AUTH) &&
             Boolean.valueOf((String) mapToCheck.get(AUTH_USE_OPENSHIFT_AUTH))) {
-            AuthConfig ret = parseOpenShiftConfig();
-            if (ret == null) {
-                throw new MojoExecutionException("Authentication configured for OpenShift, but no active user and/or " +
-                                                 "token found in ~/.config/kube. Please use 'oc login' for " +
-                                                 "connecting to OpenShift.");
-            }
-            return ret;
+            return parseOpenShiftConfig(useOpenAuthModeProp);          
         } else {
             return null;
         }
@@ -375,7 +363,7 @@ public class AuthConfigFactory {
     }
 
     // Parse OpenShift config to get credentials, but return null if not found
-    private AuthConfig parseOpenShiftConfig() {
+    private AuthConfig parseOpenShiftConfig(String useOpenAuthModeProp) throws MojoExecutionException {
         Map kubeConfig = readKubeConfig();
         if (kubeConfig != null) {
             String currentContextName = (String) kubeConfig.get("current-context");
@@ -410,7 +398,11 @@ public class AuthConfigFactory {
             }
         }
         // No user found
-        return null;
+        String kubeConfigEnv = System.getenv("KUBECONFIG");
+        throw new MojoExecutionException(
+            String.format("System property %s set, but not active user and/or token found in %s. " +
+                          "Please use 'oc login' for connecting to OpenShift.",
+                          useOpenAuthModeProp, kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
     }
 
     private JSONObject readDockerConfig() {
@@ -427,7 +419,7 @@ public class AuthConfigFactory {
 
         Reader reader = kubeConfig == null
                 ? getFileReaderFromDir(new File(getHomeDir(),".kube/config"))
-                : getFileReaderFromDir(new File(kubeConfig,"config"));
+                : getFileReaderFromDir(new File(kubeConfig));
         if (reader != null) {
             Yaml ret = new Yaml();
             return (Map<String, ?>) ret.load(reader);

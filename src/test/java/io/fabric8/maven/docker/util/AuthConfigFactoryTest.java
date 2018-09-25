@@ -327,7 +327,7 @@ public class AuthConfigFactoryTest {
                 Map<String,String> authConfigMap = new HashMap<>();
                 authConfigMap.put("useOpenShiftAuth","true");
                 expectedException.expect(MojoExecutionException.class);
-                expectedException.expectMessage(startsWith("Authentication configured for OpenShift, but no active user and/or token found in ~/.config/kube."));
+                expectedException.expectMessage(containsString("~/.kube/config"));
                 factory.createAuthConfig(isPush,false,authConfigMap,settings,"roland",null);
             }
         });
