@@ -89,12 +89,12 @@ public class UrlBuilderTest {
     public void listContainers() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
 
-        assertEquals(new URI("/1.0/containers/json"), new URI(builder.listContainers()));
-        assertEquals(new URI("/1.0/containers/json?filters=" + URLEncoder.encode("{\"ancestor\":[\"nginx\"]}","UTF8")),
-                     new URI(builder.listContainers("ancestor", "nginx")));
+        assertEquals(new URI("/1.0/containers/json?all=0"), new URI(builder.listContainers(false)));
+        assertEquals(new URI("/1.0/containers/json?all=1&filters=" + URLEncoder.encode("{\"ancestor\":[\"nginx\"]}","UTF8")),
+                     new URI(builder.listContainers(true, "ancestor", "nginx")));
 
         try {
-            builder.listContainers("ancestor");
+            builder.listContainers(false,"ancestor");
             fail();
         } catch (IllegalArgumentException exp) {
             assertTrue(exp.getMessage().contains("pair"));

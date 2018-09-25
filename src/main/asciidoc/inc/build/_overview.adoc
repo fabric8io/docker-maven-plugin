@@ -46,8 +46,10 @@ When only a single image should be built with a Dockerfile no XML configuration 
 All what need to be done is to place a `Dockerfile` into the top-level module directory, alongside to `pom.xml`.
 You can still configure <<global-configuration, global aspects>> in the plugin configuration, but as soon as you add an `<image>` in the XML configuration, you need to configure also the build explicitly.
 
-The image name is by default set from the Maven coordinates (`%g/%a:%l`, see <<image-name-placeholders,Name Placeholders>> for an explanation of the params which are essentially the Maven GAV)
+The image name is by default set from the Maven coordinates (`%g/%a:%l`, see <<image-name,Image Name >> for an explanation of the params which are essentially the Maven GAV)
 This name can be set with the property `docker.name`.
+
+If you want to add some `<run>` configuration to this image for starting it with `docker:run` then you can add an image configuration but without a `<build>` section in which case the Dockerfile will be picked up, too. This works only for a single image, though.
 
 [[build-filtering]]
 .Filtering
@@ -103,7 +105,7 @@ dmp-plugins are enabled by just declaring a dependency in the plugin declaration
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>run-java-sh</artifactId>
-      <version>1.2.1</version>
+      <version>1.2.2</version>
     </dependency>
   </dependencies>
 </plugin>

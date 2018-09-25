@@ -16,19 +16,47 @@ package io.fabric8.maven.docker.config.handler.property;/*
  */
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.CleanupMode;
+import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static io.fabric8.maven.docker.config.BuildImageConfiguration.*;
-import static org.junit.Assert.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_CLEANUP;
+import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_FILTER;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
@@ -496,7 +524,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         BuildImageConfiguration buildConfiguration = configs.get(0).getBuildConfiguration();
         assertNotNull(buildConfiguration);
         buildConfiguration.initAndValidate(null);
-        assertEquals("/some/path", buildConfiguration.getDockerFile().getAbsolutePath().toString());
+
+        Path absolutePath = Paths.get(".").toAbsolutePath();
+        String expectedPath = absolutePath.getRoot() + "some" + File.separator + "path";
+        assertEquals(expectedPath, buildConfiguration.getDockerFile().getAbsolutePath());
     }
 
     @Test
@@ -588,14 +619,6 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("project", config.getDescriptorRef());
         assertFalse(config.exportTargetDir());
         assertTrue(config.isIgnorePermissions());
-    }
-
-    @Test
-    public void testNamingScheme() throws Exception  {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NAMING_STRATEGY), RunImageConfiguration.NamingStrategy.alias.toString() };
-
-        ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(RunImageConfiguration.NamingStrategy.alias, config.getRunConfiguration().getNamingStrategy());
     }
 
     @Test
@@ -817,6 +840,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         //when(project.getProperties()).thenReturn(properties);
         new Expectations() {{
             project.getProperties(); result = properties;
+            project.getBasedir(); minTimes = 0; maxTimes = 1; result = new File("./");
         }};
 
         return configHandler.resolve(imageConfiguration, project, null);
@@ -891,7 +915,6 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
-        Assert.assertEquals(RunImageConfiguration.NamingStrategy.none, runConfig.getNamingStrategy());
         assertEquals("/tmp/envProps.txt",runConfig.getEnvPropertyFile());
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
         assertEquals(a("8081:8080"), runConfig.getPorts());

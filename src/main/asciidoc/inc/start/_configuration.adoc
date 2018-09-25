@@ -5,6 +5,10 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 |===
 | Element | Description | Property
 
+| <<container-name, *containerNamePattern*>>
+| Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
+| `docker.containerNamePattern`
+
 | *showLogs*
 | In order to switch on globally the logs *showLogs* can be used as global configuration (i.e. outside of `<images>`). If set it will print out all standard
  output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
@@ -33,6 +37,9 @@ The `<run>` configuration element knows the following sub elements:
 
 | <<misc-startup, *cmd*>>
 | Command which should be executed at the end of the container's startup. If not given, the image's default command is used. See <<misc-startup, Startup Arguments>> for details.
+
+| <<container-name, *containerNamePattern*>>
+| Pattern for naming the container when it is created. See <<container-name, Container Naming Strategy>> for details.
 
 | *domainname*
 | Domain name for the container
@@ -80,7 +87,7 @@ The `<run>` configuration element knows the following sub elements:
 | Total memory usage (memory + swap); use -1 to disable swap.
 
 | *namingStrategy*
-a| Naming strategy for how the container name is created:
+a| *This option is deprecated, please use a `containerNamePattern` instead* Naming strategy for how the container name is created:
 
 * *none* : uses randomly assigned names from docker (default)
 * *alias* : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists with this name.

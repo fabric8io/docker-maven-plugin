@@ -19,6 +19,7 @@ import mockit.MockUp;
 import mockit.Tested;
 import mockit.Verifications;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.assembly.AssemblerConfigurationSource;
@@ -158,12 +159,12 @@ public class DockerAssemblyManagerTest {
 
     private MojoParameters mockMojoParams(MavenProject project) {
         Settings settings = new Settings();
-        ArtifactRepository localRepository = new MockUp<ArtifactRepository>() {
+        ArtifactRepository localRepository = new MavenArtifactRepository() {
             @Mock
             public String getBasedir() {
                 return "repository";
             }
-        }.getMockInstance();
+        };
         @SuppressWarnings("deprecation")
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date());
         return new MojoParameters(session, project, null, null, null, settings, "src", "target", Collections.singletonList(project));

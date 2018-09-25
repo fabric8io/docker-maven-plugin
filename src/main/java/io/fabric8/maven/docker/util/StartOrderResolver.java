@@ -15,22 +15,22 @@ public class StartOrderResolver {
     public static final int MAX_RESOLVE_RETRIES = 10;
 
     private final QueryService queryService;
-    
+
     private final List<Resolvable> secondPass;
     private final Set<String> processedImages;
-    
+
     public static List<Resolvable> resolve(QueryService queryService, List<Resolvable> convertToResolvables) {
         return new StartOrderResolver(queryService).resolve(convertToResolvables);
     }
 
     private StartOrderResolver(QueryService queryService) {
         this.queryService = queryService;
-     
+
         this.secondPass = new ArrayList<>();
         this.processedImages = new HashSet<>();
     }
 
-    
+
     // Check images for volume / link dependencies and return it in the right order.
     // Only return images which should be run
     // Images references via volumes but with no run configuration are started once to create
@@ -95,7 +95,7 @@ public class StartOrderResolver {
     }
 
     private void resolveImageDependencies(List<Resolvable> resolved) throws DockerAccessException, ResolveSteadyStateException {
-        boolean changed = false;        
+        boolean changed = false;
         Iterator<Resolvable> iterator = secondPass.iterator();
 
         while (iterator.hasNext()) {
@@ -129,15 +129,12 @@ public class StartOrderResolver {
             }
             return false;
         }
-        
+
         return true;
     }
-    
+
     private List<String> extractDependentImagesFor(Resolvable config) {
-        LinkedHashSet<String> ret = new LinkedHashSet<>();
-        for (String id : config.getDependencies()) {
-            ret.add(id);
-        }
+        LinkedHashSet<String> ret = new LinkedHashSet<>(config.getDependencies());
         return ret.isEmpty() ? null : new ArrayList<>(ret);
     }
 

@@ -96,7 +96,7 @@ Images can be specified in any order and the plugin will take care of the proper
 <3> Base image, in this case `java:8`
 <4> Content of the image can be specified with an <<build-assembly,assembly descriptor>>
 <5> <<misc-startup,Default command>> to run when a container is created.
-<6> <<{plugin}:run,Run configuration>> defines how a container should be created from this image
+<6> <<{plugin}:start,Run configuration>> defines how a container should be created from this image
 <7> <<start-port-mapping,Port mapping>> defines how container ports should be mapped to host ports
 <8> <<start-wait,Wait>> section which is a readiness check when starting the service
 <9> <<start-links,Network link>> describes how this service's container is linked to the database container

@@ -1,12 +1,14 @@
 package io.fabric8.maven.docker.access;
 
+import com.google.gson.JsonObject;
+
 import java.util.Map;
 
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class VolumeCreateConfig
 {
-    private final JSONObject createConfig = new JSONObject();
+    private final JsonObject createConfig = new JsonObject();
 
     public VolumeCreateConfig(String name) {
         add("Name", name);
@@ -18,20 +20,20 @@ public class VolumeCreateConfig
 
     public VolumeCreateConfig opts(Map<String, String> opts) {
        if (opts != null && opts.size() > 0) {
-          add("DriverOpts", new JSONObject(opts));
+          add("DriverOpts", JsonFactory.newJsonObject(opts));
        }
        return this;
     }
 
     public VolumeCreateConfig labels(Map<String,String> labels) {
         if (labels != null && labels.size() > 0) {
-           add("Labels", new JSONObject(labels));
+           add("Labels", JsonFactory.newJsonObject(labels));
         }
         return this;
     }
 
     public String getName() {
-        return createConfig.getString("Name");
+        return createConfig.get("Name").getAsString();
     }
 
     /**
@@ -45,9 +47,16 @@ public class VolumeCreateConfig
 
     // =======================================================================
 
-    private VolumeCreateConfig add(String name, Object value) {
+    private VolumeCreateConfig add(String name, JsonObject value) {
         if (value != null) {
-            createConfig.put(name, value);
+            createConfig.add(name, value);
+        }
+        return this;
+    }
+
+    private VolumeCreateConfig add(String name, String value) {
+        if (value != null) {
+            createConfig.addProperty(name, value);
         }
         return this;
     }

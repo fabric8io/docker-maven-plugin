@@ -1,13 +1,13 @@
 package io.fabric8.maven.docker.config.handler;
 
-import static org.junit.Assert.assertEquals;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import static org.junit.Assert.assertEquals;
 
 public abstract class AbstractConfigHandlerTest {
 
@@ -35,7 +35,6 @@ public abstract class AbstractConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
-        assertEquals(getRunNamingStrategy(), runConfig.getNamingStrategy());
         assertEquals(getEnvPropertyFile(),runConfig.getEnvPropertyFile());
         
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
