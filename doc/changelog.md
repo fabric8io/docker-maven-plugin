@@ -10,7 +10,7 @@
   - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials (#1083)
   - Change from org.json with Gson for less restrictive licensing (#1016) (#1064)z doc
   - Fix missing actions in a watch restart (#1070)
-  
+
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
   - Sample added for how to use run-java-sh in simple dockerfile mode
