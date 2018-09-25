@@ -11,6 +11,7 @@
   - Change from org.json with Gson for less restrictive licensing (#1016) (#1064)
   - Fix missing actions in a watch restart (#1070)
   - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
+  - Fix logging failure on Windows (#873)
 
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
