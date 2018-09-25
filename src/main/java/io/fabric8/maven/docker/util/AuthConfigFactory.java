@@ -120,9 +120,17 @@ public class AuthConfigFactory {
         }
 
         // Finally check ~/.docker/config.json
+        // first search for exact registry name
         ret = getAuthConfigFromDockerConfig(registry);
         if (ret != null) {
-            log.debug("AuthConfig: credentials from ~.docker/config.json");
+            log.debug("AuthConfig: credentials for registry %s from ~/.docker/config.json", registry);
+            return ret;
+        }
+        // then search for registry hostname
+        String registryHostname = EnvUtil.extractHostnameRegistryUrl(registry);
+        ret = getAuthConfigFromDockerConfig(registryHostname);
+        if (ret != null) {
+            log.debug("AuthConfig: credentials for registry hostname %s from ~/.docker/config.json", registryHostname);
             return ret;
         }
 

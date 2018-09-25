@@ -206,4 +206,20 @@ public class EnvUtilTest {
             assertEquals(">> " + data[i], data[i+1], EnvUtil.ensureRegistryHttpUrl(data[i]));
         }
     }
+
+    @Test
+    @TestCaseName("{method}: input {0} => hostname {1}")
+    @Parameters
+    public void extractHostnameRegistryUrl(String expression, String varName) {
+        assertEquals(varName,EnvUtil.extractHostnameRegistryUrl(expression));
+    }
+
+    private Object parametersForExtractHostnameRegistryUrl() {
+        return $(
+                $("eu.gcr.io/awesome", "eu.gcr.io"),
+                $("https://eu.gcr.io/awesome", "https://eu.gcr.io"),
+                $("http://eu.gcr.io/awesome", "http://eu.gcr.io")
+        );
+    }
+
 }
