@@ -1,10 +1,16 @@
 package io.fabric8.maven.docker.model;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.google.common.base.Joiner;
+import com.google.gson.JsonObject;
+
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.DatatypeConverter;
-import java.util.*;
 
 
 public class ContainerDetails implements Container {
@@ -32,15 +38,15 @@ public class ContainerDetails implements Container {
     private static final String EXIT_CODE = "ExitCode";
     private static final String RUNNING = "Running";
 
-    private final JSONObject json;
+    private final JsonObject json;
 
-    public ContainerDetails(JSONObject json) {
+    public ContainerDetails(JsonObject json) {
         this.json = json;
     }
 
     @Override
     public long getCreated() {
-        String date = json.getString(CREATED);
+        String date = json.get(CREATED).getAsString();
         Calendar cal = DatatypeConverter.parseDateTime(date);
         return cal.getTimeInMillis();
     }
@@ -48,26 +54,26 @@ public class ContainerDetails implements Container {
     @Override
     public String getId() {
         // only need first 12 to id a container
-        return json.getString(ID).substring(0, 12);
+        return json.get(ID).getAsString().substring(0, 12);
     }
 
     @Override
     public String getImage() {
         // ID: json.getString("Image");
-        return json.getJSONObject(CONFIG).getString(IMAGE);
+        return json.getAsJsonObject(CONFIG).get(IMAGE).getAsString();
     }
 
     @Override
     public Map<String, String> getLabels() {
-        JSONObject config = json.getJSONObject(CONFIG);
+        JsonObject config = json.getAsJsonObject(CONFIG);
         return config.has(LABELS) ?
-                mapLabels(config.getJSONObject(LABELS)) :
+                mapLabels(config.getAsJsonObject(LABELS)) :
                 Collections.<String, String>emptyMap();
     }
 
     @Override
     public String getName() {
-        String name = json.getString(NAME);
+        String name = json.get(NAME).getAsString();
 
         if (name.startsWith(SLASH)) {
             name = name.substring(1);
@@ -77,10 +83,10 @@ public class ContainerDetails implements Container {
 
     @Override
     public String getIPAddress() {
-        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
-            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
-            if (!networkSettings.isNull(IP)) {
-                return networkSettings.getString(IP);
+        if (json.has(NETWORK_SETTINGS) && !json.get(NETWORK_SETTINGS).isJsonNull()) {
+            JsonObject networkSettings = json.getAsJsonObject(NETWORK_SETTINGS);
+            if (!networkSettings.get(IP).isJsonNull()) {
+                return networkSettings.get(IP).getAsString();
             }
         }
         return null;
@@ -88,27 +94,26 @@ public class ContainerDetails implements Container {
 
     @Override
     public Map<String, String> getCustomNetworkIpAddresses() {
-        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
-            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
-            if (networkSettings.has(NETWORKS) && !networkSettings.isNull(NETWORKS)) {
+        if (json.has(NETWORK_SETTINGS) && !json.get(NETWORK_SETTINGS).isJsonNull()) {
+            JsonObject networkSettings = json.getAsJsonObject(NETWORK_SETTINGS);
+            if (networkSettings.has(NETWORKS) && !networkSettings.get(NETWORKS).isJsonNull()) {
                 return extractNetworks(networkSettings);
             }
         }
         return null;
     }
 
-    private Map<String, String> extractNetworks(JSONObject networkSettings) {
-        JSONObject networks = networkSettings.getJSONObject(NETWORKS);
-        JSONArray keys = networks.names();
-        if (keys == null || keys.length() == 0) {
+    private Map<String, String> extractNetworks(JsonObject networkSettings) {
+        JsonObject networks = networkSettings.getAsJsonObject(NETWORKS);
+        Set<String> keys = networks.keySet();
+        if (keys == null || keys.isEmpty()) {
             return null;
         }
         Map<String, String> results = new HashMap<>();
-        for (int i = 0; i < keys.length(); i++) {
-            String key = keys.getString(i);
-            JSONObject net = networks.getJSONObject(key);
-            if (net.has(IP) && !net.isNull(IP)) {
-                results.put(key, net.getString(IP));
+        for (String key : keys) {
+            JsonObject net = networks.getAsJsonObject(key);
+            if (net.has(IP) && !net.get(IP).isJsonNull()) {
+                results.put(key, net.get(IP).getAsString());
             }
         }
 
@@ -117,10 +122,10 @@ public class ContainerDetails implements Container {
 
     @Override
     public Map<String, PortBinding> getPortBindings() {
-        if (json.has(NETWORK_SETTINGS) && !json.isNull(NETWORK_SETTINGS)) {
-            JSONObject networkSettings = json.getJSONObject(NETWORK_SETTINGS);
-            if (!networkSettings.isNull(PORTS)) {
-                return createPortBindings(networkSettings.getJSONObject(PORTS));
+        if (json.has(NETWORK_SETTINGS) && !json.get(NETWORK_SETTINGS).isJsonNull()) {
+            JsonObject networkSettings = json.getAsJsonObject(NETWORK_SETTINGS);
+            if (networkSettings.has(PORTS) && !networkSettings.get(PORTS).isJsonNull()) {
+                return createPortBindings(networkSettings.getAsJsonObject(PORTS));
             }
         }
 
@@ -129,8 +134,8 @@ public class ContainerDetails implements Container {
 
     @Override
     public boolean isRunning() {
-        JSONObject state = json.getJSONObject(STATE);
-        return state.getBoolean(RUNNING);
+        JsonObject state = json.getAsJsonObject(STATE);
+        return state.get(RUNNING).getAsBoolean();
     }
 
     @Override
@@ -138,27 +143,28 @@ public class ContainerDetails implements Container {
         if (isRunning()) {
             return null;
         }
-        JSONObject state = json.getJSONObject(STATE);
-        return state.getInt(EXIT_CODE);
+        JsonObject state = json.getAsJsonObject(STATE);
+        return state.get(EXIT_CODE).getAsInt();
     }
 
     public boolean isHealthy() {
-        final JSONObject state = json.getJSONObject(STATE);
+        final JsonObject state = json.getAsJsonObject(STATE);
         // always indicate healthy for docker hosts that do not support health checks.
-        return !state.has(HEALTH) || HEALTH_STATUS_HEALTHY.equals(state.getJSONObject(HEALTH).getString(STATUS));
+        return !state.has(HEALTH) || HEALTH_STATUS_HEALTHY.equals(state.getAsJsonObject(HEALTH).get(STATUS).getAsString());
     }
 
     public String getHealthcheck() {
-        if (!json.getJSONObject(CONFIG).has(HEALTHCHECK) ||
-            !json.getJSONObject(CONFIG).getJSONObject(HEALTHCHECK).has(TEST)) {
+        if (!json.getAsJsonObject(CONFIG).has(HEALTHCHECK) ||
+            !json.getAsJsonObject(CONFIG).getAsJsonObject(HEALTHCHECK).has(TEST)) {
             return null;
         }
-        return json.getJSONObject(CONFIG).getJSONObject(HEALTHCHECK).getJSONArray(TEST).join(", ");
+
+        return Joiner.on(", ").join(json.getAsJsonObject(CONFIG).getAsJsonObject(HEALTHCHECK).getAsJsonArray(TEST));
     }
 
-    private void addPortMapping(String port, JSONObject hostConfig, Map<String, PortBinding> portBindings) {
-        String hostIp = hostConfig.getString(HOST_IP);
-        Integer hostPort = Integer.valueOf(hostConfig.getString(HOST_PORT));
+    private void addPortMapping(String port, JsonObject hostConfig, Map<String, PortBinding> portBindings) {
+        String hostIp = hostConfig.get(HOST_IP).getAsString();
+        Integer hostPort = Integer.valueOf(hostConfig.get(HOST_PORT).getAsInt());
 
         addPortMapping(port, new PortBinding(hostPort, hostIp), portBindings);
     }
@@ -171,16 +177,16 @@ public class ContainerDetails implements Container {
         portBindings.put(port, binding);
     }
 
-    private Map<String, PortBinding> createPortBindings(JSONObject ports) {
+    private Map<String, PortBinding> createPortBindings(JsonObject ports) {
         Map<String, PortBinding> portBindings = new HashMap<>();
 
         for (Object obj : ports.keySet()) {
             String port = obj.toString();
-            if (ports.isNull(port)) {
+            if (ports.get(port).isJsonNull()) {
                 addPortMapping(port, (PortBinding) null, portBindings);
             } else {
                 // use the first entry in the array
-                JSONObject hostConfig = ports.getJSONArray(port).getJSONObject(0);
+                JsonObject hostConfig = ports.getAsJsonArray(port).get(0).getAsJsonObject();
                 addPortMapping(port, hostConfig, portBindings);
             }
         }
@@ -188,14 +194,14 @@ public class ContainerDetails implements Container {
         return portBindings;
     }
 
-    private Map<String, String> mapLabels(JSONObject labels) {
-        int length = labels.length();
+    private Map<String, String> mapLabels(JsonObject labels) {
+        int length = labels.size();
         Map<String, String> mapped = new HashMap<>(length);
 
-        Iterator<String> iterator = labels.keys();
+        Iterator<String> iterator = labels.keySet().iterator();
         while (iterator.hasNext()) {
             String key = iterator.next();
-            mapped.put(key, labels.get(key).toString());
+            mapped.put(key, labels.get(key).getAsString());
         }
 
         return mapped;

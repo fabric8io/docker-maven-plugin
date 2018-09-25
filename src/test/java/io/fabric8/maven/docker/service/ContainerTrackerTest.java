@@ -19,7 +19,7 @@ package io.fabric8.maven.docker.service;
 import java.util.*;
 
 import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import org.junit.Before;
@@ -146,8 +146,8 @@ public class ContainerTrackerTest {
         return s != null ? Integer.parseInt(s) : 0;
     }
 
-    private PomLabel getPomLabel(String artifactId) {
-        return new PomLabel("io.fabric8",artifactId,"1.0.0");
+    private GavLabel getPomLabel(String artifactId) {
+        return new GavLabel("io.fabric8", artifactId, "1.0.0");
     }
 
     private ImageConfiguration getImageConfiguration(String name, String alias) {

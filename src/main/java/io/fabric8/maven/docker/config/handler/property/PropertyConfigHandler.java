@@ -15,17 +15,32 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Supplier;
 
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
-import com.google.common.base.Function;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.CollectionUtils;
-
-import javax.annotation.Nullable;
 
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 
@@ -55,7 +70,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         ValueProvider valueProvider = new ValueProvider(prefix, properties, propertyMode);
 
         RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
-        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider);
+        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider, project);
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
@@ -74,18 +89,39 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .build());
     }
 
+    private boolean isStringValueNull(ValueProvider valueProvider, BuildImageConfiguration config, ConfigKey key, Supplier<String> supplier) {
+        return valueProvider.getString(key, config == null ? null : supplier.get()) != null;
+    }
     // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
-    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider) {
-        return valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
-                valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null ||
-                valueProvider.getString(DOCKER_FILE, config == null || config.getDockerFileRaw() == null ? null : config.getDockerFileRaw()) != null ||
-                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchiveRaw() == null ? null : config.getDockerArchiveRaw()) != null;
+    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider, MavenProject project) {
+
+
+        if (isStringValueNull(valueProvider, config, FROM, () -> config.getFrom())) {
+            return true;
+        }
+
+        if (valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null) {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE, () -> config.getDockerFileRaw() ))  {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_ARCHIVE, () -> config.getDockerArchiveRaw())) {
+            return true;
+        }
+
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> config.getDockerFileDirRaw())) {
+            return true;
+        }
+
+        // Simple Dockerfile mode
+        return new File(project.getBasedir(),"Dockerfile").exists();
     }
 
 
-    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider) {
+    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider, MavenProject project) {
         BuildImageConfiguration config = fromConfig.getBuildConfiguration();
-        if (!buildConfigured(config, valueProvider)) {
+        if (!buildConfigured(config, valueProvider, project)) {
             return null;
         }
 
@@ -128,7 +164,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         if (config.isDefault()) {
             config = null;
         }
-        
+
         return new RunImageConfiguration.Builder()
                 .capAdd(valueProvider.getList(CAP_ADD, config == null ? null : config.getCapAdd()))
                 .capDrop(valueProvider.getList(CAP_DROP, config == null ? null : config.getCapDrop()))
@@ -152,7 +188,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .links(valueProvider.getList(LINKS, config == null ? null : config.getLinks()))
                 .memory(valueProvider.getLong(MEMORY, config == null ? null : config.getMemory()))
                 .memorySwap(valueProvider.getLong(MEMORY_SWAP, config == null ? null : config.getMemorySwap()))
-                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategyRaw() == null ? null : config.getNamingStrategyRaw().name()))
+                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategy() == null ? null : config.getNamingStrategy().name()))
                 .exposedPropertyKey(valueProvider.getString(EXPOSED_PROPERTY_KEY, config == null ? null : config.getExposedPropertyKey()))
                 .portPropertyFile(valueProvider.getString(PORT_PROPERTY_FILE, config == null ? null : config.getPortPropertyFile()))
                 .ports(valueProvider.getList(PORTS, config == null ? null : config.getPorts()))
@@ -227,12 +263,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
     private Arguments extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
-        return valueProvider.getObject(configKey, alternative, new Function<String, Arguments>() {
-            @Override
-            public Arguments apply(@Nullable String raw) {
-                return raw != null ? new Arguments(raw) : null;
-            }
-        });
+        return valueProvider.getObject(configKey, alternative, raw -> raw != null ? new Arguments(raw) : null);
     }
 
     private RestartPolicy extractRestartPolicy(RestartPolicy config, ValueProvider valueProvider) {

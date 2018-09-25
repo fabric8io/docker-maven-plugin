@@ -1,57 +1,90 @@
 {
-  "Env": ["foo=bar"],
-  "User": "user",
-  "Entrypoint": [ "entrypoint" ],
-  "Domainname": "domain.com",
-  "ExposedPorts": {"22/tcp": {}},
-  "Image": "base",
-  "Cmd": ["date"],
-  "HostConfig": {
-    "RestartPolicy": {
-      "Name": "on-failure",
-      "MaximumRetryCount": 1
-    },
-    "Dns": ["8.8.8.8"],
-    "CapDrop": ["MKNOD"],
-    "SecurityOpt": [ "seccomp=unconfined" ],
-    "Links": ["db1:db1", "db2:db2"],
-    "DnsSearch": ["domain.com"],
-    "ShmSize": 1024,
-    "Ulimits":[
-    	{
-    		"Name":"memlock",
-    		"Hard":1024,
-    		"Soft":2048
-    	}
+  "Image":"base",
+  "Hostname":"hostname",
+  "Domainname":"domain.com",
+  "User":"user",
+  "WorkingDir":"/foo",
+  "Entrypoint":[
+    "entrypoint"
+  ],
+  "ExposedPorts":{
+    "22/tcp":{
+
+    }
+  },
+  "Env":[
+    "foo=bar"
+  ],
+  "Cmd":[
+    "date"
+  ],
+  "HostConfig":{
+    "ExtraHosts":[
+      "localhost:127.0.0.1"
     ],
-    "Privileged": true,
-    "CapAdd": ["NET_ADMIN"],
-    "Memory": 1,
-    "MemorySwap": 1,
-    "NetworkMode": "custom_network",
-    "Binds": ["/host_tmp:/container_tmp"],
-    "ExtraHosts": ["localhost:127.0.0.1"],
-    "VolumesFrom": [
+    "Links":[
+      "db1:db1",
+      "db2:db2"
+    ],
+    "PortBindings":{
+      "22/tcp":[
+        {
+          "HostPort":"11022",
+          "HostIp":"0.0.0.0"
+        }
+      ]
+    },
+    "Privileged":true,
+    "ShmSize":1024,
+    "Dns":[
+      "8.8.8.8"
+    ],
+    "DnsSearch":[
+      "domain.com"
+    ],
+    "CapAdd":[
+      "NET_ADMIN"
+    ],
+    "CapDrop":[
+      "MKNOD"
+    ],
+    "SecurityOpt":[
+      "seccomp=unconfined"
+    ],
+    "Memory":1,
+    "MemorySwap":1,
+    "RestartPolicy":{
+      "Name":"on-failure",
+      "MaximumRetryCount":1
+    },
+    "Ulimits":[
+      {
+        "Name":"memlock",
+        "Hard":1024,
+        "Soft":2048
+      }
+    ],
+    "Binds":[
+      "/host_tmp:/container_tmp"
+    ],
+    "VolumesFrom":[
       "parentContainer",
       "otherContainer"
     ],
-    "PortBindings": {
-      "22/tcp": [
-        {
-          "HostIp": "0.0.0.0",
-          "HostPort": "11022"
-        }
-      ]
+    "NetworkMode":"custom_network"
+  },
+  "Volumes":{
+    "/container_tmp":{
+
     }
   },
-  "NetworkingConfig": {
-    "EndpointsConfig": {
-      "custom_network": {
-        "Aliases": ["net-alias"]
+  "NetworkingConfig":{
+    "EndpointsConfig":{
+      "custom_network":{
+        "Aliases":[
+          "net-alias"
+        ]
       }
     }
-  },
-  "WorkingDir": "/foo",
-  "Hostname": "hostname",
-  "Volumes": {"/container_tmp": {}}
+  }
 }

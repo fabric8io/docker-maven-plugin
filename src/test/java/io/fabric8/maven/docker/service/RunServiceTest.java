@@ -1,24 +1,47 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.*;
+import com.google.gson.JsonObject;
 
-import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.wait.WaitUtil;
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.config.*;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import mockit.*;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.log.LogOutputSpec;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.util.JsonFactory;
+import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
+import mockit.Mocked;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
@@ -27,6 +50,12 @@ import static org.junit.Assert.*;
 public class RunServiceTest {
 
     private ContainerCreateConfig containerConfig;
+
+    @Mocked
+    private MavenProject project;
+
+    @Mocked
+    private MavenSession session;
 
     @Mocked
     private DockerAccess docker;
@@ -92,6 +121,11 @@ public class RunServiceTest {
     private String container = "testContainer";
     private int SHUTDOWN_WAIT = 500;
     private int KILL_AFTER = 1000;
+    private VolumeConfiguration volumeConfiguration = new VolumeConfiguration.Builder()
+            .name("sqlserver-backup-dev")
+            .driver("rexray")
+            .opts(Collections.singletonMap("size", "50"))
+            .build();
 
     @Test
     public void shutdownWithoutKeepingContainers() throws Exception {
@@ -241,6 +275,17 @@ public class RunServiceTest {
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, false);
     }
 
+    @Test
+    public void testVolumesDuringStart() throws DockerAccessException {
+        ServiceHub hub = new ServiceHubFactory().createServiceHub(project, session, docker, log, new LogOutputSpecFactory(true, true, null));
+        List<String> volumeBinds = Collections.singletonList("sqlserver-backup-dev:/var/opt/mssql/data");
+        List<VolumeConfiguration> volumeConfigurations = Collections.singletonList(volumeConfiguration);
+
+        List<String> createdVolumes = runService.createVolumesAsPerVolumeBinds(hub, volumeBinds, volumeConfigurations);
+
+        assertEquals(createdVolumes.get(0), volumeConfigurations.get(0).getName());
+        assertTrue(createdVolumes.contains(volumeConfigurations.get(0).getName()));
+    }
 
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
@@ -318,13 +363,13 @@ public class RunServiceTest {
         return config;
     }
     private void thenContainerConfigIsValid() throws IOException {
-        String expectedConfig = loadFile("docker/containerCreateConfigAll.json");
-        JSONAssert.assertEquals(expectedConfig, containerConfig.toJson(), true);
+        JsonObject expectedConfig = JsonFactory.newJsonObject(loadFile("docker/containerCreateConfigAll.json"));
+        assertEquals(expectedConfig.toString(), containerConfig.toJson());
     }
 
     private void thenStartConfigIsValid() throws IOException {
-        String expectedHostConfig = loadFile("docker/containerHostConfigAll.json");
-        JSONAssert.assertEquals(expectedHostConfig, startConfig.toJson(), true);
+        JsonObject expectedHostConfig = JsonFactory.newJsonObject(loadFile("docker/containerHostConfigAll.json"));
+        assertEquals(expectedHostConfig.toString(), startConfig.toJson());
     }
 
     private void whenCreateContainerConfig(String imageName) throws DockerAccessException {

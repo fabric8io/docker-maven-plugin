@@ -1,12 +1,8 @@
 package io.fabric8.maven.docker.access.ecr;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -16,9 +12,14 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
@@ -76,16 +77,16 @@ public class EcrExtendedAuth {
      * @throws MojoExecutionException
      */
     public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException, MojoExecutionException {
-        JSONObject jo = getAuthorizationToken(localCredentials);
+        JsonObject jo = getAuthorizationToken(localCredentials);
 
-        JSONArray authorizationDatas = jo.getJSONArray("authorizationData");
-        JSONObject authorizationData = authorizationDatas.getJSONObject(0);
-        String authorizationToken = authorizationData.getString("authorizationToken");
+        JsonArray authorizationDatas = jo.getAsJsonArray("authorizationData");
+        JsonObject authorizationData = authorizationDatas.get(0).getAsJsonObject();
+        String authorizationToken = authorizationData.get("authorizationToken").getAsString();
 
         return new AuthConfig(authorizationToken, "none");
     }
 
-    private JSONObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
+    private JsonObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
         HttpPost request = createSignedRequest(localCredentials, new Date());
         return executeRequest(createClient(), request);
     }
@@ -94,7 +95,7 @@ public class EcrExtendedAuth {
         return HttpClients.custom().useSystemProperties().build();
     }
 
-    private JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
+    private JsonObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
         try {
             CloseableHttpResponse response = client.execute(request);
             int statusCode = response.getStatusLine().getStatusCode();
@@ -105,7 +106,7 @@ public class EcrExtendedAuth {
 
             HttpEntity entity = response.getEntity();
             Reader jr = new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8);
-            return new JSONObject(new JSONTokener(jr));
+            return new Gson().fromJson(jr, JsonObject.class);
         }
         finally {
             client.close();

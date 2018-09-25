@@ -1,7 +1,16 @@
 # ChangeLog
 
-* **0.26.1**
+* **0.27-SNAPSHOT**
+  - Jump to Java 8 as minimal Java version
+  - Fix NPE in docker:remove-volumes when no volume configuration is given (#1086)
   - Fix NPE when no networks are configured (#1055)
+  - Fix Base64 encoding for X-Registry-Auth used for Docker authentication (#1084)
+  - Fix property configuration based's build detection (#1078)
+  - Introduce container name patterns for naming containers (#931)
+  - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials (#1083)
+  - Change from org.json with Gson for less restrictive licensing (#1016) (#1064)
+  - Fix missing actions in a watch restart (#1070)
+  - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
 
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given
@@ -21,7 +30,7 @@
 
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
-
+  
 * **0.25.1** (2018-04-12)
   - Fix regression which broke labels and env with space ([#988](https://github.com/fabric8io/docker-maven-plugin/issues/988))
   - Fix and enhanced zero-config Dockerfile mode

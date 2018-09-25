@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.model;
 
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 public class NetworksListElement implements Network {
 
@@ -9,31 +9,31 @@ public class NetworksListElement implements Network {
     static final String SCOPE = "Scope";
     static final String DRIVER = "Driver";
 
-    private final JSONObject json;
+    private final JsonObject json;
 
-    public NetworksListElement(JSONObject json) {
+    public NetworksListElement(JsonObject json) {
         this.json = json;
     }
 
     @Override
     public String getName() {
-        return json.getString(NAME);
+        return json.get(NAME).getAsString();
     }
 
     @Override
     public String getDriver() {
-        return json.getString(DRIVER);
+        return json.get(DRIVER).getAsString();
     }
 
     @Override
     public String getScope() {
-        return json.getString(SCOPE);
+        return json.get(SCOPE).getAsString();
     }
 
     @Override
     public String getId() {
         // only need first 12 to id a network
-        return json.getString(ID).substring(0, 12);
+        return json.get(ID).getAsString().substring(0, 12);
     }
 
 }
