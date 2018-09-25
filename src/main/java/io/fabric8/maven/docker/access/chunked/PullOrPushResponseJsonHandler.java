@@ -1,8 +1,9 @@
 package io.fabric8.maven.docker.access.chunked;
 
+import com.google.gson.JsonObject;
+
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.util.Logger;
-import org.json.JSONObject;
 
 public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.JsonEntityResponseHandler {
 
@@ -13,7 +14,7 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
     }
     
     @Override
-    public void process(JSONObject json) throws DockerAccessException {
+    public void process(JsonObject json) throws DockerAccessException {
         if (json.has("progressDetail")) {
             log.progressUpdate(getStringOrEmpty(json, "id"),
                                getStringOrEmpty(json, "status"),
@@ -27,26 +28,26 @@ public class PullOrPushResponseJsonHandler implements EntityStreamReaderUtil.Jso
         }
     }
 
-    private void logInfoMessage(JSONObject json) {
+    private void logInfoMessage(JsonObject json) {
         String value;
         if (json.has("stream")) {
-            value = json.getString("stream").replaceFirst("\n$", "");
+            value = json.get("stream").getAsString().replaceFirst("\n$", "");
         } else if (json.has("status")) {
-            value = json.getString("status");
+            value = json.get("status").getAsString();
         } else {
             value = json.toString();
         }
         log.info("%s", value);
     }
 
-    private void throwDockerAccessException(JSONObject json) throws DockerAccessException {
-        String msg = json.getString("error").trim();
-        String details = json.getJSONObject("errorDetail").getString("message").trim();
+    private void throwDockerAccessException(JsonObject json) throws DockerAccessException {
+        String msg = json.get("error").getAsString().trim();
+        String details = json.getAsJsonObject("errorDetail").get("message").getAsString().trim();
         throw new DockerAccessException("%s %s", msg, (msg.equals(details) ? "" : "(" + details + ")"));
     }
 
-    private String getStringOrEmpty(JSONObject json, String what) {
-        return json.has(what) ? json.getString(what) : "";
+    private String getStringOrEmpty(JsonObject json, String what) {
+        return json.has(what) ? json.get(what).getAsString() : "";
     }
 
     @Override

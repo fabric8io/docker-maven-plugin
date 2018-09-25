@@ -11,7 +11,7 @@ of an image configuration. The following configuration options are supported:
 | <<config-image-build-assembly, *assembly*>>
 | specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
 
-| <<config-image-build-buildargs, *buildArgs*>>
+| <<build-buildargs, *args*>>
 | Map specifying the value of https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build args]
 which should be used when building the image with an external Dockerfile which uses build arguments. The key-value syntax is the same as when defining Maven properties (or `labels` or `env`).
 This argument is ignored when no external Dockerfile is used. Build args can also be specified as properties as
@@ -20,7 +20,7 @@ described in <<build-buildargs,Build Args>>
 | *buildOptions*
 | Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile[Docker Remote API] and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `nocache`, `cleanup` for `forcerm=1` and `buildArgs`) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `nocache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
@@ -33,10 +33,10 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 
 | *dockerFile*
 | Path to a `Dockerfile` which also triggers _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
- 
+
 | *dockerFileDir*
 | Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
- 
+
 
 | *dockerArchive*
 | Path to a saved image archive which is then imported. See <<external-dockerfile, Docker archive>> for details.
@@ -48,7 +48,7 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | The environments as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *filter*
-| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details. 
+| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details.
 
 | [[build-config-from]]*from*
 | The base image which should be used for this image. If not given this default to `busybox:latest` and is suitable for a pure data image.
@@ -70,7 +70,10 @@ endif::[]
 A provided `<from>` takes precedence over the name given here. This tag is useful for extensions of this plugin like the https://maven.fabric8.io[fabric8-maven-plugin] which can evaluate the additional information given here.
 
 | <<build-healthcheck, *healthCheck*>>
-a| Definition of a health check as described in <<build-healthcheck, Healthcheck>>
+| Definition of a health check as described in <<build-healthcheck, Healthcheck>>
+
+| *imagePullPolicy*
+| Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <<image-pull-policy, imagePullPolicy>> for the possible values and the default.
 
 | <<misc-env, *labels*>>
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.
@@ -88,10 +91,13 @@ a| Definition of a health check as described in <<build-healthcheck, Healthcheck
 | The exposed ports which is a list of `<port>` elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").
 
 | *runCmds*
-| Commands to be run during the build process. It contains *run* elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* in to the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
+| Commands to be run during the build process. It contains *run* elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* into the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property
+
+| *skipTag*
+| If set to `true` this plugin won't add any tags to images. Property: `docker.skip.tag`
 
 | *tags*
 | List of additional `tag` elements with which an image is to be tagged after the build. Whitespace is trimmed from each element and empty elements are ignored.

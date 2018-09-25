@@ -28,11 +28,13 @@ public class DockerConnectionDetectorTest {
         	try {
                 assertEquals("npipe:////./pipe/docker_engine", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
+        	    // expected if no unix socket
             }
         } else {
             try {
                 assertEquals("unix:///var/run/docker.sock", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
+                // expected if no unix socket
             }
         }
     }

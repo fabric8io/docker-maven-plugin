@@ -15,17 +15,34 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Supplier;
 
-import io.fabric8.maven.docker.config.*;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.project.MavenProject;
-
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.CollectionUtils;
 
 import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
-import static io.fabric8.maven.docker.util.EnvUtil.*;
 
 /**
  * @author roland
@@ -35,169 +52,206 @@ import static io.fabric8.maven.docker.util.EnvUtil.*;
 // @Component(role = ExternalConfigHandler.class)
 public class PropertyConfigHandler implements ExternalConfigHandler {
 
+    public static final String TYPE_NAME = "properties";
+    public static final String DEFAULT_PREFIX = "docker";
+
     @Override
     public String getType() {
-        return "properties";
+        return TYPE_NAME;
     }
 
     @Override
-    public List<ImageConfiguration> resolve(ImageConfiguration config, MavenProject project, MavenSession session)
+    public List<ImageConfiguration> resolve(ImageConfiguration fromConfig, MavenProject project, MavenSession session)
         throws IllegalArgumentException {
-        String prefix = getPrefix(config);
-        Properties properties = project.getProperties();
+        Map<String, String> externalConfig = fromConfig.getExternalConfig();
+        String prefix = getPrefix(externalConfig);
+        Properties properties = EnvUtil.getPropertiesWithSystemOverrides(project);
+        PropertyMode propertyMode = getMode(externalConfig);
+        ValueProvider valueProvider = new ValueProvider(prefix, properties, propertyMode);
 
+        RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
+        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider, project);
+        WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
+        String name = valueProvider.getString(NAME, fromConfig.getName());
+        String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
 
-        RunImageConfiguration run = extractRunConfiguration(prefix,properties);
-        BuildImageConfiguration build = extractBuildConfiguration(prefix,properties);
-        WatchImageConfiguration watch = extractWatchConfig(prefix, properties);
-
-        String name = extractName(prefix, properties);
-        String alias = withPrefix(prefix, ALIAS, properties);
+        if (name == null) {
+            throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
+        }
 
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
-                        .alias(alias != null ? alias : config.getAlias())
+                        .alias(alias)
                         .runConfig(run)
                         .buildConfig(build)
                         .watchConfig(watch)
                         .build());
     }
 
+    private boolean isStringValueNull(ValueProvider valueProvider, BuildImageConfiguration config, ConfigKey key, Supplier<String> supplier) {
+        return valueProvider.getString(key, config == null ? null : supplier.get()) != null;
+    }
     // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
-    private boolean buildConfigured(String prefix, Properties properties) {
-        return withPrefix(prefix, FROM, properties) != null ||
-                mapWithPrefix(prefix, FROM_EXT, properties) != null ||
-                withPrefix(prefix, DOCKER_FILE, properties) != null ||
-                withPrefix(prefix, DOCKER_FILE_DIR, properties) != null;
+    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider, MavenProject project) {
+
+
+        if (isStringValueNull(valueProvider, config, FROM, () -> config.getFrom())) {
+            return true;
+        }
+
+        if (valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null) {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE, () -> config.getDockerFileRaw() ))  {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_ARCHIVE, () -> config.getDockerArchiveRaw())) {
+            return true;
+        }
+
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> config.getDockerFileDirRaw())) {
+            return true;
+        }
+
+        // Simple Dockerfile mode
+        return new File(project.getBasedir(),"Dockerfile").exists();
     }
 
 
-    private BuildImageConfiguration extractBuildConfiguration(String prefix, Properties properties) {
-        if (!buildConfigured(prefix, properties)) {
+    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider, MavenProject project) {
+        BuildImageConfiguration config = fromConfig.getBuildConfiguration();
+        if (!buildConfigured(config, valueProvider, project)) {
             return null;
         }
+
         return new BuildImageConfiguration.Builder()
-                .cmd(withPrefix(prefix, CMD, properties))
-                .cleanup(withPrefix(prefix, CLEANUP, properties))
-                .nocache(withPrefix(prefix, NOCACHE, properties))
-                .optimise(withPrefix(prefix, OPTIMISE, properties))
-                .entryPoint(withPrefix(prefix, ENTRYPOINT, properties))
-                .assembly(extractAssembly(prefix, properties))
-                .env(mapWithPrefix(prefix, ENV, properties))
-                .args(mapWithPrefix(prefix, ARGS, properties))
-                .labels(mapWithPrefix(prefix,LABELS,properties))
-                .ports(extractPortValues(prefix, properties))
-                .runCmds(extractRunCommands(prefix,properties))
-                .from(withPrefix(prefix, FROM, properties))
-                .fromExt(mapWithPrefix(prefix,FROM_EXT,properties))
-                .registry(withPrefix(prefix, REGISTRY, properties))
-                .volumes(listWithPrefix(prefix, VOLUMES, properties))
-                .tags(listWithPrefix(prefix, TAGS, properties))
-                .maintainer(withPrefix(prefix, MAINTAINER, properties))
-                .workdir(withPrefix(prefix, WORKDIR, properties))
-                .skip(withPrefix(prefix, SKIP_BUILD, properties))
-                .dockerArchive(withPrefix(prefix, DOCKER_ARCHIVE, properties))
-                .buildOptions(mapWithPrefix(prefix, BUILD_OPTIONS, properties))
-                .dockerFile(withPrefix(prefix, DOCKER_FILE, properties))
-                .dockerFileDir(withPrefix(prefix, DOCKER_FILE_DIR, properties))
-                .filter(withPrefix(prefix, FILTER, properties))
-                .user(withPrefix(prefix, USER, properties))
-                .healthCheck(extractHealthCheck(prefix, properties))
+                .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
+                .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanup()))
+                .nocache(valueProvider.getBoolean(NOCACHE, config == null ? null : config.getNoCache()))
+                .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
+                .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
+                .assembly(extractAssembly(config == null ? null : config.getAssemblyConfiguration(), valueProvider))
+                .env(CollectionUtils.mergeMaps(
+                        valueProvider.getMap(ENV_BUILD, config == null ? null : config.getEnv()),
+                        valueProvider.getMap(ENV, Collections.<String, String>emptyMap())
+                ))
+                .args(valueProvider.getMap(ARGS, config == null ? null : config.getArgs()))
+                .labels(valueProvider.getMap(LABELS, config == null ? null : config.getLabels()))
+                .ports(extractPortValues(config == null ? null : config.getPorts(), valueProvider))
+                .runCmds(valueProvider.getList(RUN, config == null ? null : config.getRunCmds()))
+                .from(valueProvider.getString(FROM, config == null ? null : config.getFrom()))
+                .fromExt(valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()))
+                .registry(valueProvider.getString(REGISTRY, config == null ? null : config.getRegistry()))
+                .volumes(valueProvider.getList(VOLUMES, config == null ? null : config.getVolumes()))
+                .tags(valueProvider.getList(TAGS, config == null ? null : config.getTags()))
+                .maintainer(valueProvider.getString(MAINTAINER, config == null ? null : config.getMaintainer()))
+                .workdir(valueProvider.getString(WORKDIR, config == null ? null : config.getWorkdir()))
+                .skip(valueProvider.getBoolean(SKIP_BUILD, config == null ? null : config.getSkip()))
+                .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_BUILD, config == null ? null : config.getImagePullPolicy()))
+                .dockerArchive(valueProvider.getString(DOCKER_ARCHIVE, config == null ? null : config.getDockerArchiveRaw()))
+                .dockerFile(valueProvider.getString(DOCKER_FILE, config == null ? null : config.getDockerFileRaw()))
+                .dockerFileDir(valueProvider.getString(DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDirRaw()))
+                .buildOptions(valueProvider.getMap(BUILD_OPTIONS, config == null ? null : config.getBuildOptions()))
+                .filter(valueProvider.getString(FILTER, config == null ? null : config.getFilterRaw()))
+                .user(valueProvider.getString(USER, config == null ? null : config.getUser()))
+                .healthCheck(extractHealthCheck(config == null ? null : config.getHealthCheck(), valueProvider))
                 .build();
     }
 
-    private RunImageConfiguration extractRunConfiguration(String prefix, Properties properties) {
+    private RunImageConfiguration extractRunConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider) {
+        RunImageConfiguration config = fromConfig.getRunConfiguration();
+        if (config.isDefault()) {
+            config = null;
+        }
 
         return new RunImageConfiguration.Builder()
-                .capAdd(listWithPrefix(prefix, CAP_ADD, properties))
-                .capDrop(listWithPrefix(prefix, CAP_DROP, properties))
-                .securityOpts(listWithPrefix(prefix, SECURITY_OPTS, properties))
-                .cmd(withPrefix(prefix, CMD, properties))
-                .dns(listWithPrefix(prefix, DNS, properties))
-                .dependsOn(listWithPrefix(prefix, DEPENDS_ON, properties))
-                .net(withPrefix(prefix, NET, properties))
-                .network(extractNetworkConfig(prefix, properties))
-                .dnsSearch(listWithPrefix(prefix, DNS_SEARCH, properties))
-                .domainname(withPrefix(prefix, DOMAINNAME, properties))
-                .entrypoint(withPrefix(prefix, ENTRYPOINT, properties))
-                .env(mapWithPrefix(prefix, ENV, properties))
-                .labels(mapWithPrefix(prefix,LABELS,properties))
-                .envPropertyFile(withPrefix(prefix, ENV_PROPERTY_FILE, properties))
-                .extraHosts(listWithPrefix(prefix, EXTRA_HOSTS, properties))
-                .hostname(withPrefix(prefix, HOSTNAME, properties))
-                .links(listWithPrefix(prefix, LINKS, properties))
-                .memory(longWithPrefix(prefix, MEMORY, properties))
-                .memorySwap(longWithPrefix(prefix, MEMORY_SWAP, properties))
-                .namingStrategy(withPrefix(prefix, NAMING_STRATEGY, properties))
-                .exposedPropertyKey(withPrefix(prefix, EXPOSED_PROPERTY_KEY, properties))
-                .portPropertyFile(withPrefix(prefix, PORT_PROPERTY_FILE, properties))
-                .ports(listWithPrefix(prefix, PORTS, properties))
-                .shmSize(longWithPrefix(prefix, SHMSIZE, properties))
-                .privileged(booleanWithPrefix(prefix, PRIVILEGED, properties))
-                .restartPolicy(extractRestartPolicy(prefix, properties))
-                .user(withPrefix(prefix, USER, properties))
-                .workingDir(withPrefix(prefix, WORKING_DIR, properties))
-                .log(extractLogConfig(prefix,properties))
-                .wait(extractWaitConfig(prefix, properties))
-                .volumes(extractVolumeConfig(prefix, properties))
-                .skip(withPrefix(prefix, SKIP_RUN, properties))
-                .ulimits(extractUlimits(prefix, properties))
-                .tmpfs(listWithPrefix(prefix, TMPFS, properties))
+                .capAdd(valueProvider.getList(CAP_ADD, config == null ? null : config.getCapAdd()))
+                .capDrop(valueProvider.getList(CAP_DROP, config == null ? null : config.getCapDrop()))
+                .securityOpts(valueProvider.getList(SECURITY_OPTS, config == null ? null : config.getSecurityOpts()))
+                .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
+                .dns(valueProvider.getList(DNS, config == null ? null : config.getDns()))
+                .dependsOn(valueProvider.getList(DEPENDS_ON, config == null ? null : config.getDependsOn()))
+                .net(valueProvider.getString(NET, config == null ? null : config.getNetRaw()))
+                .network(extractNetworkConfig(config == null ? null : config.getNetworkingConfig(), valueProvider))
+                .dnsSearch(valueProvider.getList(DNS_SEARCH, config == null ? null : config.getDnsSearch()))
+                .domainname(valueProvider.getString(DOMAINNAME, config == null ? null : config.getDomainname()))
+                .entrypoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntrypoint()))
+                .env(CollectionUtils.mergeMaps(
+                        valueProvider.getMap(ENV_RUN, config == null ? null : config.getEnv()),
+                        valueProvider.getMap(ENV, Collections.<String, String>emptyMap())
+                ))
+                .labels(valueProvider.getMap(LABELS, config == null ? null : config.getLabels()))
+                .envPropertyFile(valueProvider.getString(ENV_PROPERTY_FILE, config == null ? null : config.getEnvPropertyFile()))
+                .extraHosts(valueProvider.getList(EXTRA_HOSTS, config == null ? null : config.getExtraHosts()))
+                .hostname(valueProvider.getString(HOSTNAME, config == null ? null : config.getHostname()))
+                .links(valueProvider.getList(LINKS, config == null ? null : config.getLinks()))
+                .memory(valueProvider.getLong(MEMORY, config == null ? null : config.getMemory()))
+                .memorySwap(valueProvider.getLong(MEMORY_SWAP, config == null ? null : config.getMemorySwap()))
+                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategy() == null ? null : config.getNamingStrategy().name()))
+                .exposedPropertyKey(valueProvider.getString(EXPOSED_PROPERTY_KEY, config == null ? null : config.getExposedPropertyKey()))
+                .portPropertyFile(valueProvider.getString(PORT_PROPERTY_FILE, config == null ? null : config.getPortPropertyFile()))
+                .ports(valueProvider.getList(PORTS, config == null ? null : config.getPorts()))
+                .shmSize(valueProvider.getLong(SHMSIZE, config == null ? null : config.getShmSize()))
+                .privileged(valueProvider.getBoolean(PRIVILEGED, config == null ? null : config.getPrivileged()))
+                .restartPolicy(extractRestartPolicy(config == null ? null : config.getRestartPolicy(), valueProvider))
+                .user(valueProvider.getString(USER, config == null ? null : config.getUser()))
+                .workingDir(valueProvider.getString(WORKING_DIR, config == null ? null : config.getWorkingDir()))
+                .log(extractLogConfig(config == null ? null : config.getLogConfiguration(), valueProvider))
+                .wait(extractWaitConfig(config == null ? null : config.getWaitConfiguration(), valueProvider))
+                .volumes(extractVolumeConfig(config == null ? null : config.getVolumeConfiguration(), valueProvider))
+                .skip(valueProvider.getBoolean(SKIP_RUN, config == null ? null : config.getSkip()))
+                .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_RUN, config == null ? null : config.getImagePullPolicy()))
+                .ulimits(extractUlimits(config == null ? null : config.getUlimits(), valueProvider))
+                .tmpfs(valueProvider.getList(TMPFS, config == null ? null : config.getTmpfs()))
                 .build();
     }
 
-    private NetworkConfig extractNetworkConfig(String prefix, Properties properties) {
+    private NetworkConfig extractNetworkConfig(NetworkConfig config, ValueProvider valueProvider) {
         return new NetworkConfig.Builder()
-            .mode(withPrefix(prefix, NETWORK_MODE, properties))
-            .name(withPrefix(prefix, NETWORK_NAME, properties))
-            .aliases(listWithPrefix(prefix,NETWORK_ALIAS, properties))
+            .mode(valueProvider.getString(NETWORK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
+            .name(valueProvider.getString(NETWORK_NAME, config == null ? null : config.getName()))
+            .aliases(valueProvider.getList(NETWORK_ALIAS, config == null ? null : config.getAliases()))
             .build();
     }
 
     @SuppressWarnings("deprecation")
-    private AssemblyConfiguration extractAssembly(String prefix, Properties properties) {
+    private AssemblyConfiguration extractAssembly(AssemblyConfiguration config, ValueProvider valueProvider) {
         return new AssemblyConfiguration.Builder()
-                .targetDir(withPrefix(prefix, ASSEMBLY_BASEDIR, properties))
-                .descriptor(withPrefix(prefix, ASSEMBLY_DESCRIPTOR, properties))
-                .descriptorRef(withPrefix(prefix, ASSEMBLY_DESCRIPTOR_REF, properties))
-                .dockerFileDir(withPrefix(prefix, ASSEMBLY_DOCKER_FILE_DIR, properties))
-                .exportBasedir(booleanWithPrefix(prefix, ASSEMBLY_EXPORT_BASEDIR, properties))
-                .ignorePermissions(booleanWithPrefix(prefix, ASSEMBLY_IGNORE_PERMISSIONS, properties))
-                .permissions(withPrefix(prefix, ASSEMBLY_PERMISSIONS, properties))
-                .user(withPrefix(prefix, ASSEMBLY_USER, properties))
-                .mode(withPrefix(prefix, ASSEMBLY_MODE, properties))
-                .tarLongFileMode(withPrefix(prefix, ASSEMBLY_TARLONGFILEMODE, properties))
+                .targetDir(valueProvider.getString(ASSEMBLY_BASEDIR, config == null ? null : config.getTargetDir()))
+                .descriptor(valueProvider.getString(ASSEMBLY_DESCRIPTOR, config == null ? null : config.getDescriptor()))
+                .descriptorRef(valueProvider.getString(ASSEMBLY_DESCRIPTOR_REF, config == null ? null : config.getDescriptorRef()))
+                .dockerFileDir(valueProvider.getString(ASSEMBLY_DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDir()))
+                .exportBasedir(valueProvider.getBoolean(ASSEMBLY_EXPORT_BASEDIR, config == null ? null : config.getExportTargetDir()))
+                .ignorePermissions(valueProvider.getBoolean(ASSEMBLY_IGNORE_PERMISSIONS, config == null ? null : config.getIgnorePermissions()))
+                .permissions(valueProvider.getString(ASSEMBLY_PERMISSIONS, config == null ? null : config.getPermissionsRaw()))
+                .user(valueProvider.getString(ASSEMBLY_USER, config == null ? null : config.getUser()))
+                .mode(valueProvider.getString(ASSEMBLY_MODE, config == null ? null : config.getModeRaw()))
+                .tarLongFileMode(valueProvider.getString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()))
                 .build();
     }
 
-    private HealthCheckConfiguration extractHealthCheck(String prefix, Properties properties) {
-        Map<String, String> healthCheckProperties = mapWithPrefix(prefix, HEALTHCHECK, properties);
+    private HealthCheckConfiguration extractHealthCheck(HealthCheckConfiguration config, ValueProvider valueProvider) {
+        Map<String, String> healthCheckProperties = valueProvider.getMap(HEALTHCHECK, Collections.<String, String>emptyMap());
         if (healthCheckProperties != null && healthCheckProperties.size() > 0) {
             return new HealthCheckConfiguration.Builder()
-                    .interval(withPrefix(prefix, HEALTHCHECK_INTERVAL, properties))
-                    .timeout(withPrefix(prefix, HEALTHCHECK_TIMEOUT, properties))
-                    .retries(intWithPrefix(prefix, HEALTHCHECK_RETRIES, properties))
-                    .mode(withPrefix(prefix, HEALTHCHECK_MODE, properties))
-                    .cmd(withPrefix(prefix, HEALTHCHECK_CMD, properties))
+                    .interval(valueProvider.getString(HEALTHCHECK_INTERVAL, config == null ? null : config.getInterval()))
+                    .timeout(valueProvider.getString(HEALTHCHECK_TIMEOUT, config == null ? null : config.getTimeout()))
+                    .startPeriod(valueProvider.getString(HEALTHCHECK_START_PERIOD, config == null ? null : config.getStartPeriod()))
+                    .retries(valueProvider.getInteger(HEALTHCHECK_RETRIES, config == null ? null : config.getRetries()))
+                    .mode(valueProvider.getString(HEALTHCHECK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
+                    .cmd(extractArguments(valueProvider, HEALTHCHECK_CMD, config == null ? null : config.getCmd()))
                     .build();
+        } else {
+            return config;
         }
-
-        return null;
-    }
-
-    private String extractName(String prefix, Properties properties) throws IllegalArgumentException {
-        String name = withPrefix(prefix, NAME, properties);
-        if (name == null) {
-            throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
-        }
-        return name;
     }
 
     // Extract only the values of the port mapping
-    private List<String> extractPortValues(String prefix, Properties properties) {
+
+    private List<String> extractPortValues(List<String> config, ValueProvider valueProvider) {
         List<String> ret = new ArrayList<>();
-        List<String> ports = listWithPrefix(prefix, PORTS, properties);
+        List<String> ports = valueProvider.getList(PORTS, config);
         if (ports == null) {
             return null;
         }
@@ -208,65 +262,83 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return ret;
     }
 
-
-    private List<String> extractRunCommands(String prefix, Properties properties) {
-        return listWithPrefix(prefix, RUN, properties);
+    private Arguments extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
+        return valueProvider.getObject(configKey, alternative, raw -> raw != null ? new Arguments(raw) : null);
     }
 
-    private RestartPolicy extractRestartPolicy(String prefix, Properties properties) {
+    private RestartPolicy extractRestartPolicy(RestartPolicy config, ValueProvider valueProvider) {
         return new RestartPolicy.Builder()
-                .name(withPrefix(prefix, RESTART_POLICY_NAME, properties))
-                .retry(asInt(withPrefix(prefix, RESTART_POLICY_RETRY, properties)))
+                .name(valueProvider.getString(RESTART_POLICY_NAME, config == null ? null : config.getName()))
+                .retry(valueProvider.getInt(RESTART_POLICY_RETRY, config == null || config.getRetry() == 0 ? null : config.getRetry()))
                 .build();
     }
 
-    private LogConfiguration extractLogConfig(String prefix, Properties properties) {
+    private LogConfiguration extractLogConfig(LogConfiguration config, ValueProvider valueProvider) {
         LogConfiguration.Builder builder = new LogConfiguration.Builder()
-            .color(withPrefix(prefix, LOG_COLOR, properties))
-            .date(withPrefix(prefix, LOG_DATE, properties))
-            .prefix(withPrefix(prefix, LOG_PREFIX, properties))
-            .logDriverName(withPrefix(prefix, LOG_DRIVER_NAME, properties))
-            .logDriverOpts(mapWithPrefix(prefix, LOG_DRIVER_OPTS, properties));
-        Boolean enabled = booleanWithPrefix(prefix, LOG_ENABLED, properties);
-        if (enabled != null) {
-            builder.enabled(enabled);
-        }
+            .color(valueProvider.getString(LOG_COLOR, config == null ? null : config.getColor()))
+            .date(valueProvider.getString(LOG_DATE, config == null ? null : config.getDate()))
+            .file(valueProvider.getString(LOG_FILE, config == null ? null : config.getFileLocation()))
+            .prefix(valueProvider.getString(LOG_PREFIX, config == null ? null : config.getPrefix()))
+            .logDriverName(valueProvider.getString(LOG_DRIVER_NAME, config == null || config.getDriver() == null ? null : config.getDriver().getName()))
+            .logDriverOpts(valueProvider.getMap(LOG_DRIVER_OPTS, config == null || config.getDriver() == null ? null : config.getDriver().getOpts()));
+
+        Boolean configEnabled = config != null ? config.isEnabled() : null;
+        Boolean enabled = valueProvider.getBoolean(LOG_ENABLED, configEnabled);
+        builder.enabled(enabled);
         return builder.build();
     }
 
-    private WaitConfiguration extractWaitConfig(String prefix, Properties properties) {
-        String url = withPrefix(prefix,WAIT_HTTP_URL,properties);
+    private WaitConfiguration extractWaitConfig(WaitConfiguration config, ValueProvider valueProvider) {
+        String url = valueProvider.getString(WAIT_HTTP_URL, config == null ? null : config.getUrl());
         if (url == null) {
             // Fallback to deprecated old URL
-            url = withPrefix(prefix,WAIT_URL,properties);
+            url = valueProvider.getString(WAIT_URL, config == null ? null : config.getUrl());
         }
+        WaitConfiguration.ExecConfiguration exec = config == null ? null : config.getExec();
+        WaitConfiguration.TcpConfiguration tcp = config == null ? null : config.getTcp();
+        WaitConfiguration.HttpConfiguration http = config == null ? null : config.getHttp();
+
         return new WaitConfiguration.Builder()
-                .time(asInt(withPrefix(prefix, WAIT_TIME,properties)))
+                .time(valueProvider.getInt(WAIT_TIME, config == null ? null : config.getTime()))
+                .healthy(valueProvider.getBoolean(WAIT_HEALTHY, config == null ? null : config.getHealthy()))
                 .url(url)
-                .preStop(withPrefix(prefix, PRE_STOP, properties))
-                .postStart(withPrefix(prefix, POST_START, properties))
-                .method(withPrefix(prefix, WAIT_HTTP_METHOD, properties))
-                .status(withPrefix(prefix, WAIT_HTTP_STATUS, properties))
-                .log(withPrefix(prefix, WAIT_LOG, properties))
-                .kill(asInt(withPrefix(prefix, WAIT_KILL, properties)))
-                .exit(asInteger(withPrefix(prefix, WAIT_EXIT, properties)))
-                .shutdown(asInt(withPrefix(prefix, WAIT_SHUTDOWN, properties)))
-                .tcpHost(withPrefix(prefix, WAIT_TCP_HOST, properties))
-                .tcpPorts(asIntList(listWithPrefix(prefix, WAIT_TCP_PORT, properties)))
-                .tcpMode(withPrefix(prefix, WAIT_TCP_MODE, properties))
+                .preStop(valueProvider.getString(WAIT_EXEC_PRE_STOP, exec == null ? null : exec.getPreStop()))
+                .postStart(valueProvider.getString(WAIT_EXEC_POST_START, exec == null ? null : exec.getPostStart()))
+                .breakOnError(valueProvider.getBoolean(WAIT_EXEC_BREAK_ON_ERROR, exec == null ? null : exec.isBreakOnError()))
+                .method(valueProvider.getString(WAIT_HTTP_METHOD, http == null ? null : http.getMethod()))
+                .status(valueProvider.getString(WAIT_HTTP_STATUS, http == null ? null : http.getStatus()))
+                .log(valueProvider.getString(WAIT_LOG, config == null ? null : config.getLog()))
+                .kill(valueProvider.getInteger(WAIT_KILL, config == null ? null : config.getKill()))
+                .exit(valueProvider.getInteger(WAIT_EXIT, config == null ? null : config.getExit()))
+                .shutdown(valueProvider.getInteger(WAIT_SHUTDOWN, config == null ? null : config.getShutdown()))
+                .tcpHost(valueProvider.getString(WAIT_TCP_HOST, tcp == null ? null : tcp.getHost()))
+                .tcpPorts(valueProvider.getIntList(WAIT_TCP_PORT, tcp == null ? null : tcp.getPorts()))
+                .tcpMode(valueProvider.getString(WAIT_TCP_MODE, tcp == null || tcp.getMode() == null ? null : tcp.getMode().name()))
                 .build();
     }
 
-    private WatchImageConfiguration extractWatchConfig(String prefix, Properties properties) {
+    private WatchImageConfiguration extractWatchConfig(ImageConfiguration fromConfig, ValueProvider valueProvider) {
+        WatchImageConfiguration config = fromConfig.getWatchConfiguration();
+
         return new WatchImageConfiguration.Builder()
-                .interval(asInt(withPrefix(prefix, WATCH_INTERVAL, properties)))
-                .postGoal(withPrefix(prefix, WATCH_POSTGOAL, properties))
-                .mode(withPrefix(prefix, WATCH_POSTGOAL, properties))
+                .interval(valueProvider.getInteger(WATCH_INTERVAL, config == null ? null : config.getIntervalRaw()))
+                .postGoal(valueProvider.getString(WATCH_POSTGOAL, config == null ? null : config.getPostGoal()))
+                .postExec(valueProvider.getString(WATCH_POSTEXEC, config == null ? null : config.getPostExec()))
+                .mode(valueProvider.getString(WATCH_POSTGOAL, config == null || config.getMode() == null ? null : config.getMode().name()))
                 .build();
     }
 
-    private List<UlimitConfig> extractUlimits(String prefix, Properties properties) {
-        List<String> ulimits = listWithPrefix(prefix, ConfigKey.ULIMITS, properties);
+    private List<UlimitConfig> extractUlimits(List<UlimitConfig> config, ValueProvider valueProvider) {
+        List<String> other = null;
+        if (config != null) {
+            other = new ArrayList<>();
+            // Convert back to string for potential merge
+            for (UlimitConfig ulimitConfig : config) {
+                other.add(ulimitConfig.serialize());
+            }
+        }
+
+        List<String> ulimits = valueProvider.getList(ConfigKey.ULIMITS, other);
         if (ulimits == null) {
             return null;
         }
@@ -277,67 +349,43 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return ret;
     }
 
-    private RunVolumeConfiguration extractVolumeConfig(String prefix, Properties properties) {
+    private RunVolumeConfiguration extractVolumeConfig(RunVolumeConfiguration config, ValueProvider valueProvider) {
         return new RunVolumeConfiguration.Builder()
-                .bind(listWithPrefix(prefix, BIND, properties))
-                .from(listWithPrefix(prefix, VOLUMES_FROM, properties))
+                .bind(valueProvider.getList(BIND, config == null ? null : config.getBind()))
+                .from(valueProvider.getList(VOLUMES_FROM, config == null ? null : config.getFrom()))
                 .build();
     }
 
-    private int asInt(String s) {
-        return s != null ? Integer.parseInt(s) : 0;
-    }
-
-    private Integer asInteger(String s) {
-        return s != null ? new Integer(s) : null;
-    }
-
-    private List<Integer> asIntList(List<String> strings) {
-        if (strings == null) {
-            return null;
-        }
-
-        List<Integer> ints = new ArrayList<>();
-        for (String s : strings) {
-            ints.add(asInt(s));
-        }
-
-        return ints;
-
-    }
-
-    private List<String> listWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        return extractFromPropertiesAsList(key.asPropertyKey(prefix), properties);
-    }
-
-    private Map<String, String> mapWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        return extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties);
-    }
-
-    private String withPrefix(String prefix, ConfigKey key, Properties properties) {
-        return properties.getProperty(key.asPropertyKey(prefix));
-    }
-
-    private Integer intWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        String prop = withPrefix(prefix, key, properties);
-        return prop == null ? null : Integer.valueOf(prop);
-    }
-
-    private Long longWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        String prop = withPrefix(prefix, key, properties);
-        return prop == null ? null : Long.valueOf(prop);
-    }
-
-    private Boolean booleanWithPrefix(String prefix, ConfigKey key, Properties properties) {
-        String prop = withPrefix(prefix,key,properties);
-        return prop == null ? null : Boolean.valueOf(prop);
-    }
-
-    private String getPrefix(ImageConfiguration config) {
-        String prefix = config.getExternalConfig().get("prefix");
+    private static String getPrefix(Map<String, String> externalConfig) {
+        String prefix = externalConfig.get("prefix");
         if (prefix == null) {
-            prefix = "docker";
+            prefix = DEFAULT_PREFIX;
         }
         return prefix;
+    }
+
+    private static PropertyMode getMode(Map<String, String> externalConfig) {
+        return PropertyMode.parse(externalConfig.get("mode"));
+    }
+
+    public static boolean canCoexistWithOtherPropertyConfiguredImages(Map<String, String> externalConfig) {
+        if(externalConfig == null || externalConfig.isEmpty()) {
+            return false;
+        }
+
+        if(!TYPE_NAME.equals(externalConfig.get("type")))
+        {
+            // This images loads config from something totally different
+            return true;
+        }
+
+        if(externalConfig.get("prefix") != null)
+        {
+            // This image has a specified prefix. If multiple images have explicitly set docker. as prefix we
+            // assume user know what they are doing and allow it.
+            return true;
+        }
+
+        return false;
     }
 }

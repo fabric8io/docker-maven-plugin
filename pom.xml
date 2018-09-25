@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <prerequisites>
     <maven>3.0.3</maven>
@@ -7,7 +6,7 @@
 
   <groupId>io.fabric8</groupId>
   <artifactId>docker-maven-plugin</artifactId>
-  <version>0.22-SNAPSHOT</version>
+  <version>0.26-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
 
   <name>docker-maven-plugin</name>
@@ -100,7 +99,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.3</version>
+      <version>4.5.5</version>
     </dependency>
 
     <dependency>
@@ -122,9 +121,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20140107</version>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.8.5</version>
     </dependency>
 
     <dependency>
@@ -142,7 +141,7 @@
     <dependency>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-assembly-plugin</artifactId>
-      <version>2.6</version>
+      <version>3.1.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.maven</groupId>
@@ -193,7 +192,7 @@
     <dependency>
       <groupId>org.jmockit</groupId>
       <artifactId>jmockit</artifactId>
-      <version>1.33</version>
+      <version>1.40</version>
       <scope>test</scope>
     </dependency>
 
@@ -233,8 +232,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.6.2</version>
         <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <compilerArgument>-Xlint:deprecation</compilerArgument>
           <showWarnings>true</showWarnings>
         </configuration>
@@ -371,10 +370,10 @@
             <sourceDirectory>src/main/asciidoc</sourceDirectory>
             <attributes>
               <icons>font</icons>
-              <pagenums/>
+              <pagenums />
               <version>${project.version}</version>
-              <toc/>
-                <idprefix/>
+              <toc />
+                <idprefix />
               <idseparator>-</idseparator>
             </attributes>
           </configuration>
@@ -475,6 +474,17 @@
               </execution>
             </executions>
           </plugin>
+
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.7</version>
+            <extensions>true</extensions>
+            <configuration>
+              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <serverId>oss-sonatype-staging</serverId>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>
@@ -573,7 +583,7 @@
               <dependency>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctorj-pdf</artifactId>
-                <version>1.5.0-alpha.11</version>
+                <version>1.5.0-alpha.16</version>
               </dependency>
             </dependencies>
           </plugin>

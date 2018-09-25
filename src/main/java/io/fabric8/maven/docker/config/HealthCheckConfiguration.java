@@ -13,6 +13,8 @@ public class HealthCheckConfiguration implements Serializable {
 
     private String timeout;
 
+    private String startPeriod;
+
     private Integer retries;
 
     private Arguments cmd;
@@ -25,6 +27,10 @@ public class HealthCheckConfiguration implements Serializable {
 
     public String getTimeout() {
         return prepareTimeValue(timeout);
+    }
+
+    public String getStartPeriod() {
+        return prepareTimeValue(startPeriod);
     }
 
     private String prepareTimeValue(String timeout) {
@@ -54,7 +60,7 @@ public class HealthCheckConfiguration implements Serializable {
 
         switch(mode) {
         case none:
-            if (interval != null || timeout != null || retries != null || cmd != null) {
+            if (interval != null || timeout != null || startPeriod != null || retries != null || cmd != null) {
                 throw new IllegalArgumentException("HealthCheck: no parameters are allowed when the health check mode is set to 'none'");
             }
             break;
@@ -85,9 +91,14 @@ public class HealthCheckConfiguration implements Serializable {
             return this;
         }
 
-        public Builder cmd(String command) {
+        public Builder startPeriod(String startPeriod) {
+            config.startPeriod = startPeriod;
+            return this;
+        }
+
+        public Builder cmd(Arguments command) {
             if (command != null) {
-                config.cmd = new Arguments(command);
+                config.cmd = command;
             }
             return this;
         }

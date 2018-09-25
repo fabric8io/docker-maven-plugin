@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.fabric8.dmp.samples</groupId>
+  <artifactId>run-java</artifactId>
+  <packaging>jar</packaging>
+  <version>1-SNAPSHOT</version>
+
+  <build>
+
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.25-SNAPSHOT</version>
+
+        <dependencies>
+          <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>run-java-sh</artifactId>
+            <version>1.2.2</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

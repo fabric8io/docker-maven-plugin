@@ -34,18 +34,18 @@ integration test code.
 Multiple containers can be managed at once, which can be linked
 together or share data via volumes. Containers are created and started
 with the `docker:start` goal and stopped and destroyed with the
-`docker:stop` goal. For integration tests both goals are typically
-bound to the the `pre-integration-test` and `post-integration-test` phase,
+`docker:stop` goal. For integration tests, both goals are typically
+bound to the `pre-integration-test` and `post-integration-test` phase,
 respectively. It is recommended to use the 
 [`maven-failsafe-plugin`](http://maven.apache.org/surefire/maven-failsafe-plugin/) 
 for integration testing in order to stop the docker container even when
 the tests fail.
 
 For proper isolation, container exposed ports can be dynamically and
-flexibly mapped to local host ports. It is easy to specify a Maven
+flexibly mapped to localhost ports. It is easy to specify a Maven
 property which will be filled in with a dynamically assigned port
 after a container has been started. This can then be used as
-parameter for integration tests to connect to the application.
+a parameter for integration tests to connect to the application.
 
 ### Configuration
 
@@ -126,7 +126,7 @@ descriptor). Additionally it specifies the startup command for the
 container, which in this example fires up a microservice from a jar
 file copied over via the assembly descriptor. It also exposes
 port 8080. In the `<run>` section this port is dynamically mapped to a
-dynmically chosen port, and then assigned to the
+dynamically chosen port, and then assigned to the
 Maven property `${tomcat.port}`. This property could be used, for example,
 by an integration test to access this microservice. An important part is
 the `<links>` section which indicates that the image with the alias of
@@ -165,7 +165,7 @@ test. Each plugin is configured to create images and run the
 integration test (if possible). Although it might be a bit biased, it can 
 be useful for figuring out which plugin suits you best.
 
-The high-level design goals and initial motiviation fort this plugin are:
+The high-level design goals and initial motivation for this plugin are:
 
 * A flexible, **dynamic port mapping** from container to host
   ports so that truly isolated builds could be made. This should

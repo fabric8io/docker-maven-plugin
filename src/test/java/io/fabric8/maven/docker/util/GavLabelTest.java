@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 /*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 31/03/15
  */
-public class PomLabelTest {
+public class GavLabelTest {
 
     String g = "io.fabric8";
     String a = "demo";
@@ -33,30 +33,30 @@ public class PomLabelTest {
 
     @Test
     public void simple() throws Exception {
-        PomLabel label = new PomLabel(g,a,v);
+        GavLabel label = new GavLabel(g, a, v);
         assertTrue(label.getValue().equals(coord));
     }
 
     @Test
     public void dontMatch() {
-        PomLabel label = new PomLabel(g, a, v);
-        assertFalse(label.equals(new PomLabel(g, a, "2.1.1")));
+        GavLabel label = new GavLabel(g, a, v);
+        assertFalse(label.equals(new GavLabel(g, a, "2.1.1")));
     }
 
     @Test
     public void match() {
-        PomLabel label = new PomLabel(g, a, v);
-        assertTrue(label.equals(new PomLabel(g, a, v)));
+        GavLabel label = new GavLabel(g, a, v);
+        assertTrue(label.equals(new GavLabel(g, a, v)));
     }
 
     @Test
     public void parse() {
-        PomLabel label = new PomLabel(coord);
+        GavLabel label = new GavLabel(coord);
         assertEquals(coord, label.getValue());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void invalid() {
-        new PomLabel("bla");
+        new GavLabel("bla");
     }
 }

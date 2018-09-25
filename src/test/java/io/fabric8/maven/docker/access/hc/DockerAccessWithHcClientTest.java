@@ -1,24 +1,23 @@
 package io.fabric8.maven.docker.access.hc;
 
-import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.config.ArchiveCompression;
-import mockit.StrictExpectations;
+import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
+import mockit.Mocked;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.util.Logger;
-import mockit.Mocked;
+import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class DockerAccessWithHcClientTest {
 
@@ -57,7 +56,7 @@ public class DockerAccessWithHcClientTest {
     @Test
     public void testPushFailes_noRetry() throws Exception {
         givenAnImageName("test");
-        givenThePushWillFail(0,false);
+        givenThePushWillFail(0);
         whenPushImage();
         thenImageWasNotPushed();
     }
@@ -66,7 +65,7 @@ public class DockerAccessWithHcClientTest {
     public void testRetryPush() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFail(1, true);
+        givenThePushWillFailAndEventuallySucceed(1);
         whenPushImage();
         thenImageWasPushed();
     }
@@ -75,7 +74,7 @@ public class DockerAccessWithHcClientTest {
     public void testRetriesExceeded() throws Exception {
         givenAnImageName("test");
         givenANumberOfRetries(1);
-        givenThePushWillFail(1, false);
+        givenThePushWillFail(1);
         whenPushImage();
         thenImageWasNotPushed();
     }
@@ -136,26 +135,35 @@ public class DockerAccessWithHcClientTest {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void givenThePushWillFail(final int retries, final boolean suceedAtEnd) throws IOException {
-        new StrictExpectations() {{
-            int fail = retries + (suceedAtEnd ? 0 : 1);
-            mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any, 200);
+    private void givenThePushWillFailAndEventuallySucceed(final int retries) throws IOException {
+        new Expectations() {{
+            int fail = retries;
+            mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any,  200);
             minTimes = fail; maxTimes = fail;
             result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
             mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any, 200);
-            minTimes = suceedAtEnd ? 1 : 0; maxTimes = suceedAtEnd ? 1 :0;
+            minTimes = 1; maxTimes = 1;
+        }};
+    }
+
+    private void givenThePushWillFail(final int retries) throws IOException {
+        new Expectations() {{
+            int fail = retries + 1;
+            mockDelegate.post(anyString, null, (Map<String, String>) any, (ResponseHandler) any,  200);
+            minTimes = fail; maxTimes = fail;
+            result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
         }};
     }
 
     private void givenThePostWillFail() throws IOException {
-        new StrictExpectations() {{
+        new Expectations() {{
             mockDelegate.post(anyString, any, (ResponseHandler) any, 200);
             result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
         }};
     }
 
     private void givenTheGetWillFail() throws IOException {
-        new StrictExpectations() {{
+        new Expectations() {{
             mockDelegate.get(anyString, (ResponseHandler) any, 200);
             result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
         }};

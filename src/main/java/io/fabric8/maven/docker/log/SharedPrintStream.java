@@ -24,7 +24,7 @@ class SharedPrintStream {
     boolean close() {
         int nrUsers = numUsers.decrementAndGet();
         if (nrUsers == 0 && printStream != System.out) {
-            printStream.close();;
+            printStream.close();
             return true;
         } else {
             return false;

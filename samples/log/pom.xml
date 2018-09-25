@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for demonstrating the custom network mode
+
+  Call it with 'mvn install'.
+  It will automatically create the custom network "test-network" and create two automatically named containers that can
+  talk to each other via their netAlias names.
+  -->
+
+  <groupId>io.fabric8</groupId>
+  <artifactId>dmp-log</artifactId>
+  <version>0.21-SNAPSHOT</version>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.21.0</version>
+        <configuration>
+          <verbose>true</verbose>
+          <autoPull>always</autoPull>
+          <startParallel>true</startParallel>
+          <images>
+            <image>
+              <alias>jetty1</alias>
+              <name>jetty</name>
+              <run>
+                <wait>
+                  <log>.*Server:main: Started @\d+ms.*</log>
+                  <time>60000</time>
+                </wait>
+              <log><enabled>true</enabled></log>
+              </run>
+            </image>
+            <image>
+              <alias>jetty2</alias>
+              <name>jetty</name>
+              <run>
+                <wait>
+                  <log>.*Server:main: Started @\d+ms.*</log>
+                  <time>60000</time>
+                </wait>
+              <log><enabled>true</enabled></log>
+              </run>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

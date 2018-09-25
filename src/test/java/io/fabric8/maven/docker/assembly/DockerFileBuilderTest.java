@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.HealthCheckConfiguration;
-import io.fabric8.maven.docker.config.HealthCheckMode;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -36,7 +33,31 @@ public class DockerFileBuilderTest {
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
-    
+
+    @Test
+    public void testBuildDockerFileMultilineLabel() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        String dockerfileContent = new DockerFileBuilder()
+                .add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .labels(ImmutableMap.of("key", "unquoted",
+                        "flag", "",
+                        "with_space", "1.fc nuremberg",
+                        "some-json", "{\n  \"key\": \"value\"\n}\n"))
+                .content();
+        String expected = loadFile("docker/Dockerfile.multiline_label.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
+    public void testBuildLabelWithSpace() throws Exception {
+        String dockerfileContent = new DockerFileBuilder()
+                .labels(ImmutableMap.of("key", "label with space"))
+                .content();
+        assertTrue(stripCR(dockerfileContent).contains("LABEL key=\"label with space\""));
+    }
+
     @Test
     public void testBuildDockerFileUDPPort() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
@@ -70,7 +91,7 @@ public class DockerFileBuilderTest {
         String expected = loadFile("docker/Dockerfile_tcp.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }
-    
+
     @Test(expected=IllegalArgumentException.class)
     public void testBuildDockerFileBadPort() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
@@ -86,7 +107,7 @@ public class DockerFileBuilderTest {
                 .volumes(Collections.singletonList("/vol1"))
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
-    }    
+    }
 
     @Test(expected=IllegalArgumentException.class)
     public void testBuildDockerFileBadProtocol() throws Exception {
@@ -103,7 +124,7 @@ public class DockerFileBuilderTest {
                 .volumes(Collections.singletonList("/vol1"))
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
-    }      
+    }
 
     @Test
     public void testDockerFileOptimisation() throws Exception {
@@ -158,9 +179,9 @@ public class DockerFileBuilderTest {
 
     @Test
     public void testHealthCheckCmdParams() {
-        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd("echo hello").interval("5s").timeout("3s").retries(4).build();
+        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd(new Arguments("echo hello")).interval("5s").timeout("3s").startPeriod("30s").retries(4).build();
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --retries=4 CMD echo hello"));
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --start-period=30s --retries=4 CMD echo hello"));
     }
 
     @Test

@@ -68,7 +68,7 @@ with your real name (first and last name)
 If you set your `user.name` and `user.email` git configs, you can sign your
 commit automatically with `git commit -s`. If you forgot this you can
 use `git commit -s --amend` to add this in retrospective for the last commit.
-If you need to sign-off multiple commits within a branch, you need to to do an interactive
+If you need to sign-off multiple commits within a branch, you need to do an interactive
 rebase with `git rebase -i`. A nice shortcut for signing off every commit in a branch can
 be provided with this [alias](http://stackoverflow.com/questions/25570947/how-to-use-git-interactive-rebase-for-signing-off-a-series-of-commits)
 which you can put into your `~/.gitconfig`:

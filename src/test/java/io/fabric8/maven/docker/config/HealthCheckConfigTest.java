@@ -10,7 +10,7 @@ public class HealthCheckConfigTest {
     @Test
     public void testGoodHealthCheck1() {
         new HealthCheckConfiguration.Builder()
-                .cmd("exit 0")
+                .cmd(new Arguments("exit 0"))
                 .build()
                 .validate();
     }
@@ -18,7 +18,7 @@ public class HealthCheckConfigTest {
     @Test
     public void testGoodHealthCheck2() {
         new HealthCheckConfiguration.Builder()
-                .cmd("exit 0")
+                .cmd(new Arguments("exit 0"))
                 .retries(1)
                 .build()
                 .validate();
@@ -27,7 +27,7 @@ public class HealthCheckConfigTest {
     @Test
     public void testGoodHealthCheck3() {
         new HealthCheckConfiguration.Builder()
-                .cmd("exit 0")
+                .cmd(new Arguments("exit 0"))
                 .retries(1)
                 .interval("2s")
                 .build()
@@ -37,7 +37,7 @@ public class HealthCheckConfigTest {
     @Test
     public void testGoodHealthCheck4() {
         new HealthCheckConfiguration.Builder()
-                .cmd("exit 0")
+                .cmd(new Arguments("exit 0"))
                 .retries(1)
                 .interval("2s")
                 .timeout("3s")
@@ -49,16 +49,30 @@ public class HealthCheckConfigTest {
     public void testGoodHealthCheck5() {
         new HealthCheckConfiguration.Builder()
                 .mode(HealthCheckMode.cmd)
-                .cmd("exit 0")
+                .cmd(new Arguments("exit 0"))
                 .retries(1)
                 .interval("2s")
                 .timeout("3s")
+                .startPeriod("30s")
                 .build()
                 .validate();
     }
 
     @Test
     public void testGoodHealthCheck6() {
+        new HealthCheckConfiguration.Builder()
+                .mode(HealthCheckMode.cmd)
+                .cmd(new Arguments("exit 0"))
+                .retries(1)
+                .interval("2s")
+                .timeout("3s")
+                .startPeriod("4s")
+                .build()
+                .validate();
+    }
+
+    @Test
+    public void testGoodHealthCheck7() {
         new HealthCheckConfiguration.Builder()
                 .mode(HealthCheckMode.none)
                 .build()
@@ -96,7 +110,8 @@ public class HealthCheckConfigTest {
     public void testBadHealthCheck4() {
         new HealthCheckConfiguration.Builder()
                 .mode(HealthCheckMode.none)
-                .cmd("echo a")
+                .startPeriod("30s")
+                .cmd(new Arguments("echo a"))
                 .build()
                 .validate();
     }
@@ -104,12 +119,21 @@ public class HealthCheckConfigTest {
     @Test(expected = IllegalArgumentException.class)
     public void testBadHealthCheck5() {
         new HealthCheckConfiguration.Builder()
+                .mode(HealthCheckMode.none)
+                .cmd(new Arguments("echo a"))
                 .build()
                 .validate();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testBadHealthCheck6() {
+        new HealthCheckConfiguration.Builder()
+                .build()
+                .validate();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBadHealthCheck7() {
         new HealthCheckConfiguration.Builder()
                 .mode(HealthCheckMode.cmd)
                 .build()

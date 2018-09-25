@@ -1,0 +1,20 @@
+version: '2.2'
+services:
+  service1:
+    image: image
+    networks:
+      network1:
+        aliases:
+          - alias1
+          - alias2
+  service2:
+    image: image
+    networks:
+      - network1
+  service3:
+    image: image
+    networks:
+      network1:
+        aliases:
+          - alias1
+          

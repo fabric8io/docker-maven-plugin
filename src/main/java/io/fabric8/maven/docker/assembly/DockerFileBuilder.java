@@ -60,10 +60,10 @@ public class DockerFileBuilder {
     private List<String> runCmds = new ArrayList<>();
 
     // environment
-    private Map<String,String> envEntries = new HashMap<>();
+    private Map<String,String> envEntries = new LinkedHashMap<>();
 
     // image labels
-    private Map<String, String> labels = new HashMap<>();
+    private Map<String, String> labels = new LinkedHashMap<>();
 
     // exposed volumes
     private List<String> volumes = new ArrayList<>();
@@ -133,6 +133,7 @@ public class DockerFileBuilder {
             case cmd:
                 buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
                 buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
+                buildOption(healthString, DockerFileOption.HEALTHCHECK_START_PERIOD, healthCheck.getStartPeriod());
                 buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
                 buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
                 break;
@@ -225,14 +226,50 @@ public class DockerFileBuilder {
             String entries[] = new String[map.size()];
             int i = 0;
             for (Map.Entry<String, String> entry : map.entrySet()) {
-                entries[i++] = quote(entry.getKey()) + "=" + quote(entry.getValue());
+                entries[i++] = createKeyValue(entry.getKey(), entry.getValue());
             }
             keyword.addTo(b, entries);
         }
     }
 
-    private String quote(String value) {
-        return StringUtils.quoteAndEscape(value,'"');
+    /**
+     * Escape any slashes, quotes, and newlines int the value.  If any escaping occurred, quote the value.
+     * @param key The key
+     * @param value The value
+     * @return Escaped and quoted key="value"
+     */
+    private String createKeyValue(String key, String value) {
+        StringBuilder sb = new StringBuilder();
+        // no quoting the key; "Keys are alphanumeric strings which may contain periods (.) and hyphens (-)"
+        sb.append(key).append('=');
+        if (value == null || value.isEmpty()) {
+            return sb.append("\"\"").toString();
+        }
+	StringBuilder valBuf = new StringBuilder();
+	boolean toBeQuoted = false;
+        for (int i = 0; i < value.length(); ++i) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"':
+                case '\n':
+                case '\\':
+                    // escape the character
+                    valBuf.append('\\');
+                case ' ':
+                    // space needs quotes, too
+                    toBeQuoted = true;
+                default:
+                    // always append
+                    valBuf.append(c);
+            }
+        }
+        if (toBeQuoted) {
+            // need to keep quotes
+            sb.append('"').append(valBuf.toString()).append('"');
+        } else {
+            sb.append(value);
+        }
+        return sb.toString();
     }
 
     private void addPorts(StringBuilder b) {
@@ -396,7 +433,6 @@ public class DockerFileBuilder {
     public DockerFileBuilder labels(Map<String,String> values) {
         if (values != null) {
             this.labels.putAll(values);
-            validateMap(labels);
         }
         return this;
     }

@@ -67,4 +67,16 @@ public class UlimitConfig implements Serializable {
         }
         return Integer.parseInt(number);
     }
+
+    public String serialize() {
+        if(hard != null && soft != null) {
+            return name + "="+hard+":"+soft;
+        } else if(hard != null) {
+            return name + "="+hard;
+        } else if(soft != null) {
+            return name + "=:"+soft;
+        } else {
+            return null;
+        }
+    }
 }

@@ -78,10 +78,10 @@ which has more complex sample project involving two images:
 
 * Vanilla PostgreSQL 9 Image
 * HTTP Request Logging Service
-  - MicroService mit embedded Tomcat
+  - MicroService with embedded Tomcat
   - DB Schema is created during startup via [Flyway](http://flywaydb.org/)
 * PostgreSQL container is connected via a Docker 'link'
-* Simple integration test which excercises the service
+* Simple integration test which exercises the service
 
 The different plugins can be enabled with different Maven profiles,
 the one for this plugin is called `fabric8io` (and the others `wouterd`,

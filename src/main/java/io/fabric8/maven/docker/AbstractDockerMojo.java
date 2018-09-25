@@ -1,33 +1,33 @@
 package io.fabric8.maven.docker;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
+import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
+import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
-import io.fabric8.maven.docker.util.ImagePullCache;
-import io.fabric8.maven.docker.util.ImagePullCacheManager;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.PomLabel;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -60,9 +60,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Key under which the build timestamp is stored so that other mojos can reuse it
     public static final String CONTEXT_KEY_BUILD_TIMESTAMP = "CONTEXT_KEY_BUILD_TIMESTAMP";
 
-    // Key for the previously used image cache
-    public static final String CONTEXT_KEY_PREVIOUSLY_PULLED = "CONTEXT_KEY_PREVIOUSLY_PULLED";
-
     // Filename for holding the build timestamp
     public static final String DOCKER_BUILD_TIMESTAMP = "docker/build.timestamp";
 
@@ -92,8 +89,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Component
     protected DockerAccessFactory dockerAccessFactory;
 
-    @Parameter(property = "docker.autoPull", defaultValue = "on")
+    @Parameter(property = "docker.autoPull")
     protected String autoPull;
+
+    @Parameter(property = "docker.imagePullPolicy")
+    protected String imagePullPolicy;
 
     // Whether to keep the containers afters stopping (start/watch/stop)
     @Parameter(property = "docker.keepContainer", defaultValue = "false")
@@ -214,20 +214,23 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
             authConfigFactory.setLog(log);
+            imageConfigResolver.setLog(log);
 
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
-            // The 'real' images configuration to use (configured images + externally resolved images)
-            this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
+            ConfigHelper.validateExternalPropertyActivation(project, images);
+
             DockerAccess access = null;
             try {
+                // The 'real' images configuration to use (configured images + externally resolved images)
+                this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
                 if (isDockerAccessRequired()) {
                     DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
                     access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
                 }
                 ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
                 executeInternal(serviceHub);
-            } catch (DockerAccessException exp) {
+            } catch (IOException | ExecException exp) {
                 logException(exp);
                 throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
             } catch (MojoExecutionException exp) {
@@ -263,15 +266,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .build();
     }
 
-    protected RegistryService.RegistryConfig getRegistryConfig() throws MojoExecutionException {
+    protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) throws MojoExecutionException {
         return new RegistryService.RegistryConfig.Builder()
                 .settings(settings)
                 .authConfig(authConfig != null ? authConfig.toMap() : null)
                 .authConfigFactory(authConfigFactory)
                 .skipExtendedAuth(skipExtendedAuth)
-                .autoPull(autoPull)
-                .imagePullCacheManager(getImagePullCacheManager())
-                .registry(registry)
+                .registry(specificRegistry != null ? specificRegistry : registry)
                 .build();
     }
 
@@ -280,7 +281,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * call or a new current date is created
      * @return timestamp to use
      */
-    protected synchronized Date getBuildTimestamp() throws MojoExecutionException {
+    protected synchronized Date getBuildTimestamp() throws IOException {
         Date now = (Date) getPluginContext().get(CONTEXT_KEY_BUILD_TIMESTAMP);
         if (now == null) {
             now = getReferenceDate();
@@ -289,9 +290,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return now;
     }
 
-    // Get the referenc date for the build. By default this is picked up
+    // Get the reference date for the build. By default this is picked up
     // from an existing build date file. If this does not exist, the current date is used.
-    protected Date getReferenceDate() throws MojoExecutionException {
+    protected Date getReferenceDate() throws IOException {
         Date referenceDate = EnvUtil.loadTimestamp(getBuildTimestampFile());
         return referenceDate != null ? referenceDate : new Date();
     }
@@ -324,6 +325,16 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
            filter,                   // A filter which image to process
             this);                     // customizer (can be overwritten by a subclass)
 
+        // Check for simple Dockerfile mode
+        File topDockerfile = new File(project.getBasedir(),"Dockerfile");
+        if (topDockerfile.exists()) {
+            if (resolvedImages.isEmpty()) {
+                resolvedImages.add(createSimpleDockerfileConfig(topDockerfile));
+            } else if (resolvedImages.size() == 1 && resolvedImages.get(0).getBuildConfiguration() == null) {
+                resolvedImages.set(0, addSimpleDockerfileConfig(resolvedImages.get(0), topDockerfile));
+            }
+        }
+
         // Initialize configuration and detect minimal API version
         return ConfigHelper.initAndValidate(resolvedImages, apiVersion, new ImageNameFormatter(project, buildTimeStamp), log);
     }
@@ -333,28 +344,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Override
     public List<ImageConfiguration> customizeConfig(List<ImageConfiguration> imageConfigs) {
         return imageConfigs;
-    }
-
-
-    private ImagePullCacheManager getImagePullCacheManager() {
-        return new ImagePullCacheManager() {
-            @Override
-            public ImagePullCache load() {
-                @SuppressWarnings({ "rawtypes", "unchecked" })
-                Properties userProperties = session.getUserProperties();
-                String pullCacheJson = userProperties.getProperty(CONTEXT_KEY_PREVIOUSLY_PULLED);
-                ImagePullCache cache = new ImagePullCache(pullCacheJson);
-                if (pullCacheJson == null) {
-                    userProperties.put(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-                }
-                return cache;
-            }
-
-            @Override
-            public void save(ImagePullCache cache) {
-                session.getUserProperties().setProperty(CONTEXT_KEY_PREVIOUSLY_PULLED, cache.toString());
-            }
-        };
     }
 
    /**
@@ -373,7 +362,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @param serviceHub context for accessing backends
      */
     protected abstract void executeInternal(ServiceHub serviceHub)
-        throws DockerAccessException, MojoExecutionException;
+        throws IOException, ExecException, MojoExecutionException;
 
     // =============================================================================================
 
@@ -396,8 +385,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return volumes;
     }
 
-
-
     // =================================================================================
 
     @Override
@@ -407,9 +394,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    protected PomLabel getPomLabel() {
+    protected GavLabel getGavLabel() {
         // Label used for this run
-        return new PomLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
+        return new GavLabel(project.getGroupId(), project.getArtifactId(), project.getVersion());
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {
@@ -421,15 +408,52 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return dispatcher;
     }
 
-    /**
-     * Try to get the registry from various configuration parameters
-     *
-     * @param imageConfig image config which might contain the registry
-     * @param specificRegistry specific registry
-     * @return the registry found or null if none could be extracted
-     */
-    protected String getConfiguredRegistry(ImageConfiguration imageConfig, String specificRegistry) {
-        return EnvUtil.findRegistry(new ImageName(imageConfig.getName()).getRegistry(), imageConfig.getRegistry(), specificRegistry, registry);
+    public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {
+        return new ImagePullManager(getSessionCacheStore(), imagePullPolicy, autoPull);
     }
+
+    private ImagePullManager.CacheStore getSessionCacheStore() {
+        return new ImagePullManager.CacheStore() {
+            @Override
+            public String get(String key) {
+                Properties userProperties = session.getUserProperties();
+                return userProperties.getProperty(key);
+            }
+
+            @Override
+            public void put(String key, String value) {
+                Properties userProperties = session.getUserProperties();
+                userProperties.setProperty(key, value);
+            }
+        };
+    }
+
+    private ImageConfiguration createSimpleDockerfileConfig(File dockerFile) {
+        // No configured name, so create one from maven GAV
+        String name = EnvUtil.getPropertiesWithSystemOverrides(project).getProperty("docker.name");
+        if (name == null) {
+            // Default name group/artifact:version (or 'latest' if SNAPSHOT)
+            name = "%g/%a:%l";
+        }
+
+        BuildImageConfiguration buildConfig =
+            new BuildImageConfiguration.Builder()
+                .dockerFile(dockerFile.getPath())
+                .build();
+
+        return new ImageConfiguration.Builder()
+            .name(name)
+            .buildConfig(buildConfig)
+            .build();
+    }
+
+    private ImageConfiguration addSimpleDockerfileConfig(ImageConfiguration image, File dockerfile) {
+        BuildImageConfiguration buildConfig =
+            new BuildImageConfiguration.Builder()
+                .dockerFile(dockerfile.getPath())
+                .build();
+        return new ImageConfiguration.Builder(image).buildConfig(buildConfig).build();
+    }
+
 
 }

@@ -7,6 +7,26 @@ This maven goal can be configured with the following top-level parameters:
 |===
 | Element | Description | Property
 
+| <<container-name, *containerNamePattern*>>
+| Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
+| `docker.containerNamePattern`
+
+| *keepContainer*
+| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `true`.
+| `docker.keepContainer`
+
+| *keepRunning*
+| If set to `true` all container will be kept running after `{plugin}:watch` has been stopped. By default this is set to `false`.
+| `docker.keepRunning`
+
+| *removeVolumes*
+| if set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are `true`.
+| `docker.removeVolumes`
+
+| *watchInterval*
+| Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.
+| `docker.watchInterval`
+
 | *watchMode*
 a| Watch mode specifies what should be watched
 
@@ -22,29 +42,13 @@ need any watching. `none` is best used on an per image level, see
 below how this can be specified.
 | `docker.watchMode`
 
-| *watchInterval*
-| Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.
-| `docker.watchInterval`
-
-| *watchPostGoal*
-| A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by `<postGoal>` in a `<watch>` configuration.
-|
-
 | *watchPostExec*
 | A command which is executed within the container after files are copied into this container when `watchMode` is `copy`. Note that this container must be running.
 |
 
-| *keepRunning*
-| If set to `true` all container will be kept running after `{plugin}:watch` has been stopped. By default this is set to `false`.
-| `docker.keepRunning`
-
-| *keepContainer*
-| As for `{plugin}:stop`, if this is set to `true` (and `keepRunning` is disabled) then all container will be removed after they have been stopped. The default is `true`.
-| `docker.keepContainer`
-
-| *removeVolumes*
-| if set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are `true`.
-| `docker.removeVolumes`
+| *watchPostGoal*
+| A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format `<pluginGroupId>:<pluginArtifactId>:<goal>` and the plugin must be configured in the `pom.xml`. For example a post-goal `io.fabric8:fabric8:delete-pods` will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by `<postGoal>` in a `<watch>` configuration.
+|
 |===
 
 Image specific watch configuration goes into an extra image-level `<watch>` section (i.e. `+<image><watch>...</watch></image>+`). The following parameters are recognized:

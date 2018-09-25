@@ -3,7 +3,6 @@ package io.fabric8.maven.docker.wait;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.QueryService;
-import io.fabric8.maven.docker.service.ServiceHub;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;

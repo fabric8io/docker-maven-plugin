@@ -18,7 +18,7 @@ package io.fabric8.maven.docker.access;/*
 import java.util.HashMap;
 import java.util.Map;
 
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 /**
  * @author roland
@@ -62,7 +62,7 @@ public class BuildOptions {
 
     public BuildOptions buildArgs(Map<String, String> buildArgs) {
         if (buildArgs != null && buildArgs.size() > 0) {
-            options.put("buildargs", new JSONObject(buildArgs).toString());
+            options.put("buildargs", JsonFactory.newJsonObject(buildArgs).toString());
         }
         return this;
     }

@@ -29,6 +29,8 @@ A container can bind (or "mount") volumes from various source when starting up: 
 
 In this example the container creates a new volume named  `/logs` on the container and mounts `/opt/host_export` from the host as `/opt/container_import` on the container. In addition all exported volumes from the container which has been created from the image `jolokia/docker-demo` are mounted directly into the container (with the same directory names under which the exporting container exposes these directories). This image must be also configured for this plugin. Instead of the full image name, an alias name can be used, too.
 
+If a volume name instead of a path is referenced to in `<bind>` and a <<docker:volume-create,volume configuration>> exists with this name, then this this volume is created upfront with the provided options instead of using default options.
+
 You can use Maven variables in the path specifications. This should even work for boot2docker and docker-machine:
 
 .Example with absolute paths

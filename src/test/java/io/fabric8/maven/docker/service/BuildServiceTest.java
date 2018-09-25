@@ -2,8 +2,6 @@ package io.fabric8.maven.docker.service;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Map;
-
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;

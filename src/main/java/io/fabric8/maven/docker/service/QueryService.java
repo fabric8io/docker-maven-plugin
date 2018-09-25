@@ -1,18 +1,13 @@
 package io.fabric8.maven.docker.service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.util.AutoPullMode;
-import io.fabric8.maven.docker.util.ImagePullCache;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.json.JSONObject;
 
 /**
  * Query service for getting image and container information from the docker dameon
@@ -96,11 +91,12 @@ public class QueryService {
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
+     * @param all whether to fetch all containers
      * @return list of <code>Container</code> objects
      * @throws DockerAccessException if the request fails
      */
-    public List<Container> getContainersForImage(final String image) throws DockerAccessException {
-        return docker.getContainersForImage(image);
+    public List<Container> getContainersForImage(final String image, final boolean all) throws DockerAccessException {
+        return docker.getContainersForImage(image, all);
     }
 
     /**
@@ -125,7 +121,7 @@ public class QueryService {
         long newest = 0;
         Container result = null;
 
-        for (Container container : getContainersForImage(image)) {
+        for (Container container : getContainersForImage(image, false)) {
             long timestamp = container.getCreated();
 
             if (timestamp < newest) {
@@ -173,57 +169,4 @@ public class QueryService {
         return docker.hasImage(name);
     }
 
-    /**
-     * Check whether an image needs to be pulled.
-     *
-     * @param mode the auto pull mode coming from the configuration
-     * @param imageName name of the image to check
-     * @param always whether to a alwaysPull mode would be active or is always ignored
-     * @param previouslyPulled cache holding all previously pulled images
-     * @return true if the image needs to be pulled, false otherwise
-     *
-     * @throws DockerAccessException
-     * @throws MojoExecutionException
-     */
-    public boolean imageRequiresAutoPull(String mode, String imageName, boolean always, ImagePullCache
-        previouslyPulled)
-        throws DockerAccessException, MojoExecutionException {
-
-        // The logic here is like this (see also #96):
-        // If the image is not available and mode is one of: ON, ALWAYS, ONCE --> pull
-        // If mode == ALWAYS and no build config is available (so its a pulled-image anyway) --> pull
-        // otherwise: don't pull
-        AutoPullMode autoPullMode = AutoPullMode.fromString(mode);
-        if (imageRequiresPull(autoPullMode, imageName, always, previouslyPulled)) {
-            return true;
-        }
-
-        if (hasImage(imageName)) {
-            return false;
-        }
-
-        throw new MojoExecutionException(
-                String.format("No image '%s' found, Please enable 'autoPull' or pull image '%s' yourself (docker pull %s)",
-                        imageName, imageName, imageName));
-    }
-
-    private boolean imageRequiresPull(AutoPullMode autoPullMode, String imageName, boolean always, ImagePullCache previouslyPulled)
-            throws DockerAccessException {
-
-        if (autoPullMode == AutoPullMode.ONCE && previouslyPulled.has(imageName)) {
-            return false;
-        }
-
-        return pullIfNotPresent(autoPullMode, imageName) || alwaysPull(autoPullMode, always);
-    }
-
-    // Check whether ALWAYS is active
-    private boolean alwaysPull(AutoPullMode autoPullMode, boolean always) {
-        return always && autoPullMode.alwaysPull();
-    }
-
-    // Check if an image is not loaded but should be pulled
-    private boolean pullIfNotPresent(AutoPullMode autoPull, String name) throws DockerAccessException {
-        return autoPull.doPullIfNotPresent() && !hasImage(name);
-    }
 }

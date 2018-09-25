@@ -1,6 +1,6 @@
 
 [[build-overview]]
-There are two different modes how Images can be built:
+There are two different modes how images can be built:
 
 .Inline plugin configuration
 With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <<external-configuration,External configuration>>. The XML configuration syntax is recommended because of its more structured and typed nature.
@@ -18,9 +18,9 @@ Alternatively an external Dockerfile template or Docker archive can be used. Thi
 All paths can be either absolute or relative paths (except when both `dockerFileDir` and `dockerFile` are provided in which case `dockerFile` must not be absolute). A relative path is looked up in `${project.basedir}/src/main/docker` by default. You can make it easily an absolute path by using `${project.basedir}` in your configuration.
 
 .Adding assemblies in Dockerfile mode
-Any additional files located in the `dockerFileDir` directory will also be added to the build context as well. 
-You can also use an assembly if specified in an <<build-assembly,assembly configuration>>. 
-However you need to add the files on your own in the Dockerfile with an `ADD` or `COPY` command.
+Any additional files located in the `dockerFileDir` directory will also be added to the build context as well.
+You can also use an assembly if specified in an <<build-assembly,assembly configuration>>.
+However, you need to add the files on your own in the Dockerfile with an `ADD` or `COPY` command.
 The files of the assembly are stored in a build context relative directory `maven/` but can be changed by changing the assembly name with the option `<name>` in the assembly configuration.
 
 E.g. the files can be added with
@@ -31,34 +31,46 @@ E.g. the files can be added with
 COPY maven/ /my/target/directory
 ----
 
-so that the assembly files will end up in `/my/target/directory` within the container. 
+so that the assembly files will end up in `/my/target/directory` within the container.
 
-If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
+If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
 
-If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as an http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
+If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
 
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 
+[[simple-dockerfile-build]]
+.Simple Dockerfile build
+
+When only a single image should be built with a Dockerfile no XML configuration is needed at all.
+All what need to be done is to place a `Dockerfile` into the top-level module directory, alongside to `pom.xml`.
+You can still configure <<global-configuration, global aspects>> in the plugin configuration, but as soon as you add an `<image>` in the XML configuration, you need to configure also the build explicitly.
+
+The image name is by default set from the Maven coordinates (`%g/%a:%l`, see <<image-name,Image Name >> for an explanation of the params which are essentially the Maven GAV)
+This name can be set with the property `docker.name`.
+
+If you want to add some `<run>` configuration to this image for starting it with `docker:run` then you can add an image configuration but without a `<build>` section in which case the Dockerfile will be picked up, too. This works only for a single image, though.
+
 [[build-filtering]]
 .Filtering
-fabric8-maven-plugin filters given Dockerfile with Maven properties, much like the `maven-resource-plugin` does. Filtering is enabled by default and can be switched off with a build config `<filter>false</filter>`. Properties which we want to replace are specified with the `${..}` syntax. 
+fabric8-maven-plugin filters given Dockerfile with Maven properties, much like the `maven-resource-plugin` does. Filtering is enabled by default and can be switched off with a build config `<filter>false</filter>`. Properties which we want to replace are specified with the `${..}` syntax.
 Replacement includes Maven project properties such as `${project.artifactId}`, properties set in the build, command-line properties, and system properties. Unresolved properties remain untouched.
 
 This partial replacement means that you can easily mix it with Docker build arguments and environment variable reference, but you need to be careful.
 If you want to be more explicit about the property delimiter to clearly separate Docker properties and Maven properties you can redefine the delimiter.
 In general, the `filter` option can be specified the same way as delimiters in the resource plugin.
-In particular,  if this configuration contains a * then the parts left, and right of the asterisks are used as delimiters. 
+In particular,  if this configuration contains a * then the parts left, and right of the asterisks are used as delimiters.
 
 For example, the default `<filter>${*}</filter>` parse Maven properties in the format that we know.
 If you specify a single character for `<filter>` then this delimiter is taken for both, the start and the end.
-E.g a `<filter>@</filter>` triggers on parameters in the format `@...@`, much like in the `maven-invoker-plugin`. 
+E.g a `<filter>@</filter>` triggers on parameters in the format `@...@`, much like in the `maven-invoker-plugin`.
 Use something like this if you want to clearly separate from Docker builds args.
 This form of property replacement works for Dockerfile only.
-For replacing other data in other files targeted for the Docker image, please use the `maven-resource-plugin` or an <<build-assembly,assembly configuration>> with filtering to make them available in the docker build context. 
+For replacing other data in other files targeted for the Docker image, please use the `maven-resource-plugin` or an <<build-assembly,assembly configuration>> with filtering to make them available in the docker build context.
 
 .Example
 The following example uses a Dockerfile in the directory
-`src/main/docker/demo` and replaces all properties in the format `@property@` within the Dockerfile. 
+`src/main/docker/demo` and replaces all properties in the format `@property@` within the Dockerfile.
 [source,xml]
 ----
 <plugin>
@@ -76,3 +88,62 @@ The following example uses a Dockerfile in the directory
  ...
 </plugin>
 ----
+
+[[build-plugin]]
+.Build Plugins
+
+This plugin supports so call *dmp-plugins* which are used during the build phase.
+dmp-plugins are enabled by just declaring a dependency in the plugin declaration:
+
+[source, xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>docker-maven-plugin</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>run-java-sh</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+  </dependencies>
+</plugin>
+----
+
+These plugins contain a descriptor `META-INF/maven/io.fabric8/dmp-plugin` with class names, line-by-line:
+
+[source]
+----
+io.fabric8.runsh.RunShLoader
+----
+
+During a build with `docker:build`, those classes are loaded and certain fixed method are called.
+
+The following methods are supported:
+
+[[build-plugin-methods]]
+[cols="1,5"]
+|===
+| Method | Description
+
+| *addExtraFiles*
+| A _static_ method called by dmp with a single `File` argument. This will point to a directory `docker-extra` which can be referenced easily by a Dockerfile or an assembly. A dmp plugin typically will create an own subdirectory to avoid a clash with other dmp-plugins.
+|===
+
+If a configured plugin does not provide method of this name and signature, then it will be simply ignored.
+Also, no interface needs to be implemented to keep the coupling low.
+
+The following official dmp-plugins are known and supported:
+
+[[build-plugins-official]]
+[cols="1,1,5"]
+|===
+| Name | G,A | Description
+
+| https://github.com/fabric8io-images/run-java[run-java.sh]
+| `fabric8.io`, `run-java`
+| General purpose startup script fo running Java applications. The dmp plugin creates a `target/docker-extra/run-java/run-java.sh` which can be included in a Dockerfile (see the example above). See the https://github.com/fabric8io-images/run-java[run-java.sh Documentation] for more details.
+|===
+
+Check out `samples/run-java` for a fully working example.

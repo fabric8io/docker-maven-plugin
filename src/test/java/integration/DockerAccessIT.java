@@ -58,7 +58,7 @@ public class DockerAccessIT {
     }
 
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
-        DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false");
+        DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false","false");
         return new DockerConnectionDetector(
             Collections.<DockerConnectionDetector.DockerHostProvider>singletonList(new DockerMachine(logger, machine)));
     }

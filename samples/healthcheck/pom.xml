@@ -102,7 +102,21 @@
               </build>
             </image>
             <image>
-              <alias>unhealthybox5</alias>
+              <alias>healthybox5</alias>
+              <name>busybox5</name>
+              <build>
+                <from>busybox</from>
+                <healthCheck>
+                  <interval>5m</interval>
+                  <timeout>3s</timeout>
+                  <startPeriod>30m</startPeriod>
+                  <retries>3</retries>
+                  <cmd>curl -f http://localhost/ || exit 1</cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>unhealthybox6</alias>
               <name>busybox5</name>
               <build>
                 <from>busybox</from>

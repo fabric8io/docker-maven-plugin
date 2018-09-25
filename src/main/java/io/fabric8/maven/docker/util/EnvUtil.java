@@ -8,15 +8,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.shared.utils.io.FileUtils;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
+import com.google.common.base.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.utils.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,6 +33,8 @@ public class EnvUtil {
     // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
     // docker installations.
     public static final String DOCKER_HTTPS_PORT = "2376";
+
+    public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
 
     private EnvUtil() {}
 
@@ -198,8 +197,24 @@ public class EnvUtil {
     }
 
     /**
+     * Return all properties in Maven project, merged with all System properties (-D flags sent to Maven).
+     *
+     * System properties always takes precedence.
+     *
+     * @param project Project to extract Properties from
+     * @return
+     */
+    public static Properties getPropertiesWithSystemOverrides(MavenProject project) {
+        Properties properties = new Properties(project.getProperties());
+        properties.putAll(System.getProperties());
+        return properties;
+    }
+
+    /**
      * Extract part of given properties as a map. The given prefix is used to find the properties,
      * the rest of the property name is used as key for the map.
+     *
+     * NOTE: If key is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored! This is reserved for combine policy tweaking.
      *
      * @param prefix prefix which specifies the part which should be extracted as map
      * @param properties properties to extract from
@@ -213,6 +228,10 @@ public class EnvUtil {
             String propName = (String) names.nextElement();
             if (propMatchesPrefix(prefixP, propName)) {
                 String mapKey = propName.substring(prefixP.length());
+                if(PROPERTY_COMBINE_POLICY_SUFFIX.equals(mapKey)) {
+                    continue;
+                }
+
                 ret.put(mapKey, properties.getProperty(propName));
             }
         }
@@ -223,6 +242,9 @@ public class EnvUtil {
      * Extract from given properties a list of string values. The prefix is used to determine the subset of the
      * given properties from which the list should be extracted, the rest is used as a numeric index. If the rest
      * is not numeric, the order is not determined (all those props are appended to the end of the list)
+     *
+     * NOTE: If suffix/index is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored!
+     * This is reserved for combine policy tweaking.
      *
      * @param prefix for selecting the properties from which the list should be extracted
      * @param properties properties from which to extract from
@@ -237,6 +259,11 @@ public class EnvUtil {
             String key = (String) names.nextElement();
             if (propMatchesPrefix(prefixP, key)) {
                 String index = key.substring(prefixP.length());
+
+                if(PROPERTY_COMBINE_POLICY_SUFFIX.equals(index)) {
+                    continue;
+                }
+
                 String value = properties.getProperty(key);
                 try {
                     Integer nrIndex = Integer.parseInt(index);
@@ -332,7 +359,12 @@ public class EnvUtil {
         return key.startsWith(prefix) && key.length() >= prefix.length();
     }
 
-    public static String findRegistry(String ... checkFirst) {
+    /**
+     * Return the first non null registry given. Use the env var DOCKER_REGISTRY as final fallback
+     * @param checkFirst list of registries to check
+     * @return registry found or null if none.
+     */
+    public static String firstRegistryOf(String ... checkFirst) {
         for (String registry : checkFirst) {
             if (registry != null) {
                 return registry;
@@ -340,6 +372,15 @@ public class EnvUtil {
         }
         // Check environment as last resort
         return System.getenv("DOCKER_REGISTRY");
+    }
+
+    // sometimes registries might be specified with https? schema, sometimes not
+    public static String ensureRegistryHttpUrl(String registry) {
+        if (registry.toLowerCase().startsWith("http")) {
+            return registry;
+        }
+        // Default to https:// schema
+        return "https://" + registry;
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
@@ -376,7 +417,7 @@ public class EnvUtil {
         }
     }
 
-    public static Date loadTimestamp(File tsFile) throws MojoExecutionException {
+    public static Date loadTimestamp(File tsFile) throws IOException {
         try {
             if (tsFile.exists()) {
                 String ts = FileUtils.fileRead(tsFile);
@@ -385,24 +426,24 @@ public class EnvUtil {
                 return null;
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Cannot read timestamp " + tsFile,e);
+            throw new IOException("Cannot read timestamp " + tsFile,e);
         }
     }
 
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
-    
+
     /**
      * Validate that the provided filename is a valid Windows filename.
-     * 
+     *
      * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
-     * 
+     *
      * @param filename the filename
      * @return filename is a valid Windows filename
      */
     public static boolean isValidWindowsFileName(String filename) {
-    	
+
         Pattern pattern = Pattern.compile(
             "# Match a valid Windows filename (unspecified file system).          \n" +
             "^                                # Anchor to start of string.        \n" +
@@ -415,12 +456,11 @@ public class EnvUtil {
             "  $                              # and end of string                 \n" +
             ")                                # End negative lookahead assertion. \n" +
             "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F\\ .]  # Last char is not a space or dot.  \n" +
-            "$                                # Anchor to end of string.            ", 
+            "[^<>:\"/\\\\|?*\\x00-\\x1F .]    # Last char is not a space or dot.  \n" +
+            "$                                # Anchor to end of string.            ",
             Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
         Matcher matcher = pattern.matcher(filename);
-        boolean isMatch = matcher.matches();
-        return isMatch;
+        return matcher.matches();
     }
 
 }

@@ -1,7 +1,7 @@
 
 When developing and testing applications you will often have to rebuild Docker images and restart containers. Typing `{plugin}:build` and `{plugin}:start` all the time is cumbersome. With `{plugin}:watch` you can enable automatic rebuilding of images and restarting of containers in case of updates.
 
-`{plugin}:watch` is the top-level goal which perform these tasks. There are two watch modes, which can be specified in multiple ways:
+`{plugin}:watch` is the top-level goal which performs these tasks. There are two watch modes, which can be specified in multiple ways:
 
 * `build` : Automatically rebuild one or more Docker images when one of the files selected by an assembly changes. This works for all files included directly in `assembly.xml` but also for arbitrary dependencies.
 

@@ -1,15 +1,19 @@
 package io.fabric8.maven.docker.access;
 
-import java.util.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import org.json.JSONException;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.UlimitConfig;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.Test;
-import org.junit.experimental.theories.DataPoints;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONParser;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 
@@ -37,7 +41,7 @@ public class ContainerHostConfigTest {
     }
 
     @Test
-    public void testUlimits() {
+    public void testUlimits() throws JSONException {
         Object data[] = {
             "{Ulimits: [{Name:bla, Hard:2048, Soft: 1024}]}", "bla", 2048, 1024,
             "{Ulimits: [{Name:bla, Soft: 1024}]}", "bla", null, 1024,
@@ -54,9 +58,8 @@ public class ContainerHostConfigTest {
                 data[1].toString().contains("=") ?
                     new UlimitConfig((String) data[1]) :
                     new UlimitConfig((String) data[1], (Integer) data[2], (Integer) data[3])));
-            JSONAssert.assertEquals((JSONObject) JSONParser.parseJSON((String) data[0]),
-                                    (JSONObject) hc.toJsonObject(),
-                                    false);
+            assertEquals(JsonFactory.newJsonObject((String) data[0]),
+                         hc.toJsonObject());
         }
     }
 
@@ -68,12 +71,12 @@ public class ContainerHostConfigTest {
         };
         for (int i = 0; i < data.length; i+=2) {
             ContainerHostConfig hc = new ContainerHostConfig();
-            JSONObject result = (JSONObject) hc.binds(Arrays.asList(data[i])).toJsonObject();
-            JSONObject expected = new JSONObject();
-            JSONArray binds = new JSONArray();
-            binds.put(data[i+1]);
-            expected.put("Binds",binds);
-            JSONAssert.assertEquals(expected,result,false);
+            JsonObject result = hc.binds(Arrays.asList(data[i])).toJsonObject();
+            JsonObject expected = new JsonObject();
+            JsonArray binds = new JsonArray();
+            binds.add(data[i+1]);
+            expected.add("Binds",binds);
+            assertEquals(expected, result);
         }
     }
 
@@ -85,14 +88,14 @@ public class ContainerHostConfigTest {
         };
         for (int i = 0; i < data.length; i +=2) {
             ContainerHostConfig hc = new ContainerHostConfig();
-            JSONObject result = (JSONObject) hc.tmpfs(Arrays.asList(data[i])).toJsonObject();
-            JSONObject expected = (JSONObject) JSONParser.parseJSON(data[i+1]);
-            JSONAssert.assertEquals(expected, result, false);
+            JsonObject result = hc.tmpfs(Arrays.asList(data[i])).toJsonObject();
+            JsonObject expected = JsonFactory.newJsonObject(data[i + 1]);
+            assertEquals(expected, result);
         }
     }
 
     @Test
-    public void testLogConfig() throws Exception {
+    public void testLogConfig() {
         ContainerHostConfig hc = new ContainerHostConfig();
         Map<String,String> opts = new HashMap<>();
         opts.put("gelf-address","udp://10.0.0.1:12201");
@@ -103,7 +106,10 @@ public class ContainerHostConfigTest {
             .build();
         hc.logConfig(logConfig);
 
-        JSONAssert.assertEquals("{LogConfig:{Config:{gelf-address:\"udp://10.0.0.1:12201\",labels:\"label1,label2\"},Type:gelf}}", (JSONObject) hc.toJsonObject(), false);
+    // TODO: Does order matter?
+    assertEquals(
+        "{\"LogConfig\":{\"Type\":\"gelf\",\"Config\":{\"gelf-address\":\"udp://10.0.0.1:12201\",\"labels\":\"label1,label2\"}}}",
+        hc.toJson());
     }
 
 }
