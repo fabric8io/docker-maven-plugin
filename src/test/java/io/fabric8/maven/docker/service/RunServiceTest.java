@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.service;
 
 import com.google.gson.JsonObject;
 
+import io.fabric8.maven.docker.config.VolumeConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
