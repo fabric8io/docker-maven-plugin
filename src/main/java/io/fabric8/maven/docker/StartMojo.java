@@ -31,6 +31,8 @@ import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.ImagePullManager;
@@ -343,6 +345,11 @@ public class StartMojo extends AbstractDockerMojo {
                                                          queryService.hasImage(imageConfig.getName()));
 
             NetworkConfig config = runConfig.getNetworkingConfig();
+            RunVolumeConfiguration runVolumeConfig = runConfig.getVolumeConfiguration();
+            if(!runVolumeConfig.getBind().isEmpty()) {
+                List<VolumeConfiguration> volumes = getVolumes();
+                runService.createVolumesAsPerVolumeBinds(hub, runVolumeConfig.getBind(), volumes);
+            }
             if (autoCreateCustomNetworks && config.isCustomNetwork()) {
                 runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
             }

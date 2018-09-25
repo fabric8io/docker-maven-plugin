@@ -29,6 +29,7 @@
 
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
+  - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
 
 * **0.25.1** (2018-04-12)
   - Fix regression which broke labels and env with space ([#988](https://github.com/fabric8io/docker-maven-plugin/issues/988))

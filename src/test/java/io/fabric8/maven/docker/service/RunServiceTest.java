@@ -2,7 +2,10 @@ package io.fabric8.maven.docker.service;
 
 import com.google.gson.JsonObject;
 
+import io.fabric8.maven.docker.config.VolumeConfiguration;
 import org.apache.commons.io.IOUtils;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,6 +50,12 @@ import static org.junit.Assert.assertTrue;
 public class RunServiceTest {
 
     private ContainerCreateConfig containerConfig;
+
+    @Mocked
+    private MavenProject project;
+
+    @Mocked
+    private MavenSession session;
 
     @Mocked
     private DockerAccess docker;
@@ -112,6 +121,11 @@ public class RunServiceTest {
     private String container = "testContainer";
     private int SHUTDOWN_WAIT = 500;
     private int KILL_AFTER = 1000;
+    private VolumeConfiguration volumeConfiguration = new VolumeConfiguration.Builder()
+            .name("sqlserver-backup-dev")
+            .driver("rexray")
+            .opts(Collections.singletonMap("size", "50"))
+            .build();
 
     @Test
     public void shutdownWithoutKeepingContainers() throws Exception {
@@ -261,6 +275,17 @@ public class RunServiceTest {
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, false);
     }
 
+    @Test
+    public void testVolumesDuringStart() throws DockerAccessException {
+        ServiceHub hub = new ServiceHubFactory().createServiceHub(project, session, docker, log, new LogOutputSpecFactory(true, true, null));
+        List<String> volumeBinds = Collections.singletonList("sqlserver-backup-dev:/var/opt/mssql/data");
+        List<VolumeConfiguration> volumeConfigurations = Collections.singletonList(volumeConfiguration);
+
+        List<String> createdVolumes = runService.createVolumesAsPerVolumeBinds(hub, volumeBinds, volumeConfigurations);
+
+        assertEquals(createdVolumes.get(0), volumeConfigurations.get(0).getName());
+        assertTrue(createdVolumes.contains(volumeConfigurations.get(0).getName()));
+    }
 
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
