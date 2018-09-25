@@ -17,6 +17,20 @@ package io.fabric8.maven.docker.service;
  * limitations under the License.
  */
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+
 import io.fabric8.maven.docker.access.ContainerCreateConfig;
 import io.fabric8.maven.docker.access.ContainerHostConfig;
 import io.fabric8.maven.docker.access.ContainerNetworkingConfig;
@@ -31,6 +45,7 @@ import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
@@ -38,25 +53,11 @@ import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
 
