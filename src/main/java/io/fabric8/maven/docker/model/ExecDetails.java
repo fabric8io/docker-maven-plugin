@@ -1,7 +1,7 @@
 package io.fabric8.maven.docker.model;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Model class holding details of the result of an exec command on a running container.
@@ -14,46 +14,48 @@ public class ExecDetails {
 
     private static final String PROCESS_CONFIG = "ProcessConfig";
 
-    private final JSONObject json;
+    private final JsonObject json;
 
-    public ExecDetails(JSONObject json) {
+    public ExecDetails(JsonObject json) {
         this.json = json;
     }
 
     public boolean isRunning() {
-        return json.getBoolean(RUNNING);
+        return json.get(RUNNING).getAsBoolean();
     }
 
     public Integer getExitCode() {
         if (isRunning()) {
             return null;
         }
-        return json.getInt(EXIT_CODE);
+        return json.get(EXIT_CODE).getAsInt();
     }
 
     public String getEntryPoint() {
         if (!json.has(PROCESS_CONFIG)) {
             return null;
         }
-        JSONObject processConfig = json.getJSONObject(PROCESS_CONFIG);
+
+        JsonObject processConfig = json.getAsJsonObject(PROCESS_CONFIG);
         if (!processConfig.has(ENTRY_POINT)) {
             return null;
         }
-        return processConfig.getString(ENTRY_POINT);
+
+        return processConfig.get(ENTRY_POINT).getAsString();
     }
 
     public String[] getArguments() {
         if (!json.has(PROCESS_CONFIG)) {
             return null;
         }
-        JSONObject processConfig = json.getJSONObject(PROCESS_CONFIG);
+        JsonObject processConfig = json.getAsJsonObject(PROCESS_CONFIG);
         if (!processConfig.has(ARGUMENTS)) {
             return null;
         }
-        JSONArray arguments = processConfig.getJSONArray(ARGUMENTS);
-        String[] result = new String[arguments.length()];
-        for (int i = 0; i < arguments.length(); i++) {
-            result[i] = arguments.getString(i);
+        JsonArray arguments = processConfig.getAsJsonArray(ARGUMENTS);
+        String[] result = new String[arguments.size()];
+        for (int i = 0; i < arguments.size(); i++) {
+            result[i] = arguments.get(i).getAsString();
         }
         return result;
     }

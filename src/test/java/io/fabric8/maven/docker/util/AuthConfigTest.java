@@ -1,14 +1,17 @@
 package io.fabric8.maven.docker.util;
 
+import com.google.gson.JsonObject;
+
+import org.apache.commons.codec.binary.Base64;
+import org.junit.Test;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
-import org.apache.commons.codec.binary.Base64;
-import org.json.JSONObject;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author roland
@@ -43,16 +46,16 @@ public class AuthConfigTest {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used
         assertEquals(
-                "eyJwYXNzd29yZCI6IiM-c2VjcmV0cz8_IiwiZW1haWwiOiJyb2xhbmRAam9sb2tpYS5vcmciLCJ1c2VybmFtZSI6InJvbGFuZCJ9",
+                "eyJ1c2VybmFtZSI6InJvbGFuZCIsInBhc3N3b3JkIjoiIz5zZWNyZXRzPz8iLCJlbWFpbCI6InJvbGFuZEBqb2xva2lhLm9yZyJ9",
                 config.toHeaderValue()
         );
 
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
 
-        JSONObject data = new JSONObject(header);
-        assertEquals("roland",data.getString("username"));
-        assertEquals("#>secrets??",data.getString("password"));
-        assertEquals("roland@jolokia.org",data.getString("email"));
+        JsonObject data = JsonFactory.newJsonObject(header);
+        assertEquals("roland",data.get("username").getAsString());
+        assertEquals("#>secrets??",data.get("password").getAsString());
+        assertEquals("roland@jolokia.org",data.get("email").getAsString());
         assertFalse(data.has("auth"));
     }
 }

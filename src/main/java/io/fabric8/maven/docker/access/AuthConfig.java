@@ -1,10 +1,11 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Map;
+import com.google.gson.JsonObject;
 
 import org.apache.commons.codec.binary.Base64;
-import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
 
 /**
  * Configuration object holding auth information for
@@ -26,9 +27,9 @@ public class AuthConfig {
 
     public AuthConfig(Map<String,String> params) {
         this(params.get("username"),
-             params.get("password"),
-             params.get("email"),
-             params.get("auth"));
+                params.get("password"),
+                params.get("email"),
+                params.get("auth"));
     }
 
     public AuthConfig(String username, String password, String email, String auth) {
@@ -74,7 +75,7 @@ public class AuthConfig {
     // ======================================================================================================
 
     private String createAuthEncoded() {
-        JSONObject ret = new JSONObject();
+        JsonObject ret = new JsonObject();
         putNonNull(ret, "username", username);
         putNonNull(ret, "password", password);
         putNonNull(ret, "email", email);
@@ -99,9 +100,9 @@ public class AuthConfig {
                 .replace('/', '_');
     }
 
-    private void putNonNull(JSONObject ret, String key, String value) {
+    private void putNonNull(JsonObject ret, String key, String value) {
         if (value != null) {
-            ret.put(key,value);
+            ret.addProperty(key,value);
         }
     }
 }

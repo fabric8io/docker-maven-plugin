@@ -1,5 +1,8 @@
 package io.fabric8.maven.docker.util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -22,8 +25,6 @@ import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.yaml.snakeyaml.Yaml;
 
@@ -46,6 +47,8 @@ public class AuthConfigFactory {
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final PlexusContainer container;
+    private final Gson gson;
+
     private Logger log;
     private static final String[] DEFAULT_REGISTRIES = new String[]{
             "docker.io", "index.docker.io", "registry.hub.docker.com"
@@ -58,6 +61,7 @@ public class AuthConfigFactory {
      */
     public AuthConfigFactory(PlexusContainer container) {
         this.container = container;
+        this.gson = new Gson();
     }
 
     public void setLog(Logger log) {
@@ -295,7 +299,7 @@ public class AuthConfigFactory {
     }
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
-        JSONObject dockerConfig = readDockerConfig();
+        JsonObject dockerConfig = readDockerConfig();
         if (dockerConfig == null) {
             return null;
         }
@@ -303,30 +307,30 @@ public class AuthConfigFactory {
 
         if (dockerConfig.has("credHelpers") || dockerConfig.has("credsStore")) {
             if (dockerConfig.has("credHelpers")) {
-                final JSONObject credHelpers = dockerConfig.getJSONObject("credHelpers");
+                final JsonObject credHelpers = dockerConfig.getAsJsonObject("credHelpers");
                 if (credHelpers.has(registryToLookup)) {
-                    return extractAuthConfigFromCredentialsHelper(registryToLookup, credHelpers.getString(registryToLookup));
+                    return extractAuthConfigFromCredentialsHelper(registryToLookup, credHelpers.get(registryToLookup).getAsString());
                 }
             }
             if (dockerConfig.has("credsStore")) {
-                return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.getString("credsStore"));
+                return extractAuthConfigFromCredentialsHelper(registryToLookup, dockerConfig.get("credsStore").getAsString());
             }
         }
 
         if (dockerConfig.has("auths")) {
-            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.getJSONObject("auths"));
+            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.getAsJsonObject("auths"));
         }
 
         return null;
     }
 
-    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JSONObject auths) {
-        JSONObject credentials = getCredentialsNode(auths,registryToLookup);
+    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JsonObject auths) {
+        JsonObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
-        String auth = credentials.getString("auth");
-        String email = credentials.has("email") ? credentials.getString("email") : null;
+        String auth = credentials.get("auth").getAsString();
+        String email = credentials.has(AUTH_EMAIL) ? credentials.get(AUTH_EMAIL).getAsString() : null;
         return new AuthConfig(auth,email);
     }
 
@@ -338,13 +342,13 @@ public class AuthConfigFactory {
         return credentialHelper.getAuthConfig(registryToLookup);
     }
 
-    private JSONObject getCredentialsNode(JSONObject auths,String registryToLookup) {
+    private JsonObject getCredentialsNode(JsonObject auths,String registryToLookup) {
         if (auths.has(registryToLookup)) {
-            return auths.getJSONObject(registryToLookup);
+            return auths.getAsJsonObject(registryToLookup);
         }
         String registryWithScheme = EnvUtil.ensureRegistryHttpUrl(registryToLookup);
         if (auths.has(registryWithScheme)) {
-            return auths.getJSONObject(registryWithScheme);
+            return auths.getAsJsonObject(registryWithScheme);
         }
         return null;
     }
@@ -432,15 +436,14 @@ public class AuthConfigFactory {
                           useOpenAuthModeProp, kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
 
     }
-
-
-    private JSONObject readDockerConfig() {
+   
+    private JsonObject readDockerConfig() {
         String dockerConfig = System.getenv("DOCKER_CONFIG");
 
         Reader reader = dockerConfig == null
                     ? getFileReaderFromDir(new File(getHomeDir(),".docker/config.json"))
                     : getFileReaderFromDir(new File(dockerConfig,"config.json"));
-        return reader != null ? new JSONObject(new JSONTokener(reader)) : null;
+        return reader != null ? gson.fromJson(reader, JsonObject.class) : null;
     }
 
     private Map<String,?> readKubeConfig() {
@@ -506,7 +509,7 @@ public class AuthConfigFactory {
         return new AuthConfig(
                 server.getUsername(),
                 decrypt(server.getPassword()),
-                extractFromServerConfiguration(server.getConfiguration(), "email"),
+                extractFromServerConfiguration(server.getConfiguration(), AUTH_EMAIL),
                 extractFromServerConfiguration(server.getConfiguration(), "auth")
         );
     }
