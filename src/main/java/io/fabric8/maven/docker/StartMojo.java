@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -29,12 +28,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.ImagePullManager;
@@ -300,7 +296,7 @@ public class StartMojo extends AbstractDockerMojo {
                     .serviceHubFactory(serviceHubFactory)
                     .showLogs(showLogs)
                     .containerNamePattern(containerNamePattern)
-                    .buildDate(getBuildTimestamp())
+                    .buildTimestamp(getBuildTimestamp())
                     .runService(runService)
                     .build();
 

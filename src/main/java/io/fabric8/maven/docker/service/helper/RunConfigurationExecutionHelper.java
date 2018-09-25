@@ -127,7 +127,7 @@ public class RunConfigurationExecutionHelper {
             return this;
         }
 
-        public Builder buildDate(Date date) {
+        public Builder buildTimestamp(Date date) {
             helper.buildDate = date;
             return this;
         }

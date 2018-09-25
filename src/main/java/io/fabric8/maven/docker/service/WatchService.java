@@ -28,7 +28,6 @@ import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.StringUtils;
 
 /**
@@ -224,39 +223,38 @@ public class WatchService {
     }
 
     private Task<ImageWatcher> defaultContainerRestartTask() {
-        return new Task<ImageWatcher>() {
-            @Override
-            public void execute(ImageWatcher watcher) throws Exception {
-                // Stop old one
-                ImageConfiguration imageConfig = watcher.getImageConfiguration();
-                PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
-                String id = watcher.getContainerId();
+        return watcher -> {
+            // Stop old one
+            ImageConfiguration imageConfig = watcher.getImageConfiguration();
+            PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
+            String id = watcher.getContainerId();
 
-                String optionalPreStop = getPreStopCommand(imageConfig);
-                if (optionalPreStop != null) {
-                    runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
-                }
-                runService.stopPreviouslyStartedContainer(id, false, false);
-
-                // Start new one
-                RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
-                        .dispatcher(watcher.watchContext.dispatcher)
-                        .follow(watcher.watchContext.follow)
-                        .log(log)
-                        .portMapping(mappedPorts)
-                        .pomLabel(watcher.watchContext.pomLabel)
-                        .project(watcher.watchContext.mojoParameters.getProject())
-                        .imageConfig(imageConfig)
-                        .serviceHub(watcher.watchContext.hub)
-                        .serviceHubFactory(watcher.watchContext.serviceHubFactory)
-                        .showLogs(watcher.watchContext.showLogs)
-                        .runService(runService)
-                        .build();
-
-                String containerId = helper.executeRunConfiguration();
-
-                watcher.setContainerId(containerId);
+            String optionalPreStop = getPreStopCommand(imageConfig);
+            if (optionalPreStop != null) {
+                runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
             }
+            runService.stopPreviouslyStartedContainer(id, false, false);
+
+            // Start new one
+            RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
+                    .dispatcher(watcher.watchContext.dispatcher)
+                    .follow(watcher.watchContext.follow)
+                    .log(log)
+                    .portMapping(mappedPorts)
+                    .pomLabel(watcher.watchContext.pomLabel)
+                    .project(watcher.watchContext.mojoParameters.getProject())
+                    .imageConfig(imageConfig)
+                    .serviceHub(watcher.watchContext.hub)
+                    .serviceHubFactory(watcher.watchContext.serviceHubFactory)
+                    .showLogs(watcher.watchContext.showLogs)
+                    .runService(runService)
+                    .containerNamePattern(watcher.watchContext.containerNamePattern)
+                    .buildTimestamp(watcher.watchContext.buildTimestamp)
+                    .build();
+
+            String containerId = helper.executeRunConfiguration();
+
+            watcher.setContainerId(containerId);
         };
     }
 
