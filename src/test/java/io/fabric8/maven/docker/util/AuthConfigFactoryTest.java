@@ -36,6 +36,7 @@ import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
 
 import static java.util.Collections.singletonMap;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.startsWith;
