@@ -13,6 +13,7 @@ import io.fabric8.maven.docker.util.PomLabel;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
+import java.util.Date;
 import java.util.Properties;
 
 public class RunConfigurationExecutionHelper {
@@ -21,6 +22,8 @@ public class RunConfigurationExecutionHelper {
     private ServiceHub hub;
     private boolean follow;
     private String showLogs;
+    private String containerNamePattern;
+    private Date buildDate;
     private MavenProject project;
     private ImageConfiguration imageConfig;
     private PomLabel pomLabel;
@@ -33,7 +36,7 @@ public class RunConfigurationExecutionHelper {
     public String executeRunConfiguration() throws DockerAccessException, MojoExecutionException, ExecException {
         final Properties projProperties = project.getProperties();
 
-        final String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties, project.getBasedir());
+        final String containerId = runService.createAndStartContainer(imageConfig, portMapping, pomLabel, projProperties, project.getBasedir(), containerNamePattern, buildDate);
 
         if (showLogs(imageConfig)) {
             dispatcher.trackContainerLog(containerId,
@@ -118,6 +121,18 @@ public class RunConfigurationExecutionHelper {
             helper.showLogs = showLogs;
             return this;
         }
+
+        public Builder containerNamePattern(String pattern) {
+            helper.containerNamePattern = pattern;
+            return this;
+        }
+
+        public Builder buildDate(Date date) {
+            helper.buildDate = date;
+            return this;
+        }
+
+
 
         public Builder dispatcher(LogDispatcher dispatcher) {
             helper.dispatcher = dispatcher;

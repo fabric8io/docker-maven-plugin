@@ -283,31 +283,30 @@ public class StartMojo extends AbstractDockerMojo {
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
-        startingContainers.submit(new Callable<StartedContainer>() {
-            @Override
-            public StartedContainer call() throws Exception {
-                
-                // Update port-mapping writer
-                portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
+        startingContainers.submit(() -> {
 
-                RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
-                        .dispatcher(dispatcher)
-                        .follow(follow)
-                        .log(log)
-                        .portMapping(portMapping)
-                        .pomLabel(getPomLabel())
-                        .project(project)
-                        .imageConfig(imageConfig)
-                        .serviceHub(hub)
-                        .serviceHubFactory(serviceHubFactory)
-                        .showLogs(showLogs)
-                        .runService(runService)
-                        .build();
+            // Update port-mapping writer
+            portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
-                String containerId = helper.executeRunConfiguration();
+            RunConfigurationExecutionHelper helper = new RunConfigurationExecutionHelper.Builder()
+                    .dispatcher(dispatcher)
+                    .follow(follow)
+                    .log(log)
+                    .portMapping(portMapping)
+                    .pomLabel(getPomLabel())
+                    .project(project)
+                    .imageConfig(imageConfig)
+                    .serviceHub(hub)
+                    .serviceHubFactory(serviceHubFactory)
+                    .showLogs(showLogs)
+                    .containerNamePattern(containerNamePattern)
+                    .buildDate(getBuildTimestamp())
+                    .runService(runService)
+                    .build();
 
-                return new StartedContainer(imageConfig, containerId);
-            }
+            String containerId = helper.executeRunConfiguration();
+
+            return new StartedContainer(imageConfig, containerId);
         });
     }
 
