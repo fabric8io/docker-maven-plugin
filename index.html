@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.26.0,</span>
-<span id="revdate">2018-05-17</span>
+<span id="revnumber">version 0.27.0,</span>
+<span id="revdate">2018-09-26</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -540,7 +540,12 @@ table.CodeRay td.code>pre{padding:0}
 </li>
 <li><a href="#installation">2. Installation</a></li>
 <li><a href="#global-configuration">3. Global configuration</a></li>
-<li><a href="#image-configuration">4. Image configuration</a></li>
+<li><a href="#image-configuration">4. Image configuration</a>
+<ul class="sectlevel2">
+<li><a href="#image-name">4.1. Image Names</a></li>
+<li><a href="#container-name">4.2. Container Names</a></li>
+</ul>
+</li>
 <li><a href="#maven-goals">5. Maven Goals</a>
 <ul class="sectlevel2">
 <li><a href="#docker:build">5.1. <strong>docker:build</strong></a>
@@ -759,7 +764,7 @@ table.CodeRay td.code>pre{padding:0}
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td><a href="#docker:run">Run configuration</a> defines how a container should be created from this image</td>
+<td><a href="#docker:start">Run configuration</a> defines how a container should be created from this image</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="7"></i><b>7</b></td>
@@ -840,7 +845,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.26.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.27.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1286,12 +1291,31 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 </tr>
 </tbody>
 </table>
-<div id="image-name-placeholders" class="paragraph">
-<div class="title">Name placeholders</div>
-<p>When specifying the name you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
+<div class="paragraph">
+<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present (except when you are using the <a href="#simple-dockerfile-build">simple Dockerfile build</a> mode). These are explained in details in the corresponding goal sections.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  ....
+  <span class="tag">&lt;images&gt;</span>
+    <span class="tag">&lt;image&gt;</span>
+      <span class="tag">&lt;name&gt;</span>%g/docker-demo:0.1<span class="tag">&lt;/name&gt;</span>
+      <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
+      <span class="tag">&lt;run&gt;</span>....<span class="tag">&lt;/run&gt;</span>
+      <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span>
+    <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="image-name">4.1. Image Names</h3>
+<div class="paragraph">
+<p>When specifying the image name in the configuration with the <code>&lt;name&gt;</code> field you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 4. Placeholders</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1325,23 +1349,63 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>Either a <code>&lt;build&gt;</code> or <code>&lt;run&gt;</code> section must be present (except when you are using the <a href="#simple-dockerfile-build">simple Dockerfile build</a> mode). These are explained in details in the corresponding goal sections.</p>
 </div>
-<div class="listingblock">
-<div class="title">Example</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
-  ....
-  <span class="tag">&lt;images&gt;</span>
-    <span class="tag">&lt;image&gt;</span>
-      <span class="tag">&lt;name&gt;</span>%g/docker-demo:0.1<span class="tag">&lt;/name&gt;</span>
-      <span class="tag">&lt;alias&gt;</span>service<span class="tag">&lt;/alias&gt;</span>
-      <span class="tag">&lt;run&gt;</span>....<span class="tag">&lt;/run&gt;</span>
-      <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span>
-    <span class="tag">&lt;/image&gt;</span>
-  <span class="tag">&lt;/images&gt;</span>
-<span class="tag">&lt;/configuration&gt;</span></code></pre>
+<div class="sect2">
+<h3 id="container-name">4.2. Container Names</h3>
+<div class="paragraph">
+<p>Similar to image name placeholders, for starting and stopping containers and alternate set of placeholders can be configured in order to the name the containers to create.</p>
+</div>
+<div class="paragraph">
+<p>These placeholders can be used in the top-level configuration value <code>containerNamePattern</code> which is used globally for every container that is created.
+This global pattern can be overwritten individually by each image&#8217;s <a href="#config-image-run"><strong>run</strong></a> configuration.
+If neither is given, then by default the pattern <code>%n-%a</code> is used.</p>
+</div>
+<div class="paragraph">
+<p>When specifying the container name pattern the following placeholders can be used:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Placeholder</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%a</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The <code>&lt;alias&gt;</code> of an image which must be set. The alias is set in the top-level image configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%n</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the imag&#8217;s short name from which this container is created. "Sanitized" means that any non letter, digit, dot or dash is replaced by an underscore.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The build time stamp. This is the timestamp which created during the building of an image and locally cached. A rebuild of the image will update the timestamp.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%i</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An index which is incremented if a container has already been created. With this parameter it is easily possible to have multiple, similar containers. See the example below for more details.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>You can combine the placeholders in any combination and will be resolved during <code>docker:start</code>, <code>docker:stop</code> and <code>docker:watch</code>.</p>
+</div>
+<div class="paragraph">
+<p>The following example is using a container name pattern of <code>%n-%i</code> which is also the default.
+Given an image <code>fabric8io/dmp-sample-jolokia:latest</code>, then during <code>mvn docker:start</code> a container with the name <code>dmp-sample-jolokia-1</code> is first tried.
+If there is already a container with this name, then <code>dmp-sample-jolokia-2</code> is the second attempt.
+This goes on until a "free" name is found.</p>
+</div>
+<div class="paragraph">
+<p>Similar, when stopping containers with <code>mvn docker:stop</code> then only the container with the highest index is stopped.
+However, if you don&#8217;t use an index via <code>%i</code> then <em>all</em> containers started with <code>docker:start</code> are stopped.
+Use <code>mvn docker:stop -Ddocker.allContainers</code> to also stop every container named via a <code>%i</code> pattern.</p>
 </div>
 </div>
 </div>
@@ -1354,7 +1418,7 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 in the next sections.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 5. Plugin Goals</caption>
+<caption class="title">Table 4. Plugin Goals</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 42.8571%;">
@@ -1502,8 +1566,11 @@ All what need to be done is to place a <code>Dockerfile</code> into the top-leve
 You can still configure <a href="#global-configuration">global aspects</a> in the plugin configuration, but as soon as you add an <code>&lt;image&gt;</code> in the XML configuration, you need to configure also the build explicitly.</p>
 </div>
 <div class="paragraph">
-<p>The image name is by default set from the Maven coordinates (<code>%g/%a:%l</code>, see <a href="#image-name-placeholders">Name Placeholders</a> for an explanation of the params which are essentially the Maven GAV)
+<p>The image name is by default set from the Maven coordinates (<code>%g/%a:%l</code>, see <a href="#image-name">Image Name </a> for an explanation of the params which are essentially the Maven GAV)
 This name can be set with the property <code>docker.name</code>.</p>
+</div>
+<div class="paragraph">
+<p>If you want to add some <code>&lt;run&gt;</code> configuration to this image for starting it with <code>docker:run</code> then you can add an image configuration but without a <code>&lt;build&gt;</code> section in which case the Dockerfile will be picked up, too. This works only for a single image, though.</p>
 </div>
 <div id="build-filtering" class="paragraph">
 <div class="title">Filtering</div>
@@ -1562,7 +1629,7 @@ dmp-plugins are enabled by just declaring a dependency in the plugin declaration
     <span class="tag">&lt;dependency&gt;</span>
       <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
       <span class="tag">&lt;artifactId&gt;</span>run-java-sh<span class="tag">&lt;/artifactId&gt;</span>
-      <span class="tag">&lt;version&gt;</span>1.2.1<span class="tag">&lt;/version&gt;</span>
+      <span class="tag">&lt;version&gt;</span>1.2.2<span class="tag">&lt;/version&gt;</span>
     <span class="tag">&lt;/dependency&gt;</span>
   <span class="tag">&lt;/dependencies&gt;</span>
 <span class="tag">&lt;/plugin&gt;</span></code></pre>
@@ -1638,7 +1705,7 @@ Also, no interface needs to be implemented to keep the coupling low.</p>
 of an image configuration. The following configuration options are supported:</p>
 </div>
 <table id="config-image-build" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 6. Build configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
+<caption class="title">Table 5. Build configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1665,7 +1732,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildOptions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 <a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>nocache</code>, <code>cleanup</code> for <code>forcerm=1</code> and <code>buildArgs</code>) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>nocache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -1833,7 +1900,7 @@ remote API.</p>
 <p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
 </div>
 <table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 7. Assembly Configuration (<a href="#config-image">&lt;image&gt; </a> : <a href="#config-image-build">&lt;build&gt; </a>)</caption>
+<caption class="title">Table 6. Assembly Configuration (<a href="#config-image">&lt;image&gt; </a> : <a href="#config-image-build">&lt;build&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -1978,7 +2045,7 @@ predefined assembly descriptor. The following symbolic names can be
 used for <code>descriptorRef</code>:</p>
 </div>
 <table id="build-assembly-descriptor-refs" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 8. Predefined Assembly Descriptors</caption>
+<caption class="title">Table 7. Predefined Assembly Descriptors</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 75%;">
@@ -2136,7 +2203,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <p>An entry point or command can be specified in two alternative formats:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 9. Entrypoint and Command Configuration</caption>
+<caption class="title">Table 8. Entrypoint and Command Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2247,7 +2314,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>The healtcheck configuration can have the following options</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 10. Healthcheck Configuration</caption>
+<caption class="title">Table 9. Healthcheck Configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2319,7 +2386,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.&lt;alias&gt;.&lt;prop&gt;</code> where <code>&lt;alias&gt;</code> is the name of the container (see below) and <code>&lt;prop&gt;</code> is one of the following container properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 11. Properties provided</caption>
+<caption class="title">Table 10. Properties provided</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2357,7 +2424,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>In addition to the <a href="#global-configuration">Global configuration</a>, this goal supports the following global configuration options.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 12. Start options</caption>
+<caption class="title">Table 11. Start options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -2371,6 +2438,11 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 </thead>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#container-name"><strong>containerNamePattern</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default pattern for naming all containers when they are created. See <a href="#container-name">Container Names</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>showLogs</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">In order to switch on globally the logs <strong>showLogs</strong> can be used as global configuration (i.e. outside of <code>&lt;images&gt;</code>). If set it will print out all standard
@@ -2389,7 +2461,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>The <code>&lt;run&gt;</code> configuration element knows the following sub elements:</p>
 </div>
 <table id="config-image-run" class="tableblock frame-all grid-all spread">
-<caption class="title">Table 13. Run configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
+<caption class="title">Table 12. Run configuration (<a href="#config-image">&lt;image&gt; </a>)</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2412,6 +2484,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>cmd</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Command which should be executed at the end of the container&#8217;s startup. If not given, the image&#8217;s default command is used. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#container-name"><strong>containerNamePattern</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pattern for naming the container when it is created. See <a href="#container-name">Container Naming Strategy</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>domainname</strong></p></td>
@@ -2476,7 +2552,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namingStrategy</strong></p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Naming strategy for how the container name is created:</p>
+<p><strong>This option is deprecated, please use a <code>containerNamePattern</code> instead</strong> Naming strategy for how the container name is created:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -2658,7 +2734,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>A <code>port</code> stanza may take one of the following forms:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 14. Port mapping format</caption>
+<caption class="title">Table 13. Port mapping format</caption>
 <colgroup>
 <col style="width: 28.5714%;">
 <col style="width: 71.4286%;">
@@ -2781,7 +2857,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>The <code>&lt;network&gt;</code> element in the <a href="#start-configuration">&lt;run&gt; </a> configuration section can be used to configure the network mode of the container. This is now the preferred way for linking containers together. It knows the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 15. Network configuration</caption>
+<caption class="title">Table 14. Network configuration</caption>
 <colgroup>
 <col style="width: 12.5%;">
 <col style="width: 87.5%;">
@@ -2887,7 +2963,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>Specify the behavior to apply when the container exits. These values can be specified withing a <code>&lt;restartPolicy&gt;</code> section with the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 16. Restart Policy configuration</caption>
+<caption class="title">Table 15. Restart Policy configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2931,7 +3007,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 <p>A container can bind (or "mount") volumes from various source when starting up: Either from a directory of the host system or from another container which exports one or more directories. The mount configuration is specified within a <code>&lt;volumes&gt;</code> section of the run configuration. It can contain the following sub elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 17. Volume configuration</caption>
+<caption class="title">Table 16. Volume configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -2969,6 +3045,9 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 <div class="paragraph">
 <p>In this example the container creates a new volume named  <code>/logs</code> on the container and mounts <code>/opt/host_export</code> from the host as <code>/opt/container_import</code> on the container. In addition all exported volumes from the container which has been created from the image <code>jolokia/docker-demo</code> are mounted directly into the container (with the same directory names under which the exporting container exposes these directories). This image must be also configured for this plugin. Instead of the full image name, an alias name can be used, too.</p>
+</div>
+<div class="paragraph">
+<p>If a volume name instead of a path is referenced to in <code>&lt;bind&gt;</code> and a <a href="#docker:volume-create">volume configuration</a> exists with this name, then this this volume is created upfront with the provided options instead of using default options.</p>
 </div>
 <div class="paragraph">
 <p>You can use Maven variables in the path specifications. This should even work for boot2docker and docker-machine:</p>
@@ -3013,7 +3092,7 @@ some condition is met. These conditions can be specified within a
 <code>&lt;wait&gt;</code> section which the following sub-elements:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 18. Wait configuration</caption>
+<caption class="title">Table 17. Wait configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3160,7 +3239,7 @@ output of an container and blocks until the pattern is matched. You can use <cod
 <p>When running containers the standard output and standard error of the container can be printed out. Several options are available for configuring the log output:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Logging configuration</caption>
+<caption class="title">Table 18. Logging configuration</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3302,7 +3381,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Stop configuration</caption>
+<caption class="title">Table 19. Stop configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3317,6 +3396,16 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>allContainers</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stops and removes any container that matches an image defined in the current project&#8217;s configuration. This was the default behavior of the plugin prior up to version 0.13.6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.allContainers</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#container-name"><strong>containerNamePattern</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default pattern for naming all containers when they are created. See <a href="#container-name">Container Names</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> not destroy container after they have been stopped. Default is false.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
@@ -3330,11 +3419,6 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are true.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>allContainers</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Stops and removes any container that matches an image defined in the current project&#8217;s configuration. This was the default behavior of the plugin prior up to version 0.13.6</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.allContainers</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3355,7 +3439,7 @@ the global option <code>filter</code> (see <a href="#global-configuration">Globa
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Push options</caption>
+<caption class="title">Table 20. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3465,7 +3549,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Watch configuration</caption>
+<caption class="title">Table 21. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3479,6 +3563,31 @@ to do this manually.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#container-name"><strong>containerNamePattern</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default pattern for naming all containers when they are created. See <a href="#container-name">Container Names</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">As for <code>docker:stop</code>, if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all container will be removed after they have been stopped. The default is <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> all container will be kept running after <code>docker:watch</code> has been stopped. By default this is set to <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchInterval</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchInterval</code></p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchMode</strong></p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
@@ -3511,34 +3620,14 @@ below how this can be specified.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchMode</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchInterval</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Interval in milliseconds how  often to check for changes, which must be larger than 100ms. The default is 5 seconds.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.watchInterval</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostGoal</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</p></td>
-<td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostExec</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A command which is executed within the container after files are copied into this container when <code>watchMode</code> is <code>copy</code>. Note that this container must be running.</p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepRunning</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> all container will be kept running after <code>docker:watch</code> has been stopped. By default this is set to <code>false</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepRunning</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>keepContainer</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">As for <code>docker:stop</code>, if this is set to <code>true</code> (and <code>keepRunning</code> is disabled) then all container will be removed after they have been stopped. The default is <code>true</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.keepContainer</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">if set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are <code>true</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>watchPostGoal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A maven goal which should be called if a rebuild or a restart has been performed. This goal must have the format <code>&lt;pluginGroupId&gt;:&lt;pluginArtifactId&gt;:&lt;goal&gt;</code> and the plugin must be configured in the <code>pom.xml</code>. For example a post-goal <code>io.fabric8:fabric8:delete-pods</code> will trigger the deletion of PODs in Kubernetes which in turn triggers are new start of a POD within the Kubernetes cluster. The value specified here is the the default post goal which can be overridden by <code>&lt;postGoal&gt;</code> in a <code>&lt;watch&gt;</code> configuration.</p></td>
+<td class="tableblock halign-left valign-top"></td>
 </tr>
 </tbody>
 </table>
@@ -3546,7 +3635,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. Watch configuration for a single image</caption>
+<caption class="title">Table 22. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3630,7 +3719,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 You can tune this by setting the property <code>removeMode</code> (property: <code>docker.removeMode</code>) to one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. removeMode Values</caption>
+<caption class="title">Table 23. removeMode Values</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3686,7 +3775,7 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Remove options</caption>
+<caption class="title">Table 24. Remove options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3719,7 +3808,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Logging options</caption>
+<caption class="title">Table 25. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -3833,7 +3922,7 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <p>Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Save options</caption>
+<caption class="title">Table 26. Save options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3884,7 +3973,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
     <span class="tag">&lt;volumes&gt;</span>
        <span class="tag">&lt;volume&gt;</span>
          <span class="tag">&lt;name&gt;</span>temp-volume<span class="tag">&lt;/name&gt;</span>
-         <span class="tag">&lt;driver&gt;</span>local<span class="tag">&lt;/Driver&gt;</span>
+         <span class="tag">&lt;driver&gt;</span>local<span class="tag">&lt;/driver&gt;</span>
          <span class="tag">&lt;opts&gt;</span>
            <span class="tag">&lt;type&gt;</span>tmpfs<span class="tag">&lt;/type&gt;</span>
            <span class="tag">&lt;device&gt;</span>tmpfs<span class="tag">&lt;/device&gt;</span>
@@ -3905,7 +3994,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Volume configuration</caption>
+<caption class="title">Table 27. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -3966,7 +4055,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Volume configuration</caption>
+<caption class="title">Table 28. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -4052,7 +4141,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. 
 when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. External properties</caption>
+<caption class="title">Table 29. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4426,7 +4515,7 @@ configuration in the XML/POM file. This can be changed by adding the <code>&lt;m
 configuration (since version 0.25.0), which can have one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Property mode</caption>
+<caption class="title">Table 30. Property mode</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4757,7 +4846,7 @@ Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</cod
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 32. Docker compose configuration</caption>
+<caption class="title">Table 31. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -5028,7 +5117,7 @@ from an external credentials store, such as the native keychain of the operating
 <a href="https://docs.docker.com/engine/reference/commandline/login/#credentials-store">the docker login documentation</a>.</p>
 </div>
 <div class="paragraph">
-<p>As a final fallback, this plugin consults <code>~/.docker/config.json</code> and reads credentials stored directly within this
+<p>As a final fallback, this plugin consults <code>$DOCKER_CONFIG/config.json</code> if <code>DOCKER_CONFIG</code> is set, or <code>~/.docker/config.json</code> if not, and reads credentials stored directly within this
 file. This unsafe behavior happened when connecting to a registry with the command <code>docker login</code> from the command line
 with older versions of docker (pre 1.13.0) or when docker is not configured to use a
 <a href="https://docs.docker.com/engine/reference/commandline/login/#credentials-store">credential store</a>.</p>
@@ -5116,6 +5205,9 @@ available as well as the configuration option <code>&lt;useOpenShiftAuth&gt;</co
 an <code>&lt;pull&gt;</code> or <code>&lt;push&gt;</code> section within the <code>&lt;authConfig&gt;</code>
 configuration.</p>
 </div>
+<div class="paragraph">
+<p>If <code>useOpenShiftAuth</code> is enabled then the OpenShift Konfiguration will be looked up in <code>$KUBECONFIG</code> or, if this environment variable is not set, in <code>~/.kube/config</code>.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="password-encryption">8.3. Password encryption</h3>
@@ -5149,6 +5241,9 @@ password.</p>
 <p>Some docker registries require additional steps to authenticate.
 <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html">Amazon ECR</a> requires using an IAM access key to obtain temporary docker login credentials.
 The <code>docker:push</code> and <code>docker:pull</code> goals automatically execute this exchange for any registry of the form <em>&lt;awsAccountId&gt;</em> <strong>.dkr.ecr.</strong> <em>&lt;awsRegion&gt;</em> <strong>.amazonaws.com</strong>, unless the <code>skipExtendedAuth</code> configuration (<code>docker.skip.extendedAuth</code> property) is set true.</p>
+</div>
+<div class="paragraph">
+<p>Note that for an ECR repository with URI <code>123456789012.dkr.ecr.eu-west-1.amazonaws.com/example/image</code> the d-m-p&#8217;s <code>docker.registry</code> should be set to <code>123456789012.dkr.ecr.eu-west-1.amazonaws.com</code> and <code>example/image</code> is the <code>&lt;name&gt;</code> of the image.</p>
 </div>
 <div class="paragraph">
 <p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
@@ -5218,8 +5313,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.26.0<br>
-Last updated 2018-05-17 01:03:36 UTC
+Version 0.27.0<br>
+Last updated 2018-09-26 15:36:13 UTC
 </div>
 </div>
 </body>
