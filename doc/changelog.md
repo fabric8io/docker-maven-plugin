@@ -1,17 +1,17 @@
 # ChangeLog
 
-* **0.27-SNAPSHOT**
+* **0.27.0** (2018-09-26)
   - Jump to Java 8 as minimal Java version
-  - Fix NPE in docker:remove-volumes when no volume configuration is given (#1086)
-  - Fix NPE when no networks are configured (#1055)
-  - Fix Base64 encoding for X-Registry-Auth used for Docker authentication (#1084)
-  - Fix property configuration based's build detection (#1078)
-  - Introduce container name patterns for naming containers (#931)
-  - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials (#1083)
-  - Change from org.json with Gson for less restrictive licensing (#1016) (#1064)
-  - Fix missing actions in a watch restart (#1070)
+  - Fix NPE in docker:remove-volumes when no volume configuration is given ([#1086](https://github.com/fabric8io/docker-maven-plugin/issues/1086))
+  - Fix NPE when no networks are configured ([#1055](https://github.com/fabric8io/docker-maven-plugin/issues/1055))
+  - Fix Base64 encoding for X-Registry-Auth used for Docker authentication ([#1084](https://github.com/fabric8io/docker-maven-plugin/issues/1084))
+  - Fix property configuration based's build detection ([#1078](https://github.com/fabric8io/docker-maven-plugin/issues/1078))
+  - Introduce container name patterns for naming containers ([#931](https://github.com/fabric8io/docker-maven-plugin/issues/931))
+  - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials ([#1083](https://github.com/fabric8io/docker-maven-plugin/issues/1083))
+  - Change from org.json with Gson for less restrictive licensing ([#1016](https://github.com/fabric8io/docker-maven-plugin/issues/1016)) ([#1064](https://github.com/fabric8io/docker-maven-plugin/issues/1064))
+  - Fix missing actions in a watch restart ([#1070](https://github.com/fabric8io/docker-maven-plugin/issues/1070))
   - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
-  - Fix logging failure on Windows (#873)
+  - Fix logging failure on Windows ([#873](https://github.com/fabric8io/docker-maven-plugin/issues/873))
 
 * **0.26.1** (2018-07-20)
   - Simple Dockerfile triggered also when only a single run section is given

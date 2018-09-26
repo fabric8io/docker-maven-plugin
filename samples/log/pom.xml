@@ -10,16 +10,23 @@
   talk to each other via their netAlias names.
   -->
 
+  <parent>
+    <groupId>io.fabric8.dmp.samples</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.27.0</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+
   <groupId>io.fabric8</groupId>
-  <artifactId>dmp-log</artifactId>
-  <version>0.21-SNAPSHOT</version>
+  <artifactId>dmp-sample-log</artifactId>
+  <version>0.27.0</version>
 
   <build>
     <plugins>
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>0.21.0</version>
         <configuration>
           <verbose>true</verbose>
           <autoPull>always</autoPull>
