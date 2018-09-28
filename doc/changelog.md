@@ -2,7 +2,8 @@
 
 * **0.27-SNAPSHOT**
   - Fix NPE when no volume configuration is present (#1091)
-  
+  - Allow credentialhelper look up the registry without scheme prefix (#1068)
+
 * **0.27.0** (2018-09-26)
   - Jump to Java 8 as minimal Java version
   - Fix NPE in docker:remove-volumes when no volume configuration is given ([#1086](https://github.com/fabric8io/docker-maven-plugin/issues/1086))
@@ -34,7 +35,7 @@
 
 * **0.25.2** (2018-04-14)
   - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
-  
+
 * **0.25.1** (2018-04-12)
   - Fix regression which broke labels and env with space ([#988](https://github.com/fabric8io/docker-maven-plugin/issues/988))
   - Fix and enhanced zero-config Dockerfile mode
