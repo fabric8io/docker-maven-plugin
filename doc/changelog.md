@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.27-SNAPSHOT**
+  - Fix NPE when no volume configuration is present (#1091)
+  
 * **0.27.0** (2018-09-26)
   - Jump to Java 8 as minimal Java version
   - Fix NPE in docker:remove-volumes when no volume configuration is given ([#1086](https://github.com/fabric8io/docker-maven-plugin/issues/1086))
