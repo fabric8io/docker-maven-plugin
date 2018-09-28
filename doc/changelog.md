@@ -12,6 +12,7 @@
 
   - Fix NPE regression related to volumes (again) (#1091)
   - Fix NPE when stopping containers with autoCreateCustomNetworks (#1097)
+  - Smarter API version handling (#1060)
   - Fix regression when calling the credential helper for authentication, leading to an exception because of the usage of an already shutdown executor service (#1098)
   - Add support for CPU configurations with compose (#1102)
 
