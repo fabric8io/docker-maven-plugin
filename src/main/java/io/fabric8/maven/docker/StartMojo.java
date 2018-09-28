@@ -11,6 +11,7 @@ package io.fabric8.maven.docker;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -345,10 +346,10 @@ public class StartMojo extends AbstractDockerMojo {
                                                          queryService.hasImage(imageConfig.getName()));
 
             NetworkConfig config = runConfig.getNetworkingConfig();
-            RunVolumeConfiguration runVolumeConfig = runConfig.getVolumeConfiguration();
-            if(!runVolumeConfig.getBind().isEmpty()) {
+            List<String> bindMounts = extractBindMounts(runConfig.getVolumeConfiguration());
+            if(!bindMounts.isEmpty()) {
                 List<VolumeConfiguration> volumes = getVolumes();
-                runService.createVolumesAsPerVolumeBinds(hub, runVolumeConfig.getBind(), volumes);
+                runService.createVolumesAsPerVolumeBinds(hub, bindMounts, volumes);
             }
             if (autoCreateCustomNetworks && config.isCustomNetwork()) {
                 runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
@@ -357,6 +358,13 @@ public class StartMojo extends AbstractDockerMojo {
             updateAliasesSet(imageAliases, imageConfig.getAlias());
         }
         return imagesWaitingToStart;
+    }
+
+    private List<String> extractBindMounts(RunVolumeConfiguration volumeConfiguration) {
+        if (volumeConfiguration == null) {
+            return Collections.emptyList();
+        }
+        return volumeConfiguration.getBind() != null ? volumeConfiguration.getBind() : Collections.emptyList();
     }
 
     private String determinePullPolicy(RunImageConfiguration runConfig) {
