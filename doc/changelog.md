@@ -1,8 +1,8 @@
 # ChangeLog
 
-* **0.27-SNAPSHOT**
-  - Fix NPE when no volume configuration is present (#1091)
-  - Allow credentialhelper look up the registry without scheme prefix (#1068)
+* **0.27.1** (2018-09-28)
+  - Fix NPE when no volume configuration is present ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
+  - Allow credentialhelper look up the registry without scheme prefix ([#1068](https://github.com/fabric8io/docker-maven-plugin/issues/1068))
 
 * **0.27.0** (2018-09-26)
   - Jump to Java 8 as minimal Java version
