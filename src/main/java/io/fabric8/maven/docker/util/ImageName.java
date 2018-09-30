@@ -65,9 +65,7 @@ public class ImageName {
         if (!matcher.matches()) {
             throw new IllegalArgumentException(fullName + " is not a proper image name ([registry/][repo][:port]");
         }
-        tag = givenTag != null ?
-                givenTag :
-                matcher.groupCount() > 1 ? matcher.group(2) : null;
+        tag = givenTag != null ? givenTag : matcher.group(2);
         String rest = matcher.group(1);
 
         String[] parts = rest.split("\\s*/\\s*");
