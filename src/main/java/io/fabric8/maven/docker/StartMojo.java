@@ -347,8 +347,8 @@ public class StartMojo extends AbstractDockerMojo {
 
             NetworkConfig config = runConfig.getNetworkingConfig();
             List<String> bindMounts = extractBindMounts(runConfig.getVolumeConfiguration());
-            if(!bindMounts.isEmpty()) {
-                List<VolumeConfiguration> volumes = getVolumes();
+            List<VolumeConfiguration> volumes = getVolumes();
+            if(!bindMounts.isEmpty() && volumes != null) {
                 runService.createVolumesAsPerVolumeBinds(hub, bindMounts, volumes);
             }
             if (autoCreateCustomNetworks && config.isCustomNetwork()) {
