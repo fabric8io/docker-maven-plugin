@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -544,31 +545,30 @@ public class RunService {
      * a VolumeConfiguration exists
      *
      * @param hub Service hub
-     * @param volumeBinds volume binds present in ImageConfiguration
-     * @param volumesConfigs VolumeConfigs present
+     * @param binds volume binds present in ImageConfiguration
+     * @param volumes VolumeConfigs present
      * @return List of volumes created
      * @throws DockerAccessException
      */
-    public List<String> createVolumesAsPerVolumeBinds(ServiceHub hub, List<String> volumeBinds, List<VolumeConfiguration> volumesConfigs)
+    public List<String> createVolumesAsPerVolumeBinds(ServiceHub hub, List<String> binds, List<VolumeConfiguration> volumes)
             throws DockerAccessException {
-        Map<String, Integer> indexMap = new HashMap();
+
+        Map<String, Integer> indexMap = new HashMap<>();
         List<String> volumesCreated = new ArrayList<>();
 
-        for(Integer index = 0; index < volumesConfigs.size(); index++) {
-            indexMap.put(volumesConfigs.get(index).getName(), index);
+        for (int index = 0; index < volumes.size(); index++) {
+            indexMap.put(volumes.get(index).getName(), index);
         }
 
-        for(String volumeBind : volumeBinds) {
-            if(volumeBind.contains(":")) {
-                volumeBind = volumeBind.substring(0, volumeBind.indexOf(':'));
-            }
-            Integer volumeConfigIndex = indexMap.get(volumeBind);
-            if(volumeConfigIndex != null && volumeConfigIndex >= 0 && volumeConfigIndex < volumesConfigs.size()) {
-                VolumeConfiguration aVolumeConfig = volumesConfigs.get(volumeConfigIndex);
-                hub.getVolumeService().createVolume(aVolumeConfig);
-                volumesCreated.add(aVolumeConfig.getName());
-            } else {
-                log.warn("No volumeBind found with name : " + volumeBind + " " + indexMap.toString());
+        for (String bind : binds) {
+            if (bind.contains(":")) {
+                String name = bind.substring(0, bind.indexOf(':'));
+                Integer volumeConfigIndex = indexMap.get(name);
+                if (volumeConfigIndex != null) {
+                    VolumeConfiguration volumeConfig = volumes.get(volumeConfigIndex);
+                    hub.getVolumeService().createVolume(volumeConfig);
+                    volumesCreated.add(volumeConfig.getName());
+                }
             }
         }
 
