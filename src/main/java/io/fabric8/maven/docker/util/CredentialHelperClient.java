@@ -38,10 +38,9 @@ public class CredentialHelperClient {
 
     public AuthConfig getAuthConfig(String registryToLookup) throws MojoExecutionException {
         try {
-            final GetCommand getCommand = new GetCommand();
-            JsonObject creds = getCommand.getCredentialNode(registryToLookup);
+            JsonObject creds = new GetCommand().getCredentialNode(registryToLookup);
             if (creds == null) {
-                creds = getCommand.getCredentialNode(EnvUtil.ensureRegistryHttpUrl(registryToLookup));
+                creds = new GetCommand().getCredentialNode(EnvUtil.ensureRegistryHttpUrl(registryToLookup));
             }
             return toAuthConfig(creds);
         } catch (IOException e) {
