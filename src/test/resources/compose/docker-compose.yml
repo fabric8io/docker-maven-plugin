@@ -7,7 +7,7 @@
 # - dns (list)
 # - dns_search (list)
 #
-version: 2
+version: 2.2
 services:
   service:
     cap_add:
@@ -16,8 +16,9 @@ services:
       - CAP
     command: command.sh
     cgroup_parent: cgroup_parent
-    cpu_shares: 73
-    cpu_set: 0,1
+    cpu_shares: 1
+    cpuset: 0,1
+    cpus: 1
     devices:
     - "/dev/device:/dev/device"
     dns: 8.8.8.8

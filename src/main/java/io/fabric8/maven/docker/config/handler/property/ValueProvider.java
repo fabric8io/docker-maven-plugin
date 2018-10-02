@@ -42,7 +42,8 @@ public class ValueProvider {
     private IntValueExtractor intValueExtractor;
     private LongValueExtractor longValueExtractor;
     private BooleanValueExtractor booleanValueExtractor;
-
+    private DoubleValueExtractor doubleValueExtractor;
+    
     /**
      * Initiates ValueProvider which is to work with data from the given properties.
      *
@@ -64,6 +65,7 @@ public class ValueProvider {
         intValueExtractor = new IntValueExtractor();
         longValueExtractor = new LongValueExtractor();
         booleanValueExtractor = new BooleanValueExtractor();
+        doubleValueExtractor = new DoubleValueExtractor();
     }
 
     public String getString(ConfigKey key, String fromConfig) {
@@ -100,6 +102,10 @@ public class ValueProvider {
 
     public Map<String, String> getMap(ConfigKey key, Map<String, String> fromConfig) {
         return mapValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
+    }
+
+    public Double getDouble(ConfigKey key, Double fromConfig){
+        return doubleValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 
     public <T> T getObject(ConfigKey key, T fromConfig, final com.google.common.base.Function<String, T> converter) {
@@ -229,7 +235,13 @@ public class ValueProvider {
         }
     }
 
-
+    private class DoubleValueExtractor extends ValueExtractor<Double> {
+        @Override
+        protected Double withPrefix(String prefix, ConfigKey key, Properties properties) {
+            String prop = properties.getProperty(key.asPropertyKey(prefix));
+            return prop == null ? null : Double.valueOf(prop);
+        }
+    }
 
     private abstract class ListValueExtractor<T> extends ValueExtractor<List<T>> {
         @Override
