@@ -55,6 +55,6 @@ In addition to the `docker-compose.yml` you can add all known options for <<buil
 
 The following Docker Compose file keywords are not yet supported:
 
-* `cgroup_parent`, `devices`, `env_file`, `expose`, `pid`, `security_opt`, `stop_signal`, `cpu_share`, `cpu_quota`, `cpuset`, `ipc`, `mac_address`, `read_only` are not yet supported (but might be in a future version).
+* `cgroup_parent`, `devices`, `env_file`, `expose`, `pid`, `security_opt`, `stop_signal`, `cpu_quota`, `ipc`, `mac_address`, `read_only` are not yet supported (but might be in a future version).
 * `extend` for including other Docker Compose files is not yet implemented.
 * Only **services** are currently evaluated, there is no supported yet for **volumes** and **networks**.
