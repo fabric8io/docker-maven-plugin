@@ -85,6 +85,15 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.cmd*
 | Command to execute. This is used both when running a container and as default command when creating an image.
 
+| *docker.cpus*
+| Specify how much of the available CPU resources a container can use.
+
+| *docker.cpuset*
+| Limit the container to specific CPUs or cores. This can be provided either as a comma-separated list or a hyphen-separated range.
+
+| *docker.cpushares*
+| Set the proportion of the host machine's cpu cycles available to the container.
+
 | *docker.domainname*
 | Container domain name
 

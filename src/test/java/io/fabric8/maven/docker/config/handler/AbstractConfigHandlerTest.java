@@ -35,6 +35,9 @@ public abstract class AbstractConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals((Long) 1000000000L, runConfig.getCpus());
+        assertEquals((Long) 1L, runConfig.getCpuShares());
+        assertEquals("0,1", runConfig.getCpuSet());
         assertEquals(getEnvPropertyFile(),runConfig.getEnvPropertyFile());
         
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
