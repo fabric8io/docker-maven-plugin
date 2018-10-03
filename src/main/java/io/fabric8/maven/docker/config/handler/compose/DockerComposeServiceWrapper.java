@@ -347,11 +347,16 @@ class DockerComposeServiceWrapper {
     }
 
     public String getCpuSet() {
-        return asString("cpu_set");
+        return asString("cpuset");
     }
 
-    public String getCpuShares() {
-        return asString("cpu_shares");
+    public Long getCpuShares() {
+        return asLong("cpu_shares");
+    }
+
+    public Long getCpusCount(){
+        Double cpus = asDouble("cpus");
+        return convertToNanoCpus(cpus);
     }
 
     public List<String> getDevices() {
@@ -410,6 +415,14 @@ class DockerComposeServiceWrapper {
         return Collections.emptyMap();
     }
 
+    private Double asDouble(String key){
+        Double value = null;
+        if (configuration.containsKey(key)) {
+            value = Double.valueOf(configuration.get(key).toString());
+        }
+        return value;
+    }
+
     private Arguments asArguments(Object command, String label) {
         if (command instanceof String) {
             return new Arguments((String) command);
@@ -428,6 +441,13 @@ class DockerComposeServiceWrapper {
             map.put(parts[0], parts[1]);
         }
         return map;
+    }
+
+    private Long convertToNanoCpus(Double cpus){
+        if(cpus == null){
+            return null;
+        }
+        return (long)(cpus * 1000000000);
     }
 
     private void throwIllegalArgumentException(String msg) {
