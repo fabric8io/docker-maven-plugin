@@ -1,9 +1,10 @@
 # ChangeLog
 
-* **0.27.2** (2018-10-01)
+* **0.27.2** (TBR)
   - Fix NPE regression related to volumes (again) (#1091)
   - Fix NPE when stopping containers with autoCreateCustomNetworks (#1097)
   - Fix regression when calling the credential helper for authentication, leading to an exception because of the usage of an already shutdown executor service (#1098)
+  - Add support for CPU configurations with compose (#1102)
 
 * **0.27.1** (2018-09-28)
   - Fix NPE when no volume configuration is present ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
