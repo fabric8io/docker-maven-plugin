@@ -107,6 +107,15 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private List<String> extraHosts;
 
+    @Parameter
+    private Long cpuShares;
+
+    @Parameter
+    private Long cpus;
+
+    @Parameter
+    private String cpuSet;
+
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
     @Parameter
@@ -233,6 +242,18 @@ public class RunImageConfiguration implements Serializable {
 
     public Long getMemorySwap() {
         return memorySwap;
+    }
+
+    public Long getCpuShares() {
+        return cpuShares;
+    }
+
+    public Long getCpus() {
+        return cpus;
+    }
+
+    public String getCpuSet() {
+        return cpuSet;
     }
 
     @Nonnull
@@ -540,6 +561,21 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder log(LogConfiguration log) {
             config.log = log;
+            return this;
+        }
+
+        public Builder cpuShares(Long cpuShares){
+            config.cpuShares = cpuShares;
+            return this;
+        }
+
+        public Builder cpus(Long cpus){
+            config.cpus = cpus;
+            return this;
+        }
+
+        public Builder cpuSet(String cpuSet){
+            config.cpuSet = cpuSet;
             return this;
         }
 

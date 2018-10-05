@@ -126,21 +126,24 @@ public class StopMojo extends AbstractDockerMojo {
         for (ImageConfiguration image : getResolvedImages()) {
 
             final NetworkConfig config = image.getRunConfiguration().getNetworkingConfig();
+            if (!config.isCustomNetwork() || config.getName() == null) {
+                continue;
+            }
             final Network network = getNetworkByName(networks, config.getCustomNetwork());
+            if (network == null) {
+                continue;
+            }
+            customNetworks.add(network);
+            Collection<Container> existingContainers =
+                ContainerNamingUtil.getContainersToStop(image,
+                                                        containerNamePattern,
+                                                        getBuildTimestamp(),
+                                                        queryService.getContainersForImage(image.getName(), false));
 
-            if (config.isCustomNetwork() && network != null) {
-                customNetworks.add(network);
-                Collection<Container> existingContainers =
-                    ContainerNamingUtil.getContainersToStop(image,
-                                                            containerNamePattern,
-                                                            getBuildTimestamp(),
-                                                            queryService.getContainersForImage(image.getName(), false));
-
-                for (Container container : existingContainers) {
-                    if (!shouldStopContainer(container, gavLabel)) {
-                        // it's sill in use don't collect it
-                        customNetworks.remove(network);
-                    }
+            for (Container container : existingContainers) {
+                if (!shouldStopContainer(container, gavLabel)) {
+                    // it's sill in use don't collect it
+                    customNetworks.remove(network);
                 }
             }
         }

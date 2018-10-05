@@ -162,6 +162,9 @@ public class DockerComposeConfigHandlerTest {
         assertEquals(a("redis","link1"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals("0,1", runConfig.getCpuSet());
+        assertEquals((Long)1000000000L, runConfig.getCpus());
+        assertEquals((Long) 1L, runConfig.getCpuShares());
         assertEquals(null,runConfig.getEnvPropertyFile());
 
         assertEquals(null, runConfig.getPortPropertyFile());
