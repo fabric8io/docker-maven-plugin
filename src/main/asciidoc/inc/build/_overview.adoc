@@ -141,9 +141,9 @@ The following official dmp-plugins are known and supported:
 |===
 | Name | G,A | Description
 
-| https://github.com/fabric8io-images/run-java[run-java.sh]
+| https://github.com/fabric8io-images/run-java-sh[run-java.sh]
 | `fabric8.io`, `run-java`
-| General purpose startup script fo running Java applications. The dmp plugin creates a `target/docker-extra/run-java/run-java.sh` which can be included in a Dockerfile (see the example above). See the https://github.com/fabric8io-images/run-java[run-java.sh Documentation] for more details.
+| General purpose startup script fo running Java applications. The dmp plugin creates a `target/docker-extra/run-java/run-java.sh` which can be included in a Dockerfile (see the example above). See the https://github.com/fabric8io-images/run-java-sh[run-java.sh Documentation] for more details.
 |===
 
 Check out `samples/run-java` for a fully working example.
