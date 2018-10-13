@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Set;
@@ -35,7 +34,6 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
@@ -48,7 +46,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.StringUtils;
 
 
 /**
@@ -173,12 +170,12 @@ public class StartMojo extends AbstractDockerMojo {
                     imagesWaitingToStart.remove(image);
 
                     if (!startParallel) {
-                        waitForStartedContainer(hub, containerStartupService, startedContainerAliases, imagesStarting);
+                        waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
                     }
                 }
 
                 if (startParallel) {
-                    waitForStartedContainer(hub, containerStartupService, startedContainerAliases, imagesStarting);
+                    waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
                 }
             }
 
@@ -206,17 +203,16 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private void waitForStartedContainer(final ServiceHub hub,
+    private void waitForStartedContainer(
             final ExecutorCompletionService<StartedContainer> containerStartupService,
             final Set<String> startedContainerAliases, final Queue<ImageConfiguration> imagesStarting)
-            throws InterruptedException, DockerAccessException, IOException, ExecException {
+            throws InterruptedException, IOException, ExecException {
         final Future<StartedContainer> startedContainerFuture = containerStartupService.take();
         try {
             final StartedContainer startedContainer = startedContainerFuture.get();
             final ImageConfiguration imageConfig = startedContainer.imageConfig;
 
             updateAliasesSet(startedContainerAliases, imageConfig.getAlias());
-            exposeContainerProps(hub.getQueryService(), startedContainer);
 
             // All done with this image
             imagesStarting.remove(imageConfig);
@@ -283,6 +279,7 @@ public class StartMojo extends AbstractDockerMojo {
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         StartContainerExecutor startExecutor = new StartContainerExecutor.Builder()
+            .exposeContainerProps(exposeContainerProps)
             .dispatcher(dispatcher)
             .follow(follow)
             .log(log)
@@ -391,38 +388,4 @@ public class StartMojo extends AbstractDockerMojo {
         return executorService;
     }
 
-    // Expose ports as project properties
-    private void exposeContainerProps(QueryService queryService, StartedContainer startedContainer)
-        throws DockerAccessException {
-        String propKey = getExposedPropertyKeyPart(startedContainer.imageConfig);
-        if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
-            Container container = queryService.getMandatoryContainer(startedContainer.containerId);
-            Properties props = project.getProperties();
-            String prefix = addDot(exposeContainerProps) + addDot(propKey);
-            props.put(prefix + "id", startedContainer.containerId);
-            String ip = container.getIPAddress();
-            if (StringUtils.isNotEmpty(ip)) {
-                props.put(prefix + "ip", ip);
-            }
-
-            Map<String, String> nets = container.getCustomNetworkIpAddresses();
-            if (nets != null) {
-                for (Map.Entry<String, String> entry : nets.entrySet()) {
-                    props.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());
-                }
-            }
-        }
-    }
-
-    private String getExposedPropertyKeyPart(ImageConfiguration image) {
-        String propKey = image.getRunConfiguration() != null ? image.getRunConfiguration().getExposedPropertyKey() : null;
-        if (StringUtils.isEmpty(propKey)) {
-            propKey = image.getAlias();
-        }
-        return propKey;
-    }
-
-    private String addDot(String part) {
-        return part.endsWith(".") ? part : part + ".";
-    }
 }
