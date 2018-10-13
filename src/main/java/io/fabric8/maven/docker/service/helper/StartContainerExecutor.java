@@ -19,7 +19,6 @@ import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.Logger;
@@ -78,7 +77,7 @@ public class StartContainerExecutor {
     }
 
     private String getExposedPropertyKeyPart(ImageConfiguration image) {
-        String propKey = image.getRunConfiguration() != null ? image.getRunConfiguration().getExposedPropertyKey() : null;
+        String propKey = image.getRunConfiguration() != null ? image.getRunConfiguration().getExposedPropertyKey() : "";
         if (StringUtils.isEmpty(propKey)) {
             propKey = image.getAlias();
         }
