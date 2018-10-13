@@ -53,9 +53,9 @@ public class StartContainerExecutor {
         return containerId;
     }
 
-    private void exposeContainerProps( String containerId)
+    private void exposeContainerProps(String containerId)
         throws DockerAccessException {
-        String propKey = getExposedPropertyKeyPart(imageConfig);
+        String propKey = getExposedPropertyKeyPart();
 
         if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
             Container container = hub.getQueryService().getMandatoryContainer(containerId);
@@ -76,10 +76,10 @@ public class StartContainerExecutor {
         }
     }
 
-    private String getExposedPropertyKeyPart(ImageConfiguration image) {
-        String propKey = image.getRunConfiguration() != null ? image.getRunConfiguration().getExposedPropertyKey() : "";
+    String getExposedPropertyKeyPart() {
+        String propKey = imageConfig.getRunConfiguration() != null ? imageConfig.getRunConfiguration().getExposedPropertyKey() : "";
         if (StringUtils.isEmpty(propKey)) {
-            propKey = image.getAlias();
+            propKey = imageConfig.getAlias();
         }
         return propKey;
     }
@@ -89,7 +89,7 @@ public class StartContainerExecutor {
     }
 
     private void showLogsIfRequested(String containerId) {
-        if (showLogs(imageConfig)) {
+        if (showLogs()) {
             dispatcher.trackContainerLog(containerId,
                                          logOutputSpecFactory.createSpec(containerId, imageConfig));
         }
@@ -112,7 +112,7 @@ public class StartContainerExecutor {
         }
     }
 
-    private boolean showLogs(ImageConfiguration imageConfig) {
+    boolean showLogs() {
         if (showLogs != null) {
             if (showLogs.equalsIgnoreCase("true")) {
                 return true;
