@@ -17,8 +17,8 @@ package io.fabric8.maven.docker;/*
 
 import java.io.IOException;
 
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.config.WatchMode;
-import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
@@ -77,7 +77,7 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     protected synchronized void executeInternal(ServiceHub hub) throws IOException,
                                                                        MojoExecutionException {
 
-        BuildService.BuildContext buildContext = getBuildContext();
+        MavenBuildContext buildContext = getBuildContext(hub.getArchiveService());
         WatchService.WatchContext watchContext = getWatchContext(hub);
 
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
@@ -94,12 +94,14 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .keepRunning(keepRunning)
                 .removeVolumes(removeVolumes)
                 .containerNamePattern(containerNamePattern)
+                .buildArgs(buildArgs)
                 .buildTimestamp(getBuildTimestamp())
                 .pomLabel(getGavLabel())
-                .mojoParameters(createMojoParameters())
                 .follow(follow())
                 .showLogs(showLogs())
                 .serviceHubFactory(serviceHubFactory)
+                .properties(project.getProperties())
+                .basedir(project.getBasedir())
                 .hub(hub)
                 .dispatcher(getLogDispatcher(hub))
                 .build();

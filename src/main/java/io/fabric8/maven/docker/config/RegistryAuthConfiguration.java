@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -47,7 +47,7 @@ public class RegistryAuthConfiguration implements Serializable {
             authMap.put(AuthConfigFactory.AUTH_AUTHTOKEN, authToken);
         }
         if (StringUtils.isNotBlank(email)) {
-            authMap.put(AuthConfigFactory.AUTH_EMAIL,email);
+            authMap.put(AuthConfigFactory.AUTH_EMAIL, email);
         }
         return authMap;
     }

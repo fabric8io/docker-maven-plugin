@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.service;
+package io.fabric8.maven.docker.build;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,8 +6,11 @@ import java.util.Map;
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.build.docker.DockerRegistryService;
+import io.fabric8.maven.docker.build.docker.ImagePullCache;
+import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
 import io.fabric8.maven.docker.config.ImagePullPolicy;
-import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
@@ -24,15 +27,15 @@ import static org.junit.Assert.assertTrue;
  * @author roland
  * @since 23.11.17
  */
-public class RegistryServiceTest {
+public class DockerRegistryServiceTest {
 
     private Exception actualException;
 
     private String imageName;
     private ImagePullPolicy imagePullPolicy;
-    private TestCacheStore cacheStore;
+    private TestBackend cacheStore;
     private AutoPullMode autoPullMode;
-    private RegistryService registryService;
+    private DockerRegistryService registryService;
     private boolean hasImage;
     private String registry;
     private Map authConfig;
@@ -52,8 +55,8 @@ public class RegistryServiceTest {
     }
 
     private void reset() {
-        registryService = new RegistryService(docker, logger);
-        cacheStore = new TestCacheStore();
+        cacheStore = new TestBackend();
+        registryService = new DockerRegistryService(docker, logger, cacheStore);
         authConfig = new HashMap();
 
         imageName = null;
@@ -230,18 +233,12 @@ public class RegistryServiceTest {
     private void whenAutoPullImage() {
 
         try {
-            String iPolicyS = imagePullPolicy != null ? imagePullPolicy.toString() : null;
-            String autoPullModeS = autoPullMode != null ? autoPullMode.toString() : null;
-            ImagePullManager pullManager = new ImagePullManager(cacheStore,iPolicyS, autoPullModeS);
-            RegistryService.RegistryConfig.Builder registryConfigBuilder =
-                new RegistryService.RegistryConfig.Builder()
-                .authConfigFactory(authConfigFactory)
-                .authConfig(authConfig);
-            if (registry != null) {
-                registryConfigBuilder.registry(registry);
-            }
-            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), hasImage);
-
+            MavenRegistryContext buildContext =
+                new MavenRegistryContext.Builder()
+                    .authConfigFactory(authConfigFactory)
+                    .pullRegistry(registry)
+                    .build();
+            registryService.pullImage(imageName, imagePullPolicy, buildContext);
         } catch (Exception e) {
             //e.printStackTrace();
             this.actualException = e;
@@ -280,7 +277,7 @@ public class RegistryServiceTest {
         this.imageName = imageName;
     }
 
-    private class TestCacheStore implements ImagePullManager.CacheStore {
+    private class TestBackend implements ImagePullCache.Backend {
 
         String cache;
 

@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.assembly;
+package io.fabric8.maven.docker.build.maven.assembly;
 
 import java.io.File;
 import java.util.Collections;
@@ -7,8 +7,8 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -30,7 +30,7 @@ import org.codehaus.plexus.interpolation.fixed.PropertiesBasedValueSource;
 public class DockerAssemblyConfigurationSource implements AssemblerConfigurationSource {
 
     private final AssemblyConfiguration assemblyConfig;
-    private final MojoParameters params;
+    private final MavenBuildContext context;
     private final BuildDirs buildDirs;
 
     // Required by configuration source and duplicated from AbstractAssemblyMojo (which is unfortunately
@@ -40,8 +40,8 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     private FixedStringSearchInterpolator rootInterpolator;
     private FixedStringSearchInterpolator mainProjectInterpolator;
 
-    public DockerAssemblyConfigurationSource(MojoParameters params, BuildDirs buildDirs, AssemblyConfiguration assemblyConfig) {
-        this.params = params;
+    public DockerAssemblyConfigurationSource(MavenBuildContext context, BuildDirs buildDirs, AssemblyConfiguration assemblyConfig) {
+        this.context = context;
         this.assemblyConfig = assemblyConfig;
         this.buildDirs = buildDirs;
     }
@@ -52,7 +52,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
           String descriptor = assemblyConfig.getDescriptor();
 
           if (descriptor != null) {
-            return new String[] {EnvUtil.prepareAbsoluteSourceDirPath(params, descriptor).getAbsolutePath() };
+            return new String[] {EnvUtil.prepareAbsoluteSourceDirPath(context, descriptor).getAbsolutePath() };
           }
         }
         return new String[0];
@@ -95,39 +95,39 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public ArtifactRepository getLocalRepository() {
-        return params.getSession().getLocalRepository();
+        return context.getSession().getLocalRepository();
     }
-    
+
     public MavenFileFilter getMavenFileFilter() {
-        return params.getMavenFileFilter();
+        return context.getMavenFileFilter();
     }
 
     // Maybe use injection
     @Override
     public List<MavenProject> getReactorProjects() {
-        return params.getReactorProjects();
+        return context.getReactorProjects();
     }
 
     // Maybe use injection
     @Override
     public List<ArtifactRepository> getRemoteRepositories() {
-        return params.getProject().getRemoteArtifactRepositories();
+        return context.getProject().getRemoteArtifactRepositories();
     }
 
     @Override
     public MavenSession getMavenSession() {
-        return params.getSession();
+        return context.getSession();
     }
 
     @Override
     public MavenArchiveConfiguration getJarArchiveConfiguration() {
-        return params.getArchiveConfiguration();
+        return context.getArchiveConfiguration();
     }
 
     // X
     @Override
     public String getEncoding() {
-        return params.getProject().getProperties().getProperty("project.build.sourceEncoding");
+        return context.getProject().getProperties().getProperty("project.build.sourceEncoding");
     }
 
     // X
@@ -180,13 +180,13 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     // X
     @Override
     public MavenProject getProject() {
-        return params.getProject();
+        return context.getProject();
     }
 
     // X
     @Override
     public File getBasedir() {
-        return params.getProject().getBasedir();
+        return context.getProject().getBasedir();
     }
 
     // X
@@ -256,7 +256,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public MavenReaderFilter getMavenReaderFilter() {
-        return params.getMavenFilterReader();
+        return context.getMavenReaderFilter();
     }
 
     @Override

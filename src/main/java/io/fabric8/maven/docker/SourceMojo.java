@@ -17,17 +17,15 @@ package io.fabric8.maven.docker;
  */
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.BuildImageSelectMode;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.MojoParameters;
-
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -65,8 +63,8 @@ public class SourceMojo extends AbstractBuildSupportMojo {
     private BuildImageSelectMode sourceMode = BuildImageSelectMode.first;
 
     @Override
-    protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        MojoParameters params = createMojoParameters();
+    protected void executeInternal(ServiceHub hub) throws IOException {
+        MavenBuildContext context = getBuildContext(hub.getArchiveService());
         List<ImageConfiguration> imageConfigs = new ArrayList<>();
         for (ImageConfiguration imageConfig : getResolvedImages()) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
@@ -80,12 +78,12 @@ public class SourceMojo extends AbstractBuildSupportMojo {
         }
         if (sourceMode == BuildImageSelectMode.first && imageConfigs.size() > 0) {
             ImageConfiguration imageConfig = imageConfigs.get(0);
-            File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
+            File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, context);
             projectHelper.attachArtifact(project, getArchiveType(imageConfig),
                                          getClassifier(null), dockerTar);
         } else {
             for (ImageConfiguration imageConfig : imageConfigs) {
-                File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, params);
+                File dockerTar = hub.getArchiveService().createDockerBuildArchive(imageConfig, context);
                 String alias = imageConfig.getAlias();
                 if (alias == null) {
                     throw new IllegalArgumentException(

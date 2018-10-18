@@ -3,11 +3,13 @@ package io.fabric8.maven.docker;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.build.maven.MavenCacheBackend;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
@@ -18,12 +20,11 @@ import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
-import io.fabric8.maven.docker.service.ImagePullManager;
-import io.fabric8.maven.docker.service.RegistryService;
+import io.fabric8.maven.docker.build.docker.ImagePullCache;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.AuthConfigFactory;
+import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
@@ -187,8 +188,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // mangle the image configurations.
     private List<ImageConfiguration> resolvedImages;
 
+    // will be initialized and remembered for creating the authconfigfactory later
+    private PlexusContainer plexusContainer;
+
     // Handler dealing with authentication credentials
-    private AuthConfigFactory authConfigFactory;
+    protected AuthConfigFactory authConfigFactory;
 
     protected Logger log;
 
@@ -206,7 +210,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
-            authConfigFactory.setLog(log);
+            authConfigFactory = new AuthConfigFactory(plexusContainer, settings, getRegistryAuthConfig(), registry, log);
             imageConfigResolver.setLog(log);
 
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
@@ -258,14 +262,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .build();
     }
 
-    protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) throws MojoExecutionException {
-        return new RegistryService.RegistryConfig.Builder()
-                .settings(settings)
-                .authConfig(authConfig != null ? authConfig.toMap() : null)
-                .authConfigFactory(authConfigFactory)
-                .skipExtendedAuth(skipExtendedAuth)
-                .registry(specificRegistry != null ? specificRegistry : registry)
-                .build();
+    protected Map<String, String> getRegistryAuthConfig() {
+        Map registryAuthConfig = new HashMap();
+        if (authConfig != null) {
+            registryAuthConfig.putAll(authConfig.toMap());
+        }
+        if (skipExtendedAuth) {
+            registryAuthConfig.put(AuthConfigFactory.SKIP_EXTENDED_AUTH, true);
+        }
+        return registryAuthConfig;
     }
 
     /**
@@ -381,7 +386,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     @Override
     public void contextualize(Context context) throws ContextException {
-        authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
+        plexusContainer = (PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY);
     }
 
     // =================================================================================
@@ -400,24 +405,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return dispatcher;
     }
 
-    public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {
-        return new ImagePullManager(getSessionCacheStore(), imagePullPolicy, autoPull);
-    }
-
-    private ImagePullManager.CacheStore getSessionCacheStore() {
-        return new ImagePullManager.CacheStore() {
-            @Override
-            public String get(String key) {
-                Properties userProperties = session.getUserProperties();
-                return userProperties.getProperty(key);
-            }
-
-            @Override
-            public void put(String key, String value) {
-                Properties userProperties = session.getUserProperties();
-                userProperties.setProperty(key, value);
-            }
-        };
+    public ImagePullCache getImagePullManager() {
+        return new ImagePullCache(new MavenCacheBackend(session));
     }
 
     private ImageConfiguration createSimpleDockerfileConfig(File dockerFile) {

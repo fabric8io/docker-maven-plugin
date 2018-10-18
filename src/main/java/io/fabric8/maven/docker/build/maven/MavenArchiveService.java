@@ -1,5 +1,5 @@
-package io.fabric8.maven.docker.service;/*
- * 
+package io.fabric8.maven.docker.build.maven;/*
+ *
  * Copyright 2015 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,33 +15,32 @@ package io.fabric8.maven.docker.service;/*
  * limitations under the License.
  */
 
-import io.fabric8.maven.docker.assembly.ArchiverCustomizer;
-import io.fabric8.maven.docker.assembly.AssemblyFiles;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import io.fabric8.maven.docker.build.maven.assembly.ArchiverCustomizer;
+import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugins.assembly.archive.ArchiveCreationException;
 import org.apache.maven.plugins.assembly.format.AssemblyFormattingException;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * @author roland
  * @since 30/11/15
  */
-public class ArchiveService {
+public class MavenArchiveService {
 
 
     private final Logger log;
     private DockerAssemblyManager dockerAssemblyManager;
 
 
-    public ArchiveService(DockerAssemblyManager dockerAssemblyManager,Logger log) {
+    public MavenArchiveService(DockerAssemblyManager dockerAssemblyManager, Logger log) {
         this.log = log;
         this.dockerAssemblyManager = dockerAssemblyManager;
     }
@@ -53,10 +52,10 @@ public class ArchiveService {
      * @param imageConfig the image configuration
      * @param params mojo params for the project
      * @return file for holding the sources
-     * @throws MojoExecutionException if during creation of the tar an error occurs.
+     * @throws IOException if during creation of the tar an error occurs.
      */
-    public File createDockerBuildArchive(ImageConfiguration imageConfig, MojoParameters params)
-            throws MojoExecutionException {
+    public File createDockerBuildArchive(ImageConfiguration imageConfig, MavenBuildContext params)
+        throws IOException {
         return createDockerBuildArchive(imageConfig, params, null);
     }
 
@@ -65,14 +64,14 @@ public class ArchiveService {
      * uploading to a Docker daemon for creating the image
      *
      * @param imageConfig the image configuration
-     * @param params mojo params for the project
+     * @param context mojo params for the project
      * @param customizer final customizer to be applied to the tar before being generated
      * @return file for holding the sources
-     * @throws MojoExecutionException if during creation of the tar an error occurs.
+     * @throws IOException if during creation of the tar an error occurs.
      */
-    public File createDockerBuildArchive(ImageConfiguration imageConfig, MojoParameters params, ArchiverCustomizer customizer)
-            throws MojoExecutionException {
-        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), params, log, customizer);
+    public File createDockerBuildArchive(ImageConfiguration imageConfig, MavenBuildContext context, ArchiverCustomizer customizer)
+            throws IOException {
+        File ret = createArchive(imageConfig.getName(), imageConfig.getBuildConfiguration(), context, log, customizer);
         log.info("%s: Created docker source tar %s",imageConfig.getDescription(), ret);
         return ret;
     }
@@ -84,18 +83,18 @@ public class ArchiveService {
      *
      * @param imageConfig image config for which to get files. The build- and assembly configuration in this image
      *                    config must not be null.
-     * @param mojoParameters needed for tracking the assembly
+     * @param context needed for tracking the assembly
      * @return mapping of assembly files
-     * @throws MojoExecutionException
+     * @throws IOException
      */
-    public AssemblyFiles getAssemblyFiles(ImageConfiguration imageConfig, MojoParameters mojoParameters)
-        throws MojoExecutionException {
+    public AssemblyFiles getAssemblyFiles(ImageConfiguration imageConfig, MavenBuildContext context)
+        throws IOException {
 
         String name = imageConfig.getName();
         try {
-            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), mojoParameters, log);
+            return dockerAssemblyManager.getAssemblyFiles(name, imageConfig.getBuildConfiguration(), context, log);
         } catch (InvalidAssemblerConfigurationException | ArchiveCreationException | AssemblyFormattingException e) {
-            throw new MojoExecutionException("Cannot extract assembly files for image " + name + ": " + e, e);
+            throw new IOException("Cannot extract assembly files for image " + name + ": " + e, e);
         }
     }
 
@@ -107,19 +106,19 @@ public class ArchiveService {
      * @return created archive
      */
     public File createChangedFilesArchive(List<AssemblyFiles.Entry> entries, File assemblyDir,
-                                          String imageName, MojoParameters mojoParameters) throws MojoExecutionException {
+                                          String imageName, MavenBuildContext mojoParameters) throws IOException {
         return dockerAssemblyManager.createChangedFilesArchive(entries, assemblyDir, imageName, mojoParameters);
     }
 
     // =============================================
 
-    File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, Logger log)
-            throws MojoExecutionException {
-        return createArchive(imageName, buildConfig, params, log, null);
+    public File createArchive(String imageName, BuildImageConfiguration buildConfig, MavenBuildContext ctx, Logger log)
+        throws IOException {
+        return createArchive(imageName, buildConfig, ctx, log, null);
     }
 
-    File createArchive(String imageName, BuildImageConfiguration buildConfig, MojoParameters params, Logger log, ArchiverCustomizer customizer)
-            throws MojoExecutionException {
-        return dockerAssemblyManager.createDockerTarArchive(imageName, params, buildConfig, log, customizer);
+    File createArchive(String imageName, BuildImageConfiguration buildConfig, MavenBuildContext ctx, Logger log, ArchiverCustomizer customizer)
+            throws IOException {
+        return dockerAssemblyManager.createDockerTarArchive(imageName, ctx, buildConfig, customizer, log);
     }
 }

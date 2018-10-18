@@ -1,5 +1,5 @@
-package io.fabric8.maven.docker.assembly;/*
- * 
+package io.fabric8.maven.docker.build.maven.assembly;/*
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@ package io.fabric8.maven.docker.assembly;/*
 
 import java.io.File;
 
-import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.util.EnvUtil;
 
 /**
@@ -30,16 +30,16 @@ import io.fabric8.maven.docker.util.EnvUtil;
 class BuildDirs {
 
     private final String buildTopDir;
-    private final MojoParameters params;
+    private final MavenBuildContext context;
 
     /**
      * Constructor building up the the output directories
      *
      * @param imageName image name for the image to build
-     * @param params mojo params holding base and global outptput dir
+     * @param context mojo params holding base and global outptput dir
      */
-    BuildDirs(String imageName, MojoParameters params) {
-        this.params = params;
+    BuildDirs(String imageName, MavenBuildContext context) {
+        this.context = context;
         // Replace tag separator with a slash to avoid problems
         // with OSs which gets confused by colons.
         this.buildTopDir = imageName != null ? imageName.replace(':', '/') : null;
@@ -69,6 +69,6 @@ class BuildDirs {
     }
 
     private File getDir(String dir) {
-        return EnvUtil.prepareAbsoluteOutputDirPath(params, buildTopDir, dir);
+        return EnvUtil.prepareAbsoluteOutputDirPath(context, buildTopDir, dir);
     }
 }

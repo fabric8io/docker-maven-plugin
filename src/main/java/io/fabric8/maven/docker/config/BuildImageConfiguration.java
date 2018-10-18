@@ -2,12 +2,17 @@ package io.fabric8.maven.docker.config;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.*;
-
-import io.fabric8.maven.docker.util.*;
-import org.apache.maven.plugins.annotations.Parameter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
+
+import io.fabric8.maven.docker.build.BuildContext;
+import io.fabric8.maven.docker.util.DeepCopy;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Logger;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -15,7 +20,6 @@ import javax.annotation.Nonnull;
  */
 public class BuildImageConfiguration implements Serializable {
 
-    public static final String DEFAULT_FILTER = "${*}";
     public static final String DEFAULT_CLEANUP = "try";
 
     /**
@@ -165,10 +169,6 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public String getFilter() {
-        return filter != null ? filter : DEFAULT_FILTER;
-    }
-
-    public String getFilterRaw() {
         return filter;
     }
 
@@ -235,12 +235,8 @@ public class BuildImageConfiguration implements Serializable {
         return command;
     }
 
-    public String getCleanup() {
+    public String getCleanupMode() {
         return cleanup;
-    }
-
-    public CleanupMode cleanupMode() {
-        return CleanupMode.parse(cleanup != null ? cleanup : DEFAULT_CLEANUP);
     }
 
     public boolean nocache() {
@@ -296,13 +292,7 @@ public class BuildImageConfiguration implements Serializable {
         return args;
     }
 
-    public File getAbsoluteDockerFilePath(MojoParameters mojoParams) {
-        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
-    }
-
-    public File getAbsoluteDockerTarPath(MojoParameters mojoParams) {
-        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerArchive().getPath());
-    }
+    // ===========================================================================================
 
     public static class Builder {
         private final BuildImageConfiguration config;

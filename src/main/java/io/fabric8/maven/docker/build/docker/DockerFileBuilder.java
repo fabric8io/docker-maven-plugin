@@ -1,17 +1,19 @@
-package io.fabric8.maven.docker.assembly;
+package io.fabric8.maven.docker.build.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 
-import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Create a dockerfile
@@ -79,7 +81,7 @@ public class DockerFileBuilder {
      */
     public File write(File destDir) throws IOException {
         File target = new File(destDir,"Dockerfile");
-        FileUtils.fileWrite(target, content());
+        FileUtils.write(target, content(), Charset.defaultCharset());
         return target;
     }
 

@@ -43,7 +43,7 @@ public class ValueProvider {
     private LongValueExtractor longValueExtractor;
     private BooleanValueExtractor booleanValueExtractor;
     private DoubleValueExtractor doubleValueExtractor;
-    
+
     /**
      * Initiates ValueProvider which is to work with data from the given properties.
      *
@@ -199,9 +199,6 @@ public class ValueProvider {
             throw new IllegalArgumentException("Combine policy Merge is not available for "+key.asPropertyKey(prefix));
         }
     }
-
-
-
 
     private class StringValueExtractor extends ValueExtractor<String> {
         @Override

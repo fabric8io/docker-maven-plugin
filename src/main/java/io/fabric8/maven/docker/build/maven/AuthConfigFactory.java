@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.build.maven;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -18,6 +18,9 @@ import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import io.fabric8.maven.docker.util.CredentialHelperClient;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -43,11 +46,15 @@ public class AuthConfigFactory {
     public static final String AUTH_EMAIL = "email";
     public static final String AUTH_AUTHTOKEN = "authToken";
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
+    public static final String SKIP_EXTENDED_AUTH = "skipExtendedAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final PlexusContainer container;
     private final Gson gson;
+    private final Settings settings;
+    private final Map registryAuthConfig;
+    private final String defaultRegistry;
 
     private Logger log;
     private static final String[] DEFAULT_REGISTRIES = new String[]{
@@ -59,13 +66,13 @@ public class AuthConfigFactory {
      *
      * @param container the container used for do decryption of passwords
      */
-    public AuthConfigFactory(PlexusContainer container) {
+    public AuthConfigFactory(PlexusContainer container, Settings settings, Map registryAuthConfig, String defaultRegistry, Logger log) {
+        this.settings = settings;
         this.container = container;
-        this.gson = new Gson();
-    }
-
-    public void setLog(Logger log) {
+        this.registryAuthConfig = registryAuthConfig;
+        this.defaultRegistry = defaultRegistry;
         this.log = log;
+        this.gson = new Gson();
     }
 
     /**
@@ -94,28 +101,24 @@ public class AuthConfigFactory {
      *  and exchanged for ecr credentials.
      *
      * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
-     * @param skipExtendedAuth if false, do not execute extended authentication methods
-     * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
-     *                   which case the settings are consulted.
-     * @param settings the global Maven settings object
      * @param user user to check for
-     * @param registry registry to use, might be null in which case a default registry is checked,
+     * @param specificRegistry registry to use, might be null in which case a default registry is checked,
      * @return the authentication configuration or <code>null</code> if none could be found
      *
      * @throws MojoFailureException
      */
-    public AuthConfig createAuthConfig(boolean isPush, boolean skipExtendedAuth, Map authConfig, Settings settings, String user, String registry)
-            throws MojoExecutionException {
+    public AuthConfig createAuthConfig(boolean isPush, String user, String specificRegistry) {
 
-        AuthConfig ret = createStandardAuthConfig(isPush, authConfig, settings, user, registry);
+        String registry = specificRegistry != null ? specificRegistry : defaultRegistry;
+        AuthConfig ret = createStandardAuthConfig(isPush, settings, user, registry);
         if (ret != null) {
-            if (registry == null || skipExtendedAuth) {
+            if (registry == null || Boolean.TRUE.equals(registryAuthConfig.get(SKIP_EXTENDED_AUTH))) {
                 return ret;
             }
             try {
                 return extendedAuthentication(ret, registry);
             } catch (IOException e) {
-                throw new MojoExecutionException(e.getMessage(), e);
+                throw new RuntimeException(e.getMessage(), e);
             }
         }
 
@@ -141,7 +144,7 @@ public class AuthConfigFactory {
      * @throws IOException
      * @throws MojoExecutionException
      */
-    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException, MojoExecutionException {
+    private AuthConfig extendedAuthentication(AuthConfig standardAuthConfig, String registry) throws IOException {
         EcrExtendedAuth ecr = new EcrExtendedAuth(log, registry);
         if (ecr.isAwsRegistry()) {
             return ecr.extendedAuth(standardAuthConfig);
@@ -171,8 +174,6 @@ public class AuthConfigFactory {
      *
      *
      * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
-     * @param authConfigMap String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
-     *                   which case the settings are consulted.
      * @param settings the global Maven settings object
      * @param user user to check for
      * @param registry registry to use, might be null in which case a default registry is checked,
@@ -180,8 +181,7 @@ public class AuthConfigFactory {
      *
      * @throws MojoFailureException
      */
-    private AuthConfig createStandardAuthConfig(boolean isPush, Map authConfigMap, Settings settings, String user, String registry)
-            throws MojoExecutionException {
+    private AuthConfig createStandardAuthConfig(boolean isPush, Settings settings, String user, String registry) {
         AuthConfig ret;
 
         // Check first for specific configuration based on direction (pull or push), then for a default value
@@ -194,14 +194,14 @@ public class AuthConfigFactory {
             }
 
             // Check for openshift authentication either from the plugin config or from system props
-            ret = getAuthConfigFromOpenShiftConfig(lookupMode, authConfigMap);
+            ret = getAuthConfigFromOpenShiftConfig(lookupMode, registryAuthConfig);
             if (ret != null) {
                 log.debug("AuthConfig: OpenShift credentials");
                 return ret;
             }
 
             // Get configuration from global plugin config
-            ret = getAuthConfigFromPluginConfiguration(lookupMode, authConfigMap);
+            ret = getAuthConfigFromPluginConfiguration(lookupMode, registryAuthConfig);
             if (ret != null) {
                 log.debug("AuthConfig: credentials from plugin config");
                 return ret;
@@ -224,13 +224,13 @@ public class AuthConfigFactory {
 
     // ===================================================================================================
 
-    private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) {
         Properties props = System.getProperties();
         String userKey = lookupMode.asSysProperty(AUTH_USERNAME);
         String passwordKey = lookupMode.asSysProperty(AUTH_PASSWORD);
         if (props.containsKey(userKey)) {
             if (!props.containsKey(passwordKey)) {
-                throw new MojoExecutionException("No " + passwordKey + " provided for username " + props.getProperty(userKey));
+                throw new IllegalArgumentException("No " + passwordKey + " provided for username " + props.getProperty(userKey));
             }
             return new AuthConfig(props.getProperty(userKey),
                                   decrypt(props.getProperty(passwordKey)),
@@ -241,7 +241,7 @@ public class AuthConfigFactory {
         }
     }
 
-    private AuthConfig getAuthConfigFromOpenShiftConfig(LookupMode lookupMode, Map authConfigMap) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromOpenShiftConfig(LookupMode lookupMode, Map authConfigMap) {
         Properties props = System.getProperties();
         String useOpenAuthModeProp = lookupMode.asSysProperty(AUTH_USE_OPENSHIFT_AUTH);
         // Check for system property
@@ -264,12 +264,12 @@ public class AuthConfigFactory {
         }
     }
 
-    private AuthConfig getAuthConfigFromPluginConfiguration(LookupMode lookupMode, Map authConfig) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromPluginConfiguration(LookupMode lookupMode, Map authConfig) {
         Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfig);
 
         if (mapToCheck != null && mapToCheck.containsKey(AUTH_USERNAME)) {
             if (!mapToCheck.containsKey(AUTH_PASSWORD)) {
-                throw new MojoExecutionException("No 'password' given while using <authConfig> in configuration for mode " + lookupMode);
+                throw new IllegalArgumentException("No 'password' given while using <authConfig> in configuration for mode " + lookupMode);
             }
             Map<String, String> cloneConfig = new HashMap<>(mapToCheck);
             cloneConfig.put(AUTH_PASSWORD, decrypt(cloneConfig.get(AUTH_PASSWORD)));
@@ -279,7 +279,7 @@ public class AuthConfigFactory {
         }
     }
 
-    private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromSettings(Settings settings, String user, String registry) {
         Server defaultServer = null;
         Server found;
         for (Server server : settings.getServers()) {
@@ -298,7 +298,7 @@ public class AuthConfigFactory {
         return defaultServer != null ? createAuthConfigFromServer(defaultServer) : null;
     }
 
-    private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
+    private AuthConfig getAuthConfigFromDockerConfig(String registry)  {
         JsonObject dockerConfig = readDockerConfig();
         if (dockerConfig == null) {
             return null;
@@ -334,7 +334,7 @@ public class AuthConfigFactory {
         return new AuthConfig(auth,email);
     }
 
-    private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) throws MojoExecutionException {
+    private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig)  {
         CredentialHelperClient credentialHelper = new CredentialHelperClient(log, credConfig);
         log.debug("AuthConfig: credentials from credential helper/store %s version %s",
                   credentialHelper.getName(),
@@ -424,19 +424,19 @@ public class AuthConfigFactory {
                               token, null, null);
     }
 
-    private AuthConfig validateMandatoryOpenShiftLogin(AuthConfig openShiftAuthConfig, String useOpenAuthModeProp) throws MojoExecutionException {
+    private AuthConfig validateMandatoryOpenShiftLogin(AuthConfig openShiftAuthConfig, String useOpenAuthModeProp) {
         if (openShiftAuthConfig != null) {
             return openShiftAuthConfig;
         }
         // No login found
         String kubeConfigEnv = System.getenv("KUBECONFIG");
-        throw new MojoExecutionException(
+        throw new IllegalArgumentException(
             String.format("System property %s set, but not active user and/or token found in %s. " +
                           "Please use 'oc login' for connecting to OpenShift.",
                           useOpenAuthModeProp, kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
 
     }
-   
+
     private JsonObject readDockerConfig() {
         String dockerConfig = System.getenv("DOCKER_CONFIG");
 
@@ -492,20 +492,20 @@ public class AuthConfigFactory {
         return null;
     }
 
-    private String decrypt(String password) throws MojoExecutionException {
+    private String decrypt(String password) {
         try {
             // Done by reflection since I have classloader issues otherwise
             Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
             Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
             return (String) method.invoke(secDispatcher,password);
         } catch (ComponentLookupException e) {
-            throw new MojoExecutionException("Error looking security dispatcher",e);
+            throw new IllegalStateException("Error looking security dispatcher",e);
         } catch (ReflectiveOperationException e) {
-            throw new MojoExecutionException("Cannot decrypt password: " + e.getCause(),e);
+            throw new IllegalStateException("Cannot decrypt password: " + e.getCause(),e);
         }
     }
 
-    private AuthConfig createAuthConfigFromServer(Server server) throws MojoExecutionException {
+    private AuthConfig createAuthConfigFromServer(Server server) {
         return new AuthConfig(
                 server.getUsername(),
                 decrypt(server.getPassword()),

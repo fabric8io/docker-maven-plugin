@@ -1,27 +1,28 @@
-package io.fabric8.maven.docker.assembly;
+package io.fabric8.maven.docker.build.maven.assembly;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.function.Function;
 
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.build.docker.DockerFileBuilder;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mock;
-import mockit.MockUp;
 import mockit.Tested;
 import mockit.Verifications;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugins.assembly.AssemblerConfigurationSource;
 import org.apache.maven.plugins.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugins.assembly.archive.ArchiveCreationException;
@@ -30,11 +31,9 @@ import org.apache.maven.plugins.assembly.format.AssemblyFormattingException;
 import org.apache.maven.plugins.assembly.io.AssemblyReadException;
 import org.apache.maven.plugins.assembly.io.AssemblyReader;
 import org.apache.maven.plugins.assembly.model.Assembly;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
-import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.ReflectionUtils;
 import org.junit.Test;
 
@@ -70,19 +69,18 @@ public class DockerAssemblyManagerTest {
     }
 
     @Test
-    public void assemblyFiles(@Injectable final MojoParameters mojoParams,
+    public void assemblyFiles(@Injectable final MavenBuildContext mavenBuildContext,
                               @Injectable final MavenProject project,
-                              @Injectable final Assembly assembly) throws AssemblyFormattingException, ArchiveCreationException, InvalidAssemblerConfigurationException, MojoExecutionException, AssemblyReadException, IllegalAccessException {
+                              @Injectable final Assembly assembly) throws AssemblyFormattingException, ArchiveCreationException, InvalidAssemblerConfigurationException, AssemblyReadException, IllegalAccessException, IOException {
 
         ReflectionUtils.setVariableValueInObject(assemblyManager, "trackArchiver", trackArchiver);
 
         new Expectations() {{
-            mojoParams.getOutputDirectory();
+            mavenBuildContext.getOutputDirectory();
             result = "target/"; times = 3;
 
-            mojoParams.getProject();
-            project.getBasedir();
-            result = ".";
+            mavenBuildContext.getBasedir();
+            result = new File(".");
 
             assemblyReader.readAssemblies((AssemblerConfigurationSource) any);
             result = Arrays.asList(assembly);
@@ -91,7 +89,7 @@ public class DockerAssemblyManagerTest {
 
         BuildImageConfiguration buildConfig = createBuildConfig();
 
-        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, new AnsiLogger(new SystemStreamLog(),true,true));
+        assemblyManager.getAssemblyFiles("testImage", buildConfig, mavenBuildContext, new AnsiLogger(new SystemStreamLog(),true,true));
     }
 
     @Test
@@ -149,15 +147,15 @@ public class DockerAssemblyManagerTest {
                 .build();
     }
 
-    private FixedStringSearchInterpolator createInterpolator(BuildImageConfiguration buildConfig) {
+    private Function<String, String> createInterpolator(BuildImageConfiguration buildConfig) {
         MavenProject project = new MavenProject();
         project.setArtifactId("docker-maven-plugin");
 
-        return DockerFileUtil.createInterpolator(mockMojoParams(project), buildConfig.getFilter());
+        return s -> DockerFileUtil.createInterpolator(mockMavenBuildContext(project), buildConfig.getFilter()).interpolate(s);
     }
 
 
-    private MojoParameters mockMojoParams(MavenProject project) {
+    private MavenBuildContext mockMavenBuildContext(MavenProject project) {
         Settings settings = new Settings();
         ArtifactRepository localRepository = new MavenArtifactRepository() {
             @Mock
@@ -167,7 +165,15 @@ public class DockerAssemblyManagerTest {
         };
         @SuppressWarnings("deprecation")
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date());
-        return new MojoParameters(session, project, null, null, null, settings, "src", "target", Collections.singletonList(project));
+
+        return new MavenBuildContext.Builder()
+            .project(project)
+            .session(session)
+            .settings(settings)
+            .sourceDirectory("src")
+            .outputDirectory("target")
+            .reactorProjects(Collections.singletonList(project))
+            .build();
     }
 
 }

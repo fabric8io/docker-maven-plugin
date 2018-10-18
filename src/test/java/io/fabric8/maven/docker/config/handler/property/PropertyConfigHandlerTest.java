@@ -43,8 +43,6 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 
-import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_CLEANUP;
-import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_FILTER;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -620,7 +618,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CLEANUP), "none", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(CleanupMode.NONE, config.getBuildConfiguration().cleanupMode());
+        assertEquals(CleanupMode.NONE, CleanupMode.parse(config.getBuildConfiguration().getCleanupMode()));
     }
 
     @Test
@@ -701,7 +699,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(DEFAULT_FILTER, config.getBuildConfiguration().getFilter());
+        assertNull(config.getBuildConfiguration().getFilter());
     }
 
     @Test
@@ -718,7 +716,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(DEFAULT_CLEANUP, config.getBuildConfiguration().cleanupMode().toParameter());
+        assertEquals(null, config.getBuildConfiguration().getCleanupMode());
     }
 
     @Test
@@ -727,7 +725,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base", k(ConfigKey.CLEANUP), mode.toParameter() };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(mode, config.getBuildConfiguration().cleanupMode());
+        assertEquals(mode, CleanupMode.parse(config.getBuildConfiguration().getCleanupMode()));
     }
 
 
@@ -853,7 +851,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
-        assertEquals(CleanupMode.TRY_TO_REMOVE, buildConfig.cleanupMode());
+        assertEquals(CleanupMode.TRY_TO_REMOVE, CleanupMode.parse(buildConfig.getCleanupMode()));
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
         assertEquals("image-ext", buildConfig.getFromExt().get("name"));

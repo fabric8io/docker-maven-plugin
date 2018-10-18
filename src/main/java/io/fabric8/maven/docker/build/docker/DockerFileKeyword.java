@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.assembly;
+package io.fabric8.maven.docker.build.docker;
 
 /**
  * Fields for  a dockerfile

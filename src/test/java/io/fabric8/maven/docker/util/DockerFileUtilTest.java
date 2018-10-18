@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.MavenArtifactRepository;
@@ -32,9 +33,6 @@ import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
-
-import mockit.Mock;
-import mockit.MockUp;
 
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
@@ -49,7 +47,7 @@ public class DockerFileUtilTest {
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
         assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, FixedStringSearchInterpolator.create()));
+            toTest, s -> FixedStringSearchInterpolator.create().interpolate(s)));
     }
 
     private File copyToTempDir(String resource) throws IOException {
@@ -63,7 +61,8 @@ public class DockerFileUtilTest {
 
     @Test
     public void interpolate() throws Exception {
-        MojoParameters params = mockMojoParams();
+        MavenBuildContext buildContext = mockMavenBuildContext();
+
         Map<String, String> filterMapping = new HashMap<>();
         filterMapping.put("none", "false");
         filterMapping.put("var", "${*}");
@@ -74,7 +73,7 @@ public class DockerFileUtilTest {
                 File dockerFile = getDockerfilePath(i, entry.getKey());
                 File expectedDockerFile = new File(dockerFile.getParent(), dockerFile.getName() + ".expected");
                 File actualDockerFile = createTmpFile(dockerFile.getName());
-                FixedStringSearchInterpolator interpolator = DockerFileUtil.createInterpolator(params, entry.getValue());
+                FixedStringSearchInterpolator interpolator = DockerFileUtil.createInterpolator(buildContext, entry.getValue());
                 FileUtils.write(actualDockerFile, DockerFileUtil.interpolate(dockerFile, interpolator), "UTF-8");
                 // Compare text lines without regard to EOL delimiters
                 assertEquals(FileUtils.readLines(expectedDockerFile), FileUtils.readLines(actualDockerFile));
@@ -88,7 +87,7 @@ public class DockerFileUtilTest {
             String.format("interpolate/%s/Dockerfile_%d", dir, i)).getFile());
     }
 
-    private MojoParameters mockMojoParams() {
+    private MavenBuildContext mockMavenBuildContext() {
         MavenProject project = new MavenProject();
         project.setArtifactId("docker-maven-plugin");
 
@@ -108,6 +107,14 @@ public class DockerFileUtilTest {
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
         session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue
         session.getSystemProperties().put("user.name", "somebody"); // Java system property: -Duser.name=somebody
-        return new MojoParameters(session, project, null, null, null, settings, "src", "target", Collections.singletonList(project));
+
+        return new MavenBuildContext.Builder()
+            .project(project)
+            .settings(settings)
+            .session(session)
+            .sourceDirectory("src")
+            .outputDirectory("target")
+            .reactorProjects(Collections.singletonList(project))
+            .build();
     }
 }

@@ -11,10 +11,10 @@ import java.util.Date;
 import java.util.Enumeration;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.service.BuildService;
-import io.fabric8.maven.docker.service.ImagePullManager;
+import io.fabric8.maven.docker.build.docker.DockerBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -61,31 +61,6 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         }
     }
 
-    protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
-            throws MojoExecutionException, IOException {
-
-        EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
-
-        BuildService.BuildContext buildContext = getBuildContext();
-        ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), autoPull);
-        BuildService buildService = hub.getBuildService();
-
-        buildService.buildImage(imageConfig, pullManager, buildContext);
-        if (!skipTag) {
-            buildService.tagImage(imageConfig.getName(), imageConfig);
-        }
-    }
-
-    // We ignore an already existing date file and always return the current date
-
-    @Override
-    protected Date getReferenceDate() {
-        return new Date();
-    }
-    private String determinePullPolicy(BuildImageConfiguration buildConfig) {
-        return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : imagePullPolicy;
-    }
-
     /**
      * Helper method to process an ImageConfiguration.
      *
@@ -105,6 +80,27 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             }
         }
     }
+
+    protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
+            throws MojoExecutionException, IOException {
+
+        EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
+
+        MavenBuildContext buildContext = getBuildContext(hub.getArchiveService());
+        DockerBuildService buildService = hub.getBuildService();
+
+        buildService.buildImage(imageConfig, buildContext, buildArgs);
+        if (!skipTag) {
+            buildService.tagImage(imageConfig.getName(), imageConfig);
+        }
+    }
+
+    // We ignore an already existing date file and always return the current date
+    @Override
+    protected Date getReferenceDate() {
+        return new Date();
+    }
+
 
     // check for a run-java.sh dependency an extract the script to target/ if found
     private void executeBuildPlugins() {

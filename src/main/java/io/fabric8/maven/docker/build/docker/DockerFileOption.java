@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.assembly;
+package io.fabric8.maven.docker.build.docker;
 
 /**
  * List of options for Docker keywords

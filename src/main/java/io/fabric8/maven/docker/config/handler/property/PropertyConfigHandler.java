@@ -127,7 +127,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
 
         return new BuildImageConfiguration.Builder()
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
-                .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanup()))
+                .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanupMode()))
                 .nocache(valueProvider.getBoolean(NOCACHE, config == null ? null : config.getNoCache()))
                 .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
                 .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
@@ -153,7 +153,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .dockerFile(valueProvider.getString(DOCKER_FILE, config == null ? null : config.getDockerFileRaw()))
                 .dockerFileDir(valueProvider.getString(DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDirRaw()))
                 .buildOptions(valueProvider.getMap(BUILD_OPTIONS, config == null ? null : config.getBuildOptions()))
-                .filter(valueProvider.getString(FILTER, config == null ? null : config.getFilterRaw()))
+                .filter(valueProvider.getString(FILTER, config == null ? null : config.getFilter()))
                 .user(valueProvider.getString(USER, config == null ? null : config.getUser()))
                 .healthCheck(extractHealthCheck(config == null ? null : config.getHealthCheck(), valueProvider))
                 .build();

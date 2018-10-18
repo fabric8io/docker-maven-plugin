@@ -28,15 +28,15 @@ public class CredentialHelperClient {
         return credentialHelperName;
     }
 
-    public String getVersion() throws MojoExecutionException {
+    public String getVersion() {
         try {
             return new VersionCommand().getVersion();
         } catch (IOException e) {
-            throw new MojoExecutionException("Error getting the version of the configured credential helper",e);
+            throw new RuntimeException("Error getting the version of the configured credential helper",e);
         }
     }
 
-    public AuthConfig getAuthConfig(String registryToLookup) throws MojoExecutionException {
+    public AuthConfig getAuthConfig(String registryToLookup) {
         try {
             JsonObject creds = new GetCommand().getCredentialNode(registryToLookup);
             if (creds == null) {
@@ -44,7 +44,7 @@ public class CredentialHelperClient {
             }
             return toAuthConfig(creds);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error getting the credentials for " + registryToLookup + " from the configured credential helper",e);
+            throw new RuntimeException("Error getting the credentials for " + registryToLookup + " from the configured credential helper",e);
         }
     }
 

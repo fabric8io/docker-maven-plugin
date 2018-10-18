@@ -1,9 +1,11 @@
-package io.fabric8.maven.docker.assembly;
+package io.fabric8.maven.docker.build.docker;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.build.docker.DockerFileBuilder;
+import io.fabric8.maven.docker.build.docker.DockerFileKeyword;
 import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
@@ -19,17 +21,17 @@ public class DockerFileBuilderTest {
     public void testBuildDockerFile() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
-                .baseImage("image")
-                .cmd(a)
-                .env(ImmutableMap.of("foo", "bar"))
-                .basedir("/export")
-                .expose(Collections.singletonList("8080"))
-                .maintainer("maintainer@example.com")
-                .workdir("/tmp")
-                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
-                .volumes(Collections.singletonList("/vol1"))
-                .run(Arrays.asList("echo something", "echo second"))
-                .content();
+                                                          .baseImage("image")
+                                                          .cmd(a)
+                                                          .env(ImmutableMap.of("foo", "bar"))
+                                                          .basedir("/export")
+                                                          .expose(Collections.singletonList("8080"))
+                                                          .maintainer("maintainer@example.com")
+                                                          .workdir("/tmp")
+                                                          .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                                                          .volumes(Collections.singletonList("/vol1"))
+                                                          .run(Arrays.asList("echo something", "echo second"))
+                                                          .content();
         String expected = loadFile("docker/Dockerfile.test");
         assertEquals(expected, stripCR(dockerfileContent));
     }

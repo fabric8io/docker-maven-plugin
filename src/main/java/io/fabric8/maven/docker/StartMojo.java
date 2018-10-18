@@ -28,15 +28,16 @@ import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
+import io.fabric8.maven.docker.build.RegistryContext;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.QueryService;
-import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
@@ -327,7 +328,7 @@ public class StartMojo extends AbstractDockerMojo {
     // Prepare start like creating custom networks, auto pull images, map aliases and return the list of images
     // to start in the correct order
     private Queue<ImageConfiguration> prepareStart(ServiceHub hub, QueryService queryService, RunService runService, Set<String> imageAliases)
-        throws DockerAccessException, MojoExecutionException {
+        throws DockerAccessException {
         final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
         for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
             final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
@@ -336,11 +337,14 @@ public class StartMojo extends AbstractDockerMojo {
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
 
-            RegistryService.RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-            ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), autoPull);
+            String policyS = runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : this.imagePullPolicy;
+            ImagePullPolicy policy = policyS != null ? ImagePullPolicy.fromString(policyS) : ImagePullPolicy.IfNotPresent;
 
-            hub.getRegistryService().pullImageWithPolicy(imageConfig.getName(), pullManager, registryConfig,
-                                                         queryService.hasImage(imageConfig.getName()));
+            RegistryContext registryContext = new MavenRegistryContext.Builder()
+                .pullRegistry(pullRegistry)
+                .authConfigFactory(authConfigFactory)
+                .build();
+            hub.getRegistryService().pullImage(imageConfig.getName(), policy, registryContext);
 
             NetworkConfig config = runConfig.getNetworkingConfig();
             List<String> bindMounts = extractBindMounts(runConfig.getVolumeConfiguration());
@@ -362,10 +366,6 @@ public class StartMojo extends AbstractDockerMojo {
             return Collections.emptyList();
         }
         return volumeConfiguration.getBind() != null ? volumeConfiguration.getBind() : Collections.emptyList();
-    }
-
-    private String determinePullPolicy(RunImageConfiguration runConfig) {
-        return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
     }
 
     private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {

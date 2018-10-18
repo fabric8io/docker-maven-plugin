@@ -1,34 +1,37 @@
-package io.fabric8.maven.docker.service;
+package io.fabric8.maven.docker.build;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.build.docker.DockerBuildService;
+import io.fabric8.maven.docker.build.docker.DockerRegistryService;
+import io.fabric8.maven.docker.build.maven.MavenArchiveService;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 import mockit.Expectations;
 import mockit.FullVerifications;
 import mockit.Injectable;
 import mockit.Mocked;
 import mockit.Tested;
 import mockit.Verifications;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.Before;
 import org.junit.Test;
 
 
-public class BuildServiceTest {
+public class DockerBuildServiceTest {
 
     private static final String NEW_IMAGE_ID = "efg789efg789";
     private static final String OLD_IMAGE_ID = "abc123abc123";
 
     @Tested
-    private BuildService buildService;
+    private DockerBuildService buildService;
 
     @Injectable
     private DockerAccess docker;
@@ -44,30 +47,23 @@ public class BuildServiceTest {
     private String oldImageId;
 
     @Mocked
-    private MojoParameters params;
+    private MavenBuildContext buildContext;
 
     @Injectable
     private QueryService queryService;
 
     @Injectable
-    private ArchiveService archiveService;
+    private MavenArchiveService archiveService;
 
     @Injectable
-    private RegistryService registryService;
+    private DockerRegistryService registryService;
 
-    @Before
-    public void setup() throws Exception {
-        new Expectations() {{
-            archiveService.createArchive(anyString, (BuildImageConfiguration) any, (MojoParameters) any, log);
-            result = new File("docker-build.tar");
-        }};
-    }
 
     @Test
     public void testBuildImageWithCleanup() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
-        whenBuildImage(true,false);
+        whenBuildImage(true);
         thenImageIsBuilt();
         thenOldImageIsRemoved();
     }
@@ -76,7 +72,7 @@ public class BuildServiceTest {
     public void testBuildImageWithNoCleanup() throws Exception {
         givenAnImageConfiguration(false);
         givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
-        whenBuildImage(false,false);
+        whenBuildImage(false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -85,7 +81,7 @@ public class BuildServiceTest {
     public void testCleanupCachedImage() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(OLD_IMAGE_ID, OLD_IMAGE_ID);
-        whenBuildImage(false, false);
+        whenBuildImage(false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -94,7 +90,7 @@ public class BuildServiceTest {
     public void testCleanupNoExistingImage() throws Exception {
         givenAnImageConfiguration(true);
         givenImageIds(null, NEW_IMAGE_ID);
-        whenBuildImage(false, false);
+        whenBuildImage(false);
         thenImageIsBuilt();
         thenOldImageIsNotRemoved();
     }
@@ -114,7 +110,7 @@ public class BuildServiceTest {
     private void givenImageIds(final String oldImageId, final String newImageId) throws DockerAccessException {
         this.oldImageId = oldImageId;
         new Expectations() {{
-            queryService.getImageId(imageConfig.getName()); result = new String[] { oldImageId, newImageId };
+            docker.getImageId(imageConfig.getName()); result = new String[] { oldImageId, newImageId };
         }};
     }
 
@@ -127,7 +123,7 @@ public class BuildServiceTest {
         }};
     }
 
-    private void thenOldImageIsNotRemoved() throws DockerAccessException {
+    private void thenOldImageIsNotRemoved() {
         new FullVerifications(docker) {{
 
         }};
@@ -139,9 +135,11 @@ public class BuildServiceTest {
         }};
     }
 
-    private void whenBuildImage(boolean cleanup, boolean nocache) throws DockerAccessException, MojoExecutionException {
+    private void whenBuildImage(boolean cleanup) throws IOException {
         new Expectations() {{
             docker.buildImage(withEqual(imageConfig.getName()), (File) any, (BuildOptions) any);
+            buildContext.createImageContentArchive(withEqual(imageConfig.getName()), (BuildImageConfiguration) any, withEqual(log));
+            result = new File("docker-build.tar");
         }};
         if (cleanup) {
             new Expectations() {{
@@ -149,7 +147,7 @@ public class BuildServiceTest {
             }};
         }
 
-        buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap());
+        buildService.buildImage(imageConfig, buildContext, Collections.emptyMap());
 
     }
 }

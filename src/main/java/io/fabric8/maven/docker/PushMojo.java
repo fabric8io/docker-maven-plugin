@@ -1,9 +1,10 @@
 package io.fabric8.maven.docker;
 
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.service.ServiceHub;
+import java.io.IOException;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -22,13 +23,13 @@ public class PushMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.skip.push", defaultValue = "false")
     private boolean skipPush;
-    
-    /** 
+
+    /**
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;
-    
+
     @Parameter(property = "docker.push.retries", defaultValue = "0")
     private int retries;
 
@@ -36,11 +37,18 @@ public class PushMojo extends AbstractDockerMojo {
      * {@inheritDoc}
      */
     @Override
-    public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
+    public void executeInternal(ServiceHub hub) throws IOException {
         if (skipPush) {
             return;
         }
 
-        hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+        MavenRegistryContext registryContext = new MavenRegistryContext.Builder()
+            .authConfigFactory(authConfigFactory)
+            .pushRegistry(pushRegistry)
+            .build();
+
+        for (ImageConfiguration imageConfig : getResolvedImages()) {
+            hub.getRegistryService().pushImage(imageConfig, retries, skipTag, registryContext);
+        }
     }
 }

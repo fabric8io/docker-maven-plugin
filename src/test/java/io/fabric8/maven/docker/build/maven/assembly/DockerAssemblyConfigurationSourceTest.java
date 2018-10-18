@@ -1,19 +1,21 @@
-package io.fabric8.maven.docker.assembly;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+package io.fabric8.maven.docker.build.maven.assembly;
 
 import java.io.File;
 import java.util.Arrays;
 
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.build.maven.assembly.BuildDirs;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyConfigurationSource;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.project.MavenProject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DockerAssemblyConfigurationSourceTest {
 
@@ -44,42 +46,47 @@ public class DockerAssemblyConfigurationSourceTest {
 
     @Test
     public void testCreateSourceAbsolute() {
-        testCreateSource(buildParameters(".", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
+        testCreateSource(buildBuildContetxt(".", "/src/docker".replace("/", File.separator), "/output/docker".replace("/", File.separator)));
     }
 
     @Test
     public void testCreateSourceRelative() {
-        testCreateSource(buildParameters(".","src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
+        testCreateSource(buildBuildContetxt(".","src/docker".replace("/", File.separator), "output/docker".replace("/", File.separator)));
     }
 
     @Test
     public void testOutputDirHasImage() {
         String image = "image";
-        MojoParameters params = buildParameters(".", "src/docker", "output/docker");
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(params,
-                                                                                         new BuildDirs(image, params),assemblyConfig);
+        MavenBuildContext context = buildBuildContetxt(".", "src/docker", "output/docker");
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(context,
+                                                                                         new BuildDirs(image, context), assemblyConfig);
 
         assertTrue(containsDir(image, source.getOutputDirectory()));
         assertTrue(containsDir(image, source.getWorkingDirectory()));
         assertTrue(containsDir(image, source.getTemporaryRootDirectory()));
     }
 
-    private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
+    private MavenBuildContext buildBuildContetxt(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
         mavenProject.setFile(new File(projectDir));
-        return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir, outputDir, null);
+        return new MavenBuildContext.Builder()
+            .project(mavenProject)
+            .sourceDirectory(sourceDir)
+            .outputDirectory(outputDir)
+            .build();
     }
 
     @Test
     public void testEmptyAssemblyConfig() {
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", null),
-               null,null
-        );
+        MavenBuildContext buildContext = new MavenBuildContext.Builder()
+            .sourceDirectory("/src/docker")
+            .outputDirectory("/output/docker")
+            .build();
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(buildContext,null,null);
         assertEquals(0,source.getDescriptors().length);
     }
 
-    private void testCreateSource(MojoParameters params) {
+    private void testCreateSource(MavenBuildContext params) {
         DockerAssemblyConfigurationSource source =
                 new DockerAssemblyConfigurationSource(params, new BuildDirs("image", params), assemblyConfig);
 
@@ -119,10 +126,12 @@ public class DockerAssemblyConfigurationSourceTest {
         MavenProject reactorProject2 = new MavenProject();
         reactorProject2.setFile(new File("../reactor-2"));
 
-        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(
-               new MojoParameters(null, null, null, null, null, null, "/src/docker", "/output/docker", Arrays.asList(new MavenProject[] { reactorProject1, reactorProject2 })),
-               null,null
-        );
+        MavenBuildContext buildContext = new MavenBuildContext.Builder()
+            .sourceDirectory("/src/docker")
+            .outputDirectory("/output/docker")
+            .reactorProjects(Arrays.asList(reactorProject1, reactorProject2))
+            .build();
+        DockerAssemblyConfigurationSource source = new DockerAssemblyConfigurationSource(buildContext,null,null);
         assertEquals(2,source.getReactorProjects().size());
     }
 }

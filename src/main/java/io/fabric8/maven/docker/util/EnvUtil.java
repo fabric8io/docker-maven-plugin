@@ -5,12 +5,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.google.common.base.*;
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import io.fabric8.maven.docker.build.BuildContext;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -86,16 +92,13 @@ public class EnvUtil {
         return largerVersion != null && largerVersion.equals(versionA);
     }
 
-    private static final Function<String, String[]> SPLIT_ON_LAST_COLON = new Function<String, String[]>() {
-        @Override
-        public String[] apply(String element) {
-          int colon = element.lastIndexOf(':');
-          if (colon < 0) {
-              return new String[] {element, element};
-          } else {
-              return new String[] {element.substring(0, colon), element.substring(colon + 1)};
-          }
-        }
+    private static final Function<String, String[]> SPLIT_ON_LAST_COLON = element -> {
+      int colon = element.lastIndexOf(':');
+      if (colon < 0) {
+          return new String[] {element, element};
+      } else {
+          return new String[] {element.substring(0, colon), element.substring(colon + 1)};
+      }
     };
 
     /**
@@ -107,35 +110,14 @@ public class EnvUtil {
      * @return return list of 2-element arrays or an empty list if the given list is empty or null
      */
     public static List<String[]> splitOnLastColon(List<String> listToSplit) {
-        if (listToSplit != null) {
-          return Lists.transform(listToSplit, SPLIT_ON_LAST_COLON);
+        if (listToSplit == null) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        return listToSplit.stream().map(SPLIT_ON_LAST_COLON).collect(Collectors.toList());
     }
 
-    private static final Function<String, Iterable<String>> COMMA_SPLITTER = new Function<String, Iterable<String>>() {
-        private Splitter COMMA_SPLIT = Splitter.on(",").trimResults().omitEmptyStrings();
-
-        @Override
-        public Iterable<String> apply(String input) {
-            return COMMA_SPLIT.split(input);
-        }
-    };
-
-    private static final Predicate<String> NOT_EMPTY = new Predicate<String>() {
-        @Override
-        public boolean apply(@Nullable String s) {
-            return s!=null && !s.isEmpty();
-        }
-    };
-
-    private static final Function<String,String> TRIM = new Function<String,String>() {
-        @Nullable
-        @Override
-        public String apply(@Nullable String s) {
-            return s!=null ?s.trim() :s;
-        }
-    };
+    private static final Predicate<String> NOT_EMPTY = s -> s != null && !s.isEmpty();
+    private static final Function<String,String> TRIM = s -> s != null ?s.trim() :s;
 
     /**
      * Remove empty members of a list.
@@ -144,13 +126,14 @@ public class EnvUtil {
      */
     @Nonnull
     public static List<String> removeEmptyEntries(@Nullable List<String> input) {
-        if(input==null) {
+        if (input == null) {
             return Collections.emptyList();
         }
-        Iterable<String> trimmedInputs = Iterables.transform(input, TRIM);
-        Iterable<String> nonEmptyInputs = Iterables.filter(trimmedInputs, NOT_EMPTY);
-        return Lists.newArrayList(nonEmptyInputs);
+        return input.stream().map(TRIM).filter(NOT_EMPTY).collect(Collectors.toList());
     }
+
+    private static final Function<String, Stream<String>> COMMA_SPLITTER =
+        input -> Splitter.on(",").trimResults().omitEmptyStrings().splitToList(input).stream();
 
     /**
      * Split each element of an Iterable<String> at commas.
@@ -158,12 +141,11 @@ public class EnvUtil {
      * @return An Iterable over string which breaks down each input element at comma boundaries
      */
     @Nonnull
-    public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
-        if(input==null) {
+    public static List<String> splitAtCommasAndTrim(List<String> input) {
+        if (input==null) {
             return Collections.emptyList();
         }
-        Iterable<String> nonEmptyInputs = Iterables.filter(input, Predicates.notNull());
-        return Lists.newArrayList(Iterables.concat(Iterables.transform(nonEmptyInputs, COMMA_SPLITTER)));
+        return input.stream().filter(Objects::nonNull).flatMap(COMMA_SPLITTER).collect(Collectors.toList());
     }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
@@ -174,7 +156,6 @@ public class EnvUtil {
         }
         return res;
     }
-
 
     /**
      * Join a list of objects to a string with a given separator by calling Object.toString() on the elements.
@@ -383,20 +364,20 @@ public class EnvUtil {
         return "https://" + registry;
     }
 
-    public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
+    public static File prepareAbsoluteOutputDirPath(BuildContext ctx, String dir, String path) {
+        return prepareAbsolutePath(ctx, new File(ctx.getOutputDirectory(), dir).toString(), path);
     }
 
-    public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
+    public static File prepareAbsoluteSourceDirPath(BuildContext ctx, String path) {
+        return prepareAbsolutePath(ctx, ctx.getSourceDirectory(), path);
     }
 
-    private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
+    private static File prepareAbsolutePath(BuildContext ctx, String directory, String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+        return new File(new File(ctx.getBasedir(), directory), path);
     }
 
     // create a timestamp file holding time in epoch seconds

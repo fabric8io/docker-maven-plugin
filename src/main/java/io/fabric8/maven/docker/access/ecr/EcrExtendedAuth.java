@@ -76,7 +76,7 @@ public class EcrExtendedAuth {
      * @throws IOException
      * @throws MojoExecutionException
      */
-    public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException, MojoExecutionException {
+    public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException {
         JsonObject jo = getAuthorizationToken(localCredentials);
 
         JsonArray authorizationDatas = jo.getAsJsonArray("authorizationData");
@@ -86,7 +86,7 @@ public class EcrExtendedAuth {
         return new AuthConfig(authorizationToken, "none");
     }
 
-    private JsonObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
+    private JsonObject getAuthorizationToken(AuthConfig localCredentials) throws IOException {
         HttpPost request = createSignedRequest(localCredentials, new Date());
         return executeRequest(createClient(), request);
     }
@@ -95,13 +95,13 @@ public class EcrExtendedAuth {
         return HttpClients.custom().useSystemProperties().build();
     }
 
-    private JsonObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
+    private JsonObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException {
         try {
             CloseableHttpResponse response = client.execute(request);
             int statusCode = response.getStatusLine().getStatusCode();
             logger.debug("Response status %d", statusCode);
             if (statusCode != HttpStatus.SC_OK) {
-                throw new MojoExecutionException("AWS authentication failure");
+                throw new SecurityException("AWS authentication failure");
             }
 
             HttpEntity entity = response.getEntity();

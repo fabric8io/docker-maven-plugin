@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.assembly;/*
+package io.fabric8.maven.docker.build.maven.assembly;/*
  *
  * Copyright 2014 Roland Huss
  *
@@ -18,6 +18,8 @@ package io.fabric8.maven.docker.assembly;/*
 import java.io.File;
 import java.util.List;
 
+import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
+import io.fabric8.maven.docker.build.maven.assembly.MappingTrackArchiver;
 import mockit.Injectable;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
