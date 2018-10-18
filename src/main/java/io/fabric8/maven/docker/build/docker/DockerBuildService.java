@@ -13,10 +13,10 @@ import com.google.common.collect.ImmutableMap;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.build.BuildContext;
 import io.fabric8.maven.docker.build.BuildService;
 import io.fabric8.maven.docker.build.RegistryService;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
@@ -68,7 +68,9 @@ public class DockerBuildService implements BuildService {
             File dockerArchive = createDockerContextArchive(imageConfig, buildContext);
 
             // Prepare options for building against a Docker daemon and do the build
-            String newImageId = build(imageConfig, buildArgs, dockerArchive);
+            String newImageId = build(imageConfig,
+                                      getBuildArgsFromProperties(buildContext, buildArgs),
+                                      dockerArchive);
 
             // Remove the image if requested
             if (oldImageId.isPresent() && !oldImageId.get().equals(newImageId)) {
@@ -78,7 +80,7 @@ public class DockerBuildService implements BuildService {
 
     public void tagImage(String imageName, ImageConfiguration imageConfig) throws DockerAccessException {
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
-        if (tags.size() > 0) {
+        if (!tags.isEmpty()) {
             log.info("%s: Tag with %s", imageConfig.getDescription(), EnvUtil.stringJoin(tags, ","));
 
             for (String tag : tags) {
@@ -233,9 +235,9 @@ public class DockerBuildService implements BuildService {
         }
     }
 
-    private Map<String, String> addBuildArgs(BuildContext buildContext, Map<String, String> buildArgs) {
-        Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getProperties());
-        Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
+    private Map<String, String> getBuildArgsFromProperties(BuildContext buildContext, Map<String, String> buildArgs) {
+        Map<String, String> buildArgsFromProject = getBuildArgsFromProperties(buildContext.getProperties());
+        Map<String, String> buildArgsFromSystem = getBuildArgsFromProperties(System.getProperties());
         return ImmutableMap.<String, String>builder()
                 .putAll(Optional.of(buildArgs).orElse(Collections.emptyMap()))
                 .putAll(buildArgsFromProject)
@@ -243,9 +245,12 @@ public class DockerBuildService implements BuildService {
                 .build();
     }
 
-    private Map<String, String> addBuildArgsFromProperties(Properties properties) {
+    private Map<String, String> getBuildArgsFromProperties(Properties properties) {
         String argPrefix = "docker.buildArg.";
         Map<String, String> buildArgs = new HashMap<>();
+        if (properties == null) {
+            return buildArgs;
+        }
         for (Object keyObj : properties.keySet()) {
             String key = (String) keyObj;
             if (key.startsWith(argPrefix)) {
@@ -260,8 +265,6 @@ public class DockerBuildService implements BuildService {
         log.debug("Build args set %s", buildArgs);
         return buildArgs;
     }
-
-
 
     private boolean checkForNocache(ImageConfiguration imageConfig) {
         String nocache = System.getProperty("docker.nocache");

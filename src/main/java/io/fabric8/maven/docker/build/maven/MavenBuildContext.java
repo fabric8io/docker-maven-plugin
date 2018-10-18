@@ -24,7 +24,7 @@ import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
  * @author roland
  * @since 16.10.18
  */
-public class MavenBuildContext implements BuildContext, Serializable {
+public class MavenBuildContext implements BuildContext {
 
     private String sourceDirectory;
     private String outputDirectory;
@@ -38,8 +38,7 @@ public class MavenBuildContext implements BuildContext, Serializable {
     private MavenArchiveService archiveService;
     private RegistryContext registryContext;
 
-    public MavenBuildContext() {
-    }
+    private MavenBuildContext() { }
 
 
     public String getSourceDirectory() {
@@ -183,7 +182,6 @@ public class MavenBuildContext implements BuildContext, Serializable {
         public MavenBuildContext build() {
             return context;
         }
-
 
     }
 }

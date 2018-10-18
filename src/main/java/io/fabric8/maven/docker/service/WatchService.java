@@ -17,10 +17,10 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.build.docker.DockerBuildService;
 import io.fabric8.maven.docker.build.maven.MavenArchiveService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
@@ -58,8 +58,8 @@ public class WatchService {
         this.log = log;
     }
 
-    public synchronized void watch(WatchContext watchContext, MavenBuildContext buildContext, List<ImageConfiguration> images) throws DockerAccessException,
-                                                                                                                                 IOException {
+    public synchronized void watch(WatchContext watchContext, MavenBuildContext buildContext, List<ImageConfiguration> images) throws
+                                                                                                                               IOException {
 
         // Important to be be a single threaded scheduler since watch jobs must run serialized
         ScheduledExecutorService executor = null;

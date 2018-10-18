@@ -8,7 +8,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import io.fabric8.maven.docker.build.BuildContext;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
