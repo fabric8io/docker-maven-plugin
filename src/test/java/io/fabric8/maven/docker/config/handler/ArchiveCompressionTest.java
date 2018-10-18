@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.config.handler;
 
-import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.config.build.ArchiveCompression;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

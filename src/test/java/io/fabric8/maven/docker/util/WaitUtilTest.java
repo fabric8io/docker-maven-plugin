@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import io.fabric8.maven.docker.wait.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

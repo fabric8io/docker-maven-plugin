@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;/*
+package io.fabric8.maven.docker.config.run;/*
  *
  * Copyright 2014 Roland Huss
  *
@@ -17,8 +17,6 @@ package io.fabric8.maven.docker.config;/*
 
 import java.io.Serializable;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 /**
 * @author roland
 * @since 08/12/14
@@ -27,10 +25,8 @@ public class RestartPolicy implements Serializable {
 
     public static final RestartPolicy DEFAULT = new RestartPolicy();
 
-    @Parameter
     private String name;
 
-    @Parameter
     private int retry;
 
     public RestartPolicy() {};

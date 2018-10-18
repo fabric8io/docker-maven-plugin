@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.LogConfiguration;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
 import io.fabric8.maven.docker.util.FormatParameterReplacer;
 
 /**

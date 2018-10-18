@@ -1,10 +1,9 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.build;
 
 
 import java.io.Serializable;
 
 import org.apache.maven.plugins.assembly.model.Assembly;
-import org.apache.maven.plugins.annotations.Parameter;
 
 public class AssemblyConfiguration implements Serializable {
 
@@ -18,29 +17,23 @@ public class AssemblyConfiguration implements Serializable {
      * New replacement for base directory which better reflects its
      * purpose
      */
-    @Parameter
     private String targetDir;
 
     /**
      * Name of the assembly which is used also as name of the archive
      * which is created and has to be used when providing an own Dockerfile
      */
-    @Parameter
     private String name = "maven";
 
-    @Parameter
     private String descriptor;
 
-    @Parameter
     private Assembly inline;
 
-    @Parameter
     private String descriptorRef;
 
     /**
      * @deprecated Use {@link BuildImageConfiguration#dockerFileDir} instead
      */
-    @Parameter
     @Deprecated
     private String dockerFileDir;
 
@@ -53,13 +46,11 @@ public class AssemblyConfiguration implements Serializable {
      * exported.
      *
      */
-    @Parameter
     private Boolean exportTargetDir;
 
     /**
      * @deprecated use permissionMode == ignore instead.
      */
-    @Parameter
     private Boolean ignorePermissions;
 
     @Deprecated
@@ -67,13 +58,10 @@ public class AssemblyConfiguration implements Serializable {
         return ignorePermissions;
     }
 
-    @Parameter
     private AssemblyMode mode;
 
-    @Parameter
     private String user;
 
-    @Parameter
     private String tarLongFileMode;
 
     public Boolean getExportTargetDir() {
@@ -101,7 +89,7 @@ public class AssemblyConfiguration implements Serializable {
     }
 
     /**
-     * @parameter default-value="keep"
+     * default-value="keep"
      */
     private PermissionMode permissions;
 

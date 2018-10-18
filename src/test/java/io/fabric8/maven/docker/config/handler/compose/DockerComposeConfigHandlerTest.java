@@ -1,10 +1,10 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.RestartPolicy;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
 import mockit.Expectations;
 import mockit.Injectable;
@@ -73,14 +73,14 @@ public class DockerComposeConfigHandlerTest {
 	public void networkAliases() throws IOException, MavenFilteringException {
         setupComposeExpectations("docker-compose-network-aliases.yml");
         List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
-        
+
         // Service 1 has 1 network (network1) with 2 aliases (alias1, alias2)
         NetworkConfig netSvc = configs.get(0).getRunConfiguration().getNetworkingConfig();
         assertEquals("network1", netSvc.getName());
         assertEquals(2, netSvc.getAliases().size());
         assertEquals("alias1", netSvc.getAliases().get(0));
         assertEquals("alias2", netSvc.getAliases().get(1));
-  
+
         // Service 2 has 1 network (network1) with no aliases
         netSvc = configs.get(1).getRunConfiguration().getNetworkingConfig();
         assertEquals("network1", netSvc.getName());
@@ -92,7 +92,7 @@ public class DockerComposeConfigHandlerTest {
         assertEquals(1, netSvc.getAliases().size());
         assertEquals("alias1", netSvc.getAliases().get(0));
 }
-	
+
     @Test
     public void positiveVersionTest() throws IOException, MavenFilteringException {
         for (String composeFile : new String[] { "version/compose-version-2.yml", "version/compose-version-2x.yml"} ) {
@@ -101,7 +101,7 @@ public class DockerComposeConfigHandlerTest {
         }
 
     }
-	
+
     @Test
     public void negativeVersionTest() throws IOException, MavenFilteringException {
         for (String composeFile : new String[] { "version/compose-wrong-version.yml", "version/compose-no-version.yml"} ) {

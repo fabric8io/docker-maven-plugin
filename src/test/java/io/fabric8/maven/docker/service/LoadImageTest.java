@@ -10,7 +10,7 @@ import io.fabric8.maven.docker.build.docker.DockerBuildService;
 import io.fabric8.maven.docker.build.docker.DockerRegistryService;
 import io.fabric8.maven.docker.build.maven.MavenArchiveService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;

@@ -3,23 +3,18 @@ package io.fabric8.maven.docker.config;
 import java.io.Serializable;
 
 import io.fabric8.maven.docker.util.DeepCopy;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Configuration for watching on image changes
  */
 public class WatchImageConfiguration implements Serializable {
 
-    @Parameter
     private Integer interval;
 
-    @Parameter
     private WatchMode mode;
 
-    @Parameter
     private String postGoal;
 
-    @Parameter
     private String postExec;
 
     public WatchImageConfiguration() {};

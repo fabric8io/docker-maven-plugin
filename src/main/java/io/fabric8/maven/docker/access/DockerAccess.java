@@ -5,8 +5,8 @@ import java.util.List;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
-import io.fabric8.maven.docker.config.ArchiveCompression;
-import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.build.ArchiveCompression;
+import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;

@@ -3,15 +3,18 @@ package io.fabric8.maven.docker.build.docker;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
 import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.HealthCheckConfiguration;
-
+import io.fabric8.maven.docker.config.build.Arguments;
+import io.fabric8.maven.docker.config.build.HealthCheckConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 

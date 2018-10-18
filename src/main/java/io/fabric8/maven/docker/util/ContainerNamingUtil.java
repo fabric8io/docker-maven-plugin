@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
 import io.fabric8.maven.docker.model.Container;
 
 /**

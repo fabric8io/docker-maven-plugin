@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.util;
 
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
 import org.junit.Ignore;
 import org.junit.Test;
 

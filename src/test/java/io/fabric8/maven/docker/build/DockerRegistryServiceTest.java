@@ -9,7 +9,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.build.docker.DockerRegistryService;
 import io.fabric8.maven.docker.build.docker.ImagePullCache;
 import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
-import io.fabric8.maven.docker.config.ImagePullPolicy;
+import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;

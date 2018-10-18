@@ -3,10 +3,10 @@ package io.fabric8.maven.docker;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.docker.build.maven.MavenArchiveService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
-import io.fabric8.maven.docker.config.ImagePullPolicy;
-import io.fabric8.maven.docker.build.maven.MavenArchiveService;
+import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;

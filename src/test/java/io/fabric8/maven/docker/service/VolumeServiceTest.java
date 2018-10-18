@@ -10,7 +10,7 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 import io.fabric8.maven.docker.util.JsonFactory;
 import mockit.Delegate;
 import mockit.Expectations;

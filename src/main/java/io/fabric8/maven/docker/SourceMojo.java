@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.BuildImageSelectMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageSelectMode;
 import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

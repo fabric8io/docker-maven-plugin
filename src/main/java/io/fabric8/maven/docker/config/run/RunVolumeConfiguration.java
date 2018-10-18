@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;/*
+package io.fabric8.maven.docker.config.run;/*
  *
  * Copyright 2014 Roland Huss
  *
@@ -16,9 +16,8 @@ package io.fabric8.maven.docker.config;/*
  */
 
 import java.io.Serializable;
-import java.util.*;
-
-import org.apache.maven.plugins.annotations.Parameter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Run configuration for volumes.
@@ -31,14 +30,12 @@ public class RunVolumeConfiguration implements Serializable {
     /**
      * List of images names from where volumes are mounted
      */
-    @Parameter
     private List<String> from;
 
     /**
      * List of bind parameters for binding/mounting host directories
      * into the container
      */
-    @Parameter
     private List<String> bind;
 
     /**

@@ -2,7 +2,7 @@ package io.fabric8.maven.docker;
 
 
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.VolumeService;
 import org.apache.maven.plugin.MojoExecutionException;

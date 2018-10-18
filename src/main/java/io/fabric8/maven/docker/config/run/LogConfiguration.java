@@ -1,9 +1,7 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 
 import java.io.Serializable;
 import java.util.Map;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -13,22 +11,16 @@ public class LogConfiguration implements Serializable {
 
     public static final LogConfiguration DEFAULT = new LogConfiguration(null, null, null, null, null, null);
 
-    @Parameter(defaultValue = "true")
     private Boolean enabled;
 
-    @Parameter
     private String prefix;
 
-    @Parameter
     private String date;
 
-    @Parameter
     private String color;
 
-    @Parameter
     private String file;
 
-    @Parameter
     private LogDriver driver;
 
     public LogConfiguration() {}
@@ -89,10 +81,8 @@ public class LogConfiguration implements Serializable {
 
     public static class LogDriver implements Serializable {
 
-        /** @parameter */
         private String name;
 
-        /** @parameter */
         private Map<String, String> opts;
 
         public LogDriver() {};

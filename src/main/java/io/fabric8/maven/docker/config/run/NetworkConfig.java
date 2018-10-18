@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 /*
  *
  * Copyright 2016 Roland Huss
@@ -20,8 +20,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 /**
  * Network config encapsulating network specific configuration
  * @author roland
@@ -30,10 +28,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 public class NetworkConfig implements Serializable {
 
-    @Parameter
     private String name;
 
-    @Parameter
     private Mode mode;
 
     private List<String> aliases = new ArrayList<>();

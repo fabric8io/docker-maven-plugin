@@ -5,17 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.build.ArchiveCompression;
+import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProjectHelper;
-
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.service.ServiceHub;
 
 @Mojo(name = "save")
 public class SaveMojo extends AbstractDockerMojo {

@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.build.Arguments;
+import io.fabric8.maven.docker.config.run.LogConfiguration;
+import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.RestartPolicy;
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.run.UlimitConfig;
 import io.fabric8.maven.docker.util.VolumeBindingUtil;
 
 

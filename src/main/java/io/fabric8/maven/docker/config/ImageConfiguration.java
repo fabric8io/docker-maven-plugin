@@ -5,12 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -18,25 +21,18 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class ImageConfiguration implements StartOrderResolver.Resolvable, Serializable {
 
-    @Parameter(required = true)
     private String name;
 
-    @Parameter
     private String alias;
 
-    @Parameter
     private RunImageConfiguration run;
 
-    @Parameter
     private BuildImageConfiguration build;
 
-    @Parameter
     private WatchImageConfiguration watch;
 
-    @Parameter
     private Map<String,String> external;
 
-    @Parameter
     private String registry;
 
     // Used for injection

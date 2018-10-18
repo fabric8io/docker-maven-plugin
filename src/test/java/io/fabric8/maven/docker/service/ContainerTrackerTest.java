@@ -18,10 +18,10 @@ package io.fabric8.maven.docker.service;
 
 import java.util.*;
 
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 

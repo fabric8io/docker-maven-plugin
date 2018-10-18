@@ -3,8 +3,6 @@ package io.fabric8.maven.docker.config;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.maven.plugins.annotations.Parameter;
-
 public class DockerMachineConfiguration implements Serializable {
 
     public static final String DOCKER_MACHINE_NAME_PROP = "docker.machine.name";
@@ -14,19 +12,16 @@ public class DockerMachineConfiguration implements Serializable {
     /**
      * Name of the docker-machine
      */
-    @Parameter
     private String name = "default";
 
     /**
      * Should the docker-machine be created if it does not exist?
      */
-    @Parameter
     private Boolean autoCreate = Boolean.FALSE;
 
     /**
      * Should the docker-machine's certificates be regenerated after starting?
      */
-    @Parameter
     private Boolean regenerateCertsAfterStart = Boolean.FALSE;
 
     /**
@@ -37,7 +32,6 @@ public class DockerMachineConfiguration implements Serializable {
      * &lt;virtualbox-no-share/&gt;
      * </code>
      */
-    @Parameter
     private Map<String, String> createOptions;
 
     public DockerMachineConfiguration() {}

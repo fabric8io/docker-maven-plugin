@@ -1,11 +1,19 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
 import io.fabric8.maven.docker.util.DeepCopy;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;

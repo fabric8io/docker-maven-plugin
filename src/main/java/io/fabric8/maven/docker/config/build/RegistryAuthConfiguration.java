@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.build;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -6,26 +6,19 @@ import java.util.TreeMap;
 
 import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.plugins.annotations.Parameter;
 
 public class RegistryAuthConfiguration implements Serializable {
 
-    @Parameter
     private Map<String, String> push;
 
-    @Parameter
     private Map<String, String> pull;
 
-    @Parameter
     private String username;
 
-    @Parameter
     private String password;
 
-    @Parameter
     private String email;
 
-    @Parameter
     private String authToken;
 
     public Map toMap() {

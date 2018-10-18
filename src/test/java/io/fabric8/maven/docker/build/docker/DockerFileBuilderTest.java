@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.build.docker.DockerFileBuilder;
-import io.fabric8.maven.docker.build.docker.DockerFileKeyword;
-import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
+import io.fabric8.maven.docker.config.build.Arguments;
+import io.fabric8.maven.docker.config.build.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.build.HealthCheckMode;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 

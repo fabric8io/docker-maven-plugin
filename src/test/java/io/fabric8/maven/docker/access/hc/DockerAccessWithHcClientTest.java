@@ -6,7 +6,7 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
-import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.config.build.ArchiveCompression;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;

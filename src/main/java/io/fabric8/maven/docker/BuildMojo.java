@@ -11,10 +11,10 @@ import java.util.Date;
 import java.util.Enumeration;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.build.maven.MavenBuildContext;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.build.docker.DockerBuildService;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;

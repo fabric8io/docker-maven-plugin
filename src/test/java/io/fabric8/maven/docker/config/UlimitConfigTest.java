@@ -16,6 +16,7 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
+import io.fabric8.maven.docker.config.run.UlimitConfig;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

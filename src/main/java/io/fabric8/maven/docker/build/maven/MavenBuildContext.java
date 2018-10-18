@@ -2,14 +2,13 @@ package io.fabric8.maven.docker.build.maven;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Function;
 
 import io.fabric8.maven.docker.build.BuildContext;
 import io.fabric8.maven.docker.build.RegistryContext;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.archiver.MavenArchiveConfiguration;

@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunImageConfiguration;
 import io.fabric8.maven.docker.model.Container;
 import mockit.Expectations;
 import mockit.Mocked;

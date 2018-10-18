@@ -9,8 +9,8 @@ import java.util.function.Function;
 
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.build.docker.DockerFileBuilder;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.Logger;

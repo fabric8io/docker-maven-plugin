@@ -1,14 +1,12 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
+import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -16,7 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class RunImageConfiguration implements Serializable {
 
-    static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
+    public static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
 
     public boolean isDefault() {
         return this == RunImageConfiguration.DEFAULT;
@@ -25,106 +23,79 @@ public class RunImageConfiguration implements Serializable {
     /**
      * Environment variables to set when starting the container. key: variable name, value: env value
      */
-    @Parameter
     private Map<String, String> env;
 
-    @Parameter
     private Map<String,String> labels;
 
     // Path to a property file holding environment variables
-    @Parameter
     private String envPropertyFile;
 
     // Command to execute in container
-    @Parameter
     private Arguments cmd;
 
     // container domain name
-    @Parameter
     private String domainname;
 
     // container domain name
-    @Parameter
     private List<String> dependsOn;
 
     // container entry point
-    @Parameter
     private Arguments entrypoint;
 
     // container hostname
-    @Parameter
     private String hostname;
 
     // container user
-    @Parameter
     private String user;
 
     // working directory
-    @Parameter
     private String workingDir;
 
     // Size of /dev/shm in bytes
-    /** @parameter */
+    /** */
     private Long shmSize;
 
     // memory in bytes
-    @Parameter
     private Long memory;
 
     // total memory (swap + ram) in bytes, -1 to disable
-    @Parameter
     private Long memorySwap;
 
     // Path to a file where the dynamically mapped properties are written to
-    @Parameter
     private String portPropertyFile;
 
     // For simple network setups. For complex stuff use "network"
-    @Parameter
     private String net;
 
-    @Parameter
     private NetworkConfig network;
 
-    @Parameter
     private List<String> dns;
 
-    @Parameter
     private List<String> dnsSearch;
 
-    @Parameter
     private List<String> capAdd;
 
-    @Parameter
     private List<String> capDrop;
 
-    @Parameter
     private List<String> securityOpts;
 
-    @Parameter
     private Boolean privileged;
 
-    @Parameter
     private List<String> extraHosts;
 
-    @Parameter
     private Long cpuShares;
 
-    @Parameter
     private Long cpus;
 
-    @Parameter
     private String cpuSet;
 
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
-    @Parameter
     private List<String> ports;
 
     /**
      * @deprecated
      */
-    @Parameter
     @Deprecated
     private NamingStrategy namingStrategy;
 
@@ -137,47 +108,36 @@ public class RunImageConfiguration implements Serializable {
      * - %i for an increasing index of container names
      *
      */
-    @Parameter
     private String containerNamePattern;
 
     /**
      * Property key part used to expose the container ip when running.
      */
-    @Parameter
     private String exposedPropertyKey;
 
     // Mount volumes from the given image's started containers
-    @Parameter
     private RunVolumeConfiguration volumes;
 
     // Links to other container started
-    @Parameter
     private List<String> links;
 
     // Configuration for how to wait during startup of the container
-    @Parameter
     private WaitConfiguration wait;
 
     // Mountpath for tmps
-    @Parameter
     private List<String> tmpfs;
 
-    @Parameter
     private LogConfiguration log;
 
-    @Parameter
     private RestartPolicy restartPolicy;
 
-    @Parameter
     private List<UlimitConfig> ulimits;
 
-    @Parameter
     private Boolean skip;
     
     /**
      * Policy for pulling the image to start
      */
-    @Parameter
     private String imagePullPolicy;
 
     // Mount the container's root filesystem as read only
@@ -227,7 +187,6 @@ public class RunImageConfiguration implements Serializable {
         return domainname;
     }
 
-    @Nonnull
     public List<String> getDependsOn() {
         return EnvUtil.splitAtCommasAndTrim(dependsOn);
     }
@@ -260,7 +219,6 @@ public class RunImageConfiguration implements Serializable {
         return cpuSet;
     }
 
-    @Nonnull
     public List<String> getPorts() {
         return EnvUtil.removeEmptyEntries(ports);
     }
@@ -328,7 +286,6 @@ public class RunImageConfiguration implements Serializable {
         return volumes;
     }
 
-    @Nonnull
     public List<String> getLinks() {
         return EnvUtil.splitAtCommasAndTrim(links);
     }

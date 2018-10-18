@@ -1,9 +1,7 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 
 import java.io.Serializable;
 import java.util.List;
-
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -20,36 +18,27 @@ public class WaitConfiguration implements Serializable {
 
     public static final String DEFAULT_STATUS_RANGE = String.format("%d..%d", DEFAULT_MIN_STATUS, DEFAULT_MAX_STATUS);
 
-    @Parameter
     private Integer time;
 
     /**
      * @deprecated Use &lt;http&gt;&lturl&gt;&lt;/url&gt;&lt;/http&gt; instead
      */
-    @Parameter
     private String url;
 
-    @Parameter
     private HttpConfiguration http;
 
-    @Parameter
     private ExecConfiguration exec;
 
-    @Parameter
     private TcpConfiguration tcp;
 
-    @Parameter Boolean healthy;
+    Boolean healthy;
 
-    @Parameter
     private String log;
 
-    @Parameter
     private Integer shutdown;
 
-    @Parameter
     private Integer kill;
 
-    @Parameter
     private Integer exit;
 
     public WaitConfiguration() {}
@@ -209,13 +198,10 @@ public class WaitConfiguration implements Serializable {
     }
 
     public static class ExecConfiguration implements Serializable {
-        @Parameter
         private String postStart;
 
-        @Parameter
         private String preStop;
 
-        @Parameter
         private boolean breakOnError;
 
         public ExecConfiguration() {}
@@ -241,16 +227,12 @@ public class WaitConfiguration implements Serializable {
 
     public static class HttpConfiguration implements Serializable {
 
-        @Parameter
         private String url;
 
-        @Parameter
         private String method = DEFAULT_HTTP_METHOD;
 
-        @Parameter
         private String status = DEFAULT_STATUS_RANGE;
 
-        @Parameter
         private boolean allowAllHosts;
 
         public HttpConfiguration() {}
@@ -286,13 +268,10 @@ public class WaitConfiguration implements Serializable {
     }
 
     public static class TcpConfiguration implements Serializable {
-        @Parameter
         private String host;
 
-        @Parameter
         private List<Integer> ports;
 
-        @Parameter
         private TcpConfigMode mode;
 
         public TcpConfiguration() {}

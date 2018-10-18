@@ -11,11 +11,11 @@ import java.util.function.Function;
 
 import io.fabric8.maven.docker.build.docker.DockerFileBuilder;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
-import io.fabric8.maven.docker.config.ArchiveCompression;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.AssemblyMode;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.ArchiveCompression;
+import io.fabric8.maven.docker.config.build.Arguments;
+import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.build.AssemblyMode;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;

@@ -1,13 +1,10 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 
-
-import io.fabric8.maven.docker.util.DeepCopy;
 
 import java.io.Serializable;
-import java.lang.String;
 import java.util.Map;
 
-import org.apache.maven.plugins.annotations.Parameter;
+import io.fabric8.maven.docker.util.DeepCopy;
 
 /**
  *  Volume Configuration for Volumes to be created prior to container start
@@ -18,19 +15,15 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class VolumeConfiguration implements Serializable
 {
    /** Volume Name */
-   @Parameter
    private String name;
 
    /** Volume driver for mounting the volume */
-   @Parameter
    private String driver;
 
    /** Driver specific options */
-   @Parameter
    private Map<String, String> opts;
 
    /** Volume labels */
-   @Parameter
    private Map<String, String> labels;
 
    public String getName() {

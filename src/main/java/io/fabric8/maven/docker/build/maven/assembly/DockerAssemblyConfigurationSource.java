@@ -8,7 +8,7 @@ import java.util.Properties;
 import javax.annotation.Nonnull;
 
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
-import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.artifact.repository.ArtifactRepository;

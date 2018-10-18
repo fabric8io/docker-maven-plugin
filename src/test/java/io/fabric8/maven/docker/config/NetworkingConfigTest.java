@@ -18,11 +18,12 @@ package io.fabric8.maven.docker.config;
 
 import java.util.Arrays;
 
+import io.fabric8.maven.docker.config.run.NetworkConfig;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import static io.fabric8.maven.docker.config.NetworkConfig.Mode.*;
+import static io.fabric8.maven.docker.config.run.NetworkConfig.Mode.*;
 
 /**
  * @author roland

@@ -1,5 +1,5 @@
-package io.fabric8.maven.docker.config;/*
- * 
+package io.fabric8.maven.docker.config.build;/*
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

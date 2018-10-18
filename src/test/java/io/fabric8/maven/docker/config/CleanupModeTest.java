@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.config;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,9 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
+import io.fabric8.maven.docker.config.build.CleanupMode;
 import org.junit.Test;
-import static io.fabric8.maven.docker.config.CleanupMode.*;
+import static io.fabric8.maven.docker.config.build.CleanupMode.*;
 import static org.junit.Assert.*;
 
 /**
@@ -39,7 +40,7 @@ public class CleanupModeTest {
         };
 
         for (int i = 0; i < data.length; i += 2) {
-            assertEquals(data[i+1],CleanupMode.parse((String) data[i]));
+            assertEquals(data[i+1], CleanupMode.parse((String) data[i]));
         }
     }
 

@@ -1,17 +1,17 @@
-package io.fabric8.maven.docker.config;
-
-import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.maven.plugins.annotations.Parameter;
+package io.fabric8.maven.docker.config.build;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import io.fabric8.maven.docker.util.EnvUtil;
 
 public class Arguments implements Serializable {
 
-    @Parameter
     private String shell;
 
-    @Parameter
     private List<String> exec;
 
     /**

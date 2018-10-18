@@ -1,8 +1,7 @@
 package io.fabric8.maven.docker.access;
 
 import com.google.gson.JsonObject;
-
-import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.run.NetworkConfig;
 import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerNetworkingConfig {

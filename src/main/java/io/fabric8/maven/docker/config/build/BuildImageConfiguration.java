@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.build;
 
 import java.io.File;
 import java.io.Serializable;
@@ -6,12 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * @author roland
@@ -19,13 +16,10 @@ import org.apache.maven.plugins.annotations.Parameter;
  */
 public class BuildImageConfiguration implements Serializable {
 
-    public static final String DEFAULT_CLEANUP = "try";
-
     /**
      * Directory holding an external Dockerfile which is used to build the
      * image. This Dockerfile will be enriched by the addition build configuration
      */
-    @Parameter
     private String dockerFileDir;
 
     /**
@@ -33,7 +27,6 @@ public class BuildImageConfiguration implements Serializable {
      * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly givem
      * <code>dockerFileDir</code>
      */
-    @Parameter
     private String dockerFile;
 
     /**
@@ -41,101 +34,74 @@ public class BuildImageConfiguration implements Serializable {
      * Note only either dockerFile/dockerFileDir or
      * dockerArchive can be used.
      */
-    @Parameter
     private String dockerArchive;
 
     /**
      * How interpolation of a dockerfile should be performed
      */
-    @Parameter
     private String filter;
 
     /**
      * Base Image
      */
-    @Parameter
     private String from;
 
     /**
      * Extended version for <from>
      */
-    @Parameter
     private Map<String, String> fromExt;
 
-    @Parameter
     private String registry;
 
-    @Parameter
     private String maintainer;
 
-    @Parameter
     private List<String> ports;
 
     /**
      * Policy for pulling the base images
      */
-    @Parameter
     private String imagePullPolicy;
 
     /**
      * RUN Commands within Build/Image
      */
-    @Parameter
     private List<String> runCmds;
 
-    @Parameter
     private String cleanup;
 
-    @Parameter
     private Boolean nocache;
 
-    @Parameter
     private Boolean optimise;
 
-    @Parameter
     private List<String> volumes;
 
-    @Parameter
     private List<String> tags;
 
-    @Parameter
     private Map<String, String> env;
 
-    @Parameter
     private Map<String, String> labels;
 
-    @Parameter
     private Map<String, String> args;
 
-    @Parameter
     private Arguments entryPoint;
 
-    @Parameter
     @Deprecated
     private String command;
 
-    @Parameter
     private String workdir;
 
-    @Parameter
     private Arguments cmd;
 
-    @Parameter
     private String user;
 
-    @Parameter
     private HealthCheckConfiguration healthCheck;
 
-    @Parameter
     private AssemblyConfiguration assembly;
 
-    @Parameter
     private Boolean skip;
 
-    @Parameter
     private ArchiveCompression compression = ArchiveCompression.none;
 
-    @Parameter
     private Map<String,String> buildOptions;
 
     // Path to Dockerfile to use, initialized lazily ....
@@ -198,7 +164,6 @@ public class BuildImageConfiguration implements Serializable {
         return assembly;
     }
 
-    @Nonnull
     public List<String> getPorts() {
         return EnvUtil.removeEmptyEntries(ports);
     }
@@ -207,12 +172,10 @@ public class BuildImageConfiguration implements Serializable {
         return imagePullPolicy;
     }
 
-    @Nonnull
     public List<String> getVolumes() {
         return EnvUtil.removeEmptyEntries(volumes);
     }
 
-    @Nonnull
     public List<String> getTags() {
         return EnvUtil.removeEmptyEntries(tags);
     }
@@ -274,7 +237,6 @@ public class BuildImageConfiguration implements Serializable {
         return entryPoint;
     }
 
-    @Nonnull
     public List<String> getRunCmds() {
         return EnvUtil.removeEmptyEntries(runCmds);
     }

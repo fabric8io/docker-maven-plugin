@@ -1,10 +1,5 @@
 package io.fabric8.maven.docker.access;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
-import org.apache.commons.text.StrSubstitutor;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,9 +9,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import io.fabric8.maven.docker.config.Arguments;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.JsonFactory;
+import org.apache.commons.text.StrSubstitutor;
 
 public class ContainerCreateConfig {
 

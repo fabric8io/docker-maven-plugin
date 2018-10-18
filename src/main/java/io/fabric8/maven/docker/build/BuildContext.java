@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.function.Function;
 
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 
 /**

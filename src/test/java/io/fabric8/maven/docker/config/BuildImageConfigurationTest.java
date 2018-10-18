@@ -18,13 +18,15 @@ package io.fabric8.maven.docker.config;
 
 import java.io.File;
 
+import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.junit.Test;
 
-import static io.fabric8.maven.docker.config.ArchiveCompression.gzip;
-import static io.fabric8.maven.docker.config.ArchiveCompression.none;
+import static io.fabric8.maven.docker.config.build.ArchiveCompression.gzip;
+import static io.fabric8.maven.docker.config.build.ArchiveCompression.none;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

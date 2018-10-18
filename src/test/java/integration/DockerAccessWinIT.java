@@ -14,7 +14,7 @@ import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.access.DockerMachine;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
-import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.model.Container.PortBinding;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;

@@ -1,5 +1,8 @@
 package io.fabric8.maven.docker.config;
 
+import io.fabric8.maven.docker.config.build.Arguments;
+import io.fabric8.maven.docker.config.build.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.build.HealthCheckMode;
 import org.junit.Test;
 
 /**
