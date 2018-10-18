@@ -1,5 +1,9 @@
 # ChangeLog
 
+* **0.27-SNAPSHOT**
+  - Update to JMockit 1.43
+  - Compiles with Java 11
+
 * **0.27.2** (2018-10-05)
 
   - Fix NPE regression related to volumes (again) (#1091)
