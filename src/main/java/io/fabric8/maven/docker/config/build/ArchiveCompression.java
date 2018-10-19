@@ -16,13 +16,6 @@ package io.fabric8.maven.docker.config.build;
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.zip.GZIPOutputStream;
-
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
-import org.codehaus.plexus.archiver.tar.TarArchiver;
-
 /**
  * Enumeration for determine the compression mode when creating docker
  * build archives.
@@ -32,42 +25,20 @@ import org.codehaus.plexus.archiver.tar.TarArchiver;
  */
 public enum ArchiveCompression {
 
-    none(TarArchiver.TarCompressionMethod.none, "tar"),
-
-    gzip(TarArchiver.TarCompressionMethod.gzip,"tar.gz") {
-        @Override
-        public OutputStream wrapOutputStream(OutputStream out) throws IOException {
-            return new GZIPOutputStream(out);
-        }
-    },
-
-    bzip2(TarArchiver.TarCompressionMethod.bzip2,"tar.bz") {
-        @Override
-        public OutputStream wrapOutputStream(OutputStream out) throws IOException {
-            return new BZip2CompressorOutputStream(out);
-        }
-    };
+    none("tar"),
+    gzip("tar.gz"),
+    bzip2("tar.bz");
 
     // ====================================================================
 
-    private final TarArchiver.TarCompressionMethod tarCompressionMethod;
     private final String fileSuffix;
 
-    ArchiveCompression(TarArchiver.TarCompressionMethod tarCompressionMethod, String fileSuffix) {
-        this.tarCompressionMethod = tarCompressionMethod;
+    ArchiveCompression(String fileSuffix) {
         this.fileSuffix = fileSuffix;
-    }
-
-    public TarArchiver.TarCompressionMethod getTarCompressionMethod() {
-        return tarCompressionMethod;
     }
 
     public String getFileSuffix() {
         return fileSuffix;
-    }
-
-    public OutputStream wrapOutputStream(OutputStream outputStream) throws IOException {
-        return outputStream;
     }
 
     public static ArchiveCompression fromFileName(String filename) {

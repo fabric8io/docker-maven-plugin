@@ -1,7 +1,7 @@
 package io.fabric8.maven.docker.config.handler;
 
 import io.fabric8.maven.docker.config.run.RestartPolicy;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,11 +17,11 @@ public abstract class AbstractConfigHandlerTest {
 
     protected abstract String getEnvPropertyFile();
 
-    protected abstract RunImageConfiguration.NamingStrategy getRunNamingStrategy();
+    protected abstract RunConfiguration.NamingStrategy getRunNamingStrategy();
 
     protected abstract void validateEnv(Map<String, String> env);
 
-    protected void validateRunConfiguration(RunImageConfiguration runConfig) {
+    protected void validateRunConfiguration(RunConfiguration runConfig) {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());

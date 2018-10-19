@@ -2,12 +2,12 @@ package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
 
-import io.fabric8.maven.docker.util.DeepCopy;
+import org.apache.commons.lang3.SerializationUtils;
 
 /**
  * Configuration for watching on image changes
  */
-public class WatchImageConfiguration implements Serializable {
+public class WatchConfiguration implements Serializable {
 
     private Integer interval;
 
@@ -17,7 +17,7 @@ public class WatchImageConfiguration implements Serializable {
 
     private String postExec;
 
-    public WatchImageConfiguration() {};
+    public WatchConfiguration() {};
 
     public int getInterval() {
         return interval != null ? interval : 5000;
@@ -41,17 +41,17 @@ public class WatchImageConfiguration implements Serializable {
 
     public static class Builder {
 
-        private final WatchImageConfiguration c;
+        private final WatchConfiguration c;
 
         public Builder() {
             this(null);
         }
 
-        public Builder(WatchImageConfiguration that) {
+        public Builder(WatchConfiguration that) {
             if (that == null) {
-                this.c = new WatchImageConfiguration();
+                this.c = new WatchConfiguration();
             } else {
-                this.c = DeepCopy.copy(that);
+                this.c = SerializationUtils.clone(that);
             }
         }
 
@@ -77,7 +77,7 @@ public class WatchImageConfiguration implements Serializable {
             return this;
         }
 
-        public WatchImageConfiguration build() {
+        public WatchConfiguration build() {
             return c;
         }
     }

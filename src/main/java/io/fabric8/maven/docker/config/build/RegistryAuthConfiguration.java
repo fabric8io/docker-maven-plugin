@@ -4,9 +4,6 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
-import org.apache.commons.lang3.StringUtils;
-
 public class RegistryAuthConfiguration implements Serializable {
 
     private Map<String, String> push;
@@ -30,18 +27,19 @@ public class RegistryAuthConfiguration implements Serializable {
         if (pull != null) {
             authMap.put("pull", pull);
         }
-        if (StringUtils.isNotBlank(username)) {
-            authMap.put(AuthConfigFactory.AUTH_USERNAME, username);
-        }
-        if (StringUtils.isNotBlank(password)) {
-            authMap.put(AuthConfigFactory.AUTH_PASSWORD, password);
-        }
-        if (StringUtils.isNotBlank(authToken)) {
-            authMap.put(AuthConfigFactory.AUTH_AUTHTOKEN, authToken);
-        }
-        if (StringUtils.isNotBlank(email)) {
-            authMap.put(AuthConfigFactory.AUTH_EMAIL, email);
+
+        String content[] = new String[] {
+            "username", username,
+            "password", password,
+            "authToken", authToken,
+            "email", email
+        };
+        for (int i = 0; i < content.length; i += 2) {
+            if (content[i + 1] != null && content[i + 1].length() > 0) {
+                authMap.put(content[i], content[i+1]);
+            }
         }
         return authMap;
     }
+
 }

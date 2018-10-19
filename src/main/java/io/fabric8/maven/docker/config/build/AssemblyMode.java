@@ -1,4 +1,6 @@
-package io.fabric8.maven.docker.config.build;/*
+package io.fabric8.maven.docker.config.build;
+
+/*
  *
  * Copyright 2014 Roland Huss
  *

@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
-import io.fabric8.maven.docker.util.DeepCopy;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFilteringException;
@@ -103,7 +103,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .buildConfig(createBuildImageConfiguration(mapper, composeParent, unresolvedConfig, handlerConfig))
                 .runConfig(createRunConfiguration(mapper, unresolvedConfig));
         if (serviceMatchesAlias(mapper, unresolvedConfig)) {
-            builder.watchConfig(DeepCopy.copy(unresolvedConfig.getWatchConfiguration()));
+            builder.watchConfig(SerializationUtils.clone(unresolvedConfig.getWatchConfiguration()));
         }
         return builder.build();
     }
@@ -143,11 +143,11 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         return readerFilter.filter(request);
     }
 
-    private BuildImageConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper,
-                                                                  File composeParent,
-                                                                  ImageConfiguration imageConfig,
-                                                                  DockerComposeConfiguration handlerConfig) {
-        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+    private BuildConfiguration createBuildImageConfiguration(DockerComposeServiceWrapper mapper,
+                                                             File composeParent,
+                                                             ImageConfiguration imageConfig,
+                                                             DockerComposeConfiguration handlerConfig) {
+        BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
         if (handlerConfig.isIgnoreBuild() || !mapper.requiresBuild()) {
             if (serviceMatchesAlias(mapper, imageConfig)) {
                 // Only when the specified image name maps to the current docker-compose service
@@ -158,7 +158,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         }
 
         // Build from the specification as given in the docker-compose file
-        BuildImageConfiguration.Builder builder = new BuildImageConfiguration.Builder(buildConfig)
+        BuildConfiguration.Builder builder = new BuildConfiguration.Builder(buildConfig)
                 .dockerFile(extractDockerFilePath(mapper, composeParent))
                 .args(mapper.getBuildArgs());
         return builder.build();
@@ -168,11 +168,11 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         return mapper.getAlias() != null && mapper.getAlias().equals(imageConfig.getAlias());
     }
 
-    private RunImageConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper, ImageConfiguration imageConfig) {
-        RunImageConfiguration.Builder builder =
+    private RunConfiguration createRunConfiguration(DockerComposeServiceWrapper wrapper, ImageConfiguration imageConfig) {
+        RunConfiguration.Builder builder =
             serviceMatchesAlias(wrapper, imageConfig) ?
-                new RunImageConfiguration.Builder(imageConfig.getRunConfiguration()) :
-                new RunImageConfiguration.Builder();
+                new RunConfiguration.Builder(imageConfig.getRunConfiguration()) :
+                new RunConfiguration.Builder();
         return builder
                 .capAdd(wrapper.getCapAdd())
                 .capDrop(wrapper.getCapDrop())

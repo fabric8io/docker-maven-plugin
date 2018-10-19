@@ -4,32 +4,27 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.run.NetworkConfig;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
-import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
-import io.fabric8.maven.docker.util.DeepCopy;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import org.apache.commons.lang3.SerializationUtils;
 
 /**
  * @author roland
  * @since 02.09.14
  */
-public class ImageConfiguration implements StartOrderResolver.Resolvable, Serializable {
+public class ImageConfiguration implements Serializable {
 
     private String name;
 
     private String alias;
 
-    private RunImageConfiguration run;
+    private RunConfiguration run;
 
-    private BuildImageConfiguration build;
+    private BuildConfiguration build;
 
-    private WatchImageConfiguration watch;
+    private WatchConfiguration watch;
 
     private Map<String,String> external;
 
@@ -38,19 +33,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     // Used for injection
     public ImageConfiguration() {}
 
-    @Override
     public String getName() {
         return name;
-    }
-
-    /**
-     * Change the name which can be useful in long running runs e.g. for updating
-     * images when doing updates. Use with caution and only for those circumstances.
-     *
-     * @param name image name to set.
-     */
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**
@@ -62,72 +46,24 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         this.external = externalConfiguration;
     }
 
-    @Override
-	public String getAlias() {
+    public String getAlias() {
         return alias;
     }
 
-    public RunImageConfiguration getRunConfiguration() {
-        return (run == null) ? RunImageConfiguration.DEFAULT : run;
+    public RunConfiguration getRunConfiguration() {
+        return (run == null) ? RunConfiguration.DEFAULT : run;
     }
 
-    public BuildImageConfiguration getBuildConfiguration() {
+    public BuildConfiguration getBuildConfiguration() {
         return build;
     }
 
-    public WatchImageConfiguration getWatchConfiguration() {
+    public WatchConfiguration getWatchConfiguration() {
         return watch;
     }
 
     public Map<String, String> getExternalConfig() {
         return external;
-    }
-
-    @Override
-    public List<String> getDependencies() {
-        RunImageConfiguration runConfig = getRunConfiguration();
-        List<String> ret = new ArrayList<>();
-        if (runConfig != null) {
-            addVolumes(runConfig, ret);
-            addLinks(runConfig, ret);
-            addContainerNetwork(runConfig, ret);
-            addDependsOn(runConfig, ret);
-        }
-        return ret;
-    }
-
-    private void addVolumes(RunImageConfiguration runConfig, List<String> ret) {
-        RunVolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
-        if (volConfig != null) {
-            List<String> volumeImages = volConfig.getFrom();
-            if (volumeImages != null) {
-                ret.addAll(volumeImages);
-            }
-        }
-    }
-
-    private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
-        // Custom networks can have circular links, no need to be considered for the starting order.
-        if (!runConfig.getNetworkingConfig().isCustomNetwork()) {
-            for (String[] link : EnvUtil.splitOnLastColon(runConfig.getLinks())) {
-                ret.add(link[0]);
-            }
-        }
-    }
-
-    private void addContainerNetwork(RunImageConfiguration runConfig, List<String> ret) {
-        NetworkConfig config = runConfig.getNetworkingConfig();
-        String alias = config.getContainerAlias();
-        if (alias != null) {
-            ret.add(alias);
-        }
-    }
-
-    private void addDependsOn(RunImageConfiguration runConfig, List<String> ret) {
-        // Only used in custom networks.
-        if (runConfig.getNetworkingConfig().isCustomNetwork()) {
-            ret.addAll(runConfig.getDependsOn());
-        }
     }
 
     public boolean isDataImage() {
@@ -150,23 +86,23 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         return String.format("ImageConfiguration {name='%s', alias='%s'}", name, alias);
     }
 
-    public String initAndValidate(ConfigHelper.NameFormatter nameFormatter, Logger log) {
+    public String[] validate(NameFormatter nameFormatter) {
         name = nameFormatter.format(name);
-        String minimalApiVersion = null;
+        List<String> apiVersions = new ArrayList<>();
         if (build != null) {
-            minimalApiVersion = build.initAndValidate(log);
+            apiVersions.add(build.validate());
         }
         if (run != null) {
-            minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion, run.initAndValidate());
+            apiVersions.add(run.validate());
         }
-        return minimalApiVersion;
+        return apiVersions.stream().filter(Objects::nonNull).toArray(String[]::new);
     }
 
     // =========================================================================
     // Builder for image configurations
 
     public static class Builder {
-        private final ImageConfiguration config;
+        protected ImageConfiguration config;
 
         public Builder()  {
             this(null);
@@ -177,7 +113,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             if (that == null) {
                 this.config = new ImageConfiguration();
             } else {
-                this.config = DeepCopy.copy(that);
+                this.config = SerializationUtils.clone(that);
             }
         }
 
@@ -191,12 +127,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             return this;
         }
 
-        public Builder runConfig(RunImageConfiguration runConfig) {
+        public Builder runConfig(RunConfiguration runConfig) {
             config.run = runConfig;
             return this;
         }
 
-        public Builder buildConfig(BuildImageConfiguration buildConfig) {
+        public Builder buildConfig(BuildConfiguration buildConfig) {
             config.build = buildConfig;
             return this;
         }
@@ -215,9 +151,21 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             return config;
         }
 
-        public Builder watchConfig(WatchImageConfiguration watchConfig) {
+        public Builder watchConfig(WatchConfiguration watchConfig) {
             config.watch = watchConfig;
             return this;
         }
     }
+
+    // =====================================================================
+    /**
+     * Format an image name by replacing certain placeholders
+     */
+    public interface NameFormatter {
+        String format(String name);
+
+        NameFormatter IDENTITY = name -> name;
+    }
+
+
 }

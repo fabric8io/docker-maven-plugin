@@ -23,7 +23,7 @@ import java.util.List;
 
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.build.BuildImageSelectMode;
 import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugins.annotations.Component;
@@ -67,9 +67,9 @@ public class SourceMojo extends AbstractBuildSupportMojo {
         MavenBuildContext context = getBuildContext(hub.getArchiveService());
         List<ImageConfiguration> imageConfigs = new ArrayList<>();
         for (ImageConfiguration imageConfig : getResolvedImages()) {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
             if (buildConfig != null) {
-                if (buildConfig.skip()) {
+                if (buildConfig.getSkip() != null && buildConfig.getSkip()) {
                     log.info("%s: Skipped creating source",imageConfig.getDescription());
                 } else {
                     imageConfigs.add(imageConfig);

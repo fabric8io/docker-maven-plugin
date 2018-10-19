@@ -1,6 +1,9 @@
 package io.fabric8.maven.docker.config.build;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author roland
@@ -29,7 +32,9 @@ public enum ImagePullPolicy {
                 return policy;
             }
         }
-        throw new IllegalArgumentException(String.format("No policy %s known. Valid values are: %s",
-                                           imagePullPolicy, StringUtils.join(values(), ", ")));
+        throw new IllegalArgumentException(
+            String.format("No policy %s known. Valid values are: %s",
+                          imagePullPolicy,
+                          Stream.of(values()).map(Enum::name).collect(Collectors.joining(", "))));
     }
 }

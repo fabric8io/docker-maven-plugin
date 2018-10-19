@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.build.docker;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -251,7 +252,7 @@ public class DockerFileBuilderTest {
     }
 
     private String loadFile(String fileName) throws IOException {
-        return stripCR(IOUtils.toString(getClass().getClassLoader().getResource(fileName)));
+        return stripCR(IOUtils.toString(getClass().getClassLoader().getResource(fileName), Charset.defaultCharset()));
     }
 
     private static Map<String, String> dockerfileToMap(String dockerFile) {

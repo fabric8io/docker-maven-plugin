@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 
 import io.fabric8.maven.docker.config.run.LogConfiguration;
 import org.junit.Test;

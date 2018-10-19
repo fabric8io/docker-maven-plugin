@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.util;
 /*
  *
  * Copyright 2016 Roland Huss
@@ -16,12 +16,16 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;
 import io.fabric8.maven.docker.config.handler.property.PropertyMode;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.StringUtils;
@@ -118,11 +122,12 @@ public class ConfigHelper {
      * @param log a logger for printing out diagnostic messages
      * @return the minimal API Docker API required to be used for the given configuration.
      */
-    public static String initAndValidate(List<ImageConfiguration> images, String apiVersion, NameFormatter nameFormatter,
+    public static String initAndValidate(List<ImageConfiguration> images, String apiVersion, ImageConfiguration.NameFormatter nameFormatter,
                                          Logger log) {
         // Init and validate configs. After this step, getResolvedImages() contains the valid configuration.
         for (ImageConfiguration imageConfiguration : images) {
-            apiVersion = EnvUtil.extractLargerVersion(apiVersion, imageConfiguration.initAndValidate(nameFormatter, log));
+            for (String version : imageConfiguration.validate(nameFormatter))
+            apiVersion = EnvUtil.extractLargerVersion(apiVersion, version);
         }
         return apiVersion;
     }
@@ -191,19 +196,6 @@ public class ConfigHelper {
      */
     public interface Resolver {
         List<ImageConfiguration> resolve(ImageConfiguration image);
-    }
-
-    /**
-     * Format an image name by replacing certain placeholders
-     */
-    public interface NameFormatter {
-        String format(String name);
-
-        NameFormatter IDENTITY = new NameFormatter() {
-            public String format(String name) {
-                return name;
-            }
-        };
     }
 
 

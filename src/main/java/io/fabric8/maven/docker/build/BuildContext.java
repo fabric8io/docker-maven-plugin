@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.function.Function;
 
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -24,7 +24,7 @@ public interface BuildContext {
 
     Function<String, String> createInterpolator(String filter);
 
-    File createImageContentArchive(String imageName, BuildImageConfiguration buildConfig, Logger log) throws IOException;
+    File createImageContentArchive(String imageName, BuildConfiguration buildConfig, Logger log) throws IOException;
 
     RegistryContext getRegistryContext();
 }

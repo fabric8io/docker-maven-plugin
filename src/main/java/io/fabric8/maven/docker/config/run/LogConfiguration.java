@@ -3,13 +3,16 @@ package io.fabric8.maven.docker.config.run;
 import java.io.Serializable;
 import java.util.Map;
 
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
+import org.apache.commons.lang3.SerializationUtils;
+
 /**
  * @author roland
  * @since 12.10.14
  */
 public class LogConfiguration implements Serializable {
 
-    public static final LogConfiguration DEFAULT = new LogConfiguration(null, null, null, null, null, null);
+    public static final LogConfiguration DEFAULT = new LogConfiguration();
 
     private Boolean enabled;
 
@@ -24,15 +27,6 @@ public class LogConfiguration implements Serializable {
     private LogDriver driver;
 
     public LogConfiguration() {}
-
-    private LogConfiguration(Boolean enabled, String prefix, String color, String date, String file, LogDriver driver) {
-        this.enabled = enabled;
-        this.prefix = prefix;
-        this.date = date;
-        this.color = color;
-        this.file = file;
-        this.driver = driver;
-    }
 
     public String getPrefix() {
         return prefix;
@@ -104,32 +98,46 @@ public class LogConfiguration implements Serializable {
     // =============================================================================
 
     public static class Builder {
-        private Boolean enabled;
-        private String prefix, date, color, file;
-        private Map<String, String> driverOpts;
+
+        private final LogConfiguration config;
+
         private String driverName;
+        private Map<String, String> driverOpts;
+
+        public Builder() {
+            this(null);
+        }
+
+        public Builder(LogConfiguration that) {
+            if (that == null) {
+                this.config = new LogConfiguration();
+            } else {
+                this.config = SerializationUtils.clone(that);
+            }
+        }
+
         public Builder enabled(Boolean enabled) {
-            this.enabled = enabled;
+            config.enabled = enabled;
             return this;
         }
 
         public Builder prefix(String prefix) {
-            this.prefix = prefix;
+            config.prefix = prefix;
             return this;
         }
 
         public Builder date(String date) {
-            this.date = date;
+            config.date = date;
             return this;
         }
 
         public Builder color(String color) {
-            this.color = color;
+            config.color = color;
             return this;
         }
 
         public Builder file(String file) {
-            this.file = file;
+            config.file = file;
             return this;
         }
 
@@ -144,8 +152,10 @@ public class LogConfiguration implements Serializable {
         }
 
         public LogConfiguration build() {
-            return new LogConfiguration(enabled, prefix, color, date, file,
-                                        driverName != null ? new LogDriver(driverName,driverOpts) : null);
+            if (driverName != null) {
+                config.driver = new LogDriver(driverName, driverOpts);
+            }
+            return config;
         }
     }
 }

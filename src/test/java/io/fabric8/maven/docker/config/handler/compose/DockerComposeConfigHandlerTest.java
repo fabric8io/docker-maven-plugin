@@ -1,9 +1,9 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
 import io.fabric8.maven.docker.config.run.RestartPolicy;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
 import mockit.Expectations;
@@ -75,7 +75,7 @@ public class DockerComposeConfigHandlerTest {
         List<ImageConfiguration> configs = handler.resolve(unresolved, project, session);
 
         // Service 1 has 1 network (network1) with 2 aliases (alias1, alias2)
-        NetworkConfig netSvc = configs.get(0).getRunConfiguration().getNetworkingConfig();
+        NetworkConfiguration netSvc = configs.get(0).getRunConfiguration().getNetworkingConfig();
         assertEquals("network1", netSvc.getName());
         assertEquals(2, netSvc.getAliases().size());
         assertEquals("alias1", netSvc.getAliases().get(0));
@@ -146,7 +146,7 @@ public class DockerComposeConfigHandlerTest {
     }
 
 
-     void validateRunConfiguration(RunImageConfiguration runConfig) {
+     void validateRunConfiguration(RunConfiguration runConfig) {
 
         validateVolumeConfig(runConfig.getVolumeConfiguration());
 

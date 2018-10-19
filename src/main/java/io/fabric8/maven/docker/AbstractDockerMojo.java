@@ -2,6 +2,7 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -12,12 +13,13 @@ import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.build.docker.ImagePullCache;
 import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import io.fabric8.maven.docker.build.maven.MavenCacheBackend;
-import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.util.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.build.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.config.maven.MavenImageConfiguration;
 import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -178,7 +180,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Image configurations configured directly.
      */
     @Parameter
-    private List<ImageConfiguration> images;
+    private List<MavenImageConfiguration> images;
 
     // Docker-machine configuration
     @Parameter
@@ -215,7 +217,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
-            ConfigHelper.validateExternalPropertyActivation(project, images);
+            List<ImageConfiguration> imageConfigs = convertToPlainImageConfigurations(images);
+            ConfigHelper.validateExternalPropertyActivation(project, imageConfigs);
 
             DockerAccess access = null;
             try {
@@ -239,6 +242,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             }
         }
+    }
+
+    private List<ImageConfiguration> convertToPlainImageConfigurations(List<MavenImageConfiguration> images) {
+        if (images == null) {
+            return null;
+        }
+        return new ArrayList<>(images);
     }
 
     private void logException(Exception exp) {
@@ -312,7 +322,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         // Resolve images
         resolvedImages = ConfigHelper.resolveImages(
             log,
-            images,                  // Unresolved images
+            convertToPlainImageConfigurations(images),                  // Unresolved images
             new ConfigHelper.Resolver() {
                     @Override
                     public List<ImageConfiguration> resolve(ImageConfiguration image) {
@@ -417,8 +427,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             name = "%g/%a:%l";
         }
 
-        BuildImageConfiguration buildConfig =
-            new BuildImageConfiguration.Builder()
+        BuildConfiguration buildConfig =
+            new BuildConfiguration.Builder()
                 .dockerFile(dockerFile.getPath())
                 .build();
 
@@ -429,8 +439,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private ImageConfiguration addSimpleDockerfileConfig(ImageConfiguration image, File dockerfile) {
-        BuildImageConfiguration buildConfig =
-            new BuildImageConfiguration.Builder()
+        BuildConfiguration buildConfig =
+            new BuildConfiguration.Builder()
                 .dockerFile(dockerfile.getPath())
                 .build();
         return new ImageConfiguration.Builder(image).buildConfig(buildConfig).build();

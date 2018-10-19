@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import io.fabric8.maven.docker.util.GavLabel;
 
@@ -204,7 +204,7 @@ public class ContainerTracker {
             this.imageConfig = imageConfig;
             this.containerId = containerId;
 
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            RunConfiguration runConfig = imageConfig.getRunConfiguration();
             WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
             this.shutdownGracePeriod = waitConfig != null && waitConfig.getShutdown() != null ? waitConfig.getShutdown() : 0;
             this.killGracePeriod = waitConfig != null && waitConfig.getKill() != null ? waitConfig.getKill() : 0;

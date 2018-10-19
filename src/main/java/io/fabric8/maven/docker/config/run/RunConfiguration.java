@@ -1,23 +1,27 @@
 package io.fabric8.maven.docker.config.run;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import io.fabric8.maven.docker.config.build.Arguments;
-import io.fabric8.maven.docker.util.DeepCopy;
-import io.fabric8.maven.docker.util.EnvUtil;
+import org.apache.commons.lang3.SerializationUtils;
 
 /**
  * @author roland
  * @since 02.09.14
  */
-public class RunImageConfiguration implements Serializable {
+public class RunConfiguration implements Serializable {
 
-    public static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
+    public static final RunConfiguration DEFAULT = new RunConfiguration();
 
     public boolean isDefault() {
-        return this == RunImageConfiguration.DEFAULT;
+        return this == RunConfiguration.DEFAULT;
     }
 
     /**
@@ -64,10 +68,7 @@ public class RunImageConfiguration implements Serializable {
     // Path to a file where the dynamically mapped properties are written to
     private String portPropertyFile;
 
-    // For simple network setups. For complex stuff use "network"
-    private String net;
-
-    private NetworkConfig network;
+    private NetworkConfiguration network;
 
     private List<String> dns;
 
@@ -131,10 +132,10 @@ public class RunImageConfiguration implements Serializable {
 
     private RestartPolicy restartPolicy;
 
-    private List<UlimitConfig> ulimits;
+    private List<UlimitConfiguration> ulimits;
 
     private Boolean skip;
-    
+
     /**
      * Policy for pulling the image to start
      */
@@ -144,9 +145,9 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private Boolean readOnly;
 
-    public RunImageConfiguration() { }
+    public RunConfiguration() { }
 
-    public String initAndValidate() {
+    public String validate() {
         if (entrypoint != null) {
             entrypoint.validate();
         }
@@ -155,7 +156,7 @@ public class RunImageConfiguration implements Serializable {
         }
 
         // Custom networks are available since API 1.21 (Docker 1.9)
-        NetworkConfig config = getNetworkingConfig();
+        NetworkConfiguration config = getNetworkingConfig();
         if (config != null && config.isCustomNetwork()) {
             return "1.21";
         }
@@ -188,7 +189,7 @@ public class RunImageConfiguration implements Serializable {
     }
 
     public List<String> getDependsOn() {
-        return EnvUtil.splitAtCommasAndTrim(dependsOn);
+        return splitAtCommasAndTrim(dependsOn);
     }
 
     public String getUser() {
@@ -220,7 +221,14 @@ public class RunImageConfiguration implements Serializable {
     }
 
     public List<String> getPorts() {
-        return EnvUtil.removeEmptyEntries(ports);
+        if (ports == null) {
+            return Collections.emptyList();
+        }
+        return ports.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
     }
 
     public Arguments getCmd() {
@@ -259,18 +267,11 @@ public class RunImageConfiguration implements Serializable {
         return dns;
     }
 
-    @Deprecated
-    public String getNetRaw() {
-        return net;
-    }
-
-    public NetworkConfig getNetworkingConfig() {
+    public NetworkConfiguration getNetworkingConfig() {
         if (network != null) {
             return network;
-        } else if (net != null) {
-            return new NetworkConfig(net);
         } else {
-            return new NetworkConfig();
+            return new NetworkConfiguration();
         }
     }
 
@@ -287,10 +288,10 @@ public class RunImageConfiguration implements Serializable {
     }
 
     public List<String> getLinks() {
-        return EnvUtil.splitAtCommasAndTrim(links);
+        return splitAtCommasAndTrim(links);
     }
 
-    public List<UlimitConfig> getUlimits() {
+    public List<UlimitConfiguration> getUlimits() {
         return ulimits;
     }
 
@@ -323,10 +324,6 @@ public class RunImageConfiguration implements Serializable {
     }
 
     public RestartPolicy getRestartPolicy() {
-        return (restartPolicy == null) ? RestartPolicy.DEFAULT : restartPolicy;
-    }
-
-    public RestartPolicy getRestartPolicyRaw() {
         return restartPolicy;
     }
 
@@ -362,11 +359,11 @@ public class RunImageConfiguration implements Serializable {
 
     public static class Builder {
 
-        public Builder(RunImageConfiguration config) {
+        public Builder(RunConfiguration config) {
             if (config == null) {
-                this.config = new RunImageConfiguration();
+                this.config = new RunConfiguration();
             } else {
-                this.config = DeepCopy.copy(config);
+                this.config = SerializationUtils.clone(config);
             }
         }
 
@@ -374,7 +371,7 @@ public class RunImageConfiguration implements Serializable {
             this(null);
         }
 
-        private RunImageConfiguration config;
+        private RunConfiguration config;
 
         public Builder env(Map<String, String> env) {
             config.env = env;
@@ -464,12 +461,7 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder net(String net) {
-            config.net = net;
-            return this;
-        }
-
-        public Builder network(NetworkConfig networkConfig) {
+        public Builder network(NetworkConfiguration networkConfig) {
             config.network = networkConfig;
             return this;
         }
@@ -494,7 +486,7 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder ulimits(List<UlimitConfig> ulimits) {
+        public Builder ulimits(List<UlimitConfiguration> ulimits) {
             config.ulimits = ulimits;
             return this;
         }
@@ -602,8 +594,21 @@ public class RunImageConfiguration implements Serializable {
         }
 
 
-        public RunImageConfiguration build() {
+        public RunConfiguration build() {
             return config;
         }
     }
+
+    // ===========================================================================================
+
+    private List<String> splitAtCommasAndTrim(List<String> input) {
+        return Optional.ofNullable(input).orElse(Collections.emptyList())
+                       .stream()
+                       .filter(Objects::nonNull)
+                       .flatMap(s -> Arrays.stream(s.split(",")))
+                       .map(String::trim)
+                       .filter(s -> s.length() > 0)
+                       .collect(Collectors.toList());
+    }
+
 }

@@ -11,10 +11,10 @@ import java.util.Map;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.config.run.LogConfiguration;
-import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
 import io.fabric8.maven.docker.config.run.RestartPolicy;
 import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.run.UlimitConfig;
+import io.fabric8.maven.docker.config.run.UlimitConfiguration;
 import io.fabric8.maven.docker.util.VolumeBindingUtil;
 
 
@@ -169,10 +169,10 @@ class DockerComposeServiceWrapper {
             .build();
     }
 
-    NetworkConfig getNetworkConfig() {
+    NetworkConfiguration getNetworkConfig() {
         String net = asString("network_mode");
         if (net != null) {
-            return new NetworkConfig(net);
+            return new NetworkConfiguration(net);
         }
         Object networks = asObject("networks");
         if (networks == null) {
@@ -183,14 +183,14 @@ class DockerComposeServiceWrapper {
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
-            return new NetworkConfig(NetworkConfig.Mode.custom, toJoin.get(0));
+            return new NetworkConfiguration(NetworkConfiguration.Mode.custom, toJoin.get(0));
         } else if (networks instanceof Map) {
             Map<String,Object> toJoin = (Map<String, Object>) networks;
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
             String custom = toJoin.keySet().iterator().next();
-            NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
+            NetworkConfiguration ret = new NetworkConfiguration(NetworkConfiguration.Mode.custom, custom);
             Object aliases = toJoin.get(custom);
             if (aliases != null) {
                 if (aliases instanceof List) {
@@ -240,7 +240,7 @@ class DockerComposeServiceWrapper {
         return ports;
     }
 
-    List<UlimitConfig> getUlimits() {
+    List<UlimitConfiguration> getUlimits() {
         Object ulimits = asObject("ulimits");
         if (ulimits == null) {
             return null;
@@ -249,16 +249,16 @@ class DockerComposeServiceWrapper {
             throwIllegalArgumentException("'ulimits:' must be a map");
         }
         Map<String, Object> ulimitMap = (Map<String, Object>) ulimits;
-        List<UlimitConfig> ret = new ArrayList<>();
+        List<UlimitConfiguration> ret = new ArrayList<>();
         for (String ulimit : ulimitMap.keySet()) {
             Object val = ulimitMap.get(ulimit);
             if (val instanceof Map) {
                 Map<String, Integer> valMap = (Map<String, Integer>) val;
                 Integer soft = valMap.get("soft");
                 Integer hard = valMap.get("hard");
-                ret.add(new UlimitConfig(ulimit, hard, soft));
+                ret.add(new UlimitConfiguration(ulimit, hard, soft));
             } else if (val instanceof Integer) {
-                ret.add(new UlimitConfig(ulimit, (Integer) val, null));
+                ret.add(new UlimitConfiguration(ulimit, (Integer) val, null));
             } else {
                 throwIllegalArgumentException("'ulimits:' invalid limit value " + val + " (class : " + val.getClass() + ")");
             }

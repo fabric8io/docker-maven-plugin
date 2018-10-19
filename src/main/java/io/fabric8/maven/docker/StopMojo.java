@@ -9,7 +9,7 @@ import java.util.Set;
 
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
@@ -125,7 +125,7 @@ public class StopMojo extends AbstractDockerMojo {
 
         for (ImageConfiguration image : getResolvedImages()) {
 
-            final NetworkConfig config = image.getRunConfiguration().getNetworkingConfig();
+            final NetworkConfiguration config = image.getRunConfiguration().getNetworkingConfig();
             if (!config.isCustomNetwork() || config.getName() == null) {
                 continue;
             }

@@ -27,14 +27,13 @@ import java.util.Properties;
 
 import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.build.CleanupMode;
-import io.fabric8.maven.docker.config.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.run.LogConfiguration;
 import io.fabric8.maven.docker.config.run.RestartPolicy;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
-import io.fabric8.maven.docker.config.run.UlimitConfig;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import io.fabric8.maven.docker.config.run.UlimitConfiguration;
 import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
 import mockit.Expectations;
@@ -71,10 +70,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testSkipBuild() {
-        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, false)).getBuildConfiguration().skip());
-        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, true)).getBuildConfiguration().skip());
+        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, false)).getBuildConfiguration().getSkip());
+        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_BUILD, true)).getBuildConfiguration().getSkip());
 
-        assertFalse(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "busybox"}).getBuildConfiguration().skip());
+        assertNull(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "busybox"}).getBuildConfiguration().getSkip());
     }
 
     @Test
@@ -106,7 +105,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                         "docker.from", "busybox"
                                         ));
         assertEquals(1,configs.size());
-        RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
+        RunConfiguration runConfig = configs.get(0).getRunConfiguration();
         List<String> portsAsList = runConfig.getPorts();
         String[] ports = new ArrayList<>(portsAsList).toArray(new String[portsAsList.size()]);
         assertArrayEquals(new String[] {
@@ -114,7 +113,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 "9090",
                 "0.0.0.0:80:80"
         },ports);
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         ports = new ArrayList<>(buildConfig.getPorts()).toArray(new String[buildConfig.getPorts().size()]);
         assertArrayEquals(new String[]{"8080", "9090", "80"}, ports);
     }
@@ -124,11 +123,11 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testPortsFromConfigAndProperties() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(new HashMap<String, String>())
-                .buildConfig(new BuildImageConfiguration.Builder()
+                .buildConfig(new BuildConfiguration.Builder()
                         .ports(Arrays.asList("1234"))
                         .build()
                 )
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                     .ports(Arrays.asList("jolokia.port:1234"))
                     .build()
                 )
@@ -144,7 +143,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                         "docker.from", "busybox"
                 ));
         assertEquals(1,configs.size());
-        RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
+        RunConfiguration runConfig = configs.get(0).getRunConfiguration();
         List<String> portsAsList = runConfig.getPorts();
         String[] ports = new ArrayList<>(portsAsList).toArray(new String[portsAsList.size()]);
         assertArrayEquals(new String[] {
@@ -152,7 +151,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 "0.0.0.0:80:80",
                 "jolokia.port:1234"
         },ports);
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         ports = new ArrayList<>(buildConfig.getPorts()).toArray(new String[buildConfig.getPorts().size()]);
         assertArrayEquals(new String[]{"9090", "80", "1234"}, ports);
     }
@@ -178,7 +177,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
         assertArrayEquals(new String[]{"foo", "bar", "wibble"}, runCommands);
     }
@@ -187,7 +186,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testRunCommandsFromPropertiesAndConfig() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(new HashMap<String, String>())
-                .buildConfig(new BuildImageConfiguration.Builder()
+                .buildConfig(new BuildConfiguration.Builder()
                         .runCmds(Arrays.asList("some","ignored","value"))
                         .build()
                 )
@@ -206,7 +205,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
         assertArrayEquals(new String[]{"propconf", "withrun", "used"}, runCommands);
     }
@@ -215,7 +214,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testRunCommandsFromConfigAndProperties() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Fallback))
-                .buildConfig(new BuildImageConfiguration.Builder()
+                .buildConfig(new BuildConfiguration.Builder()
                         .runCmds(Arrays.asList("some","configured","value"))
                         .build()
                 )
@@ -232,7 +231,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
         assertArrayEquals(new String[]{"some", "configured", "value"}, runCommands);
     }
@@ -248,7 +247,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         assertArrayEquals(new String[]{"/entrypoint.sh", "--from-property"}, buildConfig.getEntryPoint().asStrings().toArray());
     }
 
@@ -256,7 +255,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testEntrypointExecFromConfig() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Fallback))
-                .buildConfig(new BuildImageConfiguration.Builder()
+                .buildConfig(new BuildConfiguration.Builder()
                         .entryPoint(new Arguments(Arrays.asList("/entrypoint.sh", "--from-property")))
                         .build()
                 )
@@ -270,7 +269,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         assertArrayEquals(new String[]{"/entrypoint.sh", "--from-property"}, buildConfig.getEntryPoint().asStrings().toArray());
     }
 
@@ -278,7 +277,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testDefaultLogEnabledConfiguration() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Override))
-                .buildConfig(new BuildImageConfiguration.Builder()
+                .buildConfig(new BuildConfiguration.Builder()
                         .build()
                 )
                 .build();
@@ -291,7 +290,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        RunImageConfiguration runConfiguration = configs.get(0).getRunConfiguration();
+        RunConfiguration runConfiguration = configs.get(0).getRunConfiguration();
         assertNull(runConfiguration.getLogConfiguration().isEnabled());
         assertFalse(runConfiguration.getLogConfiguration().isActivated());
 
@@ -312,7 +311,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         // If image configuration has non-blank log configuration, it should become enabled
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Override))
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                         .log(new LogConfiguration.Builder().color("red").build())
                         .build()
                 )
@@ -363,7 +362,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testExplicitLogEnabledConfiguration() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Override))
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                         .log(new LogConfiguration.Builder().color("red").build())
                         .build()
                 )
@@ -377,7 +376,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                         "docker.log.enabled", "true")
         );
 
-        RunImageConfiguration runConfiguration = getRunImageConfiguration(configs);
+        RunConfiguration runConfiguration = getRunImageConfiguration(configs);
         assertTrue(runConfiguration.getLogConfiguration().isEnabled());
         assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("red", runConfiguration.getLogConfiguration().getColor());
@@ -401,7 +400,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         // Disabled by config
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Fallback))
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                         .log(new LogConfiguration.Builder().enabled(false).color("red").build())
                         .build()
                 )
@@ -450,7 +449,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testLogFile() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Override))
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                         .log(new LogConfiguration.Builder().file("myfile").build())
                         .build()
                 )
@@ -464,14 +463,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        RunImageConfiguration runConfiguration = configs.get(0).getRunConfiguration();
+        RunConfiguration runConfiguration = configs.get(0).getRunConfiguration();
         assertNull(runConfiguration.getLogConfiguration().isEnabled());
         assertTrue(runConfiguration.getLogConfiguration().isActivated());
         assertEquals("myfile", runConfiguration.getLogConfiguration().getFileLocation());
 
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Override))
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                         .build()
                 )
                 .build();
@@ -491,7 +490,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("myfilefromprop", runConfiguration.getLogConfiguration().getFileLocation());
     }
 
-    private RunImageConfiguration getRunImageConfiguration(List<ImageConfiguration> configs) {
+    private RunConfiguration getRunImageConfiguration(List<ImageConfiguration> configs) {
         assertEquals(1, configs.size());
         return configs.get(0).getRunConfiguration();
     }
@@ -501,7 +500,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         imageConfiguration = new ImageConfiguration.Builder()
                 .name("myimage")
                 .externalConfig(externalConfigMode(PropertyMode.Override))
-                .buildConfig(new BuildImageConfiguration.Builder()
+                .buildConfig(new BuildConfiguration.Builder()
                         .dockerFile("/some/path")
                         .build()
                 )
@@ -513,13 +512,13 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         assertEquals(1, configs.size());
 
-        BuildImageConfiguration buildConfiguration = configs.get(0).getBuildConfiguration();
+        BuildConfiguration buildConfiguration = configs.get(0).getBuildConfiguration();
         assertNotNull(buildConfiguration);
-        buildConfiguration.initAndValidate(null);
+        buildConfiguration.validate();
 
         Path absolutePath = Paths.get(".").toAbsolutePath();
         String expectedPath = absolutePath.getRoot() + "some" + File.separator + "path";
-        assertEquals(expectedPath, buildConfiguration.getDockerFile().getAbsolutePath());
+        assertEquals(expectedPath, buildConfiguration.calculateDockerFilePath().getAbsolutePath());
     }
 
     @Test
@@ -609,8 +608,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
         assertEquals("user", config.getUser());
         assertEquals("project", config.getDescriptorRef());
-        assertFalse(config.exportTargetDir());
-        assertTrue(config.isIgnorePermissions());
+        assertNull(config.getExportTargetDir());
+        assertFalse(config.getPermissions() == AssemblyConfiguration.PermissionMode.ignore);
     }
 
     @Test
@@ -633,25 +632,25 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testDockerfile() throws Exception {
         String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR), "src/main/docker/", k(ConfigKey.FROM), "busybox" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
+        config.validate(ImageConfiguration.NameFormatter.IDENTITY);
         assertTrue(config.getBuildConfiguration().isDockerFileMode());
-        assertEquals(new File("src/main/docker/Dockerfile"), config.getBuildConfiguration().getDockerFile());
+        assertEquals(new File("src/main/docker/Dockerfile"), config.getBuildConfiguration().calculateDockerFilePath());
     }
 
     @Test
     public void testDockerArchive() {
         String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar", k(ConfigKey.FROM), "busybox" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
+        config.validate(ImageConfiguration.NameFormatter.IDENTITY);
         assertFalse(config.getBuildConfiguration().isDockerFileMode());
-        assertEquals(new File("dockerLoad.tar"), config.getBuildConfiguration().getDockerArchive());
+        assertEquals("dockerLoad.tar", config.getBuildConfiguration().getDockerArchive());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidDockerFileArchiveConfig() {
         String[] testData = new String[] { k(ConfigKey.NAME), "image", k(ConfigKey.DOCKER_FILE_DIR),  "src/main/docker/", k(ConfigKey.DOCKER_ARCHIVE), "dockerLoad.tar", k(ConfigKey.FROM), "base" };
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        config.initAndValidate(ConfigHelper.NameFormatter.IDENTITY, null);
+        config.validate(ImageConfiguration.NameFormatter.IDENTITY);
     }
 
     @Test
@@ -659,7 +658,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "false", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(false, config.getBuildConfiguration().nocache());
+        assertEquals(false, config.getBuildConfiguration().getNoCache());
     }
 
     @Test
@@ -667,7 +666,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "true", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(true, config.getBuildConfiguration().nocache());
+        assertEquals(true, config.getBuildConfiguration().getNoCache());
     }
 
     @Test
@@ -675,7 +674,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.OPTIMISE), "false", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(false, config.getBuildConfiguration().optimise());
+        assertEquals(false, config.getBuildConfiguration().getOptimise());
     }
 
     @Test
@@ -733,10 +732,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     public void testUlimit() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(new HashMap<String, String>())
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                         .ulimits(Arrays.asList(
-                                new UlimitConfig("memlock", 100, 50),
-                                new UlimitConfig("nfile", 1024, 512)
+                                new UlimitConfiguration("memlock", 100, 50),
+                                new UlimitConfiguration("nfile", 1024, 512)
                         ))
                         .build()
                 )
@@ -757,8 +756,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 ));
 
         assertEquals(1,configs.size());
-        RunImageConfiguration runConfig = configs.get(0).getRunConfiguration();
-        List<UlimitConfig> ulimits = runConfig.getUlimits();
+        RunConfiguration runConfig = configs.get(0).getRunConfiguration();
+        List<UlimitConfiguration> ulimits = runConfig.getUlimits();
 
         assertEquals(4, ulimits.size());
         assertUlimitEquals(ulimit("memlock",10,10),runConfig.getUlimits().get(0));
@@ -792,8 +791,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Override
-    protected RunImageConfiguration.NamingStrategy getRunNamingStrategy() {
-        return RunImageConfiguration.NamingStrategy.none;
+    protected RunConfiguration.NamingStrategy getRunNamingStrategy() {
+        return RunConfiguration.NamingStrategy.none;
     }
 
     @Override
@@ -850,7 +849,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         return resolvedImageConfigs.get(0);
     }
 
-    private void validateBuildConfiguration(BuildImageConfiguration buildConfig) {
+    private void validateBuildConfiguration(BuildConfiguration buildConfig) {
         assertEquals(CleanupMode.TRY_TO_REMOVE, CleanupMode.parse(buildConfig.getCleanupMode()));
         assertEquals("command.sh", buildConfig.getCmd().getShell());
         assertEquals("image", buildConfig.getFrom());
@@ -859,7 +858,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
         assertEquals("fabric8io@redhat.com",buildConfig.getMaintainer());
-        assertEquals(false, buildConfig.nocache());
+        assertNull(buildConfig.getNoCache());
         assertEquals("Always", buildConfig.getImagePullPolicy());
 
         validateEnv(buildConfig.getEnv());
@@ -875,8 +874,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("/maven", assemblyConfig.getTargetDir());
         assertEquals("assembly.xml", assemblyConfig.getDescriptor());
         assertNull(assemblyConfig.getUser());
-        assertNull(assemblyConfig.exportTargetDir());
-        assertFalse(assemblyConfig.isIgnorePermissions());
+        assertNull(assemblyConfig.getExportTargetDir());
+        assertFalse(assemblyConfig.getPermissions() == AssemblyConfiguration.PermissionMode.ignore);
     }
 
     private void validateArgs(Map<String, String> args) {
@@ -891,7 +890,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("2147483648", buildOptions.get("shmsize"));
     }
 
-    protected void validateRunConfiguration(RunImageConfiguration runConfig) {
+    protected void validateRunConfiguration(RunConfiguration runConfig) {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
@@ -956,8 +955,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("10", config.getDriver().getOpts().get("max-file"));
     }
 
-    private UlimitConfig ulimit(String name, Integer hard, Integer soft) {
-        return new UlimitConfig(name, hard, soft);
+    private UlimitConfiguration ulimit(String name, Integer hard, Integer soft) {
+        return new UlimitConfiguration(name, hard, soft);
     }
 
     private Properties props(String ... args) {
@@ -973,8 +972,6 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.FROM), "busybox",
             k(ConfigKey.ASSEMBLY_BASEDIR), "/basedir",
             k(ConfigKey.ASSEMBLY_DESCRIPTOR_REF), "project",
-            k(ConfigKey.ASSEMBLY_EXPORT_BASEDIR), "false",
-            k(ConfigKey.ASSEMBLY_IGNORE_PERMISSIONS), "true",
             k(ConfigKey.ASSEMBLY_USER), "user",
             k(ConfigKey.NAME), "image",
             };
@@ -994,7 +991,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.CPUSHARES), "1",
             k(ConfigKey.CMD), "command.sh",
             k(ConfigKey.DNS) + ".1", "8.8.8.8",
-            k(ConfigKey.NET), "host",
+            k(ConfigKey.NETWORK_MODE), "host",
             k(ConfigKey.DNS_SEARCH) + ".1", "example.com",
             k(ConfigKey.DOMAINNAME), "domain.com",
             k(ConfigKey.ENTRYPOINT), "entrypoint.sh",
@@ -1056,7 +1053,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     private String k(ConfigKey from) {
         return from.asPropertyKey();
     }
-    private void assertUlimitEquals(UlimitConfig expected, UlimitConfig actual){
+    private void assertUlimitEquals(UlimitConfiguration expected, UlimitConfiguration actual){
     	assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getSoft(), actual.getSoft());
         assertEquals(expected.getHard(), actual.getHard());

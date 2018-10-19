@@ -336,6 +336,10 @@
                     </assembly>
                   </build>
                   <run>
+                    <env>
+                      <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
+                      <AB_OFF>1</AB_OFF>
+                    </env>
                     <ports>
                       <port>jolokia.port:8080</port>
                     </ports>

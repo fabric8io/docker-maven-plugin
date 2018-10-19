@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.config;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.ImageName;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.model.Container;
 
 /**
@@ -140,12 +141,12 @@ public class ContainerNamingUtil {
     }
 
     private static String extractContainerNamePattern(ImageConfiguration image, String defaultContainerNamePattern) {
-        RunImageConfiguration runConfig = image.getRunConfiguration();
+        RunConfiguration runConfig = image.getRunConfiguration();
         if (runConfig != null) {
             if (runConfig.getContainerNamePattern() != null) {
                 return runConfig.getContainerNamePattern();
             }
-            if (runConfig.getNamingStrategy() == RunImageConfiguration.NamingStrategy.alias) {
+            if (runConfig.getNamingStrategy() == RunConfiguration.NamingStrategy.alias) {
                 return "%a";
             }
         }

@@ -34,7 +34,7 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
     private final BuildDirs buildDirs;
 
     // Required by configuration source and duplicated from AbstractAssemblyMojo (which is unfortunately
-    // not extracted to be usab;e
+    // not extracted to be usable
     private FixedStringSearchInterpolator commandLinePropertiesInterpolator;
     private FixedStringSearchInterpolator envInterpolator;
     private FixedStringSearchInterpolator rootInterpolator;
@@ -271,7 +271,10 @@ public class DockerAssemblyConfigurationSource implements AssemblerConfiguration
 
     @Override
     public boolean isIgnorePermissions() {
-        return assemblyConfig != null ? assemblyConfig.isIgnorePermissions() : false;
+        return
+            assemblyConfig != null &&
+            assemblyConfig.getPermissions() != null &&
+            assemblyConfig.getPermissions() == AssemblyConfiguration.PermissionMode.ignore;
     }
 
     // =======================================================================

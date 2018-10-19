@@ -9,7 +9,7 @@ import java.util.Map;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.config.run.LogConfiguration;
-import io.fabric8.maven.docker.config.run.UlimitConfig;
+import io.fabric8.maven.docker.config.run.UlimitConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.JsonFactory;
 
@@ -103,10 +103,10 @@ public class ContainerHostConfig {
         return addAsArray("VolumesFrom", volumesFrom);
     }
 
-    public ContainerHostConfig ulimits(List<UlimitConfig> ulimitsConfig) {
+    public ContainerHostConfig ulimits(List<UlimitConfiguration> ulimitsConfig) {
     	if (ulimitsConfig != null && ulimitsConfig.size() > 0) {
             JsonArray ulimits = new JsonArray();
-            for (UlimitConfig ulimit : ulimitsConfig) {
+            for (UlimitConfiguration ulimit : ulimitsConfig) {
                 JsonObject ulimitConfigJson = new JsonObject();
                 ulimitConfigJson.addProperty("Name", ulimit.getName());
                 addIfNotNull(ulimitConfigJson, "Hard", ulimit.getHard());

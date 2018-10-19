@@ -160,7 +160,7 @@ public class DockerAccessIT {
     private void testExecContainer() throws DockerAccessException {
         Arguments arguments = new Arguments();
         arguments.setExec(Lists.newArrayList("echo", "test", "echo"));
-        String execContainerId = dockerClient.createExecContainer(this.containerId, arguments);
+        String execContainerId = dockerClient.createExecContainer(this.containerId, arguments.getExec());
         //assertThat(dockerClient.startExecContainer(execContainerId), is("test echo"));
     }
 

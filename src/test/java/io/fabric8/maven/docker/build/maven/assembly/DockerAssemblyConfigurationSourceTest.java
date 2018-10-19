@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class DockerAssemblyConfigurationSourceTest {
@@ -38,8 +39,8 @@ public class DockerAssemblyConfigurationSourceTest {
             assertTrue(exp.getMessage().contains("blub"));
         }
 
-        AssemblyConfiguration config = new AssemblyConfiguration.Builder().ignorePermissions(false).permissions("ignore").build();
-        assertTrue(config.isIgnorePermissions());;
+        AssemblyConfiguration config = new AssemblyConfiguration.Builder().permissions("ignore").build();
+        assertSame(config.getPermissions(), AssemblyConfiguration.PermissionMode.ignore);;
     }
 
     @Test

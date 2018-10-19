@@ -19,7 +19,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -52,13 +52,13 @@ public class RemoveMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.removeMode")
     private String removeMode;
-    
-    /** 
+
+    /**
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
     private boolean skipTag;
-    
+
     @Override
     protected void executeInternal(ServiceHub hub) throws DockerAccessException {
         for (ImageConfiguration image : getResolvedImages()) {

@@ -2,13 +2,10 @@
 FROM ${base}
 
 ENV SAMPLE_BUILD_MODE=dockerfile \
-    DOCKERFILE_NAME="src/main/Dockerfile"
-
-LABEL PROJECT_NAME=hello-world \
-      PROJECT=${project.artifactId}
+    DOCKERFILE_NAME="src/main/Dockerfile-3"
 
 # Arbitrary files can be added
-ADD ${file} /
+ADD welcome.txt /
 
 # In maven/ the files as specified in the <assembly> section is stored
 # and need to be added manually

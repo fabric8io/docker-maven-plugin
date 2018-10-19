@@ -16,6 +16,7 @@ package io.fabric8.maven.docker.util;/*
  */
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Date;
@@ -76,7 +77,8 @@ public class DockerFileUtilTest {
                 FixedStringSearchInterpolator interpolator = DockerFileUtil.createInterpolator(buildContext, entry.getValue());
                 FileUtils.write(actualDockerFile, DockerFileUtil.interpolate(dockerFile, interpolator), "UTF-8");
                 // Compare text lines without regard to EOL delimiters
-                assertEquals(FileUtils.readLines(expectedDockerFile), FileUtils.readLines(actualDockerFile));
+                assertEquals(FileUtils.readLines(expectedDockerFile, Charset.defaultCharset()),
+                             FileUtils.readLines(actualDockerFile, Charset.defaultCharset()));
             }
         }
     }
@@ -104,7 +106,7 @@ public class DockerFileUtilTest {
             }
         };
         @SuppressWarnings("deprecation")
-        MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
+        MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
         session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue
         session.getSystemProperties().put("user.name", "somebody"); // Java system property: -Duser.name=somebody
 

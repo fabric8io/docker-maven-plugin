@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.run.LogConfiguration;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -50,7 +50,7 @@ public class LogOutputSpecFactoryTest {
     private LogOutputSpec createSpec(String prefix) {
         LogOutputSpecFactory factory = new LogOutputSpecFactory(false, false, null);
         LogConfiguration logConfig = new LogConfiguration.Builder().prefix(prefix).build();
-        RunImageConfiguration runConfig = new RunImageConfiguration.Builder().log(logConfig).build();
+        RunConfiguration runConfig = new RunConfiguration.Builder().log(logConfig).build();
         ImageConfiguration imageConfiguration = new ImageConfiguration.Builder().alias(ALIAS).name(NAME).runConfig(runConfig).build();
         return factory.createSpec(CONTAINER_ID,imageConfiguration);
     }

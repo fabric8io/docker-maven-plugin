@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 /*
  *
  * Copyright 2016 Roland Huss
@@ -16,7 +16,6 @@ package io.fabric8.maven.docker.config;
  * limitations under the License.
  */
 
-import io.fabric8.maven.docker.config.run.UlimitConfig;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -25,7 +24,7 @@ import static org.junit.Assert.fail;
  * @author roland
  * @since 19/07/16
  */
-public class UlimitConfigTest {
+public class UlimitConfigurationTest {
 
     @Test
     public void simple() {
@@ -37,7 +36,7 @@ public class UlimitConfigTest {
         };
 
         for (int i = 0; i < data.length; i+=4) {
-            UlimitConfig config = new UlimitConfig(data[0].toString());
+            UlimitConfiguration config = new UlimitConfiguration(data[0].toString());
             assertEquals(data[1], config.getName());
             assertEquals(data[2], config.getHard());
             assertEquals(data[3], config.getSoft());
@@ -53,7 +52,7 @@ public class UlimitConfigTest {
 
         for (String test : data) {
             try {
-                new UlimitConfig(test);
+                new UlimitConfiguration(test);
                 fail();
             } catch (IllegalArgumentException exp) {
                 // expected
@@ -71,7 +70,7 @@ public class UlimitConfigTest {
 
         for (String test : data) {
             try {
-                new UlimitConfig(test);
+                new UlimitConfiguration(test);
                 fail();
             } catch (NumberFormatException exp) {
                 // expected

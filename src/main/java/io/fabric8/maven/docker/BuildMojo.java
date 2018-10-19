@@ -14,7 +14,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.build.docker.DockerBuildService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -70,10 +70,10 @@ public class BuildMojo extends AbstractBuildSupportMojo {
      * @throws MojoExecutionException
      */
     private void processImageConfig(ServiceHub hub, ImageConfiguration aImageConfig) throws IOException, MojoExecutionException {
-        BuildImageConfiguration buildConfig = aImageConfig.getBuildConfiguration();
+        BuildConfiguration buildConfig = aImageConfig.getBuildConfiguration();
 
         if (buildConfig != null) {
-            if(buildConfig.skip()) {
+            if(buildConfig.getSkip() != null && buildConfig.getSkip()) {
                 log.info("%s : Skipped building", aImageConfig.getDescription());
             } else {
                 buildAndTag(hub, aImageConfig);

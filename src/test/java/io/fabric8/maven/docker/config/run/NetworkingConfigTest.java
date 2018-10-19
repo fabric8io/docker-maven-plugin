@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.run;
 /*
  *
  * Copyright 2016 Roland Huss
@@ -18,12 +18,11 @@ package io.fabric8.maven.docker.config;
 
 import java.util.Arrays;
 
-import io.fabric8.maven.docker.config.run.NetworkConfig;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import static io.fabric8.maven.docker.config.run.NetworkConfig.Mode.*;
+import static io.fabric8.maven.docker.config.run.NetworkConfiguration.Mode.*;
 
 /**
  * @author roland
@@ -42,9 +41,9 @@ public class NetworkingConfigTest {
             none, null, "None", "none", "true", "false", null, null
         };
         for (int i = 0; i < data.length; i += 8) {
-            for (NetworkConfig config : new NetworkConfig[]{
-                new NetworkConfig((NetworkConfig.Mode) data[i],(String) data[i + 1]),
-                new NetworkConfig((String) data[i + 2])}) {
+            for (NetworkConfiguration config : new NetworkConfiguration[]{
+                new NetworkConfiguration((NetworkConfiguration.Mode) data[i], (String) data[i + 1]),
+                new NetworkConfiguration((String) data[i + 2])}) {
                 if (config.isStandardNetwork()) {
                     assertEquals(data[i + 3], config.getStandardMode("containerId"));
                 } else {
@@ -66,7 +65,7 @@ public class NetworkingConfigTest {
     @Test
     public void empty() {
         for (String str : new String[]{ null, "" }) {
-            NetworkConfig config = new NetworkConfig(str);
+            NetworkConfiguration config = new NetworkConfiguration(str);
             assertFalse(config.isStandardNetwork());
             assertFalse(config.isCustomNetwork());
             assertNull(config.getContainerAlias());
@@ -76,10 +75,10 @@ public class NetworkingConfigTest {
 
     @Test
     public void builder() {
-        NetworkConfig config = new NetworkConfig.Builder().build();
+        NetworkConfiguration config = new NetworkConfiguration.Builder().build();
         assertNull(config);
 
-        config = new NetworkConfig.Builder().name("hello").aliases(Arrays.asList("alias1", "alias2")).build();
+        config = new NetworkConfiguration.Builder().name("hello").aliases(Arrays.asList("alias1", "alias2")).build();
         assertTrue(config.isCustomNetwork());
         assertEquals("hello",config.getCustomNetwork());
         assertEquals(2,config.getAliases().size());

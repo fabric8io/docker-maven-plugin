@@ -4,7 +4,7 @@ package io.fabric8.maven.docker.config.run;
 import java.io.Serializable;
 import java.util.Map;
 
-import io.fabric8.maven.docker.util.DeepCopy;
+import org.apache.commons.lang3.SerializationUtils;
 
 /**
  *  Volume Configuration for Volumes to be created prior to container start
@@ -52,7 +52,7 @@ public class VolumeConfiguration implements Serializable
        }
 
        public Builder(VolumeConfiguration that) {
-           this.config = that == null ? new VolumeConfiguration() : DeepCopy.copy(that);
+           this.config = that == null ? new VolumeConfiguration() : SerializationUtils.clone(that);
        }
 
        public Builder name(String name) {

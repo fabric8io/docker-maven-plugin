@@ -10,8 +10,7 @@ import io.fabric8.maven.docker.build.docker.DockerBuildService;
 import io.fabric8.maven.docker.build.docker.DockerRegistryService;
 import io.fabric8.maven.docker.build.maven.MavenArchiveService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -73,7 +72,7 @@ public class LoadImageTest {
     }
 
     private void givenAnImageConfiguration() {
-        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+        BuildConfiguration buildConfig = new BuildConfiguration.Builder()
             .dockerArchive("test.tar")
             .build();
 
@@ -82,7 +81,7 @@ public class LoadImageTest {
             .alias("build-alias")
             .buildConfig(buildConfig)
             .build();
-        imageConfig.initAndValidate(ConfigHelper.NameFormatter.IDENTITY,log);
+        imageConfig.validate(ImageConfiguration.NameFormatter.IDENTITY);
     }
 
     private void whenBuildImage() throws IOException {

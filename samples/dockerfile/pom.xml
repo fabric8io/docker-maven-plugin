@@ -58,7 +58,7 @@
               <alias>dockerfile</alias>
               <build>
                 <!-- filter>@</filter-->
-                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                <contextDir>${project.basedir}/src/main/docker</contextDir>
                 <assembly>
                   <descriptorRef>rootWar</descriptorRef>
                 </assembly>
@@ -74,4 +74,48 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>alternate</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <build>
+                    <dockerFile>Dockerfile-2</dockerFile>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>outside</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <build>
+                    <dockerFile>${project.basedir}/Dockerfile-3</dockerFile>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

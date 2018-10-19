@@ -23,7 +23,7 @@ import io.fabric8.maven.docker.build.maven.assembly.ArchiverCustomizer;
 import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugins.assembly.InvalidAssemblerConfigurationException;
 import org.apache.maven.plugins.assembly.archive.ArchiveCreationException;
@@ -112,12 +112,12 @@ public class MavenArchiveService {
 
     // =============================================
 
-    public File createArchive(String imageName, BuildImageConfiguration buildConfig, MavenBuildContext ctx, Logger log)
+    public File createArchive(String imageName, BuildConfiguration buildConfig, MavenBuildContext ctx, Logger log)
         throws IOException {
         return createArchive(imageName, buildConfig, ctx, log, null);
     }
 
-    File createArchive(String imageName, BuildImageConfiguration buildConfig, MavenBuildContext ctx, Logger log, ArchiverCustomizer customizer)
+    File createArchive(String imageName, BuildConfiguration buildConfig, MavenBuildContext ctx, Logger log, ArchiverCustomizer customizer)
             throws IOException {
         return dockerAssemblyManager.createDockerTarArchive(imageName, ctx, buildConfig, customizer, log);
     }

@@ -2,30 +2,31 @@ package io.fabric8.maven.docker.config.build;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import io.fabric8.maven.docker.util.DeepCopy;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.Logger;
+import org.apache.commons.lang3.SerializationUtils;
 
 /**
  * @author roland
  * @since 02.09.14
  */
-public class BuildImageConfiguration implements Serializable {
+public class BuildConfiguration implements Serializable {
 
     /**
-     * Directory holding an external Dockerfile which is used to build the
-     * image. This Dockerfile will be enriched by the addition build configuration
+     * Directory used as the contexst directory, e.g. for a docker build.
      */
-    private String dockerFileDir;
+    private String contextDir;
 
     /**
      * Path to a dockerfile to use. Its parent directory is used as build context (i.e. as <code>dockerFileDir</code>).
-     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly givem
-     * <code>dockerFileDir</code>
+     * Multiple different Dockerfiles can be specified that way. If set overwrites a possibly given
+     * <code>contextDir</code>
      */
     private String dockerFile;
 
@@ -85,9 +86,6 @@ public class BuildImageConfiguration implements Serializable {
 
     private Arguments entryPoint;
 
-    @Deprecated
-    private String command;
-
     private String workdir;
 
     private Arguments cmd;
@@ -104,33 +102,22 @@ public class BuildImageConfiguration implements Serializable {
 
     private Map<String,String> buildOptions;
 
-    // Path to Dockerfile to use, initialized lazily ....
-    private File dockerFileFile, dockerArchiveFile;
-
-    public BuildImageConfiguration() {}
+    public BuildConfiguration() {}
 
     public boolean isDockerFileMode() {
-        return dockerFileFile != null;
+        return dockerFile != null || contextDir != null;
     }
 
-    public File getDockerFile() {
-        return dockerFileFile;
-    }
-
-    public File getDockerArchive() {
-        return dockerArchiveFile;
-    }
-
-    public String getDockerFileRaw() {
+    public String getDockerFile() {
         return dockerFile;
     }
 
-    public String getDockerArchiveRaw() {
+    public String getDockerArchive() {
         return dockerArchive;
     }
 
-    public String getDockerFileDirRaw() {
-        return dockerFileDir;
+    public String getContextDir() {
+        return contextDir;
     }
 
     public String getFilter() {
@@ -165,7 +152,7 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public List<String> getPorts() {
-        return EnvUtil.removeEmptyEntries(ports);
+        return removeEmptyEntries(ports);
     }
 
     public String getImagePullPolicy() {
@@ -173,11 +160,11 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public List<String> getVolumes() {
-        return EnvUtil.removeEmptyEntries(volumes);
+        return removeEmptyEntries(volumes);
     }
 
     public List<String> getTags() {
-        return EnvUtil.removeEmptyEntries(tags);
+        return removeEmptyEntries(tags);
     }
 
     public Map<String, String> getEnv() {
@@ -192,25 +179,8 @@ public class BuildImageConfiguration implements Serializable {
         return cmd;
     }
 
-    @Deprecated
-    public String getCommand() {
-        return command;
-    }
-
     public String getCleanupMode() {
         return cleanup;
-    }
-
-    public boolean nocache() {
-        return nocache != null ? nocache : false;
-    }
-
-    public boolean optimise() {
-        return optimise != null ? optimise : false;
-    }
-
-    public boolean skip() {
-        return skip != null ? skip : false;
     }
 
     public Boolean getNoCache() {
@@ -238,7 +208,7 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public List<String> getRunCmds() {
-        return EnvUtil.removeEmptyEntries(runCmds);
+        return removeEmptyEntries(runCmds);
     }
 
     public String getUser() {
@@ -254,24 +224,25 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     // ===========================================================================================
-
     public static class Builder {
-        private final BuildImageConfiguration config;
+
+
+        protected BuildConfiguration config;
 
         public Builder() {
             this(null);
         }
 
-        public Builder(BuildImageConfiguration that) {
+        public Builder(BuildConfiguration that) {
             if (that == null) {
-                this.config = new BuildImageConfiguration();
+                this.config = new BuildConfiguration();
             } else {
-                this.config = DeepCopy.copy(that);
+                this.config = SerializationUtils.clone(that);
             }
         }
 
-        public Builder dockerFileDir(String dir) {
-            config.dockerFileDir = dir;
+        public Builder contextDir(String dir) {
+            config.contextDir = dir;
             return this;
         }
 
@@ -331,11 +302,7 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder runCmds(List<String> theCmds) {
-            if (theCmds == null) {
-                config.runCmds = new ArrayList<>();
-            } else {
-                config.runCmds = theCmds;
-            }
+            config.runCmds = theCmds;
             return this;
         }
 
@@ -378,7 +345,7 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder compression(String compression) {
             if (compression == null) {
-                config.compression = ArchiveCompression.none;
+                config.compression = null;
             } else {
                 config.compression = ArchiveCompression.valueOf(compression);
             }
@@ -422,12 +389,12 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public BuildImageConfiguration build() {
+        public BuildConfiguration build() {
             return config;
         }
     }
 
-    public String initAndValidate(Logger log) throws IllegalArgumentException {
+    public String validate() throws IllegalArgumentException {
         if (entryPoint != null) {
             entryPoint.validate();
         }
@@ -438,21 +405,11 @@ public class BuildImageConfiguration implements Serializable {
             healthCheck.validate();
         }
 
-        if (command != null) {
-            log.warn("<command> in the <build> configuration is deprecated and will be be removed soon");
-            log.warn("Please use <cmd> with nested <shell> or <exec> sections instead.");
-            log.warn("");
-            log.warn("More on this is explained in the user manual: ");
-            log.warn("https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/manual.md#start-up-arguments");
-            log.warn("");
-            log.warn("Migration is trivial, see changelog to version 0.12.0 -->");
-            log.warn("https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/changelog.md");
-            log.warn("");
-            log.warn("For now, the command is automatically translated for you to the shell form:");
-            log.warn("   <cmd>%s</cmd>", command);
+        // can't have dockerFile/dockerFileDir and dockerArchive
+        if ((dockerFile != null || contextDir != null) && dockerArchive != null) {
+            throw new IllegalArgumentException("Both <dockerFile> (<dockerFileDir>) and <dockerArchive> are set. " +
+                                               "Only one of them can be specified.");
         }
-
-        initDockerFileFile(log);
 
         if (healthCheck != null) {
             // HEALTHCHECK support added later
@@ -465,54 +422,70 @@ public class BuildImageConfiguration implements Serializable {
         }
     }
 
-    // Initialize the dockerfile location and the build mode
-    private void initDockerFileFile(Logger log) {
-        // can't have dockerFile/dockerFileDir and dockerArchive
-        if ((dockerFile != null || dockerFileDir != null) && dockerArchive != null) {
-            throw new IllegalArgumentException("Both <dockerFile> (<dockerFileDir>) and <dockerArchive> are set. " +
-                                               "Only one of them can be specified.");
-        }
-        dockerFileFile = findDockerFileFile(log);
-
-        if (dockerArchive != null) {
-            dockerArchiveFile = new File(dockerArchive);
-        }
-    }
-
-    private File findDockerFileFile(Logger log) {
+    public File calculateDockerFilePath() {
         if (dockerFile != null) {
             File dFile = new File(dockerFile);
-            if (dockerFileDir == null) {
+            if (contextDir == null) {
                 return dFile;
-            } else {
-                if (dFile.isAbsolute()) {
-                    throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
-                }
-                if (EnvUtil.isWindows() && !EnvUtil.isValidWindowsFileName(dockerFile)) {
-                    throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
-                }
-                return new File(dockerFileDir, dockerFile);
             }
+            if (dFile.isAbsolute()) {
+                return dFile;
+            }
+            if (System.getProperty("os.name").toLowerCase().contains("windows") &&
+                !isValidWindowsFileName(dockerFile)) {
+                throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
+            }
+            return new File(contextDir, dFile.getPath());
         }
 
-        if (dockerFileDir != null) {
-            return new File(dockerFileDir, "Dockerfile");
-        }
-
-        // TODO: Remove the following deprecated handling section
-        if (dockerArchive == null) {
-            String deprecatedDockerFileDir =
-                getAssemblyConfiguration() != null ?
-                    getAssemblyConfiguration().getDockerFileDir() :
-                    null;
-            if (deprecatedDockerFileDir != null) {
-                log.warn("<dockerFileDir> in the <assembly> section of a <build> configuration is deprecated");
-                log.warn("Please use <dockerFileDir> or <dockerFile> directly within the <build> configuration instead");
-                return new File(deprecatedDockerFileDir,"Dockerfile");
-            }
+        if (contextDir != null) {
+            return new File(contextDir, "Dockerfile");
         }
 
         // No dockerfile mode
-        return null;
+        throw new IllegalArgumentException("Can't calculate a docker file path if neither dockerFile nor contextDir is specified");
     }
+
+    // ===============================================================================================================
+
+    private List<String> removeEmptyEntries(List<String> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                   .filter(Objects::nonNull)
+                   .map(String::trim)
+                   .filter(s -> !s.isEmpty())
+                   .collect(Collectors.toList());
+    }
+
+
+   /**
+     * Validate that the provided filename is a valid Windows filename.
+     *
+     * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
+     *
+     * @param filename the filename
+     * @return filename is a valid Windows filename
+     */
+    boolean isValidWindowsFileName(String filename) {
+        Pattern pattern = Pattern.compile(
+            "# Match a valid Windows filename (unspecified file system).          \n" +
+            "^                                # Anchor to start of string.        \n" +
+            "(?!                              # Assert filename is not: CON, PRN, \n" +
+            "  (?:                            # AUX, NUL, COM1, COM2, COM3, COM4, \n" +
+            "    CON|PRN|AUX|NUL|             # COM5, COM6, COM7, COM8, COM9,     \n" +
+            "    COM[1-9]|LPT[1-9]            # LPT1, LPT2, LPT3, LPT4, LPT5,     \n" +
+            "  )                              # LPT6, LPT7, LPT8, and LPT9...     \n" +
+            "  (?:\\.[^.]*)?                  # followed by optional extension    \n" +
+            "  $                              # and end of string                 \n" +
+            ")                                # End negative lookahead assertion. \n" +
+            "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
+            "[^<>:\"/\\\\|?*\\x00-\\x1F .]    # Last char is not a space or dot.  \n" +
+            "$                                # Anchor to end of string.            ",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
+        Matcher matcher = pattern.matcher(filename);
+        return matcher.matches();
+    }
+
 }

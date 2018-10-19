@@ -22,7 +22,7 @@ import io.fabric8.maven.docker.build.maven.MavenArchiveService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.WatchImageConfiguration;
+import io.fabric8.maven.docker.config.WatchConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
@@ -66,8 +66,7 @@ public class WatchService {
         try {
             executor = Executors.newSingleThreadScheduledExecutor();
 
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, images)) {
-                final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+            for (ImageConfiguration imageConfig : runService.getImagesConfigsInOrder(images)) {
 
                 String imageId = queryService.getImageId(imageConfig.getName());
                 String containerId = runService.lookupContainer(imageConfig.getName());
@@ -356,26 +355,26 @@ public class WatchService {
         // =========================================================
 
         private int getWatchInterval(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             int interval = watchConfig != null ? watchConfig.getInterval() : watchContext.getWatchInterval();
             return interval < 100 ? 100 : interval;
         }
 
         private String getPostExec(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             return watchConfig != null && watchConfig.getPostExec() != null ?
                     watchConfig.getPostExec() : watchContext.getWatchPostExec();
         }
 
         private String getPostGoal(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             return watchConfig != null && watchConfig.getPostGoal() != null ?
                     watchConfig.getPostGoal() : watchContext.getWatchPostGoal();
 
         }
 
         private WatchMode getWatchMode(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             WatchMode mode = watchConfig != null ? watchConfig.getMode() : null;
             return mode != null ? mode : watchContext.getWatchMode();
         }

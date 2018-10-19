@@ -12,7 +12,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Joiner;
-import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.config.build.HealthCheckConfiguration;
 import org.apache.commons.io.FileUtils;
@@ -99,7 +98,7 @@ public class DockerFileBuilder {
 
         StringBuilder b = new StringBuilder();
 
-        DockerFileKeyword.FROM.addTo(b, baseImage != null ? baseImage : DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE);
+        DockerFileKeyword.FROM.addTo(b, baseImage != null ? baseImage : DockerBuildService.DEFAULT_DATA_BASE_IMAGE);
         if (maintainer != null) {
             DockerFileKeyword.MAINTAINER.addTo(b, maintainer);
         }

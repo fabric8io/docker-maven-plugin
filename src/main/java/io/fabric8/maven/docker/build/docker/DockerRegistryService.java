@@ -8,10 +8,10 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.build.RegistryContext;
 import io.fabric8.maven.docker.build.RegistryService;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -40,7 +40,7 @@ public class DockerRegistryService implements RegistryService {
     @Override
     public void pushImage(ImageConfiguration imageConfig,
                           int retries, boolean skipTag, RegistryContext context) throws IOException {
-        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
         String name = imageConfig.getName();
         if (buildConfig != null) {
             String registry = EnvUtil.firstRegistryOf(

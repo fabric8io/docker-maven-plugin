@@ -19,6 +19,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.util.ConfigHelper;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Mocked;
 import org.apache.maven.execution.MavenSession;

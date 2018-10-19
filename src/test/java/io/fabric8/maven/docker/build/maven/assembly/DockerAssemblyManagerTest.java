@@ -10,7 +10,7 @@ import java.util.function.Function;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.build.docker.DockerFileBuilder;
 import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.Logger;
@@ -58,7 +58,7 @@ public class DockerAssemblyManagerTest {
 
     @Test
     public void testNoAssembly() {
-        BuildImageConfiguration buildConfig = new BuildImageConfiguration();
+        BuildConfiguration buildConfig = new BuildConfiguration();
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
 
         DockerFileBuilder builder = assemblyManager.createDockerFileBuilder(buildConfig, assemblyConfig);
@@ -87,14 +87,14 @@ public class DockerAssemblyManagerTest {
 
         }};
 
-        BuildImageConfiguration buildConfig = createBuildConfig();
+        BuildConfiguration buildConfig = createBuildConfig();
 
         assemblyManager.getAssemblyFiles("testImage", buildConfig, mavenBuildContext, new AnsiLogger(new SystemStreamLog(),true,true));
     }
 
     @Test
     public void testCopyValidVerifyGivenDockerfile(@Injectable final Logger logger) throws IOException {
-        BuildImageConfiguration buildConfig = createBuildConfig();
+        BuildConfiguration buildConfig = createBuildConfig();
 
         assemblyManager.verifyGivenDockerfile(
             new File(getClass().getResource("/docker/Dockerfile_assembly_verify_copy_valid.test").getPath()),
@@ -110,7 +110,7 @@ public class DockerAssemblyManagerTest {
 
     @Test
     public void testCopyInvalidVerifyGivenDockerfile(@Injectable final Logger logger) throws IOException {
-        BuildImageConfiguration buildConfig = createBuildConfig();
+        BuildConfiguration buildConfig = createBuildConfig();
 
         assemblyManager.verifyGivenDockerfile(
             new File(getClass().getResource("/docker/Dockerfile_assembly_verify_copy_invalid.test").getPath()),
@@ -125,7 +125,7 @@ public class DockerAssemblyManagerTest {
 
     @Test
     public void testCopyChownValidVerifyGivenDockerfile(@Injectable final Logger logger) throws IOException {
-        BuildImageConfiguration buildConfig = createBuildConfig();
+        BuildConfiguration buildConfig = createBuildConfig();
 
         assemblyManager.verifyGivenDockerfile(
             new File(getClass().getResource("/docker/Dockerfile_assembly_verify_copy_chown_valid.test").getPath()),
@@ -139,15 +139,15 @@ public class DockerAssemblyManagerTest {
 
     }
 
-    private BuildImageConfiguration createBuildConfig() {
-        return new BuildImageConfiguration.Builder()
+    private BuildConfiguration createBuildConfig() {
+        return new BuildConfiguration.Builder()
                 .assembly(new AssemblyConfiguration.Builder()
                         .descriptorRef("artifact")
                         .build())
                 .build();
     }
 
-    private Function<String, String> createInterpolator(BuildImageConfiguration buildConfig) {
+    private Function<String, String> createInterpolator(BuildConfiguration buildConfig) {
         MavenProject project = new MavenProject();
         project.setArtifactId("docker-maven-plugin");
 

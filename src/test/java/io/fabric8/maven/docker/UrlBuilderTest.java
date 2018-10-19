@@ -22,7 +22,7 @@ import java.util.HashMap;
 
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.UrlBuilder;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

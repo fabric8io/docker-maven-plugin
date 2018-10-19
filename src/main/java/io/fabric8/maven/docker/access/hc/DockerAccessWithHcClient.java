@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -47,8 +48,6 @@ import io.fabric8.maven.docker.access.hc.win.NamedPipeClientBuilder;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.access.log.LogRequestor;
-import io.fabric8.maven.docker.config.build.ArchiveCompression;
-import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.log.DefaultLogCallback;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
@@ -58,10 +57,11 @@ import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.model.NetworksListElement;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
@@ -193,14 +193,14 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public String createExecContainer(String containerId, Arguments arguments) throws DockerAccessException {
+    public String createExecContainer(String containerId, List<String> arguments) throws DockerAccessException {
         String url = urlBuilder.createExecContainer(containerId);
         JsonObject request = new JsonObject();
         request.addProperty("Tty", true);
         request.addProperty("AttachStdin", false);
         request.addProperty("AttachStdout", true);
         request.addProperty("AttachStderr", true);
-        request.add("Cmd", JsonFactory.newJsonArray(arguments.getExec()));
+        request.add("Cmd", JsonFactory.newJsonArray(arguments));
 
         String execJsonRequest = request.toString();
         try {
@@ -452,27 +452,37 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException {
+    public void saveImage(String image, String filename) throws DockerAccessException {
         ImageName name = new ImageName(image);
         String url = urlBuilder.getImage(name);
         try {
-            delegate.get(url, getImageResponseHandler(filename, compression), HTTP_OK);
+            delegate.get(url, getImageResponseHandler(filename), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to save '%s' to '%s'", image, filename);
         }
 
     }
 
-    private ResponseHandler<Object> getImageResponseHandler(final String filename, final ArchiveCompression compression) throws FileNotFoundException {
-        return new ResponseHandler<Object>() {
-            @Override
-            public Object handleResponse(HttpResponse response) throws IOException {
-                try (InputStream stream = response.getEntity().getContent();
-                     OutputStream out = compression.wrapOutputStream(new FileOutputStream(filename))) {
+    private ResponseHandler<Object> getImageResponseHandler(final String filename) throws FileNotFoundException {
+        return response -> {
+            OutputStream fout = new FileOutputStream(filename);
+            OutputStream out;
+            if (filename.endsWith(".tar.gz") || filename.endsWith(".tgz")) {
+                out = new GZIPOutputStream(fout);
+            } else if (filename.endsWith(".tar.bz") || filename.endsWith(".tar.bzip2") || filename.endsWith(".tar.bz2")) {
+                out = new BZip2CompressorOutputStream(fout);
+            } else {
+                out = fout;
+            }
+
+            try {
+                try (InputStream stream = response.getEntity().getContent()) {
                     IOUtils.copy(stream, out);
                 }
-                return null;
+            } finally {
+                out.close();
             }
+            return null;
         };
     }
 

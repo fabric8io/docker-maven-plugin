@@ -12,7 +12,7 @@ import io.fabric8.maven.docker.build.docker.DockerRegistryService;
 import io.fabric8.maven.docker.build.maven.MavenArchiveService;
 import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.util.Logger;
@@ -96,7 +96,7 @@ public class DockerBuildServiceTest {
     }
 
     private void givenAnImageConfiguration(Boolean cleanup) {
-        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+        BuildConfiguration buildConfig = new BuildConfiguration.Builder()
                 .cleanup(cleanup.toString())
                 .build();
 
@@ -138,7 +138,7 @@ public class DockerBuildServiceTest {
     private void whenBuildImage(boolean cleanup) throws IOException {
         new Expectations() {{
             docker.buildImage(withEqual(imageConfig.getName()), (File) any, (BuildOptions) any);
-            buildContext.createImageContentArchive(withEqual(imageConfig.getName()), (BuildImageConfiguration) any, withEqual(log));
+            buildContext.createImageContentArchive(withEqual(imageConfig.getName()), (BuildConfiguration) any, withEqual(log));
             result = new File("docker-build.tar");
         }};
         if (cleanup) {

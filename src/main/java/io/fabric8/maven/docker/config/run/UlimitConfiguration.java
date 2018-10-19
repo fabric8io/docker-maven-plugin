@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * @since 0.15
  * @author Alexis Thaveau
  */
-public class UlimitConfig implements Serializable {
+public class UlimitConfiguration implements Serializable {
 
     private String name;
 
@@ -23,7 +23,7 @@ public class UlimitConfig implements Serializable {
 
     private Integer soft;
 
-    public UlimitConfig(String name, Integer hard, Integer soft) {
+    public UlimitConfiguration(String name, Integer hard, Integer soft) {
         this.name = name;
         this.hard = hard;
         this.soft = soft;
@@ -43,9 +43,9 @@ public class UlimitConfig implements Serializable {
 
     Pattern ULIMIT_PATTERN = Pattern.compile("^(?<name>[^=]+)=(?<hard>[^:]*):?(?<soft>[^:]*)$");
 
-    public UlimitConfig() {}
+    public UlimitConfiguration() {}
 
-    public UlimitConfig(String ulimit) {
+    public UlimitConfiguration(String ulimit) {
         Matcher matcher = ULIMIT_PATTERN.matcher(ulimit);
         if (matcher.matches()) {
             name = matcher.group("name");

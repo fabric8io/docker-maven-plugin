@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.Strings;
-import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.ImageConfiguration;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -32,7 +32,7 @@ import org.apache.maven.project.MavenProject;
  * @author roland
  * @since 07/06/16
  */
-public class ImageNameFormatter implements ConfigHelper.NameFormatter {
+public class ImageNameFormatter implements ImageConfiguration.NameFormatter {
 
 
     private final FormatParameterReplacer formatParamReplacer;

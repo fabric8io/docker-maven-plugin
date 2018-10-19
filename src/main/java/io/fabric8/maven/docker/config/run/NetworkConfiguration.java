@@ -26,7 +26,7 @@ import java.util.List;
  * @since 29/07/16
  */
 
-public class NetworkConfig implements Serializable {
+public class NetworkConfiguration implements Serializable {
 
     private String name;
 
@@ -44,17 +44,17 @@ public class NetworkConfig implements Serializable {
      * Legacy constructor using the &lt;net> config
      * @param net net, encapsulating mode & name.
      */
-    public NetworkConfig(String net) {
+    public NetworkConfiguration(String net) {
         initLegacyNetSpec(net);
     }
 
 
-    public NetworkConfig(Mode mode, String name) {
+    public NetworkConfiguration(Mode mode, String name) {
         this.name = name;
         this.mode = mode;
     }
 
-    public NetworkConfig() {
+    public NetworkConfiguration() {
         name = null;
         mode = null;
     }
@@ -145,10 +145,10 @@ public class NetworkConfig implements Serializable {
 
     public static class Builder {
 
-        private final NetworkConfig config = new NetworkConfig();
+        private final NetworkConfiguration config = new NetworkConfiguration();
         private boolean isEmpty = true;
 
-        public NetworkConfig build() {
+        public NetworkConfiguration build() {
             return isEmpty ? null : config;
         }
 

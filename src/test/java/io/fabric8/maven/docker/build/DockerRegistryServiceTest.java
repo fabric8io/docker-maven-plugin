@@ -12,7 +12,7 @@ import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
 import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Mocked;
 import mockit.Verifications;

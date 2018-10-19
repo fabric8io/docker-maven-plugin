@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -124,37 +126,7 @@ public class EnvUtil {
         return listToSplit.stream().map(SPLIT_ON_LAST_COLON).collect(Collectors.toList());
     }
 
-    private static final Predicate<String> NOT_EMPTY = s -> s != null && !s.isEmpty();
-    private static final Function<String,String> TRIM = s -> s != null ?s.trim() :s;
 
-    /**
-     * Remove empty members of a list.
-     * @param input A list of String
-     * @return A list of Non-Empty (length>0) String
-     */
-    @Nonnull
-    public static List<String> removeEmptyEntries(@Nullable List<String> input) {
-        if (input == null) {
-            return Collections.emptyList();
-        }
-        return input.stream().map(TRIM).filter(NOT_EMPTY).collect(Collectors.toList());
-    }
-
-    private static final Function<String, Stream<String>> COMMA_SPLITTER =
-        input -> Splitter.on(",").trimResults().omitEmptyStrings().splitToList(input).stream();
-
-    /**
-     * Split each element of an Iterable<String> at commas.
-     * @param input Iterable over strings.
-     * @return An Iterable over string which breaks down each input element at comma boundaries
-     */
-    @Nonnull
-    public static List<String> splitAtCommasAndTrim(List<String> input) {
-        if (input==null) {
-            return Collections.emptyList();
-        }
-        return input.stream().filter(Objects::nonNull).flatMap(COMMA_SPLITTER).collect(Collectors.toList());
-    }
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
         String[] split = toSplit.split("(?<!" + Pattern.quote("\\") + ")\\s+");
@@ -421,35 +393,6 @@ public class EnvUtil {
 
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
-    }
-
-    /**
-     * Validate that the provided filename is a valid Windows filename.
-     *
-     * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
-     *
-     * @param filename the filename
-     * @return filename is a valid Windows filename
-     */
-    public static boolean isValidWindowsFileName(String filename) {
-
-        Pattern pattern = Pattern.compile(
-            "# Match a valid Windows filename (unspecified file system).          \n" +
-            "^                                # Anchor to start of string.        \n" +
-            "(?!                              # Assert filename is not: CON, PRN, \n" +
-            "  (?:                            # AUX, NUL, COM1, COM2, COM3, COM4, \n" +
-            "    CON|PRN|AUX|NUL|             # COM5, COM6, COM7, COM8, COM9,     \n" +
-            "    COM[1-9]|LPT[1-9]            # LPT1, LPT2, LPT3, LPT4, LPT5,     \n" +
-            "  )                              # LPT6, LPT7, LPT8, and LPT9...     \n" +
-            "  (?:\\.[^.]*)?                  # followed by optional extension    \n" +
-            "  $                              # and end of string                 \n" +
-            ")                                # End negative lookahead assertion. \n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F .]    # Last char is not a space or dot.  \n" +
-            "$                                # Anchor to end of string.            ",
-            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
-        Matcher matcher = pattern.matcher(filename);
-        return matcher.matches();
     }
 
 }

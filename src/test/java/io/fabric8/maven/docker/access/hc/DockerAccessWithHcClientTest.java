@@ -194,7 +194,7 @@ public class DockerAccessWithHcClientTest {
 
     private void whenSaveImage() {
         try {
-            client.saveImage(imageName, filename, compression);
+            client.saveImage(imageName, filename);
         } catch (Exception e) {
             thrownException = e;
         }

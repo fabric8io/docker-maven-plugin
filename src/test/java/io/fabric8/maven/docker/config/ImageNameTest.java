@@ -1,5 +1,6 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.config;
 
+import io.fabric8.maven.docker.config.ImageName;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

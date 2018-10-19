@@ -5,8 +5,6 @@ import java.util.List;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
-import io.fabric8.maven.docker.config.build.ArchiveCompression;
-import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
@@ -76,7 +74,7 @@ public interface DockerAccess {
     List<Container> getContainersForImage(String image, boolean all) throws DockerAccessException;
 
     /**
-     * Starts a previously set up exec instance (via {@link #createExecContainer(String, Arguments)} container
+     * Starts a previously set up exec instance (via {@link #createExecContainer(String, List)} container
      * this API sets up a session with the exec command. Output is streamed to the log. This methods
      * returns only when the exec command has finished (i.e this method calls the command in a non-detached mode).
      *
@@ -93,7 +91,7 @@ public interface DockerAccess {
      * @param arguments container exec commands to run
      * @throws DockerAccessException if the container could not be created.
      */
-    String createExecContainer(String containerId, Arguments arguments) throws DockerAccessException;
+    String createExecContainer(String containerId, List<String> arguments) throws DockerAccessException;
 
     /**
      * Create a container from the given image.
@@ -232,10 +230,9 @@ public interface DockerAccess {
      *
      * @param image image to save
      * @param filename target filename
-     * @param compression compression to use for the archive
      * @throws DockerAccessException if an image cannot be removed
      */
-    void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException;
+    void saveImage(String image, String filename) throws DockerAccessException;
 
     /**
      * List all networks

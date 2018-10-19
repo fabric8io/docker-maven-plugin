@@ -13,6 +13,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,11 +28,11 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.run.NetworkConfig;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
 import io.fabric8.maven.docker.config.run.RestartPolicy;
-import io.fabric8.maven.docker.config.run.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.run.UlimitConfig;
+import io.fabric8.maven.docker.config.run.UlimitConfiguration;
 import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
@@ -68,7 +69,7 @@ public class RunServiceTest {
 
     private Properties properties;
 
-    private RunImageConfiguration runConfig;
+    private RunConfiguration runConfig;
 
     private RunService runService;
 
@@ -232,7 +233,7 @@ public class RunServiceTest {
     public void shutdownWithPreStopExecConfig() throws Exception {
 
         new Expectations() {{
-            docker.createExecContainer(container, (Arguments) withNotNull());result = "execContainerId";
+            docker.createExecContainer(container, withNotNull());result = "execContainerId";
             docker.startExecContainer("execContainerId", (LogOutputSpec) any);
             docker.stopContainer(container, 0);
             log.info(withSubstring("Stop"),
@@ -291,7 +292,7 @@ public class RunServiceTest {
         return new ImageConfiguration.Builder()
                 .name("test_name")
                 .alias("testAlias")
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()
                                                  .shutdown(wait)
                                                  .kill(kill)
@@ -304,7 +305,7 @@ public class RunServiceTest {
         return new ImageConfiguration.Builder()
                 .name("test_name")
                 .alias("testAlias")
-                .runConfig(new RunImageConfiguration.Builder()
+                .runConfig(new RunConfiguration.Builder()
                                    .wait(new WaitConfiguration.Builder()
                                                  .shutdown(wait)
                                                  .preStop("pre-stop-command")
@@ -329,7 +330,7 @@ public class RunServiceTest {
 
     private void givenARunConfiguration() {
         runConfig =
-                new RunImageConfiguration.Builder()
+                new RunConfiguration.Builder()
                         .hostname("hostname")
                         .domainname("domain.com")
                         .user("user")
@@ -355,14 +356,13 @@ public class RunServiceTest {
                         .capDrop(capDrop())
                         .securityOpts(securityOpts())
                         .restartPolicy(restartPolicy())
-                        .net("custom_network")
                         .network(networkConfiguration())
                         .readOnly(false)
                         .build();
     }
 
-    private NetworkConfig networkConfiguration() {
-        NetworkConfig config = new NetworkConfig("custom_network");
+    private NetworkConfiguration networkConfiguration() {
+        NetworkConfiguration config = new NetworkConfiguration("custom_network");
         config.addAlias("net-alias");
         return config;
     }
@@ -413,8 +413,8 @@ public class RunServiceTest {
 
         return env;
     }
-    private List<UlimitConfig> ulimits(){
-        return Collections.singletonList(new UlimitConfig("memlock=1024:2048"));
+    private List<UlimitConfiguration> ulimits(){
+        return Collections.singletonList(new UlimitConfiguration("memlock=1024:2048"));
     }
 
     private List<String> extraHosts() {
@@ -426,7 +426,7 @@ public class RunServiceTest {
     }
 
     private String loadFile(String fileName) throws IOException {
-        return IOUtils.toString(getClass().getClassLoader().getResource(fileName));
+        return IOUtils.toString(getClass().getClassLoader().getResource(fileName), Charset.defaultCharset());
     }
 
     private File getBaseDirectory() {

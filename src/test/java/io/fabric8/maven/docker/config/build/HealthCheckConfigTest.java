@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.config;
+package io.fabric8.maven.docker.config.build;
 
 import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.config.build.HealthCheckConfiguration;

@@ -19,6 +19,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.SerializationUtils;
+
 /**
  * Run configuration for volumes.
  *
@@ -59,11 +61,20 @@ public class RunVolumeConfiguration implements Serializable {
 
     public static class Builder {
 
-        private RunVolumeConfiguration config = new RunVolumeConfiguration();
+        private final RunVolumeConfiguration config;
 
         public Builder() {
-            this.config = new RunVolumeConfiguration();
+            this(null);
         }
+
+        public Builder(RunVolumeConfiguration that) {
+            if (that == null) {
+                this.config = new RunVolumeConfiguration();
+            } else {
+                this.config = SerializationUtils.clone(that);
+            }
+        }
+
 
         public Builder from(List<String> args) {
             if (args != null) {

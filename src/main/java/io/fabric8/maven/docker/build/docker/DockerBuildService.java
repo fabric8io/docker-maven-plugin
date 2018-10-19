@@ -16,18 +16,19 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.build.BuildContext;
 import io.fabric8.maven.docker.build.BuildService;
 import io.fabric8.maven.docker.build.RegistryService;
-import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.build.AssemblyConfiguration;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.build.CleanupMode;
 import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 
 public class DockerBuildService implements BuildService {
+
+    public static final String DEFAULT_DATA_BASE_IMAGE = "busybox:latest";
 
     private final DockerAccess docker;
     private final RegistryService registryService;
@@ -53,11 +54,11 @@ public class DockerBuildService implements BuildService {
 
             String imageName = imageConfig.getName();
             ImageName.validate(imageName);
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
             // Load an archive if present
             if (buildConfig.getDockerArchive() != null) {
-                loadImageFromArchive(imageName, buildContext, buildConfig.getDockerArchive());
+                loadImageFromArchive(imageName, buildContext, new File(buildConfig.getDockerArchive()));
                 return;
             }
 
@@ -95,7 +96,7 @@ public class DockerBuildService implements BuildService {
 
 
     private void autoPullBaseImageIfRequested(ImageConfiguration imageConfig, BuildContext buildContext) throws IOException {
-        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
         if (buildConfig.getDockerArchive() != null) {
             // No auto pull needed in archive mode
@@ -127,23 +128,23 @@ public class DockerBuildService implements BuildService {
     }
 
 
-    private String extractBaseFromConfiguration(BuildImageConfiguration buildConfig) {
+    private String extractBaseFromConfiguration(BuildConfiguration buildConfig) {
         String fromImage;
         fromImage = buildConfig.getFrom();
         if (fromImage == null) {
             AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
             if (assemblyConfig == null) {
-                fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
+                fromImage = DEFAULT_DATA_BASE_IMAGE;
             }
         }
         return fromImage;
     }
 
-    private String extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext ctx) {
+    private String extractBaseFromDockerfile(BuildConfiguration buildConfig, BuildContext ctx) {
         String fromImage;
         try {
             final File fullDockerFilePath =
-                EnvUtil.prepareAbsoluteSourceDirPath(ctx, buildConfig.getDockerFile().getPath());
+                EnvUtil.prepareAbsoluteSourceDirPath(ctx, buildConfig.calculateDockerFilePath().getPath());
             fromImage = DockerFileUtil.extractBaseImage(
                 fullDockerFilePath,
                 ctx.createInterpolator(buildConfig.getFilter()));
@@ -167,7 +168,7 @@ public class DockerBuildService implements BuildService {
     private File createDockerContextArchive(ImageConfiguration imageConfig, BuildContext ctx) throws IOException {
         long time = System.currentTimeMillis();
         String imageName = imageConfig.getName();
-        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
         File dockerContextArchive = ctx.createImageContentArchive(imageName, buildConfig, log);
         log.info("%s: Created %s in %s",
                  imageConfig.getDescription(),
@@ -176,7 +177,7 @@ public class DockerBuildService implements BuildService {
         return dockerContextArchive;
     }
 
-    private Optional<String> getOldImageId(String imageName, BuildImageConfiguration buildConfig) throws DockerAccessException {
+    private Optional<String> getOldImageId(String imageName, BuildConfiguration buildConfig) throws DockerAccessException {
         CleanupMode cleanupMode = CleanupMode.parse(buildConfig.getCleanupMode());
         return cleanupMode.isRemove() ?
             Optional.ofNullable(docker.getImageId(imageName)) :
@@ -187,7 +188,7 @@ public class DockerBuildService implements BuildService {
                          Map<String, String> buildArgs,
                          File dockerArchive) throws DockerAccessException {
         String imageName = imageConfig.getName();
-        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
         boolean noCache = checkForNocache(imageConfig);
         BuildOptions opts =
                 new BuildOptions(buildConfig.getBuildOptions())
@@ -216,7 +217,7 @@ public class DockerBuildService implements BuildService {
         }
     }
 
-    private Map<String, String> prepareBuildArgs(Map<String, String> buildArgs, BuildImageConfiguration buildConfig) {
+    private Map<String, String> prepareBuildArgs(Map<String, String> buildArgs, BuildConfiguration buildConfig) {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         if (buildArgs != null) {
             builder.putAll(buildArgs);
@@ -227,9 +228,9 @@ public class DockerBuildService implements BuildService {
         return builder.build();
     }
 
-    private String getDockerfileName(BuildImageConfiguration buildConfig) {
+    private String getDockerfileName(BuildConfiguration buildConfig) {
         if (buildConfig.isDockerFileMode()) {
-            return buildConfig.getDockerFile().getName();
+            return buildConfig.calculateDockerFilePath().getName();
         } else {
             return null;
         }
@@ -239,7 +240,7 @@ public class DockerBuildService implements BuildService {
         Map<String, String> buildArgsFromProject = getBuildArgsFromProperties(buildContext.getProperties());
         Map<String, String> buildArgsFromSystem = getBuildArgsFromProperties(System.getProperties());
         return ImmutableMap.<String, String>builder()
-                .putAll(Optional.of(buildArgs).orElse(Collections.emptyMap()))
+                .putAll(Optional.ofNullable(buildArgs).orElse(Collections.emptyMap()))
                 .putAll(buildArgsFromProject)
                 .putAll(buildArgsFromSystem)
                 .build();
@@ -271,8 +272,8 @@ public class DockerBuildService implements BuildService {
         if (nocache != null) {
             return nocache.length() == 0 || Boolean.valueOf(nocache);
         } else {
-            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            return buildConfig.nocache();
+            BuildConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            return buildConfig.getNoCache() != null ? buildConfig.getNoCache() : false;
         }
     }
 

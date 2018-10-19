@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import io.fabric8.maven.docker.util.EnvUtil;
+import java.util.regex.Pattern;
 
 public class Arguments implements Serializable {
 
@@ -105,7 +104,12 @@ public class Arguments implements Serializable {
 
     public List<String> asStrings() {
         if (shell != null) {
-            return Arrays.asList(EnvUtil.splitOnSpaceWithEscape(shell));
+            String[] split = shell.split("(?<!" + Pattern.quote("\\") + ")\\s+");
+            String[] res = new String[split.length];
+            for (int i = 0; i < split.length; i++) {
+                res[i] = split[i].replaceAll("\\\\ "," ");
+            }
+            return Arrays.asList(res);
         }
         if (exec != null) {
             return Collections.unmodifiableList(exec);

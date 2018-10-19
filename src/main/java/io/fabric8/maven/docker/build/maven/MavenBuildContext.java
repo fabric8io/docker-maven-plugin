@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 import io.fabric8.maven.docker.build.BuildContext;
 import io.fabric8.maven.docker.build.RegistryContext;
-import io.fabric8.maven.docker.config.build.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
@@ -66,7 +66,7 @@ public class MavenBuildContext implements BuildContext {
     }
 
     @Override
-    public File createImageContentArchive(String imageName, BuildImageConfiguration buildConfig, Logger log) throws IOException  {
+    public File createImageContentArchive(String imageName, BuildConfiguration buildConfig, Logger log) throws IOException  {
         return archiveService.createArchive(imageName, buildConfig, this, log);
     }
 
