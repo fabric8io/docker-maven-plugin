@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.access.ecr;
+package io.fabric8.maven.docker.build.auth.extended.ecr;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +17,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import org.codehaus.plexus.util.StringUtils;
 
 /**

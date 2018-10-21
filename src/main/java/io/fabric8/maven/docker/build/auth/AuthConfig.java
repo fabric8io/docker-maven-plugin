@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.access;
+package io.fabric8.maven.docker.build.auth;
 
 import com.google.gson.JsonObject;
 
@@ -18,6 +18,12 @@ public class AuthConfig {
 
     public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "");
 
+
+    public static final String AUTH_USERNAME = "username";
+    public static final String AUTH_PASSWORD = "password";
+    public static final String AUTH_EMAIL = "email";
+    public static final String AUTH_AUTHTOKEN = "authToken";
+
     private final String username;
     private final String password;
     private final String email;
@@ -26,10 +32,10 @@ public class AuthConfig {
     private final String authEncoded;
 
     public AuthConfig(Map<String,String> params) {
-        this(params.get("username"),
-                params.get("password"),
-                params.get("email"),
-                params.get("auth"));
+        this(params.get(AUTH_USERNAME),
+             params.get(AUTH_PASSWORD),
+             params.get(AUTH_EMAIL),
+             params.get(AUTH_AUTHTOKEN));
     }
 
     public AuthConfig(String username, String password, String email, String auth) {

@@ -1,8 +1,8 @@
-package io.fabric8.maven.docker.access.ecr;
+package io.fabric8.maven.docker.build.auth.extended.ecr;
 
 import org.junit.Test;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;

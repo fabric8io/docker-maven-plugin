@@ -173,11 +173,11 @@ public interface DockerAccess {
      * Pull an image from a remote registry and store it locally.
      *
      * @param image the image to pull.
-     * @param authConfig authentication configuration used when pulling an image
+     * @param authHeader authentication configuration used when pulling an image
      * @param registry an optional registry from where to pull the image. Can be null.
      * @throws DockerAccessException if the image couldn't be pulled.
      */
-    void pullImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
+    void pullImage(String image, String authHeader, String registry) throws DockerAccessException;
 
     /**
      * Push an image to a registry. An registry can be specified which is used as target
@@ -187,12 +187,12 @@ public interface DockerAccess {
      * part (if not already existent)
      *
      * @param image image name to push
-     * @param authConfig authentication configuration
+     * @param authHeader authentication configuration
      * @param registry optional registry to which the image should be pushed.
      * @param retries optional number of times the push should be retried on a 500 error
      * @throws DockerAccessException in case pushing fails
      */
-    void pushImage(String image, AuthConfig authConfig, String registry, int retries) throws DockerAccessException;
+    void pushImage(String image, String authHeader, String registry, int retries) throws DockerAccessException;
 
     /**
      * Create an docker image from a given archive

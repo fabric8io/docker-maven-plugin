@@ -2,7 +2,7 @@ package io.fabric8.maven.docker.build.docker;
 
 import java.io.IOException;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.build.RegistryContext;
@@ -49,16 +49,16 @@ public class DockerRegistryService implements RegistryService {
                 context.getPushRegistry());
 
 
-            AuthConfig authConfig = context.lookupRegistryAuthConfig(true, new ImageName(name).getUser(), registry);
+            AuthConfig authConfig = context.getAuthConfig(true, new ImageName(name).getUser(), registry);
 
             long start = System.currentTimeMillis();
-            docker.pushImage(name, authConfig, registry, retries);
+            docker.pushImage(name, authConfig.toHeaderValue(), registry, retries);
             log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
             if (!skipTag) {
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {
-                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, registry, retries);
+                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig.toHeaderValue(), registry, retries);
                     }
                 }
             }
@@ -73,7 +73,7 @@ public class DockerRegistryService implements RegistryService {
      * @throws DockerAccessException
      */
     public void pullImage(String image, ImagePullPolicy policy, RegistryContext registryContext)
-        throws DockerAccessException {
+        throws IOException {
 
         // Already pulled, so we don't need to take care
         if (imagePullCache.hasAlreadyPulled(image)) {
@@ -92,7 +92,7 @@ public class DockerRegistryService implements RegistryService {
             registryContext.getPullRegistry());
 
         docker.pullImage(imageName.getFullName(),
-                         registryContext.lookupRegistryAuthConfig(false, null, registry),
+                         registryContext.getAuthConfig(false, null, registry).toHeaderValue(),
                          registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         imagePullCache.pulled(image);

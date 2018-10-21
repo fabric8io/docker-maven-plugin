@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.access.ecr;
+package io.fabric8.maven.docker.build.auth.extended.ecr;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
 
 /**

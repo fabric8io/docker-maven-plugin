@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.access.ecr;
+package io.fabric8.maven.docker.build.auth.extended.ecr;
 
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +10,7 @@ import org.apache.http.entity.StringEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 
 /**
  * Test aws request signing
@@ -55,7 +55,7 @@ public class AwsSigner4RequestTest {
         Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20150830T123600Z");
         AwsSigner4Request sr = new AwsSigner4Request("us-east-1", "service", request, signingTime);
         AuthConfig credentials = new AuthConfig("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY", null, null);
- 
+
         Assert.assertEquals(TASK1, signer.task1(sr));
 
         Assert.assertEquals(TASK2, signer.task2(sr));

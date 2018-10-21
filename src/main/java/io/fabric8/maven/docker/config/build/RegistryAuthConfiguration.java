@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.TreeMap;
 
+
+/**
+ * Class holding configuration for accessing a registry
+ */
 public class RegistryAuthConfiguration implements Serializable {
 
     private Map<String, String> push;
@@ -41,5 +45,6 @@ public class RegistryAuthConfiguration implements Serializable {
         }
         return authMap;
     }
+
 
 }

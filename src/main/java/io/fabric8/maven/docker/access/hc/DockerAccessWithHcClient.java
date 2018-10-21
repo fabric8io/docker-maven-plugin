@@ -28,7 +28,7 @@ import java.util.zip.GZIPOutputStream;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.ContainerCreateConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -413,28 +413,27 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void pullImage(String image, AuthConfig authConfig, String registry)
+    public void pullImage(String image, String authHeader, String registry)
             throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pullUrl = urlBuilder.pullImage(name, registry);
 
         try {
-            delegate.post(pullUrl, null, createAuthHeader(authConfig),
-                    createPullOrPushResponseHandler(), HTTP_OK);
+            delegate.post(pullUrl, null, createAuthHeader(authHeader), createPullOrPushResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to pull '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
         }
     }
 
     @Override
-    public void pushImage(String image, AuthConfig authConfig, String registry, int retries)
+    public void pushImage(String image, String authHeader, String registry, int retries)
             throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
         String temporaryImage = tagTemporaryImage(name, registry);
         DockerAccessException dae = null;
         try {
-            doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
+            doPushImage(pushUrl, createAuthHeader(authHeader), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
             dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " to registry '" + registry + "'" : "");
             throw dae;
@@ -641,11 +640,8 @@ public class DockerAccessWithHcClient implements DockerAccess {
         return new HcChunkedResponseHandlerWrapper(new PullOrPushResponseJsonHandler(log));
     }
 
-    private Map<String, String> createAuthHeader(AuthConfig authConfig) {
-        if (authConfig == null) {
-            authConfig = AuthConfig.EMPTY_AUTH_CONFIG;
-        }
-        return Collections.singletonMap("X-Registry-Auth", authConfig.toHeaderValue());
+    private Map<String, String> createAuthHeader(String authConfig) {
+        return Collections.singletonMap("X-Registry-Auth", authConfig);
     }
 
     private boolean isRetryableErrorCode(int errorCode) {

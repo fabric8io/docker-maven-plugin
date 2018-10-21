@@ -330,7 +330,7 @@ public class StartMojo extends AbstractDockerMojo {
     // Prepare start like creating custom networks, auto pull images, map aliases and return the list of images
     // to start in the correct order
     private Queue<ImageConfiguration> prepareStart(ServiceHub hub, QueryService queryService, RunService runService, Set<String> imageAliases)
-        throws DockerAccessException {
+        throws IOException {
         final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
         for (ImageConfiguration imageConfig : runService.getImagesConfigsInOrder(getResolvedImages())) {
 

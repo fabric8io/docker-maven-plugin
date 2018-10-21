@@ -1,19 +1,21 @@
 package io.fabric8.maven.docker.build;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfigFactory;
 import io.fabric8.maven.docker.build.docker.DockerRegistryService;
 import io.fabric8.maven.docker.build.docker.ImagePullCache;
 import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
-import io.fabric8.maven.docker.config.build.ImagePullPolicy;
-import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
-import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.config.ImageName;
+import io.fabric8.maven.docker.config.build.ImagePullPolicy;
+import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
 import org.junit.Before;
@@ -90,7 +92,8 @@ public class DockerRegistryServiceTest {
         }
     }
 
-    private void checkPulledButNotTagged() throws DockerAccessException {
+    private void checkPulledButNotTagged() throws IOException {
+        givenEmptyAuthConfig();
 
         whenAutoPullImage();
 
@@ -164,12 +167,13 @@ public class DockerRegistryServiceTest {
     }
 
     @Test
-    public void pullWithCustomRegistry() throws DockerAccessException {
+    public void pullWithCustomRegistry() throws IOException {
         givenAnImage("myregistry.com/user/test:1.0.1");
         givenHasImage(false);
         givenPreviousPulled(false);
         givenRegistry("anotherRegistry.com");
         givenImagePullPolicy(ImagePullPolicy.IfNotPresent);
+        givenEmptyAuthConfig();
 
         whenAutoPullImage();
 
@@ -179,12 +183,13 @@ public class DockerRegistryServiceTest {
     }
 
     @Test
-    public void tagForCustomRegistry() throws DockerAccessException {
+    public void tagForCustomRegistry() throws IOException {
         givenAnImage("user/test:1.0.1");
         givenHasImage(false);
         givenPreviousPulled(false);
         givenRegistry("anotherRegistry.com");
         givenImagePullPolicy(ImagePullPolicy.IfNotPresent);
+        givenEmptyAuthConfig();
 
         whenAutoPullImage();
 
@@ -202,7 +207,7 @@ public class DockerRegistryServiceTest {
     }
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString); times = 0;
+            docker.pullImage(anyString, withNotNull(), anyString);times = 0;
         }};
     }
 
@@ -225,12 +230,13 @@ public class DockerRegistryServiceTest {
 
     private void thenImageHasBeenPulledWithRegistry(final String registry) throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(imageName, (AuthConfig) withNotNull(), registry);
+            docker.pullImage(imageName, withNotNull(), registry);
         }};
         assertTrue(cacheStore.get(imageName) != null);
     }
 
     private void whenAutoPullImage() {
+
 
         try {
             MavenRegistryContext buildContext =
@@ -243,6 +249,13 @@ public class DockerRegistryServiceTest {
             //e.printStackTrace();
             this.actualException = e;
         }
+    }
+
+    private void givenEmptyAuthConfig() throws IOException {
+        new Expectations() {{
+            authConfigFactory.createAuthConfig(anyBoolean, anyString, anyString);
+            result = AuthConfig.EMPTY_AUTH_CONFIG;
+        }};
     }
 
     private void givenImagePullPolicy(ImagePullPolicy policy) {

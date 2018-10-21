@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.access.ecr;
+package io.fabric8.maven.docker.build.auth.extended.ecr;
 
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;

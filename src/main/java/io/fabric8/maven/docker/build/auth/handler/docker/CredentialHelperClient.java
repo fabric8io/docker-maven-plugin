@@ -1,16 +1,17 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.build.auth.handler.docker;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
-import org.apache.maven.plugin.MojoExecutionException;
-
 import java.io.IOException;
 import java.util.List;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.JsonFactory;
+import io.fabric8.maven.docker.util.Logger;
 
 public class CredentialHelperClient {
 

@@ -10,8 +10,8 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.build.auth.AuthConfigFactory;
 import io.fabric8.maven.docker.build.docker.ImagePullCache;
-import io.fabric8.maven.docker.build.maven.AuthConfigFactory;
 import io.fabric8.maven.docker.build.maven.MavenCacheBackend;
 import io.fabric8.maven.docker.util.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
@@ -272,7 +272,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .build();
     }
 
-    protected Map<String, String> getRegistryAuthConfig() {
+    protected Map getRegistryAuthConfig() {
         Map registryAuthConfig = new HashMap();
         if (authConfig != null) {
             registryAuthConfig.putAll(authConfig.toMap());

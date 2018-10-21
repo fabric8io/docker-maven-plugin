@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.build.maven;
+package io.fabric8.maven.docker.build.auth;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -12,7 +12,6 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -41,6 +40,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author roland
@@ -101,7 +101,7 @@ public class AuthConfigFactoryTest {
     @Test
     public void testEmpty() throws Exception {
         setupAuthConfigFactory(false, null);
-        executeWithTempHomeDir(homeDir -> assertNull(factory.createAuthConfig(isPush, null, "blubberbla:1611")));
+        executeWithTempHomeDir(homeDir -> assertEquals(factory.createAuthConfig(isPush, null, "blubberbla:1611"), AuthConfig.EMPTY_AUTH_CONFIG));
     }
 
 
@@ -127,7 +127,7 @@ public class AuthConfigFactoryTest {
         setupAuthConfigFactory(false, null);
 
         executeWithTempHomeDir(homeDir -> {
-            checkDockerAuthLogin(homeDir, AuthConfigFactory.DOCKER_LOGIN_DEFAULT_REGISTRY, null);
+            checkDockerAuthLogin(homeDir, "https://index.docker.io/v1/", null);
             checkDockerAuthLogin(homeDir,"localhost:5000","localhost:5000");
             checkDockerAuthLogin(homeDir,"https://localhost:5000","localhost:5000");
         });
@@ -139,7 +139,7 @@ public class AuthConfigFactoryTest {
 
         executeWithTempHomeDir(dir -> {
             AuthConfig config = factory.createAuthConfig(isPush, "roland", null);
-            assertNull(config);
+            assertTrue(config == AuthConfig.EMPTY_AUTH_CONFIG);
         });
     }
 
@@ -161,7 +161,7 @@ public class AuthConfigFactoryTest {
         executeWithTempHomeDir(homeDir -> {
             writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
             AuthConfig config = factory.createAuthConfig(isPush,"roland","does-not-exist-either:5000");
-            assertNull(config);
+            assertTrue(config == AuthConfig.EMPTY_AUTH_CONFIG);
         });
     }
 
@@ -321,7 +321,7 @@ public class AuthConfigFactoryTest {
             executeWithTempHomeDir(homeDir -> {
                 createOpenShiftConfig(homeDir, "openshift_simple_config.yaml");
                 AuthConfig config = factory.createAuthConfig(isPush,  "roland", null);
-                assertNull(config);
+                assertTrue(config == AuthConfig.EMPTY_AUTH_CONFIG);
             });
         } finally {
             System.getProperties().remove("docker.useOpenShiftAuth");
@@ -351,13 +351,13 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testSystemPropertyNoPassword() {
+    public void testSystemPropertyNoPassword() throws IOException {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("No docker.password provided for username secret");
         checkException("docker.username");
     }
 
-    private void checkException(String key) {
+    private void checkException(String key) throws IOException {
         setupAuthConfigFactory(false, null);
 
         System.setProperty(key, "secret");
@@ -369,7 +369,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromPluginConfiguration() throws MojoExecutionException {
+    public void testFromPluginConfiguration() throws IOException {
 
         Map pluginConfig = new HashMap();
         pluginConfig.put("username", "roland");
@@ -383,7 +383,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromPluginConfigurationPull() throws MojoExecutionException {
+    public void testFromPluginConfigurationPull() throws IOException {
         Map pullConfig = new HashMap();
         pullConfig.put("username", "roland");
         pullConfig.put("password", "secret");
@@ -398,7 +398,7 @@ public class AuthConfigFactoryTest {
 
 
     @Test
-    public void testFromPluginConfigurationFailed() throws MojoExecutionException {
+    public void testFromPluginConfigurationFailed() throws IOException {
         Map pluginConfig = new HashMap();
         pluginConfig.put("username","admin");
         setupAuthConfigFactory(false, pluginConfig);
@@ -409,7 +409,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromSettingsSimple() throws MojoExecutionException {
+    public void testFromSettingsSimple() throws IOException {
         setupServers();
         setupAuthConfigFactory(false, null);
 
@@ -419,7 +419,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromSettingsDefault() throws MojoExecutionException {
+    public void testFromSettingsDefault() throws IOException {
         setupServers();
         setupAuthConfigFactory(false, null);
 
@@ -429,7 +429,7 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testFromSettingsDefault2() throws MojoExecutionException {
+    public void testFromSettingsDefault2() throws IOException {
         setupServers();
         setupAuthConfigFactory(false, null);
 
@@ -444,7 +444,7 @@ public class AuthConfigFactoryTest {
 
         executeWithTempHomeDir(homeDir -> {
             setupServers();
-            assertNull(factory.createAuthConfig(isPush,"roland","another.repo.org"));
+            assertEquals(factory.createAuthConfig(isPush,"roland","another.repo.org"), AuthConfig.EMPTY_AUTH_CONFIG);
         });
     }
 

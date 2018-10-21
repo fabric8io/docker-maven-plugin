@@ -1,14 +1,15 @@
-package io.fabric8.maven.docker.util;
+package io.fabric8.maven.docker.build.auth;
 
 import com.google.gson.JsonObject;
 
+import io.fabric8.maven.docker.util.JsonFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

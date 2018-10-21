@@ -20,6 +20,8 @@ public class ImageConfiguration implements Serializable {
 
     private String alias;
 
+    private String registry;
+
     private RunConfiguration run;
 
     private BuildConfiguration build;
@@ -28,7 +30,6 @@ public class ImageConfiguration implements Serializable {
 
     private Map<String,String> external;
 
-    private String registry;
 
     // Used for injection
     public ImageConfiguration() {}

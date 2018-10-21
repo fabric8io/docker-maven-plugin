@@ -1,7 +1,10 @@
 package io.fabric8.maven.docker.build.maven;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import java.io.IOException;
+
+import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.build.RegistryContext;
+import io.fabric8.maven.docker.build.auth.AuthConfigFactory;
 import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 
 /**
@@ -20,8 +23,8 @@ public class MavenRegistryContext implements RegistryContext {
         return defaultImagePullPolicy;
     }
 
-        @Override
-    public AuthConfig lookupRegistryAuthConfig(boolean isPush, String user, String registry) {
+    @Override
+    public AuthConfig getAuthConfig(boolean isPush, String user, String registry) throws IOException {
         return authConfigFactory.createAuthConfig(isPush, user, registry);
     }
 
