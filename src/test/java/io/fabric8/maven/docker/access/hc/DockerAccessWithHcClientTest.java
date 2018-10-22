@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.config.build.ArchiveCompression;
 import io.fabric8.maven.docker.util.Logger;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 
 public class DockerAccessWithHcClientTest {
 
-    private AuthConfig authConfig;
+    private RegistryAuth registryAuth;
 
     private DockerAccessWithHcClient client;
 

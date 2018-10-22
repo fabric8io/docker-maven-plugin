@@ -9,8 +9,6 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -18,32 +16,30 @@ import static org.junit.Assert.assertFalse;
  * @author roland
  * @since 30.07.14
  */
-public class AuthConfigTest {
+public class RegistryAuthTest {
 
 
     @Test
     public void simpleConstructor() {
-        Map<String,String> map = new HashMap<String,String>();
-        map.put("username","roland");
-        map.put("password","#>secrets??");
-        map.put("email","roland@jolokia.org");
-        AuthConfig config = new AuthConfig(map);
-        check(config);
-    }
-
-    @Test
-    public void mapConstructor() {
-        AuthConfig config = new AuthConfig("roland","#>secrets??","roland@jolokia.org",null);
+        RegistryAuth config = new RegistryAuth.Builder()
+            .username("roland")
+            .password("#>secrets??")
+            .email("roland@jolokia.org")
+            .build();
         check(config);
     }
 
     @Test
     public void dockerLoginConstructor() {
-        AuthConfig config = new AuthConfig(Base64.encodeBase64String("roland:#>secrets??".getBytes()),"roland@jolokia.org");
+        RegistryAuth config =
+            new RegistryAuth.Builder()
+                .withCredentialsEncoded(Base64.encodeBase64String("roland:#>secrets??".getBytes()))
+                .email("roland@jolokia.org")
+                .build();
         check(config);
     }
 
-    private void check(AuthConfig config) {
+    private void check(RegistryAuth config) {
         // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
         // the correct characters are used
         assertEquals(

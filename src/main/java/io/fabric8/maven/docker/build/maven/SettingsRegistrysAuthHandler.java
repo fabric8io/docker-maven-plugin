@@ -1,7 +1,11 @@
-package io.fabric8.maven.docker.build.auth.handler;
+package io.fabric8.maven.docker.build.maven;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
-import io.fabric8.maven.docker.build.auth.AuthConfigHandler;
+import java.util.Optional;
+import java.util.function.Function;
+
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuthHandler;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
@@ -11,7 +15,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
  * @author roland
  * @since 21.10.18
  */
-public class SettingsAuthConfigHandler implements AuthConfigHandler {
+public class SettingsRegistrysAuthHandler implements RegistryAuthHandler {
 
     private static final String[] DEFAULT_REGISTRIES = new String[]{
         "docker.io", "index.docker.io", "registry.hub.docker.com"
@@ -20,13 +24,18 @@ public class SettingsAuthConfigHandler implements AuthConfigHandler {
     private final Settings settings;
     private final Logger log;
 
-    public SettingsAuthConfigHandler(Settings settings, Logger log) {
+    public SettingsRegistrysAuthHandler(Settings settings, Logger log) {
         this.settings = settings;
         this.log = log;
     }
 
     @Override
-    public AuthConfig create(LookupMode mode, String user, String registry, Decryptor decryptor) {
+    public String getId() {
+        return "settings";
+    }
+
+    @Override
+    public RegistryAuth create(RegistryAuthConfig.Kind kind, String user, String registry, Function<String, String> decryptor) {
         // Now lets lookup the registry & user from ~/.m2/setting.xml
         Server defaultServer = null;
         Server found;
@@ -64,13 +73,13 @@ public class SettingsAuthConfigHandler implements AuthConfigHandler {
         return null;
     }
 
-    private AuthConfig createAuthConfigFromServer(Server server, Decryptor decryptor) {
-        return new AuthConfig(
-            server.getUsername(),
-            decryptor.decrypt(server.getPassword()),
-            extractFromServerConfiguration(server.getConfiguration(), AuthConfig.AUTH_EMAIL),
-            extractFromServerConfiguration(server.getConfiguration(), "auth")
-        );
+    private RegistryAuth createAuthConfigFromServer(Server server, Function<String, String> decryptor) {
+        return new RegistryAuth.Builder()
+            .username(server.getUsername())
+            .password(server.getPassword(), decryptor)
+            .email(extractFromServerConfiguration(server.getConfiguration(), RegistryAuth.EMAIL))
+            .auth(extractFromServerConfiguration(server.getConfiguration(), RegistryAuth.AUTH))
+            .build();
     }
 
     private String extractFromServerConfiguration(Object configuration, String prop) {

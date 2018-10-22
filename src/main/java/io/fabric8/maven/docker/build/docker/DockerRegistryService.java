@@ -2,11 +2,12 @@ package io.fabric8.maven.docker.build.docker;
 
 import java.io.IOException;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.build.RegistryContext;
 import io.fabric8.maven.docker.build.RegistryService;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.build.BuildConfiguration;
 import io.fabric8.maven.docker.config.build.ImagePullPolicy;
@@ -46,19 +47,19 @@ public class DockerRegistryService implements RegistryService {
             String registry = EnvUtil.firstRegistryOf(
                 new ImageName(imageConfig.getName()).getRegistry(),
                 imageConfig.getRegistry(),
-                context.getPushRegistry());
+                context.getRegistry(RegistryAuthConfig.Kind.PUSH));
 
 
-            AuthConfig authConfig = context.getAuthConfig(true, new ImageName(name).getUser(), registry);
+            RegistryAuth registryAuth = context.getAuthConfig(RegistryAuthConfig.Kind.PUSH, new ImageName(name).getUser(), registry);
 
             long start = System.currentTimeMillis();
-            docker.pushImage(name, authConfig.toHeaderValue(), registry, retries);
+            docker.pushImage(name, registryAuth.toHeaderValue(), registry, retries);
             log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
             if (!skipTag) {
                 for (String tag : imageConfig.getBuildConfiguration().getTags()) {
                     if (tag != null) {
-                        docker.pushImage(new ImageName(name, tag).getFullName(), authConfig.toHeaderValue(), registry, retries);
+                        docker.pushImage(new ImageName(name, tag).getFullName(), registryAuth.toHeaderValue(), registry, retries);
                     }
                 }
             }
@@ -89,10 +90,10 @@ public class DockerRegistryService implements RegistryService {
         long time = System.currentTimeMillis();
         String registry = EnvUtil.firstRegistryOf(
             imageName.getRegistry(),
-            registryContext.getPullRegistry());
+            registryContext.getRegistry(RegistryAuthConfig.Kind.PULL));
 
         docker.pullImage(imageName.getFullName(),
-                         registryContext.getAuthConfig(false, null, registry).toHeaderValue(),
+                         registryContext.getAuthConfig(RegistryAuthConfig.Kind.PULL, null, registry).toHeaderValue(),
                          registry);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         imagePullCache.pulled(image);

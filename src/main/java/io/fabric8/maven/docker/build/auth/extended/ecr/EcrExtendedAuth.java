@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.util.Logger;
 
 /**
@@ -76,17 +76,17 @@ public class EcrExtendedAuth {
      * @throws IOException
      * @throws MojoExecutionException
      */
-    public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException {
+    public RegistryAuth extendedAuth(RegistryAuth localCredentials) throws IOException {
         JsonObject jo = getAuthorizationToken(localCredentials);
 
         JsonArray authorizationDatas = jo.getAsJsonArray("authorizationData");
         JsonObject authorizationData = authorizationDatas.get(0).getAsJsonObject();
         String authorizationToken = authorizationData.get("authorizationToken").getAsString();
 
-        return new AuthConfig(authorizationToken, "none");
+        return new RegistryAuth.Builder().withCredentialsEncoded(authorizationToken).email("none").build();
     }
 
-    private JsonObject getAuthorizationToken(AuthConfig localCredentials) throws IOException {
+    private JsonObject getAuthorizationToken(RegistryAuth localCredentials) throws IOException {
         HttpPost request = createSignedRequest(localCredentials, new Date());
         return executeRequest(createClient(), request);
     }
@@ -113,7 +113,7 @@ public class EcrExtendedAuth {
         }
     }
 
-    HttpPost createSignedRequest(AuthConfig localCredentials, Date time) {
+    HttpPost createSignedRequest(RegistryAuth localCredentials, Date time) {
         String host = "ecr." + region + ".amazonaws.com";
 
         logger.debug("Get ECR AuthorizationToken from %s", host);

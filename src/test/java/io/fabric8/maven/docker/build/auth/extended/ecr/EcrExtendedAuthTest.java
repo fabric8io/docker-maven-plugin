@@ -2,7 +2,7 @@ package io.fabric8.maven.docker.build.auth.extended.ecr;
 
 import org.junit.Test;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -48,7 +48,11 @@ public class EcrExtendedAuthTest {
     @Test
     public void testHeaders() throws ParseException {
         EcrExtendedAuth eea = new EcrExtendedAuth(logger, "123456789012.dkr.ecr.eu-west-1.amazonaws.com");
-        AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
+        RegistryAuth localCredentials =
+            new RegistryAuth.Builder()
+                .username("username")
+                .password("password")
+                .build();
         Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
         HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
         assertEquals("ecr.eu-west-1.amazonaws.com", request.getFirstHeader("host").getValue());
@@ -77,8 +81,12 @@ public class EcrExtendedAuthTest {
             }
         };
 
-        AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
-        AuthConfig awsCredentials = eea.extendedAuth(localCredentials);
+        RegistryAuth localCredentials =
+            new RegistryAuth.Builder()
+                .username("username")
+                .password("password")
+                .build();
+        RegistryAuth awsCredentials = eea.extendedAuth(localCredentials);
         assertEquals("AWS", awsCredentials.getUsername());
         assertEquals("password", awsCredentials.getPassword());
 

@@ -6,8 +6,9 @@ import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.build.auth.AuthConfig;
-import io.fabric8.maven.docker.build.auth.AuthConfigFactory;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuthFactory;
 import io.fabric8.maven.docker.build.docker.DockerRegistryService;
 import io.fabric8.maven.docker.build.docker.ImagePullCache;
 import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
@@ -49,7 +50,7 @@ public class DockerRegistryServiceTest {
     private Logger logger;
 
     @Mocked
-    private AuthConfigFactory authConfigFactory;
+    private RegistryAuthFactory registryAuthFactory;
 
     @Before
     public void setup() {
@@ -241,7 +242,7 @@ public class DockerRegistryServiceTest {
         try {
             MavenRegistryContext buildContext =
                 new MavenRegistryContext.Builder()
-                    .authConfigFactory(authConfigFactory)
+                    .authRegistryAuthFactory(registryAuthFactory)
                     .pullRegistry(registry)
                     .build();
             registryService.pullImage(imageName, imagePullPolicy, buildContext);
@@ -253,8 +254,8 @@ public class DockerRegistryServiceTest {
 
     private void givenEmptyAuthConfig() throws IOException {
         new Expectations() {{
-            authConfigFactory.createAuthConfig(anyBoolean, anyString, anyString);
-            result = AuthConfig.EMPTY_AUTH_CONFIG;
+            registryAuthFactory.createAuthConfig((RegistryAuthConfig.Kind) any, anyString, anyString);
+            result = RegistryAuth.EMPTY_REGISTRY_AUTH;
         }};
     }
 

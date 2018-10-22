@@ -53,7 +53,7 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     protected MavenBuildContext getBuildContext(MavenArchiveService archiveService) {
 
         MavenRegistryContext registryContext = new MavenRegistryContext.Builder()
-            .authConfigFactory(authConfigFactory)
+            .authRegistryAuthFactory(registryAuthFactory)
             .defaultImagePullPolicy(imagePullPolicy != null ? ImagePullPolicy.fromString(imagePullPolicy) : null)
             .pullRegistry(pullRegistry)
             .build();

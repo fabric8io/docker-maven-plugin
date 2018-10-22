@@ -1,4 +1,4 @@
-package io.fabric8.maven.docker.build.auth.handler.docker;
+package io.fabric8.maven.docker.build.docker;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.access.util.ExternalCommand;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.JsonFactory;
@@ -37,7 +37,7 @@ public class CredentialHelperClient {
         }
     }
 
-    public AuthConfig getAuthConfig(String registryToLookup) {
+    public RegistryAuth getAuthConfig(String registryToLookup) {
         try {
             JsonObject creds = new GetCommand().getCredentialNode(registryToLookup);
             if (creds == null) {
@@ -49,13 +49,13 @@ public class CredentialHelperClient {
         }
     }
 
-    private AuthConfig toAuthConfig(JsonObject credential){
+    private RegistryAuth toAuthConfig(JsonObject credential){
         if (credential == null) {
             return null;
         }
         String password = credential.get(CredentialHelperClient.SECRET_KEY).getAsString();
         String userKey = credential.get(CredentialHelperClient.USERNAME_KEY).getAsString();
-        return new AuthConfig(userKey,password, null,null);
+        return new RegistryAuth.Builder().username(userKey).password(password).build();
     }
 
     // docker-credential-XXX version

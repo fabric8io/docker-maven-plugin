@@ -30,7 +30,7 @@ import io.fabric8.maven.docker.util.Logger;
  *
  * @since 14/09/16
  */
-abstract public class EnvCommand extends ExternalCommand {
+public abstract class EnvCommand extends ExternalCommand {
 
     private final Map<String, String> env = new HashMap<>();
 
@@ -51,11 +51,11 @@ abstract public class EnvCommand extends ExternalCommand {
         }
     }
 
-    private final Pattern ENV_VAR_PATTERN = Pattern.compile("^\\s*(?<key>[^=]+)=\"?(?<value>.*?)\"?\\s*$");
+    private final Pattern envVarPattern = Pattern.compile("^\\s*(?<key>[^=]+)=\"?(?<value>.*?)\"?\\s*$");
 
     // parse line like SET DOCKER_HOST=tcp://192.168.99.100:2376
     private void setEnvironmentVariable(String line) {
-        Matcher matcher = ENV_VAR_PATTERN.matcher(line);
+        Matcher matcher = envVarPattern.matcher(line);
         if (matcher.matches()) {
             String key = matcher.group("key");
             String value = matcher.group("value");

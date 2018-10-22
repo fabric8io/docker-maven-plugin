@@ -6,12 +6,17 @@ import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import io.fabric8.maven.docker.build.auth.extended.EcrExtendedRegistryAuthHandler;
+import io.fabric8.maven.docker.build.docker.DockerRegistryAuthHandler;
+import io.fabric8.maven.docker.build.auth.handler.FromConfigRegistryAuthHandler;
+import io.fabric8.maven.docker.build.auth.handler.OpenShiftRegistryAuthHandler;
+import io.fabric8.maven.docker.build.maven.SettingsRegistrysAuthHandler;
+import io.fabric8.maven.docker.build.auth.handler.SystemPropertyRegistryAuthHandler;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -34,6 +39,7 @@ import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.startsWith;
@@ -47,7 +53,7 @@ import static org.junit.Assert.assertTrue;
  * @since 29.07.14
  */
 
-public class AuthConfigFactoryTest {
+public class RegistryAuthFactoryTest {
 
     public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";
 
@@ -57,9 +63,9 @@ public class AuthConfigFactoryTest {
     @Mocked
     private Logger log;
 
-    private AuthConfigFactory factory;
+    private RegistryAuthFactory factory;
 
-    private boolean isPush = true;
+    private RegistryAuthConfig.Kind kind = RegistryAuthConfig.Kind.PUSH;
 
     private Gson gson;
 
@@ -87,32 +93,54 @@ public class AuthConfigFactoryTest {
         gson = new Gson();
     }
 
-    private void setupAuthConfigFactory(boolean skipExtendedAuth, Map authConfig) {
-        Map m = new HashMap();
-        if (authConfig != null) {
-            m.putAll(authConfig);
-        }
-        if (skipExtendedAuth) {
-            m.put(AuthConfigFactory.SKIP_EXTENDED_AUTH, true);
-        }
-        factory = new AuthConfigFactory(container, settings, m, null, log);
+    private void setupAuthConfigFactory(RegistryAuthConfig registryAuthConfig) {
+        factory = new RegistryAuthFactory.Builder()
+            .decryptor(d -> d)
+            .log(log)
+            .registryAuthConfig(registryAuthConfig)
+            .addRegistryAuthHandler(new SystemPropertyRegistryAuthHandler(registryAuthConfig, log))
+            .addRegistryAuthHandler(new OpenShiftRegistryAuthHandler(registryAuthConfig, log))
+            .addRegistryAuthHandler(new FromConfigRegistryAuthHandler(registryAuthConfig, log))
+            .addRegistryAuthHandler(new SettingsRegistrysAuthHandler(settings, log))
+            .addRegistryAuthHandler(new DockerRegistryAuthHandler(log))
+            .addExtendedRegistryAuthHandler(new EcrExtendedRegistryAuthHandler(log))
+            .build();
     }
+
+    private void setupDefaultAuthConfigFactory() {
+        setupAuthConfigFactory(
+            new RegistryAuthConfig.Builder()
+                .skipExtendedAuthentication(false)
+                .propertyPrefix("docker")
+                .build());
+    }
+
+
+    private void setupOpenshiftAuthUsage() {
+        setupAuthConfigFactory(
+            new RegistryAuthConfig.Builder()
+                .skipExtendedAuthentication(false)
+                .propertyPrefix("docker")
+                .addHandlerConfig("openshift", OpenShiftRegistryAuthHandler.AUTH_USE_OPENSHIFT_AUTH, "true")
+                .build());
+    }
+
 
     @Test
     public void testEmpty() throws Exception {
-        setupAuthConfigFactory(false, null);
-        executeWithTempHomeDir(homeDir -> assertEquals(factory.createAuthConfig(isPush, null, "blubberbla:1611"), AuthConfig.EMPTY_AUTH_CONFIG));
+        setupDefaultAuthConfigFactory();
+        executeWithTempHomeDir(homeDir -> assertEquals(factory.createAuthConfig(kind, null, "blubberbla:1611"), RegistryAuth.EMPTY_REGISTRY_AUTH));
     }
 
 
     @Test
     public void testSystemProperty() throws Exception {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
         System.setProperty("docker.push.username","roland");
         System.setProperty("docker.push.password", "secret");
         System.setProperty("docker.push.email", "roland@jolokia.org");
         try {
-            AuthConfig config = factory.createAuthConfig(true, null, null);
+            RegistryAuth config = factory.createAuthConfig(RegistryAuthConfig.Kind.PUSH, null, null);
             verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
         } finally {
             System.clearProperty("docker.push.username");
@@ -124,7 +152,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testDockerAuthLogin() throws Exception {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             checkDockerAuthLogin(homeDir, "https://index.docker.io/v1/", null);
@@ -135,39 +163,39 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testDockerLoginNoConfig() throws MojoExecutionException, IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(dir -> {
-            AuthConfig config = factory.createAuthConfig(isPush, "roland", null);
-            assertTrue(config == AuthConfig.EMPTY_AUTH_CONFIG);
+            RegistryAuth config = factory.createAuthConfig(kind, "roland", null);
+            assertTrue(config == RegistryAuth.EMPTY_REGISTRY_AUTH);
         });
     }
 
     @Test
     public void testDockerLoginFallsBackToAuthWhenCredentialHelperDoesNotMatchDomain() throws MojoExecutionException, IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
-            AuthConfig config = factory.createAuthConfig(isPush,"roland","localhost:5000");
+            RegistryAuth config = factory.createAuthConfig(kind, "roland", "localhost:5000");
             verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
         });
     }
 
     @Test
     public void testDockerLoginNoAuthConfigFoundWhenCredentialHelperDoesNotMatchDomainOrAuth() throws MojoExecutionException, IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
-            AuthConfig config = factory.createAuthConfig(isPush,"roland","does-not-exist-either:5000");
-            assertTrue(config == AuthConfig.EMPTY_AUTH_CONFIG);
+            RegistryAuth config = factory.createAuthConfig(kind, "roland", "does-not-exist-either:5000");
+            assertTrue(config == RegistryAuth.EMPTY_REGISTRY_AUTH);
         });
     }
 
     @Test
     public void testDockerLoginSelectCredentialHelper() throws MojoExecutionException, IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
@@ -176,13 +204,13 @@ public class AuthConfigFactoryTest {
                     instanceOf(IOException.class),
                     hasProperty("message",startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist version'"))
             ));
-            factory.createAuthConfig(isPush,"roland","registry1");
+            factory.createAuthConfig(kind, "roland", "registry1");
         });
     }
 
     @Test
     public void testDockerLoginSelectCredentialsStore() throws MojoExecutionException, IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
@@ -191,13 +219,13 @@ public class AuthConfigFactoryTest {
                     instanceOf(IOException.class),
                     hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
                                                         ));
-            factory.createAuthConfig(isPush,"roland",null);
+            factory.createAuthConfig(kind, "roland", null);
         });
     }
 
     @Test
     public void testDockerLoginDefaultToCredentialsStore() throws MojoExecutionException, IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
@@ -206,7 +234,7 @@ public class AuthConfigFactoryTest {
                     instanceOf(IOException.class),
                     hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
                                                         ));
-            factory.createAuthConfig(isPush,"roland","registry2");
+            factory.createAuthConfig(kind, "roland", "registry2");
         });
     }
 
@@ -228,10 +256,10 @@ public class AuthConfigFactoryTest {
 
     private void checkDockerAuthLogin(File homeDir,String configRegistry,String lookupRegistry)
             throws IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         writeDockerConfigJson(createDockerConfig(homeDir), "roland", "secret", "roland@jolokia.org", configRegistry);
-        AuthConfig config = factory.createAuthConfig(isPush, "roland", lookupRegistry);
+        RegistryAuth config = factory.createAuthConfig(kind, "roland", lookupRegistry);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
 
@@ -283,26 +311,24 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testOpenShiftConfigFromPluginConfig() throws Exception {
-        Map<String,String> authConfigMap = new HashMap<>();
-        authConfigMap.put("useOpenShiftAuth","true");
-        setupAuthConfigFactory(false, authConfigMap);
+        setupOpenshiftAuthUsage();
 
         executeWithTempHomeDir(homeDir -> {
             createOpenShiftConfig(homeDir,"openshift_simple_config.yaml");
-            AuthConfig config = factory.createAuthConfig(isPush,  "roland", null);
+            RegistryAuth config = factory.createAuthConfig(kind, "roland", null);
             verifyAuthConfig(config,"admin","token123",null);
         });
     }
 
     @Test
     public void testOpenShiftConfigFromSystemProps() throws Exception {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         try {
             System.setProperty("docker.useOpenShiftAuth","true");
             executeWithTempHomeDir(homeDir -> {
                 createOpenShiftConfig(homeDir, "openshift_simple_config.yaml");
-                AuthConfig config = factory.createAuthConfig(isPush, "roland", null);
+                RegistryAuth config = factory.createAuthConfig(kind, "roland", null);
                 verifyAuthConfig(config, "admin", "token123", null);
             });
         } finally {
@@ -312,16 +338,14 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testOpenShiftConfigFromSystemPropsNegative() throws Exception {
-        Map<String,String> authConfigMap = new HashMap<>();
-        authConfigMap.put("useOpenShiftAuth","true");
-        setupAuthConfigFactory(false, authConfigMap);
+        setupOpenshiftAuthUsage();
 
         try {
             System.setProperty("docker.useOpenShiftAuth","false");
             executeWithTempHomeDir(homeDir -> {
                 createOpenShiftConfig(homeDir, "openshift_simple_config.yaml");
-                AuthConfig config = factory.createAuthConfig(isPush,  "roland", null);
-                assertTrue(config == AuthConfig.EMPTY_AUTH_CONFIG);
+                RegistryAuth config = factory.createAuthConfig(kind, "roland", null);
+                assertTrue(config == RegistryAuth.EMPTY_REGISTRY_AUTH);
             });
         } finally {
             System.getProperties().remove("docker.useOpenShiftAuth");
@@ -330,18 +354,17 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testOpenShiftConfigNotLoggedIn() throws Exception {
-        Map<String,String> authConfigMap = new HashMap<>();
-        authConfigMap.put("useOpenShiftAuth","true");
-        setupAuthConfigFactory(false, authConfigMap);
+        setupOpenshiftAuthUsage();
 
         executeWithTempHomeDir(homeDir -> {
             createOpenShiftConfig(homeDir,"openshift_nologin_config.yaml");
             expectedException.expect(IllegalArgumentException.class);
             expectedException.expectMessage(containsString("~/.kube/config"));
-            factory.createAuthConfig(isPush,"roland",null);
+            factory.createAuthConfig(kind, "roland", null);
         });
 
     }
+
 
     private void createOpenShiftConfig(File homeDir,String testConfig) throws IOException {
         File kubeDir = new File(homeDir,".kube");
@@ -353,16 +376,16 @@ public class AuthConfigFactoryTest {
     @Test
     public void testSystemPropertyNoPassword() throws IOException {
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("No docker.password provided for username secret");
+        expectedException.expectMessage("No password provided for username secret");
         checkException("docker.username");
     }
 
     private void checkException(String key) throws IOException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         System.setProperty(key, "secret");
         try {
-            factory.createAuthConfig(isPush,  null, null);
+            factory.createAuthConfig(kind, null, null);
         } finally {
             System.clearProperty(key);
         }
@@ -370,50 +393,56 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void testFromPluginConfiguration() throws IOException {
+        setupAuthConfigFactoryWithConfigData();
 
-        Map pluginConfig = new HashMap();
-        pluginConfig.put("username", "roland");
-        pluginConfig.put("password", "secret");
-        pluginConfig.put("email", "roland@jolokia.org");
-
-        setupAuthConfigFactory(false, pluginConfig);
-
-        AuthConfig config = factory.createAuthConfig(isPush, null, null);
+        RegistryAuth config = factory.createAuthConfig(kind, null, null);
         verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
+    }
+
+    private void setupAuthConfigFactoryWithConfigData() {
+        setupAuthConfigFactory(
+            new RegistryAuthConfig.Builder()
+                .skipExtendedAuthentication(false)
+                .addDefaultConfig(RegistryAuth.USERNAME, "roland")
+                .addDefaultConfig(RegistryAuth.PASSWORD, "secret")
+                .addDefaultConfig(RegistryAuth.EMAIL, "roland@jolokia.org")
+                .build());
+    }
+
+    private void setupAuthConfigFactoryWithConfigDataForKind(RegistryAuthConfig.Kind kind) {
+        setupAuthConfigFactory(
+            new RegistryAuthConfig.Builder()
+                .skipExtendedAuthentication(false)
+                .addKindConfig(kind, RegistryAuth.USERNAME, "roland")
+                .addKindConfig(kind, RegistryAuth.PASSWORD, "secret")
+                .addKindConfig(kind, RegistryAuth.EMAIL, "roland@jolokia.org")
+                .build());
     }
 
     @Test
     public void testFromPluginConfigurationPull() throws IOException {
-        Map pullConfig = new HashMap();
-        pullConfig.put("username", "roland");
-        pullConfig.put("password", "secret");
-        pullConfig.put("email", "roland@jolokia.org");
-        Map pluginConfig = new HashMap();
-        pluginConfig.put("pull",pullConfig);
-        setupAuthConfigFactory(false, pluginConfig);
+        setupAuthConfigFactoryWithConfigDataForKind(RegistryAuthConfig.Kind.PULL);
 
-        AuthConfig config = factory.createAuthConfig(false,  null, null);
+        RegistryAuth config = factory.createAuthConfig(RegistryAuthConfig.Kind.PULL, null, null);
         verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
     }
 
 
     @Test
     public void testFromPluginConfigurationFailed() throws IOException {
-        Map pluginConfig = new HashMap();
-        pluginConfig.put("username","admin");
-        setupAuthConfigFactory(false, pluginConfig);
+        setupAuthConfigFactory(new RegistryAuthConfig.Builder().addDefaultConfig(RegistryAuth.USERNAME, "adming").build());
 
         expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("No 'password' given while using <authConfig> in configuration for mode DEFAULT");
-        factory.createAuthConfig(isPush,null,null);
+        expectedException.expectMessage(containsString("password"));
+        factory.createAuthConfig(kind, null, null);
     }
 
     @Test
     public void testFromSettingsSimple() throws IOException {
         setupServers();
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
-        AuthConfig config = factory.createAuthConfig(isPush, "roland", "test.org");
+        RegistryAuth config = factory.createAuthConfig(kind, "roland", "test.org");
         assertNotNull(config);
         verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
     }
@@ -421,9 +450,9 @@ public class AuthConfigFactoryTest {
     @Test
     public void testFromSettingsDefault() throws IOException {
         setupServers();
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
-        AuthConfig config = factory.createAuthConfig(isPush, "fabric8io", "test.org");
+        RegistryAuth config = factory.createAuthConfig(kind, "fabric8io", "test.org");
         assertNotNull(config);
         verifyAuthConfig(config, "fabric8io", "secret2", "fabric8io@redhat.com");
     }
@@ -431,20 +460,20 @@ public class AuthConfigFactoryTest {
     @Test
     public void testFromSettingsDefault2() throws IOException {
         setupServers();
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
-        AuthConfig config = factory.createAuthConfig(isPush, "tanja", null);
+        RegistryAuth config = factory.createAuthConfig(kind, "tanja", null);
         assertNotNull(config);
         verifyAuthConfig(config,"tanja","doublesecret","tanja@jolokia.org");
     }
 
     @Test
     public void testWrongUserName() throws IOException, MojoExecutionException {
-        setupAuthConfigFactory(false, null);
+        setupDefaultAuthConfigFactory();
 
         executeWithTempHomeDir(homeDir -> {
             setupServers();
-            assertEquals(factory.createAuthConfig(isPush,"roland","another.repo.org"), AuthConfig.EMPTY_AUTH_CONFIG);
+            assertEquals(factory.createAuthConfig(kind, "roland", "another.repo.org"), RegistryAuth.EMPTY_REGISTRY_AUTH);
         });
     }
 
@@ -477,7 +506,7 @@ public class AuthConfigFactoryTest {
         };
     }
 
-    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
+    private void verifyAuthConfig(RegistryAuth config, String username, String password, String email) {
         JsonObject params = gson.fromJson(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())), JsonObject.class);
         assertEquals(username,params.get("username").getAsString());
         assertEquals(password,params.get("password").getAsString());

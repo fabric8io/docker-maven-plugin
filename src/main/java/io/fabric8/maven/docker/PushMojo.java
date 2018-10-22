@@ -43,7 +43,7 @@ public class PushMojo extends AbstractDockerMojo {
         }
 
         MavenRegistryContext registryContext = new MavenRegistryContext.Builder()
-            .authConfigFactory(authConfigFactory)
+            .authRegistryAuthFactory(registryAuthFactory)
             .pushRegistry(pushRegistry)
             .build();
 

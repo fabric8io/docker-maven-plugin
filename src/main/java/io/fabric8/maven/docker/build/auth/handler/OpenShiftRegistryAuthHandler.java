@@ -8,11 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
-import io.fabric8.maven.docker.build.auth.AuthConfigHandler;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuthHandler;
 import io.fabric8.maven.docker.util.Logger;
 import org.yaml.snakeyaml.Yaml;
 
@@ -20,66 +22,64 @@ import org.yaml.snakeyaml.Yaml;
  * @author roland
  * @since 21.10.18
  */
-public class OpenShiftAuthConfigHandler implements AuthConfigHandler {
+public class OpenShiftRegistryAuthHandler implements RegistryAuthHandler {
 
-    private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
+    public static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
-    private final Map registryAuthConfig;
+    private final RegistryAuthConfig registryAuthConfig;
     private final Logger log;
 
-    public OpenShiftAuthConfigHandler(Map registryAuthConfig, Logger log) {
+    public OpenShiftRegistryAuthHandler(RegistryAuthConfig registryAuthConfig, Logger log) {
         this.registryAuthConfig = registryAuthConfig;
         this.log = log;
     }
 
     @Override
-    public AuthConfig create(LookupMode mode, String user, String registry, Decryptor decryptor) {
+    public String getId() {
+        return "openshift";
+    }
+
+    @Override
+    public RegistryAuth create(RegistryAuthConfig.Kind kind, String user, String registry, Function<String, String> decryptor) {
         // Check for openshift authentication either from the plugin config or from system props
         Properties props = System.getProperties();
-        String useOpenAuthModeProp = mode.asSysProperty(AUTH_USE_OPENSHIFT_AUTH);
+        String useOpenAuthMode = registryAuthConfig.extractFromProperties(props, kind, AUTH_USE_OPENSHIFT_AUTH);
         // Check for system property
-        if (props.containsKey(useOpenAuthModeProp)) {
-            boolean useOpenShift = Boolean.valueOf(props.getProperty(useOpenAuthModeProp));
+        if (useOpenAuthMode != null) {
+            boolean useOpenShift = Boolean.valueOf(useOpenAuthMode);
             if (!useOpenShift) {
                 return null;
             }
             log.debug("AuthConfig: OpenShift credentials");
-            return validateMandatoryOpenShiftLogin(parseOpenShiftConfig(), useOpenAuthModeProp);
+            return validateMandatoryOpenShiftLogin(parseOpenShiftConfig());
         }
 
-        // Check plugin config
-        Map mapToCheck;
-        if (mode == LookupMode.DEFAULT) {
-            mapToCheck = registryAuthConfig;
-        } else {
-            mapToCheck = Optional.ofNullable(registryAuthConfig).map(r -> (Map) r.get(mode.getConfigKey())).orElse(null);
-        }
-
-        if (mapToCheck != null &&
-            mapToCheck.containsKey(AUTH_USE_OPENSHIFT_AUTH) &&
-            Boolean.valueOf((String) mapToCheck.get(AUTH_USE_OPENSHIFT_AUTH))) {
+        boolean useOpenShiftAuth =
+            Optional.ofNullable(registryAuthConfig.getConfigForHandler(getId(),AUTH_USE_OPENSHIFT_AUTH))
+                    .map(Boolean::parseBoolean)
+                    .orElse(false);
+        if (useOpenShiftAuth) {
             log.debug("AuthConfig: OpenShift credentials");
-            return validateMandatoryOpenShiftLogin(parseOpenShiftConfig(), useOpenAuthModeProp);
+            return validateMandatoryOpenShiftLogin(parseOpenShiftConfig());
         }
 
         return null;
     }
 
-    private AuthConfig validateMandatoryOpenShiftLogin(AuthConfig openShiftAuthConfig, String useOpenAuthModeProp) {
-        if (openShiftAuthConfig != null) {
-            return openShiftAuthConfig;
+    private RegistryAuth validateMandatoryOpenShiftLogin(RegistryAuth openShiftRegistryAuth) {
+        if (openShiftRegistryAuth != null) {
+            return openShiftRegistryAuth;
         }
         // No login found
         String kubeConfigEnv = System.getenv("KUBECONFIG");
         throw new IllegalArgumentException(
-            String.format("System property %s set, but not active user and/or token found in %s. " +
-                          "Please use 'oc login' for connecting to OpenShift.",
-                          useOpenAuthModeProp, kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
+            String.format("OpenShift auth check enabled, but not active user and/or token found in %s. " +
+                          "Please use 'oc login' for connecting to OpenShift.", kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
 
     }
 
     // Parse OpenShift config to get credentials, but return null if not found
-    private AuthConfig parseOpenShiftConfig() {
+    private RegistryAuth parseOpenShiftConfig() {
         Map kubeConfig = readKubeConfig();
         if (kubeConfig == null) {
             return null;
@@ -120,7 +120,7 @@ public class OpenShiftAuthConfigHandler implements AuthConfigHandler {
         return new File(homeDir);
     }
 
-    private AuthConfig parseContext(Map kubeConfig, Map context) {
+    private RegistryAuth parseContext(Map kubeConfig, Map context) {
         if (context == null) {
             return null;
         }
@@ -142,7 +142,7 @@ public class OpenShiftAuthConfigHandler implements AuthConfigHandler {
         return null;
     }
 
-    private AuthConfig parseUser(String userName, Map user) {
+    private RegistryAuth parseUser(String userName, Map user) {
         if (user == null) {
             return null;
         }
@@ -153,7 +153,9 @@ public class OpenShiftAuthConfigHandler implements AuthConfigHandler {
 
         // Strip off stuff after username
         Matcher matcher = Pattern.compile("^([^/]+).*$").matcher(userName);
-        return new AuthConfig(matcher.matches() ? matcher.group(1) : userName,
-                              token, null, null);
+        return new RegistryAuth.Builder()
+            .username(matcher.matches() ? matcher.group(1) : userName)
+            .password(token)
+            .build();
     }
 }

@@ -10,7 +10,7 @@ import org.apache.http.entity.StringEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 
 /**
  * Test aws request signing
@@ -54,7 +54,11 @@ public class AwsSigner4RequestTest {
 
         Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20150830T123600Z");
         AwsSigner4Request sr = new AwsSigner4Request("us-east-1", "service", request, signingTime);
-        AuthConfig credentials = new AuthConfig("AKIDEXAMPLE", "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY", null, null);
+        RegistryAuth credentials =
+            new RegistryAuth.Builder()
+                .username("AKIDEXAMPLE")
+                .password("wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY")
+                .build();
 
         Assert.assertEquals(TASK1, signer.task1(sr));
 
@@ -72,7 +76,12 @@ public class AwsSigner4RequestTest {
         HttpUriRequest request = RequestUtil.newGet("https://someService.us-east-1.amazonaws.com/");
         request.setHeader("host", request.getURI().getHost());
         String awsSecurityToken = "securityToken";
-        AuthConfig credentials = new AuthConfig("awsAccessKeyId", "awsSecretAccessKey", null, awsSecurityToken);
+        RegistryAuth credentials =
+            new RegistryAuth.Builder()
+                .username("awsAccessKeyId")
+                .password( "awsSecretAccessKey")
+                .auth(awsSecurityToken)
+                .build();
 
         AwsSigner4 signer = new AwsSigner4("us-east-1", "someService");
         signer.sign(request, credentials, new Date());

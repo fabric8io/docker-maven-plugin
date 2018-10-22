@@ -28,7 +28,6 @@ import java.util.zip.GZIPOutputStream;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.fabric8.maven.docker.build.auth.AuthConfig;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.ContainerCreateConfig;
 import io.fabric8.maven.docker.access.DockerAccess;

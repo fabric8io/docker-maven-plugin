@@ -1,16 +1,17 @@
-package io.fabric8.maven.docker.build.auth.handler;
+package io.fabric8.maven.docker.build.docker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import io.fabric8.maven.docker.build.auth.AuthConfig;
-import io.fabric8.maven.docker.build.auth.AuthConfigHandler;
-import io.fabric8.maven.docker.build.auth.handler.docker.CredentialHelperClient;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuthHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 
@@ -18,25 +19,30 @@ import io.fabric8.maven.docker.util.Logger;
  * @author roland
  * @since 21.10.18
  */
-public class DockerAuthConfigHandler implements AuthConfigHandler {
+public class DockerRegistryAuthHandler implements RegistryAuthHandler {
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final Logger log;
     private final Gson gson;
 
-    public DockerAuthConfigHandler(Logger log) {
+    public DockerRegistryAuthHandler(Logger log) {
         this.log = log;
         this.gson = new Gson();
 
     }
 
     @Override
-    public AuthConfig create(LookupMode mode, String user, String registry, Decryptor decryptor) {
+    public String getId() {
+        return "docker";
+    }
+
+    @Override
+    public RegistryAuth create(RegistryAuthConfig.Kind kind, String user, String registry, Function<String, String> decryptor) {
         return readDockerConfig().map(d -> extractAuthConfigFromDocker(d, registry)).orElse(null);
     }
 
-    private AuthConfig extractAuthConfigFromDocker(JsonObject dockerConfig, String registry) {
+    private RegistryAuth extractAuthConfigFromDocker(JsonObject dockerConfig, String registry) {
         String registryToLookup = registry != null ? registry : DOCKER_LOGIN_DEFAULT_REGISTRY;
 
         if (dockerConfig.has("credHelpers") || dockerConfig.has("credsStore")) {
@@ -67,17 +73,17 @@ public class DockerAuthConfigHandler implements AuthConfigHandler {
         return reader.map(r -> gson.fromJson(r, JsonObject.class));
     }
 
-    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JsonObject auths) {
+    private RegistryAuth extractAuthConfigFromAuths(String registryToLookup, JsonObject auths) {
         JsonObject credentials = getCredentialsNode(auths, registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
         String auth = credentials.get("auth").getAsString();
-        String email = credentials.has(AuthConfig.AUTH_EMAIL) ? credentials.get(AuthConfig.AUTH_EMAIL).getAsString() : null;
-        return new AuthConfig(auth, email);
+        String email = credentials.has("email") ? credentials.get("email").getAsString() : null;
+        return new RegistryAuth.Builder().withCredentialsEncoded(auth).email(email).build();
     }
 
-    private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) {
+    private RegistryAuth extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) {
         CredentialHelperClient credentialHelper = new CredentialHelperClient(log, credConfig);
         log.debug("AuthConfig: credentials from credential helper/store %s version %s",
                   credentialHelper.getName(),

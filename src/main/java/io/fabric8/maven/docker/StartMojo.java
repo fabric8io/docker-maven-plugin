@@ -348,7 +348,7 @@ public class StartMojo extends AbstractDockerMojo {
 
             RegistryContext registryContext = new MavenRegistryContext.Builder()
                 .pullRegistry(pullRegistry)
-                .authConfigFactory(authConfigFactory)
+                .authRegistryAuthFactory(registryAuthFactory)
                 .build();
             hub.getRegistryService().pullImage(imageConfig.getName(), policy, registryContext);
 

@@ -2,9 +2,10 @@ package io.fabric8.maven.docker.build.maven;
 
 import java.io.IOException;
 
-import io.fabric8.maven.docker.build.auth.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.build.RegistryContext;
-import io.fabric8.maven.docker.build.auth.AuthConfigFactory;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuthFactory;
 import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 
 /**
@@ -14,7 +15,7 @@ import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 public class MavenRegistryContext implements RegistryContext {
 
     private ImagePullPolicy defaultImagePullPolicy;
-    private AuthConfigFactory authConfigFactory;
+    private RegistryAuthFactory registryAuthFactory;
     private String pushRegistry;
     private String pullRegistry;
 
@@ -24,18 +25,13 @@ public class MavenRegistryContext implements RegistryContext {
     }
 
     @Override
-    public AuthConfig getAuthConfig(boolean isPush, String user, String registry) throws IOException {
-        return authConfigFactory.createAuthConfig(isPush, user, registry);
+    public RegistryAuth getAuthConfig(RegistryAuthConfig.Kind kind, String user, String registry) throws IOException {
+        return registryAuthFactory.createAuthConfig(kind, user, registry);
     }
 
     @Override
-    public String getPushRegistry() {
-        return pushRegistry;
-    }
-
-    @Override
-    public String getPullRegistry() {
-        return pullRegistry;
+    public String getRegistry(RegistryAuthConfig.Kind kind) {
+        return kind == RegistryAuthConfig.Kind.PULL ? pullRegistry : pushRegistry;
     }
 
     // ===============================================================================================
@@ -59,8 +55,8 @@ public class MavenRegistryContext implements RegistryContext {
             return this;
         }
 
-        public Builder authConfigFactory(AuthConfigFactory authConfigFactory) {
-            context.authConfigFactory = authConfigFactory;
+        public Builder authRegistryAuthFactory(RegistryAuthFactory registryAuthFactory) {
+            context.registryAuthFactory = registryAuthFactory;
             return this;
         }
 
