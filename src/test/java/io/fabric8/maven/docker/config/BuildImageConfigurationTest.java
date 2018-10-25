@@ -21,19 +21,20 @@ import java.io.File;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static io.fabric8.maven.docker.config.ArchiveCompression.gzip;
 import static io.fabric8.maven.docker.config.ArchiveCompression.none;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
  * @since 04/04/16
  */
-@RunWith(JMockit.class)
+
 public class BuildImageConfigurationTest {
 
     @Mocked
