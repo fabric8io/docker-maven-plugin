@@ -357,6 +357,7 @@ public class RunServiceTest {
                         .restartPolicy(restartPolicy())
                         .net("custom_network")
                         .network(networkConfiguration())
+                        .readOnly(false)
                         .build();
     }
 

@@ -173,12 +173,16 @@ public class RunImageConfiguration implements Serializable {
 
     @Parameter
     private Boolean skip;
-
+    
     /**
      * Policy for pulling the image to start
      */
     @Parameter
     private String imagePullPolicy;
+
+    // Mount the container's root filesystem as read only
+    @Parameter
+    private Boolean readOnly;
 
     public RunImageConfiguration() { }
 
@@ -383,6 +387,10 @@ public class RunImageConfiguration implements Serializable {
 
     public String getContainerNamePattern() {
         return containerNamePattern;
+    }
+
+    public Boolean getReadOnly() {
+        return readOnly;
     }
 
     /**
@@ -628,6 +636,11 @@ public class RunImageConfiguration implements Serializable {
             if (imagePullPolicy != null) {
                 config.imagePullPolicy = imagePullPolicy;
             }
+            return this;
+        }
+
+        public Builder readOnly(Boolean readOnly) {
+            config.readOnly = readOnly;
             return this;
         }
 

@@ -207,6 +207,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .cpuShares(valueProvider.getLong(CPUSHARES, config == null ? null : config.getCpuShares()))
                 .cpus(valueProvider.getLong(CPUS, config == null ? null : config.getCpus()))
                 .cpuSet(valueProvider.getString(CPUSET, config == null ? null : config.getCpuSet()))
+                .readOnly(valueProvider.getBoolean(READ_ONLY, config == null ? null : config.getReadOnly()))
                 .build();
     }
 

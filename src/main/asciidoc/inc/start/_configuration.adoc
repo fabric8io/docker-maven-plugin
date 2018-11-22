@@ -104,6 +104,9 @@ a| *This option is deprecated, please use a `containerNamePattern` instead* Nami
 | *privileged*
 | If `true` give container full access to host
 
+| *readOnly*
+| If `true` mount the container's root filesystem as read only
+
 | <<start-restart, *restartPolicy*>>
 | Restart Policy
 

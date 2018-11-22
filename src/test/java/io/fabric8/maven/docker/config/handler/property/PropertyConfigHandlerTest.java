@@ -928,7 +928,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("/var/lib/mysql:10m", runConfig.getTmpfs().get(0));
         assertEquals(1, runConfig.getTmpfs().size());
         assertEquals("Never", runConfig.getImagePullPolicy());
-
+        assertEquals(true, runConfig.getReadOnly());
 
         validateEnv(runConfig.getEnv());
 
@@ -1046,7 +1046,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.WORKING_DIR), "foo",
             k(ConfigKey.TMPFS) + ".1", "/var/lib/mysql:10m",
             k(ConfigKey.IMAGE_PULL_POLICY_BUILD), "Always",
-            k(ConfigKey.IMAGE_PULL_POLICY_RUN), "Never"
+            k(ConfigKey.IMAGE_PULL_POLICY_RUN), "Never",
+            k(ConfigKey.READ_ONLY), "true",
         };
     }
 
