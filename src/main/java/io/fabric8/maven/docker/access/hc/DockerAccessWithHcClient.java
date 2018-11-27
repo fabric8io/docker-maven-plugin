@@ -422,7 +422,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try {
             doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
-            dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " to registry '" + registry + "'" : "");
             throw dae;
         } finally {
             if (temporaryImage != null) {
