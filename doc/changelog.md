@@ -6,6 +6,7 @@
   - Update to jnr-unixsocket version to 0.21 (#1089)
   - Add 'readOnly' option for docker:run cto mount container's root fs read-only (#1125)
   - Provide container properties to the wait configuration execution (#1111)
+  - Allow @sha256 digest for tags in FROM (#541)
 
 * **0.27.2** (2018-10-05)
 
