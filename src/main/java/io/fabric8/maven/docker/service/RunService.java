@@ -357,7 +357,8 @@ public class RunService {
                 .ulimits(runConfig.getUlimits())
                 .cpuShares(runConfig.getCpuShares())
                 .cpus(runConfig.getCpus())
-                .cpuSet(runConfig.getCpuSet());
+                .cpuSet(runConfig.getCpuSet())
+                .readonlyRootfs(runConfig.getReadOnly());
 
         addVolumeConfig(config, runConfig, baseDir);
         addNetworkingConfig(config, runConfig);
