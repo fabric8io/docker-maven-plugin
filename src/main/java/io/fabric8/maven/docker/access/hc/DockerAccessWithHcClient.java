@@ -490,7 +490,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         ImageName source = new ImageName(sourceImage);
         ImageName target = new ImageName(targetImage);
         try {
-            String url = urlBuilder.tagContainer(source, target, force);
+            String url = urlBuilder.tagImage(source, target, force);
             delegate.post(url, HTTP_CREATED);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to add tag [%s] to image [%s]", targetImage,

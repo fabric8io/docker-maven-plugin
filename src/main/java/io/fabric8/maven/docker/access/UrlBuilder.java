@@ -139,7 +139,7 @@ public final class UrlBuilder {
         return b.build();
     }
 
-    public String tagContainer(ImageName source, ImageName target, boolean force) {
+    public String tagImage(ImageName source, ImageName target, boolean force) {
         return u("images/%s/tag", source.getFullName())
                 .p("repo",target.getNameWithoutTag())
                 .p("tag",target.getTag())

@@ -12,11 +12,11 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.build.auth.extended.EcrExtendedRegistryAuthHandler;
-import io.fabric8.maven.docker.build.docker.DockerRegistryAuthHandler;
 import io.fabric8.maven.docker.build.auth.handler.FromConfigRegistryAuthHandler;
 import io.fabric8.maven.docker.build.auth.handler.OpenShiftRegistryAuthHandler;
-import io.fabric8.maven.docker.build.maven.SettingsRegistrysAuthHandler;
 import io.fabric8.maven.docker.build.auth.handler.SystemPropertyRegistryAuthHandler;
+import io.fabric8.maven.docker.build.docker.DockerRegistryAuthHandler;
+import io.fabric8.maven.docker.build.maven.SettingsRegistrysAuthHandler;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -39,13 +39,11 @@ import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
