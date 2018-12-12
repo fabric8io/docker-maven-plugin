@@ -98,7 +98,7 @@ public final class UrlBuilder {
     public String pullImage(ImageName name, String registry) {
         return u("images/create")
                 .p("fromImage", name.getNameWithoutTag(registry))
-                .p("tag", name.getTag())
+                .p("tag", name.getDigest() != null ? name.getDigest() : name.getTag())
                 .build();
     }
 

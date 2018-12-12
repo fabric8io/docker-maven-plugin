@@ -125,6 +125,10 @@ public class ImageNameTest {
                 new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo").getFullName("another.registry.org"));
         assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo:latest",
                 new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo").getFullName(null));
+        assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getFullName(null));
+        assertEquals("docker.jolokia.org",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getRegistry());
     }
 
 
