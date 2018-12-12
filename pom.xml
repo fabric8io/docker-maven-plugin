@@ -36,7 +36,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.version>3.3.9</maven.version>
     <jmockit.version>1.43</jmockit.version>
-    <surefire.version>3.0.0-M1</surefire.version>
+    <surefire.version>3.0.0-M2</surefire.version>
   </properties>
 
   <dependencies>
