@@ -47,6 +47,7 @@
   "CpuShares":1,
   "NanoCpus":1000000000,
   "CpusetCpus":"0,1",
+  "ReadonlyRootfs":false,    
   "Binds":[
     "/host_tmp:/container_tmp"
   ],

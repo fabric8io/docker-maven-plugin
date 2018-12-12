@@ -16,6 +16,7 @@ import java.nio.channels.SocketChannel;
 
 import jnr.unixsocket.UnixSocketAddress;
 import jnr.unixsocket.UnixSocketChannel;
+import jnr.unixsocket.UnixSocketOptions;
 
 final class UnixSocket extends Socket {
 
@@ -145,15 +146,22 @@ final class UnixSocket extends Socket {
     public void sendUrgentData(int data) throws IOException {
         throw new SocketException("Urgent data not supported");
     }
-
     @Override
-    public void setSoTimeout(int timeout) {
-        channel.setSoTimeout(timeout);
+    public void setSoTimeout(int timeout) throws SocketException {
+        try {
+            channel.setOption(UnixSocketOptions.SO_RCVTIMEO, Integer.valueOf(timeout));
+        } catch (IOException e) {
+            throw (SocketException)new SocketException().initCause(e);
+        }
     }
 
     @Override
     public int getSoTimeout() throws SocketException {
-        return channel.getSoTimeout();
+        try {
+            return channel.getOption(UnixSocketOptions.SO_RCVTIMEO).intValue();
+        } catch (IOException e) {
+            throw (SocketException)new SocketException().initCause(e);
+        }
     }
 
     @Override
@@ -202,12 +210,20 @@ final class UnixSocket extends Socket {
 
     @Override
     public void setKeepAlive(boolean on) throws SocketException {
-        channel.setKeepAlive(on);
+        try {
+            channel.setOption(UnixSocketOptions.SO_KEEPALIVE, Boolean.valueOf(on));
+        } catch (IOException e) {
+            throw (SocketException)new SocketException().initCause(e);
+        }
     }
 
     @Override
     public boolean getKeepAlive() throws SocketException {
-        return channel.getKeepAlive();
+        try {
+            return channel.getOption(UnixSocketOptions.SO_KEEPALIVE).booleanValue();
+        } catch (IOException e) {
+            throw (SocketException)new SocketException().initCause(e);
+        }
     }
 
     @Override

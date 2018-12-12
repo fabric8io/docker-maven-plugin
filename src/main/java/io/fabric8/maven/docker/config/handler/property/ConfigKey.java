@@ -94,6 +94,7 @@ public enum ConfigKey {
     PORT_PROPERTY_FILE,
     PORTS(ValueCombinePolicy.Merge),
     PRIVILEGED,
+    READ_ONLY,
     REGISTRY,
     RESTART_POLICY_NAME("restartPolicy.name"),
     RESTART_POLICY_RETRY("restartPolicy.retry"),

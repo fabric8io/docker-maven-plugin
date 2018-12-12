@@ -194,6 +194,10 @@ public class ContainerHostConfig {
         }
         return this;
     }
+    
+    public ContainerHostConfig readonlyRootfs(Boolean readOnly) {
+        return add("ReadonlyRootfs", readOnly);
+    }
 
     /**
      * Get JSON which is used for <em>starting</em> a container
