@@ -5,6 +5,7 @@
   - Compiles with Java 11
   - Update to jnr-unixsocket version to 0.21 (#1089)
   - Add 'readOnly' option for docker:run cto mount container's root fs read-only (#1125)
+  - Provide container properties to the wait configuration execution (#1111)
 
 * **0.27.2** (2018-10-05)
 
