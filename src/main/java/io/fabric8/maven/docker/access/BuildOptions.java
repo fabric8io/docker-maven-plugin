@@ -16,6 +16,7 @@ package io.fabric8.maven.docker.access;/*
  */
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.util.JsonFactory;
@@ -57,6 +58,15 @@ public class BuildOptions {
 
     public BuildOptions noCache(boolean noCache) {
         options.put("nocache", noCache ? "1" : "0");
+        return this;
+    }
+
+    public BuildOptions cacheFrom(List<String> cacheFrom) {
+        if (cacheFrom == null || cacheFrom.isEmpty()) {
+            options.remove("cachefrom");
+        } else {
+            options.put("cachefrom", JsonFactory.newJsonArray(cacheFrom).toString());
+        }
         return this;
     }
 
