@@ -1,10 +1,10 @@
 package io.fabric8.maven.docker.service.helper;
 
+import io.fabric8.maven.docker.config.run.LogConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import org.junit.Test;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,7 +38,7 @@ public class StartContainerExecutorTest {
   public void getExposedPropertyKeyPart_withRunConfig() {
 
     // Given
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+    final RunConfiguration runConfig = new RunConfiguration.Builder()
         .exposedPropertyKey("key")
         .build();
 
@@ -85,7 +85,7 @@ public class StartContainerExecutorTest {
   public void showLogs_withoutLogConfigButFollowTrue() {
 
     // Given
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+    final RunConfiguration runConfig = new RunConfiguration.Builder()
         .exposedPropertyKey("key")
         .build();
 
@@ -116,7 +116,7 @@ public class StartContainerExecutorTest {
         .enabled(false)
         .build();
 
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+    final RunConfiguration runConfig = new RunConfiguration.Builder()
         .exposedPropertyKey("key")
         .log(logConfig)
         .build();
@@ -147,7 +147,7 @@ public class StartContainerExecutorTest {
         .enabled(true)
         .build();
 
-    final RunImageConfiguration runConfig = new RunImageConfiguration.Builder()
+    final RunConfiguration runConfig = new RunConfiguration.Builder()
         .exposedPropertyKey("key")
         .log(logConfig)
         .build();

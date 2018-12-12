@@ -142,7 +142,6 @@ public class RunConfiguration implements Serializable {
     private String imagePullPolicy;
 
     // Mount the container's root filesystem as read only
-    @Parameter
     private Boolean readOnly;
 
     public RunConfiguration() { }
