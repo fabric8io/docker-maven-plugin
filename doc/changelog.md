@@ -3,6 +3,7 @@
 * **0.27-SNAPSHOT**
   - Update to JMockit 1.43
   - Compiles with Java 11
+  - Update to jnr-unixsocket version to 0.21 (#1089)
 
 * **0.27.2** (2018-10-05)
 

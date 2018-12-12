@@ -13,14 +13,14 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.27.2</version>
+    <version>0.27-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
 
   <groupId>io.fabric8</groupId>
   <artifactId>dmp-sample-log</artifactId>
-  <version>0.27.2</version>
+  <version>0.27-SNAPSHOT</version>
 
   <build>
     <plugins>
@@ -30,7 +30,7 @@
         <configuration>
           <verbose>true</verbose>
           <autoPull>always</autoPull>
-          <startParallel>true</startParallel>
+          <startParallel>false</startParallel>
           <images>
             <image>
               <alias>jetty1</alias>
