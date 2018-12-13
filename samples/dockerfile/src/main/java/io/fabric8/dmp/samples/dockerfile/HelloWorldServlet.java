@@ -20,7 +20,7 @@ public class HelloWorldServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String txt = FileUtils.readFileToString(new File("/welcome.txt"), Charset.defaultCharset());
-        resp.getWriter().append(txt).flush();
+        resp.getWriter().append(txt).append("\nFile: ").append(System.getenv("DOCKERFILE_NAME")).flush();
         resp.setHeader("Content-Type", "plain/text");
     }
 }

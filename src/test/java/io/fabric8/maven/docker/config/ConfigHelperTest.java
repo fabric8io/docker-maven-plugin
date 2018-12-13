@@ -19,6 +19,7 @@ package io.fabric8.maven.docker.config;
 import java.util.*;
 
 import io.fabric8.maven.docker.util.AnsiLogger;
+import io.fabric8.maven.docker.util.ConfigHelper;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
@@ -140,7 +141,7 @@ public class ConfigHelperTest {
     @Test
     public void initAndValidate() throws Exception {
         List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
-        String api = ConfigHelper.initAndValidate(configs, "v1.16", ConfigHelper.NameFormatter.IDENTITY, null);
+        String api = ConfigHelper.initAndValidate(configs, "v1.16", ImageConfiguration.NameFormatter.IDENTITY, null);
         assertEquals("v1.16",api);
     }
 

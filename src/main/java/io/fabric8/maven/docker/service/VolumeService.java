@@ -3,9 +3,7 @@ package io.fabric8.maven.docker.service;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
-
-import java.lang.String;
+import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 
 /**
  *  Service Class for helping control Volumes

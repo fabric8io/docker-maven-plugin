@@ -18,10 +18,10 @@ package io.fabric8.maven.docker.service;
 
 import java.util.*;
 
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -169,7 +169,7 @@ public class ContainerTrackerTest {
         return new ImageConfiguration.Builder()
             .name(name)
             .alias(alias)
-            .runConfig(new RunImageConfiguration.Builder()
+            .runConfig(new RunConfiguration.Builder()
                            .wait(waitConfig)
                            .build())
             .build();

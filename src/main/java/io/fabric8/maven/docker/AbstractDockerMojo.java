@@ -2,28 +2,36 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.ExecException;
-import io.fabric8.maven.docker.config.BuildImageConfiguration;
-import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.build.auth.RegistryAuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuthFactory;
+import io.fabric8.maven.docker.build.auth.extended.EcrExtendedRegistryAuthHandler;
+import io.fabric8.maven.docker.build.docker.DockerRegistryAuthHandler;
+import io.fabric8.maven.docker.build.auth.handler.FromConfigRegistryAuthHandler;
+import io.fabric8.maven.docker.build.auth.handler.OpenShiftRegistryAuthHandler;
+import io.fabric8.maven.docker.build.maven.SettingsRegistrysAuthHandler;
+import io.fabric8.maven.docker.build.auth.handler.SystemPropertyRegistryAuthHandler;
+import io.fabric8.maven.docker.util.ConfigHelper;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RegistryAuthConfiguration;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.build.BuildConfiguration;
+import io.fabric8.maven.docker.config.maven.RegistryAuthConfiguration;
 import io.fabric8.maven.docker.config.handler.ImageConfigResolver;
+import io.fabric8.maven.docker.config.maven.MavenImageConfiguration;
+import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.service.DockerAccessFactory;
-import io.fabric8.maven.docker.service.ImagePullManager;
-import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.ServiceHubFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
-import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
@@ -39,9 +47,16 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+
+import static io.fabric8.maven.docker.build.auth.RegistryAuth.AUTH;
+import static io.fabric8.maven.docker.build.auth.RegistryAuth.EMAIL;
+import static io.fabric8.maven.docker.build.auth.RegistryAuth.PASSWORD;
+import static io.fabric8.maven.docker.build.auth.RegistryAuth.USERNAME;
 
 /**
  * Base class for this plugin.
@@ -177,7 +192,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * Image configurations configured directly.
      */
     @Parameter
-    private List<ImageConfiguration> images;
+    private List<MavenImageConfiguration> images;
 
     // Docker-machine configuration
     @Parameter
@@ -187,8 +202,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // mangle the image configurations.
     private List<ImageConfiguration> resolvedImages;
 
+    // will be initialized and remembered for creating the authconfigfactory later
+    private PlexusContainer plexusContainer;
+
     // Handler dealing with authentication credentials
-    private AuthConfigFactory authConfigFactory;
+    protected RegistryAuthFactory registryAuthFactory;
 
     protected Logger log;
 
@@ -206,12 +224,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
-            authConfigFactory.setLog(log);
+            registryAuthFactory = createRegistryAuthFactory();
             imageConfigResolver.setLog(log);
 
             LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
-            ConfigHelper.validateExternalPropertyActivation(project, images);
+            List<ImageConfiguration> imageConfigs = convertToPlainImageConfigurations(images);
+            ConfigHelper.validateExternalPropertyActivation(project, imageConfigs);
 
             DockerAccess access = null;
             try {
@@ -237,6 +256,62 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
+    private RegistryAuthFactory createRegistryAuthFactory() {
+
+        RegistryAuthConfig registryAuthConfig = createRegistryAuthConfig();
+
+        return new RegistryAuthFactory.Builder()
+            .decryptor(this::decrypt)
+            .defaultRegistry(registry)
+            .log(log)
+            .addRegistryAuthHandler(new SystemPropertyRegistryAuthHandler(registryAuthConfig, log))
+            .addRegistryAuthHandler(new OpenShiftRegistryAuthHandler(registryAuthConfig, log))
+            .addRegistryAuthHandler(new FromConfigRegistryAuthHandler(registryAuthConfig, log))
+            .addRegistryAuthHandler(new SettingsRegistrysAuthHandler(settings, log))
+            .addRegistryAuthHandler(new DockerRegistryAuthHandler(log))
+            .addExtendedRegistryAuthHandler(new EcrExtendedRegistryAuthHandler(log))
+            .build();
+    }
+
+    private RegistryAuthConfig createRegistryAuthConfig() {
+
+        RegistryAuthConfig.Builder builder =
+            new RegistryAuthConfig.Builder()
+                .skipExtendedAuthentication(skipExtendedAuth)
+                .propertyPrefix("docker");
+
+        if (authConfig != null) {
+            builder
+                .addDefaultConfig(USERNAME, authConfig.getUsername())
+                .addDefaultConfig(PASSWORD, authConfig.getPassword())
+                .addDefaultConfig(EMAIL, authConfig.getEmail())
+                .addDefaultConfig(AUTH, authConfig.getAuthToken());
+            addKindMap(builder, RegistryAuthConfig.Kind.PULL, authConfig.getPull());
+            addKindMap(builder, RegistryAuthConfig.Kind.PUSH, authConfig.getPush());
+        }
+        return builder.build();
+    }
+
+    private String decrypt(String password) {
+        try {
+            // Done by reflection since I have classloader issues otherwise
+            Object secDispatcher = plexusContainer.lookup(SecDispatcher.ROLE, "maven");
+            Method method = secDispatcher.getClass().getMethod("decrypt", String.class);
+            return (String) method.invoke(secDispatcher, password);
+        } catch (ComponentLookupException e) {
+            throw new IllegalStateException("Error looking security dispatcher", e);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Cannot decrypt password: " + e.getCause(), e);
+        }
+    }
+
+    private List<ImageConfiguration> convertToPlainImageConfigurations(List<MavenImageConfiguration> images) {
+        if (images == null) {
+            return null;
+        }
+        return new ArrayList<>(images);
+    }
+
     private void logException(Exception exp) {
         if (exp.getCause() != null) {
             log.error("%s [%s]", exp.getMessage(), exp.getCause().getMessage());
@@ -258,14 +333,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .build();
     }
 
-    protected RegistryService.RegistryConfig getRegistryConfig(String specificRegistry) throws MojoExecutionException {
-        return new RegistryService.RegistryConfig.Builder()
-                .settings(settings)
-                .authConfig(authConfig != null ? authConfig.toMap() : null)
-                .authConfigFactory(authConfigFactory)
-                .skipExtendedAuth(skipExtendedAuth)
-                .registry(specificRegistry != null ? specificRegistry : registry)
-                .build();
+
+    private void addKindMap(RegistryAuthConfig.Builder builder, RegistryAuthConfig.Kind kind, Map kindMap) {
+        if (kindMap != null) {
+            builder.addKindConfig(kind, USERNAME, (String) kindMap.get(USERNAME));
+            builder.addKindConfig(kind, PASSWORD, (String) kindMap.get(PASSWORD));
+            builder.addKindConfig(kind, EMAIL, (String) kindMap.get(EMAIL));
+            builder.addKindConfig(kind, AUTH, (String) kindMap.get(AUTH));
+        }
     }
 
     /**
@@ -307,14 +382,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         // Resolve images
         resolvedImages = ConfigHelper.resolveImages(
             log,
-            images,                  // Unresolved images
-            new ConfigHelper.Resolver() {
-                    @Override
-                    public List<ImageConfiguration> resolve(ImageConfiguration image) {
-                        return imageConfigResolver.resolve(image, project, session);
-                    }
-                },
-           filter,                   // A filter which image to process
+            convertToPlainImageConfigurations(images),                  // Unresolved images
+            image -> imageConfigResolver.resolve(image, project, session),
+            filter,                   // A filter which image to process
             this);                     // customizer (can be overwritten by a subclass)
 
         // Check for simple Dockerfile mode
@@ -381,7 +451,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     @Override
     public void contextualize(Context context) throws ContextException {
-        authConfigFactory = new AuthConfigFactory((PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY));
+        plexusContainer = (PlexusContainer) context.get(PlexusConstants.PLEXUS_KEY);
     }
 
     // =================================================================================
@@ -400,26 +470,6 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return dispatcher;
     }
 
-    public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {
-        return new ImagePullManager(getSessionCacheStore(), imagePullPolicy, autoPull);
-    }
-
-    private ImagePullManager.CacheStore getSessionCacheStore() {
-        return new ImagePullManager.CacheStore() {
-            @Override
-            public String get(String key) {
-                Properties userProperties = session.getUserProperties();
-                return userProperties.getProperty(key);
-            }
-
-            @Override
-            public void put(String key, String value) {
-                Properties userProperties = session.getUserProperties();
-                userProperties.setProperty(key, value);
-            }
-        };
-    }
-
     private ImageConfiguration createSimpleDockerfileConfig(File dockerFile) {
         // No configured name, so create one from maven GAV
         String name = EnvUtil.getPropertiesWithSystemOverrides(project).getProperty("docker.name");
@@ -428,8 +478,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             name = "%g/%a:%l";
         }
 
-        BuildImageConfiguration buildConfig =
-            new BuildImageConfiguration.Builder()
+        BuildConfiguration buildConfig =
+            new BuildConfiguration.Builder()
                 .dockerFile(dockerFile.getPath())
                 .build();
 
@@ -440,8 +490,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     }
 
     private ImageConfiguration addSimpleDockerfileConfig(ImageConfiguration image, File dockerfile) {
-        BuildImageConfiguration buildConfig =
-            new BuildImageConfiguration.Builder()
+        BuildConfiguration buildConfig =
+            new BuildConfiguration.Builder()
                 .dockerFile(dockerfile.getPath())
                 .build();
         return new ImageConfiguration.Builder(image).buildConfig(buildConfig).build();

@@ -5,8 +5,6 @@ import java.util.List;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogGetHandle;
-import io.fabric8.maven.docker.config.ArchiveCompression;
-import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
@@ -76,7 +74,7 @@ public interface DockerAccess {
     List<Container> getContainersForImage(String image, boolean all) throws DockerAccessException;
 
     /**
-     * Starts a previously set up exec instance (via {@link #createExecContainer(String, Arguments)} container
+     * Starts a previously set up exec instance (via {@link #createExecContainer(String, List)} container
      * this API sets up a session with the exec command. Output is streamed to the log. This methods
      * returns only when the exec command has finished (i.e this method calls the command in a non-detached mode).
      *
@@ -93,7 +91,7 @@ public interface DockerAccess {
      * @param arguments container exec commands to run
      * @throws DockerAccessException if the container could not be created.
      */
-    String createExecContainer(String containerId, Arguments arguments) throws DockerAccessException;
+    String createExecContainer(String containerId, List<String> arguments) throws DockerAccessException;
 
     /**
      * Create a container from the given image.
@@ -175,11 +173,11 @@ public interface DockerAccess {
      * Pull an image from a remote registry and store it locally.
      *
      * @param image the image to pull.
-     * @param authConfig authentication configuration used when pulling an image
+     * @param authHeader authentication configuration used when pulling an image
      * @param registry an optional registry from where to pull the image. Can be null.
      * @throws DockerAccessException if the image couldn't be pulled.
      */
-    void pullImage(String image, AuthConfig authConfig, String registry) throws DockerAccessException;
+    void pullImage(String image, String authHeader, String registry) throws DockerAccessException;
 
     /**
      * Push an image to a registry. An registry can be specified which is used as target
@@ -189,12 +187,12 @@ public interface DockerAccess {
      * part (if not already existent)
      *
      * @param image image name to push
-     * @param authConfig authentication configuration
+     * @param authHeader authentication configuration
      * @param registry optional registry to which the image should be pushed.
      * @param retries optional number of times the push should be retried on a 500 error
      * @throws DockerAccessException in case pushing fails
      */
-    void pushImage(String image, AuthConfig authConfig, String registry, int retries) throws DockerAccessException;
+    void pushImage(String image, String authHeader, String registry, int retries) throws DockerAccessException;
 
     /**
      * Create an docker image from a given archive
@@ -232,10 +230,9 @@ public interface DockerAccess {
      *
      * @param image image to save
      * @param filename target filename
-     * @param compression compression to use for the archive
      * @throws DockerAccessException if an image cannot be removed
      */
-    void saveImage(String image, String filename, ArchiveCompression compression) throws DockerAccessException;
+    void saveImage(String image, String filename) throws DockerAccessException;
 
     /**
      * List all networks

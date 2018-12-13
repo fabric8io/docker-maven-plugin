@@ -1,11 +1,11 @@
 package io.fabric8.maven.docker.util;
 
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
 
 import static io.fabric8.maven.docker.util.DockerPathUtil.resolveAbsolutely;
 

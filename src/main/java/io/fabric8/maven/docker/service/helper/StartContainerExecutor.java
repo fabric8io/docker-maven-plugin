@@ -11,11 +11,11 @@ import org.codehaus.plexus.util.StringUtils;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.util.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.run.LogConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
@@ -123,7 +123,7 @@ public class StartContainerExecutor {
             }
         }
 
-        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        RunConfiguration runConfig = imageConfig.getRunConfiguration();
         if (runConfig != null) {
             LogConfiguration logConfig = runConfig.getLogConfiguration();
             if (logConfig != null) {

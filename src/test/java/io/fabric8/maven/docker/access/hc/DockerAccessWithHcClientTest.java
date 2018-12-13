@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.build.auth.RegistryAuth;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
-import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.config.build.ArchiveCompression;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 
 public class DockerAccessWithHcClientTest {
 
-    private AuthConfig authConfig;
+    private RegistryAuth registryAuth;
 
     private DockerAccessWithHcClient client;
 
@@ -179,7 +179,7 @@ public class DockerAccessWithHcClientTest {
 
     private void whenPushImage() {
         try {
-            client.pushImage(imageName, authConfig, registry, pushRetries);
+            client.pushImage(imageName, "", registry, pushRetries);
         } catch (Exception e) {
             thrownException = e;
         }
@@ -194,7 +194,7 @@ public class DockerAccessWithHcClientTest {
 
     private void whenSaveImage() {
         try {
-            client.saveImage(imageName, filename, compression);
+            client.saveImage(imageName, filename);
         } catch (Exception e) {
             thrownException = e;
         }

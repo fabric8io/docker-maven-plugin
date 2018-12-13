@@ -14,7 +14,7 @@ import io.fabric8.maven.docker.access.DockerConnectionDetector;
 import io.fabric8.maven.docker.access.DockerMachine;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
-import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.build.Arguments;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
 import io.fabric8.maven.docker.util.AnsiLogger;
@@ -160,7 +160,7 @@ public class DockerAccessIT {
     private void testExecContainer() throws DockerAccessException {
         Arguments arguments = new Arguments();
         arguments.setExec(Lists.newArrayList("echo", "test", "echo"));
-        String execContainerId = dockerClient.createExecContainer(this.containerId, arguments);
+        String execContainerId = dockerClient.createExecContainer(this.containerId, arguments.getExec());
         //assertThat(dockerClient.startExecContainer(execContainerId), is("test echo"));
     }
 

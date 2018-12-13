@@ -21,7 +21,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,13 +39,13 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.NetworkCreateConfig;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.build.Arguments;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
+import io.fabric8.maven.docker.config.run.RestartPolicy;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
@@ -84,6 +83,8 @@ public class RunService {
 
     private final LogOutputSpecFactory logConfig;
 
+    private StartOrderResolver startOrderResolver;
+
     public RunService(DockerAccess docker,
                       QueryService queryService,
                       ContainerTracker tracker,
@@ -91,6 +92,7 @@ public class RunService {
                       Logger log) {
         this.docker = docker;
         this.queryService = queryService;
+        this.startOrderResolver = new StartOrderResolver(queryService);
         this.tracker = tracker;
         this.log = log;
         this.logConfig = logConfig;
@@ -109,7 +111,7 @@ public class RunService {
         throws DockerAccessException, ExecException {
         Arguments arguments = new Arguments();
         arguments.setExec(Arrays.asList(EnvUtil.splitOnSpaceWithEscape(command)));
-        String execContainerId = docker.createExecContainer(containerId, arguments);
+        String execContainerId = docker.createExecContainer(containerId, arguments.getExec());
         docker.startExecContainer(execContainerId, logConfig.createSpec(containerId, imageConfiguration));
 
         ExecDetails execContainer = docker.getExecContainer(execContainerId);
@@ -141,7 +143,7 @@ public class RunService {
                                           File baseDir,
                                           String defaultContainerNamePattern,
                                           Date buildTimestamp) throws DockerAccessException {
-        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        RunConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
 
         Collection<Container> existingContainers = queryService.getContainersForImage(imageName, true);
@@ -215,7 +217,7 @@ public class RunService {
     }
 
     private void collectCustomNetworks(Set<Network> networksToRemove, ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeCustomNetworks) throws DockerAccessException {
-        final NetworkConfig config = descriptor.getImageConfiguration().getRunConfiguration().getNetworkingConfig();
+        final NetworkConfiguration config = descriptor.getImageConfiguration().getRunConfiguration().getNetworkingConfig();
         if (removeCustomNetworks && config.isCustomNetwork()) {
            networksToRemove.add(queryService.getNetworkByName(config.getCustomNetwork()));
         }
@@ -236,8 +238,8 @@ public class RunService {
      * @param images list of images for which the order should be created
      * @return list of images in the right startup order
      */
-    public List<StartOrderResolver.Resolvable> getImagesConfigsInOrder(QueryService queryService, List<ImageConfiguration> images) {
-        return StartOrderResolver.resolve(queryService, convertToResolvables(images));
+    public List<ImageConfiguration> getImagesConfigsInOrder(List<ImageConfiguration> images) {
+        return startOrderResolver.resolve(images);
     }
 
     /**
@@ -247,7 +249,7 @@ public class RunService {
      * @param properties properties to lookup variables
      * @return the portmapping
      */
-    public PortMapping createPortMapping(RunImageConfiguration runConfig, Properties properties) {
+    public PortMapping createPortMapping(RunConfiguration runConfig, Properties properties) {
         try {
             return new PortMapping(runConfig.getPorts(), properties);
         } catch (IllegalArgumentException exp) {
@@ -271,20 +273,8 @@ public class RunService {
         });
     }
 
-    private List<StartOrderResolver.Resolvable> convertToResolvables(List<ImageConfiguration> images) {
-        List<StartOrderResolver.Resolvable> ret = new ArrayList<>();
-        for (ImageConfiguration config : images) {
-            if (config.getRunConfiguration().skip()) {
-                log.info("%s: Skipped running", config.getDescription());
-            } else {
-                ret.add(config);
-            }
-        }
-        return ret;
-    }
-
     // visible for testing
-    ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
+    ContainerCreateConfig createContainerConfig(String imageName, RunConfiguration runConfig, PortMapping mappedPorts,
                                                 GavLabel gavLabel, Properties mavenProps, File baseDir)
             throws DockerAccessException {
         try {
@@ -305,7 +295,7 @@ public class RunService {
                 config.binds(volumeConfig.getBind());
             }
 
-            NetworkConfig networkConfig = runConfig.getNetworkingConfig();
+            NetworkConfiguration networkConfig = runConfig.getNetworkingConfig();
             if(networkConfig.isCustomNetwork() && networkConfig.hasAliases()) {
                 ContainerNetworkingConfig networkingConfig =
                     new ContainerNetworkingConfig()
@@ -330,9 +320,9 @@ public class RunService {
         return ret;
     }
 
-    ContainerHostConfig createContainerHostConfig(RunImageConfiguration runConfig, PortMapping mappedPorts, File baseDir)
+    ContainerHostConfig createContainerHostConfig(RunConfiguration runConfig, PortMapping mappedPorts, File baseDir)
             throws DockerAccessException {
-        RestartPolicy restartPolicy = runConfig.getRestartPolicy();
+        RestartPolicy restartPolicy = runConfig.getRestartPolicy() != null ? runConfig.getRestartPolicy() : RestartPolicy.DEFAULT;
 
 
         List<String> links = findContainerIdsForLinks(runConfig.getLinks(),
@@ -366,8 +356,8 @@ public class RunService {
         return config;
     }
 
-    private void addNetworkingConfig(ContainerHostConfig config, RunImageConfiguration runConfig) throws DockerAccessException {
-        NetworkConfig networkConfig = runConfig.getNetworkingConfig();
+    private void addNetworkingConfig(ContainerHostConfig config, RunConfiguration runConfig) throws DockerAccessException {
+        NetworkConfiguration networkConfig = runConfig.getNetworkingConfig();
         if (networkConfig.isStandardNetwork()) {
             String alias = networkConfig.getContainerAlias();
             String containerId = alias != null ? findContainerId(alias, false) : null;
@@ -377,7 +367,7 @@ public class RunService {
         }
     }
 
-    private void addVolumeConfig(ContainerHostConfig config, RunImageConfiguration runConfig, File baseDir) throws DockerAccessException {
+    private void addVolumeConfig(ContainerHostConfig config, RunConfiguration runConfig, File baseDir) throws DockerAccessException {
         RunVolumeConfiguration volConfig = runConfig.getVolumeConfiguration();
         if (volConfig != null) {
             resolveRelativeVolumeBindings(baseDir, volConfig);

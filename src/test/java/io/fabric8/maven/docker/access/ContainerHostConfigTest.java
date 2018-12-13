@@ -12,8 +12,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.run.LogConfiguration;
+import io.fabric8.maven.docker.config.run.UlimitConfiguration;
 import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
@@ -57,8 +57,8 @@ public class ContainerHostConfigTest {
             ContainerHostConfig hc = new ContainerHostConfig();
             hc.ulimits(Collections.singletonList(
                 data[1].toString().contains("=") ?
-                    new UlimitConfig((String) data[1]) :
-                    new UlimitConfig((String) data[1], (Integer) data[2], (Integer) data[3])));
+                    new UlimitConfiguration((String) data[1]) :
+                    new UlimitConfiguration((String) data[1], (Integer) data[2], (Integer) data[3])));
             assertEquals(JsonFactory.newJsonObject((String) data[0]),
                          hc.toJsonObject());
         }

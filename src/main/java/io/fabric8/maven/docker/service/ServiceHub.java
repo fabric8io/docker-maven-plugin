@@ -17,7 +17,11 @@
 package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.build.docker.DockerBuildService;
+import io.fabric8.maven.docker.build.docker.DockerRegistryService;
+import io.fabric8.maven.docker.build.maven.MavenArchiveService;
+import io.fabric8.maven.docker.build.maven.MavenCacheBackend;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.util.Logger;
 
@@ -38,10 +42,10 @@ public class ServiceHub {
 
     private final QueryService queryService;
     private final RunService runService;
-    private final RegistryService registryService;
-    private final BuildService buildService;
+    private final DockerRegistryService registryService;
+    private final DockerBuildService buildService;
     private final MojoExecutionService mojoExecutionService;
-    private final ArchiveService archiveService;
+    private final MavenArchiveService archiveService;
     private final VolumeService volumeService;
     private final WatchService watchService;
     private final WaitService waitService;
@@ -53,13 +57,13 @@ public class ServiceHub {
         this.dockerAccess = dockerAccess;
 
         mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
-        archiveService = new ArchiveService(dockerAssemblyManager, logger);
+        archiveService = new MavenArchiveService(dockerAssemblyManager, logger);
 
         if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess);
-            registryService = new RegistryService(dockerAccess, logger);
+            registryService = new DockerRegistryService(dockerAccess, logger, new MavenCacheBackend(session));
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
-            buildService = new BuildService(dockerAccess, queryService, registryService, archiveService, logger);
+            buildService = new DockerBuildService(dockerAccess, registryService, logger);
             volumeService = new VolumeService(dockerAccess);
             watchService = new WatchService(archiveService, buildService, dockerAccess, mojoExecutionService, queryService, runService, logger);
             waitService = new WaitService(dockerAccess, queryService, logger);
@@ -89,7 +93,7 @@ public class ServiceHub {
      *
      * @return get the build service
      */
-    public BuildService getBuildService() {
+    public DockerBuildService getBuildService() {
         checkDockerAccessInitialization();
         return buildService;
     }
@@ -109,7 +113,7 @@ public class ServiceHub {
      *
      * @return query service
      */
-    public RegistryService getRegistryService() {
+    public DockerRegistryService getRegistryService() {
         checkDockerAccessInitialization();
         return registryService;
     }
@@ -161,7 +165,7 @@ public class ServiceHub {
      *
      * @return the archive service
      */
-    public ArchiveService getArchiveService() {
+    public MavenArchiveService getArchiveService() {
         return archiveService;
     }
 

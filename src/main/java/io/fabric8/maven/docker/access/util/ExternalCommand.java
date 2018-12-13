@@ -20,7 +20,7 @@ import java.io.*;
 import java.util.concurrent.*;
 
 import io.fabric8.maven.docker.util.Logger;
-import org.apache.maven.shared.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author roland

@@ -18,14 +18,16 @@ package io.fabric8.maven.docker.util;/*
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
 import org.apache.maven.plugins.assembly.interpolation.AssemblyInterpolator;
 import org.apache.maven.plugins.assembly.io.DefaultAssemblyReader;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 
-import io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSource;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyConfigurationSource;
 
 
 /**
@@ -42,9 +44,8 @@ public class DockerFileUtil {
      * taken.
      *
      * @param dockerFile file from where to extract the base image
-     * @param interpolator interpolator for replacing properties
      */
-    public static String extractBaseImage(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
+    public static String extractBaseImage(File dockerFile, Function<String, String> interpolator) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
         if (!fromLines.isEmpty()) {
             String[] parts = fromLines.get(0);
@@ -60,15 +61,14 @@ public class DockerFileUtil {
      *
      * @param dockerFile dockerfile to examine
      * @param keyword keyword to extract the lines for
-     * @param interpolator interpolator for replacing properties
      * @return list of matched lines or an empty list
      */
-    public static List<String[]> extractLines(File dockerFile, String keyword, FixedStringSearchInterpolator interpolator) throws IOException {
+    public static List<String[]> extractLines(File dockerFile, String keyword, Function<String, String> interpolator) throws IOException {
         List<String[]> ret = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(dockerFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String lineInterpolated = interpolator.interpolate(line);
+                String lineInterpolated = interpolator.apply(line);
                 String[] lineParts = lineInterpolated.split("\\s+");
                 if (lineParts.length > 0 && lineParts[0].equalsIgnoreCase(keyword)) {
                     ret.add(lineParts);
@@ -100,29 +100,32 @@ public class DockerFileUtil {
     /**
      * Create an interpolator for the given maven parameters and filter configuration.
      *
-     * @param params The maven parameters.
+     * @param ctx The maven parameters.
      * @param filter The filter configuration.
      * @return An interpolator for replacing maven properties.
      */
-    public static FixedStringSearchInterpolator createInterpolator(MojoParameters params, String filter) {
+    public static FixedStringSearchInterpolator createInterpolator(MavenBuildContext ctx, String filter) {
         String[] delimiters = extractDelimiters(filter);
         if (delimiters == null) {
             // Don't interpolate anything
             return FixedStringSearchInterpolator.create();
         }
 
-        DockerAssemblyConfigurationSource configSource = new DockerAssemblyConfigurationSource(params, null, null);
+        DockerAssemblyConfigurationSource configSource = new DockerAssemblyConfigurationSource(ctx, null, null);
         // Patterned after org.apache.maven.plugins.assembly.interpolation.AssemblyExpressionEvaluator
         return AssemblyInterpolator
-                .fullInterpolator(params.getProject(),
-                        DefaultAssemblyReader.createProjectInterpolator(params.getProject())
+                .fullInterpolator(ctx.getProject(),
+                        DefaultAssemblyReader.createProjectInterpolator(ctx.getProject())
                           .withExpressionMarkers(delimiters[0], delimiters[1]), configSource)
                 .withExpressionMarkers(delimiters[0], delimiters[1]);
     }
 
     private static String[] extractDelimiters(String filter) {
-        if (filter == null ||
-            filter.equalsIgnoreCase("false") ||
+        if (filter == null) {
+            // Default interpolation scheme
+            return new String[] { "${", "}" };
+        }
+        if (filter.equalsIgnoreCase("false") ||
             filter.equalsIgnoreCase("none")) {
             return null;
         }

@@ -1,16 +1,15 @@
 package io.fabric8.maven.docker.access;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.config.LogConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import io.fabric8.maven.docker.config.run.LogConfiguration;
+import io.fabric8.maven.docker.config.run.UlimitConfiguration;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.JsonFactory;
 
@@ -104,10 +103,10 @@ public class ContainerHostConfig {
         return addAsArray("VolumesFrom", volumesFrom);
     }
 
-    public ContainerHostConfig ulimits(List<UlimitConfig> ulimitsConfig) {
+    public ContainerHostConfig ulimits(List<UlimitConfiguration> ulimitsConfig) {
     	if (ulimitsConfig != null && ulimitsConfig.size() > 0) {
             JsonArray ulimits = new JsonArray();
-            for (UlimitConfig ulimit : ulimitsConfig) {
+            for (UlimitConfiguration ulimit : ulimitsConfig) {
                 JsonObject ulimitConfigJson = new JsonObject();
                 ulimitConfigJson.addProperty("Name", ulimit.getName());
                 addIfNotNull(ulimitConfigJson, "Hard", ulimit.getHard());

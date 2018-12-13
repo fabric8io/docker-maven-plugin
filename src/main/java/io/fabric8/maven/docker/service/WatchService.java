@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -15,15 +17,17 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.assembly.AssemblyFiles;
+import io.fabric8.maven.docker.build.docker.DockerBuildService;
+import io.fabric8.maven.docker.build.maven.MavenArchiveService;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.build.maven.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.WatchImageConfiguration;
+import io.fabric8.maven.docker.config.WatchConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -35,15 +39,15 @@ import org.codehaus.plexus.util.StringUtils;
  */
 public class WatchService {
 
-    private final ArchiveService archiveService;
-    private final BuildService buildService;
+    private final MavenArchiveService archiveService;
+    private final DockerBuildService buildService;
     private final DockerAccess dockerAccess;
     private final MojoExecutionService mojoExecutionService;
     private final QueryService queryService;
     private final RunService runService;
     private final Logger log;
 
-    public WatchService(ArchiveService archiveService, BuildService buildService, DockerAccess dockerAccess, MojoExecutionService mojoExecutionService, QueryService queryService, RunService
+    public WatchService(MavenArchiveService archiveService, DockerBuildService buildService, DockerAccess dockerAccess, MojoExecutionService mojoExecutionService, QueryService queryService, RunService
             runService, Logger log) {
         this.archiveService = archiveService;
         this.buildService = buildService;
@@ -54,21 +58,20 @@ public class WatchService {
         this.log = log;
     }
 
-    public synchronized void watch(WatchContext context, BuildService.BuildContext buildContext, List<ImageConfiguration> images) throws DockerAccessException,
-            MojoExecutionException {
+    public synchronized void watch(WatchContext watchContext, MavenBuildContext buildContext, List<ImageConfiguration> images) throws
+                                                                                                                               IOException {
 
         // Important to be be a single threaded scheduler since watch jobs must run serialized
         ScheduledExecutorService executor = null;
         try {
             executor = Executors.newSingleThreadScheduledExecutor();
 
-            for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, images)) {
-                final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+            for (ImageConfiguration imageConfig : runService.getImagesConfigsInOrder(images)) {
 
                 String imageId = queryService.getImageId(imageConfig.getName());
                 String containerId = runService.lookupContainer(imageConfig.getName());
 
-                ImageWatcher watcher = new ImageWatcher(imageConfig, context, imageId, containerId);
+                ImageWatcher watcher = new ImageWatcher(imageConfig, watchContext, imageId, containerId);
                 long interval = watcher.getInterval();
 
                 WatchMode watchMode = watcher.getWatchMode(imageConfig);
@@ -80,12 +83,12 @@ public class WatchService {
                         imageConfig.getBuildConfiguration().getAssemblyConfiguration() != null) {
                     if (watcher.isCopy()) {
                         String containerBaseDir = imageConfig.getBuildConfiguration().getAssemblyConfiguration().getTargetDir();
-                        schedule(executor, createCopyWatchTask(watcher, context.getMojoParameters(), containerBaseDir), interval);
+                        schedule(executor, createCopyWatchTask(watcher, buildContext, containerBaseDir), interval);
                         tasks.add("copying artifacts");
                     }
 
                     if (watcher.isBuild()) {
-                        schedule(executor, createBuildWatchTask(watcher, context.getMojoParameters(), watchMode == WatchMode.both, buildContext), interval);
+                        schedule(executor, createBuildWatchTask(watcher, watchMode == WatchMode.both, buildContext), interval);
                         tasks.add("rebuilding");
                     }
                 }
@@ -100,8 +103,8 @@ public class WatchService {
                 }
             }
             log.info("Waiting ...");
-            if (!context.isKeepRunning()) {
-                runService.addShutdownHookForStoppingContainers(context.isKeepContainer(), context.isRemoveVolumes(), context.isAutoCreateCustomNetworks());
+            if (!watchContext.isKeepRunning()) {
+                runService.addShutdownHookForStoppingContainers(watchContext.isKeepContainer(), watchContext.isRemoveVolumes(), watchContext.isAutoCreateCustomNetworks());
             }
             wait();
         } catch (InterruptedException e) {
@@ -118,10 +121,10 @@ public class WatchService {
     }
 
     private Runnable createCopyWatchTask(final ImageWatcher watcher,
-                                         final MojoParameters mojoParameters, final String containerBaseDir) throws MojoExecutionException {
+                                         final MavenBuildContext buildContext, final String containerBaseDir) throws IOException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
 
-        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
+        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, buildContext);
         return new Runnable() {
             @Override
             public void run() {
@@ -131,10 +134,10 @@ public class WatchService {
                         log.info("%s: Assembly changed. Copying changed files to container ...", imageConfig.getDescription());
 
                         File changedFilesArchive = archiveService.createChangedFilesArchive(entries, files.getAssemblyDirectory(),
-                                imageConfig.getName(), mojoParameters);
+                                imageConfig.getName(), buildContext);
                         dockerAccess.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(watcher);
-                    } catch (MojoExecutionException | IOException | ExecException e) {
+                    } catch (IOException | ExecException e) {
                         log.error("%s: Error when copying files to container %s: %s",
                                   imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
                     }
@@ -150,47 +153,42 @@ public class WatchService {
         }
     }
 
-    private Runnable createBuildWatchTask(final ImageWatcher watcher,
-                                          final MojoParameters mojoParameters, final boolean doRestart, final BuildService.BuildContext buildContext)
-            throws MojoExecutionException {
+    private Runnable createBuildWatchTask(final ImageWatcher watcher, final boolean doRestart, final MavenBuildContext buildContext)
+            throws IOException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
+        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, buildContext);
         if (files.isEmpty()) {
             log.error("No assembly files for %s. Are you sure you invoked together with the `package` goal?", imageConfig.getDescription());
-            throw new MojoExecutionException("No files to watch found for " + imageConfig);
+            throw new IllegalArgumentException("No files to watch found for " + imageConfig);
         }
 
-        return new Runnable() {
-            @Override
-            public void run() {
-                List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
-                if (entries != null && entries.size() > 0) {
-                    try {
-                        log.info("%s: Assembly changed. Rebuild ...", imageConfig.getDescription());
+        return () -> {
+            List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
+            if (entries != null && entries.size() > 0) {
+                try {
+                    log.info("%s: Assembly changed. Rebuild ...", imageConfig.getDescription());
 
-                        if (watcher.getWatchContext().getImageCustomizer() != null) {
-                            log.info("%s: Customizing the image ...", imageConfig.getDescription());
-                            watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
-                        }
-
-                        buildService.buildImage(imageConfig, null, buildContext);
-
-                        String name = imageConfig.getName();
-                        watcher.setImageId(queryService.getImageId(name));
-                        if (doRestart) {
-                            restartContainer(watcher);
-                        }
-                        callPostGoal(watcher);
-                    } catch (Exception e) {
-                        log.error("%s: Error when rebuilding - %s", imageConfig.getDescription(), e);
+                    if (watcher.getWatchContext().getImageCustomizer() != null) {
+                        log.info("%s: Customizing the image ...", imageConfig.getDescription());
+                        watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
                     }
+
+                    buildService.buildImage(imageConfig, buildContext, watcher.getWatchContext().getBuildArgs());
+
+                    String name = imageConfig.getName();
+                    watcher.setImageId(queryService.getImageId(name));
+                    if (doRestart) {
+                        restartContainer(watcher);
+                    }
+                    callPostGoal(watcher);
+                } catch (Exception e) {
+                    log.error("%s: Error when rebuilding - %s", imageConfig.getDescription(), e);
                 }
             }
         };
     }
 
-    private Runnable createRestartWatchTask(final ImageWatcher watcher)
-            throws DockerAccessException {
+    private Runnable createRestartWatchTask(final ImageWatcher watcher) {
 
         final String imageName = watcher.getImageName();
 
@@ -226,7 +224,8 @@ public class WatchService {
         return watcher -> {
             // Stop old one
             ImageConfiguration imageConfig = watcher.getImageConfiguration();
-            PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
+            PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(),
+                                                                   watcher.getWatchContext().getProperties());
             String id = watcher.getContainerId();
 
             String optionalPreStop = getPreStopCommand(imageConfig);
@@ -242,8 +241,8 @@ public class WatchService {
                     .log(log)
                     .portMapping(mappedPorts)
                     .gavLabel(watcher.watchContext.getGavLabel())
-                    .projectProperties(watcher.watchContext.mojoParameters.getProject().getProperties())
-                    .basedir(watcher.watchContext.mojoParameters.getProject().getBasedir())
+                    .projectProperties(watcher.watchContext.getProperties())
+                    .basedir(watcher.watchContext.getBasedir())
                     .imageConfig(imageConfig)
                     .serviceHub(watcher.watchContext.hub)
                     .logOutputSpecFactory(watcher.watchContext.serviceHubFactory.getLogOutputSpecFactory())
@@ -356,26 +355,26 @@ public class WatchService {
         // =========================================================
 
         private int getWatchInterval(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             int interval = watchConfig != null ? watchConfig.getInterval() : watchContext.getWatchInterval();
             return interval < 100 ? 100 : interval;
         }
 
         private String getPostExec(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             return watchConfig != null && watchConfig.getPostExec() != null ?
                     watchConfig.getPostExec() : watchContext.getWatchPostExec();
         }
 
         private String getPostGoal(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             return watchConfig != null && watchConfig.getPostGoal() != null ?
                     watchConfig.getPostGoal() : watchContext.getWatchPostGoal();
 
         }
 
         private WatchMode getWatchMode(ImageConfiguration imageConfig) {
-            WatchImageConfiguration watchConfig = imageConfig.getWatchConfiguration();
+            WatchConfiguration watchConfig = imageConfig.getWatchConfiguration();
             WatchMode mode = watchConfig != null ? watchConfig.getMode() : null;
             return mode != null ? mode : watchContext.getWatchMode();
         }
@@ -387,8 +386,6 @@ public class WatchService {
      * Context class to hold the watch configuration
      */
     public static class WatchContext implements Serializable {
-
-        private MojoParameters mojoParameters;
 
         private WatchMode watchMode;
 
@@ -421,12 +418,11 @@ public class WatchService {
         private Date buildTimestamp;
 
         private String containerNamePattern;
+        private Map<String, String> buildArgs;
+        private Properties properties;
+        private File basedir;
 
         public WatchContext() {
-        }
-
-        public MojoParameters getMojoParameters() {
-            return mojoParameters;
         }
 
         public WatchMode getWatchMode() {
@@ -481,6 +477,18 @@ public class WatchService {
             return containerNamePattern;
         }
 
+        public Map<String, String> getBuildArgs() {
+            return buildArgs;
+        }
+
+        public Properties getProperties() {
+            return properties;
+        }
+
+        public File getBasedir() {
+            return basedir;
+        }
+
         public static class Builder {
 
             private WatchContext context;
@@ -491,11 +499,6 @@ public class WatchService {
 
             public Builder(WatchContext context) {
                 this.context = context;
-            }
-
-            public Builder mojoParameters(MojoParameters mojoParameters) {
-                context.mojoParameters = mojoParameters;
-                return this;
             }
 
             public Builder watchMode(WatchMode watchMode) {
@@ -573,7 +576,17 @@ public class WatchService {
                 return this;
             }
 
-            public Builder dispatcher(LogDispatcher dispatcher){
+            public Builder properties(Properties properties) {
+                context.properties = properties;
+                return this;
+            }
+
+            public Builder basedir(File basedir) {
+                context.basedir = basedir;
+                return this;
+            }
+
+            public Builder dispatcher(LogDispatcher dispatcher) {
                 context.dispatcher = dispatcher;
                 return this;
             }
@@ -588,6 +601,10 @@ public class WatchService {
                 return this;
             }
 
+            public Builder buildArgs(Map<String,String> buildArgs) {
+                context.buildArgs = buildArgs;
+                return this;
+            }
 
             public WatchContext build() {
                 return context;

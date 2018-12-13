@@ -1,6 +1,16 @@
 # ChangeLog
 
-* **0.27-SNAPSHOT**
+* **1.0-SNAPSHOT** [next gen docker-maven-plugin]
+  - Removed deprecated configuration and renamed configuration
+    - `<build><command>` has been removed. Use `<build><cmd><exec>` or `<build><cmd><shell>` instead
+    - `<build><assembly><dockerFileDir>` has been removed. Use `<build><contextDir>` instead.
+    - `<build><assembly><exportBaseDir>` has been removed. Use `<build><assembly><exportTargetDir>` instead
+    - `<build><assembly><ignorePermissions>` has been removed. Use `<build><assembly><permissions>ignore</..` instead
+    - `<build><dockerFileDir>` has been renamed `<build><contextDir>` and semantics has been changed slightly. You can have now a Dockerfile from outside the context directory. 
+    - `<build><assembly><basedir>` has been removed in favor of `<build><assembly><targetDir>`
+    - `<run><net>` removed, use `<run><network>` for network configuration
+
+* **0.27-SNAPSHOT** [patch releases]
   - Update to JMockit 1.43
   - Compiles with Java 11
   - Update to jnr-unixsocket version to 0.21 (#1089)

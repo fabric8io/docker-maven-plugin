@@ -38,42 +38,7 @@ public class EnvUtilTest {
         assertFalse(it.hasNext());
     }
 
-    @Test
-    public void removeEmptyEntries() {
-        assertEquals(ImmutableList.of("ein"),  EnvUtil.removeEmptyEntries(Arrays.asList(null, "", " ein", " ")));
-        assertEquals(ImmutableList.of(), EnvUtil.removeEmptyEntries(null));
-    }
 
-    @Test
-    public void splitAtCommas() {
-        Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
-        Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");
-        assertTrue(Iterables.elementsEqual(it, expected));
-    }
-
-    public void assertEmptyList(Iterable<String> actual) {
-        assertTrue(Iterables.elementsEqual(Collections.emptyList(), actual));
-    }
-    @Test
-    public void splitAtCommasEmpty() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.<String>emptyList()));
-    }
-
-    @Test
-    public void splitAtCommasSingleEmpty() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Arrays.asList("")));
-    }
-
-    @Test
-    public void splitAtCommasNullList() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(null));
-    }
-
-    // null occurs when <links><link></link></links>
-    @Test
-    public void splitAtCommasNullInList() {
-        assertEmptyList(EnvUtil.splitAtCommasAndTrim(Collections.<String>singletonList(null)));
-    }
 
     @Test
     @TestCaseName("{method}: input \"{0}\" splits to {1}")
@@ -173,14 +138,6 @@ public class EnvUtilTest {
         }
 
 
-    }
-
-    @Test
-    public void isValidWindowsFileName() {
-
-    	assertFalse(EnvUtil.isValidWindowsFileName("/Dockerfile"));
-    	assertTrue(EnvUtil.isValidWindowsFileName("Dockerfile"));
-    	assertFalse(EnvUtil.isValidWindowsFileName("Dockerfile/"));
     }
 
     private Properties getTestProperties(String ... vals) {

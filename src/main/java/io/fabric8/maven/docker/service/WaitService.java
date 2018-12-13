@@ -9,8 +9,8 @@ import java.util.Properties;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import io.fabric8.maven.docker.config.run.WaitConfiguration;
 import io.fabric8.maven.docker.log.DefaultLogCallback;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpec;
@@ -129,7 +129,7 @@ public class WaitService {
     }
 
     private WaitConfiguration getWaitConfiguration(ImageConfiguration imageConfig) {
-        RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        RunConfiguration runConfig = imageConfig.getRunConfiguration();
         return runConfig.getWaitConfiguration();
     }
 

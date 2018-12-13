@@ -37,7 +37,7 @@
     <server.version>8</server.version>
     <server.name>tomcat</server.name>
     <image>docker.io/fabric8/${server.name}-${server.version}:latest</image>
-    <jolokia.version>1.3.2</jolokia.version>
+    <jolokia.version>1.3.6</jolokia.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
@@ -96,7 +96,6 @@
               <alias>server</alias>
               <name>${image}</name>
               <run>
-                <namingStrategy>none</namingStrategy>
                 <volumes>
                   <from>
                     <image>data</image>
@@ -105,7 +104,7 @@
                 <env>
                   <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
                   <!-- Base starts jolokia by default. With this, it can be disabled -->
-                  <JOLOKIA_OFF>1</JOLOKIA_OFF>
+                  <AB_OFF>1</AB_OFF>
                   <EMPTY_PROP></EMPTY_PROP>
                 </env>
                 <envPropertyFile>${project.basedir}/src/main/docker/environment.properties</envPropertyFile>
@@ -169,6 +168,9 @@
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
               </build>
+              <run>
+                <containerNamePattern>%a-%t</containerNamePattern>
+              </run>
               <watch>
                 <interval>5000</interval>
                 <mode>both</mode>
@@ -255,7 +257,7 @@
                   <run>
                     <env>
                       <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
-                      <JOLOKIA_OFF>1</JOLOKIA_OFF>
+                      <AB_OFF>1</AB_OFF>
                     </env>
                     <ports>
                       <!-- Port mappings: Container internal port (which must be exposed) will be
@@ -275,7 +277,7 @@
                     </wait>
                     <log>
                       <enabled>true</enabled>
-                      <prefix>TC</prefix>
+                      <prefix>TC></prefix>
                       <color>yellow</color>
                     </log>
                   </run>
@@ -334,6 +336,10 @@
                     </assembly>
                   </build>
                   <run>
+                    <env>
+                      <CATALINA_OPTS>-Xmx32m</CATALINA_OPTS>
+                      <AB_OFF>1</AB_OFF>
+                    </env>
                     <ports>
                       <port>jolokia.port:8080</port>
                     </ports>

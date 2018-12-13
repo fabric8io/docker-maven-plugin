@@ -1,8 +1,7 @@
 package io.fabric8.maven.docker.access;
 
 import com.google.gson.JsonObject;
-
-import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
 import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerNetworkingConfig {
@@ -15,7 +14,7 @@ public class ContainerNetworkingConfig {
      * @param config network config as configured in the pom.xml
      * @return this configuration
      */
-    public ContainerNetworkingConfig aliases(NetworkConfig config) {
+    public ContainerNetworkingConfig aliases(NetworkConfiguration config) {
         JsonObject endPoints = new JsonObject();
         endPoints.add("Aliases", JsonFactory.newJsonArray(config.getAliases()));
 

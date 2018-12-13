@@ -17,7 +17,7 @@ package io.fabric8.maven.docker.config.handler;/*
 
 import java.util.*;
 
-import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.util.ConfigHelper;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.handler.compose.DockerComposeConfigHandler;
 import io.fabric8.maven.docker.config.handler.property.PropertyConfigHandler;

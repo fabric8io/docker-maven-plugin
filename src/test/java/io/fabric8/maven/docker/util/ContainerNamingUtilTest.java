@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.model.Container;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -120,7 +120,7 @@ public class ContainerNamingUtilTest {
     private ImageConfiguration imageConfiguration(String name, String alias, String containerNamePattern) {
         ImageConfiguration.Builder builder = new ImageConfiguration.Builder().name(name).alias(alias);
         if (containerNamePattern != null) {
-            RunImageConfiguration runConfig = new RunImageConfiguration.Builder().containerNamePattern(containerNamePattern).build();
+            RunConfiguration runConfig = new RunConfiguration.Builder().containerNamePattern(containerNamePattern).build();
             builder.runConfig(runConfig);
         }
         return builder.build();

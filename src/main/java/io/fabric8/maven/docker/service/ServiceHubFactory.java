@@ -1,7 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
+import io.fabric8.maven.docker.build.maven.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;

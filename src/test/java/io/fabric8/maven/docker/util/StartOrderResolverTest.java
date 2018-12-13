@@ -2,13 +2,16 @@ package io.fabric8.maven.docker.util;
 
 import java.util.*;
 
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
 import io.fabric8.maven.docker.service.QueryService;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
@@ -18,7 +21,7 @@ public class StartOrderResolverTest {
 
     @Mocked
     private QueryService queryService;
-    
+
     @Before
     @SuppressWarnings("unused")
     public void setup() throws Exception {
@@ -28,7 +31,7 @@ public class StartOrderResolverTest {
             minTimes = 1;
         }};
     }
-    
+
     @Test
     public void simple() {
         checkData(new Object[][]{
@@ -48,17 +51,22 @@ public class StartOrderResolverTest {
 
     private void checkData(Object[][] data) {
         for (Object[] aData : data) {
-            StartOrderResolver.Resolvable[] input = (StartOrderResolver.Resolvable[]) aData[0];
-            StartOrderResolver.Resolvable[] expected = (StartOrderResolver.Resolvable[]) aData[1];
-            List<StartOrderResolver.Resolvable> result = StartOrderResolver.resolve(queryService, Arrays.asList(input));
-            assertArrayEquals(expected, new ArrayList(result).toArray());
+            ImageConfiguration[] input = (ImageConfiguration[]) aData[0];
+            ImageConfiguration[] expected = (ImageConfiguration[]) aData[1];
+            List<ImageConfiguration> result = new StartOrderResolver(queryService).resolve(Arrays.asList(input));
+            assertThat(result.size()).isEqualTo(expected.length);
+            for (int i = 0; i < expected.length; i++) {
+                assertThat(result.get(i).getName()).isEqualTo(expected[i].getName());
+                assertThat(result.get(i).getRunConfiguration().getLinks()).containsExactly(
+                    expected[i].getRunConfiguration().getLinks().toArray(new String[0]));
+            }
         }
     }
 
 
     // ============================================================================
 
-    private static class T implements StartOrderResolver.Resolvable {
+    private static class T extends ImageConfiguration {
 
         private String id;
         private List<String> deps;
@@ -66,9 +74,7 @@ public class StartOrderResolverTest {
         private T(String id,String ... dep) {
             this.id = id;
             deps = new ArrayList<>();
-            for (String d : dep) {
-                deps.add(d);
-            }
+            Collections.addAll(deps, dep);
         }
 
         @Override
@@ -77,37 +83,13 @@ public class StartOrderResolverTest {
         }
 
         @Override
-        public String getAlias() {
-            return null;
-        }
-
-        @Override
-        public List<String> getDependencies() {
-            return deps;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            T t = (T) o;
-
-            if (id != null ? !id.equals(t.id) : t.id != null) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return id != null ? id.hashCode() : 0;
-        }
-
-        @Override
-        public String toString() {
-            return "T{" +
-                   "id='" + id + '\'' +
-                   '}';
+        public RunConfiguration getRunConfiguration() {
+            return new RunConfiguration() {
+                @Override
+                public List<String> getLinks() {
+                    return deps;
+                }
+            };
         }
     }
 }

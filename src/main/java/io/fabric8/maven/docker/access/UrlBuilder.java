@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 
 public final class UrlBuilder {
 
@@ -139,7 +139,7 @@ public final class UrlBuilder {
         return b.build();
     }
 
-    public String tagContainer(ImageName source, ImageName target, boolean force) {
+    public String tagImage(ImageName source, ImageName target, boolean force) {
         return u("images/%s/tag", source.getFullName())
                 .p("repo",target.getNameWithoutTag())
                 .p("tag",target.getTag())

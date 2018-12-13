@@ -1,0 +1,14 @@
+# Sample Dockerfile for use with the Docker file mode
+FROM ${base}
+
+ENV SAMPLE_BUILD_MODE=dockerfile \
+    DOCKERFILE_NAME="src/main/Dockerfile-3"
+
+# Arbitrary files can be added
+ADD welcome.txt /
+
+# In maven/ the files as specified in the <assembly> section is stored
+# and need to be added manually
+COPY maven/ /var/lib/jetty/webapps/
+
+EXPOSE 8080

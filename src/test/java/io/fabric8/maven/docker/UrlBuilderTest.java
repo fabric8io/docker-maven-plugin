@@ -22,7 +22,7 @@ import java.util.HashMap;
 
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.UrlBuilder;
-import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.config.ImageName;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -120,7 +120,7 @@ public class UrlBuilderTest {
     public void tagContainer() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
         assertEquals(new URI("/1.0/images/t1%3Alatest/tag?force=1&repo=new&tag=tag1"),
-                     new URI(builder.tagContainer(new ImageName("t1:latest"), new ImageName("new:tag1"), true)));
+                     new URI(builder.tagImage(new ImageName("t1:latest"), new ImageName("new:tag1"), true)));
 
     }
 }

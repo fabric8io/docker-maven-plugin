@@ -1,7 +1,9 @@
 # Sample Dockerfile for use with the Docker file mode
 FROM ${base}
 
-ENV SAMPLE_BUILD_MODE=dockerfile
+ENV SAMPLE_BUILD_MODE=dockerfile \
+    DOCKERFILE_NAME="src/main/Dockerfile"
+
 LABEL PROJECT_NAME=hello-world \
       PROJECT=${project.artifactId}
 

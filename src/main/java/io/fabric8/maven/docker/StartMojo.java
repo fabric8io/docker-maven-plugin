@@ -23,20 +23,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.build.RegistryContext;
+import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
 import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.config.build.ImagePullPolicy;
+import io.fabric8.maven.docker.config.run.NetworkConfiguration;
+import io.fabric8.maven.docker.config.run.RunConfiguration;
+import io.fabric8.maven.docker.config.run.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.run.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.QueryService;
-import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
@@ -274,7 +276,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         final RunService runService = hub.getRunService();
         final Properties projProperties = project.getProperties();
-        final RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+        final RunConfiguration runConfig = imageConfig.getRunConfiguration();
         final PortMapping portMapping = runService.createPortMapping(runConfig, projProperties);
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
@@ -315,7 +317,7 @@ public class StartMojo extends AbstractDockerMojo {
 
         // Check for all images which can be already started
         for (ImageConfiguration imageWaitingToStart : imagesRemaining) {
-            List<String> allDependencies = imageWaitingToStart.getDependencies();
+            List<String> allDependencies = StartOrderResolver.getDependencies(imageWaitingToStart);
             List<String> aliasDependencies = filterOutNonAliases(aliases, allDependencies);
             if (containersStarted.containsAll(aliasDependencies)) {
                 ret.add(imageWaitingToStart);
@@ -324,25 +326,33 @@ public class StartMojo extends AbstractDockerMojo {
         return ret;
     }
 
+
     // Prepare start like creating custom networks, auto pull images, map aliases and return the list of images
     // to start in the correct order
     private Queue<ImageConfiguration> prepareStart(ServiceHub hub, QueryService queryService, RunService runService, Set<String> imageAliases)
-        throws DockerAccessException, MojoExecutionException {
+        throws IOException {
         final Queue<ImageConfiguration> imagesWaitingToStart = new ArrayDeque<>();
-        for (StartOrderResolver.Resolvable resolvable : runService.getImagesConfigsInOrder(queryService, getResolvedImages())) {
-            final ImageConfiguration imageConfig = (ImageConfiguration) resolvable;
+        for (ImageConfiguration imageConfig : runService.getImagesConfigsInOrder(getResolvedImages())) {
 
             // Still to check: How to work with linking, volumes, etc ....
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
-            RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
+            RunConfiguration runConfig = imageConfig.getRunConfiguration();
 
-            RegistryService.RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-            ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), autoPull);
+            if (runConfig.getSkip() != null && runConfig.getSkip()) {
+                log.info("%s: Skipped running", imageConfig.getDescription());
+                continue;
+            }
 
-            hub.getRegistryService().pullImageWithPolicy(imageConfig.getName(), pullManager, registryConfig,
-                                                         queryService.hasImage(imageConfig.getName()));
+            String policyS = runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : this.imagePullPolicy;
+            ImagePullPolicy policy = policyS != null ? ImagePullPolicy.fromString(policyS) : ImagePullPolicy.IfNotPresent;
 
-            NetworkConfig config = runConfig.getNetworkingConfig();
+            RegistryContext registryContext = new MavenRegistryContext.Builder()
+                .pullRegistry(pullRegistry)
+                .authRegistryAuthFactory(registryAuthFactory)
+                .build();
+            hub.getRegistryService().pullImage(imageConfig.getName(), policy, registryContext);
+
+            NetworkConfiguration config = runConfig.getNetworkingConfig();
             List<String> bindMounts = extractBindMounts(runConfig.getVolumeConfiguration());
             List<VolumeConfiguration> volumes = getVolumes();
             if(!bindMounts.isEmpty() && volumes != null) {
@@ -364,18 +374,10 @@ public class StartMojo extends AbstractDockerMojo {
         return volumeConfiguration.getBind() != null ? volumeConfiguration.getBind() : Collections.emptyList();
     }
 
-    private String determinePullPolicy(RunImageConfiguration runConfig) {
-        return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
-    }
-
     private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {
-        List<String> ret = new ArrayList<>();
-        for (String alias : dependencies) {
-            if (imageAliases.contains(alias)) {
-                ret.add(alias);
-            }
-        }
-        return ret;
+        return dependencies.stream()
+            .filter(imageAliases::contains)
+            .collect(Collectors.toList());
     }
 
     private ExecutorService getExecutorService() {

@@ -3,22 +3,29 @@ package io.fabric8.maven.docker.util;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import com.google.common.base.*;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import io.fabric8.maven.docker.build.BuildContext;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Utility class for various (loosely related) environment related tasks.
@@ -86,16 +93,13 @@ public class EnvUtil {
         return largerVersion != null && largerVersion.equals(versionA);
     }
 
-    private static final Function<String, String[]> SPLIT_ON_LAST_COLON = new Function<String, String[]>() {
-        @Override
-        public String[] apply(String element) {
-          int colon = element.lastIndexOf(':');
-          if (colon < 0) {
-              return new String[] {element, element};
-          } else {
-              return new String[] {element.substring(0, colon), element.substring(colon + 1)};
-          }
-        }
+    private static final Function<String, String[]> SPLIT_ON_LAST_COLON = element -> {
+      int colon = element.lastIndexOf(':');
+      if (colon < 0) {
+          return new String[] {element, element};
+      } else {
+          return new String[] {element.substring(0, colon), element.substring(colon + 1)};
+      }
     };
 
     /**
@@ -107,64 +111,13 @@ public class EnvUtil {
      * @return return list of 2-element arrays or an empty list if the given list is empty or null
      */
     public static List<String[]> splitOnLastColon(List<String> listToSplit) {
-        if (listToSplit != null) {
-          return Lists.transform(listToSplit, SPLIT_ON_LAST_COLON);
-        }
-        return Collections.emptyList();
-    }
-
-    private static final Function<String, Iterable<String>> COMMA_SPLITTER = new Function<String, Iterable<String>>() {
-        private Splitter COMMA_SPLIT = Splitter.on(",").trimResults().omitEmptyStrings();
-
-        @Override
-        public Iterable<String> apply(String input) {
-            return COMMA_SPLIT.split(input);
-        }
-    };
-
-    private static final Predicate<String> NOT_EMPTY = new Predicate<String>() {
-        @Override
-        public boolean apply(@Nullable String s) {
-            return s!=null && !s.isEmpty();
-        }
-    };
-
-    private static final Function<String,String> TRIM = new Function<String,String>() {
-        @Nullable
-        @Override
-        public String apply(@Nullable String s) {
-            return s!=null ?s.trim() :s;
-        }
-    };
-
-    /**
-     * Remove empty members of a list.
-     * @param input A list of String
-     * @return A list of Non-Empty (length>0) String
-     */
-    @Nonnull
-    public static List<String> removeEmptyEntries(@Nullable List<String> input) {
-        if(input==null) {
+        if (listToSplit == null) {
             return Collections.emptyList();
         }
-        Iterable<String> trimmedInputs = Iterables.transform(input, TRIM);
-        Iterable<String> nonEmptyInputs = Iterables.filter(trimmedInputs, NOT_EMPTY);
-        return Lists.newArrayList(nonEmptyInputs);
+        return listToSplit.stream().map(SPLIT_ON_LAST_COLON).collect(Collectors.toList());
     }
 
-    /**
-     * Split each element of an Iterable<String> at commas.
-     * @param input Iterable over strings.
-     * @return An Iterable over string which breaks down each input element at comma boundaries
-     */
-    @Nonnull
-    public static List<String> splitAtCommasAndTrim(Iterable<String> input) {
-        if(input==null) {
-            return Collections.emptyList();
-        }
-        Iterable<String> nonEmptyInputs = Iterables.filter(input, Predicates.notNull());
-        return Lists.newArrayList(Iterables.concat(Iterables.transform(nonEmptyInputs, COMMA_SPLITTER)));
-    }
+
 
     public static String[] splitOnSpaceWithEscape(String toSplit) {
         String[] split = toSplit.split("(?<!" + Pattern.quote("\\") + ")\\s+");
@@ -174,7 +127,6 @@ public class EnvUtil {
         }
         return res;
     }
-
 
     /**
      * Join a list of objects to a string with a given separator by calling Object.toString() on the elements.
@@ -383,20 +335,20 @@ public class EnvUtil {
         return "https://" + registry;
     }
 
-    public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
-        return prepareAbsolutePath(params, new File(params.getOutputDirectory(), dir).toString(), path);
+    public static File prepareAbsoluteOutputDirPath(BuildContext ctx, String dir, String path) {
+        return prepareAbsolutePath(ctx, new File(ctx.getOutputDirectory(), dir).toString(), path);
     }
 
-    public static File prepareAbsoluteSourceDirPath(MojoParameters params, String path) {
-        return prepareAbsolutePath(params, params.getSourceDirectory(), path);
+    public static File prepareAbsoluteSourceDirPath(BuildContext ctx, String path) {
+        return prepareAbsolutePath(ctx, ctx.getSourceDirectory(), path);
     }
 
-    private static File prepareAbsolutePath(MojoParameters params, String directory, String path) {
+    private static File prepareAbsolutePath(BuildContext ctx, String directory, String path) {
         File file = new File(path);
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+        return new File(new File(ctx.getBasedir(), directory), path);
     }
 
     // create a timestamp file holding time in epoch seconds
@@ -432,35 +384,6 @@ public class EnvUtil {
 
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
-    }
-
-    /**
-     * Validate that the provided filename is a valid Windows filename.
-     *
-     * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
-     *
-     * @param filename the filename
-     * @return filename is a valid Windows filename
-     */
-    public static boolean isValidWindowsFileName(String filename) {
-
-        Pattern pattern = Pattern.compile(
-            "# Match a valid Windows filename (unspecified file system).          \n" +
-            "^                                # Anchor to start of string.        \n" +
-            "(?!                              # Assert filename is not: CON, PRN, \n" +
-            "  (?:                            # AUX, NUL, COM1, COM2, COM3, COM4, \n" +
-            "    CON|PRN|AUX|NUL|             # COM5, COM6, COM7, COM8, COM9,     \n" +
-            "    COM[1-9]|LPT[1-9]            # LPT1, LPT2, LPT3, LPT4, LPT5,     \n" +
-            "  )                              # LPT6, LPT7, LPT8, and LPT9...     \n" +
-            "  (?:\\.[^.]*)?                  # followed by optional extension    \n" +
-            "  $                              # and end of string                 \n" +
-            ")                                # End negative lookahead assertion. \n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F .]    # Last char is not a space or dot.  \n" +
-            "$                                # Anchor to end of string.            ",
-            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
-        Matcher matcher = pattern.matcher(filename);
-        return matcher.matches();
     }
 
 }

@@ -3,10 +3,11 @@ package io.fabric8.maven.docker;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.maven.docker.service.BuildService;
-import io.fabric8.maven.docker.util.MojoParameters;
+import io.fabric8.maven.docker.build.maven.MavenArchiveService;
+import io.fabric8.maven.docker.build.maven.MavenBuildContext;
+import io.fabric8.maven.docker.build.maven.MavenRegistryContext;
+import io.fabric8.maven.docker.config.build.ImagePullPolicy;
 import org.apache.maven.archiver.MavenArchiveConfiguration;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -25,41 +26,50 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     // See also here: http://maven.40175.n5.nabble.com/Mojo-Java-1-5-Component-MavenProject-returns-null-vs-JavaDoc-parameter-expression-quot-project-quot-s-td5733805.html
 
     @Parameter
-    private MavenArchiveConfiguration archive;
+    protected MavenArchiveConfiguration archive;
 
     @Component
-    private MavenFileFilter mavenFileFilter;
+    protected MavenFileFilter mavenFileFilter;
 
     @Component
-    private MavenReaderFilter mavenFilterReader;
+    protected MavenReaderFilter mavenReaderFilter;
 
     @Parameter
-    private Map<String, String> buildArgs;
+    protected Map<String, String> buildArgs;
 
     @Parameter(property = "docker.pull.registry")
-    private String pullRegistry;
+    protected String pullRegistry;
 
     @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
-    private String sourceDirectory;
+    protected String sourceDirectory;
 
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
-    private String outputDirectory;
+    protected String outputDirectory;
 
     @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
-    private List<MavenProject> reactorProjects;
+    protected List<MavenProject> reactorProjects;
 
 
-    protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
-        return new BuildService.BuildContext.Builder()
-                .buildArgs(buildArgs)
-                .mojoParameters(createMojoParameters())
-                .registryConfig(getRegistryConfig(pullRegistry))
-                .build();
+    protected MavenBuildContext getBuildContext(MavenArchiveService archiveService) {
+
+        MavenRegistryContext registryContext = new MavenRegistryContext.Builder()
+            .authRegistryAuthFactory(registryAuthFactory)
+            .defaultImagePullPolicy(imagePullPolicy != null ? ImagePullPolicy.fromString(imagePullPolicy) : null)
+            .pullRegistry(pullRegistry)
+            .build();
+
+        return new MavenBuildContext.Builder()
+            .project(project)
+            .sourceDirectory(sourceDirectory)
+            .outputDirectory(outputDirectory)
+            .session(session)
+            .settings(settings)
+            .mavenFileFilter(mavenFileFilter)
+            .mavenReaderFilter(mavenReaderFilter)
+            .reactorProjects(reactorProjects)
+            .archiveConfiguration(archive)
+            .archiveService(archiveService)
+            .registryContext(registryContext)
+            .build();
     }
-
-    protected MojoParameters createMojoParameters() {
-        return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
-                                  settings, sourceDirectory, outputDirectory, reactorProjects);
-    }
-
 }
