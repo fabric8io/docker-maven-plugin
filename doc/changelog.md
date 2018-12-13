@@ -1,20 +1,19 @@
 # ChangeLog
 
-* **0.27-SNAPSHOT**
+* **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
   - Compiles with Java 11
-  - Update to jnr-unixsocket version to 0.21 (#1089)
-  - Add 'readOnly' option for docker:run cto mount container's root fs read-only (#1125)
-  - Provide container properties to the wait configuration execution (#1111)
-  - Allow @sha256 digest for tags in FROM (#541)
+  - Update to jnr-unixsocket version to 0.21 ([#1089](https://github.com/fabric8io/docker-maven-plugin/issues/1089))
+  - Add 'readOnly' option for docker:run cto mount container's root fs read-only ([#1125](https://github.com/fabric8io/docker-maven-plugin/issues/1125))
+  - Provide container properties to the wait configuration execution ([#1111](https://github.com/fabric8io/docker-maven-plugin/issues/1111))
+  - Allow @sha256 digest for tags in FROM ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
 
 * **0.27.2** (2018-10-05)
-
-  - Fix NPE regression related to volumes (again) (#1091)
-  - Fix NPE when stopping containers with autoCreateCustomNetworks (#1097)
-  - Smarter API version handling (#1060)
-  - Fix regression when calling the credential helper for authentication, leading to an exception because of the usage of an already shutdown executor service (#1098)
-  - Add support for CPU configurations with compose (#1102)
+  - Fix NPE regression related to volumes (again) ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
+  - Fix NPE when stopping containers with autoCreateCustomNetworks ([#1097](https://github.com/fabric8io/docker-maven-plugin/issues/1097))
+  - Smarter API version handling ([#1060](https://github.com/fabric8io/docker-maven-plugin/issues/1060))
+  - Fix regression when calling the credential helper for authentication, leading to an exception because of the usage of an already shutdown executor service ([#1098](https://github.com/fabric8io/docker-maven-plugin/issues/1098))
+  - Add support for CPU configurations with compose ([#1102](https://github.com/fabric8io/docker-maven-plugin/issues/1102))
 
 * **0.27.1** (2018-09-28)
   - Fix NPE when no volume configuration is present ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
