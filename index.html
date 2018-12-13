@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.27.1,</span>
-<span id="revdate">2018-09-28</span>
+<span id="revnumber">version 0.28.0,</span>
+<span id="revdate">2018-12-13</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -845,7 +845,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.27.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.28.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1689,9 +1689,9 @@ Also, no interface needs to be implemented to keep the coupling low.</p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://github.com/fabric8io-images/run-java">run-java.sh</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://github.com/fabric8io-images/run-java-sh">run-java.sh</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>fabric8.io</code>, <code>run-java</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose startup script fo running Java applications. The dmp plugin creates a <code>target/docker-extra/run-java/run-java.sh</code> which can be included in a Dockerfile (see the example above). See the <a href="https://github.com/fabric8io-images/run-java">run-java.sh Documentation</a> for more details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose startup script fo running Java applications. The dmp plugin creates a <code>target/docker-extra/run-java/run-java.sh</code> which can be included in a Dockerfile (see the example above). See the <a href="https://github.com/fabric8io-images/run-java-sh">run-java.sh Documentation</a> for more details.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2580,6 +2580,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>privileged</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> give container full access to host</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>readOnly</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> mount the container&#8217;s root filesystem as read only</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-restart"><strong>restartPolicy</strong></a></p></td>
@@ -4212,6 +4216,18 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute. This is used both when running a container and as default command when creating an image.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cpus</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify how much of the available CPU resources a container can use</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cpuset</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Limit the container to specific CPUs or cores. This can be provided either as a comma-separated list or a hyphen-separated range.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cpushares</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the proportion of the host machine&#8217;s cpu cycles available to the container</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.domainname</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Container domain name</p></td>
 </tr>
@@ -4891,7 +4907,7 @@ Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</cod
 <div class="ulist">
 <ul>
 <li>
-<p><code>cgroup_parent</code>, <code>devices</code>, <code>env_file</code>, <code>expose</code>, <code>pid</code>, <code>security_opt</code>, <code>stop_signal</code>, <code>cpu_share</code>, <code>cpu_quota</code>, <code>cpuset</code>, <code>ipc</code>, <code>mac_address</code>, <code>read_only</code> are not yet supported (but might be in a future version).</p>
+<p><code>cgroup_parent</code>, <code>devices</code>, <code>env_file</code>, <code>expose</code>, <code>pid</code>, <code>security_opt</code>, <code>stop_signal</code>, <code>cpu_quota</code>, <code>ipc</code>, <code>mac_address</code>, <code>read_only</code> are not yet supported (but might be in a future version).</p>
 </li>
 <li>
 <p><code>extend</code> for including other Docker Compose files is not yet implemented.</p>
@@ -5313,8 +5329,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.27.1<br>
-Last updated 2018-09-28 19:10:23 UTC
+Version 0.28.0<br>
+Last updated 2018-12-13 19:49:10 UTC
 </div>
 </div>
 </body>
