@@ -10,7 +10,7 @@
   - Update to jnr-unixsocket 0.22
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
   - Support docker SHELL setting for runCmds (#1157)
-  - Add 'cacheFrom' option to specify images to use as cache sources (#1139)
+  - Add 'cacheFrom' option to specify images to use as cache sources ([#1132](https://github.com/fabric8io/docker-maven-plugin/issues/1132))
   - Added 'autoRemove' option for running containers (#1179)
   - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
   - Introduce `contextDir` configuration option which would be used to specify docker build context (#1189)
