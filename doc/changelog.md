@@ -10,6 +10,7 @@
   - Update to jnr-unixsocket 0.22
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
   - Support docker SHELL setting for runCmds (#1157)
+  - Add 'cacheFrom' option to specify images to use as cache sources (#1139)
   - Added 'autoRemove' option for running containers (#1179)
   - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
   - Introduce `contextDir` configuration option which would be used to specify docker build context (#1189)
@@ -27,6 +28,10 @@ Please note that `dockerFileDir` is now deprecated in favor of `contextDir` whic
   - Add 'readOnly' option for docker:run cto mount container's root fs read-only ([#1125](https://github.com/fabric8io/docker-maven-plugin/issues/1125))
   - Provide container properties to the wait configuration execution ([#1111](https://github.com/fabric8io/docker-maven-plugin/issues/1111))
   - Allow @sha256 digest for tags in FROM ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
+  - Update to jnr-unixsocket version to 0.21 (#1089)
+  - Add 'readOnly' option for docker:run cto mount container's root fs read-only (#1125)
+  - Provide container properties to the wait configuration execution (#1111)
+  - Allow @sha256 digest for tags in FROM (#541)
 
 * **0.27.2** (2018-10-05)
   - Fix NPE regression related to volumes (again) ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))

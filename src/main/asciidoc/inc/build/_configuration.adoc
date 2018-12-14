@@ -84,6 +84,9 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 | *nocache*
 | Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache` when running Maven.
 
+| *cacheFrom*
+| A list of `<image>` elements specifying images for docker to use as cache sources.
+
 | *optimise*
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
 
