@@ -56,16 +56,16 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "start", defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST)
 public class StartMojo extends AbstractDockerMojo {
 
-    @Parameter(property = "docker.showLogs")
+    @Parameter
     private String showLogs;
 
-    @Parameter(property = "docker.pull.registry")
+    @Parameter
     private String pullRegistry;
 
-    @Parameter(property = "docker.skip.run", defaultValue = "false")
+    @Parameter
     private boolean skipRun;
 
-    @Parameter(property = "docker.startParallel", defaultValue = "false")
+    @Parameter
     private boolean startParallel;
 
     // whether to block during to start. Set it via System property docker.follow
@@ -84,19 +84,19 @@ public class StartMojo extends AbstractDockerMojo {
      *
      * If set to an empty string, no properties are exposed.
      */
-    @Parameter(property = "docker.exposeContainerInfo")
+    @Parameter
     private String exposeContainerProps = "docker.container";
 
     /**
      * Naming pattern for how to name containers when started
      */
-    @Parameter(property = "docker.containerNamePattern")
+    @Parameter
     private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
-    @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
+    @Parameter
     protected boolean autoCreateCustomNetworks;
 
     // property file to write out with port mappings
@@ -120,7 +120,7 @@ public class StartMojo extends AbstractDockerMojo {
     public synchronized void executeInternal(final ServiceHub hub) throws DockerAccessException,
                                                                           ExecException,
                                                                           MojoExecutionException {
-        if (skipRun) {
+        if (getSkipRun()) {
             return;
         }
         getPluginContext().put(CONTEXT_KEY_START_CALLED, true);
@@ -152,7 +152,7 @@ public class StartMojo extends AbstractDockerMojo {
             // Prepare the shutdown hook for stopping containers if we are going to follow them.  Add the hook before starting any
             // of the containers so that partial or aborted starts will behave the same as fully-successful ones.
             if (follow) {
-                runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
+                runService.addShutdownHookForStoppingContainers(getKeepContainer(), getRemoveVolumes(), getAutoCreateCustomNetworks());
             }
 
             // Loop until every image has been started and the start of all images has been completed
@@ -169,12 +169,12 @@ public class StartMojo extends AbstractDockerMojo {
                     imagesStarting.add(image);
                     imagesWaitingToStart.remove(image);
 
-                    if (!startParallel) {
+                    if (!getStartParallel()) {
                         waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
                     }
                 }
 
-                if (startParallel) {
+                if (getStartParallel()) {
                     waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
                 }
             }
@@ -198,9 +198,14 @@ public class StartMojo extends AbstractDockerMojo {
             // Rollback if not all could be started
             if (!success) {
                 log.error("Error occurred during container startup, shutting down...");
-                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, getGavLabel());
+                runService.stopStartedContainers(getKeepContainer(), getRemoveVolumes(), getAutoCreateCustomNetworks(), getGavLabel());
             }
         }
+    }
+
+    @Override
+    public String getPrefix() {
+        return "docker.";
     }
 
     private void waitForStartedContainer(
@@ -279,7 +284,7 @@ public class StartMojo extends AbstractDockerMojo {
         final LogDispatcher dispatcher = getLogDispatcher(hub);
 
         StartContainerExecutor startExecutor = new StartContainerExecutor.Builder()
-            .exposeContainerProps(exposeContainerProps)
+            .exposeContainerProps(getExposeContainerProps())
             .dispatcher(dispatcher)
             .follow(follow)
             .log(log)
@@ -290,8 +295,8 @@ public class StartMojo extends AbstractDockerMojo {
             .imageConfig(imageConfig)
             .serviceHub(hub)
             .logOutputSpecFactory(serviceHubFactory.getLogOutputSpecFactory())
-            .showLogs(showLogs)
-            .containerNamePattern(containerNamePattern)
+            .showLogs(getShowLogs())
+            .containerNamePattern(getContainerNamePattern())
             .buildTimestamp(getBuildTimestamp())
             .build();
 
@@ -336,8 +341,8 @@ public class StartMojo extends AbstractDockerMojo {
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
 
-            RegistryService.RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-            ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), autoPull);
+            RegistryService.RegistryConfig registryConfig = getRegistryConfig(getPullRegistry());
+            ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), getAutoPull());
 
             hub.getRegistryService().pullImageWithPolicy(imageConfig.getName(), pullManager, registryConfig,
                                                          queryService.hasImage(imageConfig.getName()));
@@ -348,7 +353,7 @@ public class StartMojo extends AbstractDockerMojo {
             if(!bindMounts.isEmpty() && volumes != null) {
                 runService.createVolumesAsPerVolumeBinds(hub, bindMounts, volumes);
             }
-            if (autoCreateCustomNetworks && config.isCustomNetwork()) {
+            if (getAutoCreateCustomNetworks() && config.isCustomNetwork()) {
                 runService.createCustomNetworkIfNotExistant(config.getCustomNetwork());
             }
             imagesWaitingToStart.add(imageConfig);
@@ -365,7 +370,7 @@ public class StartMojo extends AbstractDockerMojo {
     }
 
     private String determinePullPolicy(RunImageConfiguration runConfig) {
-        return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
+        return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : getImagePullPolicy();
     }
 
     private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {
@@ -380,7 +385,7 @@ public class StartMojo extends AbstractDockerMojo {
 
     private ExecutorService getExecutorService() {
         final ExecutorService executorService;
-        if (startParallel) {
+        if (getStartParallel()) {
             executorService = Executors.newCachedThreadPool();
         } else {
             executorService = MoreExecutors.newDirectExecutorService();
@@ -388,4 +393,31 @@ public class StartMojo extends AbstractDockerMojo {
         return executorService;
     }
 
+    private String getShowLogs() {
+        return getProperty("showLogs");
+    }
+
+    private String getPullRegistry() {
+        return getProperty("pull.registry");
+    }
+
+    private boolean getSkipRun() {
+        return Boolean.parseBoolean(getProperty("skip.run", "false"));
+    }
+
+    private boolean getStartParallel() {
+        return Boolean.parseBoolean(getProperty("startParallel", "false"));
+    }
+
+    private String getExposeContainerProps() {
+        return getProperty("exposeContainerInfo", "docker.container");
+    }
+
+    private String getContainerNamePattern() {
+        return getProperty("containerNamePattern", ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN);
+    }
+
+    private boolean getAutoCreateCustomNetworks() {
+        return Boolean.parseBoolean(getProperty("autoCreateCustomNetworks", "false"));
+    }
 }

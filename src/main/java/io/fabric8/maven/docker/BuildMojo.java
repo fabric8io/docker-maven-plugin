@@ -34,21 +34,21 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     public static final String DMP_PLUGIN_DESCRIPTOR = "META-INF/maven/io.fabric8/dmp-plugin";
     public static final String DOCKER_EXTRA_DIR = "docker-extra";
 
-    @Parameter(property = "docker.skip.build", defaultValue = "false")
+    @Parameter
     protected boolean skipBuild;
 
-    @Parameter(property = "docker.name", defaultValue = "")
+    @Parameter
     protected String name;
 
     /**
      * Skip building tags
      */
-    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    @Parameter
     protected boolean skipTag;
 
     @Override
     protected void executeInternal(ServiceHub hub) throws IOException, MojoExecutionException {
-        if (skipBuild) {
+        if (getSkipBuild()) {
             return;
         }
 
@@ -61,17 +61,22 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         }
     }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
+
     protected void buildAndTag(ServiceHub hub, ImageConfiguration imageConfig)
             throws MojoExecutionException, IOException {
 
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
         BuildService.BuildContext buildContext = getBuildContext();
-        ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), autoPull);
+        ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), getAutoPull());
         BuildService buildService = hub.getBuildService();
 
         buildService.buildImage(imageConfig, pullManager, buildContext);
-        if (!skipTag) {
+        if (!getSkipTag()) {
             buildService.tagImage(imageConfig.getName(), imageConfig);
         }
     }
@@ -82,8 +87,21 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     protected Date getReferenceDate() {
         return new Date();
     }
+
+    protected boolean getSkipBuild() {
+        return Boolean.parseBoolean(getProperty("skip.build"));
+    }
+
+    protected String getName() {
+        return getProperty("name", "");
+    }
+
+    protected boolean getSkipTag() {
+        return Boolean.parseBoolean(getProperty("skip.tag"));
+    }
+
     private String determinePullPolicy(BuildImageConfiguration buildConfig) {
-        return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : imagePullPolicy;
+        return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : getImagePullPolicy();
     }
 
     /**

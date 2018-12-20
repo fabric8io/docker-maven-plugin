@@ -46,17 +46,17 @@ import java.util.List;
 public class RemoveMojo extends AbstractDockerMojo {
 
     // Should all configured images should be removed?
-    @Parameter(property = "docker.removeAll")
+    @Parameter
     @Deprecated
     private Boolean removeAll;
 
-    @Parameter(property = "docker.removeMode")
+    @Parameter
     private String removeMode;
     
     /** 
      * Skip building tags
      */
-    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    @Parameter
     private boolean skipTag;
     
     @Override
@@ -67,7 +67,7 @@ public class RemoveMojo extends AbstractDockerMojo {
             if (imageShouldBeRemoved(image)) {
                 removeImage(hub, name);
 
-                if(!skipTag) {
+                if(!getSkipTag()) {
                     // Remove any tagged images
                     for (String tag: getImageBuildTags(image)){
                         removeImage(hub, new ImageName(name, tag).getFullName());
@@ -77,21 +77,26 @@ public class RemoveMojo extends AbstractDockerMojo {
         }
     }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
+
     private boolean imageShouldBeRemoved(ImageConfiguration image) {
-        if ("all".equalsIgnoreCase(removeMode)) {
+        if ("all".equalsIgnoreCase(getRemoveMode())) {
             return true;
         }
-        if ("build".equalsIgnoreCase(removeMode)) {
+        if ("build".equalsIgnoreCase(getRemoveMode())) {
             return image.getBuildConfiguration() != null;
         }
-        if ("run".equalsIgnoreCase(removeMode)) {
+        if ("run".equalsIgnoreCase(getRemoveMode())) {
             return image.getRegistry() != null;
         }
-        if ("data".equalsIgnoreCase(removeMode)) {
+        if ("data".equalsIgnoreCase(getRemoveMode())) {
             return image.isDataImage();
         }
-        if (removeAll != null) {
-            return removeAll || image.isDataImage();
+        if (getRemoveAll() != null) {
+            return getRemoveAll() || image.isDataImage();
         }
         // Default
         return image.getBuildConfiguration() != null;
@@ -110,5 +115,17 @@ public class RemoveMojo extends AbstractDockerMojo {
         return image.getBuildConfiguration() != null ?
             image.getBuildConfiguration().getTags() :
             Collections.<String>emptyList();
+    }
+
+    private Boolean getRemoveAll() {
+        return Boolean.parseBoolean(getProperty("removeAll"));
+    }
+
+    private String getRemoveMode() {
+        return getProperty("removeMode");
+    }
+
+    private boolean getSkipTag() {
+        return Boolean.parseBoolean(getProperty("skip.tag", "false"));
     }
 }

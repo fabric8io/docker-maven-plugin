@@ -17,30 +17,51 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class PushMojo extends AbstractDockerMojo {
 
     // Registry to use for push operations if no registry is specified
-    @Parameter(property = "docker.push.registry")
+    @Parameter
     private String pushRegistry;
 
-    @Parameter(property = "docker.skip.push", defaultValue = "false")
+    @Parameter
     private boolean skipPush;
     
     /** 
      * Skip building tags
      */
-    @Parameter(property = "docker.skip.tag", defaultValue = "false")
+    @Parameter
     private boolean skipTag;
     
-    @Parameter(property = "docker.push.retries", defaultValue = "0")
+    @Parameter
     private int retries;
+
+    private String getPushRegistry() {
+        return getProperty("push.registry");
+    }
+
+    private boolean getSkipPush() {
+        return Boolean.parseBoolean(getProperty("skip.push"));
+    }
+
+    private boolean getSkipTag() {
+        return Boolean.parseBoolean(getProperty("skip.tag"));
+    }
+
+    private int getRetries() {
+        return Integer.parseInt(getProperty("push.retries", "0"));
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (skipPush) {
+        if (getSkipPush()) {
             return;
         }
 
-        hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+        hub.getRegistryService().pushImages(getResolvedImages(), getRetries(), getRegistryConfig(getPushRegistry()), getSkipTag());
+    }
+
+    @Override
+    public String getPrefix() {
+        return "docker.";
     }
 }

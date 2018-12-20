@@ -39,25 +39,25 @@ import org.apache.maven.plugins.annotations.Parameter;
 @Mojo(name = "stop", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractDockerMojo {
 
-    @Parameter(property = "docker.keepRunning", defaultValue = "false")
+    @Parameter
     private boolean keepRunning;
 
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
-    @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
+    @Parameter
     protected boolean autoCreateCustomNetworks;
 
-    @Parameter( property = "docker.allContainers", defaultValue = "false" )
+    @Parameter
     private boolean allContainers;
 
-    @Parameter( property = "docker.sledgeHammer", defaultValue = "false" )
+    @Parameter
     private boolean sledgeHammer;
 
     /**
      * Naming pattern for how to name containers when started
      */
-    @Parameter(property = "docker.containerNamePattern")
+    @Parameter
     private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     @Override
@@ -67,9 +67,9 @@ public class StopMojo extends AbstractDockerMojo {
 
         GavLabel gavLabel = getGavLabel();
 
-        if (!keepRunning) {
+        if (!getKeepRunning()) {
             if (invokedTogetherWithDockerStart()) {
-                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, gavLabel);
+                runService.stopStartedContainers(getKeepContainer(), getRemoveVolumes(), getAutoCreateCustomNetworks(), gavLabel);
             } else {
                 stopContainers(queryService, runService, gavLabel);
             }
@@ -80,18 +80,23 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
+
     private void stopContainers(QueryService queryService, RunService runService, GavLabel gavLabel) throws IOException, ExecException {
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, gavLabel);
         for (ImageConfiguration image : getResolvedImages()) {
 
             Collection<Container> existingContainers =
                 ContainerNamingUtil.getContainersToStop(image,
-                                                        containerNamePattern,
+                                                        getContainerNamePattern(),
                                                         getBuildTimestamp(),
                                                         queryService.getContainersForImage(image.getName(), false));
             for (Container container : existingContainers) {
                 if (shouldStopContainer(container, gavLabel)) {
-                    runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
+                    runService.stopContainer(container.getId(), image, getKeepContainer(), getRemoveVolumes());
                 }
             }
         }
@@ -108,7 +113,7 @@ public class StopMojo extends AbstractDockerMojo {
     }
 
     private boolean isStopAllContainers() {
-        return (allContainers || sledgeHammer);
+        return (getAllContainers() || getSledgeHammer());
     }
 
     private boolean invokedTogetherWithDockerStart() {
@@ -117,7 +122,7 @@ public class StopMojo extends AbstractDockerMojo {
     }
 
     private Set<Network> getNetworksToRemove(QueryService queryService, GavLabel gavLabel) throws IOException {
-        if (!autoCreateCustomNetworks) {
+        if (!getAutoCreateCustomNetworks()) {
             return Collections.emptySet();
         }
         Set<Network> customNetworks = new HashSet<>();
@@ -136,7 +141,7 @@ public class StopMojo extends AbstractDockerMojo {
             customNetworks.add(network);
             Collection<Container> existingContainers =
                 ContainerNamingUtil.getContainersToStop(image,
-                                                        containerNamePattern,
+                                                        getContainerNamePattern(),
                                                         getBuildTimestamp(),
                                                         queryService.getContainersForImage(image.getName(), false));
 
@@ -157,5 +162,25 @@ public class StopMojo extends AbstractDockerMojo {
             }
         }
         return null;
+    }
+
+    private boolean getKeepRunning() {
+        return Boolean.parseBoolean(getProperty("keepRunning", "false"));
+    }
+
+    private boolean getAutoCreateCustomNetworks() {
+        return Boolean.parseBoolean(getProperty("autoCreateCustomNetworks", "false"));
+    }
+
+    private boolean getAllContainers() {
+        return Boolean.parseBoolean(getProperty("allContainers", "false"));
+    }
+
+    private boolean getSledgeHammer() {
+        return Boolean.parseBoolean(getProperty("sledgeHammer", "false"));
+    }
+
+    private String getContainerNamePattern() {
+        return getProperty("containerNamePattern", ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN);
     }
 }

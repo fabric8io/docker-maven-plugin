@@ -46,31 +46,31 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     /**
      * Watching mode for rebuilding images
      */
-    @Parameter(property = "docker.watchMode", defaultValue = "both")
+    @Parameter
     private WatchMode watchMode;
 
-    @Parameter(property = "docker.watchInterval", defaultValue = "5000")
+    @Parameter
     private int watchInterval;
 
-    @Parameter(property = "docker.keepRunning", defaultValue = "false")
+    @Parameter
     private boolean keepRunning;
 
-    @Parameter(property = "docker.watchPostGoal")
+    @Parameter
     private String watchPostGoal;
 
-    @Parameter(property = "docker.watchPostExec")
+    @Parameter
     private String watchPostExec;
 
     /**
      * Naming pattern for how to name containers when started
      */
-    @Parameter(property = "docker.containerNamePattern")
+    @Parameter
     private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
 
     /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
-    @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
+    @Parameter
     protected boolean autoCreateCustomNetworks;
 
     @Override
@@ -83,17 +83,23 @@ public class WatchMojo extends AbstractBuildSupportMojo {
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages());
     }
 
+
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
+
     protected WatchService.WatchContext getWatchContext(ServiceHub hub) throws IOException {
         return new WatchService.WatchContext.Builder()
-                .watchInterval(watchInterval)
-                .watchMode(watchMode)
-                .watchPostGoal(watchPostGoal)
-                .watchPostExec(watchPostExec)
-                .autoCreateCustomNetworks(autoCreateCustomNetworks)
-                .keepContainer(keepContainer)
-                .keepRunning(keepRunning)
-                .removeVolumes(removeVolumes)
-                .containerNamePattern(containerNamePattern)
+                .watchInterval(getWatchInterval())
+                .watchMode(getWatchMode())
+                .watchPostGoal(getWatchPostGoal())
+                .watchPostExec(getWatchPostExec())
+                .autoCreateCustomNetworks(getAutoCreateCustomNetworks())
+                .keepContainer(getKeepContainer())
+                .keepRunning(getKeepRunning())
+                .removeVolumes(getRemoveVolumes())
+                .containerNamePattern(getContainerNamePattern())
                 .buildTimestamp(getBuildTimestamp())
                 .pomLabel(getGavLabel())
                 .mojoParameters(createMojoParameters())
@@ -111,5 +117,41 @@ public class WatchMojo extends AbstractBuildSupportMojo {
 
     private boolean follow() {
         return Boolean.valueOf(System.getProperty("docker.follow", "false"));
+    }
+
+    private WatchMode getWatchMode() {
+        String value = getProperty("watchMode", "both");
+        switch(value) {
+            case "build": return WatchMode.build;
+            case "copy" : return WatchMode.copy;
+            case "run"  : return WatchMode.run;
+            case "both" : return WatchMode.both;
+            case "none" : return WatchMode.none;
+            default     : return WatchMode.both;
+        }
+    }
+
+    private int getWatchInterval() {
+        return Integer.parseInt(getProperty("watchInterval", "5000"));
+    }
+
+    private boolean getKeepRunning() {
+        return Boolean.parseBoolean(getProperty("keepRunning"));
+    }
+
+    private String getWatchPostGoal() {
+        return getProperty("watchPostGoal");
+    }
+
+    private String getWatchPostExec() {
+        return getProperty("watchPostExec");
+    }
+
+    private String getContainerNamePattern() {
+        return getProperty("containerNamePattern", ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN);
+    }
+
+    private Boolean getAutoCreateCustomNetworks() {
+        return Boolean.parseBoolean(getProperty("autoCreateCustomNetworks"));
     }
 }

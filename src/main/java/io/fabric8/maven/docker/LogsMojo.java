@@ -14,7 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Mojo for printing logs of a container. By default the logs of all containers are shown interwoven
- * with the time occured. The log output can be highly customized in the plugin configuration, please
+ * with the time occurred. The log output can be highly customized in the plugin configuration, please
  * refer to the reference manual for documentation.
  *
  * This Mojo is intended for standalone usage. See {@link StartMojo} for how to enabling logging when
@@ -28,11 +28,11 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class LogsMojo extends AbstractDockerMojo {
 
     // Whether to log infinitely or to show only the logs happened until now.
-    @Parameter(property = "docker.follow", defaultValue = "false")
+    @Parameter
     private boolean follow;
 
     // Whether to log all containers or only the newest ones
-    @Parameter(property = "docker.logAll", defaultValue = "false")
+    @Parameter
     private boolean logAll;
 
     @Override
@@ -42,7 +42,7 @@ public class LogsMojo extends AbstractDockerMojo {
 
         for (ImageConfiguration image : getResolvedImages()) {
             String imageName = image.getName();
-            if (logAll) {
+            if (getLogAll()) {
                 for (Container container : queryService.getContainersForImage(imageName, false)) {
                     doLogging(logDispatcher, image, container.getId());
                 }
@@ -53,15 +53,20 @@ public class LogsMojo extends AbstractDockerMojo {
                 }
             }
         }
-        if (follow) {
+        if (getFollow()) {
             // Block forever ....
             waitForEver();
         }
     }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
+
     private void doLogging(LogDispatcher logDispatcher, ImageConfiguration imageConfig, String container) {
         LogOutputSpec spec = serviceHubFactory.getLogOutputSpecFactory().createSpec(container, imageConfig);
-        if (follow) {
+        if (getFollow()) {
             logDispatcher.trackContainerLog(container, spec);
         } else {
             logDispatcher.fetchContainerLog(container, spec);
@@ -76,5 +81,13 @@ public class LogsMojo extends AbstractDockerMojo {
                 // sleep again
             }
         }
+    }
+
+    private boolean getFollow() {
+        return Boolean.parseBoolean(getProperty("follow", "false"));
+    }
+
+    private boolean getLogAll() {
+        return Boolean.parseBoolean(getProperty("logAll", "false"));
     }
 }

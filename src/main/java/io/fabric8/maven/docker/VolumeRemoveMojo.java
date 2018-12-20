@@ -33,4 +33,8 @@ public class VolumeRemoveMojo extends AbstractDockerMojo {
        }
    }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
 }

@@ -26,16 +26,16 @@ public class SaveMojo extends AbstractDockerMojo {
 	@Component
 	private MavenProjectHelper projectHelper;
 
-	@Parameter(property = "docker.save.name")
+	@Parameter
 	private String saveName;
 
-	@Parameter(property = "docker.save.alias")
+	@Parameter
 	private String saveAlias;
 
 	@Parameter
 	private String saveFile;
 
-	@Parameter(property = "docker.skip.save", defaultValue = "false")
+	@Parameter
 	private boolean skipSave;
 
 	@Override
@@ -53,6 +53,11 @@ public class SaveMojo extends AbstractDockerMojo {
 
 		serviceHub.getDockerAccess().saveImage(imageName, fileName, ArchiveCompression.fromFileName(fileName));
 
+	}
+
+	@Override
+	public String getPrefix() {
+		return "docker.";
 	}
 
 	private String getFileName(String iName) throws MojoExecutionException {
@@ -135,5 +140,17 @@ public class SaveMojo extends AbstractDockerMojo {
 
 	private boolean equalName(ImageConfiguration ic) {
 		return saveName != null && saveName.equals(ic.getName());
+	}
+
+	private String getSaveName() {
+		return getProperty("save.name");
+	}
+
+	private String getSaveAlias() {
+		return getProperty("save.alias");
+	}
+
+	private boolean getSkipSave() {
+		return Boolean.parseBoolean(getProperty("skip.save", "false"));
 	}
 }

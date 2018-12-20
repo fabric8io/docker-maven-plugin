@@ -89,56 +89,56 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Component
     protected DockerAccessFactory dockerAccessFactory;
 
-    @Parameter(property = "docker.autoPull")
+    @Parameter
     protected String autoPull;
 
-    @Parameter(property = "docker.imagePullPolicy")
+    @Parameter
     protected String imagePullPolicy;
 
     // Whether to keep the containers afters stopping (start/watch/stop)
-    @Parameter(property = "docker.keepContainer", defaultValue = "false")
+    @Parameter
     protected boolean keepContainer;
 
     // Whether to remove volumes when removing the container (start/watch/stop)
-    @Parameter(property = "docker.removeVolumes", defaultValue = "false")
+    @Parameter
     protected boolean removeVolumes;
 
-    @Parameter(property = "docker.apiVersion")
+    @Parameter
     private String apiVersion;
 
     /**
      * URL to docker daemon
      */
-    @Parameter(property = "docker.host")
+    @Parameter
     private String dockerHost;
 
-    @Parameter(property = "docker.certPath")
+    @Parameter
     private String certPath;
 
     // Whether to use color
-    @Parameter(property = "docker.useColor", defaultValue = "true")
+    @Parameter
     protected boolean useColor;
 
     // For verbose output
-    @Parameter(property = "docker.verbose", defaultValue = "false")
+    @Parameter
     protected boolean verbose;
 
     // The date format to use when putting out logs
-    @Parameter(property = "docker.logDate")
+    @Parameter
     private String logDate;
 
     // Log to stdout regardless if log files are configured or not
-    @Parameter(property = "docker.logStdout", defaultValue = "false")
+    @Parameter
     private boolean logStdout;
 
     // Whether to skip docker altogether
-    @Parameter(property = "docker.skip", defaultValue = "false")
+    @Parameter
     private boolean skip;
 
     /**
-     * Whether the usage of docker machine should be skipped competely
+     * Whether the usage of docker machine should be skipped completely
      */
-    @Parameter(property = "docker.skip.machine", defaultValue = "false")
+    @Parameter
     private boolean skipMachine;
 
     /**
@@ -146,21 +146,21 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * the image or an alias name. It can also be comma separated list.
      * This parameter has to be set via the command line s system property.
      */
-    @Parameter(property = "docker.filter")
+    @Parameter
     private String filter;
 
     // Default registry to use if no registry is specified
-    @Parameter(property = "docker.registry")
+    @Parameter
     protected String registry;
 
     /**
      * Skip extended authentication
      */
-    @Parameter(property = "docker.skip.extendedAuth", defaultValue = "false")
+    @Parameter
     protected boolean skipExtendedAuth;
 
     // maximum connection to use in parallel for connecting the docker host
-    @Parameter(property = "docker.maxConnections", defaultValue = "100")
+    @Parameter
     private int maxConnections;
 
     // Authentication information
@@ -194,6 +194,74 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     private String minimalApiVersion;
 
+    protected String getAutoPull() {
+        return getProperty("autoPull");
+    }
+
+    protected String getImagePullPolicy() {
+        return getProperty("imagePullPolicy");
+    }
+
+    protected boolean getKeepContainer() {
+        return Boolean.parseBoolean(getProperty("keepContainer", "false"));
+    }
+
+    protected boolean getRemoveVolumes() {
+        return Boolean.parseBoolean(getProperty("removeVolumes", "false"));
+    }
+
+    private String getApiVersion() {
+        return getProperty("apiVersion");
+    }
+
+    private String getDockerHost() {
+        return getProperty("host");
+    }
+
+    private String getCertPath() {
+        return getProperty("certPath");
+    }
+
+    protected boolean getUseColor() {
+        return Boolean.parseBoolean(getProperty("useColor", "true"));
+    }
+
+    protected boolean getVerbose() {
+        return Boolean.parseBoolean(getProperty("verbose", "false"));
+    }
+
+    private String getLogDate() {
+        return getProperty("logDate");
+    }
+
+    private boolean getLogStdout() {
+        return Boolean.parseBoolean(getProperty("logStdout", "false"));
+    }
+
+    private boolean getSkip() {
+        return Boolean.parseBoolean(getProperty("skip", "false"));
+    }
+
+    private boolean getSkipMachine() {
+        return Boolean.parseBoolean(getProperty("skip.machine", "false"));
+    }
+
+    private String getFilter() {
+        return getProperty("filter");
+    }
+
+    private String getRegistry() {
+        return getProperty("registry");
+    }
+
+    protected boolean getSkipExtendedAuth() {
+        return Boolean.parseBoolean(getProperty("skip.extendedAuth", "false"));
+    }
+
+    private int getMaxConnections() {
+        return Integer.parseInt(getProperty("maxConnections", "100"));
+    }
+
     /**
      * Entry point for this plugin. It will set up the helper class and then calls
      * {@link #executeInternal(ServiceHub)}
@@ -204,12 +272,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (!skip) {
-            log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
+        if (!getSkip()) {
+            log = new AnsiLogger(getLog(), getUseColor(), getVerbose(), !settings.getInteractiveMode(), getLogPrefix());
             authConfigFactory.setLog(log);
             imageConfigResolver.setLog(log);
 
-            LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
+            LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(getUseColor(), getLogStdout(), getLogDate());
 
             ConfigHelper.validateExternalPropertyActivation(project, images);
 
@@ -237,6 +305,23 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
     }
 
+    public String getProperty(String propertyName, String defaultValue) {
+        String value = getProperty(propertyName);
+        return value != null ? value : defaultValue;
+    }
+
+    public String getProperty(String propertyName) {
+        String key = getPrefix() + propertyName;
+        if(System.getProperty(key) != null) {
+            return System.getProperty(key);
+        }
+        if(project.getProperties().getProperty(key) != null) {
+            return project.getProperties().getProperty(key);
+        }
+        return null;
+    }
+
+
     private void logException(Exception exp) {
         if (exp.getCause() != null) {
             log.error("%s [%s]", exp.getMessage(), exp.getCause().getMessage());
@@ -247,13 +332,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     protected DockerAccessFactory.DockerAccessContext getDockerAccessContext() {
         return new DockerAccessFactory.DockerAccessContext.Builder()
-                .dockerHost(dockerHost)
-                .certPath(certPath)
+                .dockerHost(getDockerHost())
+                .certPath(getCertPath())
                 .machine(machine)
-                .maxConnections(maxConnections)
+                .maxConnections(getMaxConnections())
                 .minimalApiVersion(minimalApiVersion)
                 .projectProperties(project.getProperties())
-                .skipMachine(skipMachine)
+                .skipMachine(getSkipMachine())
                 .log(log)
                 .build();
     }
@@ -263,8 +348,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .settings(settings)
                 .authConfig(authConfig != null ? authConfig.toMap() : null)
                 .authConfigFactory(authConfigFactory)
-                .skipExtendedAuth(skipExtendedAuth)
-                .registry(specificRegistry != null ? specificRegistry : registry)
+                .skipExtendedAuth(getSkipExtendedAuth())
+                .registry(specificRegistry != null ? specificRegistry : getRegistry())
                 .build();
     }
 
@@ -314,7 +399,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                         return imageConfigResolver.resolve(image, project, session);
                     }
                 },
-           filter,                   // A filter which image to process
+           getFilter(),                   // A filter which image to process
             this);                     // customizer (can be overwritten by a subclass)
 
         // Check for simple Dockerfile mode
@@ -328,7 +413,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         }
 
         // Initialize configuration and detect minimal API version
-        return ConfigHelper.initAndValidate(resolvedImages, apiVersion, new ImageNameFormatter(project, buildTimeStamp), log);
+        return ConfigHelper.initAndValidate(resolvedImages, getApiVersion(), new ImageNameFormatter(project, buildTimeStamp), log);
     }
 
     // Customization hook for subclasses to influence the final configuration. This method is called
@@ -355,6 +440,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     protected abstract void executeInternal(ServiceHub serviceHub)
         throws IOException, ExecException, MojoExecutionException;
+
+    public abstract String getPrefix();
 
     // =============================================================================================
 

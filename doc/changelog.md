@@ -1,5 +1,8 @@
 # ChangeLog
 
+* 0.27-SNAPSHOT
+  - Refactor Mojos to get rid of direct member field access of @Parameter properties, (Related to https://github.com/fabric8io/fabric8-maven-plugin/issues/215)
+
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
   - Compiles with Java 11

@@ -36,30 +36,45 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter
     private Map<String, String> buildArgs;
 
-    @Parameter(property = "docker.pull.registry")
+    @Parameter
     private String pullRegistry;
 
-    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
+    @Parameter
     private String sourceDirectory;
 
-    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
+    @Parameter
     private String outputDirectory;
 
     @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
     private List<MavenProject> reactorProjects;
 
+    private String getPullRegistry() {
+        return getProperty("pull.registry");
+    }
+
+    private String getSourceDirectory() {
+        return getProperty("source.dir", "src/main/docker");
+    }
+
+    private String getOutputDirectory() {
+        return getProperty("target.dir", "target/docker");
+    }
 
     protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
         return new BuildService.BuildContext.Builder()
                 .buildArgs(buildArgs)
                 .mojoParameters(createMojoParameters())
-                .registryConfig(getRegistryConfig(pullRegistry))
+                .registryConfig(getRegistryConfig(getPullRegistry()))
                 .build();
     }
 
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
-                                  settings, sourceDirectory, outputDirectory, reactorProjects);
+                                  settings, getSourceDirectory(), getOutputDirectory(), reactorProjects);
     }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
 }

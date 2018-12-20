@@ -97,6 +97,11 @@ public class SourceMojo extends AbstractBuildSupportMojo {
         }
     }
 
+    @Override
+    public String getPrefix() {
+        return "docker.";
+    }
+
     private String getClassifier(String alias) {
         String packaging = project.getPackaging();
         if ("docker-tar".equalsIgnoreCase(packaging)) {
