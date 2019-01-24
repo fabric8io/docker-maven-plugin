@@ -28,6 +28,7 @@ public class DockerFileBuilderTest {
                 .workdir("/tmp")
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
                 .volumes(Collections.singletonList("/vol1"))
+                .shell(Arrays.asList("/bin/sh", "-c"))
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");

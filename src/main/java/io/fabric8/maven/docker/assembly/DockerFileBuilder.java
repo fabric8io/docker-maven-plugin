@@ -56,6 +56,9 @@ public class DockerFileBuilder {
     // list of ports to expose and environments to use
     private List<String> ports = new ArrayList<>();
 
+    // SHELL executable and params to be used with the runCmds see issue #1156 on github
+    private List<String> shellParams = new ArrayList<>();
+
     // list of RUN Commands to run along with image build see issue #191 on github
     private List<String> runCmds = new ArrayList<>();
 
@@ -106,6 +109,7 @@ public class DockerFileBuilder {
 
         addCopy(b);
         addWorkdir(b);
+        addShell(b);
         addRun(b);
         addVolumes(b);
 
@@ -306,6 +310,13 @@ public class DockerFileBuilder {
         }
     }
 
+    private void addShell(StringBuilder b) {
+        if (!shellParams.isEmpty()) {
+            String shell = "[\""  + JOIN_ON_COMMA.join(shellParams.iterator()) + "\"]";
+            DockerFileKeyword.SHELL.addTo(b, true, shell);
+        }
+    }
+
 	private void addRun(StringBuilder b) {
 		for (String run : runCmds) {
             DockerFileKeyword.RUN.addTo(b, run);
@@ -398,6 +409,23 @@ public class DockerFileBuilder {
         if (ports != null) {
             this.ports.addAll(ports);
         }
+        return this;
+    }
+
+    /**
+     * Adds the SHELL Command plus params within the build image section
+     * @param shellParams
+     * @return
+     */
+    public DockerFileBuilder shell(List<String> shellParams) {
+        if (shellParams != null) {
+            for (String param : shellParams) {
+                if (!StringUtils.isEmpty(param)) {
+                    this.shellParams.add(param);
+                }
+            }
+        }
+
         return this;
     }
 
