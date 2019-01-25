@@ -78,7 +78,7 @@ public class BuildImageConfiguration implements Serializable {
      * SHELL excutable with params
      */
     @Parameter
-    private List<String> shellParams;
+    private Arguments shell;
 
     /**
      * RUN Commands within Build/Image
@@ -285,9 +285,8 @@ public class BuildImageConfiguration implements Serializable {
         return entryPoint;
     }
 
-    @Nonnull
-    public List<String> getShellParams() {
-        return EnvUtil.removeEmptyEntries(shellParams);
+    public Arguments getShell() {
+        return shell;
     }
 
     @Nonnull
@@ -390,11 +389,9 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder shellParams(List<String> shellParams) {
-            if(shellParams == null) {
-                config.shellParams = new ArrayList<>();
-            } else {
-                config.shellParams = shellParams;
+        public Builder shell(Arguments shell) {
+            if(shell != null) {
+                config.shell = shell;
             }
 
             return this;

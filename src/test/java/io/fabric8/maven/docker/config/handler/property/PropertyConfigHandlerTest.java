@@ -186,21 +186,19 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
-    public void testShellParams() {
+    public void testShell() {
         List<ImageConfiguration> configs = resolveImage(
                 imageConfiguration,props(
                         "docker.from", "base",
                         "docker.name","demo",
-                        "docker.shell.1", "foo",
-                        "docker.shell.2", "bar",
-                        "docker.shell.3", "wibble")
+                        "docker.shell", "/bin/sh -c")
         );
 
         assertEquals(1, configs.size());
 
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
-        String[] shellParams = new ArrayList<>(buildConfig.getShellParams()).toArray(new String[buildConfig.getShellParams().size()]);
-        assertArrayEquals(new String[]{"foo", "bar", "wibble"}, shellParams);
+        String[] shell = new ArrayList<>(buildConfig.getShell().asStrings()).toArray(new String[buildConfig.getShell().asStrings().size()]);
+        assertArrayEquals(new String[]{"/bin/sh", "-c"}, shell);
     }
 
     @Test
@@ -232,11 +230,11 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
-    public void testShellParamsFromPropertiesAndConfig() {
+    public void testShellFromPropertiesAndConfig() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(new HashMap<String, String>())
                 .buildConfig(new BuildImageConfiguration.Builder()
-                        .shellParams(Arrays.asList("some","ignored","value"))
+                        .shell(new Arguments(Arrays.asList("some","ignored","value")))
                         .build()
                 )
                 .build();
@@ -247,16 +245,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 imageConfiguration,props(
                         "docker.from", "base",
                         "docker.name","demo",
-                        "docker.shell.1", "propconf",
-                        "docker.shell.2", "withrun",
-                        "docker.shell.3", "used")
+                        "docker.shell", "propconf withrun used")
         );
 
         assertEquals(1, configs.size());
 
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
-        String[] shellParams = new ArrayList<>(buildConfig.getShellParams()).toArray(new String[buildConfig.getShellParams().size()]);
-        assertArrayEquals(new String[]{"propconf", "withrun", "used"}, shellParams);
+        String[] shell = new ArrayList<>(buildConfig.getShell().asStrings()).toArray(new String[buildConfig.getShell().asStrings().size()]);
+        assertArrayEquals(new String[]{"propconf", "withrun", "used"}, shell);
     }
 
     @Test

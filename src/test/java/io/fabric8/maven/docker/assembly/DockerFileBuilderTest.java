@@ -18,6 +18,7 @@ public class DockerFileBuilderTest {
     @Test
     public void testBuildDockerFile() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        Arguments b = Arguments.Builder.get().withParam("/bin/sh").withParam("-c").build();
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
                 .baseImage("image")
                 .cmd(a)
@@ -28,7 +29,28 @@ public class DockerFileBuilderTest {
                 .workdir("/tmp")
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
                 .volumes(Collections.singletonList("/vol1"))
-                .shell(Arrays.asList("/bin/sh", "-c"))
+                .shell(b)
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
+        String expected = loadFile("docker/Dockerfile.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
+    public void testBuildDockerShellArgumentsForShell() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        Arguments b = new Arguments("/bin/sh -c");
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                .volumes(Collections.singletonList("/vol1"))
+                .shell(b)
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
