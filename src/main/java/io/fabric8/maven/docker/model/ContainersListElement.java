@@ -1,12 +1,12 @@
 package io.fabric8.maven.docker.model;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class ContainersListElement implements Container {
 
@@ -75,6 +75,12 @@ public class ContainersListElement implements Container {
             throw new UnsupportedOperationException("Missing 'Names' attribute from a container list element " + json);
         }
     }
+
+    @Override
+		public String getNetworkMode() {
+			// HostConfig.NetworkMode is not provided by container list action.
+			return null;
+		}
 
     @Override
     public Map<String, PortBinding> getPortBindings() {
