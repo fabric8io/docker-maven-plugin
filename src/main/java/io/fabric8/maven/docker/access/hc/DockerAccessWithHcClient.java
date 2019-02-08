@@ -722,8 +722,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
         HttpGet get = new HttpGet(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "version");
         get.addHeader(HttpHeaders.ACCEPT, "*/*");
         get.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        CloseableHttpResponse response = delegate.getHttpClient().execute(get);
+        try (CloseableHttpResponse response = delegate.getHttpClient().execute(get)) {
 
-        return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
+            return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
+        }
     }
 }
