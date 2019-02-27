@@ -30,7 +30,7 @@ Similar to image name placeholders, for starting and stopping containers and alt
 
 These placeholders can be used in the top-level configuration value `containerNamePattern` which is used globally for every container that is created.
 This global pattern can be overwritten individually by each image's <<config-image-run, *run*>> configuration.
-If neither is given, then by default the pattern `%n-%a` is used.
+If neither is given, then by default the pattern `%n-%i` is used.
 
 When specifying the container name pattern the following placeholders can be used:
 

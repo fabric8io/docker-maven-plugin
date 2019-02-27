@@ -2,6 +2,7 @@
 
 * 0.28.1
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
+  - docs: Correct default image naming
 
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
