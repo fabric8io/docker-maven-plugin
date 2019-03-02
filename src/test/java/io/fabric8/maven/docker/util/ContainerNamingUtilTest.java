@@ -10,16 +10,14 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.model.Container;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author marcus
  * @since 1.0.0
  */
-@RunWith(JMockit.class)
+
 public class ContainerNamingUtilTest {
 
     @Test

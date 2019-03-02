@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -58,6 +59,8 @@ import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
@@ -89,6 +92,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     // Base URL which is given through when using NamedPipe communication but is not really used
     private static final String NPIPE_URL = "npipe://127.0.0.1:1/";
 
+    // Minimal API version, independent of any feature used
+    public static final String API_VERSION = "1.18";
+
     // Logging
     private final Logger log;
 
@@ -105,26 +111,30 @@ public class DockerAccessWithHcClient implements DockerAccess {
      * @param log      a log handler for printing out logging information
      * @paran usePool  whether to use a connection bool or not
      */
-    public DockerAccessWithHcClient(String apiVersion,
-                                    String baseUrl,
+    public DockerAccessWithHcClient(String baseUrl,
                                     String certPath,
                                     int maxConnections,
                                     Logger log) throws IOException {
-        this.log = log;
         URI uri = URI.create(baseUrl);
         if (uri.getScheme() == null) {
             throw new IllegalArgumentException("The docker access url '" + baseUrl + "' must contain a schema tcp://, unix:// or npipe://");
         }
         if (uri.getScheme().equalsIgnoreCase("unix")) {
             this.delegate = createHttpClient(new UnixSocketClientBuilder(uri.getPath(), maxConnections, log));
-            this.urlBuilder = new UrlBuilder(UNIX_URL, apiVersion);
+            baseUrl = UNIX_URL;
         } else if (uri.getScheme().equalsIgnoreCase("npipe")) {
-        	this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
-            this.urlBuilder = new UrlBuilder(NPIPE_URL, apiVersion);
+            this.delegate = createHttpClient(new NamedPipeClientBuilder(uri.getPath(), maxConnections, log), false);
+            baseUrl = NPIPE_URL;
         } else {
             this.delegate = createHttpClient(new HttpClientBuilder(isSSL(baseUrl) ? certPath : null, maxConnections));
-            this.urlBuilder = new UrlBuilder(baseUrl, apiVersion);
         }
+
+        // Strip trailing slashes if any
+        while(baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+        }
+        this.urlBuilder = new UrlBuilder(baseUrl, "v" + fetchApiVersionFromServer(baseUrl, this.delegate));
+        this.log = log;
     }
 
     /** {@inheritDoc} */
@@ -422,7 +432,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try {
             doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
         } catch (IOException e) {
-            dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " from registry '" + registry + "'" : "");
+            dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " to registry '" + registry + "'" : "");
             throw dae;
         } finally {
             if (temporaryImage != null) {
@@ -685,7 +695,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
-    private boolean isSSL(String url) {
+    private static boolean isSSL(String url) {
         return url != null && url.toLowerCase().startsWith("https");
     }
 
@@ -705,6 +715,16 @@ public class DockerAccessWithHcClient implements DockerAccess {
                 EntityStreamReaderUtil.processJsonStream(handler, stream);
             }
             return null;
+        }
+    }
+
+    public String fetchApiVersionFromServer(String baseUrl, ApacheHttpClientDelegate delegate) throws IOException {
+        HttpGet get = new HttpGet(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "version");
+        get.addHeader(HttpHeaders.ACCEPT, "*/*");
+        get.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        try (CloseableHttpResponse response = delegate.getHttpClient().execute(get)) {
+
+            return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
         }
     }
 }

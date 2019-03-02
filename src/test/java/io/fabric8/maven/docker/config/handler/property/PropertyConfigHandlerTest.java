@@ -18,9 +18,13 @@ package io.fabric8.maven.docker.config.handler.property;/*
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -35,19 +39,9 @@ import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_CLEANUP;
 import static io.fabric8.maven.docker.config.BuildImageConfiguration.DEFAULT_FILTER;
@@ -62,7 +56,7 @@ import static org.junit.Assert.assertTrue;
  * @author roland
  * @since 05/12/14
  */
-@RunWith(JMockit.class)
+
 public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private PropertyConfigHandler configHandler;
@@ -915,6 +909,9 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(a("redis"), runConfig.getLinks());
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
+        assertEquals((Long) 1000000000L, runConfig.getCpus());
+        assertEquals((Long) 1L, runConfig.getCpuShares());
+        assertEquals("0,1", runConfig.getCpuSet());
         assertEquals("/tmp/envProps.txt",runConfig.getEnvPropertyFile());
         assertEquals("/tmp/props.txt", runConfig.getPortPropertyFile());
         assertEquals(a("8081:8080"), runConfig.getPorts());
@@ -931,7 +928,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("/var/lib/mysql:10m", runConfig.getTmpfs().get(0));
         assertEquals(1, runConfig.getTmpfs().size());
         assertEquals("Never", runConfig.getImagePullPolicy());
-
+        assertEquals(true, runConfig.getReadOnly());
 
         validateEnv(runConfig.getEnv());
 
@@ -994,6 +991,9 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.CAP_ADD) + ".1", "CAP",
             k(ConfigKey.CAP_DROP) + ".1", "CAP",
             k(ConfigKey.SECURITY_OPTS) + ".1", "seccomp=unconfined",
+            k(ConfigKey.CPUS), "1000000000",
+            k(ConfigKey.CPUSET), "0,1",
+            k(ConfigKey.CPUSHARES), "1",
             k(ConfigKey.CMD), "command.sh",
             k(ConfigKey.DNS) + ".1", "8.8.8.8",
             k(ConfigKey.NET), "host",
@@ -1046,7 +1046,8 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.WORKING_DIR), "foo",
             k(ConfigKey.TMPFS) + ".1", "/var/lib/mysql:10m",
             k(ConfigKey.IMAGE_PULL_POLICY_BUILD), "Always",
-            k(ConfigKey.IMAGE_PULL_POLICY_RUN), "Never"
+            k(ConfigKey.IMAGE_PULL_POLICY_RUN), "Never",
+            k(ConfigKey.READ_ONLY), "true",
         };
     }
 

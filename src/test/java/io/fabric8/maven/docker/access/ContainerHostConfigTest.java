@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.access;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONException;
 import org.junit.Test;
 
@@ -90,6 +91,21 @@ public class ContainerHostConfigTest {
             ContainerHostConfig hc = new ContainerHostConfig();
             JsonObject result = hc.tmpfs(Arrays.asList(data[i])).toJsonObject();
             JsonObject expected = JsonFactory.newJsonObject(data[i + 1]);
+            assertEquals(expected, result);
+        }
+    }
+    
+    @Test
+    public void testReadonlyRootfs() throws Exception {
+        Pair [] data = {
+            Pair.of(Boolean.TRUE, "{ReadonlyRootfs: true}"),
+            Pair.of(Boolean.FALSE, "{ReadonlyRootfs: false}")
+        };
+        for (int i = 0; i < data.length; i++) {
+        	Pair<Boolean, String> d = data[i];
+            ContainerHostConfig hc = new ContainerHostConfig();
+            JsonObject result = hc.readonlyRootfs(d.getLeft()).toJsonObject();
+            JsonObject expected = JsonFactory.newJsonObject(d.getRight());
             assertEquals(expected, result);
         }
     }

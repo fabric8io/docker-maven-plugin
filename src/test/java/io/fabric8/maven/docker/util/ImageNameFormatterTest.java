@@ -19,13 +19,15 @@ package io.fabric8.maven.docker.util;
 import java.util.Date;
 import java.util.Properties;
 
-import mockit.*;
-import mockit.integration.junit4.JMockit;
+import mockit.Expectations;
+import mockit.FullVerifications;
+import mockit.Injectable;
+import mockit.Tested;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.fail;
@@ -34,7 +36,7 @@ import static org.junit.Assert.fail;
  * @author roland
  * @since 07/06/16
  */
-@RunWith(JMockit.class)
+
 public class ImageNameFormatterTest {
 
     @Injectable

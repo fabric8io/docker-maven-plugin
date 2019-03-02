@@ -3,8 +3,12 @@ package io.fabric8.maven.docker.service.helper;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 
+import org.codehaus.plexus.util.StringUtils;
+
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -14,11 +18,13 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.Logger;
 
 public class StartContainerExecutor {
+    private String exposeContainerProps;
     private Logger log;
     private LogOutputSpecFactory logOutputSpecFactory;
     private ServiceHub hub;
@@ -41,13 +47,49 @@ public class StartContainerExecutor {
         final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
 
         showLogsIfRequested(containerId);
+        exposeContainerProps(containerId);
         waitAndPostExec(containerId, projProperties);
 
         return containerId;
     }
 
+    private void exposeContainerProps(String containerId)
+        throws DockerAccessException {
+        String propKey = getExposedPropertyKeyPart();
+
+        if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
+            Container container = hub.getQueryService().getMandatoryContainer(containerId);
+
+            String prefix = addDot(exposeContainerProps) + addDot(propKey);
+            projectProperties.put(prefix + "id", containerId);
+            String ip = container.getIPAddress();
+            if (StringUtils.isNotEmpty(ip)) {
+                projectProperties.put(prefix + "ip", ip);
+            }
+
+            Map<String, String> nets = container.getCustomNetworkIpAddresses();
+            if (nets != null) {
+                for (Map.Entry<String, String> entry : nets.entrySet()) {
+                    projectProperties.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());
+                }
+            }
+        }
+    }
+
+    String getExposedPropertyKeyPart() {
+        String propKey = imageConfig.getRunConfiguration() != null ? imageConfig.getRunConfiguration().getExposedPropertyKey() : "";
+        if (StringUtils.isEmpty(propKey)) {
+            propKey = imageConfig.getAlias();
+        }
+        return propKey;
+    }
+
+    private String addDot(String part) {
+        return part.endsWith(".") ? part : part + ".";
+    }
+
     private void showLogsIfRequested(String containerId) {
-        if (showLogs(imageConfig)) {
+        if (showLogs()) {
             dispatcher.trackContainerLog(containerId,
                                          logOutputSpecFactory.createSpec(containerId, imageConfig));
         }
@@ -70,7 +112,7 @@ public class StartContainerExecutor {
         }
     }
 
-    private boolean showLogs(ImageConfiguration imageConfig) {
+    boolean showLogs() {
         if (showLogs != null) {
             if (showLogs.equalsIgnoreCase("true")) {
                 return true;
@@ -108,6 +150,11 @@ public class StartContainerExecutor {
 
         public Builder logOutputSpecFactory(LogOutputSpecFactory factory) {
             helper.logOutputSpecFactory = factory;
+            return this;
+        }
+
+        public Builder exposeContainerProps(String exposeContainerProps) {
+            helper.exposeContainerProps = exposeContainerProps;
             return this;
         }
 

@@ -1,16 +1,14 @@
 package io.fabric8.maven.docker.model;
 
-import com.google.common.base.Joiner;
-import com.google.gson.JsonObject;
-
-import java.util.Calendar;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.bind.DatatypeConverter;
+import com.google.common.base.Joiner;
+import com.google.gson.JsonObject;
 
 
 public class ContainerDetails implements Container {
@@ -47,8 +45,8 @@ public class ContainerDetails implements Container {
     @Override
     public long getCreated() {
         String date = json.get(CREATED).getAsString();
-        Calendar cal = DatatypeConverter.parseDateTime(date);
-        return cal.getTimeInMillis();
+        Instant instant = Instant.parse(date);
+        return instant.toEpochMilli();
     }
 
     @Override

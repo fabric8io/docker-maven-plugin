@@ -4,10 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>io.fabric8.dmp.samples</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.28-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+
   <groupId>io.fabric8.dmp.samples</groupId>
-  <artifactId>zero-config</artifactId>
+  <artifactId>demp-sample-zero-config</artifactId>
   <packaging>jar</packaging>
-  <version>1-SNAPSHOT</version>
+  <version>0.28-SNAPSHOT</version>
 
   <properties>
     <jar_file>${project.build.directory}/${project.build.finalName}.jar</jar_file>
@@ -18,7 +26,6 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
-        <version>0.25-SNAPSHOT</version>
       </plugin>
     </plugins>
   </build>

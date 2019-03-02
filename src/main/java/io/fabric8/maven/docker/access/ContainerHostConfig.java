@@ -68,6 +68,18 @@ public class ContainerHostConfig {
         return addAsArray("DnsSearch", dnsSearch);
     }
 
+    public ContainerHostConfig cpuShares(Long cpuShares) {
+        return add("CpuShares", cpuShares);
+    }
+
+    public ContainerHostConfig cpus(Long cpus) {
+        return add ("NanoCpus", cpus);
+    }
+
+    public ContainerHostConfig cpuSet(String cpuSet) {
+        return add("CpusetCpus", cpuSet);
+    }
+
     public ContainerHostConfig extraHosts(List<String> extraHosts) throws IllegalArgumentException {
         if (extraHosts != null) {
             List<String> mapped = new ArrayList<>();
@@ -181,6 +193,10 @@ public class ContainerHostConfig {
             }
         }
         return this;
+    }
+    
+    public ContainerHostConfig readonlyRootfs(Boolean readOnly) {
+        return add("ReadonlyRootfs", readOnly);
     }
 
     /**

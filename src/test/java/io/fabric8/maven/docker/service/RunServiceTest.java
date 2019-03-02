@@ -336,6 +336,9 @@ public class RunServiceTest {
                         .shmSize(1024L)
                         .memory(1L)
                         .memorySwap(1L)
+                        .cpus(1000000000L)
+                        .cpuSet("0,1")
+                        .cpuShares(1L)
                         .env(env())
                         .cmd("date")
                         .entrypoint(new Arguments("entrypoint"))
@@ -354,6 +357,7 @@ public class RunServiceTest {
                         .restartPolicy(restartPolicy())
                         .net("custom_network")
                         .network(networkConfiguration())
+                        .readOnly(false)
                         .build();
     }
 

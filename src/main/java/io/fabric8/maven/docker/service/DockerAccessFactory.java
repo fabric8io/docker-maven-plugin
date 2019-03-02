@@ -26,27 +26,18 @@ import org.codehaus.plexus.component.annotations.Component;
 @Component(role = DockerAccessFactory.class, instantiationStrategy = "singleton")
 public class DockerAccessFactory {
 
-    // Minimal API version, independent of any feature used
-    public static final String API_VERSION = "1.18";
-
     public DockerAccess createDockerAccess(DockerAccessContext dockerAccessContext) throws MojoExecutionException, MojoFailureException {
 
         try {
             DockerConnectionDetector dockerConnectionDetector = createDockerConnectionDetector(dockerAccessContext, dockerAccessContext.getLog());
             DockerConnectionDetector.ConnectionParameter connectionParam =
                     dockerConnectionDetector.detectConnectionParameter(dockerAccessContext.getDockerHost(), dockerAccessContext.getCertPath());
-            String version = dockerAccessContext.getMinimalApiVersion() != null ? dockerAccessContext.getMinimalApiVersion() : API_VERSION;
-            DockerAccess access = new DockerAccessWithHcClient("v" + version, connectionParam.getUrl(),
+            DockerAccess access = new DockerAccessWithHcClient(connectionParam.getUrl(),
                     connectionParam.getCertPath(),
                     dockerAccessContext.getMaxConnections(),
                     dockerAccessContext.getLog());
             access.start();
             setDockerHostAddressProperty(dockerAccessContext, connectionParam.getUrl());
-            String serverVersion = access.getServerApiVersion();
-            if (!EnvUtil.greaterOrEqualsVersion(serverVersion, version)) {
-                throw new MojoExecutionException(
-                        String.format("Server API version %s is smaller than required API version %s", serverVersion, version));
-            }
             return access;
         } catch (IOException e) {
             throw new MojoExecutionException("Cannot create docker access object ", e);

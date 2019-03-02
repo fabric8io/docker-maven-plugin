@@ -122,7 +122,7 @@ public class AuthConfigFactory {
         // Finally check ~/.docker/config.json
         ret = getAuthConfigFromDockerConfig(registry);
         if (ret != null) {
-            log.debug("AuthConfig: credentials from ~.docker/config.json");
+            log.debug("AuthConfig: credentials from ~/.docker/config.json");
             return ret;
         }
 
