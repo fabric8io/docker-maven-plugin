@@ -40,7 +40,6 @@ jobs:
     - run: |
         if [ -n "${CIRCLE_PR_NUMBER}" ]; then
           mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
-             -Dsonar.analysis.mode=preview \
              -Dsonar.github.pullRequest=${CIRCLE_PR_NUMBER} \
              -Dsonar.github.repository=fabric8io/docker-maven-plugin \
              -Dsonar.github.oauth=${GITHUB_COMMENT_TOKEN} \
