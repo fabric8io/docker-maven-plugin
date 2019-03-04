@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.wait;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -110,7 +111,7 @@ public class HttpPingChecker implements WaitChecker {
 
         try (CloseableHttpResponse response = httpClient.execute(RequestBuilder.create(method.toUpperCase()).setUri(url).build())) {
             int responseCode = response.getStatusLine().getStatusCode();
-            if (responseCode == 501) {
+            if (responseCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
                 throw new IllegalArgumentException("Invalid or not supported HTTP method '" + method.toUpperCase() + "' for checking " + url);
             }
             return responseCode >= statusMin && responseCode <= statusMax;
