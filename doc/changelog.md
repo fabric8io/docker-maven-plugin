@@ -2,6 +2,8 @@
 
 * 0.28.1
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
+  - Obtain container ip address from custom network for tcp/http wait
+  - Fix http (SSL) ping with 'allowAllHosts' flag enabled
 
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
