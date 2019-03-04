@@ -77,10 +77,10 @@ public class ContainersListElement implements Container {
     }
 
     @Override
-		public String getNetworkMode() {
-			// HostConfig.NetworkMode is not provided by container list action.
-			return null;
-		}
+    public String getNetworkMode() {
+      // HostConfig.NetworkMode is not provided by container list action.
+      return null;
+    }
 
     @Override
     public Map<String, PortBinding> getPortBindings() {

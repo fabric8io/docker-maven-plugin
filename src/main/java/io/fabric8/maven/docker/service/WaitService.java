@@ -174,16 +174,15 @@ public class WaitService {
             }
             log.info("%s: Waiting for mapped ports %s on host %s", imageConfigDesc, ports, host);
         } else {
-        		final String networkMode = container.getNetworkMode();
-        		log.info("%s: Netwok mode: %s", imageConfigDesc, networkMode);
-        		if (networkMode == null || networkMode.isEmpty() || "bridge".equals(networkMode)) {
-        			// Safe mode when network mode is not present
-        			host = container.getIPAddress();
-        		} else if (!"host".equals(networkMode)) {
-        			// Custom network
-        			host = container.getCustomNetworkIpAddresses().get(networkMode);
-        		}
-
+            final String networkMode = container.getNetworkMode();
+            log.info("%s: Netwok mode: %s", imageConfigDesc, networkMode);
+            if (networkMode == null || networkMode.isEmpty() || "bridge".equals(networkMode)) {
+                // Safe mode when network mode is not present
+                host = container.getIPAddress();
+            } else if (!"host".equals(networkMode)) {
+                // Custom network
+                host = container.getCustomNetworkIpAddresses().get(networkMode);
+            }
             ports = portsConfigured;
             log.info("%s: Waiting for ports %s directly on container with IP (%s).",
                      imageConfigDesc, ports, host);
