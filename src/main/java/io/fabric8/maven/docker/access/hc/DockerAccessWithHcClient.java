@@ -659,12 +659,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
     private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
         if (!name.hasRegistry() && registry != null) {
-            if (hasImage(targetImage)) {
-                throw new DockerAccessException(
-                    String.format("Cannot temporarily tag %s with %s because target image already exists. " +
-                                  "Please remove this and retry.",
-                                  name.getFullName(), targetImage));
-            }
             tag(name.getFullName(), targetImage, false);
             return targetImage;
         }
