@@ -182,7 +182,6 @@ public class ImageName {
      * @return full name with original registry (if set) or optional registry (if not <code>null</code>).
      */
     public String getFullName(String optionalRegistry) {
-
         String fullName = getNameWithoutTag(optionalRegistry);
         if (tag != null) {
             fullName = fullName +  ":" + tag;
@@ -231,18 +230,18 @@ public class ImageName {
         String image = user != null ? repository.substring(user.length() + 1) : repository;
 
         Object[] checks = new Object[] {
-                "registry", DOMAIN_REGEXP, registry,
-                "image", IMAGE_NAME_REGEXP, image,
-                "user", NAME_COMP_REGEXP, user,
-                "tag", TAG_REGEXP, tag,
-                "digest", DIGEST_REGEXP, digest
+            "registry", DOMAIN_REGEXP, registry,
+            "image", IMAGE_NAME_REGEXP, image,
+            "user", NAME_COMP_REGEXP, user,
+            "tag", TAG_REGEXP, tag,
+            "digest", DIGEST_REGEXP, digest
         };
 
         for (int i = 0; i < checks.length; i +=3) {
             String value = (String) checks[i + 2];
             Pattern checkPattern = (Pattern) checks[i + 1];
             if (value != null &&
-                    !checkPattern.matcher(value).matches()) {
+                !checkPattern.matcher(value).matches()) {
                 errors.add(String.format("%s part '%s' doesn't match allowed pattern '%s'",
                         checks[i], value, checkPattern.pattern()));
             }
