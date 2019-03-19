@@ -5,6 +5,7 @@
   - docs: Correct default image naming
   - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
   - Update to jnr-unixsocket 0.22
+  - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
 
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
