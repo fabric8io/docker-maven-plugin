@@ -358,7 +358,8 @@ public class RunService {
                 .cpuShares(runConfig.getCpuShares())
                 .cpus(runConfig.getCpus())
                 .cpuSet(runConfig.getCpuSet())
-                .readonlyRootfs(runConfig.getReadOnly());
+                .readonlyRootfs(runConfig.getReadOnly())
+                .autoRemove(runConfig.getAutoRemove());
 
         addVolumeConfig(config, runConfig, baseDir);
         addNetworkingConfig(config, runConfig);

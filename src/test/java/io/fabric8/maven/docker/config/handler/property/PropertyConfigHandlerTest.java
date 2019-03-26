@@ -929,6 +929,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(1, runConfig.getTmpfs().size());
         assertEquals("Never", runConfig.getImagePullPolicy());
         assertEquals(true, runConfig.getReadOnly());
+        assertEquals(true, runConfig.getAutoRemove());
 
         validateEnv(runConfig.getEnv());
 
@@ -1048,6 +1049,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.IMAGE_PULL_POLICY_BUILD), "Always",
             k(ConfigKey.IMAGE_PULL_POLICY_RUN), "Never",
             k(ConfigKey.READ_ONLY), "true",
+            k(ConfigKey.AUTO_REMOVE), "true",
         };
     }
 
