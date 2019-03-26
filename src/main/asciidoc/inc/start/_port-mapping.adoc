@@ -21,6 +21,8 @@ A `port` stanza may take one of the following forms:
 | Tuple consisting of two strings and a numeric value separated by a `:`. In this form, the host ip of the container will be placed into a Maven property name `host.ip`. If docker reports that value to be `0.0.0.0`, the value of `docker.host.address` will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (`host.ip` in this example) containing the value to use. `host:port` works in the same way as described above.
 |===
 
+By default TCP is used as protocol but you can also use UDP by appending '/udp' to the port number.
+
 The following are examples of valid configuration entries:
 
 .Example
@@ -35,6 +37,7 @@ The following are examples of valid configuration entries:
 
 <ports>
   <port>18080:8080</port>
+  <port>15060:5060/udp</port>
   <port>host.port:80</port>
   <port>127.0.0.1:80:80</port>
   <port>localhost:host.port:80</port>
