@@ -9,6 +9,7 @@
   - Update to jnr-unixsocket 0.22
   - Support docker SHELL setting for runCmds (#1157)
   - Added 'autoRemove' option for running containers (#1179)
+  - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
 
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43

@@ -1,14 +1,14 @@
 package io.fabric8.maven.docker.util;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +16,14 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.settings.Server;
@@ -27,6 +33,13 @@ import org.codehaus.plexus.component.repository.exception.ComponentLookupExcepti
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.yaml.snakeyaml.Yaml;
+
+import com.google.common.net.UrlEscapers;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -217,13 +230,87 @@ public class AuthConfigFactory {
             log.debug("AuthConfig: credentials from ~/.m2/setting.xml");
             return ret;
         }
+        
+        // check EC2 instance role if registry is ECR
+        if (EcrExtendedAuth.isAwsRegistry(registry)) {
+            try {
+                ret = getAuthConfigFromEC2InstanceRole();
+            } catch (ConnectTimeoutException ex) {
+                log.debug("Connection timeout while retrieving instance meta-data, likely not an EC2 instance (%s)",
+                        ex.getMessage());
+            } catch (IOException ex) {
+                // don't make that an error since it may fail if not run on an EC2 instance
+                log.warn("Error while retrieving EC2 instance credentials: %s", ex.getMessage());
+            }
+            if (ret != null) {
+                log.debug("AuthConfig: credentials from EC2 instance role");
+                return ret;
+            }
+        }
 
         // No authentication found
         return null;
     }
 
     // ===================================================================================================
+    
+    
+    // if the local credentials don't contain user and password, use EC2 instance
+    // role credentials
+    private AuthConfig getAuthConfigFromEC2InstanceRole() throws IOException {
+        log.debug("No user and password set for ECR, checking EC2 instance role");
+        try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
+            // we can set very low timeouts because the request returns almost instantly on
+            // an EC2 instance
+            // on a non-EC2 instance we can fail early
+            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
+                    .setSocketTimeout(1000).build();
 
+            // get instance role - if available
+            HttpGet request = new HttpGet("http://169.254.169.254/latest/meta-data/iam/security-credentials");
+            request.setConfig(conf);
+            String instanceRole;
+            try (CloseableHttpResponse response = client.execute(request)) {
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    // no instance role found
+                    log.debug("No instance role found, return code was %d", response.getStatusLine().getStatusCode());
+                    return null;
+                }
+
+                // read instance role
+                try (InputStream is = response.getEntity().getContent()) {
+                    instanceRole = IOUtils.toString(is, StandardCharsets.UTF_8);
+                }
+            }
+            log.debug("Found instance role %s, getting temporary security credentials", instanceRole);
+
+            // get temporary credentials
+            request = new HttpGet("http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+                    + UrlEscapers.urlPathSegmentEscaper().escape(instanceRole));
+            request.setConfig(conf);
+            try (CloseableHttpResponse response = client.execute(request)) {
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    log.debug("No security credential found, return code was %d",
+                            response.getStatusLine().getStatusCode());
+                    // no instance role found
+                    return null;
+                }
+
+                // read instance role
+                try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
+                    JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
+
+                    String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
+                    String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
+                    String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
+
+                    log.debug("Received temporary access key %s...", user.substring(0, 8));
+                    return new AuthConfig(user, password, "none", token);
+                }
+            }
+        }
+    }
+        
     private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
         Properties props = System.getProperties();
         String userKey = lookupMode.asSysProperty(AUTH_USERNAME);
