@@ -199,6 +199,10 @@ public class ContainerHostConfig {
         return add("ReadonlyRootfs", readOnly);
     }
 
+    public ContainerHostConfig autoRemove(Boolean autoRemove) {
+        return add("AutoRemove", autoRemove);
+    }
+
     /**
      * Get JSON which is used for <em>starting</em> a container
      *
