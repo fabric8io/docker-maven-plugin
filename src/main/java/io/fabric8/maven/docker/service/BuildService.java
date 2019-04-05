@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -28,6 +29,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class BuildService {
+
+    private final String argPrefix = "docker.buildArg.";
 
     private final DockerAccess docker;
     private final QueryService queryService;
@@ -165,7 +168,9 @@ public class BuildService {
     private Map<String, String> addBuildArgs(BuildContext buildContext) {
         Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getMojoParameters().getProject().getProperties());
         Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
+        Map<String, String> buildArgsFromDockerConfig = addBuildArgsFromDockerConfig();
         return ImmutableMap.<String, String>builder()
+                .putAll(buildArgsFromDockerConfig)
                 .putAll(buildContext.getBuildArgs() != null ? buildContext.getBuildArgs() : Collections.<String, String>emptyMap())
                 .putAll(buildArgsFromProject)
                 .putAll(buildArgsFromSystem)
@@ -173,7 +178,6 @@ public class BuildService {
     }
 
     private Map<String, String> addBuildArgsFromProperties(Properties properties) {
-        String argPrefix = "docker.buildArg.";
         Map<String, String> buildArgs = new HashMap<>();
         for (Object keyObj : properties.keySet()) {
             String key = (String) keyObj;
@@ -183,6 +187,36 @@ public class BuildService {
 
                 if (!isEmpty(value)) {
                     buildArgs.put(argKey, value);
+                }
+            }
+        }
+        log.debug("Build args set %s", buildArgs);
+        return buildArgs;
+    }
+
+    private Map<String, String> addBuildArgsFromDockerConfig() {
+        JsonObject dockerConfig = DockerFileUtil.readDockerConfig();
+        if (dockerConfig == null) {
+            return Collections.emptyMap();
+        }
+
+        // add proxies
+        Map<String, String> buildArgs = new HashMap<>();
+        if (dockerConfig.has("proxies")) {
+            JsonObject proxies = dockerConfig.getAsJsonObject("proxies");
+            if (proxies.has("default")) {
+                JsonObject defaultProxyObj = proxies.getAsJsonObject("default");
+                String[] proxyMapping = new String[] {
+                        "httpProxy", "http_proxy",
+                        "httpsProxy", "https_proxy",
+                        "noProxy", "no_proxy",
+                        "ftpProxy", "ftp_proxy"
+                };
+
+                for(int index = 0; index < proxyMapping.length; index += 2) {
+                    if (defaultProxyObj.has(proxyMapping[index])) {
+                        buildArgs.put(argPrefix + proxyMapping[index+1], defaultProxyObj.get(proxyMapping[index]).getAsString());
+                    }
                 }
             }
         }

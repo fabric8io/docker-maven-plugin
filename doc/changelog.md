@@ -3,6 +3,7 @@
 * 0.28.1
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
   - docs: Correct default image naming
+  - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
   - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
   - Obtain container ip address from custom network for tcp/http wait
   - Fix http (SSL) ping with 'allowAllHosts' flag enabled
