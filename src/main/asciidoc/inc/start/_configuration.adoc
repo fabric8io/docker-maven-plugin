@@ -107,6 +107,9 @@ a| *This option is deprecated, please use a `containerNamePattern` instead* Nami
 | *readOnly*
 | If `true` mount the container's root filesystem as read only
 
+| *autoRemove*
+| If `true` automatically remove the container when it exits. This has no effect if <<start-restart, Restart Policy>> has been set.
+
 | <<start-restart, *restartPolicy*>>
 | Restart Policy
 
