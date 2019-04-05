@@ -90,6 +90,9 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 | *ports*
 | The exposed ports which is a list of `<port>` elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").
 
+| *shell*
+| Shell to be used for the *runCmds*. It contains *arg* elements which are defining the executable and its params.
+
 | *runCmds*
 | Commands to be run during the build process. It contains *run* elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after *workdir* into the Dockerfile. This tag is not to be confused with the `<run>` section for this image which specifies the runtime behaviour when starting containers.
 
@@ -135,6 +138,17 @@ remote API.
   <buildOptions>
     <shmsize>2147483648</shmsize>
   </buildOptions>
+
+  <shell>
+    <exec>
+      <arg>/bin/sh</arg>
+      <arg>-c</arg>
+    </exec>
+  </shell>
+  <runCmds>
+    <run>groupadd -r appUser</run>
+    <run>useradd -r -g appUser appUser</run>
+  </runCmds>
 
   <entryPoint>
     <!-- exec form for ENTRYPOINT -->

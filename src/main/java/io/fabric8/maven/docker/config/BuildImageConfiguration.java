@@ -75,6 +75,12 @@ public class BuildImageConfiguration implements Serializable {
     private String imagePullPolicy;
 
     /**
+     * SHELL excutable with params
+     */
+    @Parameter
+    private Arguments shell;
+
+    /**
      * RUN Commands within Build/Image
      */
     @Parameter
@@ -279,6 +285,10 @@ public class BuildImageConfiguration implements Serializable {
         return entryPoint;
     }
 
+    public Arguments getShell() {
+        return shell;
+    }
+
     @Nonnull
     public List<String> getRunCmds() {
         return EnvUtil.removeEmptyEntries(runCmds);
@@ -376,6 +386,14 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder imagePullPolicy(String imagePullPolicy) {
             config.imagePullPolicy = imagePullPolicy;
+            return this;
+        }
+
+        public Builder shell(Arguments shell) {
+            if(shell != null) {
+                config.shell = shell;
+            }
+
             return this;
         }
 

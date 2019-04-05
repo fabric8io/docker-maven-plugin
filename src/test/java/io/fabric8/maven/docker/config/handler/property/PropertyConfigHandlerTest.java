@@ -186,6 +186,22 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testShell() {
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "base",
+                        "docker.name","demo",
+                        "docker.shell", "/bin/sh -c")
+        );
+
+        assertEquals(1, configs.size());
+
+        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        String[] shell = new ArrayList<>(buildConfig.getShell().asStrings()).toArray(new String[buildConfig.getShell().asStrings().size()]);
+        assertArrayEquals(new String[]{"/bin/sh", "-c"}, shell);
+    }
+
+    @Test
     public void testRunCommandsFromPropertiesAndConfig() {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(new HashMap<String, String>())
@@ -211,6 +227,32 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
         String[] runCommands = new ArrayList<>(buildConfig.getRunCmds()).toArray(new String[buildConfig.getRunCmds().size()]);
         assertArrayEquals(new String[]{"propconf", "withrun", "used"}, runCommands);
+    }
+
+    @Test
+    public void testShellFromPropertiesAndConfig() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(new HashMap<String, String>())
+                .buildConfig(new BuildImageConfiguration.Builder()
+                        .shell(new Arguments(Arrays.asList("some","ignored","value")))
+                        .build()
+                )
+                .build();
+
+        makeExternalConfigUse(PropertyMode.Override);
+
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.from", "base",
+                        "docker.name","demo",
+                        "docker.shell", "propconf withrun used")
+        );
+
+        assertEquals(1, configs.size());
+
+        BuildImageConfiguration buildConfig = configs.get(0).getBuildConfiguration();
+        String[] shell = new ArrayList<>(buildConfig.getShell().asStrings()).toArray(new String[buildConfig.getShell().asStrings().size()]);
+        assertArrayEquals(new String[]{"propconf", "withrun", "used"}, shell);
     }
 
     @Test
@@ -837,7 +879,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             project.getBasedir(); minTimes = 0; maxTimes = 1; result = new File("./");
         }};
 
-        return configHandler.resolve(imageConfiguration, project, null);
+        return configHandler.resolve(image, project, null);
     }
 
     private ImageConfiguration resolveExternalImageConfig(String[] testData) {

@@ -99,6 +99,7 @@ public enum ConfigKey {
     REGISTRY,
     RESTART_POLICY_NAME("restartPolicy.name"),
     RESTART_POLICY_RETRY("restartPolicy.retry"),
+    SHELL,
     RUN,
     SECURITY_OPTS,
     SHMSIZE,

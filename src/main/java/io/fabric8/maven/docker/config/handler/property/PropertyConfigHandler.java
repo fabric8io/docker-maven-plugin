@@ -139,6 +139,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .args(valueProvider.getMap(ARGS, config == null ? null : config.getArgs()))
                 .labels(valueProvider.getMap(LABELS, config == null ? null : config.getLabels()))
                 .ports(extractPortValues(config == null ? null : config.getPorts(), valueProvider))
+                .shell(extractArguments(valueProvider, SHELL, config == null ? null : config.getShell()))
                 .runCmds(valueProvider.getList(RUN, config == null ? null : config.getRunCmds()))
                 .from(valueProvider.getString(FROM, config == null ? null : config.getFrom()))
                 .fromExt(valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()))
