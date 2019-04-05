@@ -4,6 +4,8 @@
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
   - docs: Correct default image naming
   - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
+  - Obtain container ip address from custom network for tcp/http wait
+  - Fix http (SSL) ping with 'allowAllHosts' flag enabled
   - Update to jnr-unixsocket 0.22
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
   - Support docker SHELL setting for runCmds (#1157)
