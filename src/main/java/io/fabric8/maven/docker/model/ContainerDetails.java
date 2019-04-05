@@ -22,6 +22,8 @@ public class ContainerDetails implements Container {
     static final String LABELS = "Labels";
     static final String NAME = "Name";
     static final String IP = "IPAddress";
+    static final String HOST_CONFIG = "HostConfig";
+    static final String NETWORK_MODE = "NetworkMode";
     static final String NETWORK_SETTINGS = "NetworkSettings";
     static final String NETWORKS = "Networks";
     static final String PORTS = "Ports";
@@ -89,6 +91,17 @@ public class ContainerDetails implements Container {
         }
         return null;
     }
+
+		@Override
+		public String getNetworkMode() {
+			if (json.has(HOST_CONFIG) && !json.get(HOST_CONFIG).isJsonNull()) {
+				final JsonObject hostConfig = json.getAsJsonObject(HOST_CONFIG);
+				if (!hostConfig.get(NETWORK_MODE).isJsonNull()) {
+          return hostConfig.get(NETWORK_MODE).getAsString();
+				}
+			}
+			return null;
+		}
 
     @Override
     public Map<String, String> getCustomNetworkIpAddresses() {
