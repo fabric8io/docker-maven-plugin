@@ -11,6 +11,7 @@ public enum DockerFileKeyword
     MAINTAINER,
     EXPOSE,
     FROM,
+    SHELL,
     RUN,
     WORKDIR,
     ENTRYPOINT,
