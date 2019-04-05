@@ -7,6 +7,7 @@
   - Obtain container ip address from custom network for tcp/http wait
   - Fix http (SSL) ping with 'allowAllHosts' flag enabled
   - Update to jnr-unixsocket 0.22
+  - Support docker SHELL setting for runCmds (#1157)
 
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
