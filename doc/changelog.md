@@ -5,6 +5,7 @@
   - docs: Correct default image naming
   - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
   - Update to jnr-unixsocket 0.22
+  - Support docker SHELL setting for runCmds (#1157)
 
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
