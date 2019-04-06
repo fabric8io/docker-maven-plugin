@@ -1,7 +1,10 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import io.fabric8.maven.docker.util.*;
@@ -30,6 +33,7 @@ public class BuildImageConfiguration implements Serializable {
      * image. This Dockerfile will be enriched by the addition build configuration
      */
     @Parameter
+    @Deprecated
     private String dockerFileDir;
 
     /**
@@ -571,19 +575,39 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     private File findDockerFileFile(Logger log) {
+        if(dockerFileDir != null && contextDir != null) {
+            log.warn("Both contextDir (%s) and deprecated dockerFileDir (%s) are configured. Using contextDir.", contextDir, dockerFileDir);
+        }
+
         if (dockerFile != null) {
+            if (EnvUtil.isWindows() && !EnvUtil.isValidWindowsFileName(dockerFile)) {
+                throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
+            }
+
             File dFile = new File(dockerFile);
-            if (dockerFileDir == null) {
+            if (dockerFileDir == null && contextDir == null) {
                 return dFile;
             } else {
-                if (dFile.isAbsolute()) {
-                    throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+                if(contextDir != null) {
+                    if (dFile.isAbsolute()) {
+                        return dFile;
+                    }
+                    return new File(contextDir, dockerFile);
                 }
-                if (EnvUtil.isWindows() && !EnvUtil.isValidWindowsFileName(dockerFile)) {
-                    throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
+
+                if (dockerFileDir != null) {
+                    if (dFile.isAbsolute()) {
+                        throw new IllegalArgumentException("<dockerFile> can not be absolute path if <dockerFileDir> also set.");
+                    }
+                    log.warn("dockerFileDir parameter is deprecated, please migrate to contextDir");
+                    return new File(dockerFileDir, dockerFile);
                 }
-                return new File(dockerFileDir, dockerFile);
             }
+        }
+
+
+        if (contextDir != null) {
+            return new File(contextDir, "Dockerfile");
         }
 
         if (dockerFileDir != null) {

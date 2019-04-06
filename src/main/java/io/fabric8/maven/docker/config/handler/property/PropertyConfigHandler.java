@@ -110,6 +110,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             return true;
         }
 
+        if (isStringValueNull(valueProvider, config, CONTEXT_DIR, () -> config.getContextDirRaw())) {
+            return true;
+        }
+
         if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> config.getDockerFileDirRaw())) {
             return true;
         }

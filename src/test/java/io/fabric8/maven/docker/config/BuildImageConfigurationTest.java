@@ -17,6 +17,7 @@ package io.fabric8.maven.docker.config;
  */
 
 import java.io.File;
+import java.io.IOException;
 
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -105,7 +106,7 @@ public class BuildImageConfigurationTest {
                         dockerFile("src/docker/Dockerfile").
                         contextDir("target").build();
         config.initAndValidate(logger);
-        assertEquals(new File("src/docker/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target/src/docker/Dockerfile"), config.getDockerFile());
         assertEquals(new File("target"), config.getContextDir());
     }
 
@@ -116,7 +117,23 @@ public class BuildImageConfigurationTest {
                         dockerFileDir("src/docker").
                         contextDir("target").build();
         config.initAndValidate(logger);
-        assertEquals(new File("src/docker/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target"), config.getContextDir());
+    }
+
+    @Test
+    public void contextDirAndAbsoluteDockerfile() throws IOException {
+        File tempDockerFile = File.createTempFile("Dockerfile", "");
+        tempDockerFile.deleteOnExit();
+        BuildImageConfiguration config = new BuildImageConfiguration.Builder()
+                .dockerFile(tempDockerFile.getAbsolutePath())
+                .contextDir("target")
+                .build();
+
+        // If contextDir is given and the dockerFile is an absolute path.
+        // The Dockerfile should then be copied over.
+        config.initAndValidate(logger);
+        assertEquals(new File(tempDockerFile.getAbsolutePath()), config.getDockerFile());
         assertEquals(new File("target"), config.getContextDir());
     }
 
