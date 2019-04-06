@@ -1,16 +1,5 @@
 package io.fabric8.maven.docker.access.log;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.CharBuffer;
-import java.nio.charset.CharsetEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.regex.Matcher;
-
 import com.google.common.base.Charsets;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
@@ -25,6 +14,18 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.CharBuffer;
+import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.regex.Matcher;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -236,6 +237,67 @@ public class LogRequestorTest {
         assertTrue(matcher.matches());
         assertEquals(matched, matcher.group("entry"));
     }
+
+    @Test
+    public void runCallsOpenAndCloseOnHandler() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        new Expectations() {{
+            callback.open();
+            times = 1;
+
+            callback.close();
+            times = 1;
+
+        }};
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
+    @Test
+    public void runCanConsumeEmptyStream() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
+    @Test
+    public void runCanConsumeSingleLineStream() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "Hello, world!";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        new Expectations() {{
+            callback.log(type.type, (Timestamp) any, anyString);
+            times = 1;
+        }};
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
+    @Test
+    public void runCanHandleIOException() throws Exception {
+        final IOExcpetionStream stream = new IOExcpetionStream();
+        setupMocks(stream);
+
+        new Expectations() {{
+            callback.error(anyString);
+            times = 1;
+        }};
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
     private void setupMocks(final InputStream inputStream) throws Exception {
         new Expectations() {{
             RequestUtil.newGet(anyString);
@@ -323,5 +385,9 @@ public class LogRequestorTest {
         return String.format("[2015-08-05T12:34:56Z] %s", message);
     }
 
-
+    private class IOExcpetionStream extends InputStream {
+        public int read() throws IOException {
+            throw new IOException("Something bad happened");
+        }
+    }
 }

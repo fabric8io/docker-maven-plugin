@@ -1,14 +1,13 @@
 package io.fabric8.maven.docker.access;
 
-import java.util.List;
+import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.config.NetworkConfig;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerNetworkingConfig {
 
-    private final JSONObject networkingConfig = new JSONObject();
+    private final JsonObject networkingConfig = new JsonObject();
 
     /**
      * Add networking aliases to a custom network
@@ -17,13 +16,13 @@ public class ContainerNetworkingConfig {
      * @return this configuration
      */
     public ContainerNetworkingConfig aliases(NetworkConfig config) {
-        JSONObject endPoints = new JSONObject();
-        endPoints.put("Aliases",new JSONArray(config.getAliases()));
+        JsonObject endPoints = new JsonObject();
+        endPoints.add("Aliases", JsonFactory.newJsonArray(config.getAliases()));
 
-        JSONObject endpointConfigMap = new JSONObject();
-        endpointConfigMap.put(config.getCustomNetwork(), endPoints);
+        JsonObject endpointConfigMap = new JsonObject();
+        endpointConfigMap.add(config.getCustomNetwork(), endPoints);
 
-        networkingConfig.put("EndpointsConfig", endpointConfigMap);
+        networkingConfig.add("EndpointsConfig", endpointConfigMap);
         return this;
     }
 
@@ -31,7 +30,7 @@ public class ContainerNetworkingConfig {
         return networkingConfig.toString();
     }
 
-    public Object toJsonObject() {
+    public JsonObject toJsonObject() {
         return networkingConfig;
     }
 }

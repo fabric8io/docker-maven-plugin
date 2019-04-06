@@ -45,6 +45,7 @@ public class SaveMojo extends AbstractDockerMojo {
 		}
 		String imageName = getImageName();
 		String fileName = getFileName(imageName);
+		ensureSaveDir(fileName);
 		log.info("Saving image %s to %s", imageName, fileName);
 		if (!serviceHub.getQueryService().hasImage(imageName)) {
 			throw new MojoExecutionException("No image " + imageName + " exists");
@@ -83,15 +84,14 @@ public class SaveMojo extends AbstractDockerMojo {
     }
 
     private String completeCalculatedFileName(String file) throws MojoExecutionException {
-	    ensureBuildDir();
         return project.getBuild().getDirectory() + "/" + file.replace("/","-");
     }
 
-    private void ensureBuildDir() throws MojoExecutionException {
-        File buildDir = new File(project.getBuild().getDirectory());
-        if (!buildDir.exists()) {
-            if (!buildDir.mkdirs()) {
-                throw new MojoExecutionException("Can not create directory " + buildDir + " for storing save file");
+    private void ensureSaveDir(String fileName) throws MojoExecutionException {
+        File saveDir = new File(fileName).getParentFile();
+        if (!saveDir.exists()) {
+            if (!saveDir.mkdirs()) {
+                throw new MojoExecutionException("Can not create directory " + saveDir + " for storing save file");
             }
         }
     }

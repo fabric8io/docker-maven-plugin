@@ -1,12 +1,16 @@
 package io.fabric8.maven.docker.access;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeSet;
 
 import io.fabric8.maven.docker.util.ImageName;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 public final class UrlBuilder {
 
@@ -75,8 +79,13 @@ public final class UrlBuilder {
                 .build();
     }
 
-    public String listContainers(String ... filter) {
-        Builder builder = u("containers/json");
+    public String inspectExecContainer(String containerId) {
+        return u("exec/%s/json", containerId)
+                .build();
+    }
+
+    public String listContainers(boolean all, String ... filter) {
+        Builder builder = u("containers/json").p("all", all);
         addFilters(builder, filter);
         return builder.build();
     }
@@ -89,7 +98,7 @@ public final class UrlBuilder {
     public String pullImage(ImageName name, String registry) {
         return u("images/create")
                 .p("fromImage", name.getNameWithoutTag(registry))
-                .p("tag", name.getTag())
+                .p("tag", name.getDigest() != null ? name.getDigest() : name.getTag())
                 .build();
     }
 
@@ -209,11 +218,11 @@ public final class UrlBuilder {
            if (filter.length % 2 != 0) {
                throw new IllegalArgumentException("Filters must be given as key value pairs and not " + Arrays.asList(filter));
            }
-           JSONObject filters = new JSONObject();
+           JsonObject filters = new JsonObject();
            for (int i = 0; i < filter.length; i +=2) {
-               JSONArray value = new JSONArray();
-               value.put(filter[i+1]);
-               filters.put(filter[i],value);
+               JsonArray value = new JsonArray();
+               value.add(filter[i+1]);
+               filters.add(filter[i],value);
            }
            builder.p("filters",filters.toString());
        }

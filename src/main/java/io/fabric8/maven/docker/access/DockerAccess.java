@@ -9,7 +9,8 @@ import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.model.InspectedContainer;
+import io.fabric8.maven.docker.model.ContainerDetails;
+import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.Network;
 
 /**
@@ -36,7 +37,16 @@ public interface DockerAccess {
      * @return <code>ContainerDetails<code> representing the container or null if none could be found
      * @throws DockerAccessException if the container could not be inspected
      */
-    InspectedContainer getContainer(String containerIdOrName) throws DockerAccessException;
+    ContainerDetails getContainer(String containerIdOrName) throws DockerAccessException;
+
+    /**
+     * Get an exec container which is the result of executing a command in a running container.
+     *
+     * @param containerIdOrName exec container id or name
+     * @return <code>ExecDetails<code> representing the container or null if none could be found
+     * @throws DockerAccessException if the container could not be inspected
+     */
+    ExecDetails getExecContainer(String containerIdOrName) throws DockerAccessException;
 
     /**
      * Check whether the given name exists as image at the docker daemon
@@ -59,14 +69,16 @@ public interface DockerAccess {
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
+     * @param all whether to fetch also stopped containers. If false only running containers are returned
      * @return list of <code>Container</code> objects or an empty list if none is found
      * @throws DockerAccessException if the request fails
      */
-    List<Container> getContainersForImage(String image) throws DockerAccessException;
+    List<Container> getContainersForImage(String image, boolean all) throws DockerAccessException;
 
     /**
-     * Starts a previously set up exec instance id.
-     * this API sets up an interactive session with the exec command. Output is streamed to the log.
+     * Starts a previously set up exec instance (via {@link #createExecContainer(String, Arguments)} container
+     * this API sets up a session with the exec command. Output is streamed to the log. This methods
+     * returns only when the exec command has finished (i.e this method calls the command in a non-detached mode).
      *
      * @param containerId id of the exec container
      * @param outputSpec how to print out the output of the command

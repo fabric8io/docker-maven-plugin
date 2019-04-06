@@ -3,7 +3,7 @@ package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
 
-import org.apache.maven.plugin.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugins.annotations.Parameter;
 
 public class AssemblyConfiguration implements Serializable {
@@ -62,6 +62,11 @@ public class AssemblyConfiguration implements Serializable {
     @Parameter
     private Boolean ignorePermissions;
 
+    @Deprecated
+    public Boolean getIgnorePermissions() {
+        return ignorePermissions;
+    }
+
     @Parameter
     private AssemblyMode mode;
 
@@ -70,6 +75,10 @@ public class AssemblyConfiguration implements Serializable {
 
     @Parameter
     private String tarLongFileMode;
+
+    public Boolean getExportTargetDir() {
+        return exportTargetDir;
+    }
 
     public Boolean exportTargetDir() {
         if (exportTargetDir != null) {
@@ -120,6 +129,10 @@ public class AssemblyConfiguration implements Serializable {
         return mode != null ? mode : AssemblyMode.dir;
     }
 
+    public String getModeRaw() {
+        return mode != null ? mode.name() : null;
+    }
+
     public String getTarLongFileMode() {
         return tarLongFileMode;
     }
@@ -134,6 +147,10 @@ public class AssemblyConfiguration implements Serializable {
 
      public PermissionMode getPermissions() {
         return permissions != null ? permissions : PermissionMode.keep;
+    }
+
+    public String getPermissionsRaw() {
+        return permissions != null ? permissions.name() : null;
     }
 
     public String getName() {

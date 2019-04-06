@@ -52,7 +52,7 @@ When working with this plugin you can use an own packaging with a specialized li
 
 * *docker* : This binds `{plugin}:build` to the package phase and `{plugin}:start` / `{plugin}:stop` to the pre- and post-integration phase respectively. Also `{plugin}:push` is bound to the deploy phase.
 * *docker-build* : Much like the _docker_ packaging, except that there are no integration tests configured by default.
-* *docker-tar* : Create a so called _Docker tar_ archive which is used as the artifact and which later can be use for building an image. It contains essentially a `Dockerfile` with supporting files. See link:docker-source[{plugin}:source] for more details.
+* *docker-tar* : Create a so called _Docker tar_ archive which is used as the artifact and which later can be used for building an image. It contains essentially a `Dockerfile` with supporting files. See link:docker-source[{plugin}:source] for more details.
 
 These packaging definitions include the _jar_ lifecycle methods so they are well suited for simple Microservice style projects.
 

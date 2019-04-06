@@ -125,6 +125,26 @@ public class ImageNameTest {
                 new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo").getFullName("another.registry.org"));
         assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo:latest",
                 new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo").getFullName(null));
+        assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getFullName(null));
+        assertEquals("docker.jolokia.org",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getRegistry());
+        assertEquals("docker.jolokia.org",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo:alpine").getRegistry());
+        assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo:alpine",
+                new ImageName("org/jolokia/jolokia_demo:alpine").getFullName("docker.jolokia.org"));
+        assertEquals("docker.jolokia.org",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo:alpine").getRegistry());
+        assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo:1.2.3.4-alpine",
+                new ImageName("org/jolokia/jolokia_demo:1.2.3.4-alpine").getFullName("docker.jolokia.org"));
+        assertEquals("docker.jolokia.org",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo:alpine@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getRegistry());
+        assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo:alpine@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da",
+                new ImageName("org/jolokia/jolokia_demo:alpine@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getFullName("docker.jolokia.org"));
+        assertEquals("docker.jolokia.org",
+                new ImageName("docker.jolokia.org/org/jolokia/jolokia_demo:1.2.3.4-alpine@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getRegistry());
+        assertEquals("docker.jolokia.org/org/jolokia/jolokia_demo:1.2.3.4-alpine@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da",
+                new ImageName("org/jolokia/jolokia_demo:1.2.3.4-alpine@sha256:2781907cc3ae9bb732076f14392128d4b84ff3ebb66379d268e563b10fbfb9da").getFullName("docker.jolokia.org"));
     }
 
 
@@ -151,7 +171,7 @@ public class ImageNameTest {
             try {
                 new ImageName(i);
                 fail(String.format("Name '%s' should fail",i));
-            } catch (IllegalArgumentException exp) {};
+            } catch (IllegalArgumentException exp) { /* expected */};
         }
 
         String[] legal = {

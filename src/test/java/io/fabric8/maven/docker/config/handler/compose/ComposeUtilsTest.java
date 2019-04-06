@@ -1,14 +1,12 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
+import java.io.File;
+
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.VerificationsInOrder;
-import mockit.integration.junit4.JMockit;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.io.File;
 
 import static io.fabric8.maven.docker.util.PathTestUtil.DOT;
 import static io.fabric8.maven.docker.util.PathTestUtil.SEP;
@@ -19,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  */
-@RunWith(JMockit.class)
+
 public class ComposeUtilsTest {
 
     private final String className = ComposeUtilsTest.class.getSimpleName();

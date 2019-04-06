@@ -12,12 +12,12 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.22.1</version>
+    <version>0.28-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-healthcheck</artifactId>
-  <version>0.22.1</version>
+  <version>0.28-SNAPSHOT</version>
 
 
   <build>
@@ -102,7 +102,21 @@
               </build>
             </image>
             <image>
-              <alias>unhealthybox5</alias>
+              <alias>healthybox5</alias>
+              <name>busybox5</name>
+              <build>
+                <from>busybox</from>
+                <healthCheck>
+                  <interval>5m</interval>
+                  <timeout>3s</timeout>
+                  <startPeriod>30m</startPeriod>
+                  <retries>3</retries>
+                  <cmd>curl -f http://localhost/ || exit 1</cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>unhealthybox6</alias>
               <name>busybox5</name>
               <build>
                 <from>busybox</from>

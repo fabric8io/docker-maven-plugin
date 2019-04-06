@@ -17,14 +17,11 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -47,8 +44,19 @@ public class DockerFileUtilTest {
     @Test
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
-        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, FixedStringSearchInterpolator.create()));
+        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create()).get(0));
+    }
+
+    @Test
+    public void testMultiStage() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+             toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertEquals("fabric8/s1i-java", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
     }
 
     private File copyToTempDir(String resource) throws IOException {
@@ -98,12 +106,11 @@ public class DockerFileUtilTest {
         projectProperties.put("ext", "png");
 
         Settings settings = new Settings();
-        ArtifactRepository localRepository = new MockUp<ArtifactRepository>() {
-            @Mock
+        ArtifactRepository localRepository = new MavenArtifactRepository() {
             public String getBasedir() {
                 return "repository";
             }
-        }.getMockInstance();
+        };
         @SuppressWarnings("deprecation")
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
         session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue

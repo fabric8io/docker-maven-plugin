@@ -5,7 +5,7 @@ import java.util.*;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.GavLabel;
 
 /**
  * Tracker class for tracking started containers so that they can be shut down at the end when
@@ -22,21 +22,21 @@ public class ContainerTracker {
 
     // Maps holding actions to be used when doing a shutdown
     private final Map<String, ContainerShutdownDescriptor> shutdownDescriptorPerContainerMap = new LinkedHashMap<>();
-    private final Map<PomLabel,List<ContainerShutdownDescriptor>> shutdownDescriptorPerPomLabelMap = new HashMap<>();
+    private final Map<GavLabel,List<ContainerShutdownDescriptor>> shutdownDescriptorPerPomLabelMap = new HashMap<>();
 
     /**
      * Register a started container to this tracker
      *
      * @param containerId container id to register
      * @param imageConfig configuration of associated image
-     * @param pomLabel pom label to identifying the reactor project where the container was created
+     * @param gavLabel pom label to identifying the reactor project where the container was created
      */
     public synchronized void registerContainer(String containerId,
                                                ImageConfiguration imageConfig,
-                                               PomLabel pomLabel) {
+                                               GavLabel gavLabel) {
         ContainerShutdownDescriptor descriptor = new ContainerShutdownDescriptor(imageConfig, containerId);
         shutdownDescriptorPerContainerMap.put(containerId, descriptor);
-        updatePomLabelMap(pomLabel, descriptor);
+        updatePomLabelMap(gavLabel, descriptor);
         updateImageToContainerMapping(imageConfig, containerId);
     }
 
@@ -74,13 +74,13 @@ public class ContainerTracker {
      *
      * If no pom label is given, then all descriptors are returned.
      *
-     * @param pomLabel the label for which to get the descriptors or <code>null</code> for all descriptors
+     * @param gavLabel the label for which to get the descriptors or <code>null</code> for all descriptors
      * @return the descriptors for the given label or an empty collection
      */
-    public synchronized Collection<ContainerShutdownDescriptor> removeShutdownDescriptors(PomLabel pomLabel) {
+    public synchronized Collection<ContainerShutdownDescriptor> removeShutdownDescriptors(GavLabel gavLabel) {
         List<ContainerShutdownDescriptor> descriptors;
-        if (pomLabel != null) {
-            descriptors = removeFromPomLabelMap(pomLabel);
+        if (gavLabel != null) {
+            descriptors = removeFromPomLabelMap(gavLabel);
             removeFromPerContainerMap(descriptors);
         } else {
             // All entries are requested
@@ -94,21 +94,21 @@ public class ContainerTracker {
 
     // ========================================================
 
-    private void updatePomLabelMap(PomLabel pomLabel, ContainerShutdownDescriptor descriptor) {
-        if (pomLabel != null) {
-            List<ContainerShutdownDescriptor> descList = shutdownDescriptorPerPomLabelMap.get(pomLabel);
+    private void updatePomLabelMap(GavLabel gavLabel, ContainerShutdownDescriptor descriptor) {
+        if (gavLabel != null) {
+            List<ContainerShutdownDescriptor> descList = shutdownDescriptorPerPomLabelMap.get(gavLabel);
             if (descList == null) {
                 descList = new ArrayList<>();
-                shutdownDescriptorPerPomLabelMap.put(pomLabel,descList);
+                shutdownDescriptorPerPomLabelMap.put(gavLabel, descList);
             }
             descList.add(descriptor);
         }
     }
 
     private void removeDescriptorFromPomLabelMap(ContainerShutdownDescriptor descriptor) {
-        Iterator<Map.Entry<PomLabel, List<ContainerShutdownDescriptor>>> mapIt = shutdownDescriptorPerPomLabelMap.entrySet().iterator();
+        Iterator<Map.Entry<GavLabel, List<ContainerShutdownDescriptor>>> mapIt = shutdownDescriptorPerPomLabelMap.entrySet().iterator();
         while(mapIt.hasNext()) {
-            Map.Entry<PomLabel,List<ContainerShutdownDescriptor>> mapEntry = mapIt.next();
+            Map.Entry<GavLabel,List<ContainerShutdownDescriptor>> mapEntry = mapIt.next();
             List<ContainerShutdownDescriptor> descs = mapEntry.getValue();
             Iterator<ContainerShutdownDescriptor> it = descs.iterator();
             while (it.hasNext()) {
@@ -157,9 +157,9 @@ public class ContainerTracker {
         }
     }
 
-    private List<ContainerShutdownDescriptor> removeFromPomLabelMap(PomLabel pomLabel) {
+    private List<ContainerShutdownDescriptor> removeFromPomLabelMap(GavLabel gavLabel) {
         List<ContainerShutdownDescriptor> descriptors;
-        descriptors = shutdownDescriptorPerPomLabelMap.remove(pomLabel);
+        descriptors = shutdownDescriptorPerPomLabelMap.remove(gavLabel);
         if (descriptors == null) {
             descriptors = new ArrayList<>();
         } return descriptors;
@@ -188,8 +188,10 @@ public class ContainerTracker {
         // How long to wait after stop to kill container (in seconds)
         private final int killGracePeriod;
 
-        // Command to call before stopping container
+
+        // Command to call before stopping container and whether to stop the build
         private String preStop;
+        private boolean breakOnError = false;
 
         ContainerShutdownDescriptor(ImageConfiguration imageConfig, String containerId) {
             this.imageConfig = imageConfig;
@@ -197,10 +199,11 @@ public class ContainerTracker {
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
-            this.shutdownGracePeriod = waitConfig != null ? waitConfig.getShutdown() : 0;
-            this.killGracePeriod = waitConfig != null ? waitConfig.getKill() : 0;
+            this.shutdownGracePeriod = waitConfig != null && waitConfig.getShutdown() != null ? waitConfig.getShutdown() : 0;
+            this.killGracePeriod = waitConfig != null && waitConfig.getKill() != null ? waitConfig.getKill() : 0;
             if (waitConfig != null && waitConfig.getExec() != null) {
                 this.preStop = waitConfig.getExec().getPreStop();
+                this.breakOnError = waitConfig.getExec().isBreakOnError();
             }
         }
 
@@ -230,6 +233,10 @@ public class ContainerTracker {
 
         public String getPreStop() {
             return preStop;
+        }
+
+        public boolean isBreakOnError() {
+            return breakOnError;
         }
 
         @Override

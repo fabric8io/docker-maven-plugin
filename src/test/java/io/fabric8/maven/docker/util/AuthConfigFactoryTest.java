@@ -1,25 +1,5 @@
 package io.fabric8.maven.docker.util;
 
-import mockit.*;
-import mockit.integration.junit4.JMockit;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.settings.Server;
-import org.apache.maven.settings.Settings;
-import org.codehaus.plexus.PlexusContainer;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
-import org.codehaus.plexus.util.Base64;
-import org.codehaus.plexus.util.IOUtil;
-import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.hamcrest.Matchers;
-import io.fabric8.maven.docker.access.AuthConfig;
-import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,15 +10,41 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import io.fabric8.maven.docker.access.AuthConfig;
+import mockit.Expectations;
+import mockit.Mock;
+import mockit.Mocked;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
+import org.codehaus.plexus.PlexusContainer;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
+import org.codehaus.plexus.util.Base64;
+import org.codehaus.plexus.util.IOUtil;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
+
 import static java.util.Collections.singletonMap;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author roland
  * @since 29.07.14
  */
-@RunWith(JMockit.class)
+
 public class AuthConfigFactoryTest {
 
     public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";
@@ -53,7 +59,9 @@ public class AuthConfigFactoryTest {
 
     private boolean isPush = true;
 
-    public static final class MockSecDispatcher extends MockUp<SecDispatcher> {
+    private Gson gson;
+
+    public static final class MockSecDispatcher implements SecDispatcher {
         @Mock
         public String decrypt(String password) {
             return password;
@@ -68,13 +76,15 @@ public class AuthConfigFactoryTest {
 
     @Before
     public void containerSetup() throws ComponentLookupException {
-        final SecDispatcher secDispatcher = new MockSecDispatcher().getMockInstance();
+        final SecDispatcher secDispatcher = new MockSecDispatcher();
         new Expectations() {{
             container.lookup(SecDispatcher.ROLE, "maven"); minTimes = 0; result = secDispatcher;
 
         }};
         factory = new AuthConfigFactory(container);
         factory.setLog(log);
+
+        gson = new Gson();
     }
 
     @Test
@@ -127,12 +137,24 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginIgnoreAuthWhenCredentialHelperAvailable() throws MojoExecutionException, IOException {
+    public void testDockerLoginFallsBackToAuthWhenCredentialHelperDoesNotMatchDomain() throws MojoExecutionException, IOException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
-                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","localhost:5000");
+                verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginNoAuthConfigFoundWhenCredentialHelperDoesNotMatchDomainOrAuth() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","does-not-exist-either:5000");
                 assertNull(config);
             }
         });
@@ -220,40 +242,40 @@ public class AuthConfigFactoryTest {
                                        String email, String registry) throws IOException {
         File configFile = new File(dockerDir,"config.json");
 
-        JSONObject config = new JSONObject();
+        JsonObject config = new JsonObject();
         addAuths(config,user,password,email,registry);
 
         try (Writer writer = new FileWriter(configFile)){
-            config.write(writer);
+            gson.toJson(config, writer);
         }
     }
 
     private void writeDockerConfigJson(File dockerDir,String credsStore,Map<String,String> credHelpers) throws IOException {
         File configFile = new File(dockerDir,"config.json");
 
-        JSONObject config = new JSONObject();
+        JsonObject config = new JsonObject();
         if (!credHelpers.isEmpty()){
-            config.put("credHelpers",credHelpers);
+            config.add("credHelpers", JsonFactory.newJsonObject(credHelpers));
         }
 
         if (credsStore!=null) {
-            config.put("credsStore",credsStore);
+            config.addProperty("credsStore",credsStore);
         }
 
         addAuths(config,"roland","secret","roland@jolokia.org", "localhost:5000");
 
         try (Writer writer = new FileWriter(configFile)){
-            config.write(writer);
+            gson.toJson(config, writer);
         }
     }
 
-    private void addAuths(JSONObject config,String user,String password,String email,String registry) {
-        JSONObject auths = new JSONObject();
-        JSONObject value = new JSONObject();
-        value.put("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
-        value.put("email",email);
-        auths.put(registry,value);
-        config.put("auths",auths);
+    private void addAuths(JsonObject config,String user,String password,String email,String registry) {
+        JsonObject auths = new JsonObject();
+        JsonObject value = new JsonObject();
+        value.addProperty("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
+        value.addProperty("email",email);
+        auths.add(registry, value);
+        config.add("auths",auths);
     }
 
     @Test
@@ -315,7 +337,7 @@ public class AuthConfigFactoryTest {
                 Map<String,String> authConfigMap = new HashMap<>();
                 authConfigMap.put("useOpenShiftAuth","true");
                 expectedException.expect(MojoExecutionException.class);
-                expectedException.expectMessage(startsWith("Authentication configured for OpenShift, but no active user and/or token found in ~/.config/kube."));
+                expectedException.expectMessage(containsString("~/.kube/config"));
                 factory.createAuthConfig(isPush,false,authConfigMap,settings,"roland",null);
             }
         });
@@ -443,11 +465,11 @@ public class AuthConfigFactoryTest {
     }
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
-        JSONObject params = new JSONObject(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())));
-        assertEquals(username,params.get("username"));
-        assertEquals(password,params.get("password"));
+        JsonObject params = gson.fromJson(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())), JsonObject.class);
+        assertEquals(username,params.get("username").getAsString());
+        assertEquals(password,params.get("password").getAsString());
         if (email != null) {
-            assertEquals(email, params.get("email"));
+            assertEquals(email, params.get("email").getAsString());
         }
     }
 

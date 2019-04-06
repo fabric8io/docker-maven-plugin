@@ -7,8 +7,8 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 |===
 | Element | Description
 
-| *name* 
-| Assembly name, which is `maven` by default. This name is used for the archived and directories created during the build and holding the assembly files. If an <<external-dockerfile,external Dockerfile>> is used than this name is also the relative directory which contains the assembly files.
+| *name*
+| Assembly name, which is `maven` by default. This name is used for the archives and directories created during the build. This directory holds the files specified by the assembly. If an <<external-dockerfile,external Dockerfile>> is used than this name is also the relative directory which contains the assembly files.
 
 | *targetDir*
 | Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/<assembly name>`, so `/maven` if *name* is not set to a different value. This option has no meaning when an <<external-dockerfile,external Dockerfile>> is used.
@@ -23,14 +23,14 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 | Alias to a predefined assembly descriptor. The available aliases are also described in <<build-assembly-descriptor,Assembly Descriptor>> below.
 
 | *dockerFileDir*
-| Directory containing an external Dockerfile. _This option is deprecated, please use <dockerfiledir> directly in the <build> section_.
+| Directory containing an external Dockerfile. _This option is deprecated, please use <dockerFileDir> directly in the <build> section_.
 
 | *exportTargetDir*
 | Specification whether the `targetDir` should be exported as a volume.  This value is `true` by default except in the case the `targetDir` is set to the container root (`/`). It is also `false` by default when a base image is used with `from` since exporting makes no sense in this case and will waste disk space unnecessarily.
 
 | *ignorePermissions*
 | Specification if existing file permissions should be ignored
-when creating the assembly archive with a mode `dir`. This value is `false` by default. _This property is deprecated, use a `permissionMode` of `ignore` instead._
+when creating the assembly archive with a mode `dir`. This value is `false` by default. _This property is deprecated, use a `permissions` of `ignore` instead._
 
 | *mode*
 a| Mode how the how the assembled files should be collected:
@@ -128,7 +128,7 @@ will add the created artifact with the name `${project.build.finalName}.${artifa
 All declared files end up in the configured `targetDir` (or `/maven` by default) in the created image.
 
 .Maven peculiarities when including the artifact
-If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. Otherwise the artifact file can't be found by `docker:build`. This is an old https://issues.apache.org/jira/browse/MASSEMBLY-94[outstanding issue] of the assembly plugin which probably can't be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases you won't experience any problem. However, when the following warning happens which might lead to the given error:
+If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. Otherwise the artifact file, can't be found by `docker:build`. This is an old https://issues.apache.org/jira/browse/MASSEMBLY-94[outstanding issue] of the assembly plugin which probably can't be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases, you won't experience any problem. However, when the following warning happens which might lead to the given error:
 
 [source]
 ----
@@ -177,7 +177,7 @@ automatically.
         <outputFileNameMapping>jolokia.war</outputFileNameMapping>
       </dependencySet>
     </dependencySets>
-  </inline>  
+  </inline>
 </assembly>
 ----
 

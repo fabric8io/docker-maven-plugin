@@ -67,44 +67,17 @@ public class LogOutputSpecFactory {
     private Map<String, FormatParameterReplacer.Lookup> getPrefixFormatParameterLookups(final ImageConfiguration imageConfig, final String containerId) {
         Map<String, FormatParameterReplacer.Lookup> ret = new HashMap<>();
 
-        ret.put("z", new FormatParameterReplacer.Lookup() {
-            @Override
-            public String lookup() {
-                return "";
+        ret.put("z", () -> "");
+        ret.put("c", () -> containerId.substring(0, 6));
+        ret.put("C", () -> containerId);
+        ret.put("a", () -> {
+            String alias = imageConfig.getAlias();
+            if (alias != null) {
+                return alias;
             }
+            return containerId.substring(0, 6);
         });
-
-        ret.put("c", new FormatParameterReplacer.Lookup() {
-            @Override
-            public String lookup() {
-                return containerId.substring(0, 6);
-            }
-        });
-
-        ret.put("C", new FormatParameterReplacer.Lookup() {
-            @Override
-            public String lookup() {
-                return containerId;
-            }
-        });
-
-        ret.put("a", new FormatParameterReplacer.Lookup() {
-            @Override
-            public String lookup() {
-                String alias = imageConfig.getAlias();
-                if (alias != null) {
-                    return alias;
-                }
-                return containerId.substring(0, 6);
-            }
-        });
-
-        ret.put("n", new FormatParameterReplacer.Lookup() {
-            @Override
-            public String lookup() {
-                return imageConfig.getName();
-            }
-        });
+        ret.put("n", imageConfig::getName);
 
         return ret;
     }

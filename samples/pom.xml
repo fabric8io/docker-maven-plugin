@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8.dmp.samples</groupId>
   <artifactId>dmp-sample-parent</artifactId>
-  <version>0.24-SNAPSHOT</version>
+  <version>0.28-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <url>http://www.jolokia.org</url>
@@ -53,10 +53,14 @@
     <module>dockerignore</module>
     <module>docker-compose</module>
     <module>data-jolokia</module>
-    <!-- module>healthcheck</module -->
+    <module>smallest</module>
+    <module>zero-config</module>
+    <module>healthcheck</module>
     <module>multi-wait</module>
-    <!--module>helloworld</module -->
+    <module>helloworld</module>
     <module>dockerfile</module>
-   <!-- module>cargo-jolokia</module -->
+    <module>cargo-jolokia</module>
+    <module>log</module>
+    <module>run-java</module>
   </modules>
 </project>

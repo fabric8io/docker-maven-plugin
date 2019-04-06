@@ -1,0 +1,65 @@
+[[image-name]]
+## Image Names
+When specifying the image name in the configuration with the `<name>` field you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.
+
+[cols="1,5"]
+|===
+| Placeholder | Description
+
+| *%g*
+| The last part of the Maven group name, sanitized so that it can be used as username on GitHub. Only the part after the last dot is used. E.g. for a group id `io.fabric8` this placeholder would insert `fabric8`
+
+| *%a*
+| A sanitized version of the artefact id so that it can be used as part of an Docker image name. I.e. it is converted to all lower case (as required by Docker)
+
+| *%v*
+| The project version. Synonym to `${project.version}`
+
+| *%l*
+| If the project version ends with `-SNAPSHOT` then this placeholder is `latest`, otherwise its the full version (same as `%v`)
+
+| *%t*
+| If the project version ends with `-SNAPSHOT` this placeholder resolves to `snapshot-<timestamp>` where timestamp has the date format `yyMMdd-HHmmss-SSSS` (eg `snapshot-`). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.
+|===
+
+ifeval::["{plugin}" == "docker"]
+[[container-name]]
+## Container Names
+
+Similar to image name placeholders, for starting and stopping containers and alternate set of placeholders can be configured in order to the name the containers to create.
+
+These placeholders can be used in the top-level configuration value `containerNamePattern` which is used globally for every container that is created.
+This global pattern can be overwritten individually by each image's <<config-image-run, *run*>> configuration.
+If neither is given, then by default the pattern `%n-%i` is used.
+
+When specifying the container name pattern the following placeholders can be used:
+
+[cols="1,5"]
+|===
+| Placeholder | Description
+
+| *%a*
+| The `<alias>` of an image which must be set. The alias is set in the top-level image configuration
+
+| *%n*
+| A sanitized version of the imag's short name from which this container is created. "Sanitized" means that any non letter, digit, dot or dash is replaced by an underscore.
+
+| *%t*
+| The build time stamp. This is the timestamp which created during the building of an image and locally cached. A rebuild of the image will update the timestamp.
+
+| *%i*
+| An index which is incremented if a container has already been created. With this parameter it is easily possible to have multiple, similar containers. See the example below for more details.
+
+|===
+
+You can combine the placeholders in any combination and will be resolved during `docker:start`, `docker:stop` and `docker:watch`.
+
+The following example is using a container name pattern of `%n-%i` which is also the default.
+Given an image `fabric8io/dmp-sample-jolokia:latest`, then during `mvn docker:start` a container with the name `dmp-sample-jolokia-1` is first tried.
+If there is already a container with this name, then `dmp-sample-jolokia-2` is the second attempt.
+This goes on until a "free" name is found.
+
+Similar, when stopping containers with `mvn docker:stop` then only the container with the highest index is stopped.
+However, if you don't use an index via `%i` then _all_ containers started with `docker:start` are stopped.
+Use `mvn docker:stop -Ddocker.allContainers` to also stop every container named via a `%i` pattern.
+endif::[]

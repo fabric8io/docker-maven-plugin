@@ -117,7 +117,7 @@ public class ApacheHttpClientDelegate {
 
     private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
         req.addHeader(HttpHeaders.ACCEPT, "*/*");
-        req.addHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+        req.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         return req;
     }
 

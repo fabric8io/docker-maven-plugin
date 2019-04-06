@@ -14,7 +14,7 @@ There are five different locations searched for credentials.  In order, these ar
 * Login into a registry with `docker login` (credentials in a credential helper or in `~/.docker/config.json`)
 
 Using the username and password directly in the `pom.xml` is not
-recommended since this is widely visible. This is most easiest and
+recommended since this is widely visible. This is easiest and
 transparent way, though. Using an `<authConfig>` is straight forward:
 
 [source,xml]
@@ -68,7 +68,7 @@ The most _secure_ way is to rely on docker's credential store or credential help
 from an external credentials store, such as the native keychain of the operating system. Follow the instruction on
 https://docs.docker.com/engine/reference/commandline/login/#credentials-store[the docker login documentation].
 
-As a final fallback, this plugin consults `~/.docker/config.json` and reads credentials stored directly within this
+As a final fallback, this plugin consults `$DOCKER_CONFIG/config.json` if `DOCKER_CONFIG` is set, or `~/.docker/config.json` if not, and reads credentials stored directly within this
 file. This unsafe behavior happened when connecting to a registry with the command `docker login` from the command line
 with older versions of docker (pre 1.13.0) or when docker is not configured to use a
 https://docs.docker.com/engine/reference/commandline/login/#credentials-store[credential store].
@@ -76,7 +76,7 @@ https://docs.docker.com/engine/reference/commandline/login/#credentials-store[cr
 == Pull vs. Push Authentication
 
 The credentials lookup described above is valid for both push and
-pull operations. In order to narrow things down, credentials can be be
+pull operations. In order to narrow things down, credentials can be
 provided for pull or push operations alone:
 
 In an `<authConfig>` section a sub-section `<pull>` and/or `<push>`
@@ -121,7 +121,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
     -Ddocker.password=$(oc whoami -t)
 ----
 
-(note, that the image's user name part ("default" here") must
+(note, that the image's username part ("default" here") must
 correspond to an OpenShift project with the same name to which you
 currently connected account has access).
 
@@ -144,6 +144,8 @@ For dedicated _pull_ and _push_ configuration the system properties
 available as well as the configuration option `<useOpenShiftAuth>` in
 an `<pull>` or `<push>` section within the `<authConfig>`
 configuration.
+
+If `useOpenShiftAuth` is enabled then the OpenShift Konfiguration will be looked up in `$KUBECONFIG` or, if this environment variable is not set, in `~/.kube/config`.
 
 [[password-encryption]]
 == Password encryption
@@ -176,7 +178,15 @@ Some docker registries require additional steps to authenticate.
 link:https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html[Amazon ECR] requires using an IAM access key to obtain temporary docker login credentials.
 The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _<awsAccountId>_ *.dkr.ecr.* _<awsRegion>_ *.amazonaws.com*, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set true.
 
+Note that for an ECR repository with URI `123456789012.dkr.ecr.eu-west-1.amazonaws.com/example/image` the d-m-p's `docker.registry` should be set to `123456789012.dkr.ecr.eu-west-1.amazonaws.com` and `example/image` is the `<name>` of the image.
+
 You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
 In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
 To do so, either specify the `docker.authToken` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
+
+In case you are running on an EC2 instance that has an appropriate IAM role assigned
+(e.g. a role that grants the AWS built-in policy _AmazonEC2ContainerRegistryPowerUser_)
+authentication information doesn't need to be provided at all. Instead the instance
+meta-data service is queried for temporary access credentials supplied by the
+assigned role.

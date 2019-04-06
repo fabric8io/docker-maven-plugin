@@ -7,6 +7,7 @@ public enum DockerFileOption
 {
     HEALTHCHECK_INTERVAL("interval"),
     HEALTHCHECK_TIMEOUT("timeout"),
+    HEALTHCHECK_START_PERIOD("start-period"),
     HEALTHCHECK_RETRIES("retries");
 
     private String key;

@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Set;
 
 import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.util.AutoPullMode;
-import org.apache.maven.plugin.MojoExecutionException;
 
 /**
  * Query service for getting image and container information from the docker dameon
@@ -93,11 +91,12 @@ public class QueryService {
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
+     * @param all whether to fetch all containers
      * @return list of <code>Container</code> objects
      * @throws DockerAccessException if the request fails
      */
-    public List<Container> getContainersForImage(final String image) throws DockerAccessException {
-        return docker.getContainersForImage(image);
+    public List<Container> getContainersForImage(final String image, final boolean all) throws DockerAccessException {
+        return docker.getContainersForImage(image, all);
     }
 
     /**
@@ -122,7 +121,7 @@ public class QueryService {
         long newest = 0;
         Container result = null;
 
-        for (Container container : getContainersForImage(image)) {
+        for (Container container : getContainersForImage(image, false)) {
             long timestamp = container.getCreated();
 
             if (timestamp < newest) {
@@ -169,4 +168,5 @@ public class QueryService {
     public boolean hasImage(String name) throws DockerAccessException {
         return docker.hasImage(name);
     }
+
 }

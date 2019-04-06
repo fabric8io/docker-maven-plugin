@@ -23,7 +23,7 @@ The configuration is the same as for <<docker:volume-create>>
 ----
 
 [[volume-remove-configuration]]
-=== Configuration
+.Configuration
 
 The configuration is quite simple. Only the name of the volume to delete is required.
 

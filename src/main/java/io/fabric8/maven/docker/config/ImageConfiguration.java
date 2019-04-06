@@ -1,9 +1,15 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.DeepCopy;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -49,6 +55,15 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Override externalConfiguration when defined via special property.
+     *
+     * @param externalConfiguration Map with alternative config
+     */
+    public void setExternalConfiguration(Map<String, String> externalConfiguration) {
+        this.external = externalConfiguration;
     }
 
     @Override
@@ -115,9 +130,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     private void addDependsOn(RunImageConfiguration runConfig, List<String> ret) {
         // Only used in custom networks.
         if (runConfig.getNetworkingConfig().isCustomNetwork()) {
-            for (String link : runConfig.getDependsOn()) {
-                ret.add(link);
-            }
+            ret.addAll(runConfig.getDependsOn());
         }
     }
 

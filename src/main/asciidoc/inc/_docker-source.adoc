@@ -2,10 +2,29 @@
 [[docker:source]]
 == *docker:source*
 
-The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <<docker:build,<<{plugin}:build> >>.
+The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <<{plugin}:build> >>.
 
-`{plugin}:source` uses the image's link:image-configuration.md[alias] as part of the classifier, so it is mandatory that the alias is set for
-this goal to work. The classifier is calculated as `docker-<alias>` so when the alias is set to `service`, then the classifier is `docker-service`.
+By default, only the first image configuration is used for creating the source archive.
+You can export all image configurations by setting the `sourceMode` configuration to `all`:
+
+.Export all image configs
+[source,xml]
+----
+<plugin>
+  <artifactId>docker-maven-plugin</artifactId>
+  <configuration>
+    <!-- source mode can be "first" or "all" -->
+    <sourceMode>all</sourceMode>
+    <!-- .... -->
+  </configuration>
+</plugin>
+----
+
+For exporting all image configurations, `{plugin}:source` uses the image's link:image-configuration.md[alias] as part of the classifier, so it is mandatory that the alias is set for
+this goal to work when all images should be exported this way.
+The classifier is calculated as `docker-<alias>` so when the alias is set to `service`, then the classifier is `docker-service`.
+
+If you only export the first image configuration (which is the default), then the classifier is just `docker` (without alias).
 
 `{plugin}:source` can be attached to a Maven execution phase, which is `generate-sources` by default.
 
