@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.LinkedList;
 
 import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.BuildOptions;
@@ -233,14 +234,20 @@ public class BuildService {
             return;
         }
 
-        String fromImage;
+        List<String> fromImages;
         if (buildConfig.isDockerFileMode()) {
-            fromImage = extractBaseFromDockerfile(buildConfig, buildContext);
+            fromImages = extractBaseFromDockerfile(buildConfig, buildContext);
         } else {
-            fromImage = extractBaseFromConfiguration(buildConfig);
+            fromImages = new LinkedList<>();
+            String baseImage = extractBaseFromConfiguration(buildConfig);
+            if (baseImage!=null) {
+                fromImages.add(extractBaseFromConfiguration(buildConfig));
+            }
         }
-        if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
-            registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+        for (String fromImage : fromImages) {
+            if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
+                registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+            }
         }
     }
 
@@ -256,17 +263,17 @@ public class BuildService {
         return fromImage;
     }
 
-    private String extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext) {
-        String fromImage;
+    private List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext) {
+        List<String> fromImage;
         try {
             File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
-            fromImage = DockerFileUtil.extractBaseImage(
+            fromImage = DockerFileUtil.extractBaseImages(
                 fullDockerFilePath,
                 DockerFileUtil.createInterpolator(buildContext.getMojoParameters(), buildConfig.getFilter()));
         } catch (IOException e) {
             // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
             // building the image, so we are passive here.
-            fromImage = null;
+            return Collections.emptyList();
         }
         return fromImage;
     }
