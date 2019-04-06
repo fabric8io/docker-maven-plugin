@@ -1,8 +1,12 @@
 package io.fabric8.maven.docker.access.ecr;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -13,13 +17,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
@@ -40,6 +40,16 @@ public class EcrExtendedAuth {
     private final String accountId;
     private final String region;
 
+    /**
+     * Is given the registry an ecr registry?
+     * 
+     * @param registry the registry name
+     * @return true, if the registry matches the ecr pattern
+     */
+    public static boolean isAwsRegistry(String registry) {
+        return (registry != null) && AWS_REGISTRY.matcher(registry).matches();
+    }
+    
     /**
      * Initialize an extended authentication for ecr registry.
      *

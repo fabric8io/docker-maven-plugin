@@ -184,3 +184,9 @@ You can use any IAM access key with the necessary permissions in any of the loca
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
 In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
 To do so, either specify the `docker.authToken` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
+
+In case you are running on an EC2 instance that has an appropriate IAM role assigned
+(e.g. a role that grants the AWS built-in policy _AmazonEC2ContainerRegistryPowerUser_)
+authentication information doesn't need to be provided at all. Instead the instance
+meta-data service is queried for temporary access credentials supplied by the
+assigned role.
