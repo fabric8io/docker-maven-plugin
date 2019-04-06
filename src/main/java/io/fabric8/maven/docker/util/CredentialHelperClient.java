@@ -28,11 +28,11 @@ public class CredentialHelperClient {
         return credentialHelperName;
     }
 
-    public String getVersion() throws MojoExecutionException {
+    public String getVersion() {
         try {
             return new VersionCommand().getVersion();
         } catch (IOException e) {
-            throw new MojoExecutionException("Error getting the version of the configured credential helper",e);
+            return null;
         }
     }
 
@@ -79,9 +79,6 @@ public class CredentialHelperClient {
 
         public String getVersion() throws IOException {
             execute();
-            if (version == null) {
-                log.verbose("The credentials helper \"%s\" didn't return a version string",CredentialHelperClient.this.credentialHelperName);
-            }
             return version;
         }
     }
