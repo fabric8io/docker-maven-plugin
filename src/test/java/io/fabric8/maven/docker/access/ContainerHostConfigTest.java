@@ -102,9 +102,24 @@ public class ContainerHostConfigTest {
             Pair.of(Boolean.FALSE, "{ReadonlyRootfs: false}")
         };
         for (int i = 0; i < data.length; i++) {
-        	Pair<Boolean, String> d = data[i];
+            Pair<Boolean, String> d = data[i];
             ContainerHostConfig hc = new ContainerHostConfig();
             JsonObject result = hc.readonlyRootfs(d.getLeft()).toJsonObject();
+            JsonObject expected = JsonFactory.newJsonObject(d.getRight());
+            assertEquals(expected, result);
+        }
+    }
+    
+    @Test
+    public void testAutoRemove() throws Exception {
+        Pair [] data = {
+            Pair.of(Boolean.TRUE, "{AutoRemove: true}"),
+            Pair.of(Boolean.FALSE, "{AutoRemove: false}")
+        };
+        for (int i = 0; i < data.length; i++) {
+            Pair<Boolean, String> d = data[i];
+            ContainerHostConfig hc = new ContainerHostConfig();
+            JsonObject result = hc.autoRemove(d.getLeft()).toJsonObject();
             JsonObject expected = JsonFactory.newJsonObject(d.getRight());
             assertEquals(expected, result);
         }

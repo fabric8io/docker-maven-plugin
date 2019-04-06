@@ -184,6 +184,10 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private Boolean readOnly;
 
+    // Automatically remove the container when it exists
+    @Parameter
+    private Boolean autoRemove;
+
     public RunImageConfiguration() { }
 
     public String initAndValidate() {
@@ -391,6 +395,10 @@ public class RunImageConfiguration implements Serializable {
 
     public Boolean getReadOnly() {
         return readOnly;
+    }
+
+    public Boolean getAutoRemove() {
+        return autoRemove;
     }
 
     /**
@@ -644,6 +652,10 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder autoRemove(Boolean autoRemove) {
+            config.autoRemove = autoRemove;
+            return this;
+        }
 
         public RunImageConfiguration build() {
             return config;

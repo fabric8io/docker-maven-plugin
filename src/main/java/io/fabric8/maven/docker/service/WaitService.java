@@ -175,7 +175,7 @@ public class WaitService {
             log.info("%s: Waiting for mapped ports %s on host %s", imageConfigDesc, ports, host);
         } else {
             final String networkMode = container.getNetworkMode();
-            log.info("%s: Netwok mode: %s", imageConfigDesc, networkMode);
+            log.info("%s: Network mode: %s", imageConfigDesc, networkMode);
             if (networkMode == null || networkMode.isEmpty() || "bridge".equals(networkMode)) {
                 // Safe mode when network mode is not present
                 host = container.getIPAddress();
