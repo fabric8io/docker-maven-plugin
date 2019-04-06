@@ -36,6 +36,8 @@ public interface Container {
 
     String getName();
 
+    String getNetworkMode();
+
     Map<String, PortBinding> getPortBindings();
 
     boolean isRunning();

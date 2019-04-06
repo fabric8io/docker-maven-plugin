@@ -19,14 +19,18 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.maven.plugins.assembly.interpolation.AssemblyInterpolator;
 import org.apache.maven.plugins.assembly.io.DefaultAssemblyReader;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 
 import io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSource;
+import org.yaml.snakeyaml.Yaml;
 
 
 /**
@@ -136,7 +140,30 @@ public class DockerFileUtil {
                 .withExpressionMarkers(delimiters[0], delimiters[1]);
     }
 
-    private static String[] extractDelimiters(String filter) {
+
+    private static Reader getFileReaderFromDir(File file) {
+        if (file.exists() && file.length() != 0) {
+            try {
+                return new FileReader(file);
+            } catch (FileNotFoundException e) {
+                // Shouldnt happen. Nevertheless ...
+                throw new IllegalStateException("Cannot find " + file,e);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public static JsonObject readDockerConfig() {
+        String dockerConfig = System.getenv("DOCKER_CONFIG");
+
+        Reader reader = dockerConfig == null
+                ? getFileReaderFromDir(new File(getHomeDir(),".docker/config.json"))
+                : getFileReaderFromDir(new File(dockerConfig,"config.json"));
+        return reader != null ? new Gson().fromJson(reader, JsonObject.class) : null;
+    }
+
+    public static String[] extractDelimiters(String filter) {
         if (filter == null ||
             filter.equalsIgnoreCase("false") ||
             filter.equalsIgnoreCase("none")) {
@@ -150,4 +177,26 @@ public class DockerFileUtil {
         }
         return new String[] { filter, filter };
     }
+
+    public static Map<String,?> readKubeConfig() {
+        String kubeConfig = System.getenv("KUBECONFIG");
+
+        Reader reader = kubeConfig == null
+                ? getFileReaderFromDir(new File(getHomeDir(),".kube/config"))
+                : getFileReaderFromDir(new File(kubeConfig));
+        if (reader != null) {
+            Yaml ret = new Yaml();
+            return (Map<String, ?>) ret.load(reader);
+        }
+        return null;
+    }
+
+    private static File getHomeDir() {
+        String homeDir = System.getProperty("user.home");
+        if (homeDir == null) {
+            homeDir = System.getenv("HOME");
+        }
+        return new File(homeDir);
+    }
+
 }
