@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import com.google.gson.JsonObject;
+
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -32,7 +35,6 @@ import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
-import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
@@ -60,7 +62,6 @@ public class AuthConfigFactory {
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
 
     private final PlexusContainer container;
-    private final Gson gson;
 
     private Logger log;
     private static final String[] DEFAULT_REGISTRIES = new String[]{
@@ -74,7 +75,6 @@ public class AuthConfigFactory {
      */
     public AuthConfigFactory(PlexusContainer container) {
         this.container = container;
-        this.gson = new Gson();
     }
 
     public void setLog(Logger log) {
@@ -386,7 +386,7 @@ public class AuthConfigFactory {
     }
 
     private AuthConfig getAuthConfigFromDockerConfig(String registry) throws MojoExecutionException {
-        JsonObject dockerConfig = readDockerConfig();
+        JsonObject dockerConfig = DockerFileUtil.readDockerConfig();
         if (dockerConfig == null) {
             return null;
         }
@@ -455,7 +455,7 @@ public class AuthConfigFactory {
 
     // Parse OpenShift config to get credentials, but return null if not found
     private AuthConfig parseOpenShiftConfig() {
-        Map kubeConfig = readKubeConfig();
+        Map kubeConfig = DockerFileUtil.readKubeConfig();
         if (kubeConfig == null) {
             return null;
         }
@@ -524,49 +524,6 @@ public class AuthConfigFactory {
 
     }
    
-    private JsonObject readDockerConfig() {
-        String dockerConfig = System.getenv("DOCKER_CONFIG");
-
-        Reader reader = dockerConfig == null
-                    ? getFileReaderFromDir(new File(getHomeDir(),".docker/config.json"))
-                    : getFileReaderFromDir(new File(dockerConfig,"config.json"));
-        return reader != null ? gson.fromJson(reader, JsonObject.class) : null;
-    }
-
-    private Map<String,?> readKubeConfig() {
-        String kubeConfig = System.getenv("KUBECONFIG");
-
-        Reader reader = kubeConfig == null
-                ? getFileReaderFromDir(new File(getHomeDir(),".kube/config"))
-                : getFileReaderFromDir(new File(kubeConfig));
-        if (reader != null) {
-            Yaml ret = new Yaml();
-            return (Map<String, ?>) ret.load(reader);
-        }
-        return null;
-    }
-
-    private Reader getFileReaderFromDir(File file) {
-        if (file.exists() && file.length() != 0) {
-            try {
-                return new FileReader(file);
-            } catch (FileNotFoundException e) {
-                // Shouldnt happen. Nevertheless ...
-                throw new IllegalStateException("Cannot find " + file,e);
-            }
-        } else {
-            return null;
-        }
-    }
-
-    private File getHomeDir() {
-        String homeDir = System.getProperty("user.home");
-        if (homeDir == null) {
-            homeDir = System.getenv("HOME");
-        }
-        return new File(homeDir);
-    }
-
 
     private Server checkForServer(Server server, String id, String registry, String user) {
 

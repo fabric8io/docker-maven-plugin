@@ -64,25 +64,35 @@ public class ImageName {
             throw new NullPointerException("Image name must not be null");
         }
 
+        // set digest to null as default
+        digest = null;
+        // check if digest is part of fullName, if so -> extract it
         if(fullName.contains("@sha256")) { // Of it contains digest
             String[] digestParts = fullName.split("@");
             digest = digestParts[1];
-            parseComponentsBeforeTag(digestParts[0]);
-        } else {
-            digest = null;
-            Pattern tagPattern = Pattern.compile("^(.+?)(?::([^:/]+))?$");
-            Matcher matcher = tagPattern.matcher(fullName);
-            if (!matcher.matches()) {
-                throw new IllegalArgumentException(fullName + " is not a proper image name ([registry/][repo][:port]");
-            }
-            tag = givenTag != null ? givenTag : matcher.group(2);
-            String rest = matcher.group(1);
+            fullName = digestParts[0];
+        }
 
-            parseComponentsBeforeTag(rest);
+        // check for tag
+        Pattern tagPattern = Pattern.compile("^(.+?)(?::([^:/]+))?$");
+        Matcher matcher = tagPattern.matcher(fullName);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(fullName + " is not a proper image name ([registry/][repo][:port]");
+        }
+        // extract tag if it exists
+        tag = givenTag != null ? givenTag : matcher.group(2);
+        String rest = matcher.group(1);
 
-            if (tag == null) {
-                tag = "latest";
-            }
+        // extract registry, repository, user
+        parseComponentsBeforeTag(rest);
+
+        /*
+         * set tag to latest if tag AND digest are null
+         * if digest is not null but tag is -> leave it!
+         *  -> in case of "image_name@sha256" it is not required to get resolved to "latest"
+         */
+        if (tag == null && digest == null) {
+            tag = "latest";
         }
 
         doValidate();
@@ -172,10 +182,14 @@ public class ImageName {
      * @return full name with original registry (if set) or optional registry (if not <code>null</code>).
      */
     public String getFullName(String optionalRegistry) {
-        if(digest != null) {
-            return getNameWithoutTag(optionalRegistry) + "@" + digest;
+        String fullName = getNameWithoutTag(optionalRegistry);
+        if (tag != null) {
+            fullName = fullName +  ":" + tag;
         }
-        return getNameWithoutTag(optionalRegistry) + ":" + tag;
+        if(digest != null) {
+            fullName = fullName + "@" + digest;
+        }
+        return fullName;
     }
 
     /**
