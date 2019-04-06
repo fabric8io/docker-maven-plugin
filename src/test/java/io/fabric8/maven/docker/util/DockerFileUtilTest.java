@@ -44,8 +44,8 @@ public class DockerFileUtilTest {
     @Test
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
-        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, FixedStringSearchInterpolator.create()));
+        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create()).get(0));
     }
 
     @Test

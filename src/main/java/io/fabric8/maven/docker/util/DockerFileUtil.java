@@ -43,20 +43,6 @@ public class DockerFileUtil {
     private DockerFileUtil() {}
 
     /**
-     * Extract the base image from a dockerfile. The first line containing a <code>FROM</code> is
-     * taken.
-     *
-     * @param dockerFile file from where to extract the base image
-     * @param interpolator interpolator for replacing properties
-     * @deprecated Use {@link DockerFileUtil#extractBaseImages} extractBaseImages instead
-     */
-    @Deprecated
-    public static String extractBaseImage(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
-        List<String> result = extractBaseImages(dockerFile, interpolator);
-        return result.isEmpty() ? null : result.iterator().next();
-    }
-
-    /**
      * Extract the base images from a dockerfile. All lines containing a <code>FROM</code> is
      * taken.
      *
