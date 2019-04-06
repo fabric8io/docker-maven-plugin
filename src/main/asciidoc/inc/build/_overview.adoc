@@ -26,7 +26,7 @@ The files of the assembly are stored in a build context relative directory `mave
 E.g. the files can be added with
 
 .Example
-[source,dockerfils]
+[source,dockerfile]
 ----
 COPY maven/ /my/target/directory
 ----
@@ -34,8 +34,30 @@ COPY maven/ /my/target/directory
 so that the assembly files will end up in `/my/target/directory` within the container.
 
 If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
+<<ex-build-dockerexclude>> is an  example which excludes all compiled Java classes.
 
-If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
+[[ex-build-dockerexclude]]
+.Example `.maven-dockerexclude` or `.maven-dockerignore`
+====
+[source]
+----
+target/classes/**  # <1>
+----
+<1> Exclude all compiled classes
+====
+
+
+If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. <<ex-build-dockerinclude>> shows how to include only jar file that have build to the Docker build context.
+
+[[ex-build-dockerinclude]]
+.Example `.maven-dockerinclude`
+====
+[source]
+----
+target/*.jar  # <1>
+----
+<1> Only add jar file to you Docker build context.
+====
 
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 

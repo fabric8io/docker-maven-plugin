@@ -1,8 +1,20 @@
 # ChangeLog
 
-* 0.27-SNAPSHOT
-  - Refactor Mojos to get rid of direct member field access of @Parameter properties, (Related to https://github.com/fabric8io/fabric8-maven-plugin/issues/215)
-
+* 0.28-SNAPSHOT
+  - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
+  - docs: Correct default image naming
+  - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
+  - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
+  - Obtain container ip address from custom network for tcp/http wait
+  - Fix http (SSL) ping with 'allowAllHosts' flag enabled
+  - Update to jnr-unixsocket 0.22
+  - Enhance @sha256 digest for tags in FROM `image_name:image_tag@sha256<digest>` ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
+  - Support docker SHELL setting for runCmds (#1157)
+  - Added 'autoRemove' option for running containers (#1179)
+  - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
+  - Add support for auto-pulling multiple base image for multi stage builds (#1057)
+  - Refactor Mojos to get rid of direct member field access of @Parameter properties, ([#215](https://github.com/fabric8io/fabric8-maven-plugin/issues/215))
+  
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
   - Compiles with Java 11

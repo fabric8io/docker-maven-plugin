@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.LinkedList;
 
+import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -28,6 +30,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.maven.plugin.MojoExecutionException;
 
 public class BuildService {
+
+    private final String argPrefix = "docker.buildArg.";
 
     private final DockerAccess docker;
     private final QueryService queryService;
@@ -165,7 +169,9 @@ public class BuildService {
     private Map<String, String> addBuildArgs(BuildContext buildContext) {
         Map<String, String> buildArgsFromProject = addBuildArgsFromProperties(buildContext.getMojoParameters().getProject().getProperties());
         Map<String, String> buildArgsFromSystem = addBuildArgsFromProperties(System.getProperties());
+        Map<String, String> buildArgsFromDockerConfig = addBuildArgsFromDockerConfig();
         return ImmutableMap.<String, String>builder()
+                .putAll(buildArgsFromDockerConfig)
                 .putAll(buildContext.getBuildArgs() != null ? buildContext.getBuildArgs() : Collections.<String, String>emptyMap())
                 .putAll(buildArgsFromProject)
                 .putAll(buildArgsFromSystem)
@@ -173,7 +179,6 @@ public class BuildService {
     }
 
     private Map<String, String> addBuildArgsFromProperties(Properties properties) {
-        String argPrefix = "docker.buildArg.";
         Map<String, String> buildArgs = new HashMap<>();
         for (Object keyObj : properties.keySet()) {
             String key = (String) keyObj;
@@ -190,6 +195,36 @@ public class BuildService {
         return buildArgs;
     }
 
+    private Map<String, String> addBuildArgsFromDockerConfig() {
+        JsonObject dockerConfig = DockerFileUtil.readDockerConfig();
+        if (dockerConfig == null) {
+            return Collections.emptyMap();
+        }
+
+        // add proxies
+        Map<String, String> buildArgs = new HashMap<>();
+        if (dockerConfig.has("proxies")) {
+            JsonObject proxies = dockerConfig.getAsJsonObject("proxies");
+            if (proxies.has("default")) {
+                JsonObject defaultProxyObj = proxies.getAsJsonObject("default");
+                String[] proxyMapping = new String[] {
+                        "httpProxy", "http_proxy",
+                        "httpsProxy", "https_proxy",
+                        "noProxy", "no_proxy",
+                        "ftpProxy", "ftp_proxy"
+                };
+
+                for(int index = 0; index < proxyMapping.length; index += 2) {
+                    if (defaultProxyObj.has(proxyMapping[index])) {
+                        buildArgs.put(argPrefix + proxyMapping[index+1], defaultProxyObj.get(proxyMapping[index]).getAsString());
+                    }
+                }
+            }
+        }
+        log.debug("Build args set %s", buildArgs);
+        return buildArgs;
+    }
+
     private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
@@ -199,14 +234,20 @@ public class BuildService {
             return;
         }
 
-        String fromImage;
+        List<String> fromImages;
         if (buildConfig.isDockerFileMode()) {
-            fromImage = extractBaseFromDockerfile(buildConfig, buildContext);
+            fromImages = extractBaseFromDockerfile(buildConfig, buildContext);
         } else {
-            fromImage = extractBaseFromConfiguration(buildConfig);
+            fromImages = new LinkedList<>();
+            String baseImage = extractBaseFromConfiguration(buildConfig);
+            if (baseImage!=null) {
+                fromImages.add(extractBaseFromConfiguration(buildConfig));
+            }
         }
-        if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
-            registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+        for (String fromImage : fromImages) {
+            if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
+                registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+            }
         }
     }
 
@@ -222,17 +263,17 @@ public class BuildService {
         return fromImage;
     }
 
-    private String extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext) {
-        String fromImage;
+    private List<String> extractBaseFromDockerfile(BuildImageConfiguration buildConfig, BuildContext buildContext) {
+        List<String> fromImage;
         try {
             File fullDockerFilePath = buildConfig.getAbsoluteDockerFilePath(buildContext.getMojoParameters());
-            fromImage = DockerFileUtil.extractBaseImage(
+            fromImage = DockerFileUtil.extractBaseImages(
                 fullDockerFilePath,
                 DockerFileUtil.createInterpolator(buildContext.getMojoParameters(), buildConfig.getFilter()));
         } catch (IOException e) {
             // Cant extract base image, so we wont try an auto pull. An error will occur later anyway when
             // building the image, so we are passive here.
-            fromImage = null;
+            return Collections.emptyList();
         }
         return fromImage;
     }

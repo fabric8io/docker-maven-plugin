@@ -17,11 +17,7 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -48,8 +44,19 @@ public class DockerFileUtilTest {
     @Test
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
-        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, FixedStringSearchInterpolator.create()));
+        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create()).get(0));
+    }
+
+    @Test
+    public void testMultiStage() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+             toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertEquals("fabric8/s1i-java", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
     }
 
     private File copyToTempDir(String resource) throws IOException {

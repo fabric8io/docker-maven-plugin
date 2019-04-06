@@ -92,6 +92,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     // Base URL which is given through when using NamedPipe communication but is not really used
     private static final String NPIPE_URL = "npipe://127.0.0.1:1/";
 
+    // Minimal API version, independent of any feature used
+    public static final String API_VERSION = "1.18";
+
     // Logging
     private final Logger log;
 
@@ -719,8 +722,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
         HttpGet get = new HttpGet(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "version");
         get.addHeader(HttpHeaders.ACCEPT, "*/*");
         get.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-        CloseableHttpResponse response = delegate.getHttpClient().execute(get);
+        try (CloseableHttpResponse response = delegate.getHttpClient().execute(get)) {
 
-        return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : null;
+            return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
+        }
     }
 }

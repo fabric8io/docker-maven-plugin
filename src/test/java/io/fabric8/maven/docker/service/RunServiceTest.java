@@ -358,6 +358,7 @@ public class RunServiceTest {
                         .net("custom_network")
                         .network(networkConfiguration())
                         .readOnly(false)
+                        .autoRemove(false)
                         .build();
     }
 

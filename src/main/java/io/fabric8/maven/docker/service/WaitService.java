@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.text.StrSubstitutor;
+import org.apache.maven.shared.utils.StringUtils;
+
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -25,8 +28,6 @@ import io.fabric8.maven.docker.wait.TcpPortChecker;
 import io.fabric8.maven.docker.wait.WaitChecker;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
-import org.apache.commons.text.StrSubstitutor;
-import org.apache.maven.shared.utils.StringUtils;
 
 /**
  * @author roland
@@ -173,7 +174,15 @@ public class WaitService {
             }
             log.info("%s: Waiting for mapped ports %s on host %s", imageConfigDesc, ports, host);
         } else {
-            host = container.getIPAddress();
+            final String networkMode = container.getNetworkMode();
+            log.info("%s: Network mode: %s", imageConfigDesc, networkMode);
+            if (networkMode == null || networkMode.isEmpty() || "bridge".equals(networkMode)) {
+                // Safe mode when network mode is not present
+                host = container.getIPAddress();
+            } else if (!"host".equals(networkMode)) {
+                // Custom network
+                host = container.getCustomNetworkIpAddresses().get(networkMode);
+            }
             ports = portsConfigured;
             log.info("%s: Waiting for ports %s directly on container with IP (%s).",
                      imageConfigDesc, ports, host);
