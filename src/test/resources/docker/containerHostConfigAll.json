@@ -48,6 +48,7 @@
   "NanoCpus":1000000000,
   "CpusetCpus":"0,1",
   "ReadonlyRootfs":false,    
+  "AutoRemove":false,    
   "Binds":[
     "/host_tmp:/container_tmp"
   ],
