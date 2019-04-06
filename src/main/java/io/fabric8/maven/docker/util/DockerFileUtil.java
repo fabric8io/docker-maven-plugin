@@ -17,6 +17,7 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -47,16 +48,31 @@ public class DockerFileUtil {
      *
      * @param dockerFile file from where to extract the base image
      * @param interpolator interpolator for replacing properties
+     * @deprecated Use {@link DockerFileUtil#extractBaseImages} extractBaseImages instead
      */
+    @Deprecated
     public static String extractBaseImage(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
+        List<String> result = extractBaseImages(dockerFile, interpolator);
+        return result.isEmpty() ? null : result.iterator().next();
+    }
+
+    /**
+     * Extract the base images from a dockerfile. All lines containing a <code>FROM</code> is
+     * taken.
+     *
+     * @param dockerFile file from where to extract the base image
+     * @param interpolator interpolator for replacing properties
+     * @return LinkedList of base images name or empty collection if none is found.
+     */
+    public static List<String> extractBaseImages(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
-        if (!fromLines.isEmpty()) {
-            String[] parts = fromLines.get(0);
-            if (parts.length > 1) {
-                return parts[1];
+        LinkedList<String> result = new LinkedList<>();
+        for (String[] fromLine :  fromLines) {
+            if (fromLine.length > 1) {
+                result.add(fromLine[1]);
             }
         }
-        return null;
+        return result;
     }
 
     /**
