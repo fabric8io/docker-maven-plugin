@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,6 +129,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .externalConfig(new HashMap<String, String>())
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .ports(Arrays.asList("1234"))
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .runConfig(new RunImageConfiguration.Builder()
@@ -207,6 +209,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .externalConfig(new HashMap<String, String>())
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .runCmds(Arrays.asList("some","ignored","value"))
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .build();
@@ -235,6 +238,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .externalConfig(new HashMap<String, String>())
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .shell(new Arguments(Arrays.asList("some","ignored","value")))
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .build();
@@ -261,6 +265,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .externalConfig(externalConfigMode(PropertyMode.Fallback))
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .runCmds(Arrays.asList("some","configured","value"))
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .build();
@@ -302,6 +307,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .externalConfig(externalConfigMode(PropertyMode.Fallback))
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .entryPoint(new Arguments(Arrays.asList("/entrypoint.sh", "--from-property")))
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .build();
@@ -323,6 +329,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         imageConfiguration = new ImageConfiguration.Builder()
                 .externalConfig(externalConfigMode(PropertyMode.Override))
                 .buildConfig(new BuildImageConfiguration.Builder()
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .build();
@@ -547,6 +554,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                 .externalConfig(externalConfigMode(PropertyMode.Override))
                 .buildConfig(new BuildImageConfiguration.Builder()
                         .dockerFile("/some/path")
+                        .cacheFrom((Arrays.asList("foo/bar:latest")))
                         .build()
                 )
                 .build();
@@ -712,6 +720,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(true, config.getBuildConfiguration().nocache());
+    }
+
+    @Test
+    public void testCacheFrom() {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CACHEFROM), "foo/bar:latest", k(ConfigKey.FROM), "base"};
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertEquals(Collections.singletonList("foo/bar:latest"), config.getBuildConfiguration().getCacheFrom());
     }
 
     @Test
