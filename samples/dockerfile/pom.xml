@@ -58,7 +58,7 @@
               <alias>dockerfile</alias>
               <build>
                 <!-- filter>@</filter-->
-                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                <contextDir>${project.basedir}/src/main/docker</contextDir>
                 <assembly>
                   <descriptorRef>rootWar</descriptorRef>
                 </assembly>

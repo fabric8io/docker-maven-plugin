@@ -130,7 +130,7 @@ public class DockerAssemblyManager {
                 archiveCustomizers.add(new ArchiverCustomizer() {
                     @Override
                     public TarArchiver customize(TarArchiver archiver) throws IOException {
-                        DefaultFileSet fileSet = DefaultFileSet.fileSet(dockerFile.getParentFile());
+                        DefaultFileSet fileSet = DefaultFileSet.fileSet(buildConfig.getAbsoluteContextDirPath(params));
                         addDockerIncludesExcludesIfPresent(fileSet, params);
                         // Exclude non-interpolated dockerfile from source tree
                         // Interpolated Dockerfile is already added as it was created into the output directory when
