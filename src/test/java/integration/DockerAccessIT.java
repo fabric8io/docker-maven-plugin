@@ -51,7 +51,7 @@ public class DockerAccessIT {
     private final DockerAccessWithHcClient dockerClient;
 
     public DockerAccessIT() throws IOException {
-        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
+        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, "build");
         String url = createDockerConnectionDetector(logger).detectConnectionParameter(null,null).getUrl();
         this.dockerClient = createClient(url, logger);
     }

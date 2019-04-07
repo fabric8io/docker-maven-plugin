@@ -116,11 +116,11 @@ public class ImageConfigResolver implements Initializable {
             externalConfig.put("mode", mode);
             unresolvedConfig.setExternalConfiguration(externalConfig);
 
-            log.verbose("Global %s=%s property activates property configuration for image", ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, mode);
+            log.verbose(Logger.LogVerboseCategory.BUILD,"Global %s=%s property activates property configuration for image", ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, mode);
         }
         else
         {
-            log.verbose("Ignoring %s=%s property, image has <external> in POM which takes precedence", ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, mode);
+            log.verbose(Logger.LogVerboseCategory.BUILD,"Ignoring %s=%s property, image has <external> in POM which takes precedence", ConfigHelper.EXTERNALCONFIG_ACTIVATION_PROPERTY, mode);
         }
     }
 }

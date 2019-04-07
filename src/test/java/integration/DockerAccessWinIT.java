@@ -49,7 +49,7 @@ public class DockerAccessWinIT {
     private final DockerAccessWithHcClient dockerClient;
 
     public DockerAccessWinIT() throws IOException {
-        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
+        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, "build");
         String url = createDockerConnectionDetector(logger).detectConnectionParameter(null, null).getUrl();
         this.dockerClient = createClient(url, logger);
     }

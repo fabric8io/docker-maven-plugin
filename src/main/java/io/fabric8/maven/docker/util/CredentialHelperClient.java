@@ -73,7 +73,7 @@ public class CredentialHelperClient {
 
         @Override
         protected void processLine(String line) {
-            log.verbose("Credentials helper reply for \"%s\" is %s",CredentialHelperClient.this.credentialHelperName,line);
+            log.verbose(Logger.LogVerboseCategory.BUILD,"Credentials helper reply for \"%s\" is %s",CredentialHelperClient.this.credentialHelperName,line);
             version = line;
         }
 

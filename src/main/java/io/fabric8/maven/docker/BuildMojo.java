@@ -16,6 +16,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -137,7 +138,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         } catch (ClassNotFoundException e) {
             // Not declared as dependency, so just ignoring ...
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            log.verbose("Found dmp-plugin %s but could not be called : %s",
+            log.verbose(Logger.LogVerboseCategory.BUILD,"Found dmp-plugin %s but could not be called : %s",
                      line,
                      e.getMessage());
         }
@@ -158,7 +159,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             method.invoke(null, outputDir);
             log.info("Extra files from %s extracted", buildPluginClass);
         } catch (NoSuchMethodException exp) {
-            log.verbose("Build plugin %s does not support 'addExtraFiles' method", buildPluginClass);
+            log.verbose(Logger.LogVerboseCategory.BUILD,"Build plugin %s does not support 'addExtraFiles' method", buildPluginClass);
         }
     }
 

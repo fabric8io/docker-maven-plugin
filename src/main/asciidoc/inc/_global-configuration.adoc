@@ -144,7 +144,7 @@ If set to `true` this plugin won't remove any tags with `{plugin}:remove`. +
 | `docker.useColor`
 
 | *verbose*
-| Boolean attribute for switching on verbose output on standard output (stdout). This includes detailed information like the build steps when doing a Docker build. Default is `false`
+| Boolean/String attribute for switching on verbose output on standard output (stdout). It can have true/false values as well and also now it also takes string values which can used for various debug levels, for example you can use it like `verbose=build,api` to enable these two debug levels. This includes detailed information like the build steps when doing a Docker build. Default is `false` for Boolean attribute and `build` for String attribute
 | `docker.verbose`
 |===
 
