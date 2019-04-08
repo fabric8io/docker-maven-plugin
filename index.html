@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.28.0,</span>
-<span id="revdate">2018-12-13</span>
+<span id="revnumber">version 0.29.0,</span>
+<span id="revdate">2019-04-08</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -845,7 +845,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.28.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.29.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1358,7 +1358,7 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 <div class="paragraph">
 <p>These placeholders can be used in the top-level configuration value <code>containerNamePattern</code> which is used globally for every container that is created.
 This global pattern can be overwritten individually by each image&#8217;s <a href="#config-image-run"><strong>run</strong></a> configuration.
-If neither is given, then by default the pattern <code>%n-%a</code> is used.</p>
+If neither is given, then by default the pattern <code>%n-%i</code> is used.</p>
 </div>
 <div class="paragraph">
 <p>When specifying the container name pattern the following placeholders can be used:</p>
@@ -1518,13 +1518,16 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>dockerFileDir</strong> specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
+<p><strong>contextDir</strong> specifies docker build context if an external dockerfile is located outside of Docker build context. If not specified, Dockerfile&#8217;s parent directory is used as build context.</p>
 </li>
 <li>
-<p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>dockerFileDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile path.</p>
 </li>
 <li>
 <p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
+</li>
+<li>
+<p><strong>dockerFileDir</strong> (<strong>deprecated</strong>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
 </li>
 </ul>
 </div>
@@ -1544,17 +1547,54 @@ The files of the assembly are stored in a build context relative directory <code
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="dockerfils">COPY maven/ /my/target/directory</code></pre>
+<pre class="CodeRay highlight"><code data-lang="dockerfile">COPY maven/ /my/target/directory</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>so that the assembly files will end up in <code>/my/target/directory</code> within the container.</p>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).</p>
+<p>If this directory contains a <code>.maven-dockerignore</code> (or alternatively, a <code>.maven-dockerexclude</code> file), then it is used for excluding files for the build. Each line in this file is treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. It is similar to <code>.dockerignore</code> when using Docker but has a slightly different syntax (hence the different name).
+<a href="#ex-build-dockerexclude">Example <code>.maven-dockerexclude</code> or <code>.maven-dockerignore</code></a> is an  example which excludes all compiled Java classes.</p>
+</div>
+<div id="ex-build-dockerexclude" class="exampleblock">
+<div class="title">Example 1. Example <code>.maven-dockerexclude</code> or <code>.maven-dockerignore</code></div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>target/classes/**  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Exclude all compiled classes</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph">
-<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>.</p>
+<p>If this directory contains a <code>.maven-dockerinclude</code> file, then it is used for including only those files for the build. Each line in this file is also treated as a <a href="http://ant.apache.org/manual/Types/fileset.html">FileSet exclude pattern</a> as used by the <a href="http://maven.apache.org/plugins/maven-assembly-plugin">maven-assembly-plugin</a>. <a href="#ex-build-dockerinclude">Example <code>.maven-dockerinclude</code></a> shows how to include only jar file that have build to the Docker build context.</p>
+</div>
+<div id="ex-build-dockerinclude" class="exampleblock">
+<div class="title">Example 2. Example <code>.maven-dockerinclude</code></div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>target/*.jar  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Only add jar file to you Docker build context.</td>
+</tr>
+</table>
+</div>
+</div>
 </div>
 <div class="paragraph">
 <p>Except for the <a href="#build-assembly">assembly configuration</a> all other configuration options are ignored for now.</p>
@@ -1819,6 +1859,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The exposed ports which is a list of <code>&lt;port&gt;</code> elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>shell</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shell to be used for the <strong>runCmds</strong>. It contains <strong>arg</strong> elements which are defining the executable and its params.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>runCmds</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Commands to be run during the build process. It contains <strong>run</strong> elements which are passed to the shell. Whitespace is trimmed from each element and empty elements are ignored. The run commands are inserted right after the assembly and after <strong>workdir</strong> into the Dockerfile. This tag is not to be confused with the <code>&lt;run&gt;</code> section for this image which specifies the runtime behaviour when starting containers.</p></td>
 </tr>
@@ -1872,6 +1916,17 @@ remote API.</p>
   <span class="tag">&lt;buildOptions&gt;</span>
     <span class="tag">&lt;shmsize&gt;</span>2147483648<span class="tag">&lt;/shmsize&gt;</span>
   <span class="tag">&lt;/buildOptions&gt;</span>
+
+  <span class="tag">&lt;shell&gt;</span>
+    <span class="tag">&lt;exec&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>/bin/sh<span class="tag">&lt;/arg&gt;</span>
+      <span class="tag">&lt;arg&gt;</span>-c<span class="tag">&lt;/arg&gt;</span>
+    <span class="tag">&lt;/exec&gt;</span>
+  <span class="tag">&lt;/shell&gt;</span>
+  <span class="tag">&lt;runCmds&gt;</span>
+    <span class="tag">&lt;run&gt;</span>groupadd -r appUser<span class="tag">&lt;/run&gt;</span>
+    <span class="tag">&lt;run&gt;</span>useradd -r -g appUser appUser<span class="tag">&lt;/run&gt;</span>
+  <span class="tag">&lt;/runCmds&gt;</span>
 
   <span class="tag">&lt;entryPoint&gt;</span>
     <span class="comment">&lt;!-- exec form for ENTRYPOINT --&gt;</span>
@@ -2586,6 +2641,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> mount the container&#8217;s root filesystem as read only</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>autoRemove</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> automatically remove the container when it exits. This has no effect if <a href="#start-restart">Restart Policy</a> has been set.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-restart"><strong>restartPolicy</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Restart Policy</p></td>
 </tr>
@@ -2769,6 +2828,9 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tbody>
 </table>
 <div class="paragraph">
+<p>By default TCP is used as protocol but you can also use UDP by appending '/udp' to the port number.</p>
+</div>
+<div class="paragraph">
 <p>The following are examples of valid configuration entries:</p>
 </div>
 <div class="listingblock">
@@ -2783,6 +2845,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 
 <span class="tag">&lt;ports&gt;</span>
   <span class="tag">&lt;port&gt;</span>18080:8080<span class="tag">&lt;/port&gt;</span>
+  <span class="tag">&lt;port&gt;</span>15060:5060/udp<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;port&gt;</span>host.port:80<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;port&gt;</span>127.0.0.1:80:80<span class="tag">&lt;/port&gt;</span>
   <span class="tag">&lt;port&gt;</span>localhost:host.port:80<span class="tag">&lt;/port&gt;</span>
@@ -5267,6 +5330,13 @@ Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secre
 In case you&#8217;re using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the <strong>security token</strong> as well.
 To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
 </div>
+<div class="paragraph">
+<p>In case you are running on an EC2 instance that has an appropriate IAM role assigned
+(e.g. a role that grants the AWS built-in policy <em>AmazonEC2ContainerRegistryPowerUser</em>)
+authentication information doesn&#8217;t need to be provided at all. Instead the instance
+meta-data service is queried for temporary access credentials supplied by the
+assigned role.</p>
+</div>
 </div>
 </div>
 </div>
@@ -5329,8 +5399,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.28.0<br>
-Last updated 2018-12-13 19:49:10 UTC
+Version 0.29.0<br>
+Last updated 2019-04-08 08:55:49 UTC
 </div>
 </div>
 </body>
