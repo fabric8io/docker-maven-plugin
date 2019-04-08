@@ -110,6 +110,10 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             return true;
         }
 
+        if (isStringValueNull(valueProvider, config, CONTEXT_DIR, () -> config.getContextDirRaw())) {
+            return true;
+        }
+
         if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> config.getDockerFileDirRaw())) {
             return true;
         }
@@ -150,6 +154,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .workdir(valueProvider.getString(WORKDIR, config == null ? null : config.getWorkdir()))
                 .skip(valueProvider.getBoolean(SKIP_BUILD, config == null ? null : config.getSkip()))
                 .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_BUILD, config == null ? null : config.getImagePullPolicy()))
+                .contextDir(valueProvider.getString(CONTEXT_DIR, config == null ? null : config.getContextDirRaw()))
                 .dockerArchive(valueProvider.getString(DOCKER_ARCHIVE, config == null ? null : config.getDockerArchiveRaw()))
                 .dockerFile(valueProvider.getString(DOCKER_FILE, config == null ? null : config.getDockerFileRaw()))
                 .dockerFileDir(valueProvider.getString(DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDirRaw()))

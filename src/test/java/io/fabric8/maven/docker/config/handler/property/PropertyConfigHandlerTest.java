@@ -739,6 +739,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testContextDir() {
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CONTEXT_DIR), "dir" };
+
+        ImageConfiguration config = resolveExternalImageConfig(testData);
+        assertNotNull(config.getBuildConfiguration());
+    }
+
+    @Test
     public void testFilterDefault() {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "base" };
 

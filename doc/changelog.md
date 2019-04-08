@@ -13,8 +13,13 @@
   - Added 'autoRemove' option for running containers (#1179)
   - Stop and remove using regex names (#900)
   - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
+  - Introduce `contextDir` configuration option which would be used to specify docker build context (#1189)
   - Add support for auto-pulling multiple base image for multi stage builds (#1057)
   - Fix usage of credential helper that do not support 'version' command (#1159)
+
+Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with
+`dockerFile` and it will be removed in 1.0.0. It's still supported in this release but users are suggested to migrate to 
+`contextDir` instead.
   
 * **0.28.0** (2018-12-13)
   - Update to JMockit 1.43
