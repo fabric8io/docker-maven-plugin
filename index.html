@@ -523,7 +523,7 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.29.0,</span>
+<span id="revnumber">version 0.29-SNAPSHOT,</span>
 <span id="revdate">2019-04-08</span>
 </div>
 <div id="toc" class="toc2">
@@ -845,7 +845,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.29.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.29-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1521,13 +1521,13 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <p><strong>contextDir</strong> specifies docker build context if an external dockerfile is located outside of Docker build context. If not specified, Dockerfile&#8217;s parent directory is used as build context.</p>
 </li>
 <li>
-<p><strong>dockerFile</strong> specifies a specific Dockerfile path.</p>
+<p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>contextDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
 </li>
 <li>
 <p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
 </li>
 <li>
-<p><strong>dockerFileDir</strong> (<strong>deprecated</strong>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
+<p><strong>dockerFileDir</strong> (<em>deprecated</em>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
 </li>
 </ul>
 </div>
@@ -1779,6 +1779,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail the build and <code>none</code> if no cleanup is requested.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="context-dir"></a><strong>contextDir</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory used for the build&#8217;s context. You can specify the <code>Dockerfile</code> to use with <strong>dockerFile</strong>, which by default is the Dockerfile found in the <code>contextDir</code>. The Dockerfile can be also located outside of the <code>contextDir</code>, if provided with an absolute file path. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-startup"><strong>cmd</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A command to execute by default (i.e. if no command is provided when a container for this image is started). See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
@@ -1791,8 +1795,8 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Path to a <code>Dockerfile</code> which also triggers <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory holding a <code>Dockerfile</code> and switch on <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerFileDir</strong> (<em>deprecated</em> in favor of <strong><a href="#context-dir">contextDir</a></strong>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a directory holding a <code>Dockerfile</code> and switch on <em>Dockerfile mode</em>. See <a href="#external-dockerfile">External Dockerfile</a> for details. <em>This option is deprecated in favor of _contextDir</em> and will be removed for the next major release_.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dockerArchive</strong></p></td>
@@ -5399,8 +5403,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.29.0<br>
-Last updated 2019-04-08 08:55:49 UTC
+Version 0.29-SNAPSHOT<br>
+Last updated 2019-04-08 16:00:31 UTC
 </div>
 </div>
 </body>
