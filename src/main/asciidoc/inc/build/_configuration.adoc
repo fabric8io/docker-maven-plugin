@@ -25,6 +25,9 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
 
+| [[context-dir]]*contextDir*
+| Path to a directory used for the build's context. You can specify the `Dockerfile` to use with *dockerFile*, which by default is the Dockerfile found in the `contextDir`. The Dockerfile can be also located outside of the `contextDir`, if provided with an absolute file path. See <<external-dockerfile, External Dockerfile>> for details.
+
 | <<misc-startup, *cmd*>>
 | A command to execute by default (i.e. if no command is provided when a container for this image is started). See <<misc-startup,Startup Arguments>> for details.
 
@@ -34,9 +37,8 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | *dockerFile*
 | Path to a `Dockerfile` which also triggers _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
 
-| *dockerFileDir*
-| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
-
+| *dockerFileDir* (_deprecated_ in favor of *<<context-dir, contextDir>>*)
+| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details. _This option is deprecated in favor of _contextDir_ and will be removed for the next major release_.
 
 | *dockerArchive*
 | Path to a saved image archive which is then imported. See <<external-dockerfile, Docker archive>> for details.
