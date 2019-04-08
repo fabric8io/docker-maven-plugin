@@ -169,7 +169,7 @@ public class AuthConfigFactoryTest {
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist get'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland","registry1");
             }
@@ -185,7 +185,7 @@ public class AuthConfigFactoryTest {
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland",null);
             }
@@ -201,7 +201,7 @@ public class AuthConfigFactoryTest {
                 expectedException.expect(MojoExecutionException.class);
                 expectedException.expectCause(Matchers.<Throwable>allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
             }
