@@ -1,6 +1,9 @@
 # ChangeLog
 
-* **0.28-SNAPSHOT**
+* **0.29-SNAPSHOT**
+
+* **0.29.0** (2019-04-08)
+  - Avoid failing docker:save when no images with build configuration are present ([#1185](https://github.com/fabric8io/docker-maven-plugin/issues/1185))
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
   - docs: Correct default image naming
   - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
@@ -10,12 +13,12 @@
   - Fix http (SSL) ping with 'allowAllHosts' flag enabled
   - Update to jnr-unixsocket 0.22
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
-  - Support docker SHELL setting for runCmds (#1157)
-  - Added 'autoRemove' option for running containers (#1179)
-  - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
-  - Introduce `contextDir` configuration option which would be used to specify docker build context (#1189)
-  - Add support for auto-pulling multiple base image for multi stage builds (#1057)
-  - Fix usage of credential helper that do not support 'version' command (#1159)
+  - Support docker SHELL setting for runCmds ([#1157](https://github.com/fabric8io/docker-maven-plugin/issues/1157))
+  - Added 'autoRemove' option for running containers ([#1179](https://github.com/fabric8io/docker-maven-plugin/issues/1179))
+  - Added support for AWS EC2 instance roles when pushing to AWS ECR ([#1186](https://github.com/fabric8io/docker-maven-plugin/issues/1186))
+  - Introduce `contextDir` configuration option which would be used to specify docker build context ([#1189](https://github.com/fabric8io/docker-maven-plugin/issues/1189))
+  - Add support for auto-pulling multiple base image for multi stage builds ([#1057](https://github.com/fabric8io/docker-maven-plugin/issues/1057))
+  - Fix usage of credential helper that do not support 'version' command ([#1159](https://github.com/fabric8io/docker-maven-plugin/issues/1159))
 
 Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with
 `dockerFile` and it will be removed in 1.0.0. It's still supported in this release but users are suggested to migrate to 
