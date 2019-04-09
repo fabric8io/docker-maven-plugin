@@ -3,6 +3,7 @@
 * **0.29-SNAPSHOT**
 
 * **0.29.0** (2019-04-08)
+  - Avoid failing docker:save when no images with build configuration are present ([#1185](https://github.com/fabric8io/docker-maven-plugin/issues/1185))
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
   - docs: Correct default image naming
   - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
