@@ -43,7 +43,27 @@ public class SaveMojo extends AbstractDockerMojo {
 		if (skipSave) {
 			return;
 		}
-		String imageName = getImageName();
+
+		List<ImageConfiguration> images = getResolvedImages();
+		List<ImageConfiguration> buildImages = getImagesWithBuildConfig(images);
+		String imageName;
+
+		if (saveName == null && saveAlias == null) {
+			if (buildImages.isEmpty()) {
+				log.info("No images have a build configuration defined: save skipped");
+				return;
+			}
+			if (buildImages.size() == 1) {
+				imageName = buildImages.get(0).getName();
+			} else {
+				throw new MojoExecutionException("More than one image with build configuration is defined. Please specify the image with 'docker.name' or 'docker.alias'.");
+			}
+		} else if (saveName != null && saveAlias != null) {
+			throw new MojoExecutionException("Cannot specify both name and alias.");
+		} else  {
+			imageName = getImageName(images);
+		}
+
 		String fileName = getFileName(imageName);
 		ensureSaveDir(fileName);
 		log.info("Saving image %s to %s", imageName, fileName);
@@ -52,7 +72,6 @@ public class SaveMojo extends AbstractDockerMojo {
 		}
 
 		serviceHub.getDockerAccess().saveImage(imageName, fileName, ArchiveCompression.fromFileName(fileName));
-
 	}
 
 	private String getFileName(String iName) throws MojoExecutionException {
@@ -96,19 +115,7 @@ public class SaveMojo extends AbstractDockerMojo {
         }
     }
 
-    private String getImageName() throws MojoExecutionException {
-		List<ImageConfiguration> images = getResolvedImages();
-		// specify image by name or alias
-		if (saveName == null && saveAlias == null) {
-			List<ImageConfiguration> buildImages = getImagesWithBuildConfig(images);
-			if (buildImages.size() == 1) {
-                return buildImages.get(0).getName();
-			}
-			throw new MojoExecutionException("More than one image with build configuration is defined. Please specify the image with 'docker.name' or 'docker.alias'.");
-		}
-		if (saveName != null && saveAlias != null) {
-			throw new MojoExecutionException("Cannot specify both name and alias.");
-		}
+    private String getImageName(List<ImageConfiguration> images) throws MojoExecutionException {
 		for (ImageConfiguration ic : images) {
 			if (equalName(ic) || equalAlias(ic)) {
 				return ic.getName();
