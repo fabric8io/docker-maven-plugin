@@ -1,5 +1,7 @@
 # ChangeLog
 
+* **0.29-SNAPSHOT**
+
 * **0.29.0** (2019-04-08)
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
   - docs: Correct default image naming
