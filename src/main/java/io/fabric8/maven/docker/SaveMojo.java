@@ -21,7 +21,7 @@ import io.fabric8.maven.docker.service.ServiceHub;
 public class SaveMojo extends AbstractDockerMojo {
 
     // Used when not automatically determined
-	private final static ArchiveCompression STANDARD_ARCHIVE_COMPRESSION = ArchiveCompression.gzip;
+	private static final ArchiveCompression STANDARD_ARCHIVE_COMPRESSION = ArchiveCompression.gzip;
 
 	@Component
 	private MavenProjectHelper projectHelper;
@@ -40,30 +40,13 @@ public class SaveMojo extends AbstractDockerMojo {
 
 	@Override
 	protected void executeInternal(ServiceHub serviceHub) throws DockerAccessException, MojoExecutionException {
-		if (skipSave) {
+
+		List<ImageConfiguration> images = getResolvedImages();
+		if (skipSaveFor(images)) {
 			return;
 		}
 
-		List<ImageConfiguration> images = getResolvedImages();
-		List<ImageConfiguration> buildImages = getImagesWithBuildConfig(images);
-		String imageName;
-
-		if (saveName == null && saveAlias == null) {
-			if (buildImages.isEmpty()) {
-				log.info("No images have a build configuration defined: save skipped");
-				return;
-			}
-			if (buildImages.size() == 1) {
-				imageName = buildImages.get(0).getName();
-			} else {
-				throw new MojoExecutionException("More than one image with build configuration is defined. Please specify the image with 'docker.name' or 'docker.alias'.");
-			}
-		} else if (saveName != null && saveAlias != null) {
-			throw new MojoExecutionException("Cannot specify both name and alias.");
-		} else  {
-			imageName = getImageName(images);
-		}
-
+		String imageName = getImageName(images);
 		String fileName = getFileName(imageName);
 		ensureSaveDir(fileName);
 		log.info("Saving image %s to %s", imageName, fileName);
@@ -72,6 +55,22 @@ public class SaveMojo extends AbstractDockerMojo {
 		}
 
 		serviceHub.getDockerAccess().saveImage(imageName, fileName, ArchiveCompression.fromFileName(fileName));
+	}
+
+	private boolean skipSaveFor(List<ImageConfiguration> images) {
+		if (skipSave) {
+			log.info("docker:save skipped because `skipSave` config is set to true");
+			return true;
+		}
+
+		if (saveName == null &&
+			saveAlias == null &&
+			images.stream().allMatch(i -> i.getBuildConfiguration() == null)) {
+			log.info("docker:save skipped because no image has a build configuration defined");
+			return true;
+		}
+
+		return false;
 	}
 
 	private String getFileName(String iName) throws MojoExecutionException {
@@ -115,15 +114,26 @@ public class SaveMojo extends AbstractDockerMojo {
         }
     }
 
-    private String getImageName(List<ImageConfiguration> images) throws MojoExecutionException {
+	private String getImageName(List<ImageConfiguration> images) throws MojoExecutionException {
+		// specify image by name or alias
+		if (saveName == null && saveAlias == null) {
+			List<ImageConfiguration> buildImages = getImagesWithBuildConfig(images);
+			if (buildImages.size() == 1) {
+				return buildImages.get(0).getName();
+			}
+			throw new MojoExecutionException("More than one image with build configuration is defined. Please specify the image with 'docker.name' or 'docker.alias'.");
+		}
+		if (saveName != null && saveAlias != null) {
+			throw new MojoExecutionException("Cannot specify both name and alias.");
+		}
 		for (ImageConfiguration ic : images) {
 			if (equalName(ic) || equalAlias(ic)) {
 				return ic.getName();
 			}
 		}
 		throw new MojoExecutionException(saveName != null ?
-                                             "Can not find image with name '" + saveName + "'" :
-                                             "Can not find image with alias '"+ saveAlias + "'");
+											 "Can not find image with name '" + saveName + "'" :
+											 "Can not find image with alias '"+ saveAlias + "'");
 	}
 
 	private List<ImageConfiguration> getImagesWithBuildConfig(List<ImageConfiguration> images) {
