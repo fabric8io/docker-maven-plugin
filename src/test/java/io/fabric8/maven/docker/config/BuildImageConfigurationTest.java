@@ -86,7 +86,7 @@ public class BuildImageConfigurationTest {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
                 dockerFileDir("/tmp/").
-                dockerFile("/Dockerfile").build();
+                dockerFile(new File("Dockerfile").getAbsolutePath()).build();
         config.initAndValidate(logger);
     }
 
