@@ -580,10 +580,6 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         if (dockerFile != null) {
-            if (EnvUtil.isWindows() && !EnvUtil.isValidWindowsFileName(dockerFile)) {
-                throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
-            }
-
             File dFile = new File(dockerFile);
             if (dockerFileDir == null && contextDir == null) {
                 return dFile;
