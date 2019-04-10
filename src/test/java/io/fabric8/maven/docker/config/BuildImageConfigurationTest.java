@@ -56,7 +56,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
-        assertEquals(config.getContextDir(),new File("src/docker"));
+        assertTrue(config.getContextDir().isAbsolute());
     }
 
     @Test
@@ -67,7 +67,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
-        assertEquals(config.getContextDir(),new File("src/docker"));
+        assertTrue(config.getContextDir().isAbsolute());
     }
 
     @Test
