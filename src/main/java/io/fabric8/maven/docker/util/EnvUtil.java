@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -432,5 +433,12 @@ public class EnvUtil {
 
     public static boolean isWindows() {
         return System.getProperty("os.name").toLowerCase().contains("windows");
+    }
+
+    public static boolean isMaven350OrLater(MavenSession mavenSession) {
+        // Maven enforcer and help:evaluate goals both use mavenSession.getSystemProperties(),
+        // and it turns out that System.getProperty("maven.version") does not return the value.
+        String mavenVersion = mavenSession.getSystemProperties().getProperty("maven.version", "3");
+        return greaterOrEqualsVersion(mavenVersion, "3.5.0");
     }
 }
