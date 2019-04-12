@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Properties;
 
 import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -54,7 +55,9 @@ public class SaveMojo extends AbstractDockerMojo {
 			throw new MojoExecutionException("No image " + imageName + " exists");
 		}
 
+		long time = System.currentTimeMillis();
 		serviceHub.getDockerAccess().saveImage(imageName, fileName, ArchiveCompression.fromFileName(fileName));
+		log.info("%s: Saved image to %s in %s", imageName, fileName, EnvUtil.formatDurationTill(time));
 	}
 
 	private boolean skipSaveFor(List<ImageConfiguration> images) {

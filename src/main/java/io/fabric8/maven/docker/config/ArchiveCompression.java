@@ -18,7 +18,7 @@ package io.fabric8.maven.docker.config;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.Deflater;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
@@ -81,4 +81,11 @@ public enum ArchiveCompression {
         return ArchiveCompression.none;
     }
 
+    private static class GZIPOutputStream extends java.util.zip.GZIPOutputStream {
+        private GZIPOutputStream(OutputStream out) throws IOException {
+            super(out, 65536);
+            // According to https://bugs.openjdk.java.net/browse/JDK-8142920, 3 is a better default
+            def.setLevel(3);
+        }
+    }
 }

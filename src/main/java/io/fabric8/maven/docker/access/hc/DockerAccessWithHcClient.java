@@ -465,7 +465,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             public Object handleResponse(HttpResponse response) throws IOException {
                 try (InputStream stream = response.getEntity().getContent();
                      OutputStream out = compression.wrapOutputStream(new FileOutputStream(filename))) {
-                    IOUtils.copy(stream, out);
+                    IOUtils.copy(stream, out, 65536);
                 }
                 return null;
             }
