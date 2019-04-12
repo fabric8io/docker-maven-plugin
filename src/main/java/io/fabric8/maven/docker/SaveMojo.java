@@ -106,7 +106,7 @@ public class SaveMojo extends AbstractDockerMojo {
     }
 
     private void ensureSaveDir(String fileName) throws MojoExecutionException {
-        File saveDir = new File(fileName).getParentFile();
+        File saveDir = new File(fileName).getAbsoluteFile().getParentFile();
         if (!saveDir.exists()) {
             if (!saveDir.mkdirs()) {
                 throw new MojoExecutionException("Can not create directory " + saveDir + " for storing save file");
