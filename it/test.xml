@@ -1,0 +1,19 @@
+<c xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://fabric8.io/docker-maven-plugin/test2"
+         xsi:schemaLocation="http://fabric8.io/docker-maven-plugin/test2 file:///tmp/test2.xsd">
+  <watchMode>build</watchMode>
+  <pushRegistry>blas</pushRegistry>
+  <pushRegistry>blub</pushRegistry>
+  <images>
+    <image>
+      <build>
+
+      </build>
+      <name>Test</name>
+      <alias>blub</alias>
+      <run>
+      </run>
+      <alias></alias>
+    </image>
+  </images>
+</c>
