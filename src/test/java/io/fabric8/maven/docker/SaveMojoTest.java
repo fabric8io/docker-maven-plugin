@@ -99,7 +99,7 @@ public class SaveMojoTest {
 
         Deencapsulation.setField(saveMojo, "images", Collections.singletonList(image));
         Deencapsulation.setField(saveMojo, "resolvedImages", Collections.singletonList(image));
-        Deencapsulation.setField(saveMojo, "saveAttach", true);
+        Deencapsulation.setField(saveMojo, "saveClassifier", "archive");
         Deencapsulation.setField(saveMojo, "project", mavenProject);
         Deencapsulation.setField(saveMojo, "projectHelper", mavenProjectHelper);
 
@@ -153,7 +153,7 @@ public class SaveMojoTest {
         Deencapsulation.setField(saveMojo, "images", Collections.singletonList(image));
         Deencapsulation.setField(saveMojo, "resolvedImages", Collections.singletonList(image));
         Deencapsulation.setField(saveMojo, "saveFile", "destination/archive-name.tar.bz2");
-        Deencapsulation.setField(saveMojo, "saveAttach", true);
+        Deencapsulation.setField(saveMojo, "saveClassifier", "archive");
         Deencapsulation.setField(saveMojo, "project", mavenProject);
         Deencapsulation.setField(saveMojo, "projectHelper", mavenProjectHelper);
 
@@ -231,7 +231,7 @@ public class SaveMojoTest {
         Deencapsulation.setField(saveMojo, "images", Arrays.asList(image1, image2));
         Deencapsulation.setField(saveMojo, "resolvedImages", Arrays.asList(image1, image2));
         Deencapsulation.setField(saveMojo, "saveAlias", "example2");
-        Deencapsulation.setField(saveMojo, "saveAttach", true);
+        Deencapsulation.setField(saveMojo, "saveClassifier", "archive-%a");
         Deencapsulation.setField(saveMojo, "project", mavenProject);
         Deencapsulation.setField(saveMojo, "projectHelper", mavenProjectHelper);
 
@@ -272,7 +272,6 @@ public class SaveMojoTest {
         Deencapsulation.setField(saveMojo, "resolvedImages", Arrays.asList(image1, image2));
         Deencapsulation.setField(saveMojo, "saveAlias", "example2");
         Deencapsulation.setField(saveMojo, "saveClassifier", "preferred");
-        Deencapsulation.setField(saveMojo, "saveAttach", true);
         Deencapsulation.setField(saveMojo, "project", mavenProject);
         Deencapsulation.setField(saveMojo, "projectHelper", mavenProjectHelper);
 
