@@ -216,7 +216,7 @@ public class BuildService {
     }
 
     private String matchArchiveImagesToPattern(String imageNamePattern, ImageArchiveManifest manifest) {
-        String imageNameRegex = NamePatternUtil.convertImageNamePattern(imageNamePattern);
+        String imageNameRegex = NamePatternUtil.convertNamePattern(imageNamePattern);
         log.debug("Image name regex is %s", imageNameRegex);
 
         Map<String, ImageArchiveManifestEntry> entries = ImageArchiveUtil.findEntriesByRepoTagPattern(imageNameRegex, manifest);

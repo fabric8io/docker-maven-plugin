@@ -25,6 +25,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     private String alias;
 
     @Parameter
+    private String stopNamePattern;
+
+    @Parameter
+    private String removeNamePattern;
+
+    @Parameter
     private RunImageConfiguration run;
 
     @Parameter
@@ -69,6 +75,14 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     @Override
 	public String getAlias() {
         return alias;
+    }
+
+    public String getStopNamePattern() {
+        return stopNamePattern;
+    }
+
+    public String getRemoveNamePattern() {
+        return removeNamePattern;
     }
 
     public RunImageConfiguration getRunConfiguration() {
@@ -192,6 +206,16 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
         public Builder alias(String alias) {
             config.alias = alias;
+            return this;
+        }
+
+        public Builder removeNamePattern(String removeNamePattern) {
+            config.removeNamePattern = removeNamePattern;
+            return this;
+        }
+
+        public Builder stopNamePattern(String stopNamePattern) {
+            config.stopNamePattern = stopNamePattern;
             return this;
         }
 
