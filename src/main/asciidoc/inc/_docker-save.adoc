@@ -27,6 +27,14 @@ Please note that the exported image contains all image layers and can be quite l
 | The filename to save.
 | `docker.save.file` or `docker.file` or `file`
 
+| *saveAttach*
+| Whether to attach the saved archive to the project (`false` by default).
+| `docker.save.attach`
+
+| *saveClassifier*
+| Sets the artifact classifier when attaching the saved archive to the project. If `saveAlias` is set, defaults to `archive-<saveAlias>`, otherwise defaults to `archive`. Note that using overriding the default to use `docker` or `docker-<saveAlias>` may lead to a conflict if a source archive is also attached with <<{plugin}:source>>.
+| `docker.save.classifier`
+
 | *skipSave*
 | A boolean flag whether to skip execution of the goal.
 | `docker.skip.save`

@@ -39,6 +39,12 @@ public class SaveMojo extends AbstractDockerMojo {
 	@Parameter(property = "docker.skip.save", defaultValue = "false")
 	private boolean skipSave;
 
+	@Parameter(property = "docker.save.attach", defaultValue = "false")
+	private boolean saveAttach;
+
+	@Parameter(property = "docker.save.classifier")
+	private String saveClassifier;
+
 	@Override
 	protected void executeInternal(ServiceHub serviceHub) throws DockerAccessException, MojoExecutionException {
 
@@ -56,8 +62,13 @@ public class SaveMojo extends AbstractDockerMojo {
 		}
 
 		long time = System.currentTimeMillis();
-		serviceHub.getDockerAccess().saveImage(imageName, fileName, ArchiveCompression.fromFileName(fileName));
+		ArchiveCompression compression = ArchiveCompression.fromFileName(fileName);
+		serviceHub.getDockerAccess().saveImage(imageName, fileName, compression);
 		log.info("%s: Saved image to %s in %s", imageName, fileName, EnvUtil.formatDurationTill(time));
+
+		if(saveAttach) {
+			projectHelper.attachArtifact(project, compression.getFileSuffix(), getClassifier(), new File(fileName));
+		}
 	}
 
 	private boolean skipSaveFor(List<ImageConfiguration> images) {
@@ -148,6 +159,15 @@ public class SaveMojo extends AbstractDockerMojo {
 		}
 		return ret;
 	}
+
+	private String getClassifier() {
+		if(saveClassifier == null) {
+			return saveAlias == null ? "archive" : "archive-" + saveAlias;
+		} else {
+			return saveClassifier;
+		}
+	}
+
 
 	private boolean equalAlias(ImageConfiguration ic) {
 		return saveAlias != null && saveAlias.equals(ic.getAlias());
