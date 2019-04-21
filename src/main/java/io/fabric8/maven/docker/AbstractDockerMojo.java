@@ -37,11 +37,13 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+import org.fusesource.jansi.Ansi;
 
 /**
  * Base class for this plugin.
@@ -205,34 +207,40 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
-            log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
-            authConfigFactory.setLog(log);
-            imageConfigResolver.setLog(log);
+            boolean ansiRestore = Ansi.isEnabled();
+            log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix());
 
-            LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
-
-            ConfigHelper.validateExternalPropertyActivation(project, images);
-
-            DockerAccess access = null;
             try {
-                // The 'real' images configuration to use (configured images + externally resolved images)
-                this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
-                if (isDockerAccessRequired()) {
-                    DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
-                    access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
+                authConfigFactory.setLog(log);
+                imageConfigResolver.setLog(log);
+
+                LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
+
+                ConfigHelper.validateExternalPropertyActivation(project, images);
+
+                DockerAccess access = null;
+                try {
+                    // The 'real' images configuration to use (configured images + externally resolved images)
+                    this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
+                    if (isDockerAccessRequired()) {
+                        DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
+                        access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
+                    }
+                    ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
+                    executeInternal(serviceHub);
+                } catch (IOException | ExecException exp) {
+                    logException(exp);
+                    throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
+                } catch (MojoExecutionException exp) {
+                    logException(exp);
+                    throw exp;
+                } finally {
+                    if (access != null) {
+                        access.shutdown();
+                    }
                 }
-                ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
-                executeInternal(serviceHub);
-            } catch (IOException | ExecException exp) {
-                logException(exp);
-                throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
-            } catch (MojoExecutionException exp) {
-                logException(exp);
-                throw exp;
             } finally {
-                if (access != null) {
-                    access.shutdown();
-                }
+                Ansi.setEnabled(ansiRestore);
             }
         }
     }
@@ -300,6 +308,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     protected String getLogPrefix() {
         return AnsiLogger.DEFAULT_LOG_PREFIX;
+    }
+
+    /**
+     * Determine whether to enable colorized log messages
+     * @return true if log statements should be colorized
+     */
+    private boolean useColorForLogging() {
+        return useColor && MessageUtils.isColorEnabled()
+                && !(EnvUtil.isWindows() && !EnvUtil.isMaven350OrLater(session));
     }
 
     // Resolve and customize image configuration
