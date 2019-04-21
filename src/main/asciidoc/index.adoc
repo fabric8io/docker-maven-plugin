@@ -11,7 +11,7 @@ Roland Huß;
 
 ifndef::ebook-format[:leveloffset: 1]
 
-(C) 2015 - 2018 The original authors.
+(C) 2015 - 2019 The original authors.
 
 ifdef::basebackend-html[toc::[]]
 
