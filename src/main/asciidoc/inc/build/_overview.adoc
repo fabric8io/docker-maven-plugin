@@ -11,9 +11,10 @@ When using this mode, the Dockerfile is created on the fly with all instructions
 .External Dockerfile or Docker archive
 Alternatively an external Dockerfile template or Docker archive can be used. This mode is switched on by using one of these three configuration options within
 
-* *dockerFileDir* specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is `Dockerfile` by default but can be also set with the option `dockerFile` (see below).
-* *dockerFile* specifies a specific Dockerfile path. The Docker build context directory is set to `dockerFileDir` if given. If not the directory by default is the directory in which the Dockerfile is stored.
-* *dockerArchive* specifies a previously saved image archive to load directly. Such a tar archive can be created with `docker save`. If a `dockerArchive` is provided, no `dockerFile` or `dockerFileDir` must be given.
+* *contextDir* specifies docker build context if an external dockerfile is located outside of Docker build context. If not specified, Dockerfile's parent directory is used as build context.
+* *dockerFile* specifies a specific Dockerfile path. The Docker build context directory is set to `contextDir` if given. If not the directory by default is the directory in which the Dockerfile is stored.
+* *dockerArchive* specifies a previously saved image archive to load directly. Such a tar archive can be created with `docker save` or the <<{plugin}:save>> goal. If a `dockerArchive` is provided, no `dockerFile` or `dockerFileDir` must be given.
+* *dockerFileDir* (_deprecated_, use *contextDir*) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is `Dockerfile` by default but can be also set with the option `dockerFile` (see below).
 
 All paths can be either absolute or relative paths (except when both `dockerFileDir` and `dockerFile` are provided in which case `dockerFile` must not be absolute). A relative path is looked up in `${project.basedir}/src/main/docker` by default. You can make it easily an absolute path by using `${project.basedir}` in your configuration.
 

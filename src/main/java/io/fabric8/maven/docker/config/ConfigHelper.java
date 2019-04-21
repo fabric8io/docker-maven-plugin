@@ -114,7 +114,7 @@ public class ConfigHelper {
      *
      * @param images the images to check
      * @param apiVersion the original API version intended to use
-     * @param nameFormatter formmatter for image names
+     * @param nameFormatter formatter for image names
      * @param log a logger for printing out diagnostic messages
      * @return the minimal API Docker API required to be used for the given configuration.
      */

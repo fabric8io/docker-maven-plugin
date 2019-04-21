@@ -12,12 +12,12 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.28-SNAPSHOT</version>
+    <version>0.29-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dockerfile</artifactId>
-  <version>0.28-SNAPSHOT</version>
+  <version>0.29-SNAPSHOT</version>
   <packaging>war</packaging>
   <name>dmp-sample-dockerfile</name>
 
@@ -58,7 +58,7 @@
               <alias>dockerfile</alias>
               <build>
                 <!-- filter>@</filter-->
-                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                <contextDir>${project.basedir}/src/main/docker</contextDir>
                 <assembly>
                   <descriptorRef>rootWar</descriptorRef>
                 </assembly>

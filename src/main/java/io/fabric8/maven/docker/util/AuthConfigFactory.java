@@ -230,7 +230,7 @@ public class AuthConfigFactory {
             log.debug("AuthConfig: credentials from ~/.m2/setting.xml");
             return ret;
         }
-        
+
         // check EC2 instance role if registry is ECR
         if (EcrExtendedAuth.isAwsRegistry(registry)) {
             try {
@@ -253,8 +253,8 @@ public class AuthConfigFactory {
     }
 
     // ===================================================================================================
-    
-    
+
+
     // if the local credentials don't contain user and password, use EC2 instance
     // role credentials
     private AuthConfig getAuthConfigFromEC2InstanceRole() throws IOException {
@@ -310,7 +310,7 @@ public class AuthConfigFactory {
             }
         }
     }
-        
+
     private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
         Properties props = System.getProperties();
         String userKey = lookupMode.asSysProperty(AUTH_USERNAME);
@@ -423,9 +423,10 @@ public class AuthConfigFactory {
 
     private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) throws MojoExecutionException {
         CredentialHelperClient credentialHelper = new CredentialHelperClient(log, credConfig);
-        log.debug("AuthConfig: credentials from credential helper/store %s version %s",
+        String version = credentialHelper.getVersion();
+        log.debug("AuthConfig: credentials from credential helper/store %s%s",
                   credentialHelper.getName(),
-                  credentialHelper.getVersion());
+                  version != null ? " version " + version : "");
         return credentialHelper.getAuthConfig(registryToLookup);
     }
 
@@ -523,7 +524,7 @@ public class AuthConfigFactory {
                           useOpenAuthModeProp, kubeConfigEnv != null ? kubeConfigEnv : "~/.kube/config"));
 
     }
-   
+
 
     private Server checkForServer(Server server, String id, String registry, String user) {
 

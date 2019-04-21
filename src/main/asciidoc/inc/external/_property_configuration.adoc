@@ -175,6 +175,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.labels.LABEL*
 | Sets a label which works similarly like setting environment variables.
 
+| *docker.loadNamePattern*
+| Search the archive specified in `docker.dockerArchive` for the specified image name and creates a tag from the matched name to the build image name specified in `docker.name`.
+
 | *docker.log.enabled*
 | Use logging (default: `true`)
 
