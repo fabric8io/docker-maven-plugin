@@ -5,12 +5,17 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.LinkedList;
+import java.util.regex.PatternSyntaxException;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -19,15 +24,15 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.model.ImageArchiveManifest;
+import io.fabric8.maven.docker.model.ImageArchiveManifestEntry;
 import io.fabric8.maven.docker.util.DockerFileUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageArchiveUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-
-import com.google.common.collect.ImmutableMap;
-
-import org.apache.maven.plugin.MojoExecutionException;
+import io.fabric8.maven.docker.util.NamePatternUtil;
 
 public class BuildService {
 
@@ -106,13 +111,23 @@ public class BuildService {
             oldImageId = queryService.getImageId(imageName);
         }
 
-        long time = System.currentTimeMillis();
-
         if (buildConfig.getDockerArchive() != null) {
-            docker.loadImage(imageName, buildConfig.getAbsoluteDockerTarPath(params));
+            File tarArchive = buildConfig.getAbsoluteDockerTarPath(params);
+            String archiveImageName = getArchiveImageName(buildConfig, tarArchive);
+
+            long time = System.currentTimeMillis();
+
+            docker.loadImage(imageName, tarArchive);
             log.info("%s: Loaded tarball in %s", buildConfig.getDockerArchive(), EnvUtil.formatDurationTill(time));
+
+            if(archiveImageName != null && !archiveImageName.equals(imageName)) {
+                docker.tag(archiveImageName, imageName, true);
+            }
+
             return;
         }
+
+        long time = System.currentTimeMillis();
 
         File dockerArchive = archiveService.createArchive(imageName, buildConfig, params, log);
         log.info("%s: Created %s in %s", imageConfig.getDescription(), dockerArchive.getName(), EnvUtil.formatDurationTill(time));
@@ -151,6 +166,82 @@ public class BuildService {
             builder.putAll(buildConfig.getArgs());
         }
         return builder.build();
+    }
+
+    private String getArchiveImageName(BuildImageConfiguration buildConfig, File tarArchive) throws MojoExecutionException {
+        if(buildConfig.getLoadNamePattern() == null || buildConfig.getLoadNamePattern().length() == 0) {
+            return null;
+        }
+
+        ImageArchiveManifest manifest;
+        try {
+            manifest = readArchiveManifest(tarArchive);
+        } catch (IOException | JsonParseException e) {
+            throw new MojoExecutionException("Unable to read image manifest in archive " + buildConfig.getDockerArchive(), e);
+        }
+
+        String archiveImageName;
+
+        try {
+            archiveImageName = matchArchiveImagesToPattern(buildConfig.getLoadNamePattern(), manifest);
+        } catch(PatternSyntaxException e) {
+            throw new MojoExecutionException("Unable to interpret loadNamePattern " + buildConfig.getLoadNamePattern(), e);
+        }
+
+        if(archiveImageName == null) {
+            throw new MojoExecutionException("No image in the archive has a tag that matches pattern " + buildConfig.getLoadNamePattern());
+        }
+
+        return archiveImageName;
+    }
+
+    private ImageArchiveManifest readArchiveManifest(File tarArchive) throws IOException, JsonParseException {
+        long time = System.currentTimeMillis();
+
+        ImageArchiveManifest manifest = ImageArchiveUtil.readManifest(tarArchive);
+
+        log.info("%s: Read archive manifest in %s", tarArchive, EnvUtil.formatDurationTill(time));
+
+        // Show the results of reading the manifest to users trying to debug their configuration
+        if(log.isDebugEnabled()) {
+            for(ImageArchiveManifestEntry entry : manifest.getEntries()) {
+                log.debug("Entry ID: %s has %d repo tag(s)", entry.getId(), entry.getRepoTags().size());
+                for(String repoTag : entry.getRepoTags()) {
+                    log.debug("Repo Tag: %s", repoTag);
+                }
+            }
+        }
+
+        return manifest;
+    }
+
+    private String matchArchiveImagesToPattern(String imageNamePattern, ImageArchiveManifest manifest) {
+        String imageNameRegex = NamePatternUtil.convertImageNamePattern(imageNamePattern);
+        log.debug("Image name regex is %s", imageNameRegex);
+
+        Map<String, ImageArchiveManifestEntry> entries = ImageArchiveUtil.findEntriesByRepoTagPattern(imageNameRegex, manifest);
+
+        // Show the matches from the manifest to users trying to debug their configuration
+        if(log.isDebugEnabled()) {
+            for(Map.Entry<String, ImageArchiveManifestEntry> entry : entries.entrySet()) {
+                log.debug("Repo tag pattern matched %s referring to image %s", entry.getKey(), entry.getValue().getId());
+            }
+        }
+
+        if(!entries.isEmpty()) {
+            Map.Entry<String, ImageArchiveManifestEntry> matchedEntry = entries.entrySet().iterator().next();
+
+            if(ImageArchiveUtil.mapEntriesById(entries.values()).size() > 1) {
+                log.warn("Multiple image ids matched pattern %s: using tag %s associated with id %s",
+                        imageNamePattern, matchedEntry.getKey(), matchedEntry.getValue().getId());
+            } else {
+                log.info("Using image tag %s from archive", matchedEntry.getKey());
+            }
+
+            return matchedEntry.getKey();
+        }
+
+        return null;
     }
 
     private String getDockerfileName(BuildImageConfiguration buildConfig) {

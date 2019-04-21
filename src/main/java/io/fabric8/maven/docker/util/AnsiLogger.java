@@ -198,8 +198,7 @@ public class AnsiLogger implements Logger {
     }
 
     private void initializeColor(boolean useColor) {
-        // sl4j simple logger used by Maven seems to escape ANSI escapes on Windows
-        this.useAnsi = useColor && System.console() != null && !log.isDebugEnabled() && !isWindows();
+        this.useAnsi = useColor && !log.isDebugEnabled();
         if (useAnsi) {
             AnsiConsole.systemInstall();
             Ansi.setEnabled(true);
@@ -207,11 +206,6 @@ public class AnsiLogger implements Logger {
         else {
             Ansi.setEnabled(false);
         }
-    }
-
-    private boolean isWindows() {
-        String os = System.getProperty("os.name");
-        return os != null && os.toLowerCase().startsWith("windows");
     }
 
     private void println(String txt) {
@@ -243,20 +237,33 @@ public class AnsiLogger implements Logger {
 
     // Emphasize parts encloses in "[[*]]" tags
     private String evaluateEmphasis(String message, Ansi.Color msgColor) {
-        // Split with delimiters [[.]]. See also http://stackoverflow.com/a/2206545/207604
-        String prepared = message.replaceAll("\\[\\[(.)]]","[[]]$1[[]]");
-        String[] parts = prepared.split("\\[\\[]]");
+        // Split but keep the content by splitting on [[ and ]] separately when they
+        // are followed or preceded by their counterpart. This lets the split retain
+        // the character in the center.
+        String[] parts = message.split("(\\[\\[(?=.]])|(?<=\\[\\[.)]])");
         if (parts.length == 1) {
             return message;
         }
+        // The split up string is comprised of a leading plain part, followed
+        // by groups of colorization that are <SET> color-part <RESET> plain-part.
+        // To avoid emitting needless color changes, we skip the set or reset
+        // if the subsequent part is empty.
         String msgColorS = ansi().fg(msgColor).toString();
         StringBuilder ret = new StringBuilder(parts[0]);
-        boolean colorOpen = true;
-        for (int i = 1; i < parts.length; i+=2) {
-            ret.append(colorOpen ? getEmphasisColor(parts[i]) : msgColorS);
-            colorOpen = !colorOpen;
-            if (i+1 < parts.length) {
-                ret.append(parts[i+1]);
+
+        for (int i = 1; i < parts.length; i += 4) {
+            boolean colorPart = i + 1 < parts.length && parts[i + 1].length() > 0;
+            boolean plainPart = i + 3 < parts.length && parts[i + 3].length() > 0;
+
+            if (colorPart) {
+                ret.append(getEmphasisColor(parts[i]));
+                ret.append(parts[i + 1]);
+                if(plainPart) {
+                    ret.append(msgColorS);
+                }
+            }
+            if (plainPart) {
+                ret.append(parts[i + 3]);
             }
         }
         return ret.toString();

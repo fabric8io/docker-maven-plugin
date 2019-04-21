@@ -25,6 +25,9 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
 
+| [[context-dir]]*contextDir*
+| Path to a directory used for the build's context. You can specify the `Dockerfile` to use with *dockerFile*, which by default is the Dockerfile found in the `contextDir`. The Dockerfile can be also located outside of the `contextDir`, if provided with an absolute file path. See <<external-dockerfile, External Dockerfile>> for details.
+
 | <<misc-startup, *cmd*>>
 | A command to execute by default (i.e. if no command is provided when a container for this image is started). See <<misc-startup,Startup Arguments>> for details.
 
@@ -34,9 +37,8 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | *dockerFile*
 | Path to a `Dockerfile` which also triggers _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
 
-| *dockerFileDir*
-| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
-
+| *dockerFileDir* (_deprecated_ in favor of *<<context-dir, contextDir>>*)
+| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details. _This option is deprecated in favor of _contextDir_ and will be removed for the next major release_.
 
 | *dockerArchive*
 | Path to a saved image archive which is then imported. See <<external-dockerfile, Docker archive>> for details.
@@ -74,6 +76,18 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 
 | *imagePullPolicy*
 | Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <<image-pull-policy, imagePullPolicy>> for the possible values and the default.
+
+| *loadNamePattern*
+a| Scan the images in the archive specified in `dockerArchive` and match the associated repository and tag information against this pattern. When a matching repository and tag is found, create a tag linking the `name` for this image to the repository and tag that matched the pattern.
+
+The wildcards are:
+
+* `?` matches a single character
+* `*` matches within one component, where components are separated by slashes, or the final colon that separates the repository from the tag
+* `**` matches multiple components, stopping at the final colon
+* `**/` matches multiple components, but must stop at a slash, or the final colon
+
+When matching multiple components, `$$**/$$` is likely to be more useful than `$$**$$`. The pattern `$$**image-name:*$$` will match `my-group/my-image-name:some-tag`, whereas `$$**/image-name:*$$` will not, because the wildcard has to stop at a slash. Note that `$$**/image-name:*$$` will also match 'image-name:some-tag', since the `$$**/$$` wildcard can be empty.
 
 | <<misc-env, *labels*>>
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.

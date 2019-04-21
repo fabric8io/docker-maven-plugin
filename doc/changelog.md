@@ -1,6 +1,15 @@
 # ChangeLog
 
-* **0.28-SNAPSHOT**
+* **0.29-SNAPSHOT**
+  - Restore ANSI color to Maven logging if disabled during plugin execution and enable color for Windows with Maven 3.5.0 or later. Color logging is enabled by default, but disabled if the Maven CLI disables color (e.g. in batch mode) ([#1108](https://github.com/fabric8io/docker-maven-plugin/issues/1108))
+  - Fix NPE if docker:save is called with -Dfile=file-name-only.tar ([#1203](https://github.com/fabric8io/docker-maven-plugin/issues/1203))
+  - Improve GZIP compression performance for docker:save ([#1205](https://github.com/fabric8io/docker-maven-plugin/issues/1205))
+  - Allow docker:save to attach image archive as a project artifact ([#1210](https://github.com/fabric8io/docker-maven-plugin/pull/1210))
+  - Use pattern to detect image name in archive loaded during build and tag with image name from the project configuration ([#1207](https://github.com/fabric8io/docker-maven-plugin/issues/1207))
+  - Add 'cacheFrom' option to specify images to use as cache sources ([#1132](https://github.com/fabric8io/docker-maven-plugin/issues/1132))
+
+* **0.29.0** (2019-04-08)
+  - Avoid failing docker:save when no images with build configuration are present ([#1185](https://github.com/fabric8io/docker-maven-plugin/issues/1185))
   - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
   - docs: Correct default image naming
   - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
@@ -10,7 +19,6 @@
   - Update to jnr-unixsocket 0.22
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
   - Support docker SHELL setting for runCmds (#1157)
-  - Add 'cacheFrom' option to specify images to use as cache sources ([#1132](https://github.com/fabric8io/docker-maven-plugin/issues/1132))
   - Added 'autoRemove' option for running containers (#1179)
   - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
   - Introduce `contextDir` configuration option which would be used to specify docker build context (#1189)
