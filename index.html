@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.29-SNAPSHOT,</span>
-<span id="revdate">2019-04-08</span>
+<span id="revnumber">version 0.30.0,</span>
+<span id="revdate">2019-04-21</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -610,7 +610,7 @@ table.CodeRay td.code>pre{padding:0}
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2015 - 2018 The original authors.</p>
+<p>&#169; 2015 - 2019 The original authors.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -845,7 +845,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.29-SNAPSHOT<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.30.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1158,7 +1158,34 @@ If set to <code>true</code> this plugin won&#8217;t remove any tags with <code>d
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Boolean attribute for switching on verbose output on standard output (stdout). This includes detailed information like the build steps when doing a Docker build. Default is <code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.</p>
+</div>
+<div class="paragraph">
+<p>The currently known groups are:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">build</dt>
+<dd>
+<p>Print out Docker build instructions</p>
+</dd>
+<dt class="hdlist1">api</dt>
+<dd>
+<p>API calls to the Docker daemons are logged</p>
+</dd>
+<dt class="hdlist1">all</dt>
+<dd>
+<p>All levels are enabled</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>If you set an empty string (or only e.g. <code>-Ddocker.verbose</code>) then the "build" group is enabled. You can also use "true" / "false" to switch on / off verbose logging.</p>
+</div>
+<div class="paragraph">
+<p>Default is that verbose logging is disabled.</p>
+</div></div></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.verbose</code></p></td>
 </tr>
 </tbody>
@@ -1524,7 +1551,7 @@ so you should use it then in combination with <code>docker:build</code>.</p>
 <p><strong>dockerFile</strong> specifies a specific Dockerfile path. The Docker build context directory is set to <code>contextDir</code> if given. If not the directory by default is the directory in which the Dockerfile is stored.</p>
 </li>
 <li>
-<p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code>. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
+<p><strong>dockerArchive</strong> specifies a previously saved image archive to load directly. Such a tar archive can be created with <code>docker save</code> or the <a href="#docker:save"><strong>docker:save</strong></a> goal. If a <code>dockerArchive</code> is provided, no <code>dockerFile</code> or <code>dockerFileDir</code> must be given.</p>
 </li>
 <li>
 <p><strong>dockerFileDir</strong> (<em>deprecated</em>, use <strong>contextDir</strong>) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is <code>Dockerfile</code> by default but can be also set with the option <code>dockerFile</code> (see below).</p>
@@ -1772,7 +1799,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildOptions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 <a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>nocache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>noCache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -1843,6 +1870,34 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <a href="#image-pull-policy">imagePullPolicy</a> for the possible values and the default.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>loadNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Scan the images in the archive specified in <code>dockerArchive</code> and match the associated repository and tag information against this pattern. When a matching repository and tag is found, create a tag linking the <code>name</code> for this image to the repository and tag that matched the pattern.</p>
+</div>
+<div class="paragraph">
+<p>The wildcards are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>?</code> matches a single character</p>
+</li>
+<li>
+<p><code>*</code> matches within one component, where components are separated by slashes, or the final colon that separates the repository from the tag</p>
+</li>
+<li>
+<p><code>**</code> matches multiple components, stopping at the final colon</p>
+</li>
+<li>
+<p><code>**/</code> matches multiple components, but must stop at a slash, or the final colon</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When matching multiple components, <code>**/</code> is likely to be more useful than <code>**</code>. The pattern <code>**image-name:*</code> will match <code>my-group/my-image-name:some-tag</code>, whereas <code>**/image-name:*</code> will not, because the wildcard has to stop at a slash. Note that <code>**/image-name:*</code> will also match 'image-name:some-tag', since the <code>**/</code> wildcard can be empty.</p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>labels</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Labels  as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
@@ -1851,8 +1906,12 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The author (<code>MAINTAINER</code>) field for the generated image</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>nocache</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>noCache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.noCache</code> when running Maven.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheFrom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;image&gt;</code> elements specifying image names to use as cache sources.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>optimise</strong></p></td>
@@ -3992,6 +4051,48 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <div class="paragraph">
 <p>Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).</p>
 </div>
+<div class="paragraph">
+<div class="title">Controlling image compression</div>
+<p>The file name extension is used to select a compression method for the output.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 33.3333%;">
+<col style="width: 16.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Extensions</th>
+<th class="tableblock halign-left valign-top">Compression</th>
+<th class="tableblock halign-left valign-top">Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.tar or unrecognized</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No compression</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.tar</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.tar.gz, .tgz</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GZIP compression</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.tar.gz</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.tar.bz, .tar.bz2, .tar.bzip2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BZIP2 compression</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">.tar.bz</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<div class="title">Attaching the saved image as an artifact</div>
+<p>If <code>saveClassifier</code> is set, the saved archive will be attached to the project using the provided classifier and the type determined from the file name. The placeholder <code>%a</code> will be replaced with the image alias.</p>
+</div>
+<div class="paragraph">
+<p>Note that using overriding the default to use <code>docker</code> or <code>docker-%a</code> may lead to a conflict if a source archive is also attached with <a href="#docker:source"><strong>docker:source</strong></a>.</p>
+</div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 26. Save options</caption>
 <colgroup>
@@ -4021,6 +4122,11 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>saveFile</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The filename to save.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.save.file</code> or <code>docker.file</code> or <code>file</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>saveClassifier</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set, attach the the saved archive to the project with the provided classifier. A placeholder of <code>%a</code> will be replaced with the image alias.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.save.classifier</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipSave</strong></p></td>
@@ -4255,8 +4361,8 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated please use <code>docker.dockerFileDir</code> or <code>docker.dockerFile</code> instead.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.nocache</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache.This can be overwritten by setting a system property <code>docker.nocache</code> when running Maven.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.noCache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.noCache</code> when running Maven.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.bind.idx</strong></p></td>
@@ -4293,6 +4399,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cpushares</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Set the proportion of the host machine&#8217;s cpu cycles available to the container</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cacheFrom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of image names to use as cache sources</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.domainname</strong></p></td>
@@ -4403,6 +4513,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Sets a label which works similarly like setting environment variables.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.loadNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Search the archive specified in <code>docker.dockerArchive</code> for the specified image name and creates a tag from the matched name to the build image name specified in <code>docker.name</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.log.enabled</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Use logging (default: <code>true</code>)</p></td>
 </tr>
@@ -4461,6 +4575,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.network.alias.idx</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">One or more aliase for a custom network. Only used when the network mode is <code>custom</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.noCache</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use a cache when building the image</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.optimise</strong></p></td>
@@ -5403,8 +5521,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.29-SNAPSHOT<br>
-Last updated 2019-04-08 16:00:31 UTC
+Version 0.30.0<br>
+Last updated 2019-04-21 15:31:58 UTC
 </div>
 </div>
 </body>
