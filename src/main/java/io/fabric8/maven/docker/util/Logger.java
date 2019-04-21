@@ -26,12 +26,13 @@ public interface Logger {
     void info(String format, Object ... params);
 
     /**
-     * Verbose message
+     * Verbose message for build
      *
+     * @param logVerboseCategory debug level for logging
      * @param format verbose message format
      * @param params parameter for formatting message
      */
-    void verbose(String format, Object ... params);
+    void verbose(Logger.LogVerboseCategory logVerboseCategory, String format, Object ... params);
 
     /**
      * A warning.
@@ -86,4 +87,18 @@ public interface Logger {
      * used.
      */
     void progressFinished();
+
+    enum LogVerboseCategory {
+        BUILD("build"), API("api");
+
+        private String category;
+
+        LogVerboseCategory(String category) {
+            this.category = category;
+        }
+
+        public String getValue() {
+            return category;
+        }
+    };
 }

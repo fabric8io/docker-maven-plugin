@@ -122,8 +122,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected boolean useColor;
 
     // For verbose output
-    @Parameter(property = "docker.verbose", defaultValue = "false")
-    protected boolean verbose;
+    @Parameter(property = "docker.verbose")
+    protected String verbose;
 
     // The date format to use when putting out logs
     @Parameter(property = "docker.logDate")

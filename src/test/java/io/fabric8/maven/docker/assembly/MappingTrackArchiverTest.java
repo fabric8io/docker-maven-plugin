@@ -42,7 +42,7 @@ public class MappingTrackArchiverTest {
     @Before
     public void setup() throws IllegalAccessException {
         archiver = new MappingTrackArchiver();
-        archiver.init(new AnsiLogger(new SystemStreamLog(),false,false), "maven");
+        archiver.init(new AnsiLogger(new SystemStreamLog(),false,"build"), "maven");
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -17,6 +17,7 @@ Renamed "nocache" to "noCache" for consistencies reason. "nocache" is still supp
   - docs: Correct default image naming
   - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
   - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
+  - Log more information when verbose=true  (#917)
   - Obtain container ip address from custom network for tcp/http wait
   - Fix http (SSL) ping with 'allowAllHosts' flag enabled
   - Update to jnr-unixsocket 0.22

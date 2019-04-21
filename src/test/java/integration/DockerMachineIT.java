@@ -18,7 +18,7 @@ public class DockerMachineIT {
     @Test
     public void testLaunchDockerMachine() throws Exception {
         DockerMachineConfiguration mc = new DockerMachineConfiguration("default","true","true");
-        DockerMachine de = new DockerMachine(new AnsiLogger(new SystemStreamLog(), true, true), mc);
+        DockerMachine de = new DockerMachine(new AnsiLogger(new SystemStreamLog(), true, "build"), mc);
         Assert.assertTrue(de.getConnectionParameter(null) != null);
     }
 }
