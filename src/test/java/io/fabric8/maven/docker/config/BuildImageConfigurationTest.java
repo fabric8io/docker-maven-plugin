@@ -52,11 +52,11 @@ public class BuildImageConfigurationTest {
     public void simpleDockerfile() {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
-                dockerFile("src/docker/Dockerfile").build();
+                dockerFile("src/main/docker/Dockerfile").build();
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
-        assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
-        assertTrue(config.getContextDir().isAbsolute());
+        assertEquals(config.getDockerFile(),new File("src/main/docker/Dockerfile"));
+        assertEquals(config.getContextDir(),new File("src/main/docker"));
     }
 
     @Test
@@ -68,8 +68,9 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("Dockerfile"));
-        assertTrue(config.getContextDir().isAbsolute());
+        assertEquals(config.getContextDir(), new File(""));
     }
+
 
     @Test
     public void simpleDockerfileDir() {
@@ -79,7 +80,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
-        assertTrue(config.getContextDir().isAbsolute());
+        assertFalse(config.getContextDir().isAbsolute());
     }
 
     @Test

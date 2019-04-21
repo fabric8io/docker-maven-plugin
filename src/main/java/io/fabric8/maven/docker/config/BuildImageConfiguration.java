@@ -174,7 +174,16 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public File getContextDir() {
-        return contextDir != null ? new File(contextDir) : getDockerFile().getAbsoluteFile().getParentFile();
+        if (!isDockerFileMode()) {
+            return null;
+        }
+        if (contextDir != null) {
+            return new File(contextDir);
+        }
+        if (getDockerFile().getParentFile() == null) {
+            return new File("");
+        }
+        return getDockerFile().getParentFile();
     }
 
     public String getContextDirRaw() {
@@ -342,16 +351,7 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public File getAbsoluteDockerFilePath(MojoParameters mojoParams) {
-        File absoluteDockerFilePath = EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
-
-        // Update contextDir is dockerfile in src path is different than build config's.
-        if(!absoluteDockerFilePath.getAbsolutePath().equals(getDockerFile().getAbsolutePath())) {
-            dockerFile = absoluteDockerFilePath.getAbsolutePath();
-            if(contextDir == null) {
-                contextDir = absoluteDockerFilePath.getAbsoluteFile().getParent();
-            }
-        }
-        return absoluteDockerFilePath;
+        return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerFile().getPath());
     }
 
     public File getAbsoluteDockerTarPath(MojoParameters mojoParams) {
