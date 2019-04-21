@@ -32,7 +32,7 @@ public class AnsiLogger implements Logger {
     private final String prefix;
     private final boolean batchMode;
 
-    private Boolean isVerbose = false;
+    private boolean isVerbose = false;
     private List<LogVerboseCategory> verboseModes = null;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
@@ -302,33 +302,45 @@ public class AnsiLogger implements Logger {
         }
     }
 
+    private void checkVerboseLoggingEnabled(String verbose) {
+        if (verbose == null || verbose.equalsIgnoreCase("false")) {
+            this.isVerbose = false;
+            return;
+        }
+        if (verbose.equalsIgnoreCase("all")) {
+            this.isVerbose = true;
+            this.verboseModes = Arrays.asList(LogVerboseCategory.values());
+            return;
+        }
+        if (verbose.equals("") || verbose.equalsIgnoreCase("true")) {
+            this.isVerbose = true;
+            this.verboseModes = Collections.singletonList(LogVerboseCategory.BUILD);
+            return;
+        }
+
+        this.verboseModes = getVerboseModesFromString(verbose);
+        this.isVerbose = true;
+    }
+
     private Boolean checkBackwardVersionValues(String verbose) {
-        if(verbose.equalsIgnoreCase("true") || verbose.equalsIgnoreCase("false")) {
+        if (verbose.isEmpty()) {
+            return Boolean.TRUE;
+        }
+        if (verbose.equalsIgnoreCase("true") || verbose.equalsIgnoreCase("false")) {
             return Boolean.parseBoolean(verbose.toLowerCase());
         }
         return null;
     }
 
-    private List<LogVerboseCategory> getVerboseModesFromStr(String verboseModesStr) {
-        List<LogVerboseCategory> verboseCategories = new ArrayList<>();
-
-        for (String verboseModeStr : verboseModesStr.split(",")) {
-            verboseCategories.add(LogVerboseCategory.valueOf(verboseModeStr.toUpperCase()));
-        }
-        return verboseCategories;
-    }
-
-    private void checkVerboseLoggingEnabled(String verbose) {
-        if(verbose != null) {
-            this.isVerbose = checkBackwardVersionValues(verbose); // For backward compatibility
-            if (isVerbose == null) {
-                this.verboseModes = getVerboseModesFromStr(verbose);
-                isVerbose = Boolean.TRUE;
-            } else {
-                this.verboseModes = Collections.singletonList(LogVerboseCategory.BUILD);
+    private List<LogVerboseCategory> getVerboseModesFromString(String groups) {
+        List<LogVerboseCategory> ret = new ArrayList<>();
+        for (String group : groups.split(",")) {
+            try {
+                ret.add(LogVerboseCategory.valueOf(group.toUpperCase()));
+            } catch (Exception exp) {
+                log.info("log: Unknown verbosity group " + groups + ". Ignoring...");
             }
-        } else {
-            this.isVerbose = Boolean.FALSE;
         }
+        return ret;
     }
 }

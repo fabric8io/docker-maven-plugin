@@ -65,7 +65,7 @@ public class AnsiLoggerTest {
             }
         };
 
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         logger.debug("Debug messages do not interpret [[*]]%s[[*]]", "emphasis");
         assertEquals("T>Debug messages do not interpret [[*]]emphasis[[*]]",
                 testLog.getMessage());
@@ -80,23 +80,42 @@ public class AnsiLoggerTest {
             }
         };
 
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         logger.info("Info messages do not apply [[*]]%s[[*]] when debug is enabled", "color codes");
         assertEquals("T>Info messages do not apply color codes when debug is enabled",
                 testLog.getMessage());
     }
 
     @Test
+    public void verboseEnabled() {
+        String[] data = {
+            "build", "Test",
+            "api", null,
+            "bla", "log: Unknown verbosity group bla. Ignoring...",
+            "all", "Test",
+            "", "Test",
+            "true", "Test",
+            "false", null
+        };
+        for (int i = 0; i < data.length; i += 2) {
+            TestLog testLog = new TestLog();
+            AnsiLogger logger = new AnsiLogger(testLog, false, data[i], false, "");
+            logger.verbose(Logger.LogVerboseCategory.BUILD, "Test");
+            assertEquals(data[i+1], testLog.getMessage());
+        }
+    }
+    @Test
+
     public void emphasizeInfo() {
         TestLog testLog = new TestLog();
         AnsiLogger logger = new AnsiLogger(testLog, true, "build", false, "T>");
         Ansi ansi = Ansi.ansi();
-        logger.info("Yet another [[*]]Test[[*]] %s","emphasis");
-        assertEquals(ansi.a("T>")
-                         .fg(AnsiLogger.COLOR_INFO)
+        logger.info("Yet another [[*]]Test[[*]] %s", "emphasis");
+        assertEquals(ansi.fg(AnsiLogger.COLOR_INFO)
+                         .a("T>")
                          .a("Yet another ")
                          .fgBright(AnsiLogger.COLOR_EMPHASIS)
-                         .a("show")
+                         .a("Test")
                          .fg(AnsiLogger.COLOR_INFO)
                          .a(" emphasis")
                          .reset().toString(),
@@ -106,7 +125,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasizeInfoSpecificColor() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         Ansi ansi = new Ansi();
         logger.info("Specific [[C]]color[[C]] %s","is possible");
         assertEquals(ansi.fg(AnsiLogger.COLOR_INFO)
@@ -123,7 +142,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasizeInfoIgnoringEmpties() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         Ansi ansi = new Ansi();
         // Note that the closing part of the emphasis does not need to match the opening.
         // E.g. [[b]]Blue[[*]] works just like [[b]]Blue[[b]]
@@ -142,7 +161,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasizeInfoSpecificBrightColor() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         Ansi ansi = new Ansi();
         logger.info("Lowercase enables [[c]]bright version[[c]] of %d colors",Ansi.Color.values().length - 1);
         assertEquals(ansi.fg(AnsiLogger.COLOR_INFO)
@@ -159,7 +178,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasizeInfoWithoutColor() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, false, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, false, null, false, "T>");
         logger.info("Disabling color causes logger to [[*]]interpret and remove[[*]] %s","emphasis");
         assertEquals("T>Disabling color causes logger to interpret and remove emphasis",
                      testLog.getMessage());
@@ -168,7 +187,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasizeWarning() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         Ansi ansi = new Ansi();
         logger.warn("%s messages support [[*]]emphasis[[*]] too","Warning");
         assertEquals(ansi.fg(AnsiLogger.COLOR_WARNING)
@@ -185,7 +204,7 @@ public class AnsiLoggerTest {
     @Test
     public void emphasizeError() {
         TestLog testLog = new TestLog();
-        AnsiLogger logger = new AnsiLogger(testLog, true, false, false, "T>");
+        AnsiLogger logger = new AnsiLogger(testLog, true, null, false, "T>");
         Ansi ansi = new Ansi();
         logger.error("Error [[*]]messages[[*]] could emphasise [[*]]%s[[*]]","many things");
         assertEquals(ansi.fg(AnsiLogger.COLOR_ERROR)

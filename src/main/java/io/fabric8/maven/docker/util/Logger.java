@@ -88,8 +88,9 @@ public interface Logger {
      */
     void progressFinished();
 
-    public enum LogVerboseCategory {
+    enum LogVerboseCategory {
         BUILD("build"), API("api");
+
         private String category;
 
         LogVerboseCategory(String category) {
