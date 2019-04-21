@@ -52,12 +52,25 @@ public class BuildImageConfigurationTest {
     public void simpleDockerfile() {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
-                dockerFile("src/docker/Dockerfile").build();
+                dockerFile("src/main/docker/Dockerfile").build();
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
-        assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
-        assertEquals(config.getContextDir(),new File("src/docker"));
+        assertEquals(config.getDockerFile(),new File("src/main/docker/Dockerfile"));
+        assertEquals(config.getContextDir(),new File("src/main/docker"));
     }
+
+    @Test
+    // Tests fix for #1200
+    public void simpleDockerfileWithoutParentDir() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerFile("Dockerfile").build();
+        config.initAndValidate(logger);
+        assertTrue(config.isDockerFileMode());
+        assertEquals(config.getDockerFile(),new File("Dockerfile"));
+        assertEquals(config.getContextDir(), new File(""));
+    }
+
 
     @Test
     public void simpleDockerfileDir() {
@@ -67,7 +80,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
-        assertEquals(config.getContextDir(),new File("src/docker"));
+        assertFalse(config.getContextDir().isAbsolute());
     }
 
     @Test

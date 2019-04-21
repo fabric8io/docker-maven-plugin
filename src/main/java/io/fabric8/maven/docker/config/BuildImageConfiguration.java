@@ -174,7 +174,16 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public File getContextDir() {
-        return contextDir != null ? new File(contextDir) : getDockerFile().getParentFile();
+        if (!isDockerFileMode()) {
+            return null;
+        }
+        if (contextDir != null) {
+            return new File(contextDir);
+        }
+        if (getDockerFile().getParentFile() == null) {
+            return new File("");
+        }
+        return getDockerFile().getParentFile();
     }
 
     public String getContextDirRaw() {
