@@ -10,6 +10,31 @@ If the option `saveFile` is not set, the file name is calculated automatically:
 
 Please note that the exported image contains all image layers and can be quite large (also, it takes a bit to export the image).
 
+.Controlling image compression
+The file name extension is used to select a compression method for the output.
+[cols="3,2,1"]
+|===
+| Extensions | Compression | Type
+
+| .tar or unrecognized
+| No compression
+| .tar
+
+| .tar.gz, .tgz
+| GZIP compression
+| .tar.gz
+
+| .tar.bz, .tar.bz2, .tar.bzip2
+| BZIP2 compression
+| .tar.bz
+
+|===
+
+.Attaching the saved image as an artifact
+If `saveClassifier` is set, the saved archive will be attached to the project using the provided classifier and the type determined from the file name. The placeholder `%a` will be replaced with the image alias.
+
+Note that using overriding the default to use `docker` or `docker-%a` may lead to a conflict if a source archive is also attached with <<{plugin}:source>>.
+
 .Save options
 [cols="1,5,1"]
 |===
@@ -26,6 +51,10 @@ Please note that the exported image contains all image layers and can be quite l
 | *saveFile*
 | The filename to save.
 | `docker.save.file` or `docker.file` or `file`
+
+| *saveClassifier*
+| If set, attach the the saved archive to the project with the provided classifier. A placeholder of `%a` will be replaced with the image alias.
+| `docker.save.classifier`
 
 | *skipSave*
 | A boolean flag whether to skip execution of the goal.
