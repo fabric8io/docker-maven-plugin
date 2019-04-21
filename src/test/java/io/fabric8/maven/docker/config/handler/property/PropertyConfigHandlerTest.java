@@ -708,23 +708,23 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testNoCacheDisabled() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "false", k(ConfigKey.FROM), "base" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NO_CACHE), "false", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(false, config.getBuildConfiguration().nocache());
+        assertEquals(false, config.getBuildConfiguration().noCache());
     }
 
     @Test
     public void testNoCacheEnabled() throws Exception {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NOCACHE), "true", k(ConfigKey.FROM), "base" };
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.NO_CACHE), "true", k(ConfigKey.FROM), "base" };
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
-        assertEquals(true, config.getBuildConfiguration().nocache());
+        assertEquals(true, config.getBuildConfiguration().noCache());
     }
 
     @Test
     public void testCacheFrom() {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CACHEFROM), "foo/bar:latest", k(ConfigKey.FROM), "base"};
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CACHE_FROM), "foo/bar:latest", k(ConfigKey.FROM), "base"};
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(Collections.singletonList("foo/bar:latest"), config.getBuildConfiguration().getCacheFrom());
@@ -927,7 +927,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("registry", buildConfig.getRegistry());
         assertEquals(a("/foo"), buildConfig.getVolumes());
         assertEquals("fabric8io@redhat.com",buildConfig.getMaintainer());
-        assertEquals(false, buildConfig.nocache());
+        assertEquals(false, buildConfig.noCache());
         assertEquals("Always", buildConfig.getImagePullPolicy());
 
         validateEnv(buildConfig.getEnv());

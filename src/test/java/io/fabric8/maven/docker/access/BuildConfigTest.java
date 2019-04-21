@@ -83,7 +83,7 @@ public class BuildConfigTest {
     }
 
     @Test
-    public void cachefrom() {
+    public void cacheFrom() {
         BuildOptions opts = new BuildOptions().cacheFrom(Arrays.asList("foo/bar:latest"));
         assertEquals("[\"foo/bar:latest\"]", opts.getOptions().get("cachefrom"));
 

@@ -64,8 +64,8 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.assembly.dockerFileDir*
 | specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated please use `docker.dockerFileDir` or `docker.dockerFile` instead.
 
-| *docker.nocache*
-| Don't use Docker's build cache.This can be overwritten by setting a system property `docker.nocache` when running Maven.
+| *docker.noCache*
+| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.noCache` when running Maven.
 
 | *docker.bind.idx*
 | Sets a list of paths to bind/expose in the container
@@ -93,6 +93,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 
 | *docker.cpushares*
 | Set the proportion of the host machine's cpu cycles available to the container
+
+| *docker.cacheFrom*
+| List of image names to use as cache sources
 
 | *docker.domainname*
 | Container domain name
@@ -222,6 +225,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 
 | *docker.network.alias.idx*
 | One or more aliase for a custom network. Only used when the network mode is `custom`
+
+| *docker.noCache*
+| Don't use a cache when building the image
 
 | *docker.optimise*
 | if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
