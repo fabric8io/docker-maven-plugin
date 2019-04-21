@@ -3,6 +3,8 @@ package io.fabric8.maven.docker.config;
 import java.io.File;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -77,6 +79,9 @@ public class BuildImageConfiguration implements Serializable {
      */
     @Parameter
     private Map<String, String> fromExt;
+
+    @Parameter
+    private List<String> cacheFrom;
 
     @Parameter
     private String registry;
@@ -227,6 +232,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public Map<String, String> getFromExt() {
         return fromExt;
+    }
+
+    public List<String> getCacheFrom() {
+        return cacheFrom;
     }
 
     public String getRegistry() {
@@ -413,6 +422,19 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder cacheFrom(String cacheFrom, String ...more) {
+            if (more == null || more.length == 0)
+                return cacheFrom(Collections.singletonList(cacheFrom));
+
+            List<String> list = Stream.concat(Stream.of(cacheFrom), Arrays.stream(more)).collect(Collectors.toList());
+            return cacheFrom(list);
+        }
+
+        public Builder cacheFrom(Collection<String> cacheFrom) {
+            config.cacheFrom = cacheFrom != null ? new ArrayList<>(cacheFrom) : null;
+            return this;
+        }
+
         public Builder registry(String registry) {
             config.registry = registry;
             return this;
@@ -575,7 +597,10 @@ public class BuildImageConfiguration implements Serializable {
 
         initDockerFileFile(log);
 
-        if (healthCheck != null) {
+        if (cacheFrom != null && !cacheFrom.isEmpty()) {
+            // cachefrom query param was introduced in v1.25
+            return "1.25";
+        } else if (healthCheck != null) {
             // HEALTHCHECK support added later
             return "1.24";
         } else if (args != null) {

@@ -133,6 +133,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
                 .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanup()))
                 .nocache(valueProvider.getBoolean(NOCACHE, config == null ? null : config.getNoCache()))
+                .cacheFrom(valueProvider.getString(CACHEFROM, config == null ? null : config.getCacheFrom().toString()))
                 .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
                 .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
                 .assembly(extractAssembly(config == null ? null : config.getAssemblyConfiguration(), valueProvider))
