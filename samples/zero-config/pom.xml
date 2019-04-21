@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.30.0</version>
+    <version>0.30-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -15,7 +15,7 @@
   <groupId>io.fabric8.dmp.samples</groupId>
   <artifactId>demp-sample-zero-config</artifactId>
   <packaging>jar</packaging>
-  <version>0.30.0</version>
+  <version>0.30-SNAPSHOT</version>
 
   <properties>
     <jar_file>${project.build.directory}/${project.build.finalName}.jar</jar_file>
