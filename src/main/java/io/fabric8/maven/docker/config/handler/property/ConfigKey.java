@@ -77,6 +77,7 @@ public enum ConfigKey {
     IMAGE_PULL_POLICY_RUN("imagePullPolicy.run"),
     LABELS(ValueCombinePolicy.Merge),
     LINKS,
+    LOAD_NAME_PATTERN,
     LOG_ENABLED("log.enabled"),
     LOG_PREFIX("log.prefix"),
     LOG_DATE("log.date"),
