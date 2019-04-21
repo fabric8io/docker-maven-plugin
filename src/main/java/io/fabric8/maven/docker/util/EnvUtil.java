@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -434,33 +435,10 @@ public class EnvUtil {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
-    /**
-     * Validate that the provided filename is a valid Windows filename.
-     *
-     * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
-     *
-     * @param filename the filename
-     * @return filename is a valid Windows filename
-     */
-    public static boolean isValidWindowsFileName(String filename) {
-
-        Pattern pattern = Pattern.compile(
-            "# Match a valid Windows filename (unspecified file system).          \n" +
-            "^                                # Anchor to start of string.        \n" +
-            "(?!                              # Assert filename is not: CON, PRN, \n" +
-            "  (?:                            # AUX, NUL, COM1, COM2, COM3, COM4, \n" +
-            "    CON|PRN|AUX|NUL|             # COM5, COM6, COM7, COM8, COM9,     \n" +
-            "    COM[1-9]|LPT[1-9]            # LPT1, LPT2, LPT3, LPT4, LPT5,     \n" +
-            "  )                              # LPT6, LPT7, LPT8, and LPT9...     \n" +
-            "  (?:\\.[^.]*)?                  # followed by optional extension    \n" +
-            "  $                              # and end of string                 \n" +
-            ")                                # End negative lookahead assertion. \n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F .]    # Last char is not a space or dot.  \n" +
-            "$                                # Anchor to end of string.            ",
-            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
-        Matcher matcher = pattern.matcher(filename);
-        return matcher.matches();
+    public static boolean isMaven350OrLater(MavenSession mavenSession) {
+        // Maven enforcer and help:evaluate goals both use mavenSession.getSystemProperties(),
+        // and it turns out that System.getProperty("maven.version") does not return the value.
+        String mavenVersion = mavenSession.getSystemProperties().getProperty("maven.version", "3");
+        return greaterOrEqualsVersion(mavenVersion, "3.5.0");
     }
-
 }

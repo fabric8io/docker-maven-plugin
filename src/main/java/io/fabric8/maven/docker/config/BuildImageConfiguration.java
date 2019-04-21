@@ -1,10 +1,7 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 import io.fabric8.maven.docker.util.*;
@@ -51,6 +48,17 @@ public class BuildImageConfiguration implements Serializable {
      */
     @Parameter
     private String dockerArchive;
+
+    /**
+     * Pattern for the image name we expect to find in the dockerArchive.
+     *
+     * If set, the archive is scanned prior to sending to Docker and checked to
+     * ensure a matching name is found linked to one of the images in the archive.
+     * After loading, the image with the matching name will be tagged with the
+     * image name configured in this project.
+     */
+    @Parameter
+    private String loadNamePattern;
 
     /**
      * How interpolation of a dockerfile should be performed
@@ -159,6 +167,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public boolean isDockerFileMode() {
         return dockerFileFile != null;
+    }
+
+    public String getLoadNamePattern() {
+        return loadNamePattern;
     }
 
     public File getContextDir() {
@@ -372,6 +384,11 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder loadNamePattern(String archiveEntryRepoTagPattern) {
+            config.loadNamePattern = archiveEntryRepoTagPattern;
+            return this;
+        }
+
         public Builder filter(String filter) {
             config.filter = filter;
             return this;
@@ -580,10 +597,6 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         if (dockerFile != null) {
-            if (EnvUtil.isWindows() && !EnvUtil.isValidWindowsFileName(dockerFile)) {
-                throw new IllegalArgumentException(String.format("Invalid Windows file name %s for <dockerFile>", dockerFile));
-            }
-
             File dFile = new File(dockerFile);
             if (dockerFileDir == null && contextDir == null) {
                 return dFile;
