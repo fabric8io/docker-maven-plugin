@@ -3,9 +3,11 @@
 * **0.29-SNAPSHOT**
   - Restore ANSI color to Maven logging if disabled during plugin execution and enable color for Windows with Maven 3.5.0 or later. Color logging is enabled by default, but disabled if the Maven CLI disables color (e.g. in batch mode) ([#1108](https://github.com/fabric8io/docker-maven-plugin/issues/1108))
   - Fix NPE if docker:save is called with -Dfile=file-name-only.tar ([#1203](https://github.com/fabric8io/docker-maven-plugin/issues/1203))
+  - Fix NPE in BuildImageConfiguration ([#1200](https://github.com/fabric8io/docker-maven-plugin/issues/1200))
   - Improve GZIP compression performance for docker:save ([#1205](https://github.com/fabric8io/docker-maven-plugin/issues/1205))
   - Allow docker:save to attach image archive as a project artifact ([#1210](https://github.com/fabric8io/docker-maven-plugin/pull/1210))
   - Use pattern to detect image name in archive loaded during build and tag with image name from the project configuration ([#1207](https://github.com/fabric8io/docker-maven-plugin/issues/1207))
+  - Add 'cacheFrom' option to specify images to use as cache sources ([#1132](https://github.com/fabric8io/docker-maven-plugin/issues/1132))
 
 * **0.29.0** (2019-04-08)
   - Avoid failing docker:save when no images with build configuration are present ([#1185](https://github.com/fabric8io/docker-maven-plugin/issues/1185))
@@ -18,14 +20,14 @@
   - Fix http (SSL) ping with 'allowAllHosts' flag enabled
   - Update to jnr-unixsocket 0.22
   - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
-  - Support docker SHELL setting for runCmds ([#1157](https://github.com/fabric8io/docker-maven-plugin/issues/1157))
-  - Added 'autoRemove' option for running containers ([#1179](https://github.com/fabric8io/docker-maven-plugin/issues/1179))
-  - Added support for AWS EC2 instance roles when pushing to AWS ECR ([#1186](https://github.com/fabric8io/docker-maven-plugin/issues/1186))
-  - Introduce `contextDir` configuration option which would be used to specify docker build context ([#1189](https://github.com/fabric8io/docker-maven-plugin/issues/1189))
-  - Add support for auto-pulling multiple base image for multi stage builds ([#1057](https://github.com/fabric8io/docker-maven-plugin/issues/1057))
-  - Fix usage of credential helper that do not support 'version' command ([#1159](https://github.com/fabric8io/docker-maven-plugin/issues/1159))
+  - Support docker SHELL setting for runCmds (#1157)
+  - Added 'autoRemove' option for running containers (#1179)
+  - Added support for AWS EC2 instance roles when pushing to AWS ECR (#1186)
+  - Introduce `contextDir` configuration option which would be used to specify docker build context (#1189)
+  - Add support for auto-pulling multiple base image for multi stage builds (#1057)
+  - Fix usage of credential helper that do not support 'version' command (#1159)
 
-Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with
+Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with 
 `dockerFile` and it will be removed in 1.0.0. It's still supported in this release but users are suggested to migrate to 
 `contextDir` instead.
   
