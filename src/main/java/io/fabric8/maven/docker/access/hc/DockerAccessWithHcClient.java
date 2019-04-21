@@ -95,6 +95,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     // Minimal API version, independent of any feature used
     public static final String API_VERSION = "1.18";
 
+    // Copy buffer size when saving images
+    private static final int COPY_BUFFER_SIZE = 65536;
+
     // Logging
     private final Logger log;
 
@@ -465,7 +468,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             public Object handleResponse(HttpResponse response) throws IOException {
                 try (InputStream stream = response.getEntity().getContent();
                      OutputStream out = compression.wrapOutputStream(new FileOutputStream(filename))) {
-                    IOUtils.copy(stream, out, 65536);
+                    IOUtils.copy(stream, out, COPY_BUFFER_SIZE);
                 }
                 return null;
             }
