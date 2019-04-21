@@ -60,6 +60,18 @@ public class BuildImageConfigurationTest {
     }
 
     @Test
+    // Tests fix for #1200
+    public void simpleDockerfileWithoutParentDir() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerFile("Dockerfile").build();
+        config.initAndValidate(logger);
+        assertTrue(config.isDockerFileMode());
+        assertEquals(config.getDockerFile(),new File("Dockerfile"));
+        assertTrue(config.getContextDir().isAbsolute());
+    }
+
+    @Test
     public void simpleDockerfileDir() {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
