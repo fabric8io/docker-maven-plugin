@@ -26,7 +26,7 @@
   - Add support for auto-pulling multiple base image for multi stage builds (#1057)
   - Fix usage of credential helper that do not support 'version' command (#1159)
 
-Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with
+Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with 
 `dockerFile` and it will be removed in 1.0.0. It's still supported in this release but users are suggested to migrate to 
 `contextDir` instead.
   
@@ -37,10 +37,6 @@ Please note that `dockerFileDir` is now deprecated in favor of `contextDir` whic
   - Add 'readOnly' option for docker:run cto mount container's root fs read-only ([#1125](https://github.com/fabric8io/docker-maven-plugin/issues/1125))
   - Provide container properties to the wait configuration execution ([#1111](https://github.com/fabric8io/docker-maven-plugin/issues/1111))
   - Allow @sha256 digest for tags in FROM ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
-  - Update to jnr-unixsocket version to 0.21 (#1089)
-  - Add 'readOnly' option for docker:run cto mount container's root fs read-only (#1125)
-  - Provide container properties to the wait configuration execution (#1111)
-  - Allow @sha256 digest for tags in FROM (#541)
 
 * **0.27.2** (2018-10-05)
   - Fix NPE regression related to volumes (again) ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
