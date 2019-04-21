@@ -371,12 +371,15 @@ public class BuildService {
     }
 
     private boolean checkForNocache(ImageConfiguration imageConfig) {
-        String nocache = System.getProperty("docker.nocache");
-        if (nocache != null) {
-            return nocache.length() == 0 || Boolean.valueOf(nocache);
+        String noCache = System.getProperty("docker.noCache");
+        if (noCache == null) {
+            noCache = System.getProperty("docker.nocache");
+        }
+        if (noCache != null) {
+            return noCache.length() == 0 || Boolean.valueOf(noCache);
         } else {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            return buildConfig.nocache();
+            return buildConfig.noCache();
         }
     }
 

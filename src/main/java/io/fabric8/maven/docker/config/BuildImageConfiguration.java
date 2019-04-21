@@ -113,8 +113,12 @@ public class BuildImageConfiguration implements Serializable {
     @Parameter
     private String cleanup;
 
+    @Deprecated
     @Parameter
     private Boolean nocache;
+
+    @Parameter
+    private Boolean noCache;
 
     @Parameter
     private Boolean optimise;
@@ -298,8 +302,14 @@ public class BuildImageConfiguration implements Serializable {
         return CleanupMode.parse(cleanup != null ? cleanup : DEFAULT_CLEANUP);
     }
 
-    public boolean nocache() {
-        return nocache != null ? nocache : false;
+    public boolean noCache() {
+        if (noCache != null) {
+            return noCache;
+        }
+        if (nocache != null) {
+            return nocache;
+        }
+        return false;
     }
 
     public boolean optimise() {
@@ -311,7 +321,7 @@ public class BuildImageConfiguration implements Serializable {
     }
 
     public Boolean getNoCache() {
-        return nocache;
+        return noCache != null ? noCache : nocache;
     }
 
     public Boolean getOptimise() {
@@ -423,10 +433,13 @@ public class BuildImageConfiguration implements Serializable {
         }
 
         public Builder cacheFrom(String cacheFrom, String ...more) {
-            if (more == null || more.length == 0)
+            if (more == null || more.length == 0) {
                 return cacheFrom(Collections.singletonList(cacheFrom));
+            }
 
-            List<String> list = Stream.concat(Stream.of(cacheFrom), Arrays.stream(more)).collect(Collectors.toList());
+            List<String> list = new ArrayList<>();
+            list.add(cacheFrom);
+            list.addAll(Arrays.asList(more));
             return cacheFrom(list);
         }
 
@@ -528,8 +541,8 @@ public class BuildImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder nocache(Boolean nocache) {
-            config.nocache = nocache;
+        public Builder noCache(Boolean noCache) {
+            config.noCache = noCache;
             return this;
         }
 
