@@ -5,6 +5,7 @@
   - Fix NPE if docker:save is called with -Dfile=file-name-only.tar ([#1203](https://github.com/fabric8io/docker-maven-plugin/issues/1203))
   - Improve GZIP compression performance for docker:save ([#1205](https://github.com/fabric8io/docker-maven-plugin/issues/1205))
   - Allow docker:save to attach image archive as a project artifact ([#1210](https://github.com/fabric8io/docker-maven-plugin/pull/1210))
+  - Use pattern to detect image name in archive loaded during build and tag with image name from the project configuration ([#1207](https://github.com/fabric8io/docker-maven-plugin/issues/1207))
 
 * **0.29.0** (2019-04-08)
   - Avoid failing docker:save when no images with build configuration are present ([#1185](https://github.com/fabric8io/docker-maven-plugin/issues/1185))
