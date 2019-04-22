@@ -94,7 +94,7 @@ public class RemoveMojo extends AbstractDockerMojo {
             return image.getBuildConfiguration() != null;
         }
         if ("run".equalsIgnoreCase(removeMode)) {
-            return image.getRegistry() != null;
+            return image.getBuildConfiguration() == null;
         }
         if ("data".equalsIgnoreCase(removeMode)) {
             return image.isDataImage();

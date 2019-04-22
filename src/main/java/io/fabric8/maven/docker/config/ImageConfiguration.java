@@ -152,7 +152,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         // If there is no explicit run configuration, its a data image
         // TODO: Probably add an explicit property so that a user can indicated whether it
         // is a data image or not on its own.
-        return getRunConfiguration() == null;
+        return run == null;
     }
 
     public String getDescription() {

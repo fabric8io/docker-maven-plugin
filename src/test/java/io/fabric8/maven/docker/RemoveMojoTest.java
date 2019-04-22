@@ -140,11 +140,118 @@ public class RemoveMojoTest extends BaseMojoTest {
      * @throws ExecException
      */
     @Test
-    @Ignore
+    public void removeNullWithOneRunImage() throws IOException, MojoExecutionException, ExecException {
+        givenProjectWithResolvedImage(singleImageWithRun());
+
+        givenRemoveMode(null);
+
+        givenHasImage("example:latest");
+
+        whenMojoExecutes();
+
+        thenRemoveImageIsNotCalled();
+        thenListImagesIsNotCalled();
+    }
+
+    /**
+     * Mock project with one build image that is removed
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void removeNullWithRemoveAllWithOneBuildImage() throws IOException, MojoExecutionException, ExecException {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        givenRemoveMode(null);
+        givenRemoveAll(true);
+
+        givenHasImage("example:latest");
+
+        whenMojoExecutes();
+
+        thenRemoveImageIsCalledFor("example:latest");
+        thenListImagesIsNotCalled();
+    }
+
+    /**
+     * Mock project with one build image that is removed
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void removeNullWithRemoveAllFalseWithOneBuildImage() throws IOException, MojoExecutionException, ExecException {
+        givenProjectWithResolvedImage(singleImageWithBuild());
+
+        givenRemoveMode(null);
+        givenRemoveAll(false);
+
+        givenHasImage("example:latest");
+
+        whenMojoExecutes();
+
+        thenRemoveImageIsCalledFor("example:latest");
+        thenListImagesIsNotCalled();
+    }
+
+    /**
+     * Mock project with one build image that is removed
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void removeNullWithRemoveAllWithOneRunImage() throws IOException, MojoExecutionException, ExecException {
+        givenProjectWithResolvedImage(singleImageWithRun());
+
+        givenRemoveMode(null);
+        givenRemoveAll(false);
+
+        givenHasImage("example:latest");
+
+        whenMojoExecutes();
+
+        thenRemoveImageIsNotCalled();
+        thenListImagesIsNotCalled();
+    }
+
+    /**
+     * Mock project with one build image that is removed
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
     public void removeDataWithOneBuildOnlyImage() throws IOException, MojoExecutionException, ExecException {
         givenProjectWithResolvedImage(singleImageWithBuild());
 
         givenRemoveMode("data");
+
+        givenHasImage("example:latest");
+
+        whenMojoExecutes();
+
+        thenRemoveImageIsCalledFor("example:latest");
+        thenListImagesIsNotCalled();
+    }
+
+    /**
+     * Mock project with one build image that is removed
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void removeRunWithOneRunOnlyImage() throws IOException, MojoExecutionException, ExecException {
+        givenProjectWithResolvedImage(singleImageWithRun());
+
+        givenRemoveMode("run");
 
         givenHasImage("example:latest");
 
@@ -406,6 +513,10 @@ public class RemoveMojoTest extends BaseMojoTest {
         Deencapsulation.setField(removeMojo, "removeMode", removeMode);
     }
 
+    private void givenRemoveAll(boolean removeAll) {
+        Deencapsulation.setField(removeMojo, "removeAll", removeAll);
+    }
+
     private void givenRemoveNamePattern(String removeNamePattern) {
         Deencapsulation.setField(removeMojo, "removeNamePattern", removeNamePattern);
     }
@@ -439,7 +550,8 @@ public class RemoveMojoTest extends BaseMojoTest {
             queryService.listImages(anyBoolean); result = images; minTimes = 0;
             for(String imageName : imageNames) {
                 queryService.hasImage(imageName); result = true; minTimes = 0;
-                dockerAccess.removeImage(imageName, anyBoolean); result = true; minTimes = 0;
+                dockerAccess.removeImage(imageName, false); result = true; minTimes = 0;
+                dockerAccess.removeImage(imageName, true); result = true; minTimes = 0;
             }
         }};
     }
