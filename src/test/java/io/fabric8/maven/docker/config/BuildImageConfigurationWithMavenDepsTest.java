@@ -44,13 +44,25 @@ public class BuildImageConfigurationWithMavenDepsTest {
             "/context", "/other/Dockerfile", "/context", "/other/Dockerfile"
         };
 
+        // If the tests are run on Windows, the expected paths need to be adjusted.
+        // On platforms that use the Unix convention, the following does not actually change
+        // the test data.
+        for (int i = 0; i < data.length; ++i) {
+            if(data[i] != null) {
+                File file = new File(data[i]);
+                if(data[i].startsWith("/")) {
+                    file = file.getAbsoluteFile();
+                }
+                data[i] = file.getPath();
+            }
+        }
+
         for (int i = 0; i < data.length; i+= 4) {
             BuildImageConfiguration config =
                 new BuildImageConfiguration.Builder()
                     .contextDir(data[i])
                     .dockerFile(data[i + 1]).build();
             config.initAndValidate(logger);
-
 
             assertEquals(data[i + 2], config.getAbsoluteContextDirPath(params).getAbsolutePath());
             assertEquals(data[i + 3], config.getAbsoluteDockerFilePath(params).getAbsolutePath());
