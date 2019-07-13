@@ -112,6 +112,35 @@ public class AuthConfigFactoryTest {
         }
     }
 
+    @Test
+    public void testDockerSystemProperty() throws Exception {
+        System.setProperty("docker.username","roland");
+        System.setProperty("docker.password", "secret");
+        System.setProperty("docker.email", "roland@jolokia.org");
+        try {
+            AuthConfig config = factory.createAuthConfig(true, false, null, settings, null, null);
+            verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+        } finally {
+            System.clearProperty("docker.username");
+            System.clearProperty("docker.password");
+            System.clearProperty("docker.email");
+        }
+    }
+
+    @Test
+    public void testRegistrySystemProperty() throws Exception {
+        System.setProperty("registry.username","roland");
+        System.setProperty("registry.password", "secret");
+        System.setProperty("registry.email", "roland@jolokia.org");
+        try {
+            AuthConfig config = factory.createAuthConfig(true, false, null, settings, null, null);
+            verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+        } finally {
+            System.clearProperty("registry.username");
+            System.clearProperty("registry.password");
+            System.clearProperty("registry.email");
+        }
+    }
 
     @Test
     public void testDockerAuthLogin() throws Exception {

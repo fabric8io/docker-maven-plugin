@@ -174,7 +174,7 @@ public class AuthConfigFactory {
      *    <li>From the Maven settings stored typically in ~/.m2/settings.xml</li>
      * </ul>
      *
-     * The following properties (prefix with 'docker.') and config key are evaluated:
+     * The following properties (prefix with 'docker.' or 'registry.') and config key are evaluated:
      *
      * <ul>
      *     <li>username: User to authenticate</li>
@@ -198,7 +198,7 @@ public class AuthConfigFactory {
         AuthConfig ret;
 
         // Check first for specific configuration based on direction (pull or push), then for a default value
-        for (LookupMode lookupMode : new LookupMode[] { getLookupMode(isPush), LookupMode.DEFAULT }) {
+        for (LookupMode lookupMode : new LookupMode[] { getLookupMode(isPush), LookupMode.DEFAULT, LookupMode.REGISTRY}) {
             // System properties docker.username and docker.password always take precedence
             ret = getAuthConfigFromSystemProperties(lookupMode);
             if (ret != null) {
@@ -207,10 +207,12 @@ public class AuthConfigFactory {
             }
 
             // Check for openshift authentication either from the plugin config or from system props
-            ret = getAuthConfigFromOpenShiftConfig(lookupMode, authConfigMap);
-            if (ret != null) {
-                log.debug("AuthConfig: OpenShift credentials");
-                return ret;
+            if (lookupMode != LookupMode.REGISTRY) {
+                ret = getAuthConfigFromOpenShiftConfig(lookupMode, authConfigMap);
+                if (ret != null) {
+                    log.debug("AuthConfig: OpenShift credentials");
+                    return ret;
+                }
             }
 
             // Get configuration from global plugin config
@@ -580,6 +582,7 @@ public class AuthConfigFactory {
     private enum LookupMode {
         PUSH("docker.push.","push"),
         PULL("docker.pull.","pull"),
+        REGISTRY("registry.",null),
         DEFAULT("docker.",null);
 
         private final String sysPropPrefix;
