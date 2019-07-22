@@ -308,7 +308,7 @@ public class BuildService {
 
                 for(int index = 0; index < proxyMapping.length; index += 2) {
                     if (defaultProxyObj.has(proxyMapping[index])) {
-                        buildArgs.put(argPrefix + proxyMapping[index+1], defaultProxyObj.get(proxyMapping[index]).getAsString());
+                        buildArgs.put(proxyMapping[index+1], defaultProxyObj.get(proxyMapping[index]).getAsString());
                     }
                 }
             }
