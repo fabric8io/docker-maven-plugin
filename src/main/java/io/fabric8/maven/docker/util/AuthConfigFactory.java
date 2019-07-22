@@ -107,7 +107,7 @@ public class AuthConfigFactory {
      *  and exchanged for ecr credentials.
      *
      * @param isPush if true this AuthConfig is created for a push, if false it's for a pull
-     * @param skipExtendedAuth if false, do not execute extended authentication methods
+     * @param skipExtendedAuth if true, do not execute extended authentication methods
      * @param authConfig String-String Map holding configuration info from the plugin's configuration. Can be <code>null</code> in
      *                   which case the settings are consulted.
      * @param settings the global Maven settings object
