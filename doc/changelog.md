@@ -1,7 +1,8 @@
 # ChangeLog
 
-* **0.30-SNAPSHOT** (2019-04-23)
+* **0.30-SNAPSHOT** (2019-07-01)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
+  - ECR credentials from IAM Task role for ECS Fargate deployment ([#1233](https://github.com/fabric8io/docker-maven-plugin/issues/1233))
   - Fix bug in properties names extracted from docker config json file ([#1237](https://github.com/fabric8io/docker-maven-plugin/issues/1237))
 
 * **0.30.0** (2019-04-21)
