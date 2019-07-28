@@ -297,11 +297,12 @@ public class StartMojo extends AbstractDockerMojo {
 
         startingContainers.submit(() -> {
 
+            String containerId = startExecutor.startContainers();
+
             // Update port-mapping writer
             portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
 
 
-            String containerId = startExecutor.startContainers();
 
             return new StartedContainer(imageConfig, containerId);
         });
