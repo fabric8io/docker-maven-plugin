@@ -473,8 +473,9 @@ public class AuthConfigFactory {
             return null;
         }
         String auth = credentials.get("auth").getAsString();
+        String identityToken = credentials.has("identitytoken") ? credentials.get("identitytoken").getAsString() : null;
         String email = credentials.has(AUTH_EMAIL) ? credentials.get(AUTH_EMAIL).getAsString() : null;
-        return new AuthConfig(auth,email);
+        return new AuthConfig(auth, email, identityToken);
     }
 
     private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) throws MojoExecutionException {
