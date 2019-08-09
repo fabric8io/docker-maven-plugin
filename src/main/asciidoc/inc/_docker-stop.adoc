@@ -13,6 +13,7 @@ In case the naming strategy for an image is `alias` (i.e. the container name is 
 It should be noted that any containers created prior to version `0.13.7` of the plugin may not be stopped correctly by the plugin because the label needed to tie the container to the project may not exist. Should this happen, you will need to use the Docker CLI to clean up the containers and/or use the `docker.allContainers` option listed below.
 
 For tuning what should happen when stopping there are four global parameters which are typically used as system properties:
+`allContainers`, `keepContainer`, `keepRunning` and `removeVolumes`.
 
 .Stop configuration
 [cols="1,5,1"]
@@ -24,7 +25,8 @@ For tuning what should happen when stopping there are four global parameters whi
 | `docker.allContainers`
 
 | <<container-name, *containerNamePattern*>>
-| Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
+| Default pattern that <<{plugin}:start>> uses for naming containers when they are created. See <<container-name, Container Names>> for details.
+This should match the setting for <<{plugin}:start>> goals if the goals are configured in separate executions.
 | `docker.containerNamePattern`
 
 | *keepContainer*
@@ -38,6 +40,12 @@ For tuning what should happen when stopping there are four global parameters whi
 | *removeVolumes*
 | If set to `true` will remove any volumes associated to the container as well. This option will be ignored if either `keepContainer` or `keepRunning` are true.
 | `docker.removeVolumes`
+
+| *stopNamePattern*
+| If a list of <<name-patterns, name patterns>> is provided, any containers matching the patterns will be stopped and
+removed (depending on the values of `keepContainer` and `keepRunning`),
+independently of whether there is an <<image-configuration, image configuration>>.
+| `docker.stopNamePattern`
 |===
 
 .Example

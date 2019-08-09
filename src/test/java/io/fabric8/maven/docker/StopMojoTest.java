@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.print.Doc;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
@@ -13,7 +15,6 @@ import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.model.Container;
-import io.fabric8.maven.docker.util.GavLabel;
 import mockit.Deencapsulation;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -45,6 +46,68 @@ public class StopMojoTest extends BaseMojoTest {
     }
 
     /**
+     * Mock project with no images, but stopNamePattern is set, so containers are checked.
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void stopWithStopNamePatternButNoImages() throws IOException, MojoExecutionException, ExecException {
+        givenMavenProject();
+        givenStopNamePattern("**/example:*");
+
+        whenMojoExecutes();
+
+        thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
+        thenNoContainerIsStopped();
+    }
+
+    /**
+     * Mock project with no images, but stopNamePattern is set to a list that evaluates as empty,
+     * so containers are checked.
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void stopWithStopNamePatternThatIsActuallyEmpty() throws IOException, MojoExecutionException, ExecException {
+        givenMavenProject();
+        givenStopNamePattern(" , , ");
+
+        whenMojoExecutes();
+
+        thenNoContainerLookupByImageOccurs();
+        thenListContainersIsNotCalled();
+        thenNoContainerIsStopped();
+    }
+
+    /**
+     * Mock project with no images, but stopNamePattern is set, so a container is stopped.
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void stopWithMatchingStopNamePatternButNoImages() throws IOException, MojoExecutionException, ExecException {
+        givenMavenProject();
+        givenStopNamePattern("**/example:*");
+
+        givenRunningContainer("container-id", "example-1", "example:latest");
+        givenContainerHasGavLabels();
+        givenListOfRunningContainers();
+
+        whenMojoExecutes();
+
+        thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
+        thenContainerIsStopped("container-id", false, false);
+    }
+
+    /**
      * Mock project with one image, query service indicates running image, but it is not labelled.
      *
      * @throws IOException
@@ -59,6 +122,8 @@ public class StopMojoTest extends BaseMojoTest {
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenNoContainerIsStopped();
     }
 
@@ -74,10 +139,12 @@ public class StopMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(singleImageWithBuild());
 
         givenContainerIsRunningForImage("example:latest", "container-id", "example-1");
-        configureGavLabels();
+        givenContainerHasGavLabels();
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsStopped("container-id", false, false);
     }
 
@@ -94,12 +161,14 @@ public class StopMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(singleImageWithBuild());
 
         givenContainerIsRunningForImage("example:latest", "container-id", "example-1");
-        configureGavLabels();
+        givenContainerHasGavLabels();
 
         Deencapsulation.setField(stopMojo, "removeVolumes", true);
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsStopped("container-id", false, true);
     }
 
@@ -116,12 +185,14 @@ public class StopMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(singleImageWithBuild());
 
         givenContainerIsRunningForImage("example:latest", "container-id", "example-1");
-        configureGavLabels();
+        givenContainerHasGavLabels();
 
         Deencapsulation.setField(stopMojo, "keepContainer", true);
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsStopped("container-id", true, false);
     }
 
@@ -144,6 +215,8 @@ public class StopMojoTest extends BaseMojoTest {
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsStopped("container-id", false, false);
     }
 
@@ -163,13 +236,15 @@ public class StopMojoTest extends BaseMojoTest {
 
         givenAllContainersIsTrue();
 
-        configureRunningContainer(running1, "container-id-1", "example-1");
-        configureRunningContainer(running2, "container-id-2", "example-2");
-        configureRunningContainer(running3, "container-id-3", "example-3");
+        givenRunningContainer(running1, "container-id-1", "example-1");
+        givenRunningContainer(running2, "container-id-2", "example-2");
+        givenRunningContainer(running3, "container-id-3", "example-3");
         givenContainersAreRunningForImage("example:latest", running1, running2, running3);
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsNotStopped("container-id-1");
         thenContainerIsNotStopped("container-id-2");
         thenContainerIsStopped("container-id-3", false, false);
@@ -192,14 +267,16 @@ public class StopMojoTest extends BaseMojoTest {
 
         givenAllContainersIsTrue();
 
-        configureRunningContainer(running1, "container-id-1", "example-1");
-        configureRunningContainer(running2, "container-id-2", "example-2");
+        givenRunningContainer(running1, "container-id-1", "example-1");
+        givenRunningContainer(running2, "container-id-2", "example-2");
         // having a gap in the numbering causes the enumeration of images to stop early
-        configureRunningContainer(running3, "container-id-4", "example-4");
+        givenRunningContainer(running3, "container-id-4", "example-4");
         givenContainersAreRunningForImage("example:latest", running1, running2, running3);
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsNotStopped("container-id-1");
         thenContainerIsStopped("container-id-2", false, false);
         thenContainerIsStopped("container-id-4", false, false);
@@ -223,9 +300,9 @@ public class StopMojoTest extends BaseMojoTest {
 
         givenAllContainersIsTrue();
 
-        configureRunningContainer(running1, "container-id-1", "example-1");
-        configureRunningContainer(running2, "container-id-2", "example-2");
-        configureRunningContainer(running3, "container-id-3", "example-3");
+        givenRunningContainer(running1, "container-id-1", "example-1");
+        givenRunningContainer(running2, "container-id-2", "example-2");
+        givenRunningContainer(running3, "container-id-3", "example-3");
         givenContainersAreRunningForImage("example:latest", running1, running2, running3);
 
         // If name pattern doesn't contain index placeholder, all containers are stopped
@@ -233,6 +310,8 @@ public class StopMojoTest extends BaseMojoTest {
 
         whenMojoExecutes();
 
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
         thenContainerIsStopped("container-id-1", false, false);
         thenContainerIsStopped("container-id-2", false, false);
         thenContainerIsStopped("container-id-3", false, false);
@@ -248,18 +327,16 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithSingleImageAndPatternDoesNotMatch() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("**/example:loudest"));
 
-        configureRunningContainer("container-id-1", "example-1");
-        configureGavLabels();
+        givenRunningContainer("container-id-1", "example-1", "example:latest");
 
         givenListOfRunningContainers();
-
-        givenStopNamePattern("**/example:loudest");
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenNoContainerIsStopped();
     }
 
@@ -273,9 +350,7 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithSingleImageAndNoApplicablePattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
-
-        givenStopNamePattern(" , , ");
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern(" , , "));
 
         whenMojoExecutes();
 
@@ -294,9 +369,7 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test(expected = MojoExecutionException.class)
     public void stopWithSingleImageAndImagePatternSyntaxException() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
-
-        givenStopNamePattern(" , image=%regex[surprise! [], ");
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern(" , image=%regex[surprise! [], "));
 
         whenMojoExecutes();
 
@@ -307,17 +380,16 @@ public class StopMojoTest extends BaseMojoTest {
 
     /**
      * Mock project with one image, query service indicates running image, but it is not labelled.
-     * The stopNamePattern is set for images only and does not match.
+     * The stopNamePattern is set for container names only and does not match.
      *
      * @throws IOException
      * @throws MojoExecutionException
      * @throws ExecException
      */
     @Test(expected = MojoExecutionException.class)
-    public void stopWithSingleImageAndContainerNamePatternSyntaxException() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
-
-        givenStopNamePattern(" ,name= %regex[surprise! [], ");
+    public void stopWithSingleImageAndContainerNamePatternSyntaxException()
+            throws IOException, MojoExecutionException, ExecException {
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern(" ,name= %regex[surprise! [], "));
 
         whenMojoExecutes();
 
@@ -336,17 +408,16 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithSingleImageAndImageOnlyPattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("image=**/example:loudest"));
 
-        configureRunningContainer("container-id-1", "example-1", "example:latest");
-        configureGavLabels();
+        givenRunningContainer("container-id-1", "example-1", "example:latest");
+        givenContainerHasGavLabels();
         givenListOfRunningContainers();
-
-        givenStopNamePattern("image=**/example:loudest");
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenNoContainerIsStopped();
     }
 
@@ -360,50 +431,17 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithSingleImageAndNameOnlyPattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("name=exemplary-*"));
 
-        configureRunningContainer("container-id-1", "example-1", "example:latest");
-        configureGavLabels();
+        givenRunningContainer("container-id-1", "example-1", "example:latest");
+        givenContainerHasGavLabels();
         givenListOfRunningContainers();
-
-        givenStopNamePattern("name=exemplary-*");
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenNoContainerIsStopped();
-    }
-
-    /**
-     * Mock project with one image, query service indicates running image, but it is not labelled.
-     * The stopNamePattern is set and does not match.
-     *
-     * @throws IOException
-     * @throws MojoExecutionException
-     * @throws ExecException
-     */
-    @Test
-    public void stopWithSingleImageAndPerImagePattern() throws IOException, MojoExecutionException, ExecException {
-        ImageConfiguration image = new ImageConfiguration.Builder()
-                .name("example:latest")
-                .stopNamePattern("override:latest")
-                .buildConfig(new BuildImageConfiguration.Builder()
-                        .from("scratch")
-                        .build())
-                .build();
-
-        givenProjectWithResolvedImage(image);
-
-        configureRunningContainer("container-id-1", "example-1", "example:latest");
-        configureGavLabels();
-        givenListOfRunningContainers();
-
-        givenStopNamePattern("**/example:*");
-
-        whenMojoExecutes();
-
-        thenNoContainerIsStopped();
-        thenNoContainerLookupByImageOccurs();
     }
 
     /**
@@ -419,19 +457,19 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithMultipleImagesImageNamePattern(@Mocked Container running1, @Mocked Container running2, @Mocked Container running3) throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("example:*"));
 
         givenAllContainersIsTrue();
-        givenStopNamePattern("example:*");
 
-        configureRunningContainer(running1, "container-id-1", "example-1", "example:v1");
-        configureRunningContainer(running2, "container-id-2", "example-2", "example:v2");
-        configureRunningContainer(running3, "container-id-3", "example-3", "example:v3");
+        givenRunningContainer(running1, "container-id-1", "example-1", "example:v1");
+        givenRunningContainer(running2, "container-id-2", "example-2", "example:v2");
+        givenRunningContainer(running3, "container-id-3", "example-3", "example:v3");
         givenListOfRunningContainers(running1, running2, running3);
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenContainerIsStopped("container-id-1", false, false);
         thenContainerIsStopped("container-id-2", false, false);
         thenContainerIsStopped("container-id-3", false, false);
@@ -450,19 +488,19 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithMultipleImagesContainerNamePattern(@Mocked Container running1, @Mocked Container running2, @Mocked Container running3) throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("example-*"));
 
         givenAllContainersIsTrue();
-        givenStopNamePattern("example-*");
 
-        configureRunningContainer(running1, "container-id-1", "example-1", "example:v1");
-        configureRunningContainer(running2, "container-id-2", "example-2", "example:v2");
-        configureRunningContainer(running3, "container-id-3", "example-3", "example:v3");
+        givenRunningContainer(running1, "container-id-1", "example-1", "example:v1");
+        givenRunningContainer(running2, "container-id-2", "example-2", "example:v2");
+        givenRunningContainer(running3, "container-id-3", "example-3", "example:v3");
         givenListOfRunningContainers(running1, running2, running3);
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenContainerIsStopped("container-id-1", false, false);
         thenContainerIsStopped("container-id-2", false, false);
         thenContainerIsStopped("container-id-3", false, false);
@@ -482,19 +520,19 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithMultipleImagesContainerAndImageNamePattern(@Mocked Container running1, @Mocked Container running2, @Mocked Container running3) throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("name=%regex[example-[14]],image=*:v2,**:v3"));
 
         givenAllContainersIsTrue();
-        givenStopNamePattern("name=%regex[example-[14]],image=*:v2,**:v3");
 
-        configureRunningContainer(running1, "container-id-1", "example-1", "example:v1");
-        configureRunningContainer(running2, "container-id-2", "example-2", "example:v2");
-        configureRunningContainer(running3, "container-id-3", "example-3", "example:v3");
+        givenRunningContainer(running1, "container-id-1", "example-1", "example:v1");
+        givenRunningContainer(running2, "container-id-2", "example-2", "example:v2");
+        givenRunningContainer(running3, "container-id-3", "example-3", "example:v3");
         givenListOfRunningContainers(running1, running2, running3);
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenContainerIsStopped("container-id-1", false, false);
         thenContainerIsStopped("container-id-2", false, false);
         thenContainerIsStopped("container-id-3", false, false);
@@ -513,19 +551,19 @@ public class StopMojoTest extends BaseMojoTest {
      */
     @Test
     public void stopWithMultipleImagesContainerNameRegexPattern(@Mocked Container running1, @Mocked Container running2, @Mocked Container running3) throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithBuild());
+        givenProjectWithResolvedImage(singleImageWithBuildAndStopNamePattern("%regex[example-[13]]"));
 
         givenAllContainersIsTrue();
-        givenStopNamePattern("%regex[example-[13]]");
 
-        configureRunningContainer(running1, "container-id-1", "example-1", "example:v1");
-        configureRunningContainer(running2, "container-id-2", "example-2", "example:v2");
-        configureRunningContainer(running3, "container-id-3", "example-3", "example:v3");
+        givenRunningContainer(running1, "container-id-1", "example-1", "example:v1");
+        givenRunningContainer(running2, "container-id-2", "example-2", "example:v2");
+        givenRunningContainer(running3, "container-id-3", "example-3", "example:v3");
         givenListOfRunningContainers(running1, running2, running3);
 
         whenMojoExecutes();
 
         thenNoContainerLookupByImageOccurs();
+        thenListContainersIsCalled();
         thenContainerIsStopped("container-id-1", false, false);
         thenContainerIsNotStopped("container-id-2");
         thenContainerIsStopped("container-id-3", false, false);
@@ -545,6 +583,16 @@ public class StopMojoTest extends BaseMojoTest {
         givenResolvedImages(stopMojo, resolvedImages);
     }
 
+    protected ImageConfiguration singleImageWithBuildAndStopNamePattern(String stopNamePattern) {
+        return new ImageConfiguration.Builder()
+                .name("example:latest")
+                .stopNamePattern(stopNamePattern)
+                .buildConfig(new BuildImageConfiguration.Builder()
+                        .from("scratch")
+                        .build())
+                .build();
+    }
+
     private void givenStopNamePattern(String stopNamePattern) {
         Deencapsulation.setField(stopMojo, "stopNamePattern", stopNamePattern);
     }
@@ -553,19 +601,15 @@ public class StopMojoTest extends BaseMojoTest {
         Deencapsulation.setField(stopMojo, "allContainers", true);
     }
 
-    private void configureRunningContainer(String containerId, String containerName) {
-        configureRunningContainer(this.runningInstance, containerId, containerName);
+    private void givenRunningContainer(String containerId, String containerName, String imageName) {
+        givenRunningContainer(this.runningInstance, containerId, containerName, imageName);
     }
 
-    private void configureRunningContainer(String containerId, String containerName, String imageName) {
-        configureRunningContainer(this.runningInstance, containerId, containerName, imageName);
+    private void givenRunningContainer(Container instance, String containerId, String containerName) {
+        givenRunningContainer(instance, containerId, containerName, null);
     }
 
-    private void configureRunningContainer(Container instance, String containerId, String containerName) {
-        configureRunningContainer(instance, containerId, containerName, null);
-    }
-
-    private void configureRunningContainer(Container instance, String containerId, String containerName, String imageName) {
+    private void givenRunningContainer(Container instance, String containerId, String containerName, String imageName) {
         new Expectations() {{
             instance.getId(); result = containerId; minTimes = 0;
             instance.getName(); result = containerName; minTimes = 0;
@@ -577,25 +621,28 @@ public class StopMojoTest extends BaseMojoTest {
         new Expectations() {{
             queryService.listContainers(anyBoolean);
             result = (instances.length == 0 ? Collections.singletonList(runningInstance) : Arrays.asList(instances));
+            minTimes = 0;
         }};
     }
 
     private void givenContainerIsRunningForImage(String imageName, String containerId, String containerName) throws DockerAccessException {
-        configureRunningContainer(this.runningInstance, containerId, containerName);
+        givenRunningContainer(this.runningInstance, containerId, containerName, imageName);
         givenContainersAreRunningForImage(imageName, this.runningInstance);
     }
 
     private void givenContainersAreRunningForImage(String imageName, Container... containers) throws DockerAccessException {
         new Expectations() {{
-            queryService.getContainersForImage(imageName, anyBoolean); result = Arrays.asList(containers);
+            queryService.getContainersForImage(imageName, anyBoolean);
+            result = Arrays.asList(containers);
+            minTimes = 0;
         }};
     }
 
-    private void configureGavLabels() {
-        configureGavLabels(this.runningInstance);
+    private void givenContainerHasGavLabels() {
+        givenContainerHasGavLabels(this.runningInstance);
     }
 
-    private void configureGavLabels(Container instance) {
+    private void givenContainerHasGavLabels(Container instance) {
         new Expectations() {{
             instance.getLabels();
             result = Collections.singletonMap(projectGavLabel.getKey(), projectGavLabel.getValue());
@@ -607,15 +654,10 @@ public class StopMojoTest extends BaseMojoTest {
         stopMojo.executeInternal(serviceHub);
     }
 
-    private void thenNoContainerLookupByImageOccurs() throws DockerAccessException {
-        new Verifications() {{
-            queryService.getContainersForImage(anyString, anyBoolean); times = 0;
-        }};
-    }
-
     private void thenNoContainerIsStopped() throws ExecException, DockerAccessException {
         new Verifications() {{
-            runService.stopContainer(anyString, (ImageConfiguration)any, anyBoolean, anyBoolean); times = 0;
+            runService.stopContainer(anyString, (ImageConfiguration)any, anyBoolean, anyBoolean);
+            times = 0;
         }};
     }
 
@@ -627,13 +669,36 @@ public class StopMojoTest extends BaseMojoTest {
 
     private void thenContainerIsNotStopped(String containerId) throws ExecException, DockerAccessException {
         new Verifications() {{
-            runService.stopContainer(containerId, (ImageConfiguration)any, anyBoolean, anyBoolean); times = 0;
+            runService.stopContainer(containerId, (ImageConfiguration)any, anyBoolean, anyBoolean);
+            times = 0;
+        }};
+    }
+
+    private void thenNoContainerLookupByImageOccurs() throws DockerAccessException {
+        new Verifications() {{
+            queryService.getContainersForImage(anyString, anyBoolean);
+            times = 0;
+        }};
+    }
+
+    private void thenContainerLookupByImageOccurs(String imageName) throws DockerAccessException {
+        new Verifications() {{
+            queryService.getContainersForImage(imageName, anyBoolean);
+            minTimes = 1;
+        }};
+    }
+
+    private void thenListContainersIsCalled() throws DockerAccessException {
+        new Verifications() {{
+            queryService.listContainers(anyBoolean);
+            minTimes = 1;
         }};
     }
 
     private void thenListContainersIsNotCalled() throws DockerAccessException {
         new Verifications() {{
-            queryService.listContainers(anyBoolean); times = 0;
+            queryService.listContainers(anyBoolean);
+            times = 0;
         }};
     }
 }

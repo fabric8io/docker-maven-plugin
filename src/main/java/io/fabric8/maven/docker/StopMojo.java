@@ -92,6 +92,7 @@ public class StopMojo extends AbstractDockerMojo {
             throws MojoExecutionException, IOException, ExecException {
 
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, gavLabel);
+
         for (ImageConfiguration image : getResolvedImages()) {
 
             Collection<Container> existingContainers
@@ -103,38 +104,65 @@ public class StopMojo extends AbstractDockerMojo {
                 }
             }
         }
+
+        // If the mojo has a stopNamePattern, check to see if there are matching containers
+        for (Container container : getContainersForMojo(queryService)) {
+            if (shouldStopContainer(container, gavLabel)) {
+                runService.stopContainer(container.getId(),
+                        new ImageConfiguration.Builder().name(container.getImage()).build(),
+                        keepContainer, removeVolumes);
+            }
+        }
+
         runService.removeCustomNetworks(networksToRemove);
     }
 
-    private Collection<Container> getContainersForImage(QueryService queryService, ImageConfiguration image)
+    private Collection<Container> getContainersForPattern(QueryService queryService, Matcher imageNameMatcher,
+                                                          Matcher containerNameMatcher)
+            throws IOException {
+        return queryService.listContainers(!keepContainer)
+                .stream()
+                .filter(c -> containerMatchesPattern(c, imageNameMatcher, containerNameMatcher))
+                .collect(Collectors.toList());
+    }
+
+    private Collection<Container> getContainersForMojo(QueryService queryService)
             throws MojoExecutionException, IOException {
-
-        String stopNamePattern = getStopNamePatternForImage(image);
-
         if(stopNamePattern != null) {
             Matcher imageNameMatcher = getImageNameMatcher(stopNamePattern);
 
             Matcher containerNameMatcher = getContainerNameMatcher(stopNamePattern);
 
             if(imageNameMatcher == null && containerNameMatcher == null) {
+                log.warn("There are no image name or container name patterns in non-empty stopNamePattern: no containers will be stopped");
+            } else {
+                return getContainersForPattern(queryService, imageNameMatcher, containerNameMatcher);
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    private Collection<Container> getContainersForImage(QueryService queryService, ImageConfiguration image)
+            throws MojoExecutionException, IOException {
+
+        if(image.getStopNamePattern() != null) {
+            Matcher imageNameMatcher = getImageNameMatcher(image.getStopNamePattern());
+
+            Matcher containerNameMatcher = getContainerNameMatcher(image.getStopNamePattern());
+
+            if(imageNameMatcher == null && containerNameMatcher == null) {
                 log.warn("There are no image name or container name patterns in stopNamePattern for image %s: no containers will be stopped", image.getName());
                 return Collections.emptyList();
             }
 
-            return queryService.listContainers(!keepContainer)
-                    .stream()
-                    .filter(c -> containerMatchesPattern(c, image.getName(), imageNameMatcher, containerNameMatcher))
-                    .collect(Collectors.toList());
+            return getContainersForPattern(queryService, imageNameMatcher, containerNameMatcher);
         }
 
         return ContainerNamingUtil.getContainersToStop(image,
                 containerNamePattern,
                 getBuildTimestamp(),
                 queryService.getContainersForImage(image.getName(), !keepContainer));
-    }
-
-    private String getStopNamePatternForImage(ImageConfiguration image) {
-        return image.getStopNamePattern() == null ? this.stopNamePattern : image.getStopNamePattern();
     }
 
     private Matcher getImageNameMatcher(String stopNamePattern) throws MojoExecutionException {
@@ -167,15 +195,15 @@ public class StopMojo extends AbstractDockerMojo {
         }
     }
 
-    private boolean containerMatchesPattern(Container container, String imageName, Matcher imageNameMatcher, Matcher containerNameMatcher) {
+    private boolean containerMatchesPattern(Container container, Matcher imageNameMatcher, Matcher containerNameMatcher) {
         if(imageNameMatcher != null && container.getImage() != null && imageNameMatcher.reset(container.getImage()).find()) {
-            log.debug("Container image %s matched stopNamePattern for image %s", container.getImage(), imageName);
+            log.debug("Container image %s matched stopNamePattern", container.getImage());
             return true;
         } else if(containerNameMatcher != null && container.getName() != null && containerNameMatcher.reset(container.getName()).find()) {
-            log.debug("Container name %s matched stopNamePattern for image %s", container.getName(), imageName);
+            log.debug("Container name %s matched stopNamePattern", container.getName());
             return true;
         } else {
-            log.debug("Neither container image %s nor name %s matched stopNamePattern for image %s", container.getImage(), container.getName(), imageName);
+            log.debug("Neither container image %s nor name %s matched stopNamePattern", container.getImage(), container.getName());
             return false;
         }
     }

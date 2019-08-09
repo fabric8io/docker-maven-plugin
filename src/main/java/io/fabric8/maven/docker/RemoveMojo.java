@@ -72,7 +72,7 @@ public class RemoveMojo extends AbstractDockerMojo {
     protected void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration image : getResolvedImages()) {
             if (imageShouldBeRemoved(image)) {
-                for(String name : getImageNamesToRemove(hub, image)) {
+                for(String name : getImageNamesToRemoveForImage(hub, image)) {
                     removeImage(hub, name);
                 }
 
@@ -83,6 +83,11 @@ public class RemoveMojo extends AbstractDockerMojo {
                     }
                 }
             }
+        }
+
+        // If a global pattern option is provided, process it after per-image patterns
+        for(String name : getImageNamesToRemoveForMojo(hub)) {
+            removeImage(hub, name);
         }
     }
 
@@ -106,25 +111,43 @@ public class RemoveMojo extends AbstractDockerMojo {
         return image.getBuildConfiguration() != null;
     }
 
-    private Collection<String> getImageNamesToRemove(ServiceHub hub, ImageConfiguration imageConfiguration)
+    private Collection<String> getImageNamesMatchingPattern(ServiceHub hub, Matcher imageNameMatcher)
             throws MojoExecutionException, DockerAccessException {
+        return hub.getQueryService().listImages(false)
+                .stream()
+                .flatMap(image -> image.getRepoTags().stream())
+                .filter(repoTag -> imageNameMatcher.reset(repoTag).matches())
+                .collect(Collectors.toList());
+    }
 
-        String removeNamePattern = imageConfiguration.getRemoveNamePattern() == null
-                ? this.removeNamePattern : imageConfiguration.getRemoveNamePattern();
-
+    private Collection<String> getImageNamesToRemoveForMojo(ServiceHub hub)
+            throws MojoExecutionException, DockerAccessException {
         if(removeNamePattern != null) {
             Matcher imageNameMatcher = getImageNameMatcher(removeNamePattern);
+
+            if(imageNameMatcher == null) {
+                log.warn("There are no image name patterns in removeNamePattern for docker:remove");
+                return Collections.emptyList();
+            }
+
+            return getImageNamesMatchingPattern(hub, imageNameMatcher);
+        }
+
+        return Collections.emptyList();
+    }
+
+    private Collection<String> getImageNamesToRemoveForImage(ServiceHub hub, ImageConfiguration imageConfiguration)
+            throws MojoExecutionException, DockerAccessException {
+
+        if(imageConfiguration.getRemoveNamePattern() != null) {
+            Matcher imageNameMatcher = getImageNameMatcher(imageConfiguration.getRemoveNamePattern());
 
             if(imageNameMatcher == null) {
                 log.warn("There are no image name patterns in removeNamePattern for image %s: no images will be removed", imageConfiguration.getName());
                 return Collections.emptyList();
             }
 
-            return hub.getQueryService().listImages(false)
-                    .stream()
-                    .flatMap(image -> image.getRepoTags().stream())
-                    .filter(repoTag -> imageNameMatcher.reset(repoTag).matches())
-                    .collect(Collectors.toList());
+            return getImageNamesMatchingPattern(hub, imageNameMatcher);
         }
 
         return Collections.singleton(imageConfiguration.getName());

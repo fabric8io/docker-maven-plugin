@@ -49,6 +49,44 @@ public class RemoveMojoTest extends BaseMojoTest {
     }
 
     /**
+     * Mock project with no images, but a pattern is provided.
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void removeWithRemovePatternAndNoImages() throws IOException, MojoExecutionException, ExecException {
+        givenMavenProject();
+        givenRemoveNamePattern("example:*");
+        givenListOfImageNames("example:latest");
+
+        whenMojoExecutes();
+
+        thenListImagesIsCalled();
+        thenRemoveImageIsCalledFor("example:latest");
+    }
+
+    /**
+     * Mock project with no images, and an empty set of patterns is provided.
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void removeWithEmptyRemovePatternsAndNoImages() throws IOException, MojoExecutionException, ExecException {
+        givenMavenProject();
+        givenRemoveNamePattern(" , , ");
+        givenListOfImageNames("example:latest");
+
+        whenMojoExecutes();
+
+        thenListImagesIsNotCalled();
+        thenRemoveImageIsNotCalledFor("example:latest");
+    }
+
+    /**
      * Mock project with one image that is removed.
      *
      * @throws IOException
@@ -362,10 +400,9 @@ public class RemoveMojoTest extends BaseMojoTest {
      */
     @Test
     public void removeAllWithOneImageAndPattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithoutBuildOrRun());
+        givenProjectWithResolvedImage(singleImageWithoutBuildOrRunWithRemoveNamePattern("example:*"));
 
         givenRemoveMode("all");
-        givenRemoveNamePattern("example:*");
 
         givenListOfImageNames("example:latest");
 
@@ -383,38 +420,8 @@ public class RemoveMojoTest extends BaseMojoTest {
      * @throws ExecException
      */
     @Test
-    public void removeAllWithOneImageAndOverridePattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(
-                new ImageConfiguration.Builder()
-                .name("example:latest")
-                .removeNamePattern("**:latest")
-                .build());
-
-        givenRemoveMode("all");
-        givenRemoveNamePattern("example:*");
-
-        givenListOfImageNames("example:latest", "example:fastest", "example:loosest");
-
-        whenMojoExecutes();
-
-        thenListImagesIsCalled();
-        thenRemoveImageIsCalledFor("example:latest");
-    }
-
-    /**
-     * Mock project with one image that is removed by pattern
-     *
-     * @throws IOException
-     * @throws MojoExecutionException
-     * @throws ExecException
-     */
-    @Test
     public void removeAllWithOneImageAndImagePatternOnly() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(
-                new ImageConfiguration.Builder()
-                .name("example:latest")
-                .removeNamePattern("**:latest")
-                .build());
+        givenProjectWithResolvedImage(singleImageWithoutBuildOrRunWithRemoveNamePattern("**:latest"));
 
         givenRemoveMode("all");
         givenRemoveNamePattern(null);
@@ -425,6 +432,8 @@ public class RemoveMojoTest extends BaseMojoTest {
 
         thenListImagesIsCalled();
         thenRemoveImageIsCalledFor("example:latest");
+        thenRemoveImageIsNotCalledFor("example:fastest");
+        thenRemoveImageIsNotCalledFor("example:loosest");
     }
 
     /**
@@ -436,10 +445,10 @@ public class RemoveMojoTest extends BaseMojoTest {
      */
     @Test
     public void removeAllWithOneImageAndUnspecifiedTags() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithoutBuildOrRun());
+        givenProjectWithResolvedImage(singleImageWithoutBuildOrRunWithRemoveNamePattern("example:*"));
 
         givenRemoveMode("all");
-        givenRemoveNamePattern("example:*");
+        givenRemoveNamePattern(null);
 
         givenListOfImageNames("example:latest", "example:earlier-run", "example:1.0.0-MOCK");
 
@@ -460,10 +469,9 @@ public class RemoveMojoTest extends BaseMojoTest {
      */
     @Test(expected = MojoExecutionException.class)
     public void removeAllWithOneImageAndInvalidPattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithoutBuildOrRun());
+        givenProjectWithResolvedImage(singleImageWithoutBuildOrRunWithRemoveNamePattern("%regex[[]"));
 
         givenRemoveMode("all");
-        givenRemoveNamePattern("%regex[[]");
 
         givenListOfImageNames("example:latest");
 
@@ -482,12 +490,11 @@ public class RemoveMojoTest extends BaseMojoTest {
      */
     @Test
     public void removeAllWithOneImageAndNoApplicablePattern() throws IOException, MojoExecutionException, ExecException {
-        givenProjectWithResolvedImage(singleImageWithoutBuildOrRun());
+        givenProjectWithResolvedImage(singleImageWithoutBuildOrRunWithRemoveNamePattern("container=example:*"));
 
         givenRemoveMode("all");
-        givenRemoveNamePattern("container=example:*");
 
-        givenListOfImageNames("example:latest");
+        givenListOfImageNames("example:earlier-run");
 
         whenMojoExecutes();
 
@@ -508,7 +515,14 @@ public class RemoveMojoTest extends BaseMojoTest {
         givenMavenProject(removeMojo);
         givenResolvedImages(removeMojo, resolvedImages);
     }
-    
+
+    protected ImageConfiguration singleImageWithoutBuildOrRunWithRemoveNamePattern(String removeNamePattern) {
+        return new ImageConfiguration.Builder()
+                .name("example:latest")
+                .removeNamePattern(removeNamePattern)
+                .build();
+    }
+
     private void givenRemoveMode(String removeMode) {
         Deencapsulation.setField(removeMojo, "removeMode", removeMode);
     }
