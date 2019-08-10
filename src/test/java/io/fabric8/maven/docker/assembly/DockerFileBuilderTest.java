@@ -253,6 +253,16 @@ public class DockerFileBuilderTest {
     }
 
     @Test
+    public void testTargetDirStartsWithEnvVar() {
+        assertTrue(new DockerFileBuilder().basedir("${FOO}").content().contains("${FOO}"));
+        assertTrue(new DockerFileBuilder().basedir("$FOO").content().contains("$FOO"));
+        assertTrue(new DockerFileBuilder().basedir("${FOO}/").content().contains("${FOO}"));
+        assertTrue(new DockerFileBuilder().basedir("$FOO/").content().contains("$FOO"));
+        assertTrue(new DockerFileBuilder().basedir("${FOO}/bar").content().contains("${FOO}/bar"));
+        assertTrue(new DockerFileBuilder().basedir("$FOO/bar").content().contains("$FOO/bar"));
+    }
+
+    @Test
     public void testDockerFileKeywords() {
         StringBuilder b = new StringBuilder();
         DockerFileKeyword.RUN.addTo(b, "apt-get", "update");
