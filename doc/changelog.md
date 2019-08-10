@@ -1,15 +1,16 @@
 # ChangeLog
 
-* **0.30-SNAPSHOT**
+* **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
   - ECR credentials from IAM Task role for ECS Fargate deployment ([#1233](https://github.com/fabric8io/docker-maven-plugin/issues/1233))
   - Fix bug in properties names extracted from docker config json file ([#1237](https://github.com/fabric8io/docker-maven-plugin/issues/1237))
-  - Fix that portPropertyFile is not written anymore (#1112)
+  - Fix that portPropertyFile is not written anymore ([#1112](https://github.com/fabric8io/docker-maven-plugin/issues/1112))
   - Use identity token if found in Docker config.json ([#1249](https://github.com/fabric8io/docker-maven-plugin/issues/1249))
-  - Support for pattern matching in `docker:stop` and `docker:remove` (#1215)
-  - Increase interoperability with docker-java by accepting `registry.username` and `registry.password`, too (#1245)
-  - Allow also starting with an environment variable in `targetDir` of an aseembly config instead of insisting on only absolute path-names (#1244)
-  
+  - Allow also starting with an environment variable in `targetDir` of an aseembly config instead of insisting on only absolute path-names ([#1244](https://github.com/fabric8io/docker-maven-plugin/issues/1244))
+  - Support for pattern matching in `docker:stop` and `docker:remove` ([#1215](https://github.com/fabric8io/docker-maven-plugin/issues/1215))
+  - Increase interoperability with docker-java by accepting `registry.username` and `registry.password`, too ([#1245](https://github.com/fabric8io/docker-maven-plugin/issues/1245))
+
+>>>>>>> preps for 0.31.0
 * **0.30.0** (2019-04-21)
   - Restore ANSI color to Maven logging if disabled during plugin execution and enable color for Windows with Maven 3.5.0 or later. Color logging is enabled by default, but disabled if the Maven CLI disables color (e.g. in batch mode) ([#1108](https://github.com/fabric8io/docker-maven-plugin/issues/1108))
   - Fix NPE if docker:save is called with -Dfile=file-name-only.tar ([#1203](https://github.com/fabric8io/docker-maven-plugin/issues/1203))
