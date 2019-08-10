@@ -1,14 +1,6 @@
 package io.fabric8.maven.docker.access.hc;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.ResponseHandler;
+import static java.net.HttpURLConnection.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +15,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.BuildOptions;
@@ -52,22 +55,15 @@ import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ContainersListElement;
 import io.fabric8.maven.docker.model.ExecDetails;
+import io.fabric8.maven.docker.model.Image;
+import io.fabric8.maven.docker.model.ImageDetails;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.model.NetworksListElement;
 import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.Timestamp;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
-import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
-import static java.net.HttpURLConnection.HTTP_OK;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
@@ -328,6 +324,25 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
+    public List<Container> listContainers(boolean all) throws DockerAccessException {
+        String url = urlBuilder.listContainers(all);
+
+        try {
+            String response = delegate.get(url, HTTP_OK);
+            JsonArray array = JsonFactory.newJsonArray(response);
+            List<Container> containers = new ArrayList<>();
+
+            for (JsonElement element : array) {
+                containers.add(new ContainersListElement(element.getAsJsonObject()));
+            }
+
+            return containers;
+        } catch (IOException e) {
+            throw new DockerAccessException(e.getMessage());
+        }
+    }
+
+    @Override
     public ContainerDetails getContainer(String containerIdOrName) throws DockerAccessException {
         HttpBodyAndStatus response = inspectContainer(containerIdOrName);
         if (response.getStatusCode() == HTTP_NOT_FOUND) {
@@ -362,6 +377,25 @@ public class DockerAccessWithHcClient implements DockerAccess {
             return delegate.get(url, new BodyAndStatusResponseHandler(), HTTP_OK, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to retrieve container name for [%s]", containerIdOrName);
+        }
+    }
+
+    @Override
+    public List<Image> listImages(boolean all) throws DockerAccessException {
+        String url = urlBuilder.listImages(all);
+
+        try {
+            String response = delegate.get(url, HTTP_OK);
+            JsonArray array = JsonFactory.newJsonArray(response);
+            List<Image> images = new ArrayList<>(array.size());
+
+            for (int i = 0; i < array.size(); i++) {
+                images.add(new ImageDetails(array.get(i).getAsJsonObject()));
+            }
+
+            return images;
+        } catch(IOException e) {
+            throw new DockerAccessException(e.getMessage());
         }
     }
 

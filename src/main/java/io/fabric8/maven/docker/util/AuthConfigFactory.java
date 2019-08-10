@@ -248,6 +248,19 @@ public class AuthConfigFactory {
                 log.debug("AuthConfig: credentials from EC2 instance role");
                 return ret;
             }
+
+            try {
+                ret = getAuthConfigFromECSTaskRole();
+            } catch (ConnectTimeoutException ex) {
+                log.debug("Connection timeout while retrieving ECS meta-data, likely not an ECS instance (%s)",
+                        ex.getMessage());
+            } catch (IOException ex) {
+                log.warn("Error while retrieving ECS Task role credentials: %s", ex.getMessage());
+            }
+            if (ret != null) {
+                log.debug("AuthConfig: credentials from ECS Task role");
+                return ret;
+            }
         }
 
         // No authentication found
@@ -299,6 +312,49 @@ public class AuthConfigFactory {
                 }
 
                 // read instance role
+                try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
+                    JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
+
+                    String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
+                    String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
+                    String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
+
+                    log.debug("Received temporary access key %s...", user.substring(0, 8));
+                    return new AuthConfig(user, password, "none", token);
+                }
+            }
+        }
+    }
+
+    // if the local credentials don't contain user and password & is not a EC2 instance, use ECS Task instance
+    // role credentials
+    private AuthConfig getAuthConfigFromECSTaskRole() throws IOException {
+        log.debug("No user and password set for ECR, checking ECS Task role");
+        try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
+            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
+                    .setSocketTimeout(1000).build();
+
+            // get ECS task role - if available
+            String awsContainerCredentialsUri = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
+            if (awsContainerCredentialsUri == null) {
+                log.debug("System environment not set for variable AWS_CONTAINER_CREDENTIALS_RELATIVE_URI, no task role found");
+                return null;
+            }
+
+            log.debug("Getting temporary security credentials from: %s", awsContainerCredentialsUri);
+
+            // get temporary credentials
+            HttpGet request = new HttpGet("http://169.254.170.2/" + UrlEscapers.urlPathSegmentEscaper().escape(awsContainerCredentialsUri));
+            request.setConfig(conf);
+            try (CloseableHttpResponse response = client.execute(request)) {
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    log.debug("No security credential found, return code was %d",
+                            response.getStatusLine().getStatusCode());
+                    // no task role found
+                    return null;
+                }
+
+                // read task role
                 try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
                     JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
 
@@ -419,8 +475,9 @@ public class AuthConfigFactory {
             return null;
         }
         String auth = credentials.get("auth").getAsString();
+        String identityToken = credentials.has("identitytoken") ? credentials.get("identitytoken").getAsString() : null;
         String email = credentials.has(AUTH_EMAIL) ? credentials.get(AUTH_EMAIL).getAsString() : null;
-        return new AuthConfig(auth,email);
+        return new AuthConfig(auth, email, identityToken);
     }
 
     private AuthConfig extractAuthConfigFromCredentialsHelper(String registryToLookup, String credConfig) throws MojoExecutionException {

@@ -74,6 +74,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
+        String removeNamePattern = valueProvider.getString(REMOVE_NAME_PATTERN, fromConfig.getRemoveNamePattern());
+        String stopNamePattern = valueProvider.getString(STOP_NAME_PATTERN, fromConfig.getStopNamePattern());
 
         if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
@@ -83,6 +85,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 new ImageConfiguration.Builder()
                         .name(name)
                         .alias(alias)
+                        .removeNamePattern(removeNamePattern)
+                        .stopNamePattern(stopNamePattern)
                         .runConfig(run)
                         .buildConfig(build)
                         .watchConfig(watch)

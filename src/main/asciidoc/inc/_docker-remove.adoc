@@ -2,7 +2,7 @@
 [[docker:remove]]
 == *docker:remove*
 
-This goal can be used to clean up images and containers. By default all images with a build configuration are removed.
+This goal can be used to clean up images. By default all images with a build configuration are removed.
 You can tune this by setting the property `removeMode` (property: `docker.removeMode`) to one of the following values:
 
 .removeMode Values
@@ -14,13 +14,13 @@ You can tune this by setting the property `removeMode` (property: `docker.remove
 | All images with a <<build-configuration,build configuration>>
 
 | `run`
-| All images with a <<start-configuration,run configuration>>
+| All images without a <<start-configuration,build configuration>>
 
 | `all`
 | All configured images
 
 | `data`
-| All data images, which are images without a run configuration.
+| All data images, which are images without a <<start-configuration,run configuration>>.
 |===
 
 Previously, this could be tuned also by providing the property `removeAll` which indicates to remove all images managed by this build. Otherwise only data images were delete before 0.24.0. `removeAll` is deprecated and will be removed soone. Please use `removeMode` instead.
@@ -42,4 +42,9 @@ Considering three images 'db','tomcat' and 'data' where 'data' is the only image
 | *skipTag*
 | If set to `true` this plugin won't remove any tags
 | `docker.skip.tag`
+
+| *removeNamePattern*
+| If a list of <<name-patterns, name patterns>> is provided, any images matching the patterns will be removed,
+independently of whether there is an <<image-configuration, image configuration>> marked for removal.
+| `docker.removeNamePattern`
 |===

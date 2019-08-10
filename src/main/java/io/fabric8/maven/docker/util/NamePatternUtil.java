@@ -2,11 +2,17 @@ package io.fabric8.maven.docker.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Helper functions for pattern matching for image and container names.
  */
 public class NamePatternUtil {
+    /// Name patterns can be prefixed with image= to have them only apply to image name.
+    public static final String IMAGE_FIELD = "image";
+
+    /// Name patterns can be prefixed with name= to have them only apply to container name.
+    public static final String NAME_FIELD = "name";
 
     /**
      * Accepts an Ant-ish or regular expression pattern and compiles to a regular expression.
@@ -26,7 +32,7 @@ public class NamePatternUtil {
      *
      * @return a regular expression pattern created from the input pattern
      */
-    public static String convertImageNamePattern(String pattern) {
+    public static String convertNamePattern(String pattern) {
         final String REGEX_PREFIX = "%regex[", ANT_PREFIX = "%ant[", PATTERN_SUFFIX="]";
 
         if(pattern.startsWith(REGEX_PREFIX) && pattern.endsWith(PATTERN_SUFFIX)) {
@@ -66,5 +72,96 @@ public class NamePatternUtil {
         builder.append("$");
 
         return builder.toString();
+    }
+
+    /**
+     * Take a string that represents a list of patterns, possibly a mixture of
+     * regular expressions and Ant-style patterns, and return a single regular
+     * expression that matches any of the alternatives.
+     *
+     * To allow users to target some parts of the filter list to some fields on
+     * the object to which the pattern is ultimately applied, it is possible to
+     * prefix patterns in the list with fieldName=pattern, and then the pattern
+     * can be excluded from use on unrelated fields.
+     *
+     * @param patternList the pattern list specification to convert
+     *
+     * @return the combined pattern, or null if there is are no patterns for
+     * the field.
+     *
+     * @throws PatternSyntaxException if any of the individual patterns fails
+     * to compile as a regular expression.
+     */
+    public static String convertNamePatternList(String patternList) {
+        return convertNamePatternList(patternList, null, true);
+    }
+
+    /**
+     * Take a string that represents a list of patterns, possibly a mixture of
+     * regular expressions and Ant-style patterns, and return a single regular
+     * expression that matches any of the alternatives.
+     *
+     * To allow users to target some parts of the filter list to some fields on
+     * the object to which the pattern is ultimately applied, it is possible to
+     * prefix patterns in the list with fieldName=pattern, and then the pattern
+     * can be excluded from use on unrelated fields.
+     *
+     * @param patternList the pattern list specification to convert
+     * @param fieldName the field name for which patterns should be selected
+     * @param includeUnnamed if true, include patterns that do not specify a
+     *                       field name
+     *
+     * @return the combined pattern, or null if there is are no patterns for
+     * the field.
+     *
+     * @throws PatternSyntaxException if any of the individual patterns fails
+     * to compile as a regular expression.
+     */
+    public static String convertNamePatternList(String patternList, String fieldName, boolean includeUnnamed) {
+        String[] patterns = patternList.split(",");
+        StringBuilder combinedPattern = new StringBuilder("(");
+        boolean compound = false;
+
+        for(String pattern : patterns) {
+            pattern = pattern.trim();
+            String[] namedFieldPattern = pattern.split("=", 2);
+            if(namedFieldPattern.length == 2) {
+                if(!namedFieldPattern[0].trim().equals(fieldName)) {
+                    continue;
+                }
+                pattern = namedFieldPattern[1].trim();
+            } else if(fieldName != null && !includeUnnamed) {
+                continue;
+            }
+
+            if(pattern.length() > 0) {
+                String converted = convertNamePattern(pattern);
+
+                if(converted.length() == 0) {
+                    continue;
+                }
+
+                try {
+                    Pattern.compile(converted);
+                } catch(PatternSyntaxException e) {
+                    throw new IllegalArgumentException("Unable to convert pattern " + pattern + " to regular expression. " + e.getMessage(), e);
+                }
+
+                if(combinedPattern.length() > 1) {
+                    compound = true;
+                    combinedPattern.append('|');
+                }
+
+                combinedPattern.append(converted);
+            }
+        }
+
+        if(compound) {
+            combinedPattern.append(')');
+        } else {
+            combinedPattern.deleteCharAt(0);
+        }
+
+        return combinedPattern.length() == 0 ? null : combinedPattern.toString();
     }
 }
