@@ -11,6 +11,7 @@ import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ExecDetails;
+import io.fabric8.maven.docker.model.Image;
 import io.fabric8.maven.docker.model.Network;
 
 /**
@@ -63,6 +64,15 @@ public interface DockerAccess {
      * @return the image id or <code>null</code>
      */
     String getImageId(String name) throws DockerAccessException;
+
+    /**
+     * List all containers from the Docker server.
+     *
+     * @param all whether to fetch also stopped containers. If false only running containers are returned
+     * @return list of <code>Container</code> objects or an empty list if none is found
+     * @throws DockerAccessException if the request fails
+     */
+    List<Container> listContainers(boolean all) throws DockerAccessException;
 
     /**
      * Get all containers which are build from an image. By default only the last containers are considered but this
@@ -161,6 +171,14 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container couldn't be removed.
      */
     void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException;
+
+    /**
+     * List the containers on the server
+     * @param all if true, return untagged images
+     * @return the images list (may be empty but never null)
+     * @throws DockerAccessException if the list couldn't be retrieved
+     */
+    List<Image> listImages(boolean all) throws DockerAccessException;
 
     /**
      * Load an image from an archive.

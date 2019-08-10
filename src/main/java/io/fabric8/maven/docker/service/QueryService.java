@@ -7,6 +7,7 @@ import java.util.Set;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.Image;
 import io.fabric8.maven.docker.model.Network;
 
 /**
@@ -87,16 +88,40 @@ public class QueryService {
     }
 
     /**
+     * List all containers on the Docker server.
+     *
+     * @param all if true, list stopped containers as well as running containers.
+     *
+     * @return list of <code>Container</code> objects
+     * @throws DockerAccessException if the request fails
+     */
+    public List<Container> listContainers(final boolean all) throws DockerAccessException {
+        return docker.listContainers(all);
+    }
+
+    /**
      * Get all containers which are build from an image. By default only the last containers are considered but this
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
-     * @param all whether to fetch all containers
+     * @param all if true, fetch stopped containers as well as running containers.
      * @return list of <code>Container</code> objects
      * @throws DockerAccessException if the request fails
      */
     public List<Container> getContainersForImage(final String image, final boolean all) throws DockerAccessException {
         return docker.getContainersForImage(image, all);
+    }
+
+    /**
+     * Get all images on the Docker server.
+     *
+     * @param all if true, fetch untagged images as well as tagged.
+     *
+     * @return list of <code>Image</code> objects
+     * @throws DockerAccessException if the request fails
+     */
+    public List<Image> listImages(final boolean all) throws DockerAccessException {
+        return docker.listImages(all);
     }
 
     /**
