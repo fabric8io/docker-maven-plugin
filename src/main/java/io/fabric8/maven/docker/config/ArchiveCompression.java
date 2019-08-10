@@ -18,7 +18,6 @@ package io.fabric8.maven.docker.config;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.Deflater;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.codehaus.plexus.archiver.tar.TarArchiver;

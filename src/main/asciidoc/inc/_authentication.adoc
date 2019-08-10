@@ -5,9 +5,10 @@
 When pulling (via the `autoPull` mode of `{plugin}:start`) or pushing image, it
 might be necessary to authenticate against a Docker registry.
 
-There are five different locations searched for credentials.  In order, these are:
+There are six different locations searched for credentials.  In order, these are:
 
 * Providing system properties `docker.username` and `docker.password` from the outside.
+* Providing system properties `registry.username` and `registry.password` from the outside.
 * Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
 * Using OpenShift configuration in `~/.config/kube`
 * Using a `<server>` configuration in `~/.m2/settings.xml`
@@ -185,8 +186,8 @@ Use the IAM *Access key ID* as the username and the *Secret access key* as the p
 In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
 To do so, either specify the `docker.authToken` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
 
-In case you are running on an EC2 instance that has an appropriate IAM role assigned
+In case you are running on an EC2 instance OR ECS with fargate deployment (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true") that has an appropriate IAM role assigned
 (e.g. a role that grants the AWS built-in policy _AmazonEC2ContainerRegistryPowerUser_)
 authentication information doesn't need to be provided at all. Instead the instance
-meta-data service is queried for temporary access credentials supplied by the
+meta-data service or task metadata endpoint in case of ECS is queried for temporary access credentials supplied by the
 assigned role.

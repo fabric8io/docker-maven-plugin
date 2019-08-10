@@ -2,18 +2,23 @@ package io.fabric8.maven.docker.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.PatternSyntaxException;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -25,6 +30,9 @@ import io.fabric8.maven.docker.model.ImageArchiveManifestEntry;
 import io.fabric8.maven.docker.model.ImageArchiveManifestEntryAdapter;
 
 public class ImageArchiveUtilTest {
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @Test
     public void readEmptyArchive() throws IOException {
         byte[] emptyTar;
@@ -36,6 +44,51 @@ public class ImageArchiveUtilTest {
         }
 
         ImageArchiveManifest manifest = ImageArchiveUtil.readManifest(new ByteArrayInputStream(emptyTar));
+        Assert.assertNull(manifest);
+    }
+
+    @Test
+    public void readEmptyCompressedArchive() throws IOException {
+        byte[] emptyTar;
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             GZIPOutputStream gzip = new GZIPOutputStream(baos);
+             TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(gzip)) {
+            tarOutput.finish();
+            gzip.finish();
+            emptyTar = baos.toByteArray();
+        }
+
+        ImageArchiveManifest manifest = ImageArchiveUtil.readManifest(new ByteArrayInputStream(emptyTar));
+        Assert.assertNull(manifest);
+    }
+
+    @Test
+    public void readEmptyArchiveFromStreamWithoutMarkSupport() throws IOException {
+        byte[] emptyTar;
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(baos)) {
+            tarOutput.finish();
+            emptyTar = baos.toByteArray();
+        }
+
+        ImageArchiveManifest manifest = ImageArchiveUtil.readManifest(new ByteArrayInputStream(emptyTar) {
+            public boolean markSupported() { return false; }
+        });
+        Assert.assertNull(manifest);
+    }
+
+    @Test
+    public void readEmptyArchiveFromFile() throws IOException {
+        File temporaryTar = temporaryFolder.newFile();
+
+        try (FileOutputStream fileOutput = new FileOutputStream(temporaryTar);
+             TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(fileOutput)) {
+            tarOutput.finish();
+        }
+
+        ImageArchiveManifest manifest = ImageArchiveUtil.readManifest(temporaryTar);
         Assert.assertNull(manifest);
     }
 
@@ -121,15 +174,26 @@ public class ImageArchiveUtilTest {
     @Test
     public void readValidArchive() throws IOException {
         final byte[] entryData = new Gson().toJson(createBasicManifestJson()).getBytes(StandardCharsets.UTF_8);
+        final byte[] relatedData = new Gson().toJson(new JsonObject()).getBytes(StandardCharsets.UTF_8);
+
         byte[] archiveBytes;
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              TarArchiveOutputStream tarOutput = new TarArchiveOutputStream(baos)) {
-            TarArchiveEntry tarEntry = new TarArchiveEntry(ImageArchiveUtil.MANIFEST_JSON);
+            TarArchiveEntry tarEntry;
+
+            tarEntry = new TarArchiveEntry("image-id-sha256.json");
+            tarEntry.setSize(relatedData.length);
+            tarOutput.putArchiveEntry(tarEntry);
+            tarOutput.write(relatedData);
+            tarOutput.closeArchiveEntry();
+
+            tarEntry = new TarArchiveEntry(ImageArchiveUtil.MANIFEST_JSON);
             tarEntry.setSize(entryData.length);
             tarOutput.putArchiveEntry(tarEntry);
             tarOutput.write(entryData);
             tarOutput.closeArchiveEntry();
+
             tarOutput.finish();
             archiveBytes = baos.toByteArray();
         }
