@@ -6,7 +6,7 @@
   - Fix bug in properties names extracted from docker config json file ([#1237](https://github.com/fabric8io/docker-maven-plugin/issues/1237))
   - Fix that portPropertyFile is not written anymore ([#1112](https://github.com/fabric8io/docker-maven-plugin/issues/1112))
   - Use identity token if found in Docker config.json ([#1249](https://github.com/fabric8io/docker-maven-plugin/issues/1249))
-  - Allow also starting with an environment variable in `targetDir` of an aseembly config instead of insisting on only absolute path-names (#1244)
+  - Allow also starting with an environment variable in `targetDir` of an aseembly config instead of insisting on only absolute path-names ([#1244](https://github.com/fabric8io/docker-maven-plugin/issues/1244))
   - Support for pattern matching in `docker:stop` and `docker:remove` ([#1215](https://github.com/fabric8io/docker-maven-plugin/issues/1215))
   - Increase interoperability with docker-java by accepting `registry.username` and `registry.password`, too ([#1245](https://github.com/fabric8io/docker-maven-plugin/issues/1245))
 
