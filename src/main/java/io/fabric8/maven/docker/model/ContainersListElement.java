@@ -11,8 +11,8 @@ import com.google.gson.JsonObject;
 public class ContainersListElement implements Container {
 
     static final String CREATED = "Created";
-    static final String ID = "Id";
-    static final String IMAGE = "Image";
+    public static final String ID = "Id";
+    public static final String IMAGE = "Image";
     static final String IP = "IP";
     static final String LABELS = "Labels";
     static final String PORTS = "Ports";

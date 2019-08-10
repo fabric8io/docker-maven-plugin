@@ -86,6 +86,14 @@ public class UrlBuilderTest {
     }
 
     @Test
+    public void listImages() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
+        UrlBuilder builder = new UrlBuilder("","1.0");
+
+        assertEquals(new URI("/1.0/images/json?all=0"), new URI(builder.listImages(false)));
+        assertEquals(new URI("/1.0/images/json?all=1"), new URI(builder.listImages(true)));
+    }
+
+    @Test
     public void listContainers() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
         UrlBuilder builder = new UrlBuilder("","1.0");
 

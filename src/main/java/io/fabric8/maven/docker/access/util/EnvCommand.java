@@ -44,7 +44,7 @@ abstract public class EnvCommand extends ExternalCommand {
     @Override
     protected void processLine(String line) {
         if (log.isDebugEnabled()) {
-            log.verbose("%s", line);
+            log.verbose(Logger.LogVerboseCategory.BUILD,"%s", line);
         }
         if (line.startsWith(prefix)) {
             setEnvironmentVariable(line.substring(prefix.length()));

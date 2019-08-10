@@ -74,6 +74,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
+        String removeNamePattern = valueProvider.getString(REMOVE_NAME_PATTERN, fromConfig.getRemoveNamePattern());
+        String stopNamePattern = valueProvider.getString(STOP_NAME_PATTERN, fromConfig.getStopNamePattern());
 
         if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
@@ -83,6 +85,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 new ImageConfiguration.Builder()
                         .name(name)
                         .alias(alias)
+                        .removeNamePattern(removeNamePattern)
+                        .stopNamePattern(stopNamePattern)
                         .runConfig(run)
                         .buildConfig(build)
                         .watchConfig(watch)
@@ -132,7 +136,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new BuildImageConfiguration.Builder()
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
                 .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanup()))
-                .nocache(valueProvider.getBoolean(NOCACHE, config == null ? null : config.getNoCache()))
+                .noCache(valueProvider.getBoolean(NO_CACHE, config == null ? null : config.getNoCache()))
+                .cacheFrom(valueProvider.getString(CACHE_FROM, config == null ? null : config.getCacheFrom().toString()))
                 .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
                 .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
                 .assembly(extractAssembly(config == null ? null : config.getAssemblyConfiguration(), valueProvider))

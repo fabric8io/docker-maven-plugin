@@ -22,6 +22,7 @@ public class AuthConfig {
     private final String password;
     private final String email;
     private final String auth;
+    private final String identityToken;
 
     private final String authEncoded;
 
@@ -29,14 +30,20 @@ public class AuthConfig {
         this(params.get("username"),
                 params.get("password"),
                 params.get("email"),
-                params.get("auth"));
+                params.get("auth"),
+                params.get("identityToken"));
     }
 
     public AuthConfig(String username, String password, String email, String auth) {
+        this(username, password, email, auth, null);
+    }
+
+    public AuthConfig(String username, String password, String email, String auth, String identityToken) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.auth = auth;
+        this.identityToken = identityToken;
         authEncoded = createAuthEncoded();
     }
 
@@ -47,11 +54,22 @@ public class AuthConfig {
      * @param email the email to use for authentication
      */
     public AuthConfig(String credentialsEncoded, String email) {
+        this(credentialsEncoded, email, null);
+    }
+
+    /**
+     * Constructor which takes an base64 encoded credentials in the form 'user:password'
+     *
+     * @param credentialsEncoded the docker encoded user and password
+     * @param email the email to use for authentication
+     */
+    public AuthConfig(String credentialsEncoded, String email, String identityToken) {
         String credentials = new String(Base64.decodeBase64(credentialsEncoded));
         String[] parsedCreds = credentials.split(":",2);
         username = parsedCreds[0];
         password = parsedCreds[1];
         this.email = email;
+        this.identityToken = identityToken;
         auth = null;
         authEncoded = createAuthEncoded();
     }
@@ -68,6 +86,10 @@ public class AuthConfig {
         return auth;
     }
 
+    public String getIdentityToken() {
+        return identityToken;
+    }
+
     public String toHeaderValue() {
         return authEncoded;
     }
@@ -76,10 +98,15 @@ public class AuthConfig {
 
     private String createAuthEncoded() {
         JsonObject ret = new JsonObject();
-        putNonNull(ret, "username", username);
-        putNonNull(ret, "password", password);
-        putNonNull(ret, "email", email);
-        putNonNull(ret, "auth", auth);
+        if(identityToken != null) {
+            putNonNull(ret, "identitytoken", identityToken);
+        } else {
+            putNonNull(ret, "username", username);
+            putNonNull(ret, "password", password);
+            putNonNull(ret, "email", email);
+            putNonNull(ret, "auth", auth);
+        }
+
         try {
             return encodeBase64ChunkedURLSafeString(ret.toString().getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {

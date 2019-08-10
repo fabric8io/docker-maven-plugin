@@ -28,4 +28,13 @@ created and run when <<{plugin}:start>> is called. If this image is only used a 
 | <<external-configuration, *external*>>
 | Specification of external configuration as an alternative to this XML based configuration with `<run>` and `<build>`. It contains a `<type>` element specifying the handler for getting the configuration. See <<external-configuration,External configuration>> for details.
 endif::[]
+
+| *removeNamePattern*
+| When this image is to be removed by <<{plugin}:remove>>, use this <<name-patterns, pattern list>> to find images to
+remove rather than just using the name.
+
+| *stopNamePattern*
+| When containers associated with this image will be stopped by <<{plugin}:stop>>, use this <<name-patterns, pattern list>>
+to find containers to remove rather than just using the associated container name.
+
 |===

@@ -23,6 +23,8 @@ public class DockerFileBuilder {
 
     private static final Joiner JOIN_ON_COMMA = Joiner.on("\",\"");
 
+    private static final Pattern ENV_VAR_PATTERN = Pattern.compile("^\\$(\\{[a-zA-Z0-9_]+\\}|[a-zA-Z0-9_]+).*");
+
     // Base image to use as from
     private String baseImage;
 
@@ -370,9 +372,9 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
-            if (!dir.startsWith("/")) {
+            if (!dir.startsWith("/") && !ENV_VAR_PATTERN.matcher(dir).matches()) {
                 throw new IllegalArgumentException("'basedir' must be an absolute path starting with / (and not " +
-                                                   "'" + basedir + "')");
+                                                   "'" + basedir + "') or start with an environment variable");
             }
             basedir = dir;
         }

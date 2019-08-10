@@ -20,7 +20,7 @@ described in <<build-buildargs,Build Args>>
 | *buildOptions*
 | Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile[Docker Remote API] and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `nocache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `noCache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
@@ -77,17 +77,8 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 | *imagePullPolicy*
 | Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <<image-pull-policy, imagePullPolicy>> for the possible values and the default.
 
-| *loadNamePattern*
-a| Scan the images in the archive specified in `dockerArchive` and match the associated repository and tag information against this pattern. When a matching repository and tag is found, create a tag linking the `name` for this image to the repository and tag that matched the pattern.
-
-The wildcards are:
-
-* `?` matches a single character
-* `*` matches within one component, where components are separated by slashes, or the final colon that separates the repository from the tag
-* `**` matches multiple components, stopping at the final colon
-* `**/` matches multiple components, but must stop at a slash, or the final colon
-
-When matching multiple components, `$$**/$$` is likely to be more useful than `$$**$$`. The pattern `$$**image-name:*$$` will match `my-group/my-image-name:some-tag`, whereas `$$**/image-name:*$$` will not, because the wildcard has to stop at a slash. Note that `$$**/image-name:*$$` will also match 'image-name:some-tag', since the `$$**/$$` wildcard can be empty.
+| [[build-config-load-name-pattern]]*loadNamePattern*
+a| Scan the archive specified in `dockerArchive` and find the actual repository and tag in the archive that matches this <<name-patterns, name pattern>>. After loading the archive, link the <<config-image, image name>> configured in the POM to the repository and tag matched in the archive.
 
 | <<misc-env, *labels*>>
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.
@@ -95,8 +86,11 @@ When matching multiple components, `$$**/$$` is likely to be more useful than `$
 | *maintainer*
 | The author (`MAINTAINER`) field for the generated image
 
-| *nocache*
-| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache` when running Maven.
+| *noCache*
+| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.noCache` when running Maven.
+
+| *cacheFrom*
+| A list of `<image>` elements specifying image names to use as cache sources.
 
 | *optimise*
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.

@@ -144,7 +144,20 @@ If set to `true` this plugin won't remove any tags with `{plugin}:remove`. +
 | `docker.useColor`
 
 | *verbose*
-| Boolean attribute for switching on verbose output on standard output (stdout). This includes detailed information like the build steps when doing a Docker build. Default is `false`
+a| String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.
+
+The currently known groups are:
+
+build::
+ Print out Docker build instructions
+api::
+ API calls to the Docker daemons are logged
+all::
+ All levels are enabled
+
+If you set an empty string (or only e.g. `-Ddocker.verbose`) then the "build" group is enabled. You can also use "true" / "false" to switch on / off verbose logging.
+
+Default is that verbose logging is disabled.
 | `docker.verbose`
 |===
 

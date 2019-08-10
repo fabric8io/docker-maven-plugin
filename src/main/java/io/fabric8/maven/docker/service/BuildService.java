@@ -140,6 +140,7 @@ public class BuildService {
                         .dockerfile(getDockerfileName(buildConfig))
                         .forceRemove(cleanupMode.isRemove())
                         .noCache(noCache)
+                        .cacheFrom(buildConfig.getCacheFrom())
                         .buildArgs(mergedBuildMap);
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);
@@ -215,7 +216,7 @@ public class BuildService {
     }
 
     private String matchArchiveImagesToPattern(String imageNamePattern, ImageArchiveManifest manifest) {
-        String imageNameRegex = NamePatternUtil.convertImageNamePattern(imageNamePattern);
+        String imageNameRegex = NamePatternUtil.convertNamePattern(imageNamePattern);
         log.debug("Image name regex is %s", imageNameRegex);
 
         Map<String, ImageArchiveManifestEntry> entries = ImageArchiveUtil.findEntriesByRepoTagPattern(imageNameRegex, manifest);
@@ -307,7 +308,7 @@ public class BuildService {
 
                 for(int index = 0; index < proxyMapping.length; index += 2) {
                     if (defaultProxyObj.has(proxyMapping[index])) {
-                        buildArgs.put(argPrefix + proxyMapping[index+1], defaultProxyObj.get(proxyMapping[index]).getAsString());
+                        buildArgs.put(proxyMapping[index+1], defaultProxyObj.get(proxyMapping[index]).getAsString());
                     }
                 }
             }
@@ -370,12 +371,15 @@ public class BuildService {
     }
 
     private boolean checkForNocache(ImageConfiguration imageConfig) {
-        String nocache = System.getProperty("docker.nocache");
-        if (nocache != null) {
-            return nocache.length() == 0 || Boolean.valueOf(nocache);
+        String noCache = System.getProperty("docker.noCache");
+        if (noCache == null) {
+            noCache = System.getProperty("docker.nocache");
+        }
+        if (noCache != null) {
+            return noCache.length() == 0 || Boolean.valueOf(noCache);
         } else {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
-            return buildConfig.nocache();
+            return buildConfig.noCache();
         }
     }
 

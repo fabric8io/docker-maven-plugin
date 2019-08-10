@@ -128,7 +128,7 @@ public class ConfigHelperTest {
         List<ImageConfiguration> configs = Arrays.asList(new ImageConfiguration.Builder().name("test").build());
         CatchingLog logCatcher = new CatchingLog();
         List<ImageConfiguration> result = ConfigHelper.resolveImages(
-            new AnsiLogger(logCatcher, true, true),
+            new AnsiLogger(logCatcher, true, "build"),
             configs, createResolver(), "bla", createCustomizer());
         assertEquals(0,result.size());
         assertTrue(resolverCalled);

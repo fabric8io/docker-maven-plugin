@@ -19,6 +19,7 @@ package io.fabric8.maven.docker.access.util;
 import java.io.*;
 import java.util.concurrent.*;
 
+import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -129,7 +130,7 @@ public abstract class ExternalCommand {
     }
 
     protected void processLine(String line) {
-        log.verbose(line);
+        log.verbose(Logger.LogVerboseCategory.BUILD,line);
     }
 
     private Future<IOException> startStreamPump(final InputStream errorStream) {

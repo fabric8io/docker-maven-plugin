@@ -2,22 +2,33 @@ package io.fabric8.maven.docker.access.hc;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.model.Container;
+import io.fabric8.maven.docker.model.ContainersListElement;
+import io.fabric8.maven.docker.model.Image;
+import io.fabric8.maven.docker.model.ImageDetails;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 public class DockerAccessWithHcClientTest {
 
@@ -41,7 +52,8 @@ public class DockerAccessWithHcClientTest {
     private String archiveFile;
     private String filename;
     private ArchiveCompression compression;
-
+    private List<Container> containers;
+    private List<Image> images;
 
     @Before
     public void setup() throws IOException {
@@ -77,6 +89,42 @@ public class DockerAccessWithHcClientTest {
         givenThePushWillFail(1);
         whenPushImage();
         thenImageWasNotPushed();
+    }
+
+    @Test
+    public void testListContainers() throws IOException {
+        String containerId1 = UUID.randomUUID().toString().replace("-", "");
+        String containerId2 = UUID.randomUUID().toString().replace("-", "");
+
+        givenContainerIdImagePairs(Pair.of(containerId1, "image:tag"), Pair.of(containerId2, "image:tag"));
+        whenListContainers();
+        thenNoException();
+        thenContainerIdImagePairsMatch(Pair.of(containerId1.substring(0, 12), "image:tag"), Pair.of(containerId2.substring(0, 12), "image:tag"));
+    }
+
+    @Test
+    public void testListContainersFail() throws IOException {
+        givenTheGetWithoutResponseHandlerWillFail();
+        whenListContainers();
+        thenContainerListNotReturned();
+    }
+
+    @Test
+    public void testListImages() throws IOException {
+        String imageId1 = UUID.randomUUID().toString().replace("-", "");
+        String imageId2 = UUID.randomUUID().toString().replace("-", "");
+
+        givenImageIdRepoTagPairs(Pair.of(imageId1, "image:tag1"), Pair.of(imageId2, "image:tag2"));
+        whenListImages();
+        thenNoException();
+        thenImageIdRepoTagPairsMatch(Pair.of(imageId1, "image:tag1"), Pair.of(imageId2, "image:tag2"));
+    }
+
+    @Test
+    public void testListImagesFail() throws IOException {
+        givenTheGetWithoutResponseHandlerWillFail();
+        whenListImages();
+        thenImageListNotReturned();
     }
 
     @Test
@@ -134,6 +182,38 @@ public class DockerAccessWithHcClientTest {
     	this.compression = compression;
     }
 
+    private void givenContainerIdImagePairs(Pair<String, String>... idNamePairs) throws IOException {
+        final JsonArray array = new JsonArray();
+        for(Pair<String, String> idNamePair : idNamePairs) {
+            JsonObject idNameObject = new JsonObject();
+            idNameObject.addProperty(ContainersListElement.ID, idNamePair.getLeft());
+            idNameObject.addProperty(ContainersListElement.IMAGE, idNamePair.getRight());
+            array.add(idNameObject);
+        }
+
+        new Expectations() {{
+            mockDelegate.get(anyString, 200);
+            result = array.toString();
+        }};
+    }
+
+    private void givenImageIdRepoTagPairs(Pair<String, String>... idRepoTagPairs) throws IOException {
+        final JsonArray array = new JsonArray();
+        for(Pair<String, String> idNamePair : idRepoTagPairs) {
+            JsonObject imageObject = new JsonObject();
+            imageObject.addProperty(ImageDetails.ID, idNamePair.getLeft());
+            JsonArray repoTags = new JsonArray();
+            repoTags.add(idNamePair.getRight());
+            imageObject.add(ImageDetails.REPO_TAGS, repoTags);
+            array.add(imageObject);
+        }
+
+        new Expectations() {{
+            mockDelegate.get(anyString, 200);
+            result = array.toString();
+        }};
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private void givenThePushWillFailAndEventuallySucceed(final int retries) throws IOException {
         new Expectations() {{
@@ -169,12 +249,37 @@ public class DockerAccessWithHcClientTest {
         }};
     }
 
+    private void givenTheGetWithoutResponseHandlerWillFail() throws IOException {
+        new Expectations() {{
+            mockDelegate.get(anyString, 200);
+            result = new HttpResponseException(HTTP_INTERNAL_ERROR, "error");
+        }};
+    }
+
     private void thenImageWasNotPushed() {
         assertNotNull(thrownException);
     }
 
     private void thenImageWasPushed() {
        assertNull(thrownException);
+    }
+
+    private void whenListContainers() {
+        containers = null;
+        try {
+            containers = client.listContainers(true);
+        } catch (Exception e) {
+            thrownException = e;
+        }
+    }
+
+    private void whenListImages() {
+        images = null;
+        try {
+            images = client.listImages(false);
+        } catch (Exception e) {
+            thrownException = e;
+        }
     }
 
     private void whenPushImage() {
@@ -212,4 +317,29 @@ public class DockerAccessWithHcClientTest {
         assertNotNull(thrownException);
     }
 
+    private void thenContainerListNotReturned() {
+        assertNotNull(thrownException);
+    }
+
+    private void thenImageListNotReturned() {
+        assertNotNull(thrownException);
+    }
+
+    private void thenContainerIdImagePairsMatch(Pair<String, String>... idNamePairs) {
+        assertEquals(idNamePairs.length, this.containers.size());
+        for (int i = 0; i < idNamePairs.length; ++i) {
+            assertNotNull(this.containers.get(i));
+            assertEquals(idNamePairs[i].getLeft(), this.containers.get(i).getId());
+            assertEquals(idNamePairs[i].getRight(), this.containers.get(i).getImage());
+        }
+    }
+
+    private void thenImageIdRepoTagPairsMatch(Pair<String, String>... idRepoTagPairs) {
+        assertEquals(idRepoTagPairs.length, this.images.size());
+        for (int i = 0; i < idRepoTagPairs.length; ++i) {
+            assertNotNull(this.images.get(i));
+            assertEquals(idRepoTagPairs[i].getLeft(), this.images.get(i).getId());
+            assertEquals(Collections.singletonList(idRepoTagPairs[i].getRight()), this.images.get(i).getRepoTags());
+        }
+    }
 }

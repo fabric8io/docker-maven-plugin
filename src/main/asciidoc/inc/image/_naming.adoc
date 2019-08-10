@@ -63,3 +63,104 @@ Similar, when stopping containers with `mvn docker:stop` then only the container
 However, if you don't use an index via `%i` then _all_ containers started with `docker:start` are stopped.
 Use `mvn docker:stop -Ddocker.allContainers` to also stop every container named via a `%i` pattern.
 endif::[]
+
+[[name-patterns]]
+## Name Patterns
+
+Goals that need to refer to images or containers where the name of the image or container is not fixed may support name
+patterns for matching. Patterns can use an Ant-like syntax or Java regular expressions.
+
+### Ant-like Name Patterns
+Ant path matching patterns that operate on path names use the convention that a `$$*$$` matches within a single path
+component, while `$$**$$` can match multiple components.
+
+Adapting this style to image names requires some tweaks since image names may include registry information, a path-like
+repository name and a tag. Consider the following image names:
+
+* `alpine:latest`
+* `fluent/fluentd:edge`
+* `quay.io/operator-framework/helm-operator:v0.9.0`
+* `company.local:5000/division/project/artifact:version`
+
+Unlike in Ant matching of file system paths, the `:` is an important marker, but only at the end where it separates the
+version from the repository. Also, patterns that match repository names need to anticipate that there may be a registry
+name at the beginning if the image has been tagged for pushing to a registry.
+
+Taking this into account, the name pattern wildcards are:
+
+* `?` matches a single character
+* `*` matches zero or more characters, up to the next slash or the tag separator
+* `**` matches zero or more characters, up to the tag separator
+* `**/` matches zero or more characters, up to the tag separator, and ensures that if any characters are matched, the
+final character matched is a slash
+
+#### Examples of Ant-like Name Patterns
+
+[cols="1,3,3"]
+|===
+| Pattern | Matches | Does Not Match
+
+| `$$**tomcat:jdk-11*$$`
+a|
+* megacorp/tomcat:jdk-11-alpine
+* megacorp.com:5000/megacorp/project-x-tomcat:jdk-11
+
+a|
+* megacorp/tomcat__-operator__:jdk-11
+* megacorp/project-x-tomcat:__jdk-9-alpine__
+
+| `$$**/megacorp/tomcat:*alpine$$`
+a|
+* megacorp/tomcat:alpine
+* megacorp.com:5000/megacorp/tomcat:jdk-11-alpine
+
+a|
+* megacorp/tomcat:__jdk-11__
+* megacorp.com:5000/__ultra__megacorp/tomcat:jdk-11-alpine
+
+| `$$megacorp/*-operator:*$$`
+a|
+* megacorp/tomcat-operator:alpine
+* megacorp/mysql-operator:latest
+
+a|
+* megacorp/__tomcat__:jdk-11
+* __megacorp.com:5000/__megacorp/tomcat-operator:alpine
+
+|===
+
+### Java Regular Expression Patterns
+
+To indicate that a name pattern is a Java regular expression, prefix the regular expression with `$$%regex[$$` and
+suffix with `$$]$$`.
+
+#### Examples of Java Regular Expression Patterns
+
+[cols="1,3,3"]
+|===
+| Pattern | Matches | Does Not Match
+
+| `$$%regex[j(dk\|re)-11]$$`
+a|
+* megacorp/tomcat:jdk-11-alpine
+* openjdk-11:latest
+
+a|
+* openjdk:11-alpine
+
+| `$$%regex[tomcat]$$`
+a|
+* megacorp/tomcat:alpine
+* megacorp.com:5000/tomcat-projects/project-x:latest
+
+a|
+* megacorp/topcat:edge
+
+|===
+
+[[name-pattern-lists]]
+### Name Pattern Lists
+
+In goals such as <<{plugin}:stop>> and <<{plugin}:remove>> where multiple patterns are supported, separate patterns
+with commas.
+
