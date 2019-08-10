@@ -8,7 +8,8 @@
   - Use identity token if found in Docker config.json ([#1249](https://github.com/fabric8io/docker-maven-plugin/issues/1249))
   - Support for pattern matching in `docker:stop` and `docker:remove` (#1215)
   - Increase interoperability with docker-java by accepting `registry.username` and `registry.password`, too (#1245)
-
+  - Allow also starting with an environment variable in `targetDir` of an aseembly config instead of insisting on only absolute path-names (#1244)
+  
 * **0.30.0** (2019-04-21)
   - Restore ANSI color to Maven logging if disabled during plugin execution and enable color for Windows with Maven 3.5.0 or later. Color logging is enabled by default, but disabled if the Maven CLI disables color (e.g. in batch mode) ([#1108](https://github.com/fabric8io/docker-maven-plugin/issues/1108))
   - Fix NPE if docker:save is called with -Dfile=file-name-only.tar ([#1203](https://github.com/fabric8io/docker-maven-plugin/issues/1203))
