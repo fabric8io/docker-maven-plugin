@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.30.0,</span>
-<span id="revdate">2019-04-21</span>
+<span id="revnumber">version 0.31.0,</span>
+<span id="revdate">2019-08-10</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -544,6 +544,13 @@ table.CodeRay td.code>pre{padding:0}
 <ul class="sectlevel2">
 <li><a href="#image-name">4.1. Image Names</a></li>
 <li><a href="#container-name">4.2. Container Names</a></li>
+<li><a href="#name-patterns">4.3. Name Patterns</a>
+<ul class="sectlevel3">
+<li><a href="#ant-like-name-patterns">4.3.1. Ant-like Name Patterns</a></li>
+<li><a href="#java-regular-expression-patterns">4.3.2. Java Regular Expression Patterns</a></li>
+<li><a href="#name-pattern-lists">4.3.3. Name Pattern Lists</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#maven-goals">5. Maven Goals</a>
@@ -845,7 +852,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.30.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.31.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1316,6 +1323,16 @@ created and run when <a href="#docker:start"><strong>docker:start</strong></a> i
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#external-configuration"><strong>external</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specification of external configuration as an alternative to this XML based configuration with <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code>. It contains a <code>&lt;type&gt;</code> element specifying the handler for getting the configuration. See <a href="#external-configuration">External configuration</a> for details.</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When this image is to be removed by <a href="#docker:remove"><strong>docker:remove</strong></a>, use this <a href="#name-patterns">pattern list</a> to find images to
+remove rather than just using the name.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>stopNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When containers associated with this image will be stopped by <a href="#docker:stop"><strong>docker:stop</strong></a>, use this <a href="#name-patterns">pattern list</a>
+to find containers to remove rather than just using the associated container name.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -1433,6 +1450,226 @@ This goes on until a "free" name is found.</p>
 <p>Similar, when stopping containers with <code>mvn docker:stop</code> then only the container with the highest index is stopped.
 However, if you don&#8217;t use an index via <code>%i</code> then <em>all</em> containers started with <code>docker:start</code> are stopped.
 Use <code>mvn docker:stop -Ddocker.allContainers</code> to also stop every container named via a <code>%i</code> pattern.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="name-patterns">4.3. Name Patterns</h3>
+<div class="paragraph">
+<p>Goals that need to refer to images or containers where the name of the image or container is not fixed may support name
+patterns for matching. Patterns can use an Ant-like syntax or Java regular expressions.</p>
+</div>
+<div class="sect3">
+<h4 id="ant-like-name-patterns">4.3.1. Ant-like Name Patterns</h4>
+<div class="paragraph">
+<p>Ant path matching patterns that operate on path names use the convention that a <code>*</code> matches within a single path
+component, while <code>**</code> can match multiple components.</p>
+</div>
+<div class="paragraph">
+<p>Adapting this style to image names requires some tweaks since image names may include registry information, a path-like
+repository name and a tag. Consider the following image names:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>alpine:latest</code></p>
+</li>
+<li>
+<p><code>fluent/fluentd:edge</code></p>
+</li>
+<li>
+<p><code>quay.io/operator-framework/helm-operator:v0.9.0</code></p>
+</li>
+<li>
+<p><code>company.local:5000/division/project/artifact:version</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Unlike in Ant matching of file system paths, the <code>:</code> is an important marker, but only at the end where it separates the
+version from the repository. Also, patterns that match repository names need to anticipate that there may be a registry
+name at the beginning if the image has been tagged for pushing to a registry.</p>
+</div>
+<div class="paragraph">
+<p>Taking this into account, the name pattern wildcards are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>?</code> matches a single character</p>
+</li>
+<li>
+<p><code>*</code> matches zero or more characters, up to the next slash or the tag separator</p>
+</li>
+<li>
+<p><code>**</code> matches zero or more characters, up to the tag separator</p>
+</li>
+<li>
+<p><code>**/</code> matches zero or more characters, up to the tag separator, and ensures that if any characters are matched, the
+final character matched is a slash</p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="examples-of-ant-like-name-patterns">Examples of Ant-like Name Patterns</h5>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Pattern</th>
+<th class="tableblock halign-left valign-top">Matches</th>
+<th class="tableblock halign-left valign-top">Does Not Match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>**tomcat:jdk-11*</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat:jdk-11-alpine</p>
+</li>
+<li>
+<p>megacorp.com:5000/megacorp/project-x-tomcat:jdk-11</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat<em>-operator</em>:jdk-11</p>
+</li>
+<li>
+<p>megacorp/project-x-tomcat:<em>jdk-9-alpine</em></p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>**/megacorp/tomcat:*alpine</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat:alpine</p>
+</li>
+<li>
+<p>megacorp.com:5000/megacorp/tomcat:jdk-11-alpine</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat:<em>jdk-11</em></p>
+</li>
+<li>
+<p>megacorp.com:5000/<em>ultra</em>megacorp/tomcat:jdk-11-alpine</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>megacorp/*-operator:*</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat-operator:alpine</p>
+</li>
+<li>
+<p>megacorp/mysql-operator:latest</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/<em>tomcat</em>:jdk-11</p>
+</li>
+<li>
+<p><em>megacorp.com:5000/</em>megacorp/tomcat-operator:alpine</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="java-regular-expression-patterns">4.3.2. Java Regular Expression Patterns</h4>
+<div class="paragraph">
+<p>To indicate that a name pattern is a Java regular expression, prefix the regular expression with <code>%regex[</code> and
+suffix with <code>]</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="examples-of-java-regular-expression-patterns">Examples of Java Regular Expression Patterns</h5>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Pattern</th>
+<th class="tableblock halign-left valign-top">Matches</th>
+<th class="tableblock halign-left valign-top">Does Not Match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>%regex[j(dk|re)-11]</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat:jdk-11-alpine</p>
+</li>
+<li>
+<p>openjdk-11:latest</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>openjdk:11-alpine</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>%regex[tomcat]</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/tomcat:alpine</p>
+</li>
+<li>
+<p>megacorp.com:5000/tomcat-projects/project-x:latest</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div><div class="ulist">
+<ul>
+<li>
+<p>megacorp/topcat:edge</p>
+</li>
+</ul>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="name-pattern-lists">4.3.3. Name Pattern Lists</h4>
+<div class="paragraph">
+<p>In goals such as <a href="#docker:stop"><strong>docker:stop</strong></a> and <a href="#docker:remove"><strong>docker:remove</strong></a> where multiple patterns are supported, separate patterns
+with commas.</p>
+</div>
 </div>
 </div>
 </div>
@@ -1870,31 +2107,9 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <a href="#image-pull-policy">imagePullPolicy</a> for the possible values and the default.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>loadNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="build-config-load-name-pattern"></a><strong>loadNamePattern</strong></p></td>
 <td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>Scan the images in the archive specified in <code>dockerArchive</code> and match the associated repository and tag information against this pattern. When a matching repository and tag is found, create a tag linking the <code>name</code> for this image to the repository and tag that matched the pattern.</p>
-</div>
-<div class="paragraph">
-<p>The wildcards are:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>?</code> matches a single character</p>
-</li>
-<li>
-<p><code>*</code> matches within one component, where components are separated by slashes, or the final colon that separates the repository from the tag</p>
-</li>
-<li>
-<p><code>**</code> matches multiple components, stopping at the final colon</p>
-</li>
-<li>
-<p><code>**/</code> matches multiple components, but must stop at a slash, or the final colon</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>When matching multiple components, <code>**/</code> is likely to be more useful than <code>**</code>. The pattern <code>**image-name:*</code> will match <code>my-group/my-image-name:some-tag</code>, whereas <code>**/image-name:*</code> will not, because the wildcard has to stop at a slash. Note that <code>**/image-name:*</code> will also match 'image-name:some-tag', since the <code>**/</code> wildcard can be empty.</p>
+<p>Scan the archive specified in <code>dockerArchive</code> and find the actual repository and tag in the archive that matches this <a href="#name-patterns">name pattern</a>. After loading the archive, link the <a href="#config-image">image name</a> configured in the POM to the repository and tag matched in the archive.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -3508,7 +3723,8 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <p>It should be noted that any containers created prior to version <code>0.13.7</code> of the plugin may not be stopped correctly by the plugin because the label needed to tie the container to the project may not exist. Should this happen, you will need to use the Docker CLI to clean up the containers and/or use the <code>docker.allContainers</code> option listed below.</p>
 </div>
 <div class="paragraph">
-<p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:</p>
+<p>For tuning what should happen when stopping there are four global parameters which are typically used as system properties:
+<code>allContainers</code>, <code>keepContainer</code>, <code>keepRunning</code> and <code>removeVolumes</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <caption class="title">Table 19. Stop configuration</caption>
@@ -3532,7 +3748,8 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#container-name"><strong>containerNamePattern</strong></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Default pattern for naming all containers when they are created. See <a href="#container-name">Container Names</a> for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default pattern that <a href="#docker:start"><strong>docker:start</strong></a> uses for naming containers when they are created. See <a href="#container-name">Container Names</a> for details.
+This should match the setting for <a href="#docker:start"><strong>docker:start</strong></a> goals if the goals are configured in separate executions.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
 </tr>
 <tr>
@@ -3549,6 +3766,13 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeVolumes</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> will remove any volumes associated to the container as well. This option will be ignored if either <code>keepContainer</code> or <code>keepRunning</code> are true.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeVolumes</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>stopNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If a list of <a href="#name-patterns">name patterns</a> is provided, any containers matching the patterns will be stopped and
+removed (depending on the values of <code>keepContainer</code> and <code>keepRunning</code>),
+independently of whether there is an <a href="#image-configuration">image configuration</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.stopNamePattern</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -3845,7 +4069,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 <div class="sect2">
 <h3 id="docker:remove">5.6. <strong>docker:remove</strong></h3>
 <div class="paragraph">
-<p>This goal can be used to clean up images and containers. By default all images with a build configuration are removed.
+<p>This goal can be used to clean up images. By default all images with a build configuration are removed.
 You can tune this by setting the property <code>removeMode</code> (property: <code>docker.removeMode</code>) to one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
@@ -3867,7 +4091,7 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>run</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">All images with a <a href="#start-configuration">run configuration</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All images without a <a href="#start-configuration">build configuration</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>all</code></p></td>
@@ -3875,7 +4099,7 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>data</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">All data images, which are images without a run configuration.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All data images, which are images without a <a href="#start-configuration">run configuration</a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -3923,6 +4147,12 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin won&#8217;t remove any tags</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.tag</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>removeNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If a list of <a href="#name-patterns">name patterns</a> is provided, any images matching the patterns will be removed,
+independently of whether there is an <a href="#image-configuration">image configuration</a> marked for removal.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.removeNamePattern</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -5236,12 +5466,15 @@ because Docker can only push registry-named images.</p>
 might be necessary to authenticate against a Docker registry.</p>
 </div>
 <div class="paragraph">
-<p>There are five different locations searched for credentials.  In order, these are:</p>
+<p>There are six different locations searched for credentials.  In order, these are:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
 <p>Providing system properties <code>docker.username</code> and <code>docker.password</code> from the outside.</p>
+</li>
+<li>
+<p>Providing system properties <code>registry.username</code> and <code>registry.password</code> from the outside.</p>
 </li>
 <li>
 <p>Using a <code>&lt;authConfig&gt;</code> section in the plugin configuration with <code>&lt;username&gt;</code> and <code>&lt;password&gt;</code> elements.</p>
@@ -5453,10 +5686,10 @@ In case you&#8217;re using temporary security credentials provided by the AWS Se
 To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
 </div>
 <div class="paragraph">
-<p>In case you are running on an EC2 instance that has an appropriate IAM role assigned
+<p>In case you are running on an EC2 instance OR ECS with fargate deployment (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true") that has an appropriate IAM role assigned
 (e.g. a role that grants the AWS built-in policy <em>AmazonEC2ContainerRegistryPowerUser</em>)
 authentication information doesn&#8217;t need to be provided at all. Instead the instance
-meta-data service is queried for temporary access credentials supplied by the
+meta-data service or task metadata endpoint in case of ECS is queried for temporary access credentials supplied by the
 assigned role.</p>
 </div>
 </div>
@@ -5521,8 +5754,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.30.0<br>
-Last updated 2019-04-21 15:31:58 UTC
+Version 0.31.0<br>
+Last updated 2019-08-10 12:23:01 UTC
 </div>
 </div>
 </body>
