@@ -5,9 +5,10 @@
 When pulling (via the `autoPull` mode of `{plugin}:start`) or pushing image, it
 might be necessary to authenticate against a Docker registry.
 
-There are five different locations searched for credentials.  In order, these are:
+There are six different locations searched for credentials.  In order, these are:
 
 * Providing system properties `docker.username` and `docker.password` from the outside.
+* Providing system properties `registry.username` and `registry.password` from the outside.
 * Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
 * Using OpenShift configuration in `~/.config/kube`
 * Using a `<server>` configuration in `~/.m2/settings.xml`
