@@ -1,5 +1,7 @@
 package io.fabric8.maven.docker.service;
 
+import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
+
 /*
  *
  * Copyright 2014 Roland Huss
@@ -21,7 +23,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,8 +60,6 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
-
-import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
 
 
 /**
@@ -206,12 +205,28 @@ public class RunService {
                                       boolean removeCustomNetworks,
                                       GavLabel gavLabel)
         throws DockerAccessException, ExecException {
+		List<DockerAccessException> thrownExceptions = new ArrayList<>();
         Set<Network> networksToRemove = new HashSet<>();
         for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(gavLabel)) {
-            collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
-            shutdown(descriptor, keepContainer, removeVolumes);
+			try {
+				collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
+				shutdown(descriptor, keepContainer, removeVolumes);
+			} catch (DockerAccessException exc) {
+				thrownExceptions.add(exc);
+			}
+		}
+		try {
+			removeCustomNetworks(networksToRemove);
+		} catch (DockerAccessException exc) {
+			thrownExceptions.add(exc);
         }
-        removeCustomNetworks(networksToRemove);
+		if (!thrownExceptions.isEmpty()) {
+			DockerAccessException exception = new DockerAccessException("At least one exception thrown during container removal.");
+			for (DockerAccessException dae : thrownExceptions) {
+				exception.addSuppressed(dae);
+			}
+			throw exception;
+		}
     }
 
     private void collectCustomNetworks(Set<Network> networksToRemove, ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeCustomNetworks) throws DockerAccessException {
@@ -495,8 +510,20 @@ public class RunService {
     }
 
     public void removeCustomNetworks(Collection<Network> networks) throws DockerAccessException {
+		List<DockerAccessException> thrownExceptions = new ArrayList<>();
         for (Network network : networks) {
-            docker.removeNetwork(network.getId());
+			try {
+				docker.removeNetwork(network.getId());
+			} catch (DockerAccessException exc) {
+				thrownExceptions.add(exc);
+			}
+		}
+		if (!thrownExceptions.isEmpty()) {
+			DockerAccessException exception = new DockerAccessException("At least one exception was thrown while trying to remove custom networks.");
+			for (DockerAccessException dae : thrownExceptions) {
+				exception.addSuppressed(dae);
+			}
+			throw exception;
         }
     }
 
