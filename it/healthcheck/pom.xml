@@ -109,7 +109,6 @@
                 <healthCheck>
                   <interval>5m</interval>
                   <timeout>3s</timeout>
-                  <startPeriod>30m</startPeriod>
                   <retries>3</retries>
                   <cmd>curl -f http://localhost/ || exit 1</cmd>
                 </healthCheck>
