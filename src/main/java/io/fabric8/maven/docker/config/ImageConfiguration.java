@@ -77,6 +77,10 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         return alias;
     }
 
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
     public String getStopNamePattern() {
         return stopNamePattern;
     }
