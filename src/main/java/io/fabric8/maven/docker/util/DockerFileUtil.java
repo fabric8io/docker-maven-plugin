@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,8 @@ import org.yaml.snakeyaml.Yaml;
 public class DockerFileUtil {
 
     private static final String ARG_PATTERN_REGEX = "\\$(?:\\{(.*)\\}|(.*))";
+    // injection point for unit tests
+    private static UnaryOperator<String> systemGetEnv = System::getenv;
 
     private DockerFileUtil() {}
 
@@ -249,9 +252,9 @@ public class DockerFileUtil {
     }
 
     private static File getHomeDir() {
-        String homeDir = System.getProperty("user.home");
+        String homeDir = systemGetEnv.apply("HOME");
         if (homeDir == null) {
-            homeDir = System.getenv("HOME");
+            homeDir = System.getProperty("user.home");
         }
         return new File(homeDir);
     }
