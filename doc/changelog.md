@@ -2,6 +2,7 @@
 
 * **0.31-SNAPSHOT**
   - Update to jnr-unixsocket 0.23
+  - Add null check for null instance in config.json for email #1262
 
 * **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
