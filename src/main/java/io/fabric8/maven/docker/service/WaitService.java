@@ -176,7 +176,7 @@ public class WaitService {
         } else {
             final String networkMode = container.getNetworkMode();
             log.info("%s: Network mode: %s", imageConfigDesc, networkMode);
-            if (networkMode == null || networkMode.isEmpty() || "bridge".equals(networkMode)) {
+            if (networkMode == null || networkMode.isEmpty() || "default".equals(networkMode) || "bridge".equals(networkMode)) {
                 // Safe mode when network mode is not present
                 host = container.getIPAddress();
             } else if (!"host".equals(networkMode)) {
