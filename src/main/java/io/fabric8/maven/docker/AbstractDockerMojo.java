@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import com.google.common.collect.ImmutableList;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -181,6 +183,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     private List<ImageConfiguration> images;
 
+    /**
+     * Image configurations configured via maps to allow overriding.
+     */
+    @Parameter
+    private Map<String, ImageConfiguration> imagesMap;
+
     // Docker-machine configuration
     @Parameter
     private DockerMachineConfiguration machine;
@@ -216,7 +224,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
                 LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
 
-                ConfigHelper.validateExternalPropertyActivation(project, images);
+                ConfigHelper.validateExternalPropertyActivation(project, getAllImages());
 
                 DockerAccess access = null;
                 try {
@@ -324,7 +332,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         // Resolve images
         resolvedImages = ConfigHelper.resolveImages(
             log,
-            images,                  // Unresolved images
+                getAllImages(), // Unresolved images
             new ConfigHelper.Resolver() {
                     @Override
                     public List<ImageConfiguration> resolve(ImageConfiguration image) {
@@ -415,6 +423,22 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
+    }
+
+    private ImmutableList<ImageConfiguration> getAllImages() {
+        ImmutableList.Builder<ImageConfiguration> allImages = ImmutableList.builder();
+        if (images != null) {
+            allImages.addAll(images);
+        }
+        if (imagesMap != null) {
+            imagesMap.forEach((alias, config) -> {
+                if (config.getAlias() == null) {
+                    config.setAlias(alias);
+                }
+                allImages.add(config);
+            });
+        }
+        return allImages.build();
     }
 
     public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {
