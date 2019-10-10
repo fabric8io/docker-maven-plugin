@@ -731,6 +731,22 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testCacheFromIsNullInBuildConfig() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(new HashMap<>())
+                .buildConfig(new BuildImageConfiguration.Builder().build())
+                .build();
+
+        List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration,props(
+                        "docker.name","demo",
+                        "docker.from", "busybox"
+                ));
+
+        assertNull(configs.get(0).getBuildConfiguration().getCacheFrom().get(0));
+    }
+
+    @Test
     public void testNoOptimise() throws Exception {
         String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.OPTIMISE), "false", k(ConfigKey.FROM), "base" };
 
