@@ -119,7 +119,7 @@ public class WaitService {
             }
         }
 
-        if (wait.getHealthy() == Boolean.TRUE) {
+        if (Boolean.TRUE.equals(wait.getHealthy())) {
             checkers.add(new HealthCheckChecker(dockerAccess, containerId, imageConfig.getDescription(), log));
         }
 
