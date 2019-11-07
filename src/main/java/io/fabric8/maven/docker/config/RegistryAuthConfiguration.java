@@ -45,6 +45,7 @@ public class RegistryAuthConfiguration implements Serializable {
         }
         if (StringUtils.isNotBlank(authToken)) {
             authMap.put(AuthConfigFactory.AUTH_AUTHTOKEN, authToken);
+            authMap.put("auth", authToken);
         }
         if (StringUtils.isNotBlank(email)) {
             authMap.put(AuthConfigFactory.AUTH_EMAIL,email);
