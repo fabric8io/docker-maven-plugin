@@ -71,6 +71,9 @@ endif::[]
 
 A provided `<from>` takes precedence over the name given here. This tag is useful for extensions of this plugin like the https://maven.fabric8.io[fabric8-maven-plugin] which can evaluate the additional information given here.
 
+| *autoPull*
+| Whether we need to pull a newer version of image.
+
 | <<build-healthcheck, *healthCheck*>>
 | Definition of a health check as described in <<build-healthcheck, Healthcheck>>
 
@@ -139,6 +142,7 @@ remote API.
 <build>
   <from>java:8u40</from>
   <maintainer>john.doe@example.com</maintainer>
+  <autoPull>true</autoPull>
   <tags>
     <tag>latest</tag>
     <tag>${project.version}</tag>

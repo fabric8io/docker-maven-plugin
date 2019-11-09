@@ -13,6 +13,7 @@ import java.util.Enumeration;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.ServiceHub;
@@ -74,7 +75,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         EnvUtil.storeTimestamp(getBuildTimestampFile(), getBuildTimestamp());
 
         BuildService.BuildContext buildContext = getBuildContext();
-        ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), autoPull);
+        ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), determineAutoPull(imageConfig.getBuildConfiguration()));
         BuildService buildService = hub.getBuildService();
 
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
@@ -115,6 +116,10 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     private String determinePullPolicy(BuildImageConfiguration buildConfig) {
         return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : imagePullPolicy;
+    }
+
+    private String determineAutoPull(BuildImageConfiguration buildConfig) {
+        return buildConfig != null && buildConfig.getAutoPull() != null ? buildConfig.getAutoPull() : autoPull;
     }
 
     /**
