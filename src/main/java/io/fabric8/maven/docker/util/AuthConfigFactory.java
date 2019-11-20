@@ -1,17 +1,16 @@
 package io.fabric8.maven.docker.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import com.google.gson.JsonObject;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +37,6 @@ import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
@@ -250,7 +248,7 @@ public class AuthConfigFactory {
             }
 
             try {
-                ret = getAuthConfigFromECSTaskRole();
+                ret = getAuthConfigFromTaskRole(settings);
             } catch (ConnectTimeoutException ex) {
                 log.debug("Connection timeout while retrieving ECS meta-data, likely not an ECS instance (%s)",
                         ex.getMessage());
@@ -326,25 +324,44 @@ public class AuthConfigFactory {
         }
     }
 
-    // if the local credentials don't contain user and password & is not a EC2 instance, use ECS Task instance
-    // role credentials
-    private AuthConfig getAuthConfigFromECSTaskRole() throws IOException {
+    // if the local credentials don't contain user and password & is not a EC2 instance,
+    // use ECS|Fargate Task instance role credentials
+    private AuthConfig getAuthConfigFromTaskRole(Settings settings) throws IOException {
         log.debug("No user and password set for ECR, checking ECS Task role");
+        Map<String, Object> ecsSettings = getMetadataSettings(settings);
+
+        // get ECS task role - if available
+        String awsContainerCredentialsUri = ecsSettings.getOrDefault("path",
+                System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")).toString();
+        if (awsContainerCredentialsUri == null) {
+            log.debug("System environment not set for variable AWS_CONTAINER_CREDENTIALS_RELATIVE_URI, no task role found");
+            return null;
+        }
+        if (awsContainerCredentialsUri.charAt(0) != '/') {
+            awsContainerCredentialsUri = "/" + awsContainerCredentialsUri;
+        }
+        log.debug("Getting temporary security credentials from: %s", awsContainerCredentialsUri);
+
+        // get temporary credentials
         try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
             RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
                     .setSocketTimeout(1000).build();
-
-            // get ECS task role - if available
-            String awsContainerCredentialsUri = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
-            if (awsContainerCredentialsUri == null) {
-                log.debug("System environment not set for variable AWS_CONTAINER_CREDENTIALS_RELATIVE_URI, no task role found");
+            URI uri;
+            try {
+                uri = new URI(
+                        "http",
+                        null,
+                        ecsSettings.getOrDefault("host", "169.254.170.2").toString(),
+                        Integer.parseInt(ecsSettings.getOrDefault("port", "80").toString()),
+                        awsContainerCredentialsUri,
+                        null,
+                        null
+                );
+            } catch (URISyntaxException e) {
+                log.warn("Failed to construct path to ECS credentials", e);
                 return null;
             }
-
-            log.debug("Getting temporary security credentials from: %s", awsContainerCredentialsUri);
-
-            // get temporary credentials
-            HttpGet request = new HttpGet("http://169.254.170.2/" + UrlEscapers.urlPathSegmentEscaper().escape(awsContainerCredentialsUri));
+            HttpGet request = new HttpGet(uri);
             request.setConfig(conf);
             try (CloseableHttpResponse response = client.execute(request)) {
                 if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
@@ -367,6 +384,21 @@ public class AuthConfigFactory {
                 }
             }
         }
+    }
+
+    /** This is present to support testing */
+    private Map<String, Object> getMetadataSettings(Settings settings) {
+        Server server = settings.getServer("junit.ecs-meta");
+        Map<String, Object> ecsSettings = Collections.emptyMap();
+        if (server != null) {
+            Object configuration = server.getConfiguration();
+            if (configuration instanceof Map) {
+                ecsSettings = (Map<String, Object>) configuration;
+            } else {
+                log.debug("ECS settings are no Map; there's something wrong in the setup!");
+            }
+        }
+        return ecsSettings;
     }
 
     private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {

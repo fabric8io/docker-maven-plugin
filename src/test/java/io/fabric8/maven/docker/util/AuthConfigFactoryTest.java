@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.Gson;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -18,6 +18,9 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.Mocked;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
@@ -27,7 +30,7 @@ import org.codehaus.plexus.util.Base64;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.hamcrest.Matchers;
-import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,6 +38,8 @@ import org.junit.rules.ExpectedException;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import static java.util.Collections.singletonMap;
+import static java.util.UUID.randomUUID;
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
@@ -64,6 +69,8 @@ public class AuthConfigFactoryTest {
 
     private GsonBuilder gsonBuilder;
 
+    private HttpServer httpServer;
+
 
     public static final class MockSecDispatcher implements SecDispatcher {
         @Mock
@@ -89,6 +96,14 @@ public class AuthConfigFactoryTest {
         factory.setLog(log);
 
         gsonBuilder = new GsonBuilder();
+    }
+
+    @After
+    public void shutdownHttpServer() {
+        if (httpServer != null) {
+            httpServer.stop();
+            httpServer = null;
+        }
     }
 
     @Test
@@ -503,6 +518,33 @@ public class AuthConfigFactoryTest {
         });
     }
 
+    @Test
+    public void ecsTaskRole() throws IOException, MojoExecutionException {
+        String containerCredentialsUri = "/v2/credentials/" + randomUUID().toString();
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        String sessionToken = randomUUID().toString();
+        givenEcsMetadataService(containerCredentialsUri, accessKeyId, secretAccessKey, sessionToken);
+        setupEcsMetadataConfiguration(httpServer, containerCredentialsUri);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
+    }
+
+    @Test
+    public void fargateTaskRole() throws IOException, MojoExecutionException {
+        String containerCredentialsUri = "v2/credentials/" + randomUUID().toString();
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        String sessionToken = randomUUID().toString();
+        givenEcsMetadataService("/" + containerCredentialsUri, accessKeyId, secretAccessKey, sessionToken);
+        setupEcsMetadataConfiguration(httpServer, containerCredentialsUri);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
+    }
 
     private void setupServers() {
         new Expectations() {{
@@ -532,13 +574,52 @@ public class AuthConfigFactoryTest {
         };
     }
 
-    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
+    private void givenEcsMetadataService(String containerCredentialsUri, String accessKeyId, String secretAccessKey, String sessionToken) throws IOException {
+        httpServer = ServerBootstrap.bootstrap()
+                .registerHandler("*", (request, response, context) -> {
+                    System.out.println("REQUEST: " + request.getRequestLine());
+                    if (containerCredentialsUri.matches(request.getRequestLine().getUri())) {
+                        response.setEntity(new StringEntity(gsonBuilder.create().toJson(ImmutableMap.of(
+                                "AccessKeyId", accessKeyId,
+                                "SecretAccessKey", secretAccessKey,
+                                "Token", sessionToken
+                        ))));
+                    } else {
+                        response.setStatusCode(SC_NOT_FOUND);
+                    }
+                })
+                .create();
+        httpServer.start();
+    }
+
+    private void setupEcsMetadataConfiguration(HttpServer httpServer, String containerCredentialsUri) {
+        new Expectations() {{
+            settings.getServer("junit.ecs-meta");
+            HashMap<String, Object> testConfiuration = new HashMap<>();
+            testConfiuration.put("host", httpServer.getInetAddress().getHostAddress());
+            testConfiuration.put("port", httpServer.getLocalPort());
+            testConfiuration.put("path", containerCredentialsUri);
+            Server server = new Server();
+            server.setConfiguration(testConfiuration);
+            result = server;
+        }};
+    }
+
+    private void verifyAuthConfig(AuthConfig config, String username, String password, String email, String auth) {
+        assertNotNull(config);
         JsonObject params = gsonBuilder.create().fromJson(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())), JsonObject.class);
-        assertEquals(username,params.get("username").getAsString());
-        assertEquals(password,params.get("password").getAsString());
+        assertEquals(username, params.get("username").getAsString());
+        assertEquals(password, params.get("password").getAsString());
         if (email != null) {
             assertEquals(email, params.get("email").getAsString());
         }
+        if (auth != null) {
+            assertEquals(auth, params.get("auth").getAsString());
+        }
+    }
+
+    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
+        verifyAuthConfig(config, username, password, email, null);
     }
 
 }
