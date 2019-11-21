@@ -184,7 +184,7 @@ Note that for an ECR repository with URI `123456789012.dkr.ecr.eu-west-1.amazona
 You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
 In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
-To do so, either specify the `docker.authToken` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
+To do so, either specify the `docker.auth` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
 
 In case you are running on an EC2 instance OR ECS with fargate deployment (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true") that has an appropriate IAM role assigned
 (e.g. a role that grants the AWS built-in policy _AmazonEC2ContainerRegistryPowerUser_)

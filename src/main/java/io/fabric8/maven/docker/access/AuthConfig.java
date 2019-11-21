@@ -18,6 +18,12 @@ public class AuthConfig {
 
     public final static AuthConfig EMPTY_AUTH_CONFIG = new AuthConfig("", "", "", "");
 
+    public static final String AUTH_USERNAME = "username";
+    public static final String AUTH_PASSWORD = "password";
+    public static final String AUTH_EMAIL = "email";
+    public static final String AUTH_AUTH = "auth";
+    public static final String AUTH_IDENTITY_TOKEN = "identityToken";
+
     private final String username;
     private final String password;
     private final String email;
@@ -27,11 +33,11 @@ public class AuthConfig {
     private final String authEncoded;
 
     public AuthConfig(Map<String,String> params) {
-        this(params.get("username"),
-                params.get("password"),
-                params.get("email"),
-                params.get("auth"),
-                params.get("identityToken"));
+        this(params.get(AUTH_USERNAME),
+                params.get(AUTH_PASSWORD),
+                params.get(AUTH_EMAIL),
+                params.get(AUTH_AUTH),
+                params.get(AUTH_IDENTITY_TOKEN));
     }
 
     public AuthConfig(String username, String password, String email, String auth) {
@@ -99,12 +105,12 @@ public class AuthConfig {
     private String createAuthEncoded() {
         JsonObject ret = new JsonObject();
         if(identityToken != null) {
-            putNonNull(ret, "identitytoken", identityToken);
+            putNonNull(ret, AUTH_IDENTITY_TOKEN, identityToken);
         } else {
-            putNonNull(ret, "username", username);
-            putNonNull(ret, "password", password);
-            putNonNull(ret, "email", email);
-            putNonNull(ret, "auth", auth);
+            putNonNull(ret, AUTH_USERNAME, username);
+            putNonNull(ret, AUTH_PASSWORD, password);
+            putNonNull(ret, AUTH_EMAIL, email);
+            putNonNull(ret, AUTH_AUTH, auth);
         }
 
         try {
