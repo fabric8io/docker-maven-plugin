@@ -49,12 +49,7 @@ import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
  */
 public class AuthConfigFactory {
 
-    // Properties for specifying username, password (can be encrypted), email and authtoken (not used yet)
-    // + whether to check for OpenShift authentication
-    public static final String AUTH_USERNAME = "username";
-    public static final String AUTH_PASSWORD = "password";
-    public static final String AUTH_EMAIL = "email";
-    public static final String AUTH_AUTHTOKEN = "authToken";
+    // Whether to check for OpenShift authentication
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
@@ -373,19 +368,28 @@ public class AuthConfigFactory {
 
     private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
         Properties props = System.getProperties();
-        String userKey = lookupMode.asSysProperty(AUTH_USERNAME);
-        String passwordKey = lookupMode.asSysProperty(AUTH_PASSWORD);
+        String userKey = lookupMode.asSysProperty(AuthConfig.AUTH_USERNAME);
+        String passwordKey = lookupMode.asSysProperty(AuthConfig.AUTH_PASSWORD);
         if (props.containsKey(userKey)) {
             if (!props.containsKey(passwordKey)) {
                 throw new MojoExecutionException("No " + passwordKey + " provided for username " + props.getProperty(userKey));
             }
             return new AuthConfig(props.getProperty(userKey),
                                   decrypt(props.getProperty(passwordKey)),
-                                  props.getProperty(lookupMode.asSysProperty(AUTH_EMAIL)),
-                                  props.getProperty(lookupMode.asSysProperty(AUTH_AUTHTOKEN)));
+                                  props.getProperty(lookupMode.asSysProperty(AuthConfig.AUTH_EMAIL)),
+                                  getAuthProperty(props, lookupMode));
         } else {
             return null;
         }
+    }
+
+    private String getAuthProperty(Properties props, LookupMode lookupMode) {
+        String authProp = props.getProperty(lookupMode.asSysProperty(AuthConfig.AUTH_AUTH));
+        if (authProp != null) {
+            return authProp;
+        }
+        // Fallback is deprecated AUTH_AUTHTOKEN property
+        return props.getProperty(lookupMode.asSysProperty("authToken"));
     }
 
     private AuthConfig getAuthConfigFromOpenShiftConfig(LookupMode lookupMode, Map authConfigMap) throws MojoExecutionException {
@@ -414,12 +418,12 @@ public class AuthConfigFactory {
     private AuthConfig getAuthConfigFromPluginConfiguration(LookupMode lookupMode, Map authConfig) throws MojoExecutionException {
         Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfig);
 
-        if (mapToCheck != null && mapToCheck.containsKey(AUTH_USERNAME)) {
-            if (!mapToCheck.containsKey(AUTH_PASSWORD)) {
+        if (mapToCheck != null && mapToCheck.containsKey(AuthConfig.AUTH_USERNAME)) {
+            if (!mapToCheck.containsKey(AuthConfig.AUTH_PASSWORD)) {
                 throw new MojoExecutionException("No 'password' given while using <authConfig> in configuration for mode " + lookupMode);
             }
             Map<String, String> cloneConfig = new HashMap<>(mapToCheck);
-            cloneConfig.put(AUTH_PASSWORD, decrypt(cloneConfig.get(AUTH_PASSWORD)));
+            cloneConfig.put(AuthConfig.AUTH_PASSWORD, decrypt(cloneConfig.get(AuthConfig.AUTH_PASSWORD)));
             return new AuthConfig(cloneConfig);
         } else {
             return null;
@@ -465,20 +469,20 @@ public class AuthConfigFactory {
         }
 
         if (dockerConfig.has("auths")) {
-            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.getAsJsonObject("auths"));
+            return extractAuthConfigFromDockerConfigAuths(registryToLookup, dockerConfig.getAsJsonObject("auths"));
         }
 
         return null;
     }
 
-    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JsonObject auths) {
+    private AuthConfig extractAuthConfigFromDockerConfigAuths(String registryToLookup, JsonObject auths) {
         JsonObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
         String auth = credentials.get("auth").getAsString();
         String identityToken = credentials.has("identitytoken") ? credentials.get("identitytoken").getAsString() : null;
-        String email = credentials.has(AUTH_EMAIL) && !credentials.get(AUTH_EMAIL).isJsonNull() ? credentials.get(AUTH_EMAIL).getAsString() : null;
+        String email = credentials.has(AuthConfig.AUTH_EMAIL) && !credentials.get(AuthConfig.AUTH_EMAIL).isJsonNull() ? credentials.get(AuthConfig.AUTH_EMAIL).getAsString() : null;
         return new AuthConfig(auth, email, identityToken);
     }
 
@@ -615,8 +619,8 @@ public class AuthConfigFactory {
         return new AuthConfig(
                 server.getUsername(),
                 decrypt(server.getPassword()),
-                extractFromServerConfiguration(server.getConfiguration(), AUTH_EMAIL),
-                extractFromServerConfiguration(server.getConfiguration(), "auth")
+                extractFromServerConfiguration(server.getConfiguration(), AuthConfig.AUTH_EMAIL),
+                extractFromServerConfiguration(server.getConfiguration(), AuthConfig.AUTH_AUTH)
         );
     }
 

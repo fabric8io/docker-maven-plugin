@@ -23,9 +23,9 @@ public class AuthConfigTest {
     @Test
     public void simpleConstructor() {
         Map<String,String> map = new HashMap<String,String>();
-        map.put("username","roland");
-        map.put("password","#>secrets??");
-        map.put("email","roland@jolokia.org");
+        map.put(AuthConfig.AUTH_USERNAME,"roland");
+        map.put(AuthConfig.AUTH_PASSWORD,"#>secrets??");
+        map.put(AuthConfig.AUTH_EMAIL,"roland@jolokia.org");
         AuthConfig config = new AuthConfig(map);
         check(config);
     }
@@ -53,9 +53,9 @@ public class AuthConfigTest {
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
 
         JsonObject data = JsonFactory.newJsonObject(header);
-        assertEquals("roland",data.get("username").getAsString());
-        assertEquals("#>secrets??",data.get("password").getAsString());
-        assertEquals("roland@jolokia.org",data.get("email").getAsString());
-        assertFalse(data.has("auth"));
+        assertEquals("roland",data.get(AuthConfig.AUTH_USERNAME).getAsString());
+        assertEquals("#>secrets??",data.get(AuthConfig.AUTH_PASSWORD).getAsString());
+        assertEquals("roland@jolokia.org",data.get(AuthConfig.AUTH_EMAIL).getAsString());
+        assertFalse(data.has(AuthConfig.AUTH_AUTH));
     }
 }

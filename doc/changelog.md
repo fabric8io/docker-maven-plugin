@@ -6,10 +6,11 @@
   - Allow merging of image configurations using <imagesMap> ([#360](https://github.com/fabric8io/docker-maven-plugin/issues/360))
   - Update to joda-time 2.10.4 (#706)
   - Add docker:build support for 'network' option #1030
-  - Treat bridged and default network mode the same #1234
-  - Fix NPE when cacheFrom is missing from config #1274
-  - Fix healthy option regression introduced in 0.25.0 #1279
   - Failure referencing a previous staged image in FROM clause #1264
+  - Treat bridged and default network mode the same (#1234)
+  - Fix NPE when cacheFrom is missing from config (#1274)
+  - Fix healthy option regression introduced in 0.25.0 (#1279)
+  - Deprecated "authToken" for ECR authentication in favor of "auth" (#1286)
 
 * **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
@@ -183,7 +184,7 @@ Please note that now filtering in an external Dockerfiles is switched on by defa
   - Allow multi line matches in log output ([#628](https://github.com/fabric8io/docker-maven-plugin/issues/628))
   - Add a wait condition on a healthcheck when starting up containers ([#719](https://github.com/fabric8io/docker-maven-plugin/issues/719))
   - Don't use authentication from config when no "auth" is set ([#731](https://github.com/fabric8io/docker-maven-plugin/issues/731))
-
+  
 * **0.20.0** (2017-02-17)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
 
