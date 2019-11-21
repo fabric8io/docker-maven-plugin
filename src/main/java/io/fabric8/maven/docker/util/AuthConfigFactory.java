@@ -366,7 +366,7 @@ public class AuthConfigFactory {
         try {
             return new URI(ecsMetadataEndpoint + awsContainerCredentialsUri);
         } catch (URISyntaxException e) {
-            log.warn("Failed to construct path to ECS credentials", e);
+            log.warn("Failed to construct path to ECS metadata endpoint for credentials", e);
             return null;
         }
     }
