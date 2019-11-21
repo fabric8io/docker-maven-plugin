@@ -34,6 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.rules.ExpectedException;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
@@ -55,7 +56,9 @@ import static org.junit.Assert.assertNull;
 
 public class AuthConfigFactoryTest {
 
-    public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";
+    public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";@Rule
+
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Mocked
     Settings settings;
@@ -593,16 +596,9 @@ public class AuthConfigFactoryTest {
     }
 
     private void setupEcsMetadataConfiguration(HttpServer httpServer, String containerCredentialsUri) {
-        new Expectations() {{
-            settings.getServer("junit.ecs-meta");
-            HashMap<String, Object> testConfiuration = new HashMap<>();
-            testConfiuration.put("host", httpServer.getInetAddress().getHostAddress());
-            testConfiuration.put("port", httpServer.getLocalPort());
-            testConfiuration.put("path", containerCredentialsUri);
-            Server server = new Server();
-            server.setConfiguration(testConfiuration);
-            result = server;
-        }};
+        environmentVariables.set("ECS_METADATA_ENDPOINT", "http://" +
+                httpServer.getInetAddress().getHostAddress()+":" + httpServer.getLocalPort());
+        environmentVariables.set("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", containerCredentialsUri);
     }
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email, String auth) {

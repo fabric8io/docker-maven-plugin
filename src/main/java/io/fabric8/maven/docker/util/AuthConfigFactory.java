@@ -248,7 +248,7 @@ public class AuthConfigFactory {
             }
 
             try {
-                ret = getAuthConfigFromTaskRole(settings);
+                ret = getAuthConfigFromTaskRole();
             } catch (ConnectTimeoutException ex) {
                 log.debug("Connection timeout while retrieving ECS meta-data, likely not an ECS instance (%s)",
                         ex.getMessage());
@@ -301,38 +301,55 @@ public class AuthConfigFactory {
             request = new HttpGet("http://169.254.169.254/latest/meta-data/iam/security-credentials/"
                     + UrlEscapers.urlPathSegmentEscaper().escape(instanceRole));
             request.setConfig(conf);
-            try (CloseableHttpResponse response = client.execute(request)) {
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    log.debug("No security credential found, return code was %d",
-                            response.getStatusLine().getStatusCode());
-                    // no instance role found
-                    return null;
-                }
-
-                // read instance role
-                try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
-                    JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
-
-                    String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
-                    String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
-                    String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
-
-                    log.debug("Received temporary access key %s...", user.substring(0, 8));
-                    return new AuthConfig(user, password, "none", token);
-                }
-            }
+            return readAwsCredentials(client, request);
         }
     }
 
     // if the local credentials don't contain user and password & is not a EC2 instance,
     // use ECS|Fargate Task instance role credentials
-    private AuthConfig getAuthConfigFromTaskRole(Settings settings) throws IOException {
+    private AuthConfig getAuthConfigFromTaskRole() throws IOException {
         log.debug("No user and password set for ECR, checking ECS Task role");
-        Map<String, Object> ecsSettings = getMetadataSettings(settings);
+        URI uri = getMetadataEndpointForCredentials();
+        if (uri == null) {
+            return null;
+        }
+        // get temporary credentials
+        log.debug("Getting temporary security credentials from: %s", uri);
+        try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
+            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
+                    .setSocketTimeout(1000).build();
+            HttpGet request = new HttpGet(uri);
+            request.setConfig(conf);
+            return readAwsCredentials(client, request);
+        }
+    }
 
+    private AuthConfig readAwsCredentials(CloseableHttpClient client, HttpGet request) throws IOException {
+        try (CloseableHttpResponse response = client.execute(request)) {
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                log.debug("No security credential found, return code was %d",
+                        response.getStatusLine().getStatusCode());
+                // no instance role found
+                return null;
+            }
+
+            // read instance role
+            try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
+                JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
+
+                String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
+                String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
+                String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
+
+                log.debug("Received temporary access key %s...", user.substring(0, 8));
+                return new AuthConfig(user, password, "none", token);
+            }
+        }
+    }
+
+    private URI getMetadataEndpointForCredentials() {
         // get ECS task role - if available
-        String awsContainerCredentialsUri = ecsSettings.getOrDefault("path",
-                System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")).toString();
+        String awsContainerCredentialsUri = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
         if (awsContainerCredentialsUri == null) {
             log.debug("System environment not set for variable AWS_CONTAINER_CREDENTIALS_RELATIVE_URI, no task role found");
             return null;
@@ -340,65 +357,18 @@ public class AuthConfigFactory {
         if (awsContainerCredentialsUri.charAt(0) != '/') {
             awsContainerCredentialsUri = "/" + awsContainerCredentialsUri;
         }
-        log.debug("Getting temporary security credentials from: %s", awsContainerCredentialsUri);
 
-        // get temporary credentials
-        try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
-            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
-                    .setSocketTimeout(1000).build();
-            URI uri;
-            try {
-                uri = new URI(
-                        "http",
-                        null,
-                        ecsSettings.getOrDefault("host", "169.254.170.2").toString(),
-                        Integer.parseInt(ecsSettings.getOrDefault("port", "80").toString()),
-                        awsContainerCredentialsUri,
-                        null,
-                        null
-                );
-            } catch (URISyntaxException e) {
-                log.warn("Failed to construct path to ECS credentials", e);
-                return null;
-            }
-            HttpGet request = new HttpGet(uri);
-            request.setConfig(conf);
-            try (CloseableHttpResponse response = client.execute(request)) {
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    log.debug("No security credential found, return code was %d",
-                            response.getStatusLine().getStatusCode());
-                    // no task role found
-                    return null;
-                }
-
-                // read task role
-                try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
-                    JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
-
-                    String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
-                    String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
-                    String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
-
-                    log.debug("Received temporary access key %s...", user.substring(0, 8));
-                    return new AuthConfig(user, password, "none", token);
-                }
-            }
+        String ecsMetadataEndpoint = System.getenv("ECS_METADATA_ENDPOINT");
+        if (ecsMetadataEndpoint == null) {
+            ecsMetadataEndpoint = "http://169.254.170.2";
         }
-    }
 
-    /** This is present to support testing */
-    private Map<String, Object> getMetadataSettings(Settings settings) {
-        Server server = settings.getServer("junit.ecs-meta");
-        Map<String, Object> ecsSettings = Collections.emptyMap();
-        if (server != null) {
-            Object configuration = server.getConfiguration();
-            if (configuration instanceof Map) {
-                ecsSettings = (Map<String, Object>) configuration;
-            } else {
-                log.debug("ECS settings are no Map; there's something wrong in the setup!");
-            }
+        try {
+            return new URI(ecsMetadataEndpoint + awsContainerCredentialsUri);
+        } catch (URISyntaxException e) {
+            log.warn("Failed to construct path to ECS credentials", e);
+            return null;
         }
-        return ecsSettings;
     }
 
     private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
