@@ -17,11 +17,14 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -52,13 +55,21 @@ public class DockerFileUtil {
      */
     public static List<String> extractBaseImages(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
-        LinkedList<String> result = new LinkedList<>();
+        Set<String> result = new LinkedHashSet<>();
+        Set<String> fromAlias = new HashSet<>();
         for (String[] fromLine :  fromLines) {
             if (fromLine.length > 1) {
-                result.add(fromLine[1]);
+                if (fromLine.length == 2) { // FROM image:tag use case
+                    result.add(fromLine[1]);
+                } else if (fromLine.length == 4) { // FROM image:tag AS alias use case
+                    if (!fromAlias.contains(fromLine[1])) {
+                        result.add(fromLine[1]);
+                    }
+                    fromAlias.add(fromLine[3]);
+                }
             }
         }
-        return result;
+        return result.stream().collect(Collectors.toList());
     }
 
     /**

@@ -9,6 +9,7 @@
   - Treat bridged and default network mode the same #1234
   - Fix NPE when cacheFrom is missing from config #1274
   - Fix healthy option regression introduced in 0.25.0 #1279
+  - Failure referencing a previous staged image in FROM clause #1264
 
 * **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
