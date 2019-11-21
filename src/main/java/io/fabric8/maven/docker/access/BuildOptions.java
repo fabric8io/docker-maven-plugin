@@ -77,6 +77,13 @@ public class BuildOptions {
         return this;
     }
 
+    public BuildOptions network(String network) {
+        if (network != null && !network.isEmpty()) {
+            options.put("networkmode", network);
+        }
+        return this;
+    }
+
     public Map<String, String> getOptions() {
         return options;
     }
