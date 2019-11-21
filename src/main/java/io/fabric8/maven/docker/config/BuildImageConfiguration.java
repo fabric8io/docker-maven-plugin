@@ -3,8 +3,6 @@ package io.fabric8.maven.docker.config;
 import java.io.File;
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.fabric8.maven.docker.util.*;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -88,6 +86,9 @@ public class BuildImageConfiguration implements Serializable {
 
     @Parameter
     private String maintainer;
+
+    @Parameter
+    private String network;
 
     @Parameter
     private List<String> ports;
@@ -240,6 +241,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public List<String> getCacheFrom() {
         return cacheFrom;
+    }
+
+    public String getNetwork() {
+        return network;
     }
 
     public String getRegistry() {
@@ -455,6 +460,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder maintainer(String maintainer) {
             config.maintainer = maintainer;
+            return this;
+        }
+
+        public Builder network(String network) {
+            config.network = network;
             return this;
         }
 
