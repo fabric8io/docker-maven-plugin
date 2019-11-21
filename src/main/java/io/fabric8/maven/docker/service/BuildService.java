@@ -141,6 +141,7 @@ public class BuildService {
                         .forceRemove(cleanupMode.isRemove())
                         .noCache(noCache)
                         .cacheFrom(buildConfig.getCacheFrom())
+                        .network(buildConfig.getNetwork())
                         .buildArgs(mergedBuildMap);
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);

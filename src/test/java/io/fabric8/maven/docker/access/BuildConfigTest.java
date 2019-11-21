@@ -96,4 +96,13 @@ public class BuildConfigTest {
         opts.cacheFrom(null);
         assertEquals(null, opts.getOptions().get("cachefrom"));
     }
+
+    @Test
+    public void network() {
+        BuildOptions opts = new BuildOptions().network(null);
+        assertEquals(null, opts.getOptions().get("networkmode"));
+
+        opts.network("host");
+        assertEquals("host", opts.getOptions().get("networkmode"));
+    }
 }
