@@ -56,8 +56,9 @@ import static org.junit.Assert.assertNull;
 
 public class AuthConfigFactoryTest {
 
-    public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";@Rule
+    public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";
 
+    @Rule
     public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Mocked
