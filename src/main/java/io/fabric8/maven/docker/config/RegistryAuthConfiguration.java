@@ -48,11 +48,14 @@ public class RegistryAuthConfiguration implements Serializable {
             authMap.put(AuthConfig.AUTH_PASSWORD, password);
         }
 
-        // deprecated "authToken"
+        if (StringUtils.isNotBlank(authToken) && StringUtils.isNotBlank(auth)) {
+            throw new IllegalStateException("For a registry configuration either 'auth' or 'authToken' (deprecated) can be specified but not both. Use only 'auth' and remove 'authToken' in the registry configuration");
+        }
+
         if (StringUtils.isNotBlank(authToken)) {
             authMap.put(AuthConfig.AUTH_AUTH, authToken);
         }
-        // overwrite with "auth"
+
         if (StringUtils.isNotBlank(auth)) {
             authMap.put(AuthConfig.AUTH_AUTH, auth);
         }

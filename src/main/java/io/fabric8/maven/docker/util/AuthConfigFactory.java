@@ -46,9 +46,6 @@ import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
  */
 public class AuthConfigFactory {
 
-    // Deprecated property for token: Use "AuthConfig.AUTH_AUTH" instead
-    public static final String AUTH_AUTHTOKEN = "authToken";
-
     // Whether to check for OpenShift authentication
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 

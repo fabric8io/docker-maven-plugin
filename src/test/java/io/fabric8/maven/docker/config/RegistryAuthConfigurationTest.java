@@ -18,13 +18,16 @@ public class RegistryAuthConfigurationTest {
     }
 
     @Test
-    public void deprecatedAuthTokenOverrideTest() throws ReflectiveOperationException {
+    public void invalidAuthTokenConfigTest() throws ReflectiveOperationException {
         RegistryAuthConfiguration config = new RegistryAuthConfiguration();
         setField(config, "authToken", "foo");
         setField(config, "auth", "bar");
-        Map map = config.toMap();
-        assertNull(map.get("authToken"));
-        assertEquals("bar", map.get("auth"));
+        try {
+            config.toMap();
+            fail("Should throw an exception because both 'auth' and 'authToken' is specified");
+        } catch (IllegalStateException exp) {
+
+        }
     }
 
         @Test
