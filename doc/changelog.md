@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.31-SNAPSHOT**
+  - Support building dockerFile without pushing it to docker server #1197
   - Update to jnr-unixsocket 0.23
   - Add null check for null instance in config.json for email (#1262)
   - Allow merging of image configurations using <imagesMap> ([#360](https://github.com/fabric8io/docker-maven-plugin/issues/360))
