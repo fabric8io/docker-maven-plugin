@@ -4,6 +4,7 @@ import java.util.*;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.StopMode;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.util.GavLabel;
 
@@ -188,6 +189,9 @@ public class ContainerTracker {
         // How long to wait after stop to kill container (in seconds)
         private final int killGracePeriod;
 
+        // Whether to kill or stop gracefully
+        private final StopMode stopMode;
+
 
         // Command to call before stopping container and whether to stop the build
         private String preStop;
@@ -200,6 +204,7 @@ public class ContainerTracker {
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             WaitConfiguration waitConfig = runConfig != null ? runConfig.getWaitConfiguration() : null;
             this.shutdownGracePeriod = waitConfig != null && waitConfig.getShutdown() != null ? waitConfig.getShutdown() : 0;
+            this.stopMode = runConfig != null ? runConfig.getStopMode()  : StopMode.graceful;
             this.killGracePeriod = waitConfig != null && waitConfig.getKill() != null ? waitConfig.getKill() : 0;
             if (waitConfig != null && waitConfig.getExec() != null) {
                 this.preStop = waitConfig.getExec().getPreStop();
@@ -237,6 +242,10 @@ public class ContainerTracker {
 
         public boolean isBreakOnError() {
             return breakOnError;
+        }
+
+        public StopMode getStopMode() {
+            return stopMode;
         }
 
         @Override

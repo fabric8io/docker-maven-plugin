@@ -188,6 +188,10 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private Boolean autoRemove;
 
+    // How to stop a container
+    @Parameter
+    private StopMode stopMode;
+
     public RunImageConfiguration() { }
 
     public String initAndValidate() {
@@ -399,6 +403,13 @@ public class RunImageConfiguration implements Serializable {
 
     public Boolean getAutoRemove() {
         return autoRemove;
+    }
+
+    public StopMode getStopMode() {
+        if (stopMode == null) {
+            return StopMode.graceful;
+        }
+        return stopMode;
     }
 
     /**
@@ -637,6 +648,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder skip(Boolean skip) {
             config.skip = skip;
+            return this;
+        }
+
+        public Builder stopMode(StopMode stopMode) {
+            config.stopMode = stopMode;
             return this;
         }
 

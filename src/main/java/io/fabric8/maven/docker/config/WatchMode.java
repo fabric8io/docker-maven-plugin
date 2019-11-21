@@ -23,7 +23,7 @@ package io.fabric8.maven.docker.config;/*
 public enum WatchMode {
 
     /**
-     * Copy watched artefacts into contaienr
+     * Copy watched artefacts into container
      */
     copy(false, false, true, "build"),
 
