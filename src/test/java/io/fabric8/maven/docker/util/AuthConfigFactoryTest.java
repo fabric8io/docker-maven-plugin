@@ -605,13 +605,13 @@ public class AuthConfigFactoryTest {
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email, String auth) {
         assertNotNull(config);
         JsonObject params = gsonBuilder.create().fromJson(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())), JsonObject.class);
-        assertEquals(username, params.get("username").getAsString());
-        assertEquals(password, params.get("password").getAsString());
+        assertEquals(username, params.get(AuthConfig.AUTH_USERNAME).getAsString());
+        assertEquals(password, params.get(AuthConfig.AUTH_PASSWORD).getAsString());
         if (email != null) {
-            assertEquals(email, params.get("email").getAsString());
+            assertEquals(email, params.get(AuthConfig.AUTH_EMAIL).getAsString());
         }
         if (auth != null) {
-            assertEquals(auth, params.get("auth").getAsString());
+            assertEquals(auth, params.get(AuthConfig.AUTH_AUTH).getAsString());
         }
     }
 
