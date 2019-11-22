@@ -133,6 +133,14 @@ public interface DockerAccess {
      */
     void stopContainer(String containerId, int killWait) throws DockerAccessException;
 
+    /**
+     * Kill a container
+     *
+     * @param containerId the container id
+     * @throws DockerAccessException if container failed to be killed
+     */
+    void killContainer(String containerId) throws DockerAccessException;
+
     /** Copy an archive (must be a tar) into a running container
      * Get all containers matching a certain label. This might not be a cheap operation especially if many containers
      * are running. Use with care.

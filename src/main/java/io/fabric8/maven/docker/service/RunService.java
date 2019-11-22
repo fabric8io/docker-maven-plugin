@@ -46,6 +46,7 @@ import io.fabric8.maven.docker.config.NetworkConfig;
 import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.StopMode;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
@@ -452,6 +453,7 @@ public class RunService {
         throws DockerAccessException, ExecException {
 
         String containerId = descriptor.getContainerId();
+        StopMode stopMode = descriptor.getStopMode();
         if (descriptor.getPreStop() != null) {
             try {
                 execInContainer(containerId, descriptor.getPreStop(), descriptor.getImageConfiguration());
@@ -466,24 +468,33 @@ public class RunService {
             }
         }
 
-        int killGracePeriod = adjustGracePeriod(descriptor.getKillGracePeriod());
-        log.debug("shutdown will wait max of %d seconds before removing container", killGracePeriod);
+        if (stopMode.equals(StopMode.graceful)) {
+            int killGracePeriod = adjustGracePeriod(descriptor.getKillGracePeriod());
+            log.debug("shutdown will wait max of %d seconds before removing container", killGracePeriod);
 
-        long waited;
-        if (killGracePeriod == 0) {
-            docker.stopContainer(containerId, 0);
-            waited = 0;
-        } else {
-            waited = shutdownAndWait(containerId, killGracePeriod);
+            long waited;
+            if (killGracePeriod == 0) {
+                docker.stopContainer(containerId, 0);
+                waited = 0;
+            } else {
+                waited = shutdownAndWait(containerId, killGracePeriod);
+            }
+            log.info("%s: Stop%s container %s after %s ms",
+                    descriptor.getDescription(),
+                    (keepContainer ? "" : " and removed"),
+                    containerId.substring(0, 12), waited);
+        } else if (stopMode.equals(StopMode.kill)) {
+            docker.killContainer(containerId);
+            log.info("%s: Killed%s container %s.",
+                    descriptor.getDescription(),
+                    (keepContainer ? "" : " and removed"),
+                    containerId.subSequence(0, 12));
         }
         if (!keepContainer) {
             removeContainer(descriptor, removeVolumes, containerId);
         }
 
-        log.info("%s: Stop%s container %s after %s ms",
-                descriptor.getDescription(),
-                (keepContainer ? "" : " and removed"),
-                containerId.substring(0, 12), waited);
+
     }
 
     public void createCustomNetworkIfNotExistant(String customNetwork) throws DockerAccessException {

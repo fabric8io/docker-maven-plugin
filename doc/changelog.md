@@ -10,6 +10,7 @@
   - Treat bridged and default network mode the same (#1234)
   - Fix NPE when cacheFrom is missing from config (#1274)
   - Fix healthy option regression introduced in 0.25.0 (#1279)
+  - Allow killing and removing all spawned containers (#1182)
   - Deprecated "authToken" for ECR authentication in favor of "auth" (#1286)
 
 * **0.31.0** (2019-08-10)

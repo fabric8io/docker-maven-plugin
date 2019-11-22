@@ -122,6 +122,9 @@ a| *This option is deprecated, please use a `containerNamePattern` instead* Nami
 | *skip*
 | If `true` disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.
 
+| *stopMode*
+| Specifies how to stop a running container. It supports the modes `graceful` and `kill` as values, with `graceful` being the default.
+
 | *tmpfs*
 a| List countaintin `<mount>` elements for directories to mount with a temporary filesystem. Optionally, mount options can be appended after a ':'. See below for an example.
 
