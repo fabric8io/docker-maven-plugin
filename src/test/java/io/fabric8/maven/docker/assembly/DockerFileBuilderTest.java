@@ -228,10 +228,7 @@ public class DockerFileBuilderTest {
     public void testAssemblyUserWithChown() {
         String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss")
                                                    .add("a","a/nested").add("b","b/deeper/nested").content();
-        String EXPECTED_REGEXP = "chown\\s+-R\\s+jboss:jboss\\s+([^\\s]+)"
-                                 + "\\s+&&\\s+cp\\s+-rp\\s+\\1/\\*\\s+/\\s+&&\\s+rm\\s+-rf\\s+\\1";
-        Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
-        assertTrue(pattern.matcher(dockerFile).find());
+        assertThat(dockerfileToMap(dockerFile), hasEntry("COPY", "--chown=jboss:jboss b /maven/b/deeper/nested"));
     }
 
     @Test

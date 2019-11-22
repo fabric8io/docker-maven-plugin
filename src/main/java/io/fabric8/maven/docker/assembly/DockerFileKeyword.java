@@ -9,6 +9,7 @@ package io.fabric8.maven.docker.assembly;
 public enum DockerFileKeyword
 {
     MAINTAINER,
+    ADD,
     EXPOSE,
     FROM,
     SHELL,
