@@ -1,9 +1,9 @@
 
 
-Using `entryPoint` and `cmd` it is possible to specify the https://docs.docker.com/reference/builder/#entrypoint[entry point]
+Using `entrypoint` and `cmd` it is possible to specify the https://docs.docker.com/reference/builder/#entrypoint[entry point]
 or https://docs.docker.com/reference/builder/#cmd[cmd] for a container.
 
-The difference is, that an `entrypoint` is the command that always be executed, with the `cmd` as argument. If no `entryPoint` is provided, it defaults to `/bin/sh -c` so any `cmd` given is executed with a shell. The arguments given to `docker run` are always given as arguments to the
+The difference is, that an `entrypoint` is the command that always be executed, with the `cmd` as argument. If no `entrypoint` is provided, it defaults to `/bin/sh -c` so any `cmd` given is executed with a shell. The arguments given to `docker run` are always given as arguments to the
 `entrypoint`, overriding any given `cmd` option. On the other hand if no extra arguments are given to `docker run` the default `cmd` is used as argument to `entrypoint`.
 
 ****
@@ -29,10 +29,10 @@ Either shell or params should be specified.
 .Example
 [source,xml]
 ----
-<entryPoint>
+<entrypoint>
    <!-- shell form  -->
    <shell>java -jar $HOME/server.jar</shell>
-</entryPoint>
+</entrypoint>
 ----
 
 or
@@ -40,14 +40,14 @@ or
 .Example
 [source,xml]
 ----
-<entryPoint>
+<entrypoint>
    <!-- exec form  -->
    <exec>
      <arg>java</arg>
      <arg>-jar</arg>
      <arg>/opt/demo/server.jar</arg>
    </exec>
-</entryPoint>
+</entrypoint>
 ----
 
 This can be formulated also more dense with:
@@ -56,7 +56,7 @@ This can be formulated also more dense with:
 [source,xml]
 ----
 <!-- shell form  -->
-<entryPoint>java -jar $HOME/server.jar</entryPoint>
+<entrypoint>java -jar $HOME/server.jar</entrypoint>
 ----
 
 or
@@ -64,11 +64,11 @@ or
 .Example
 [source,xml]
 ----
-<entryPoint>
+<entrypoint>
   <!-- exec form  -->
   <arg>java</arg>
   <arg>-jar</arg>
   <arg>/opt/demo/server.jar</arg>
-</entryPoint>
+</entrypoint>
 ----
 
