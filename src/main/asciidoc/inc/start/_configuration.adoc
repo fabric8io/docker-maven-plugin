@@ -51,7 +51,7 @@ The `<run>` configuration element knows the following sub elements:
 | List of `host` elements specifying dns search domains
 
 | *entrypoint*
-| Entry point for the container. See <<misc-startup, Startup Arguments] for details.
+| Entry point for the container. See <<misc-startup, Startup Arguments>> for details.
 
 | <<misc-env, *env*>>
 | Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <<misc-env,Environment and Labels>>.
