@@ -39,7 +39,7 @@ jobs:
         key: dmp-sonar-pr-{{ checksum "pom.xml" }}
     - run: |
         if [ -n "${CIRCLE_PR_NUMBER}" ]; then
-          mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
+          mvn clean -Pjacoco org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
              -Dsonar.pullrequest.base=master \
              -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} \
              -Dsonar.pullrequest.key=${CIRCLE_PR_NUMBER} \
@@ -66,7 +66,7 @@ jobs:
     - restore_cache:
         key: dmp-sonar-{{ checksum "pom.xml" }}
     - run: |
-        mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
+        mvn clean -Pjacoco org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
         -Dsonar.host.url=https://sonarcloud.io \
         -Dsonar.login=${SONARQUBE_TOKEN}
     - save_cache:
