@@ -14,7 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  */
 @Mojo(name = "push", defaultPhase = LifecyclePhase.DEPLOY)
-public class PushMojo extends AbstractDockerMojo {
+public class PushMojo extends AbstractBuildSupportMojo {
 
     // Registry to use for push operations if no registry is specified
     @Parameter(property = "docker.push.registry")
