@@ -227,6 +227,12 @@ public class AuthConfigFactory {
 
         // check EC2 instance role if registry is ECR
         if (EcrExtendedAuth.isAwsRegistry(registry)) {
+            ret = getAuthConfigFromAwsEnvironmentVariables();
+            if (ret != null) {
+                log.debug("AuthConfig: AWS credentials from ENV variables");
+                return ret;
+            }
+
             try {
                 ret = getAuthConfigFromEC2InstanceRole();
             } catch (ConnectTimeoutException ex) {
@@ -257,6 +263,24 @@ public class AuthConfigFactory {
 
         // No authentication found
         return null;
+    }
+
+    /**
+     * Try using the AWS credentials provided via ENV variables.
+     * See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+     */
+    private AuthConfig getAuthConfigFromAwsEnvironmentVariables() {
+        String accessKeyId = System.getenv("AWS_ACCESS_KEY_ID");
+        if (accessKeyId == null) {
+            log.debug("System environment not set for variable AWS_ACCESS_KEY_ID, no AWS credentials found");
+            return null;
+        }
+        String secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY");
+        if (secretAccessKey == null) {
+            log.warn("System environment set for variable AWS_ACCESS_KEY_ID, but NOT for variable AWS_SECRET_ACCESS_KEY!");
+            return null;
+        }
+        return new AuthConfig(accessKeyId, secretAccessKey, "none", System.getenv("AWS_SESSION_TOKEN"));
     }
 
     // ===================================================================================================

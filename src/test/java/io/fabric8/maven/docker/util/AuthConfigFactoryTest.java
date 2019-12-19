@@ -550,6 +550,41 @@ public class AuthConfigFactoryTest {
         verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
     }
 
+    @Test
+    public void awsTemporaryCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        String sessionToken = randomUUID().toString();
+        environmentVariables.set("AWS_ACCESS_KEY_ID", accessKeyId);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", secretAccessKey);
+        environmentVariables.set("AWS_SESSION_TOKEN", sessionToken);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
+    }
+
+    @Test
+    public void awsStaticCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        environmentVariables.set("AWS_ACCESS_KEY_ID", accessKeyId);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", secretAccessKey);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, null);
+    }
+
+    @Test
+    public void incompleteAwsCredentialsAreIgnored() throws MojoExecutionException {
+        environmentVariables.set("AWS_ACCESS_KEY_ID", randomUUID().toString());
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        assertNull(authConfig);
+    }
+
     private void setupServers() {
         new Expectations() {{
             List<Server> servers = new ArrayList<>();
