@@ -1,22 +1,11 @@
 package io.fabric8.maven.docker.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import com.google.common.net.UrlEscapers;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -34,11 +23,20 @@ import org.codehaus.plexus.component.repository.exception.ComponentLookupExcepti
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
-import com.google.common.net.UrlEscapers;
-import com.google.gson.Gson;
-
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -227,6 +225,12 @@ public class AuthConfigFactory {
 
         // check EC2 instance role if registry is ECR
         if (EcrExtendedAuth.isAwsRegistry(registry)) {
+            ret = getAuthConfigViaAwsSdk();
+            if (ret != null) {
+                log.debug("AuthConfig: AWS credentials from AWS SDK");
+                return ret;
+            }
+
             ret = getAuthConfigFromAwsEnvironmentVariables();
             if (ret != null) {
                 log.debug("AuthConfig: AWS credentials from ENV variables");
@@ -263,6 +267,18 @@ public class AuthConfigFactory {
 
         // No authentication found
         return null;
+    }
+
+    private AuthConfig getAuthConfigViaAwsSdk() {
+        try {
+            Class.forName("com.amazonaws.auth.DefaultAWSCredentialsProviderChain");
+        } catch (ClassNotFoundException e) {
+            log.info("It appears that you're using AWS ECR." +
+                    " Consider integrating the AWS SDK in order to make use of common AWS authentication mechanisms," +
+                    " see TODO");
+            return null;
+        }
+        return new AwsSdkAuthConfigFactory(log).createAuthConfig();
     }
 
     /**
