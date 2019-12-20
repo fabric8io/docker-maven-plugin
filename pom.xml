@@ -188,6 +188,16 @@
       <artifactId>aws-java-sdk-core</artifactId>
       <version>1.11.696</version>
       <optional>true</optional>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.dataformat</groupId>
+          <artifactId>jackson-dataformat-cbor</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>software.amazon.ion</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
 
