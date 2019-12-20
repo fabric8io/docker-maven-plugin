@@ -25,16 +25,9 @@ public class AwsSdkAuthConfigFactory {
         if (credentials == null) {
             return null;
         }
-        if (credentials instanceof AWSSessionCredentials) {
-            AWSSessionCredentials sessionCredentials = (AWSSessionCredentials) credentials;
-            return new AuthConfig(
-                    sessionCredentials.getAWSAccessKeyId(),
-                    sessionCredentials.getAWSSecretKey(),
-                    "none",
-                    sessionCredentials.getSessionToken()
-            );
-        }
-        return new AuthConfig(credentials.getAWSAccessKeyId(), credentials.getAWSSecretKey(), "none", null);
+        String sessionToken = (credentials instanceof AWSSessionCredentials)
+                ? ((AWSSessionCredentials) credentials).getSessionToken() : null;
+        return new AuthConfig(credentials.getAWSAccessKeyId(), credentials.getAWSSecretKey(), "none", sessionToken);
     }
 
 }
