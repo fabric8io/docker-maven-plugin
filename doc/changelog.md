@@ -6,6 +6,9 @@
   - Allow merging of image configurations using <imagesMap> ([#360](https://github.com/fabric8io/docker-maven-plugin/issues/360))
   - Update to joda-time 2.10.4 (#706)
   - Add docker:build support for 'network' option #1030
+  - Avoiding chown to reduce the image size (#544)
+    (_Note: Assembly user format `user:user:user` with the third user option has been marked deprecated
+    and will not be available in future versions of plugin_)
   - Failure referencing a previous staged image in FROM clause #1264
   - Treat bridged and default network mode the same (#1234)
   - Fix NPE when cacheFrom is missing from config (#1274)
