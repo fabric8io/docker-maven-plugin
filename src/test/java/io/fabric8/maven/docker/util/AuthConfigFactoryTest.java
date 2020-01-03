@@ -537,6 +537,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void ecsTaskRole() throws IOException, MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String containerCredentialsUri = "/v2/credentials/" + randomUUID().toString();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
@@ -551,6 +552,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void fargateTaskRole() throws IOException, MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String containerCredentialsUri = "v2/credentials/" + randomUUID().toString();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
@@ -565,6 +567,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void awsTemporaryCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
         String sessionToken = randomUUID().toString();
@@ -579,6 +582,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void awsStaticCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
         environmentVariables.set("AWS_ACCESS_KEY_ID", accessKeyId);
@@ -591,6 +595,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void incompleteAwsCredentialsAreIgnored() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
         environmentVariables.set("AWS_ACCESS_KEY_ID", randomUUID().toString());
 
         AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
@@ -667,7 +672,11 @@ public class AuthConfigFactoryTest {
         verifyAuthConfig(config, username, password, email, null);
     }
 
-    public static class MockedAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
+    private static void givenAwsSdkIsDisabled() {
+        new DisableAwsSdkAuthConfigFactory();
+    }
+
+    private static class MockedAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
         private final String accessKeyId;
         private final String secretAccessKey;
 
@@ -683,6 +692,19 @@ public class AuthConfigFactoryTest {
         @Mock
         public AuthConfig createAuthConfig() {
             return new AuthConfig(accessKeyId, secretAccessKey, null,null);
+        }
+
+    }
+
+    private static class DisableAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
+
+        @Mock
+        public void $init(Logger log) {
+        }
+
+        @Mock
+        public AuthConfig createAuthConfig() {
+            return null;
         }
 
     }
