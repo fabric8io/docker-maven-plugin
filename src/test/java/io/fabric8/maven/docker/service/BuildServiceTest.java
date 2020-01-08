@@ -26,6 +26,8 @@ import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
+
 
 public class BuildServiceTest {
 
@@ -139,7 +141,8 @@ public class BuildServiceTest {
             mavenProject.getProperties(); result = new Properties();
         }};
 
-        buildService.buildImage(imageConfig, pullManager, buildContext);
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
 
         //verify that tries to pull both images
         new Verifications() {{
@@ -148,6 +151,26 @@ public class BuildServiceTest {
             queryService.hasImage("fabric8/s1i-java");
             registryService.pullImageWithPolicy("fabric8/s1i-java",  pullManager, buildContext.getRegistryConfig(), false);
         }};
+    }
+
+    @Test
+    public void testDockerBuildArchiveOnly() throws Exception {
+        givenAnImageConfiguration(true);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+                .mojoParameters(mojoParameters)
+                .build();
+        File dockerArchive = buildService.buildArchive(imageConfig, buildContext, mavenProject.getBasedir().getAbsolutePath());
+        assertNotNull(dockerArchive);
+    }
+
+    @Test (expected = MojoExecutionException.class)
+    public void testDockerBuildArchiveOnlyWithInvalidPath() throws MojoExecutionException{
+        givenAnImageConfiguration(true);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+                .mojoParameters(mojoParameters)
+                .build();
+        File dockerArchive = buildService.buildArchive(imageConfig, buildContext, "/i/donot/exist");
+        assertNotNull(dockerArchive);
     }
 
     private void givenAnImageConfiguration(Boolean cleanup) {
@@ -199,8 +222,12 @@ public class BuildServiceTest {
                 docker.removeImage(withEqual(oldImageId), withEqual(true)); result = true;
             }};
         }
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+                .mojoParameters(mojoParameters)
+                .build();
+        File dockerArchive = buildService.buildArchive(imageConfig, buildContext, "");
 
-        buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap());
+        buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap(), dockerArchive);
 
     }
 }
