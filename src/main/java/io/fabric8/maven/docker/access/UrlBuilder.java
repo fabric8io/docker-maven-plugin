@@ -145,6 +145,11 @@ public final class UrlBuilder {
         return b.build();
     }
 
+    public String killContainer(String containerId) {
+        Builder b = u("containers/%s/kill", containerId);
+        return b.build();
+    }
+
     public String tagContainer(ImageName source, ImageName target, boolean force) {
         return u("images/%s/tag", source.getFullName())
                 .p("repo",target.getNameWithoutTag())

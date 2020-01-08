@@ -12,5 +12,5 @@ https://github.com/fabric8io/docker-maven-sample[sample project]
 with a Microservice and a Database.
 * https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/changelog.md[ChangeLog]
 has the release history of this plugin.
-* https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/contributing.md[Contributing]
+* https://github.com/fabric8io/docker-maven-plugin/blob/master/CONTRIBUTING.md[Contributing]
 explains how you can contribute to this project. Pull requests are highly appreciated!

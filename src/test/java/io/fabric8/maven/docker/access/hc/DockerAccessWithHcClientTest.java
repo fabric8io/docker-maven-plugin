@@ -18,19 +18,25 @@ import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
 
+import mockit.Verifications;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.Assert.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 public class DockerAccessWithHcClientTest {
+
+    private static final String BASE_URL = "tcp://1.2.3.4:2375";
 
     private AuthConfig authConfig;
 
@@ -57,12 +63,46 @@ public class DockerAccessWithHcClientTest {
 
     @Before
     public void setup() throws IOException {
-        client = new DockerAccessWithHcClient("tcp://1.2.3.4:2375", null, 1, mockLogger) {
+        client = new DockerAccessWithHcClient(BASE_URL, null, 1, mockLogger) {
             @Override
             ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
                 return mockDelegate;
             }
         };
+    }
+
+    @Test
+    public void testPushImage_replacementOfExistingOfTheSameTag() throws Exception {
+        String image = "test-image";
+        String tag = "test-tag";
+        String taggedImageName = String.format("%s:%s", image, tag);
+
+        givenAnImageName(taggedImageName);
+        givenRegistry("test-registry");
+        givenThatGetWillSucceedWithOk();
+
+        whenPushImage();
+
+        thenAlreadyHasImageMessageIsLogged();
+        thenImageWasTagged(image, tag);
+        thenPushSucceeded(image, tag);
+    }
+
+    @Test
+    public void testPushImage_imageOfTheSameTagDoesNotExist() throws Exception {
+        String image = "test-image";
+        String tag = "test-tag";
+        String taggedImageName = String.format("%s:%s", image, tag);
+
+        givenAnImageName(taggedImageName);
+        givenRegistry("test-registry");
+        givenThatGetWillSucceedWithNotFound();
+        givenThatDeleteWillSucceed();
+
+        whenPushImage();
+
+        thenImageWasTagged(image, tag);
+        thenPushSucceeded(image, tag);
     }
 
     @Test
@@ -166,6 +206,10 @@ public class DockerAccessWithHcClientTest {
         this.imageName = imageName;
     }
 
+    private void givenRegistry(String registry) {
+        this.registry = registry;
+    }
+
     private void givenANumberOfRetries(int retries) {
         this.pushRetries = retries;
     }
@@ -242,6 +286,22 @@ public class DockerAccessWithHcClientTest {
         }};
     }
 
+    @SuppressWarnings("unchecked")
+    private void givenThatGetWillSucceedWithOk() throws IOException {
+        new Expectations() {{
+            mockDelegate.get(anyString, (ResponseHandler<Integer>) any, HTTP_OK, HTTP_NOT_FOUND);
+            result = HTTP_OK;
+        }};
+    }
+
+    @SuppressWarnings("unchecked")
+    private void givenThatGetWillSucceedWithNotFound() throws IOException {
+        new Expectations() {{
+            mockDelegate.get(anyString, (ResponseHandler<Integer>) any, HTTP_OK, HTTP_NOT_FOUND);
+            result = HTTP_NOT_FOUND;
+        }};
+    }
+
     private void givenTheGetWillFail() throws IOException {
         new Expectations() {{
             mockDelegate.get(anyString, (ResponseHandler) any, 200);
@@ -256,12 +316,51 @@ public class DockerAccessWithHcClientTest {
         }};
     }
 
+    @SuppressWarnings("unchecked")
+    private void givenThatDeleteWillSucceed() throws IOException {
+        new Expectations() {{
+            mockDelegate.delete(anyString, (ResponseHandler<ApacheHttpClientDelegate.HttpBodyAndStatus>) any, HTTP_OK,
+                HTTP_NOT_FOUND);
+            result = new ApacheHttpClientDelegate.HttpBodyAndStatus(HTTP_OK, anyString);
+        }};
+    }
+
     private void thenImageWasNotPushed() {
         assertNotNull(thrownException);
     }
 
     private void thenImageWasPushed() {
        assertNull(thrownException);
+    }
+
+    private void thenPushSucceeded(String imageNameWithoutTag, String tag) throws IOException {
+        new Verifications() {{
+            String url;
+            mockDelegate.post(url = withCapture(), null, (Map<String, String>) any, (ResponseHandler<Object>) any,
+                HTTP_OK);
+
+            String expectedUrl = String.format("%s/vnull/images/%s%%2F%s/push?force=1&tag=%s", BASE_URL, registry,
+                imageNameWithoutTag, tag);
+            assertEquals(expectedUrl, url);
+        }};
+    }
+
+    private void thenAlreadyHasImageMessageIsLogged() {
+        new Verifications() {{
+            mockLogger.warn("Target image '%s' already exists. Tagging of '%s' will replace existing image",
+                getImageNameWithRegistry(), imageName);
+        }};
+    }
+
+    private void thenImageWasTagged(String imageNameWithoutTag, String tag) throws IOException {
+        new Verifications() {{
+            String url;
+            mockDelegate.post(url = withCapture(), HTTP_CREATED);
+
+            String expectedUrl = String.format("%s/vnull/images/%s%%3A%s/tag?force=0&repo=%s%%2F%s&tag=%s", BASE_URL,
+                imageNameWithoutTag, tag, registry, imageNameWithoutTag, tag);
+            assertEquals(expectedUrl, url);
+        }};
     }
 
     private void whenListContainers() {
@@ -341,5 +440,9 @@ public class DockerAccessWithHcClientTest {
             assertEquals(idRepoTagPairs[i].getLeft(), this.images.get(i).getId());
             assertEquals(Collections.singletonList(idRepoTagPairs[i].getRight()), this.images.get(i).getRepoTags());
         }
+    }
+
+    private String getImageNameWithRegistry() {
+        return registry + "/" + imageName;
     }
 }

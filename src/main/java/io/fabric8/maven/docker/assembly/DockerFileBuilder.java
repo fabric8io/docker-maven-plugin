@@ -195,32 +195,32 @@ public class DockerFileBuilder {
 
     private void addCopy(StringBuilder b) {
         if (assemblyUser != null) {
-            String tmpDir = createTempDir();
-            addCopyEntries(b, tmpDir);
+            String[] userParts = assemblyUser.split(":");
 
-            String[] userParts = StringUtils.split(assemblyUser, ":");
-            String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
-            String chmod = "chown -R " + userArg + " " + tmpDir + " && cp -rp " + tmpDir + "/* / && rm -rf " + tmpDir;
-            if (userParts.length > 2) {
-                DockerFileKeyword.USER.addTo(b, "root");
-                DockerFileKeyword.RUN.addTo(b, chmod);
-                DockerFileKeyword.USER.addTo(b, userParts[2]);
-            } else {
-                DockerFileKeyword.RUN.addTo(b, chmod);
+            for (CopyEntry entry : copyEntries) {
+                if (userParts.length > 2) {
+                    DockerFileKeyword.USER.addTo(b, "root");
+                }
+                addCopyEntries(b, "", (userParts.length > 1 ?
+                        userParts[0] + ":" + userParts[1] :
+                        userParts[0]));
+                if (userParts.length > 2) {
+                    DockerFileKeyword.USER.addTo(b, userParts[2]);
+                }
             }
         } else {
-            addCopyEntries(b, "");
+            addCopyEntries(b, "", null);
         }
     }
 
-    private String createTempDir() {
-         return "/tmp/" + UUID.randomUUID().toString();
-    }
-
-    private void addCopyEntries(StringBuilder b, String topLevelDir) {
+    private void addCopyEntries(StringBuilder b, String topLevelDir, String ownerAndGroup) {
         for (CopyEntry entry : copyEntries) {
             String dest = topLevelDir + (basedir.equals("/") ? "" : basedir) + "/" + entry.destination;
-            DockerFileKeyword.COPY.addTo(b, entry.source, dest);
+            if (ownerAndGroup == null) {
+                DockerFileKeyword.COPY.addTo(b, entry.source, dest);
+            } else {
+                DockerFileKeyword.COPY.addTo(b, " --chown=" + ownerAndGroup, entry.source, dest);
+            }
         }
     }
 

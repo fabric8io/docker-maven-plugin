@@ -1,0 +1,15 @@
+
+.Example
+[source,xml]
+----
+<configuration>
+  ....
+  <imagesMap>
+    <service>
+      <name>%g/docker-demo:0.1</name>
+      <run>....</run>
+      <build>....</build>
+    </service>
+  </images>
+</configuration>
+----

@@ -16,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -141,6 +143,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public String getServerApiVersion() throws DockerAccessException {
         try {
             String url = urlBuilder.version();
+            log.verbose(Logger.LogVerboseCategory.API,"GET %s", url);
             String response = delegate.get(url, 200);
             JsonObject info = JsonFactory.newJsonObject(response);
             return info.get("ApiVersion").getAsString();
@@ -157,7 +160,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             request.addProperty("Detach", false);
             request.addProperty("Tty", true);
 
-            log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with %s", url, request);
+            log.verbose(Logger.LogVerboseCategory.API,"POST to %s with %s", url, request);
             delegate.post(url, request.toString(), createExecResponseHandler(outputSpec), HTTP_OK);
         } catch (Exception e) {
             throw new DockerAccessException(e, "Unable to start container id [%s]", containerId);
@@ -199,7 +202,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         request.add("Cmd", JsonFactory.newJsonArray(arguments.getExec()));
 
         String execJsonRequest = request.toString();
-        log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with %s", url, execJsonRequest);
+        log.verbose(Logger.LogVerboseCategory.API,"POST to %s with %s", url, execJsonRequest);
         try {
             String response = delegate.post(url, execJsonRequest, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             JsonObject json = JsonFactory.newJsonObject(response);
@@ -223,7 +226,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
         try {
             String url = urlBuilder.createContainer(containerName);
-            log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with %s", url, createJson);
+            log.verbose(Logger.LogVerboseCategory.API,"POST to %s with %s", url, createJson);
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             JsonObject json = JsonFactory.newJsonObject(response);
@@ -241,6 +244,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void startContainer(String containerId) throws DockerAccessException {
         try {
             String url = urlBuilder.startContainer(containerId);
+            log.verbose(Logger.LogVerboseCategory.API,"POST %s", url);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to start container id [%s]", containerId);
@@ -251,6 +255,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void stopContainer(String containerId, int killWait) throws DockerAccessException {
         try {
             String url = urlBuilder.stopContainer(containerId, killWait);
+            log.verbose(Logger.LogVerboseCategory.API,"POST %s", url);
             delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to stop container id [%s]", containerId);
@@ -258,10 +263,21 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
+    public void killContainer(String containerId) throws DockerAccessException {
+        try {
+            String url = urlBuilder.killContainer(containerId);
+            log.verbose(Logger.LogVerboseCategory.API,"POST %s", url);
+            delegate.post(url, HTTP_NO_CONTENT, HTTP_NOT_MODIFIED);
+        } catch (IOException ie) {
+            throw new DockerAccessException(ie, "Unable to kill container id [%s]", containerId);
+        }
+    }
+
+    @Override
     public void buildImage(String image, File dockerArchive, BuildOptions options) throws DockerAccessException {
         try {
             String url = urlBuilder.buildImage(image, options);
-            log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with contents of file %s", url, dockerArchive);
+            log.verbose(Logger.LogVerboseCategory.API,"POST to %s with contents of file %s", url, dockerArchive);
             delegate.post(url, dockerArchive, createBuildResponseHandler(), HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to build image [%s]", image);
@@ -273,7 +289,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         try {
             String url = urlBuilder.copyArchive(containerId, targetPath);
-            log.verbose(Logger.LogVerboseCategory.API,"PUTing to %s with contents of file %s", url, archive);
+            log.verbose(Logger.LogVerboseCategory.API,"PUT to %s with contents of file %s", url, archive);
             delegate.put(url, archive, HTTP_OK);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to copy archive %s to container [%s] with path %s",
@@ -307,6 +323,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
 
         try {
+            log.verbose(Logger.LogVerboseCategory.API,"GET %s", url);
             String response = delegate.get(url, HTTP_OK);
             JsonArray array = JsonFactory.newJsonArray(response);
             List<Container> containers = new ArrayList<>();
@@ -433,7 +450,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         try {
             String url = urlBuilder.removeContainer(containerId, removeVolumes);
-            log.verbose(Logger.LogVerboseCategory.API,"DELETEing %s", url);
+            log.verbose(Logger.LogVerboseCategory.API,"DELETE %s", url);
             delegate.delete(url, HTTP_NO_CONTENT);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove container [%s]", containerId);
@@ -444,7 +461,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void loadImage(String image, File tarArchive) throws DockerAccessException {
         String url = urlBuilder.loadImage();
 
-        log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with contents of file %s", url, tarArchive);
+        log.verbose(Logger.LogVerboseCategory.API,"POST to %s with contents of file %s", url, tarArchive);
         try {
             delegate.post(url, tarArchive, new BodyAndStatusResponseHandler(), HTTP_OK);
         } catch (IOException e) {
@@ -471,7 +488,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         ImageName name = new ImageName(image);
         String pushUrl = urlBuilder.pushImage(name, registry);
-        String temporaryImage = tagTemporaryImage(name, registry);
+        TemporaryImageHandler temporaryImageHandler = tagTemporaryImage(name, registry);
         DockerAccessException dae = null;
         try {
             doPushImage(pushUrl, createAuthHeader(authConfig), createPullOrPushResponseHandler(), HTTP_OK, retries);
@@ -479,15 +496,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             dae = new DockerAccessException(e, "Unable to push '%s'%s", image, (registry != null) ? " to registry '" + registry + "'" : "");
             throw dae;
         } finally {
-            if (temporaryImage != null) {
-                if (!removeImage(temporaryImage, true)) {
-                    if (dae == null) {
-                        throw new DockerAccessException("Image %s could be pushed, but the temporary tag could not be removed", temporaryImage);
-                    } else {
-                        throw new DockerAccessException(dae.getCause(), dae.getMessage() + " and also temporary tag [%s] could not be removed, too.", temporaryImage);
-                    }
-                }
-            }
+            temporaryImageHandler.handle(dae);
         }
     }
 
@@ -572,7 +581,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         log.debug("Network create config: " + createJson);
         try {
             String url = urlBuilder.createNetwork();
-            log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with %s", url, createJson);
+            log.verbose(Logger.LogVerboseCategory.API,"POST to %s with %s", url, createJson);
             String response =
                     delegate.post(url, createJson, new ApacheHttpClientDelegate.BodyResponseHandler(), HTTP_CREATED);
             log.debug(response);
@@ -594,7 +603,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
             throws DockerAccessException {
         try {
             String url = urlBuilder.removeNetwork(networkId);
-            log.verbose(Logger.LogVerboseCategory.API,"DELETEing %s", url);
+            log.verbose(Logger.LogVerboseCategory.API,"DELETE %s", url);
             int status = delegate.delete(url, HTTP_OK, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
             return status == HTTP_OK || status == HTTP_NO_CONTENT;
         } catch (IOException e) {
@@ -612,7 +621,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
         try
         {
             String url = urlBuilder.createVolume();
-            log.verbose(Logger.LogVerboseCategory.API,"POSTing to %s with %s", url, createJson);
+            log.verbose(Logger.LogVerboseCategory.API,"POST to %s with %s", url, createJson);
             String response =
                     delegate.post(url,
                                   createJson,
@@ -634,7 +643,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
     public void removeVolume(String name) throws DockerAccessException {
         try {
             String url = urlBuilder.removeVolume(name);
-            log.verbose(Logger.LogVerboseCategory.API,"DELETEing %s", url);
+            log.verbose(Logger.LogVerboseCategory.API,"DELETE %s", url);
             delegate.delete(url, HTTP_NO_CONTENT, HTTP_NOT_FOUND);
         } catch (IOException e) {
             throw new DockerAccessException(e, "Unable to remove volume [%s]", name);
@@ -704,19 +713,26 @@ public class DockerAccessWithHcClient implements DockerAccess {
         }
     }
 
-    private String tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
+    private TemporaryImageHandler tagTemporaryImage(ImageName name, String registry) throws DockerAccessException {
         String targetImage = name.getFullName(registry);
-        if (!name.hasRegistry() && registry != null) {
-            if (hasImage(targetImage)) {
-                throw new DockerAccessException(
-                    String.format("Cannot temporarily tag %s with %s because target image already exists. " +
-                                  "Please remove this and retry.",
-                                  name.getFullName(), targetImage));
-            }
-            tag(name.getFullName(), targetImage, false);
-            return targetImage;
+        if (name.hasRegistry() || registry == null) {
+            return () ->
+                log.info("Temporary image tag skipped. Target image '%s' already has registry set or no registry is available",
+                    targetImage);
         }
-        return null;
+
+        String fullName = name.getFullName();
+        boolean alreadyHasImage = hasImage(targetImage);
+
+        if (alreadyHasImage) {
+            log.warn("Target image '%s' already exists. Tagging of '%s' will replace existing image",
+                targetImage, fullName);
+        }
+
+        tag(fullName, targetImage, false);
+        return alreadyHasImage ?
+            () -> log.info("Tagged image '%s' won't be removed after tagging as it already existed", targetImage) :
+            new RemovingTemporaryImageHandler(targetImage);
     }
 
     // ===========================================================================================================
@@ -774,5 +790,39 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
             return response.getFirstHeader("Api-Version") != null ? response.getFirstHeader("Api-Version").getValue() : API_VERSION;
         }
+    }
+
+    @FunctionalInterface
+    private interface TemporaryImageHandler {
+        void handle() throws DockerAccessException;
+
+        default void handle(@Nullable DockerAccessException interruptingError) throws DockerAccessException {
+            handle();
+
+            if (interruptingError == null) {
+                return;
+            }
+            throw interruptingError;
+        }
+    }
+
+    private final class RemovingTemporaryImageHandler implements TemporaryImageHandler {
+		private final String targetImage;
+
+		private RemovingTemporaryImageHandler(String targetImage) {
+            this.targetImage = targetImage;
+        }
+
+		@Override
+		public void handle() throws DockerAccessException {
+			boolean imageRemoved = removeImage(targetImage, true);
+			if (imageRemoved) {
+				return;
+			}
+			throw new DockerAccessException(
+				"Image %s could be pushed, but the temporary tag could not be removed",
+				targetImage
+			);
+		}
     }
 }
