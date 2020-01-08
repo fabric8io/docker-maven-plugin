@@ -29,6 +29,26 @@ jobs:
         paths:
         - ~/.m2
 
+  # Run integration tests
+  e2e-tests:
+    working_directory: ~/fabric8io/docker-maven-plugin
+    machine: true
+    steps:
+    - checkout
+    - restore_cache:
+        key: dmp-{{ checksum "pom.xml" }}
+    - run:
+        command: |
+          mvn clean install -DskipTests
+          PROJECT_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          cd it/
+          find . -type f -exec sed -i 's/0.29-SNAPSHOT/'"$PROJECT_VERSION"'/g' {} +
+          mvn clean install
+    - save_cache:
+        key: dmp-{{ checksum "pom.xml" }}
+        paths:
+        - ~/.m2
+
   sonar-pr:
     working_directory: ~/fabric8io/dmp-sonar-pr
     docker:
@@ -83,6 +103,7 @@ workflows:
           branches:
             only: dmp.fabric8.io
     - build
+    - e2e-tests
     - sonar-pr
     - sonar:
         filters:
