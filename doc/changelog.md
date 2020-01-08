@@ -19,6 +19,7 @@
   - Allow overriding of existing image in creation of temporary one with same tag before push ([#838](https://github.com/fabric8io/docker-maven-plugin/issues/838))
   - Pick up AWS credentials from ENV variables (#1310)
   - Fix accidentally disabled logging under certain conditions (#1291)
+  - When stopping containers, try harder to remove containers, even if one fails (#1251)
 
 * **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
