@@ -2,6 +2,8 @@ package io.fabric8.maven.docker.service;
 
 import com.google.gson.JsonObject;
 
+import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.config.StopMode;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
@@ -287,6 +289,23 @@ public class RunServiceTest {
         assertTrue(createdVolumes.contains(volumeConfigurations.get(0).getName()));
     }
 
+    @Test
+    public void testStopModeWithKill() throws DockerAccessException, ExecException {
+        new Expectations() {{
+            docker.killContainer(container);
+            log.debug(anyString); times = 0;
+            docker.removeContainer(container, false);
+            log.info(withSubstring("Killed"),
+                    anyString,
+                    withSubstring(" removed"),
+                    withSubstring(container.substring(0,12)));
+        }};
+
+        long start = System.currentTimeMillis();
+        runService.stopContainer(container, createImageConfigWithStopMode(StopMode.kill), false, false);
+        assertTrue("No wait", System.currentTimeMillis() - start < SHUTDOWN_WAIT);
+    }
+
     private ImageConfiguration createImageConfig(int wait, int kill) {
         return new ImageConfiguration.Builder()
                 .name("test_name")
@@ -297,6 +316,16 @@ public class RunServiceTest {
                                                  .kill(kill)
                                                  .build())
                                    .build())
+                .build();
+    }
+
+    private ImageConfiguration createImageConfigWithStopMode(StopMode stopMode) {
+        return new ImageConfiguration.Builder()
+                .name("test_name")
+                .alias("testAlias")
+                .runConfig(new RunImageConfiguration.Builder()
+                        .stopMode(StopMode.kill)
+                        .build())
                 .build();
     }
 

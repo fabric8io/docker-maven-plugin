@@ -144,7 +144,7 @@ If set to `true` this plugin won't remove any tags with `{plugin}:remove`. +
 | `docker.useColor`
 
 | *verbose*
-a| String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.
+| String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.
 
 The currently known groups are:
 
@@ -159,6 +159,17 @@ If you set an empty string (or only e.g. `-Ddocker.verbose`) then the "build" gr
 
 Default is that verbose logging is disabled.
 | `docker.verbose`
+
+| *buildArchiveOnly*
+| This option would skip the docker build step and would only create a build tar.
+
+`-Ddocker.buildArchiveOnly`=`/path/to/archive` would create the build tar with name `/path/to/archive` and then stop without actually building
+
+`-Ddocker.buildArchiveOnly`, `-Ddocker.buildArchiveOnly=true` would also skip building image, but leaving the archive in `target/` only without copying it to anywhere.
+
+`-Ddocker.buildArchiveOnly=false` which is default value would do the default docker build.
+
+| docker.buildArchiveOnly
 |===
 
 .Example

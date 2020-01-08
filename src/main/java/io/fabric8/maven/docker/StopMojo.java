@@ -1,15 +1,23 @@
 package io.fabric8.maven.docker;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
@@ -23,10 +31,6 @@ import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.NamePatternUtil;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -92,7 +96,7 @@ public class StopMojo extends AbstractDockerMojo {
             throws MojoExecutionException, IOException, ExecException {
 
         Collection<Network> networksToRemove = getNetworksToRemove(queryService, gavLabel);
-
+		List<DockerAccessException> thrownExceptions = new ArrayList<>();
         for (ImageConfiguration image : getResolvedImages()) {
 
             Collection<Container> existingContainers
@@ -100,21 +104,40 @@ public class StopMojo extends AbstractDockerMojo {
 
             for (Container container : existingContainers) {
                 if (shouldStopContainer(container, gavLabel)) {
-                    runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
+					try {
+						runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
+					} catch (DockerAccessException exc) {
+						thrownExceptions.add(exc);
+					}
                 }
             }
         }
-
         // If the mojo has a stopNamePattern, check to see if there are matching containers
         for (Container container : getContainersForMojo(queryService)) {
             if (shouldStopContainer(container, gavLabel)) {
-                runService.stopContainer(container.getId(),
-                        new ImageConfiguration.Builder().name(container.getImage()).build(),
-                        keepContainer, removeVolumes);
+            	try {
+	                runService.stopContainer(container.getId(),
+	                        new ImageConfiguration.Builder().name(container.getImage()).build(),
+	                        keepContainer, removeVolumes);
+            	} catch (DockerAccessException exc) {
+					thrownExceptions.add(exc);
+				}
             }
         }
 
-        runService.removeCustomNetworks(networksToRemove);
+		try {
+			runService.removeCustomNetworks(networksToRemove);
+		} catch (DockerAccessException exc) {
+			thrownExceptions.add(exc);
+		}
+
+		if (!thrownExceptions.isEmpty()) {
+			DockerAccessException exception = new DockerAccessException("At least one exception thrown during container removal.");
+			for (DockerAccessException dae : thrownExceptions) {
+				exception.addSuppressed(dae);
+			}
+			throw exception;
+		}
     }
 
     private Collection<Container> getContainersForPattern(QueryService queryService, Matcher imageNameMatcher,

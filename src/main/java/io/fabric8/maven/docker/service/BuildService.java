@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -60,14 +61,56 @@ public class BuildService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
+    public void buildImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext, File buildArchiveFile)
             throws DockerAccessException, MojoExecutionException {
 
         if (imagePullManager != null) {
             autoPullBaseImage(imageConfig, imagePullManager, buildContext);
         }
 
-        buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), addBuildArgs(buildContext));
+        buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), addBuildArgs(buildContext), buildArchiveFile);
+    }
+
+    /**
+     * Create docker archive for building image
+     *
+     * @param imageConfiguration image configuration
+     * @param buildContext docker build context
+     * @param archivePath build archive only flag, it can have values TRUE or FALSE and also
+     *                               it can hold path to archive where it might get copied over
+     * @return tarball for docker image
+     * @throws MojoExecutionException in case any exception comes during building tarball
+     */
+    public File buildArchive(ImageConfiguration imageConfiguration, BuildContext buildContext, String archivePath)
+            throws MojoExecutionException {
+        String imageName = imageConfiguration.getName();
+        ImageName.validate(imageName);
+        BuildImageConfiguration buildConfig = imageConfiguration.getBuildConfiguration();
+        MojoParameters params = buildContext.getMojoParameters();
+
+        if (buildConfig.getDockerArchive() != null) {
+            return buildConfig.getAbsoluteDockerTarPath(params);
+        }
+        long time = System.currentTimeMillis();
+
+        File dockerArchive = archiveService.createArchive(imageName, buildConfig, params, log);
+        log.info("%s: Created %s in %s", imageConfiguration.getDescription(), dockerArchive.getName(), EnvUtil.formatDurationTill(time));
+
+        // Copy created tarball to directory if specified
+        try {
+            copyDockerArchive(imageConfiguration, dockerArchive, archivePath);
+        } catch (IOException exception) {
+            throw new MojoExecutionException("Error while copying created tar to specified buildArchive path: " + archivePath,
+                    exception);
+        }
+        return dockerArchive;
+    }
+
+    public void copyDockerArchive(ImageConfiguration imageConfiguration, File dockerArchive, String archivePath) throws IOException {
+        if (archivePath != null && !archivePath.isEmpty()) {
+            Files.copy(dockerArchive.toPath(), new File(archivePath, dockerArchive.getName()).toPath());
+            log.info("%s: Copied created tarball to %s", imageConfiguration.getDescription(), archivePath);
+        }
     }
 
     public void tagImage(String imageName, ImageConfiguration imageConfig) throws DockerAccessException {
@@ -92,11 +135,11 @@ public class BuildService {
      * @param imageConfig the image configuration
      * @param params mojo params for the project
      * @param noCache if not null, dictate the caching behaviour. Otherwise its taken from the build configuration
-     * @param buildArgs
+     * @param buildArgs docker build args
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    protected void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs)
+    protected void buildImage(ImageConfiguration imageConfig, MojoParameters params, boolean noCache, Map<String, String> buildArgs, File dockerArchive)
             throws DockerAccessException, MojoExecutionException {
 
         String imageName = imageConfig.getName();
@@ -127,11 +170,6 @@ public class BuildService {
             return;
         }
 
-        long time = System.currentTimeMillis();
-
-        File dockerArchive = archiveService.createArchive(imageName, buildConfig, params, log);
-        log.info("%s: Created %s in %s", imageConfig.getDescription(), dockerArchive.getName(), EnvUtil.formatDurationTill(time));
-
         Map<String, String> mergedBuildMap = prepareBuildArgs(buildArgs, buildConfig);
 
         // auto is now supported by docker, consider switching?
@@ -141,6 +179,7 @@ public class BuildService {
                         .forceRemove(cleanupMode.isRemove())
                         .noCache(noCache)
                         .cacheFrom(buildConfig.getCacheFrom())
+                        .network(buildConfig.getNetwork())
                         .buildArgs(mergedBuildMap);
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);

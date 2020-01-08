@@ -1,16 +1,14 @@
 package io.fabric8.maven.docker.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import com.google.gson.JsonObject;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +36,6 @@ import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
 import com.google.common.net.UrlEscapers;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
@@ -51,12 +48,7 @@ import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
  */
 public class AuthConfigFactory {
 
-    // Properties for specifying username, password (can be encrypted), email and authtoken (not used yet)
-    // + whether to check for OpenShift authentication
-    public static final String AUTH_USERNAME = "username";
-    public static final String AUTH_PASSWORD = "password";
-    public static final String AUTH_EMAIL = "email";
-    public static final String AUTH_AUTHTOKEN = "authToken";
+    // Whether to check for OpenShift authentication
     private static final String AUTH_USE_OPENSHIFT_AUTH = "useOpenShiftAuth";
 
     static final String DOCKER_LOGIN_DEFAULT_REGISTRY = "https://index.docker.io/v1/";
@@ -235,6 +227,12 @@ public class AuthConfigFactory {
 
         // check EC2 instance role if registry is ECR
         if (EcrExtendedAuth.isAwsRegistry(registry)) {
+            ret = getAuthConfigFromAwsEnvironmentVariables();
+            if (ret != null) {
+                log.debug("AuthConfig: AWS credentials from ENV variables");
+                return ret;
+            }
+
             try {
                 ret = getAuthConfigFromEC2InstanceRole();
             } catch (ConnectTimeoutException ex) {
@@ -250,7 +248,7 @@ public class AuthConfigFactory {
             }
 
             try {
-                ret = getAuthConfigFromECSTaskRole();
+                ret = getAuthConfigFromTaskRole();
             } catch (ConnectTimeoutException ex) {
                 log.debug("Connection timeout while retrieving ECS meta-data, likely not an ECS instance (%s)",
                         ex.getMessage());
@@ -265,6 +263,24 @@ public class AuthConfigFactory {
 
         // No authentication found
         return null;
+    }
+
+    /**
+     * Try using the AWS credentials provided via ENV variables.
+     * See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+     */
+    private AuthConfig getAuthConfigFromAwsEnvironmentVariables() {
+        String accessKeyId = System.getenv("AWS_ACCESS_KEY_ID");
+        if (accessKeyId == null) {
+            log.debug("System environment not set for variable AWS_ACCESS_KEY_ID, no AWS credentials found");
+            return null;
+        }
+        String secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY");
+        if (secretAccessKey == null) {
+            log.warn("System environment set for variable AWS_ACCESS_KEY_ID, but NOT for variable AWS_SECRET_ACCESS_KEY!");
+            return null;
+        }
+        return new AuthConfig(accessKeyId, secretAccessKey, "none", System.getenv("AWS_SESSION_TOKEN"));
     }
 
     // ===================================================================================================
@@ -303,87 +319,100 @@ public class AuthConfigFactory {
             request = new HttpGet("http://169.254.169.254/latest/meta-data/iam/security-credentials/"
                     + UrlEscapers.urlPathSegmentEscaper().escape(instanceRole));
             request.setConfig(conf);
-            try (CloseableHttpResponse response = client.execute(request)) {
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    log.debug("No security credential found, return code was %d",
-                            response.getStatusLine().getStatusCode());
-                    // no instance role found
-                    return null;
-                }
+            return readAwsCredentials(client, request);
+        }
+    }
 
-                // read instance role
-                try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
-                    JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
+    // if the local credentials don't contain user and password & is not a EC2 instance,
+    // use ECS|Fargate Task instance role credentials
+    private AuthConfig getAuthConfigFromTaskRole() throws IOException {
+        log.debug("No user and password set for ECR, checking ECS Task role");
+        URI uri = getMetadataEndpointForCredentials();
+        if (uri == null) {
+            return null;
+        }
+        // get temporary credentials
+        log.debug("Getting temporary security credentials from: %s", uri);
+        try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
+            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
+                    .setSocketTimeout(1000).build();
+            HttpGet request = new HttpGet(uri);
+            request.setConfig(conf);
+            return readAwsCredentials(client, request);
+        }
+    }
 
-                    String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
-                    String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
-                    String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
+    private AuthConfig readAwsCredentials(CloseableHttpClient client, HttpGet request) throws IOException {
+        try (CloseableHttpResponse response = client.execute(request)) {
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                log.debug("No security credential found, return code was %d",
+                        response.getStatusLine().getStatusCode());
+                // no instance role found
+                return null;
+            }
 
-                    log.debug("Received temporary access key %s...", user.substring(0, 8));
-                    return new AuthConfig(user, password, "none", token);
-                }
+            // read instance role
+            try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
+                JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
+
+                String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
+                String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
+                String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
+
+                log.debug("Received temporary access key %s...", user.substring(0, 8));
+                return new AuthConfig(user, password, "none", token);
             }
         }
     }
 
-    // if the local credentials don't contain user and password & is not a EC2 instance, use ECS Task instance
-    // role credentials
-    private AuthConfig getAuthConfigFromECSTaskRole() throws IOException {
-        log.debug("No user and password set for ECR, checking ECS Task role");
-        try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
-            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
-                    .setSocketTimeout(1000).build();
+    private URI getMetadataEndpointForCredentials() {
+        // get ECS task role - if available
+        String awsContainerCredentialsUri = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
+        if (awsContainerCredentialsUri == null) {
+            log.debug("System environment not set for variable AWS_CONTAINER_CREDENTIALS_RELATIVE_URI, no task role found");
+            return null;
+        }
+        if (awsContainerCredentialsUri.charAt(0) != '/') {
+            awsContainerCredentialsUri = "/" + awsContainerCredentialsUri;
+        }
 
-            // get ECS task role - if available
-            String awsContainerCredentialsUri = System.getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI");
-            if (awsContainerCredentialsUri == null) {
-                log.debug("System environment not set for variable AWS_CONTAINER_CREDENTIALS_RELATIVE_URI, no task role found");
-                return null;
-            }
+        String ecsMetadataEndpoint = System.getenv("ECS_METADATA_ENDPOINT");
+        if (ecsMetadataEndpoint == null) {
+            ecsMetadataEndpoint = "http://169.254.170.2";
+        }
 
-            log.debug("Getting temporary security credentials from: %s", awsContainerCredentialsUri);
-
-            // get temporary credentials
-            HttpGet request = new HttpGet("http://169.254.170.2/" + UrlEscapers.urlPathSegmentEscaper().escape(awsContainerCredentialsUri));
-            request.setConfig(conf);
-            try (CloseableHttpResponse response = client.execute(request)) {
-                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                    log.debug("No security credential found, return code was %d",
-                            response.getStatusLine().getStatusCode());
-                    // no task role found
-                    return null;
-                }
-
-                // read task role
-                try (Reader r = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8)) {
-                    JsonObject securityCredentials = new Gson().fromJson(r, JsonObject.class);
-
-                    String user = securityCredentials.getAsJsonPrimitive("AccessKeyId").getAsString();
-                    String password = securityCredentials.getAsJsonPrimitive("SecretAccessKey").getAsString();
-                    String token = securityCredentials.getAsJsonPrimitive("Token").getAsString();
-
-                    log.debug("Received temporary access key %s...", user.substring(0, 8));
-                    return new AuthConfig(user, password, "none", token);
-                }
-            }
+        try {
+            return new URI(ecsMetadataEndpoint + awsContainerCredentialsUri);
+        } catch (URISyntaxException e) {
+            log.warn("Failed to construct path to ECS metadata endpoint for credentials", e);
+            return null;
         }
     }
 
     private AuthConfig getAuthConfigFromSystemProperties(LookupMode lookupMode) throws MojoExecutionException {
         Properties props = System.getProperties();
-        String userKey = lookupMode.asSysProperty(AUTH_USERNAME);
-        String passwordKey = lookupMode.asSysProperty(AUTH_PASSWORD);
+        String userKey = lookupMode.asSysProperty(AuthConfig.AUTH_USERNAME);
+        String passwordKey = lookupMode.asSysProperty(AuthConfig.AUTH_PASSWORD);
         if (props.containsKey(userKey)) {
             if (!props.containsKey(passwordKey)) {
                 throw new MojoExecutionException("No " + passwordKey + " provided for username " + props.getProperty(userKey));
             }
             return new AuthConfig(props.getProperty(userKey),
                                   decrypt(props.getProperty(passwordKey)),
-                                  props.getProperty(lookupMode.asSysProperty(AUTH_EMAIL)),
-                                  props.getProperty(lookupMode.asSysProperty(AUTH_AUTHTOKEN)));
+                                  props.getProperty(lookupMode.asSysProperty(AuthConfig.AUTH_EMAIL)),
+                                  getAuthProperty(props, lookupMode));
         } else {
             return null;
         }
+    }
+
+    private String getAuthProperty(Properties props, LookupMode lookupMode) {
+        String authProp = props.getProperty(lookupMode.asSysProperty(AuthConfig.AUTH_AUTH));
+        if (authProp != null) {
+            return authProp;
+        }
+        // Fallback is deprecated AUTH_AUTHTOKEN property
+        return props.getProperty(lookupMode.asSysProperty("authToken"));
     }
 
     private AuthConfig getAuthConfigFromOpenShiftConfig(LookupMode lookupMode, Map authConfigMap) throws MojoExecutionException {
@@ -412,12 +441,12 @@ public class AuthConfigFactory {
     private AuthConfig getAuthConfigFromPluginConfiguration(LookupMode lookupMode, Map authConfig) throws MojoExecutionException {
         Map mapToCheck = getAuthConfigMapToCheck(lookupMode,authConfig);
 
-        if (mapToCheck != null && mapToCheck.containsKey(AUTH_USERNAME)) {
-            if (!mapToCheck.containsKey(AUTH_PASSWORD)) {
+        if (mapToCheck != null && mapToCheck.containsKey(AuthConfig.AUTH_USERNAME)) {
+            if (!mapToCheck.containsKey(AuthConfig.AUTH_PASSWORD)) {
                 throw new MojoExecutionException("No 'password' given while using <authConfig> in configuration for mode " + lookupMode);
             }
             Map<String, String> cloneConfig = new HashMap<>(mapToCheck);
-            cloneConfig.put(AUTH_PASSWORD, decrypt(cloneConfig.get(AUTH_PASSWORD)));
+            cloneConfig.put(AuthConfig.AUTH_PASSWORD, decrypt(cloneConfig.get(AuthConfig.AUTH_PASSWORD)));
             return new AuthConfig(cloneConfig);
         } else {
             return null;
@@ -463,20 +492,20 @@ public class AuthConfigFactory {
         }
 
         if (dockerConfig.has("auths")) {
-            return extractAuthConfigFromAuths(registryToLookup, dockerConfig.getAsJsonObject("auths"));
+            return extractAuthConfigFromDockerConfigAuths(registryToLookup, dockerConfig.getAsJsonObject("auths"));
         }
 
         return null;
     }
 
-    private AuthConfig extractAuthConfigFromAuths(String registryToLookup, JsonObject auths) {
+    private AuthConfig extractAuthConfigFromDockerConfigAuths(String registryToLookup, JsonObject auths) {
         JsonObject credentials = getCredentialsNode(auths,registryToLookup);
         if (credentials == null || !credentials.has("auth")) {
             return null;
         }
         String auth = credentials.get("auth").getAsString();
         String identityToken = credentials.has("identitytoken") ? credentials.get("identitytoken").getAsString() : null;
-        String email = credentials.has(AUTH_EMAIL) && !credentials.get(AUTH_EMAIL).isJsonNull() ? credentials.get(AUTH_EMAIL).getAsString() : null;
+        String email = credentials.has(AuthConfig.AUTH_EMAIL) && !credentials.get(AuthConfig.AUTH_EMAIL).isJsonNull() ? credentials.get(AuthConfig.AUTH_EMAIL).getAsString() : null;
         return new AuthConfig(auth, email, identityToken);
     }
 
@@ -613,8 +642,8 @@ public class AuthConfigFactory {
         return new AuthConfig(
                 server.getUsername(),
                 decrypt(server.getPassword()),
-                extractFromServerConfiguration(server.getConfiguration(), AUTH_EMAIL),
-                extractFromServerConfiguration(server.getConfiguration(), "auth")
+                extractFromServerConfiguration(server.getConfiguration(), AuthConfig.AUTH_EMAIL),
+                extractFromServerConfiguration(server.getConfiguration(), AuthConfig.AUTH_AUTH)
         );
     }
 

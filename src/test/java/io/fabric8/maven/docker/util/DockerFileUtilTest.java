@@ -59,6 +59,27 @@ public class DockerFileUtilTest {
         assertEquals(false, fromClauses.hasNext());
     }
 
+    @Test
+    public void testMultiStageNamed() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_named_build_stages");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
+    }
+
+    @Test
+    public void testMultiStageNamedWithDuplicates() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_named_redundant_build_stages");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("centos", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
+
+    }
+
     private File copyToTempDir(String resource) throws IOException {
         File dir = Files.createTempDirectory("d-m-p").toFile();
         File ret = new File(dir, "Dockerfile");

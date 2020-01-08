@@ -64,8 +64,7 @@ public class LogConfiguration implements Serializable {
      * @return
      */
     public boolean isActivated() {
-        return enabled == Boolean.TRUE ||
-                (enabled != Boolean.FALSE && !isBlank());
+        return enabled != null ? enabled : !isBlank();
     }
 
     /**

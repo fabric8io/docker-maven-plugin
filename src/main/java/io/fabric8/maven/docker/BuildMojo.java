@@ -42,6 +42,12 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     protected String name;
 
     /**
+     * Skip Sending created tarball to docker daemon
+     */
+    @Parameter(property = "docker.buildArchiveOnly", defaultValue = "false")
+    protected String buildArchiveOnly;
+
+    /**
      * Skip building tags
      */
     @Parameter(property = "docker.skip.tag", defaultValue = "false")
@@ -71,7 +77,10 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), autoPull);
         BuildService buildService = hub.getBuildService();
 
-        buildService.buildImage(imageConfig, pullManager, buildContext);
+        File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
+        if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
+            buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
+        }
         if (!skipTag) {
             buildService.tagImage(imageConfig.getName(), imageConfig);
         }
@@ -83,6 +92,27 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     protected Date getReferenceDate() {
         return new Date();
     }
+
+    private String resolveBuildArchiveParameter() {
+        if (buildArchiveOnly != null && !buildArchiveOnly.isEmpty()) {
+            if (!(buildArchiveOnly.equalsIgnoreCase("false") ||
+                buildArchiveOnly.equalsIgnoreCase("true"))) {
+                return buildArchiveOnly;
+            }
+        }
+        return null;
+    }
+
+    private boolean shallBuildArchiveOnly() {
+        if (buildArchiveOnly != null && !buildArchiveOnly.isEmpty()) {
+            if (buildArchiveOnly.equalsIgnoreCase("false") ||
+                    buildArchiveOnly.equalsIgnoreCase("true")) {
+                return Boolean.parseBoolean(buildArchiveOnly);
+            }
+        }
+        return false;
+    }
+
     private String determinePullPolicy(BuildImageConfiguration buildConfig) {
         return buildConfig != null && buildConfig.getImagePullPolicy() != null ? buildConfig.getImagePullPolicy() : imagePullPolicy;
     }

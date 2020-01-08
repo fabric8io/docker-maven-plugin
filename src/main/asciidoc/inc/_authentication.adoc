@@ -184,10 +184,10 @@ Note that for an ECR repository with URI `123456789012.dkr.ecr.eu-west-1.amazona
 You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
 In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
-To do so, either specify the `docker.authToken` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
+To do so, either specify the `docker.auth` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
 
-In case you are running on an EC2 instance OR ECS with fargate deployment (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true") that has an appropriate IAM role assigned
-(e.g. a role that grants the AWS built-in policy _AmazonEC2ContainerRegistryPowerUser_)
-authentication information doesn't need to be provided at all. Instead the instance
-meta-data service or task metadata endpoint in case of ECS is queried for temporary access credentials supplied by the
-assigned role.
+d-m-p will attempt to read AWS credentials from some well-known spots in case there is no explicit configuration:
+* it will pick up ENV variables link:https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html[as documented for the AWS CLI]
+* it will pick up temporary credentials of link:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[the IAM role of an EC2 instance]
+* it will pick up temporary credentials of link:https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html[the IAM role of a fargate task (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true")]
+If any of these authentication information is accessible, it will be used.

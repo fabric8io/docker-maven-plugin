@@ -1,0 +1,12 @@
+# Dockerfile with multi-stage builds with named stages
+FROM fabric8/s2i-java as BUILD
+
+RUN ls -la /
+
+FROM BUILD as DEVELOPMENT
+
+RUN ls -la /
+
+FROM BUILD AS DEPOYLABLE
+
+RUN ls -la /
