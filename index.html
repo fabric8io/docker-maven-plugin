@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.31.0,</span>
-<span id="revdate">2019-08-10</span>
+<span id="revnumber">version 0.32.0,</span>
+<span id="revdate">2020-01-08</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -852,7 +852,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.31.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.32.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1020,6 +1020,26 @@ be specified by the certPath or machine configuration, or by the
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.autoPull</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildArchiveOnly</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Skip the actual Docker image build and only create the archive holding the Dockerfile and build context. The following values are supported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>/path/to/archive</code> : Create the build tar archive as file with name <code>/path/to/archive</code> and then stop without doing the actual image build</p>
+</li>
+<li>
+<p><code>true</code> (or an empty value) : Skip building the image, but don&#8217;t copy the generated build archive.</p>
+</li>
+<li>
+<p><code>false</code> : Build the image. This is the default behaviour.</p>
+</li>
+</ul>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.buildArchiveOnly</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>certPath</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in <code>~/.docker/</code>. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable <code>DOCKER_CERT_PATH</code> and then as last resort <code>~/.docker/</code>. The keys in this are expected with it standard names <code>ca.pem</code>, <code>cert.pem</code> and <code>key.pem</code>. Please refer to the <a href="https://docs.docker.com/articles/https">Docker documentation</a> for more information about SSL security with Docker.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.certPath</code></p></td>
@@ -1165,34 +1185,16 @@ If set to <code>true</code> this plugin won&#8217;t remove any tags with <code>d
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
-<td class="tableblock halign-left valign-top"><div><div class="paragraph">
-<p>String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.</p>
-</div>
-<div class="paragraph">
-<p>The currently known groups are:</p>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">build</dt>
-<dd>
-<p>Print out Docker build instructions</p>
-</dd>
-<dt class="hdlist1">api</dt>
-<dd>
-<p>API calls to the Docker daemons are logged</p>
-</dd>
-<dt class="hdlist1">all</dt>
-<dd>
-<p>All levels are enabled</p>
-</dd>
-</dl>
-</div>
-<div class="paragraph">
-<p>If you set an empty string (or only e.g. <code>-Ddocker.verbose</code>) then the "build" group is enabled. You can also use "true" / "false" to switch on / off verbose logging.</p>
-</div>
-<div class="paragraph">
-<p>Default is that verbose logging is disabled.</p>
-</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.</p>
+<p class="tableblock">The currently known groups are:</p>
+<p class="tableblock">build::
+ Print out Docker build instructions
+api::
+ API calls to the Docker daemons are logged
+all::
+ All levels are enabled</p>
+<p class="tableblock">If you set an empty string (or only e.g. <code>-Ddocker.verbose</code>) then the "build" group is enabled. You can also use "true" / "false" to switch on / off verbose logging.</p>
+<p class="tableblock">Default is that verbose logging is disabled.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.verbose</code></p></td>
 </tr>
 </tbody>
@@ -1350,6 +1352,29 @@ to find containers to remove rather than just using the associated container nam
       <span class="tag">&lt;run&gt;</span>....<span class="tag">&lt;/run&gt;</span>
       <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span>
     <span class="tag">&lt;/image&gt;</span>
+  <span class="tag">&lt;/images&gt;</span>
+<span class="tag">&lt;/configuration&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When using Maven profiles, it can be useful to override settings
+of a particular image. To facilitate this, the element <code>&lt;imagesMap&gt;</code>
+can be used alongside the <code>&lt;images&gt;</code> element. Each entry in <code>&lt;imagesMap&gt;</code>
+translates to an image configuration where the <strong>alias</strong> of the image
+is set to the map entry&#8217;s <strong>key</strong>. The examples above and below produce
+identical image configurations.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;configuration&gt;</span>
+  ....
+  <span class="tag">&lt;imagesMap&gt;</span>
+    <span class="tag">&lt;service&gt;</span>
+      <span class="tag">&lt;name&gt;</span>%g/docker-demo:0.1<span class="tag">&lt;/name&gt;</span>
+      <span class="tag">&lt;run&gt;</span>....<span class="tag">&lt;/run&gt;</span>
+      <span class="tag">&lt;build&gt;</span>....<span class="tag">&lt;/build&gt;</span>
+    <span class="tag">&lt;/service&gt;</span>
   <span class="tag">&lt;/images&gt;</span>
 <span class="tag">&lt;/configuration&gt;</span></code></pre>
 </div>
@@ -2334,7 +2359,8 @@ assembly configuration</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="config-image-build-assembly-user"></a> <strong>user</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User and/or group under which the files should be added. The user must already exist in the base image.</p>
 <p class="tableblock">It has the general format <code>user[:group[:run-user]]</code>. The user and group can be given either as numeric user- and group-id or as names. The group id is optional.</p>
-<p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.</p>
+<p class="tableblock">If a third part is given, then the build changes to user <code>root</code> before changing the ownerships, changes the ownerships and then change to user <code>run-user</code> which is then used for the final command to execute. This feature might be needed, if the base image already changed the user (e.g. to 'jboss') so that a <code>chown</code> from root to this user would fail.
+(<em><strong>This third user part has been marked as deprecated and will not be supported in future versions of this plugin.</strong></em>)</p>
 <p class="tableblock">For example, the image <code>jboss/wildfly</code> use a "jboss" user under which all commands are executed. Adding files in Docker always happens under the UID root. These files can only be changed to "jboss" is the <code>chown</code> command is executed as root. For the following commands to be run again as "jboss" (like the final <code>standalone.sh</code>), the plugin switches back to user <code>jboss</code> (this is this "run-user") after changing the file ownership. For this example a specification of
 <code>jboss:jboss:jboss</code> would be required.</p></td>
 </tr>
@@ -2518,11 +2544,11 @@ possible to change the name of the final build artifact with the following:</p>
 <div class="sect3">
 <h4 id="misc-startup">5.1.3. Startup Arguments</h4>
 <div class="paragraph">
-<p>Using <code>entryPoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
+<p>Using <code>entrypoint</code> and <code>cmd</code> it is possible to specify the <a href="https://docs.docker.com/reference/builder/#entrypoint">entry point</a>
 or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a container.</p>
 </div>
 <div class="paragraph">
-<p>The difference is, that an <code>entrypoint</code> is the command that always be executed, with the <code>cmd</code> as argument. If no <code>entryPoint</code> is provided, it defaults to <code>/bin/sh -c</code> so any <code>cmd</code> given is executed with a shell. The arguments given to <code>docker run</code> are always given as arguments to the
+<p>The difference is, that an <code>entrypoint</code> is the command that always be executed, with the <code>cmd</code> as argument. If no <code>entrypoint</code> is provided, it defaults to <code>/bin/sh -c</code> so any <code>cmd</code> given is executed with a shell. The arguments given to <code>docker run</code> are always given as arguments to the
 <code>entrypoint</code>, overriding any given <code>cmd</code> option. On the other hand if no extra arguments are given to <code>docker run</code> the default <code>cmd</code> is used as argument to <code>entrypoint</code>.</p>
 </div>
 <div class="sidebarblock">
@@ -2564,10 +2590,10 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entrypoint&gt;</span>
    <span class="comment">&lt;!-- shell form  --&gt;</span>
    <span class="tag">&lt;shell&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/shell&gt;</span>
-<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2576,14 +2602,14 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entrypoint&gt;</span>
    <span class="comment">&lt;!-- exec form  --&gt;</span>
    <span class="tag">&lt;exec&gt;</span>
      <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
      <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
      <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
    <span class="tag">&lt;/exec&gt;</span>
-<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2593,7 +2619,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- shell form  --&gt;</span>
-<span class="tag">&lt;entryPoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+<span class="tag">&lt;entrypoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2602,12 +2628,12 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entrypoint&gt;</span>
   <span class="comment">&lt;!-- exec form  --&gt;</span>
   <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
   <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
   <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
-<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
+<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -2710,7 +2736,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <div class="sect2">
 <h3 id="docker:start">5.2. <strong>docker:start</strong></h3>
 <div id="start-overview" class="paragraph">
-<p>This goal creates and starts docker containers. This goals evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images).</p>
+<p>This goal creates and starts docker containers. This goal evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images).</p>
 </div>
 <div class="paragraph">
 <p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis). <code>docker:run</code> is an alias for <code>docker:start</code> with <code>docker.follow</code> enabled.</p>
@@ -2836,7 +2862,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entrypoint</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Entry point for the container. See &lt;&lt;misc-startup, Startup Arguments] for details.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Entry point for the container. See <a href="#misc-startup">Startup Arguments</a> for details.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#misc-env"><strong>env</strong></a></p></td>
@@ -2937,6 +2963,10 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code> disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>stopMode</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specifies how to stop a running container. It supports the modes <code>graceful</code> and <code>kill</code> as values, with <code>graceful</code> being the default.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tmpfs</strong></p></td>
@@ -4208,7 +4238,7 @@ properties can the behaviour of this goal:</p>
 <div class="sect2">
 <h3 id="docker:source">5.8. <strong>docker:source</strong></h3>
 <div class="paragraph">
-<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build&gt; ">[docker:build&gt; ]</a>.</p>
+<p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build"><strong>docker:build</strong></a>.</p>
 </div>
 <div class="paragraph">
 <p>By default, only the first image configuration is used for creating the source archive.
@@ -5683,14 +5713,14 @@ The <code>docker:push</code> and <code>docker:pull</code> goals automatically ex
 <p>You can use any IAM access key with the necessary permissions in any of the locations mentioned above except <code>~/.docker/config.json</code>.
 Use the IAM <strong>Access key ID</strong> as the username and the <strong>Secret access key</strong> as the password.
 In case you&#8217;re using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the <strong>security token</strong> as well.
-To do so, either specify the <code>docker.authToken</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
+To do so, either specify the <code>docker.auth</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
 </div>
 <div class="paragraph">
-<p>In case you are running on an EC2 instance OR ECS with fargate deployment (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true") that has an appropriate IAM role assigned
-(e.g. a role that grants the AWS built-in policy <em>AmazonEC2ContainerRegistryPowerUser</em>)
-authentication information doesn&#8217;t need to be provided at all. Instead the instance
-meta-data service or task metadata endpoint in case of ECS is queried for temporary access credentials supplied by the
-assigned role.</p>
+<p>d-m-p will attempt to read AWS credentials from some well-known spots in case there is no explicit configuration:
+* it will pick up ENV variables <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html">as documented for the AWS CLI</a>
+* it will pick up temporary credentials of <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">the IAM role of an EC2 instance</a>
+* it will pick up temporary credentials of <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html">the IAM role of a fargate task (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true")</a>
+If any of these authentication information is accessible, it will be used.</p>
 </div>
 </div>
 </div>
@@ -5744,7 +5774,7 @@ with a Microservice and a Database.</p>
 has the release history of this plugin.</p>
 </li>
 <li>
-<p><a href="https://github.com/fabric8io/docker-maven-plugin/blob/master/doc/contributing.md">Contributing</a>
+<p><a href="https://github.com/fabric8io/docker-maven-plugin/blob/master/CONTRIBUTING.md">Contributing</a>
 explains how you can contribute to this project. Pull requests are highly appreciated!</p>
 </li>
 </ul>
@@ -5754,8 +5784,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.31.0<br>
-Last updated 2019-08-10 12:23:01 UTC
+Version 0.32.0<br>
+Last updated 2020-01-08 22:25:18 UTC
 </div>
 </div>
 </body>
