@@ -20,6 +20,7 @@
   - Pick up AWS credentials from ENV variables (#1310)
   - Fix accidentally disabled logging under certain conditions (#1291)
   - When stopping containers, try harder to remove containers, even if one fails (#1251)
+  - Added integration tests (#1209)
 
 * **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
