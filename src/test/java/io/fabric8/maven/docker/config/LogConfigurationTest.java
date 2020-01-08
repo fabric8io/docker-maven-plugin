@@ -52,29 +52,33 @@ public class LogConfigurationTest {
 
     @Test
     public void testEnabled() {
-        LogConfiguration cfg = new LogConfiguration.Builder()
-                .enabled(true)
+        for (Boolean enabled : new Boolean[]{Boolean.TRUE, new Boolean(true)}) {
+            LogConfiguration cfg = new LogConfiguration.Builder()
+                .enabled(enabled)
                 .build();
-        assertTrue(cfg.isEnabled());
-        assertTrue(cfg.isActivated());
+            assertTrue(cfg.isEnabled());
+            assertTrue(cfg.isActivated());
 
-        cfg = new LogConfiguration.Builder()
+            cfg = new LogConfiguration.Builder()
                 .enabled(true)
                 .color("red")
                 .build();
-        assertTrue(cfg.isEnabled());
-        assertTrue(cfg.isActivated());
-        assertEquals("red", cfg.getColor());
+            assertTrue(cfg.isEnabled());
+            assertTrue(cfg.isActivated());
+            assertEquals("red", cfg.getColor());
+        }
     }
 
     @Test
     public void testDisabled() {
-        LogConfiguration cfg = new LogConfiguration.Builder()
+        for (Boolean disabled : new Boolean[]{Boolean.FALSE, new Boolean(false)}) {
+            LogConfiguration cfg = new LogConfiguration.Builder()
                 .color("red")
-                .enabled(false)
+                .enabled(disabled)
                 .build();
-        assertFalse(cfg.isEnabled());
-        assertFalse(cfg.isActivated());
-        assertEquals("red", cfg.getColor());
+            assertFalse(cfg.isEnabled());
+            assertFalse(cfg.isActivated());
+            assertEquals("red", cfg.getColor());
+        }
     }
 }
