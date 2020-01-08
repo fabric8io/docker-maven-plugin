@@ -1,7 +1,7 @@
 # ChangeLog
 
 * **0.31-SNAPSHOT**
-  - Support building dockerFile without pushing it to docker server #1197
+  - Support building dockerFile without pushing it to docker server (#1197)
   - Update to jnr-unixsocket 0.23
   - Add null check for null instance in config.json for email (#1262)
   - Allow merging of image configurations using <imagesMap> ([#360](https://github.com/fabric8io/docker-maven-plugin/issues/360))
@@ -18,6 +18,7 @@
   - Deprecated "authToken" for ECR authentication in favor of "auth" (#1286)
   - Allow overriding of existing image in creation of temporary one with same tag before push ([#838](https://github.com/fabric8io/docker-maven-plugin/issues/838))
   - Pick up AWS credentials from ENV variables (#1310)
+  - Fix accidentally disabled logging under certain conditions (#1291)
 
 * **0.31.0** (2019-08-10)
   - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
