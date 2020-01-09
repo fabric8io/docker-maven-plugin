@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.32-SNAPSHOT**
+  - Update to jnr-unixsocket 0.25 to solve concurrency issues (hopefully fixing #552)
+
 * **0.32.0** (2020-01-08)
   - Support building dockerFile without pushing it to docker server ([#1197](https://github.com/fabric8io/docker-maven-plugin/issues/1197))
   - Update to jnr-unixsocket 0.23
