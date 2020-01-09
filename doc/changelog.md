@@ -4,7 +4,7 @@
   - Support building dockerFile without pushing it to docker server ([#1197](https://github.com/fabric8io/docker-maven-plugin/issues/1197))
   - Update to jnr-unixsocket 0.23
   - Add null check for null instance in config.json for email ([#1262](https://github.com/fabric8io/docker-maven-plugin/issues/1262))
-  - Allow merging of image configurations using <imagesMap> ([#360](https://github.com/fabric8io/docker-maven-plugin/issues/360))
+  - Allow merging of image configurations using `<imagesMap>` ([#360](https://github.com/fabric8io/docker-maven-plugin/issues/360))
   - Update to joda-time 2.10.4 ([#706](https://github.com/fabric8io/docker-maven-plugin/issues/706))
   - Add docker:build support for 'network' option ([#1030](https://github.com/fabric8io/docker-maven-plugin/issues/1030))
   - Avoiding chown to reduce the image size ([#544](https://github.com/fabric8io/docker-maven-plugin/issues/544))
