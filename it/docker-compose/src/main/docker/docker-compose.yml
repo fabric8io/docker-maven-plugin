@@ -1,0 +1,19 @@
+version: "2"
+services:
+  jolokia-war:
+    labels:
+      "dmp.type": "example"
+      "dmp.value": "100$$"
+  tomcat:
+    image: "fabric8/tomcat-7:latest"
+    ports:
+      - "8080:8080"
+    environment:
+      CATALINA_OPTS: "-Xmx32m"
+      AB_OFF: "1"
+    ulimits:
+      memlock:
+        hard: 2048
+        soft: 1024
+    volumes_from:
+      - jolokia-war

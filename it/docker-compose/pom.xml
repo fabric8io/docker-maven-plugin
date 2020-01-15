@@ -1,0 +1,109 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Integration test demo which makes some small tests for Jolokia
+
+  Call it with: 'mvn verify'
+
+  The test does the following:
+
+  * Creates a Docker data container with 'jolokia.war' and 'jolokia-it.war' as described in
+    assembly descriptor src/main/docker-assembly.xml
+  * Starts (and optionally pull) the jolokia/tomcat-7.0 container with the data container linked to it
+  * Waits until Tomcat is up (i.e. until it is reachable via an HTTP request)
+  * Runs an integration test via maven-failsafe-plugin, using rest-assured for accessing the deployed app.
+  * Prints out some version information about the contaner running (in order prove that's not a fake ;-)
+  * Stops and removes the containers.
+
+  -->
+
+  <parent>
+    <groupId>io.fabric8.dmp.samples</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.29-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-sample-docker-compose</artifactId>
+  <version>0.29-SNAPSHOT</version>
+
+  <url>http://www.jolokia.org</url>
+
+  <properties>
+    <server.version>7</server.version>
+    <server.name>tomcat</server.name>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jolokia</groupId>
+      <artifactId>jolokia-war</artifactId>
+      <version>1.3.5</version>
+      <type>war</type>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>build</id>
+            <phase>install</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>start</id>
+            <phase>install</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>install</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <images>
+            <image>
+            <alias>jolokia-war</alias>
+              <!-- Data image containing jolokia.war -->
+              <name>${project.groupId}/${project.artifactId}:latest</name>
+              <!-- <build> the image-->
+              <build>
+                <assembly>
+                  <inline>
+                    <id>jolokia</id>
+                    <dependencySets>
+                      <dependencySet>
+                        <includes>
+                          <include>org.jolokia:jolokia-war</include>
+                        </includes>
+                        <outputDirectory>.</outputDirectory>
+                        <outputFileNameMapping>jolokia.war</outputFileNameMapping>
+                      </dependencySet>
+                    </dependencySets>
+                  </inline>
+                </assembly>
+              </build>
+              <!-- The <run> part is taken from compose -->
+              <external>
+                <type>compose</type>
+              </external>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

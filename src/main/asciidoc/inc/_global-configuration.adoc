@@ -45,6 +45,14 @@ The following values are supported:
 
 | `docker.autoPull`
 
+| *buildArchiveOnly*
+a| Skip the actual Docker image build and only create the archive holding the Dockerfile and build context. The following values are supported:
+
+* `/path/to/archive` : Create the build tar archive as file with name `/path/to/archive` and then stop without doing the actual image build
+* `true` (or an empty value) : Skip building the image, but don't copy the generated build archive.
+* `false` : Build the image. This is the default behaviour.
+| `docker.buildArchiveOnly`
+
 | *certPath*
 | Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
 | `docker.certPath`
@@ -159,17 +167,6 @@ If you set an empty string (or only e.g. `-Ddocker.verbose`) then the "build" gr
 
 Default is that verbose logging is disabled.
 | `docker.verbose`
-
-| *buildArchiveOnly*
-| This option would skip the docker build step and would only create a build tar.
-
-`-Ddocker.buildArchiveOnly`=`/path/to/archive` would create the build tar with name `/path/to/archive` and then stop without actually building
-
-`-Ddocker.buildArchiveOnly`, `-Ddocker.buildArchiveOnly=true` would also skip building image, but leaving the archive in `target/` only without copying it to anywhere.
-
-`-Ddocker.buildArchiveOnly=false` which is default value would do the default docker build.
-
-| docker.buildArchiveOnly
 |===
 
 .Example

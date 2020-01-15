@@ -1,0 +1,100 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <!--
+  Simple sample program including Java code.
+
+  This helloworld exactly has been taken over mostly from https://github.com/arun-gupta/docker-java-sample.git
+-->
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.fabric8.dmp.samples</groupId>
+    <artifactId>dmp-sample-parent</artifactId>
+    <version>0.29-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dockerfile</artifactId>
+  <version>0.29-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <name>dmp-sample-dockerfile</name>
+
+  <properties>
+    <file>welcome.txt</file>
+    <base>jetty</base>
+    <project.artifactId>${project.artifactId}</project.artifactId>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.5</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>build</id>
+            <phase>install</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>start</id>
+            <phase>install</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>install</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <images>
+            <image>
+              <name>fabric8:dmp-sample-dockerfile</name>
+              <alias>dockerfile</alias>
+              <build>
+                <!-- filter>@</filter-->
+                <contextDir>${project.basedir}/src/main/docker</contextDir>
+                <assembly>
+                  <descriptorRef>rootWar</descriptorRef>
+                </assembly>
+              </build>
+              <run>
+                <ports>
+                  <port>8080:8080</port>
+                </ports>
+              </run>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
