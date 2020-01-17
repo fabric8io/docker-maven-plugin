@@ -124,7 +124,7 @@ public class EcrExtendedAuth {
     }
 
     HttpPost createSignedRequest(AuthConfig localCredentials, Date time) {
-        String host = "ecr." + region + ".amazonaws.com";
+        String host = "api.ecr." + region + ".amazonaws.com";
 
         logger.debug("Get ECR AuthorizationToken from %s", host);
 

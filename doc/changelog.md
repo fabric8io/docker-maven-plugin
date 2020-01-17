@@ -2,6 +2,7 @@
 
 * **0.32-SNAPSHOT**
   - Update to jnr-unixsocket 0.25 to solve concurrency issues (hopefully fixing #552)
+  - Udate ECR AuthorizationToken URL to new endpoint (#1317)
   - Allow including `com.amazonaws:aws-java-sdk-core` to pick up various forms of AWS credentials with which to authenticate at AWS ECR ([#1311](https://github.com/fabric8io/docker-maven-plugin/issues/1311))
 
 * **0.32.0** (2020-01-08)
