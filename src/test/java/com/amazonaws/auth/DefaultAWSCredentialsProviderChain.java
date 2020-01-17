@@ -1,10 +1,11 @@
 package com.amazonaws.auth;
 
-import io.fabric8.maven.docker.access.AuthConfig;
-
 import static java.lang.System.getenv;
 
-/** Shameless copy of the original for testing {@link io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory} */
+/**
+ * Shameless copy of the original for testing {@link io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory}.
+ * Based on <tt>com.amazonaws:aws-java-sdk-core:1.11.707</tt>.
+ */
 public final class DefaultAWSCredentialsProviderChain {
 
     public AWSCredentials getCredentials() {
