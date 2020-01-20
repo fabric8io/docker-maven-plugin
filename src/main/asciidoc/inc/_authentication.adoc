@@ -187,7 +187,37 @@ In case you're using temporary security credentials provided by the AWS Security
 To do so, either specify the `docker.auth` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
 
 d-m-p will attempt to read AWS credentials from some well-known spots in case there is no explicit configuration:
+
 * it will pick up ENV variables link:https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html[as documented for the AWS CLI]
+
 * it will pick up temporary credentials of link:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[the IAM role of an EC2 instance]
+
 * it will pick up temporary credentials of link:https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html[the IAM role of a fargate task (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true")]
+
 If any of these authentication information is accessible, it will be used.
+
+[NOTE]
+====
+For a more complete, robust and reliable authentication experience, you can add the AWS SDK for Java as a dependency.
+
+[source,xml]
+----
+<plugins>
+    <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <dependencies>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-core</artifactId>
+                <version>1.11.707</version>
+            </dependency>
+        </dependencies>
+    </plugin>
+</plugins>
+----
+
+This allows you to make use of all link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[the options the default credential provider chain provides].
+
+If the AWS SDK is found in the classpath, it takes precedence over the custom AWS credentials lookup mechanisms listed above.
+====
