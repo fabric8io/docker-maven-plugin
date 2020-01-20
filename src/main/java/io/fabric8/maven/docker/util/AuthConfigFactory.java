@@ -278,7 +278,7 @@ public class AuthConfigFactory {
         } catch (ClassNotFoundException e) {
             log.info("It appears that you're using AWS ECR." +
                     " Consider integrating the AWS SDK in order to make use of common AWS authentication mechanisms," +
-                    " see TODO");
+                    " see https://dmp.fabric8.io/#extended-authentication");
             return null;
         }
         return new AwsSdkAuthConfigFactory(log).createAuthConfig();
