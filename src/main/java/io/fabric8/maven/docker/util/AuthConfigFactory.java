@@ -39,6 +39,7 @@ import com.google.gson.Gson;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.ecr.EcrExtendedAuth;
+import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
 
 /**
  * Factory for creating docker specific authentication configuration
@@ -227,6 +228,12 @@ public class AuthConfigFactory {
 
         // check EC2 instance role if registry is ECR
         if (EcrExtendedAuth.isAwsRegistry(registry)) {
+            ret = getAuthConfigViaAwsSdk();
+            if (ret != null) {
+                log.debug("AuthConfig: AWS credentials from AWS SDK");
+                return ret;
+            }
+
             ret = getAuthConfigFromAwsEnvironmentVariables();
             if (ret != null) {
                 log.debug("AuthConfig: AWS credentials from ENV variables");
@@ -263,6 +270,18 @@ public class AuthConfigFactory {
 
         // No authentication found
         return null;
+    }
+
+    private AuthConfig getAuthConfigViaAwsSdk() {
+        try {
+            Class.forName("com.amazonaws.auth.DefaultAWSCredentialsProviderChain");
+        } catch (ClassNotFoundException e) {
+            log.info("It appears that you're using AWS ECR." +
+                    " Consider integrating the AWS SDK in order to make use of common AWS authentication mechanisms," +
+                    " see https://dmp.fabric8.io/#extended-authentication");
+            return null;
+        }
+        return new AwsSdkAuthConfigFactory(log).createAuthConfig();
     }
 
     /**

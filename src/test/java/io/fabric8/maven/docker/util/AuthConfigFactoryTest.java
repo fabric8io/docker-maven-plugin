@@ -15,8 +15,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
 import mockit.Expectations;
 import mockit.Mock;
+import mockit.MockUp;
 import mockit.Mocked;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.bootstrap.HttpServer;
@@ -523,7 +525,19 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
+    public void getAuthConfigViaAwsSdk() throws MojoExecutionException {
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        new MockedAwsSdkAuthConfigFactory(accessKeyId, secretAccessKey);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, null);
+    }
+
+    @Test
     public void ecsTaskRole() throws IOException, MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String containerCredentialsUri = "/v2/credentials/" + randomUUID().toString();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
@@ -538,6 +552,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void fargateTaskRole() throws IOException, MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String containerCredentialsUri = "v2/credentials/" + randomUUID().toString();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
@@ -552,6 +567,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void awsTemporaryCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
         String sessionToken = randomUUID().toString();
@@ -566,6 +582,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void awsStaticCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
         String accessKeyId = randomUUID().toString();
         String secretAccessKey = randomUUID().toString();
         environmentVariables.set("AWS_ACCESS_KEY_ID", accessKeyId);
@@ -578,6 +595,7 @@ public class AuthConfigFactoryTest {
 
     @Test
     public void incompleteAwsCredentialsAreIgnored() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
         environmentVariables.set("AWS_ACCESS_KEY_ID", randomUUID().toString());
 
         AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
@@ -652,6 +670,43 @@ public class AuthConfigFactoryTest {
 
     private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
         verifyAuthConfig(config, username, password, email, null);
+    }
+
+    private static void givenAwsSdkIsDisabled() {
+        new DisableAwsSdkAuthConfigFactory();
+    }
+
+    private static class MockedAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
+        private final String accessKeyId;
+        private final String secretAccessKey;
+
+        public MockedAwsSdkAuthConfigFactory(String accessKeyId, String secretAccessKey) {
+            this.accessKeyId = accessKeyId;
+            this.secretAccessKey = secretAccessKey;
+        }
+
+        @Mock
+        public void $init(Logger log) {
+        }
+
+        @Mock
+        public AuthConfig createAuthConfig() {
+            return new AuthConfig(accessKeyId, secretAccessKey, null,null);
+        }
+
+    }
+
+    private static class DisableAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
+
+        @Mock
+        public void $init(Logger log) {
+        }
+
+        @Mock
+        public AuthConfig createAuthConfig() {
+            return null;
+        }
+
     }
 
 }
