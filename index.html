@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.32.0,</span>
-<span id="revdate">2020-01-08</span>
+<span id="revnumber">version 0.33.0,</span>
+<span id="revdate">2020-01-21</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -852,7 +852,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.32.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.33.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -5716,11 +5716,60 @@ In case you&#8217;re using temporary security credentials provided by the AWS Se
 To do so, either specify the <code>docker.auth</code> system property or provide an <code>&lt;auth&gt;</code> element alongside username &amp; password in the <code>authConfig</code>.</p>
 </div>
 <div class="paragraph">
-<p>d-m-p will attempt to read AWS credentials from some well-known spots in case there is no explicit configuration:
-* it will pick up ENV variables <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html">as documented for the AWS CLI</a>
-* it will pick up temporary credentials of <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">the IAM role of an EC2 instance</a>
-* it will pick up temporary credentials of <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html">the IAM role of a fargate task (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true")</a>
-If any of these authentication information is accessible, it will be used.</p>
+<p>d-m-p will attempt to read AWS credentials from some well-known spots in case there is no explicit configuration:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>it will pick up ENV variables <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html">as documented for the AWS CLI</a></p>
+</li>
+<li>
+<p>it will pick up temporary credentials of <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html">the IAM role of an EC2 instance</a></p>
+</li>
+<li>
+<p>it will pick up temporary credentials of <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html">the IAM role of a fargate task (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true")</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If any of these authentication information is accessible, it will be used.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For a more complete, robust and reliable authentication experience, you can add the AWS SDK for Java as a dependency.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugins&gt;</span>
+    <span class="tag">&lt;plugin&gt;</span>
+        <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
+        <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+        <span class="tag">&lt;dependencies&gt;</span>
+            <span class="tag">&lt;dependency&gt;</span>
+                <span class="tag">&lt;groupId&gt;</span>com.amazonaws<span class="tag">&lt;/groupId&gt;</span>
+                <span class="tag">&lt;artifactId&gt;</span>aws-java-sdk-core<span class="tag">&lt;/artifactId&gt;</span>
+                <span class="tag">&lt;version&gt;</span>1.11.707<span class="tag">&lt;/version&gt;</span>
+            <span class="tag">&lt;/dependency&gt;</span>
+        <span class="tag">&lt;/dependencies&gt;</span>
+    <span class="tag">&lt;/plugin&gt;</span>
+<span class="tag">&lt;/plugins&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This extra dependency allows the usage of all <a href="https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html">options</a> that the AWS default credential provider chain provides.</p>
+</div>
+<div class="paragraph">
+<p>If the AWS SDK is found in the classpath, it takes precedence over the custom AWS credentials lookup mechanisms listed above.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -5784,8 +5833,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.32.0<br>
-Last updated 2020-01-08 22:25:18 UTC
+Version 0.33.0<br>
+Last updated 2020-01-21 09:06:54 UTC
 </div>
 </div>
 </body>
