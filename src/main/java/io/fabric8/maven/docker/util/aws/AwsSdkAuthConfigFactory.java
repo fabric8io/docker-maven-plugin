@@ -32,7 +32,7 @@ public class AwsSdkAuthConfigFactory {
                     sessionToken
             );
         } catch (Throwable t) {
-            log.debug("Failed to fetch AWS credentials: %s", t);
+            log.warn("AWS SDK detected, but failed to fetch AWS credentials: %s", t);
             return null;
         }
     }
