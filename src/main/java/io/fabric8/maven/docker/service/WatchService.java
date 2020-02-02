@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,7 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
@@ -252,7 +254,9 @@ public class WatchService {
                     .buildTimestamp(watcher.watchContext.buildTimestamp)
                     .build();
 
-            String containerId = helper.startContainers();
+            ImmutablePair<String, Properties> containerIdToProperties = helper.startContainers();
+            String containerId = containerIdToProperties.getKey();
+            watcher.watchContext.mojoParameters.getProject().getProperties().putAll(containerIdToProperties.getValue());
 
             watcher.setContainerId(containerId);
         };

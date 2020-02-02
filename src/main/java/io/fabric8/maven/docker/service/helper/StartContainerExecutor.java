@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.codehaus.plexus.util.StringUtils;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -41,39 +42,41 @@ public class StartContainerExecutor {
 
     private StartContainerExecutor(){}
 
-    public String startContainers() throws IOException, ExecException {
+    public ImmutablePair<String, Properties> startContainers() throws IOException, ExecException {
         final Properties projProperties = projectProperties;
 
         final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
 
         showLogsIfRequested(containerId);
-        exposeContainerProps(containerId);
+        Properties exposedProperties = exposeContainerProps(containerId);
         waitAndPostExec(containerId, projProperties);
 
-        return containerId;
+        return new ImmutablePair<>(containerId, exposedProperties);
     }
 
-    private void exposeContainerProps(String containerId)
+    private Properties exposeContainerProps(String containerId)
         throws DockerAccessException {
         String propKey = getExposedPropertyKeyPart();
+        Properties exposedProperties = new Properties();
 
         if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
             Container container = hub.getQueryService().getMandatoryContainer(containerId);
 
             String prefix = addDot(exposeContainerProps) + addDot(propKey);
-            projectProperties.put(prefix + "id", containerId);
+            exposedProperties.put(prefix + "id", containerId);
             String ip = container.getIPAddress();
             if (StringUtils.isNotEmpty(ip)) {
-                projectProperties.put(prefix + "ip", ip);
+                exposedProperties.put(prefix + "ip", ip);
             }
 
             Map<String, String> nets = container.getCustomNetworkIpAddresses();
             if (nets != null) {
                 for (Map.Entry<String, String> entry : nets.entrySet()) {
-                    projectProperties.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());
+                    exposedProperties.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());
                 }
             }
         }
+        return exposedProperties;
     }
 
     String getExposedPropertyKeyPart() {
