@@ -137,7 +137,7 @@
     <dependency>
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk15on</artifactId>
-      <version>1.57</version>
+      <version>1.65</version>
     </dependency>
 
     <dependency>
@@ -166,13 +166,13 @@
     <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
-      <version>1.18</version>
+      <version>1.26</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>23.0-android</version>
+      <version>29.0-android</version>
     </dependency>
 
     <dependency>
