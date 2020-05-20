@@ -1,6 +1,6 @@
 # ChangeLog
 
-* 0.34-SNAPSHOT
+* **0.34-SNAPSHOT**
   - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
   - Loading Image tarball into docker daemon fails in JIB mode ([1385](https://github.com/fabric8io/docker-maven-plugin/issues/1385))
   - `assembly.inline` is removed when external properties are enabled ([1082](https://github.com/fabric8io/docker-maven-plugin/issues/1082))
@@ -16,6 +16,7 @@
   - Retry port mapping to avoid race condition where complete port information may not be initially available in Docker Engine 20.10.5 ([1447](https://github.com/fabric8io/docker-maven-plugin/pull/1447))
   - New `copy` goal for copying files and directories from containers to host ([752](https://github.com/fabric8io/docker-maven-plugin/issues/752) and [1405](https://github.com/fabric8io/docker-maven-plugin/pull/1405))
   - Add support for multiple copy layers using multiple assemblies ([554](https://github.com/fabric8io/docker-maven-plugin/issues/554))
+  - Prefer HOME environment variable over the Java system property to determine the user's home directory to better resemble the golang client's behavior ([#1236](https://github.com/fabric8io/docker-maven-plugin/pull/1263)
   
 * **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
