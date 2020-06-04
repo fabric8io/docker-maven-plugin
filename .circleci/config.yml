@@ -5,7 +5,7 @@ jobs:
   doc:
     working_directory: ~/fabric8io/dmp-docs
     docker:
-    - image: circleci/node:8-browsers
+    - image: circleci/node:9-browsers
     steps:
     - checkout
     - run:
@@ -17,7 +17,7 @@ jobs:
   build:
     working_directory: ~/fabric8io/docker-maven-plugin
     docker:
-    - image: circleci/openjdk:8-node-browsers
+    - image: circleci/openjdk:11
     steps:
     - checkout
     - restore_cache:
@@ -52,7 +52,7 @@ jobs:
   sonar-pr:
     working_directory: ~/fabric8io/dmp-sonar-pr
     docker:
-    - image: circleci/openjdk:8-node-browsers
+    - image: circleci/openjdk:11
     steps:
     - checkout
     - restore_cache:
@@ -81,7 +81,7 @@ jobs:
   sonar:
     working_directory: ~/fabric8io/dmp-sonar
     docker:
-    - image: circleci/openjdk:8-node-browsers
+    - image: circleci/openjdk:11
     steps:
     - checkout
     - restore_cache:
