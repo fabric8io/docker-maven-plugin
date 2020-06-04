@@ -397,7 +397,13 @@ public class EnvUtil {
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+
+        File baseDir = new File(directory);
+        if (!baseDir.isAbsolute()) {
+            baseDir = new File(params.getProject().getBasedir(), directory);
+        }
+
+        return new File(baseDir, path);
     }
 
     // create a timestamp file holding time in epoch seconds
