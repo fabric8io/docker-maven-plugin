@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.util;
 
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -301,5 +302,21 @@ public class VolumeBindingUtilTest {
         assertFalse(isRelativePath("x:\\bar"));                            // x:\bar
         assertFalse(isRelativePath("C:\\"));                               // C:\
         assertFalse(isRelativePath("\\"));                                 // \
+    }
+
+    /**
+     * Insures that a host volume binding string that contains a windows path with .. is correctly canonicalized
+     */
+    @Test
+
+    public void testResolveAbsoluteWindowsVolumePath() {
+        Assume.assumeTrue(System.getProperty("os.name").toLowerCase().startsWith("win"));
+        String volumeString = format(BIND_STRING_FMT, "C:\\dir/subdir/../", CONTAINER_PATH);
+
+        String relativizedVolumeString = resolveRelativeVolumeBinding(ABS_BASEDIR, volumeString);
+
+        String expectedBindingString = format(BIND_STRING_FMT,
+                "C:\\dir", CONTAINER_PATH);
+        assertEquals(expectedBindingString, relativizedVolumeString);
     }
 }

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.util;
 
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +54,11 @@ public class VolumeBindingUtil {
      * A dot representing the current working directory
      */
     private static final String DOT = ".";
+
+    /**
+     * A dot representing the parent directory
+     */
+    private static final String DOUBLE_DOT = "..";
 
     /**
      * A tilde representing the current user's home directory
@@ -165,6 +171,14 @@ public class VolumeBindingUtil {
         // - datavolume:/var/lib/mysql
 
         String[] pathParts = bindingString.split(":");
+        if (SystemUtils.IS_OS_WINDOWS &&  WINDOWS_DRIVE_PATTERN.matcher(bindingString).matches() && pathParts.length>2) {
+            String[] winPathParts = new String[pathParts.length-1];
+            winPathParts[0]=pathParts[0]+":"+pathParts[1];
+            for (int i=1;i<winPathParts.length;i++) {
+                winPathParts[i]=pathParts[i+1];
+            }
+            pathParts=winPathParts;
+        }
         String localPath = pathParts[0];
 
         if (isRelativePath(localPath)) {
@@ -177,6 +191,13 @@ public class VolumeBindingUtil {
                 }
                 resolvedFile = resolveAbsolutely(localPath, baseDir.getAbsolutePath());
             }
+            try {
+                localPath = resolvedFile.getCanonicalFile().getAbsolutePath();
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to canonicalize '" + resolvedFile + "'");
+            }
+        } else if (SystemUtils.IS_OS_WINDOWS && (localPath.contains(DOUBLE_DOT))) {
+            File resolvedFile=new File(localPath);
             try {
                 localPath = resolvedFile.getCanonicalFile().getAbsolutePath();
             } catch (IOException e) {

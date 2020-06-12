@@ -17,6 +17,7 @@
   - New `copy` goal for copying files and directories from containers to host ([752](https://github.com/fabric8io/docker-maven-plugin/issues/752) and [1405](https://github.com/fabric8io/docker-maven-plugin/pull/1405))
   - Add support for multiple copy layers using multiple assemblies ([554](https://github.com/fabric8io/docker-maven-plugin/issues/554))
   - Prefer HOME environment variable over the Java system property to determine the user's home directory to better resemble the golang client's behavior ([#1236](https://github.com/fabric8io/docker-maven-plugin/pull/1263)
+  - Volume binding bug in windows ([1338](https://github.com/fabric8io/docker-maven-plugin/issues/1338))
   
 * **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
