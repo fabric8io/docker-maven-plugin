@@ -16,6 +16,8 @@ public class CredentialHelperClient {
 
     static final String SECRET_KEY = "Secret";
     static final String USERNAME_KEY = "Username";
+    static final String TOKEN_USERNAME = "<token>";
+
     private final String credentialHelperName;
     private final Logger log;
 
@@ -54,6 +56,11 @@ public class CredentialHelperClient {
         }
         String password = credential.get(CredentialHelperClient.SECRET_KEY).getAsString();
         String userKey = credential.get(CredentialHelperClient.USERNAME_KEY).getAsString();
+        if(TOKEN_USERNAME.equals(userKey)) {
+            // If userKey is <token>, the password is actually a token
+            return new AuthConfig(null, null, null, null, password);
+        }
+
         return new AuthConfig(userKey,password, null,null);
     }
 
