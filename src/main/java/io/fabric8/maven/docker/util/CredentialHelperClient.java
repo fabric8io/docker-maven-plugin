@@ -50,7 +50,7 @@ public class CredentialHelperClient {
         }
     }
 
-    private AuthConfig toAuthConfig(JsonObject credential){
+    AuthConfig toAuthConfig(JsonObject credential){
         if (credential == null) {
             return null;
         }
