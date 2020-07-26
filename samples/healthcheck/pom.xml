@@ -12,12 +12,12 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.21-SNAPSHOT</version>
+    <version>0.33-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-healthcheck</artifactId>
-  <version>0.21-SNAPSHOT</version>
+  <version>0.33-SNAPSHOT</version>
 
 
   <build>
@@ -33,11 +33,15 @@
           <images>
             <image>
               <alias>healthybox1</alias>
-              <name>busybox</name>
+              <name>busybox1</name>
               <build>
+                <from>busybox</from>
                 <healthCheck>
                   <cmd>curl -f http://localhost/ || exit 1</cmd>
                 </healthCheck>
+                <cmd>
+                  <shell>sleep 2</shell>
+                </cmd>
               </build>
               <run>
                 <wait>
@@ -47,8 +51,9 @@
             </image>
             <image>
               <alias>healthybox2</alias>
-              <name>busybox</name>
+              <name>busybox2</name>
               <build>
+                <from>busybox</from>
                 <healthCheck>
                   <interval>5m</interval>
                   <timeout>3s</timeout>
@@ -59,8 +64,9 @@
             </image>
             <image>
               <alias>healthybox3</alias>
-              <name>busybox</name>
+              <name>busybox3</name>
               <build>
+                <from>busybox</from>
                 <healthCheck>
                   <interval>5m</interval>
                   <retries>3</retries>
@@ -77,8 +83,9 @@
             </image>
             <image>
               <alias>healthybox4</alias>
-              <name>busybox</name>
+              <name>busybox4</name>
               <build>
+                <from>busybox</from>
                 <healthCheck>
                   <mode>cmd</mode>
                   <interval>5m</interval>
@@ -95,9 +102,24 @@
               </build>
             </image>
             <image>
-              <alias>unhealthybox5</alias>
-              <name>busybox</name>
+              <alias>healthybox5</alias>
+              <name>busybox5</name>
               <build>
+                <from>busybox</from>
+                <healthCheck>
+                  <interval>5m</interval>
+                  <timeout>3s</timeout>
+                  <startPeriod>30m</startPeriod>
+                  <retries>3</retries>
+                  <cmd>curl -f http://localhost/ || exit 1</cmd>
+                </healthCheck>
+              </build>
+            </image>
+            <image>
+              <alias>unhealthybox6</alias>
+              <name>busybox5</name>
+              <build>
+                <from>busybox</from>
                 <healthCheck>
                   <mode>none</mode>
                 </healthCheck>

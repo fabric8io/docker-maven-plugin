@@ -19,6 +19,7 @@ package io.fabric8.maven.docker.access.util;
 import java.io.*;
 import java.util.concurrent.*;
 
+import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.shared.utils.StringUtils;
 
@@ -38,10 +39,15 @@ public abstract class ExternalCommand {
     }
 
     public void execute() throws IOException {
+        execute(null);
+    }
+
+    public void execute(String processInput) throws IOException {
         final Process process = startProcess();
         start();
         try {
-            closeOutputStream(process.getOutputStream());
+            inputStreamPump(process.getOutputStream(),processInput);
+
             Future<IOException> stderrFuture = startStreamPump(process.getErrorStream());
             outputStreamPump(process.getInputStream());
 
@@ -71,24 +77,27 @@ public abstract class ExternalCommand {
 
     private void checkProcessExit(Process process) {
         try {
+            statusCode = process.waitFor();
             executor.shutdown();
             executor.awaitTermination(10, TimeUnit.SECONDS);
-            statusCode = process.exitValue();
         } catch (IllegalThreadStateException | InterruptedException e) {
             process.destroy();
             statusCode = -1;
         }
     }
 
-    private void closeOutputStream(OutputStream outputStream) {
-        try {
-            outputStream.close();
+    private void inputStreamPump(OutputStream outputStream,String processInput) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+            if (processInput != null) {
+                writer.write(processInput);
+                writer.flush();
+            }
         } catch (IOException e) {
             log.info("Failed to close process output stream: %s", e.getMessage());
         }
     }
 
-    private Process startProcess(String... args) throws IOException {
+    private Process startProcess() throws IOException {
         try {
             return Runtime.getRuntime().exec(getArgs());
         } catch (IOException e) {
@@ -98,14 +107,14 @@ public abstract class ExternalCommand {
         }
     }
 
-    private String getCommandAsString() {
+    protected String getCommandAsString() {
         return StringUtils.join(getArgs(), " ");
     }
 
     protected abstract String[] getArgs();
 
     private void outputStreamPump(final InputStream inputStream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             for (; ; ) {
                 String line = reader.readLine();
                 if (line == null) {
@@ -121,7 +130,7 @@ public abstract class ExternalCommand {
     }
 
     protected void processLine(String line) {
-        log.verbose(line);
+        log.verbose(Logger.LogVerboseCategory.BUILD,line);
     }
 
     private Future<IOException> startStreamPump(final InputStream errorStream) {

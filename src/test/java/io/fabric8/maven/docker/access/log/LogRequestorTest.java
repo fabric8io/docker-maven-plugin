@@ -1,6 +1,22 @@
 package io.fabric8.maven.docker.access.log;
 
+import com.google.common.base.Charsets;
+import io.fabric8.maven.docker.access.UrlBuilder;
+import io.fabric8.maven.docker.access.util.RequestUtil;
+import io.fabric8.maven.docker.util.Timestamp;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.Verifications;
+import org.apache.commons.text.RandomStringGenerator;
+import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.junit.Test;
+
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -11,30 +27,13 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 
-import com.google.common.base.Charsets;
-import io.fabric8.maven.docker.access.UrlBuilder;
-import io.fabric8.maven.docker.access.util.RequestUtil;
-import io.fabric8.maven.docker.util.Timestamp;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class LogRequestorTest {
-    private static final String containerId = RandomStringUtils.randomAlphabetic(64);
+    private static final String containerId = new RandomStringGenerator.Builder().build().generate(64);
 
     @Mocked(stubOutClassInitialization = true)
     final RequestUtil unused = null;
@@ -80,9 +79,10 @@ public class LogRequestorTest {
     @Test
     public void testStdoutMessage() throws Exception {
         final Streams type = Streams.STDOUT;
-        final String message0 = RandomStringUtils.randomAlphanumeric(257);
+        RandomStringGenerator randomGenerator = new RandomStringGenerator.Builder().build();
+        final String message0 = randomGenerator.generate(257);
         final String message1 = "test test";
-        final String message2 = RandomStringUtils.randomAlphanumeric(666);
+        final String message2 = randomGenerator.generate(666);
 
         final ByteBuffer body = responseContent(type, message0, message1, message2);
         final InputStream inputStream = new ByteArrayInputStream(body.array());
@@ -98,20 +98,41 @@ public class LogRequestorTest {
     }
 
     @Test
+    public void testMessageWithLeadingWhitespace() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message0 = " I have a leading space";
+        final String message1 = "\tI have a leading tab";
+
+        final ByteBuffer body = responseContent(type, message0, message1);
+        final InputStream inputStream = new ByteArrayInputStream(body.array());
+
+        setupMocks(inputStream);
+        new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
+
+        new Verifications() {{
+            callback.log(type.type, (Timestamp) any, message0);
+            callback.log(type.type, (Timestamp) any, message1);
+        }};
+    }
+
+
+    @Test
     public void testAllStreams() throws Exception {
         final Random rand = new Random();
         final int upperBound = 1024;
 
+        RandomStringGenerator randomGenerator = new RandomStringGenerator.Builder().build();
+
         final Streams type0 = Streams.STDIN;
-        final String msg0 = RandomStringUtils.randomAlphanumeric(rand.nextInt(upperBound));
+        final String msg0 = randomGenerator.generate(rand.nextInt(upperBound));
         final ByteBuffer buf0 = messageToBuffer(type0, msg0);
 
         final Streams type1 = Streams.STDOUT;
-        final String msg1 = RandomStringUtils.randomAlphanumeric(rand.nextInt(upperBound));
+        final String msg1 = randomGenerator.generate(rand.nextInt(upperBound));
         final ByteBuffer buf1 = messageToBuffer(type1, msg1);
 
         final Streams type2 = Streams.STDERR;
-        final String msg2 = RandomStringUtils.randomAlphanumeric(rand.nextInt(upperBound));
+        final String msg2 = randomGenerator.generate(rand.nextInt(upperBound));
         final ByteBuffer buf2 = messageToBuffer(type2, msg2);
 
         final ByteBuffer body = combineBuffers(buf0, buf1, buf2);
@@ -216,6 +237,67 @@ public class LogRequestorTest {
         assertTrue(matcher.matches());
         assertEquals(matched, matcher.group("entry"));
     }
+
+    @Test
+    public void runCallsOpenAndCloseOnHandler() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        new Expectations() {{
+            callback.open();
+            times = 1;
+
+            callback.close();
+            times = 1;
+
+        }};
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
+    @Test
+    public void runCanConsumeEmptyStream() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
+    @Test
+    public void runCanConsumeSingleLineStream() throws Exception {
+        final Streams type = Streams.STDOUT;
+        final String message = "Hello, world!";
+        final ByteBuffer buf = messageToBuffer(type, message);
+        final InputStream inputStream = new ByteArrayInputStream(buf.array());
+        setupMocks(inputStream);
+
+        new Expectations() {{
+            callback.log(type.type, (Timestamp) any, anyString);
+            times = 1;
+        }};
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
+    @Test
+    public void runCanHandleIOException() throws Exception {
+        final IOExcpetionStream stream = new IOExcpetionStream();
+        setupMocks(stream);
+
+        new Expectations() {{
+            callback.error(anyString);
+            times = 1;
+        }};
+
+        new LogRequestor(client, urlBuilder, containerId, callback).run();
+    }
+
     private void setupMocks(final InputStream inputStream) throws Exception {
         new Expectations() {{
             RequestUtil.newGet(anyString);
@@ -303,5 +385,9 @@ public class LogRequestorTest {
         return String.format("[2015-08-05T12:34:56Z] %s", message);
     }
 
-
+    private class IOExcpetionStream extends InputStream {
+        public int read() throws IOException {
+            throw new IOException("Something bad happened");
+        }
+    }
 }

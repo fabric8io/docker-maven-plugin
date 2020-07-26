@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Integration test demo which makes some small tests for Jolokia
+
+  Call it with: 'mvn verify'
+
+  The test does the following:
+
+  * Creates a Docker data container with 'jolokia.war' and 'jolokia-it.war' as described in
+    assembly descriptor src/main/docker-assembly.xml
+  * Starts (and optionally pull) the jolokia/tomcat-7.0 container with the data container linked to it
+  * Waits until Tomcat is up (i.e. until it is reachable via an HTTP request)
+  * Runs an integration test via maven-failsafe-plugin, using rest-assured for accessing the deployed app.
+  * Prints out some version information about the contaner running (in order prove that's not a fake ;-)
+  * Stops and removes the containers.
+
+  -->
+
+  <groupId>io.fabric8.dmp.samples</groupId>
+  <artifactId>dmp-sample-parent</artifactId>
+  <version>0.29-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <url>http://www.jolokia.org</url>
+
+  <!-- Should this reference the outer directory as a parent pom instead?  -->
+  <properties>
+    <docker.maven.plugin.version>${project.version}</docker.maven.plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>${docker.maven.plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <modules>
+    <module>net</module>
+    <module>volume</module>
+    <module>properties</module>
+    <module>dockerignore</module>
+    <module>docker-compose</module>
+    <module>smallest</module>
+    <module>zero-config</module>
+    <module>healthcheck</module>
+    <module>helloworld</module>
+    <module>dockerfile</module>
+    <module>log</module>
+    <module>run-java</module>
+  </modules>
+</project>

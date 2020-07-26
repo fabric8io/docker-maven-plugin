@@ -1,40 +1,49 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.*;
-import java.util.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
-import io.fabric8.maven.docker.util.EnvUtil;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StrSubstitutor;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
 import io.fabric8.maven.docker.config.Arguments;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 public class ContainerCreateConfig {
 
-    private final JSONObject createConfig = new JSONObject();
+    private final JsonObject createConfig = new JsonObject();
     private final String imageName;
 
     public ContainerCreateConfig(String imageName) {
         this.imageName = imageName;
-        createConfig.put("Image", imageName);
+        createConfig.addProperty("Image", imageName);
     }
 
     public ContainerCreateConfig binds(List<String> volumes) {
         if (volumes != null && !volumes.isEmpty()) {
-            JSONObject extractedVolumes = new JSONObject();
+            JsonObject extractedVolumes = new JsonObject();
 
             for (String volume : volumes) {
-                extractedVolumes.put(extractContainerPath(volume),
-                                     new JSONObject());
+                extractedVolumes.add(extractContainerPath(volume),
+                                     new JsonObject());
             }
-            createConfig.put("Volumes", extractedVolumes);
+            createConfig.add("Volumes", extractedVolumes);
         }
         return this;
     }
 
     public ContainerCreateConfig command(Arguments command) {
         if (command != null) {
-            createConfig.put("Cmd", new JSONArray(command.asStrings()));
+            createConfig.add("Cmd", JsonFactory.newJsonArray(command.asStrings()));
         }
         return this;
     }
@@ -45,7 +54,7 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig entrypoint(Arguments entrypoint) {
         if (entrypoint != null) {
-            createConfig.put("Entrypoint", new JSONArray(entrypoint.asStrings()));
+            createConfig.add("Entrypoint", JsonFactory.newJsonArray(entrypoint.asStrings()));
         }
         return this;
     }
@@ -58,6 +67,12 @@ public class ContainerCreateConfig {
                 String value = entry.getValue();
                 if (value == null) {
                     value = "";
+                } else if(value.matches("^\\+\\$\\{.*}$")) {
+                    /*
+                     * This case is to handle the Maven interpolation issue which used
+                     * to occur when using ${..} only without any suffix.
+                     */
+                    value = value.substring(1, value.length());
                 }
                 envProps.put(entry.getKey(), StrSubstitutor.replace(value, mavenProps));
             }
@@ -75,18 +90,18 @@ public class ContainerCreateConfig {
 
     public ContainerCreateConfig labels(Map<String,String> labels) {
         if (labels != null && labels.size() > 0) {
-            createConfig.put("Labels", new JSONObject(labels));
+            createConfig.add("Labels", JsonFactory.newJsonObject(labels));
         }
         return this;
     }
 
     public ContainerCreateConfig exposedPorts(Set<String> portSpecs) {
         if (portSpecs != null && portSpecs.size() > 0) {
-            JSONObject exposedPorts = new JSONObject();
+            JsonObject exposedPorts = new JsonObject();
             for (String portSpec : portSpecs) {
-                exposedPorts.put(portSpec, new JSONObject());
+                exposedPorts.add(portSpec, new JsonObject());
             }
-            createConfig.put("ExposedPorts", exposedPorts);
+            createConfig.add("ExposedPorts", exposedPorts);
         }
         return this;
     }
@@ -126,9 +141,16 @@ public class ContainerCreateConfig {
 
     // =======================================================================
 
-    private ContainerCreateConfig add(String name, Object value) {
+    private ContainerCreateConfig add(String name, String value) {
         if (value != null) {
-            createConfig.put(name, value);
+            createConfig.addProperty(name, value);
+        }
+        return this;
+    }
+
+    private ContainerCreateConfig add(String name, JsonObject value) {
+        if (value != null) {
+            createConfig.add(name, value);
         }
         return this;
     }
@@ -145,7 +167,7 @@ public class ContainerCreateConfig {
     }
 
     private void addEnvironment(Properties envProps) {
-        JSONArray containerEnv = new JSONArray();
+        JsonArray containerEnv = new JsonArray();
         Enumeration keys = envProps.keys();
         while (keys.hasMoreElements()) {
             String key = (String) keys.nextElement();
@@ -153,9 +175,9 @@ public class ContainerCreateConfig {
             if (value == null) {
                 value = "";
             }
-            containerEnv.put(key + "=" + value);
+            containerEnv.add(key + "=" + value);
         }
-        createConfig.put("Env", containerEnv);
+        createConfig.add("Env", containerEnv);
     }
 
     private void addPropertiesFromFile(String envPropsFile, Properties envProps) {

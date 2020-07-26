@@ -1,0 +1,7 @@
+= Implicit properties
+
+There are some implicit configurations in docker maven plugin that are not so straightforward. These are simply workarouds to get docker-maven-plugin's flow right; just to overcome limitations of Maven and other things. Some of these are mentioned below:
+
+* If the only value of the `env` parameter is a docker-maven-plugin internal property which has been set implicitly you have to prefix the property with a single `+` like in `+${docker.container.test.ip}`. This is necessary due to some Maven limitations which simply interpolates a lone, non defined property, to an empty string which can't then be replaced by this plugin after the initial interpolation phase.
+
+* When providing port mapping in a format like `host.ip:host.port:80`, you need to prefix property with a single `+`. In this form, the host ip of the container will be placed into a Maven property name host.ip. If docker reports that value to be 0.0.0.0, the value of docker.host.address will be substituted instead. In the event you want to use this form and have the container bind to a specific hostname/ip address, you can declare a Maven property of the same name (host.ip in this example) containing the value to use. host:port works in the same way as described above.

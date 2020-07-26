@@ -4,6 +4,7 @@ Your containers should preferably be able to deal with temporarily unresolvable 
 
 The `<dependsOn>` configuration can be used to expresses custom network dependencies between your containers. `docker:start` will ensure that all dependencies a container depends on are completely started (fulfilling all `<wait>` conditions) before the depending container is started.
 
+Additionally, each `<container>` element can specify a comma separated set of containers.  Comma (and whitespace) can be used to separate containers since valid docker container names contain only characters, digits, underscores, periods and dashes.
 
 .Example
 [source,xml]

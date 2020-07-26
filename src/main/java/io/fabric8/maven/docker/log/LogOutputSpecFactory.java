@@ -15,15 +15,20 @@ package io.fabric8.maven.docker.log;/*
  * limitations under the License.
  */
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.util.FormatParameterReplacer;
 
 /**
  * @author roland
  * @since 26/09/15
  */
 public class LogOutputSpecFactory {
+    private static final String DEFAULT_PREFIX_FORMAT = "%a> ";
     private boolean useColor;
     private boolean logStdout;
     private String logDate;
@@ -41,7 +46,7 @@ public class LogOutputSpecFactory {
         LogConfiguration logConfig = extractLogConfiguration(imageConfiguration);
 
         addLogFormat(builder, logConfig);
-        addPrefix(builder, logConfig.getPrefix(), imageConfiguration.getAlias(), containerId);
+        addPrefix(builder, logConfig.getPrefix(), imageConfiguration, containerId);
         builder.file(logConfig.getFileLocation())
                .useColor(useColor)
                .logStdout(logStdout)
@@ -50,15 +55,31 @@ public class LogOutputSpecFactory {
         return builder.build();
     }
 
-    private void addPrefix(LogOutputSpec.Builder builder, String logPrefix, String alias, String containerId) {
-        String prefix = logPrefix;
-        if (prefix == null) {
-            prefix = alias;
+    private void addPrefix(LogOutputSpec.Builder builder, String logPrefix, ImageConfiguration imageConfig, String containerId) {
+        String prefixFormat = logPrefix;
+        if (prefixFormat == null) {
+            prefixFormat = DEFAULT_PREFIX_FORMAT;
         }
-        if (prefix == null) {
-            prefix = containerId.substring(0, 6);
-        }
-        builder.prefix(prefix);
+        FormatParameterReplacer formatParameterReplacer = new FormatParameterReplacer(getPrefixFormatParameterLookups(imageConfig, containerId));
+        builder.prefix(formatParameterReplacer.replace(prefixFormat));
+    }
+
+    private Map<String, FormatParameterReplacer.Lookup> getPrefixFormatParameterLookups(final ImageConfiguration imageConfig, final String containerId) {
+        Map<String, FormatParameterReplacer.Lookup> ret = new HashMap<>();
+
+        ret.put("z", () -> "");
+        ret.put("c", () -> containerId.substring(0, 6));
+        ret.put("C", () -> containerId);
+        ret.put("a", () -> {
+            String alias = imageConfig.getAlias();
+            if (alias != null) {
+                return alias;
+            }
+            return containerId.substring(0, 6);
+        });
+        ret.put("n", imageConfig::getName);
+
+        return ret;
     }
 
     private void addLogFormat(LogOutputSpec.Builder builder, LogConfiguration logConfig) {

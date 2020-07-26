@@ -17,9 +17,9 @@ package io.fabric8.maven.docker.util;
  */
 
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.google.common.base.Strings;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -34,58 +34,33 @@ import org.apache.maven.project.MavenProject;
  */
 public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
-    private final Map<String, Lookup> lookups;
+
+    private final FormatParameterReplacer formatParamReplacer;
 
     private final Date now;
 
     public ImageNameFormatter(MavenProject project, Date now) {
-        this.lookups = new HashMap<>();
         this.now = now;
-        initLookups(project);
+        formatParamReplacer = new FormatParameterReplacer(initLookups(project));
     }
-
-    // Detect format elements within the name
-    private Pattern FORMAT_IDENTIFIER_PATTERN = Pattern.compile("^(.*?)%([^a-zA-Z]*)([a-zA-Z])(.*)$");
 
     @Override
     public String format(String name) {
         if (name == null) {
             return null;
         }
-        StringBuilder ret = new StringBuilder();
-        String rest = name;
 
-        while (true) {
-            Matcher matcher = FORMAT_IDENTIFIER_PATTERN.matcher(rest);
-            if (!matcher.matches()) {
-                ret.append(rest);
-                return ret.toString();
-            }
-            ret.append(matcher.group(1));
-            ret.append(formatElement(matcher.group(2),matcher.group(3)));
-            rest = matcher.group(4);
-        }
+        return formatParamReplacer.replace(name);
     }
 
     // =====================================================================================
 
-    private String formatElement(String options, String what) {
-        Lookup lookup = lookups.get(what);
-        if (lookup == null) {
-            throw new IllegalArgumentException(String.format("No image name format element '%%%s' known", what) );
-        }
-        String val = lookup.lookup();
-        return String.format("%" + (options != null ? options : "") + "s",val);
-    }
-
-    // Lookup abstraction
-    private interface Lookup {
-        String lookup();
-    }
 
     // Lookup classes
-    private void initLookups(final MavenProject project) {
+    private Map<String, FormatParameterReplacer.Lookup> initLookups(final MavenProject project) {
         // Sanitized group id
+        final Map<String, FormatParameterReplacer.Lookup> lookups = new HashMap<>();
+
         lookups.put("g", new DefaultUserLookup(project));
 
         // Sanitized artifact id
@@ -95,11 +70,12 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
         lookups.put("v", new DefaultTagLookup(project, DefaultTagLookup.Mode.PLAIN, now));
         lookups.put("t", new DefaultTagLookup(project, DefaultTagLookup.Mode.SNAPSHOT_WITH_TIMESTAMP, now));
         lookups.put("l", new DefaultTagLookup(project, DefaultTagLookup.Mode.SNAPSHOT_LATEST, now));
+        return lookups;
     }
 
     // ==============================================================================================
 
-    private static abstract class AbstractLookup implements Lookup {
+    public static abstract class AbstractLookup implements FormatParameterReplacer.Lookup {
         protected final MavenProject project;
 
         private AbstractLookup(MavenProject project) {
@@ -109,8 +85,9 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
         protected String getProperty(String key) {
             return project.getProperties().getProperty(key);
         }
-
     }
+
+
     private static class DefaultUserLookup extends AbstractLookup {
 
         /**

@@ -1,9 +1,11 @@
 package io.fabric8.maven.docker.access.ecr;
 
+import io.fabric8.maven.docker.access.util.RequestUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,6 +65,19 @@ public class AwsSigner4RequestTest {
         Assert.assertEquals(TASK3, dst.toString());
 
         Assert.assertEquals(TASK4, signer.task4(sr, credentials));
+    }
+
+    @Test
+    public void includesAuthTokenAsAwsSecurityToken() {
+        HttpUriRequest request = RequestUtil.newGet("https://someService.us-east-1.amazonaws.com/");
+        request.setHeader("host", request.getURI().getHost());
+        String awsSecurityToken = "securityToken";
+        AuthConfig credentials = new AuthConfig("awsAccessKeyId", "awsSecretAccessKey", null, awsSecurityToken);
+
+        AwsSigner4 signer = new AwsSigner4("us-east-1", "someService");
+        signer.sign(request, credentials, new Date());
+
+        Assert.assertEquals(request.getFirstHeader("X-Amz-Security-Token").getValue(), awsSecurityToken);
     }
 
 }

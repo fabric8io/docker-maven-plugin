@@ -9,6 +9,17 @@ The `<image>` element can contain the following sub elements:
 
 include::image/_configuration.adoc[]
 
-Either a `<build>` or `<run>` section must be present. These are explained in details in the corresponding goal sections.
+Either a `<build>` or `<run>` section must be present (except when you are using the <<simple-dockerfile-build,simple Dockerfile build>> mode). These are explained in details in the corresponding goal sections.
 
 include::image/_example.adoc[]
+
+When using Maven profiles, it can be useful to override settings
+of a particular image. To facilitate this, the element `<imagesMap>`
+can be used alongside the `<images>` element. Each entry in `<imagesMap>`
+translates to an image configuration where the **alias** of the image
+is set to the map entry's **key**. The examples above and below produce
+identical image configurations.
+
+include::image/_example_imagesMap.adoc[]
+
+include::image/_naming.adoc[]

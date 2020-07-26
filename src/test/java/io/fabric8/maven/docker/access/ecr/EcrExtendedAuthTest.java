@@ -51,9 +51,9 @@ public class EcrExtendedAuthTest {
         AuthConfig localCredentials = new AuthConfig("username", "password", null, null);
         Date signingTime = AwsSigner4Request.TIME_FORMAT.parse("20161217T211058Z");
         HttpPost request = eea.createSignedRequest(localCredentials, signingTime);
-        assertEquals("ecr.eu-west-1.amazonaws.com", request.getFirstHeader("host").getValue());
+        assertEquals("api.ecr.eu-west-1.amazonaws.com", request.getFirstHeader("host").getValue());
         assertEquals("20161217T211058Z", request.getFirstHeader("X-Amz-Date").getValue());
-        assertEquals("AWS4-HMAC-SHA256 Credential=username/20161217/eu-west-1/ecr/aws4_request, SignedHeaders=content-type;host;x-amz-target, Signature=1bab0f5c269debe913e532011d5d192b190bb4c55d3de1bc1506eefb93e058e1", request.getFirstHeader("Authorization").getValue());
+        assertEquals("AWS4-HMAC-SHA256 Credential=username/20161217/eu-west-1/ecr/aws4_request, SignedHeaders=content-type;host;x-amz-target, Signature=2ae11d499499cc951900aac0fbec96009382ba4f735bd14baa375c3e51d50aa9", request.getFirstHeader("Authorization").getValue());
     }
 
     @Test

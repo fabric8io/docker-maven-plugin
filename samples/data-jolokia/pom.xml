@@ -22,21 +22,21 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.21-SNAPSHOT</version>
+    <version>0.33-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-data-jolokia</artifactId>
-  <version>0.21-SNAPSHOT</version>
+  <version>0.33-SNAPSHOT</version>
   <!-- add custom lifecycle -->
   <packaging>docker</packaging>
 
   <url>http://www.jolokia.org</url>
 
   <properties>
-    <server.version>7.0</server.version>
+    <server.version>8</server.version>
     <server.name>tomcat</server.name>
-    <image>consol/${server.name}-${server.version}:latest</image>
+    <image>docker.io/fabric8/${server.name}-${server.version}:latest</image>
     <jolokia.version>1.3.2</jolokia.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -87,7 +87,7 @@
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
-          <autoPull>always</autoPull>
+          <imagePullPolicy>IfNotPresent</imagePullPolicy>
           <watchPostGoal>org.apache.maven.plugins:maven-help-plugin:help</watchPostGoal>
           <images>
             <!-- Docker Image to use -->
@@ -158,13 +158,13 @@
                 </tags>
                 <!-- The assembly descriptor prepares the "/maven" directory in the temporary data
                    container which will be made available to the specified container. The startup script in the
-                   container (jolokia/tomcat-7.0) should check for files in this directory and use them
+                   container (fabric8/tomcat-8) should check for files in this directory and use them
                    for deploying them. I.e. this image has a script 'deploy-and-run.sh' which exactly
                    does this. -->
                 <assembly>
                   <name>app</name>
                   <targetDir>/maven</targetDir>
-                  <mode>tar</mode>
+                  <mode>dir</mode>
                   <user>www-data:www-data:www-data</user>
                   <descriptor>assembly.xml</descriptor>
                 </assembly>
@@ -474,7 +474,7 @@
       <id>tomcat</id>
       <properties>
         <server.name>tomcat</server.name>
-        <server.version>7.0</server.version>
+        <server.version>8</server.version>
       </properties>
       <activation>
         <activeByDefault>true</activeByDefault>

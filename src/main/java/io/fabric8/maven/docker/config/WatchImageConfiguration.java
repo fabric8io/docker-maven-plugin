@@ -11,7 +11,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 public class WatchImageConfiguration implements Serializable {
 
     @Parameter
-    private int interval = 5000; // default
+    private Integer interval;
 
     @Parameter
     private WatchMode mode;
@@ -25,6 +25,10 @@ public class WatchImageConfiguration implements Serializable {
     public WatchImageConfiguration() {};
 
     public int getInterval() {
+        return interval != null ? interval : 5000;
+    }
+
+    public Integer getIntervalRaw() {
         return interval;
     }
 
@@ -56,7 +60,7 @@ public class WatchImageConfiguration implements Serializable {
             }
         }
 
-        public Builder interval(int interval) {
+        public Builder interval(Integer interval) {
             c.interval = interval;
             return this;
         }
@@ -70,6 +74,11 @@ public class WatchImageConfiguration implements Serializable {
 
         public Builder postGoal(String goal) {
             c.postGoal = goal;
+            return this;
+        }
+
+        public Builder postExec(String exec) {
+            c.postExec = exec;
             return this;
         }
 

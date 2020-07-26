@@ -1,28 +1,36 @@
 package io.fabric8.maven.docker;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.Network;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
+import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.NamePatternUtil;
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * Mojo for stopping containers. If called together with <code>docker:start</code> (i.e.
@@ -55,19 +63,27 @@ public class StopMojo extends AbstractDockerMojo {
     @Parameter( property = "docker.sledgeHammer", defaultValue = "false" )
     private boolean sledgeHammer;
 
+    /**
+     * Naming pattern for how to name containers when started
+     */
+    @Parameter(property = "docker.containerNamePattern")
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
+
+    @Parameter(property = "docker.stopNamePattern")
+    private String stopNamePattern;
 
     @Override
-    protected void executeInternal(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
+    protected void executeInternal(ServiceHub hub) throws MojoExecutionException, IOException, ExecException {
         QueryService queryService = hub.getQueryService();
         RunService runService = hub.getRunService();
 
-        PomLabel pomLabel = getPomLabel();
+        GavLabel gavLabel = getGavLabel();
 
         if (!keepRunning) {
             if (invokedTogetherWithDockerStart()) {
-                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, pomLabel);
+                runService.stopStartedContainers(keepContainer, removeVolumes, autoCreateCustomNetworks, gavLabel);
             } else {
-                stopContainers(queryService, runService, pomLabel);
+                stopContainers(queryService, runService, gavLabel);
             }
         }
 
@@ -76,43 +92,152 @@ public class StopMojo extends AbstractDockerMojo {
         dispatcher.untrackAllContainerLogs();
     }
 
-    private void stopContainers(QueryService queryService, RunService runService, PomLabel pomLabel) throws DockerAccessException {
-        Collection<Network> networksToRemove = getNetworksToRemove(queryService, pomLabel);
+    private void stopContainers(QueryService queryService, RunService runService, GavLabel gavLabel)
+            throws MojoExecutionException, IOException, ExecException {
+
+        Collection<Network> networksToRemove = getNetworksToRemove(queryService, gavLabel);
+		List<DockerAccessException> thrownExceptions = new ArrayList<>();
         for (ImageConfiguration image : getResolvedImages()) {
-            for (Container container : getContainersToStop(queryService, image)) {
-                if (shouldStopContainer(container, pomLabel, image)) {
-                    runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
+
+            Collection<Container> existingContainers
+                    = getContainersForImage(queryService, image);
+
+            for (Container container : existingContainers) {
+                if (shouldStopContainer(container, gavLabel)) {
+					try {
+						runService.stopContainer(container.getId(), image, keepContainer, removeVolumes);
+					} catch (DockerAccessException exc) {
+						thrownExceptions.add(exc);
+					}
                 }
             }
         }
-        runService.removeCustomNetworks(networksToRemove);
+        // If the mojo has a stopNamePattern, check to see if there are matching containers
+        for (Container container : getContainersForMojo(queryService)) {
+            if (shouldStopContainer(container, gavLabel)) {
+            	try {
+	                runService.stopContainer(container.getId(),
+	                        new ImageConfiguration.Builder().name(container.getImage()).build(),
+	                        keepContainer, removeVolumes);
+            	} catch (DockerAccessException exc) {
+					thrownExceptions.add(exc);
+				}
+            }
+        }
+
+		try {
+			runService.removeCustomNetworks(networksToRemove);
+		} catch (DockerAccessException exc) {
+			thrownExceptions.add(exc);
+		}
+
+		if (!thrownExceptions.isEmpty()) {
+			DockerAccessException exception = new DockerAccessException("At least one exception thrown during container removal.");
+			for (DockerAccessException dae : thrownExceptions) {
+				exception.addSuppressed(dae);
+			}
+			throw exception;
+		}
     }
 
-    // If naming strategy is alias stop a container with this name, otherwise get all containers with this image's name
-    private List<Container> getContainersToStop(QueryService queryService, ImageConfiguration image) throws DockerAccessException {
-        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
+    private Collection<Container> getContainersForPattern(QueryService queryService, Matcher imageNameMatcher,
+                                                          Matcher containerNameMatcher)
+            throws IOException {
+        return queryService.listContainers(!keepContainer)
+                .stream()
+                .filter(c -> containerMatchesPattern(c, imageNameMatcher, containerNameMatcher))
+                .collect(Collectors.toList());
+    }
 
-        if (strategy == RunImageConfiguration.NamingStrategy.alias) {
-            Container container = queryService.getContainer(image.getAlias());
-            return container != null ? Collections.singletonList(container) : Collections.<Container>emptyList();
-        } else {
-            return queryService.getContainersForImage(image.getName());
+    private Collection<Container> getContainersForMojo(QueryService queryService)
+            throws MojoExecutionException, IOException {
+        if(stopNamePattern != null) {
+            Matcher imageNameMatcher = getImageNameMatcher(stopNamePattern);
+
+            Matcher containerNameMatcher = getContainerNameMatcher(stopNamePattern);
+
+            if(imageNameMatcher == null && containerNameMatcher == null) {
+                log.warn("There are no image name or container name patterns in non-empty stopNamePattern: no containers will be stopped");
+            } else {
+                return getContainersForPattern(queryService, imageNameMatcher, containerNameMatcher);
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    private Collection<Container> getContainersForImage(QueryService queryService, ImageConfiguration image)
+            throws MojoExecutionException, IOException {
+
+        if(image.getStopNamePattern() != null) {
+            Matcher imageNameMatcher = getImageNameMatcher(image.getStopNamePattern());
+
+            Matcher containerNameMatcher = getContainerNameMatcher(image.getStopNamePattern());
+
+            if(imageNameMatcher == null && containerNameMatcher == null) {
+                log.warn("There are no image name or container name patterns in stopNamePattern for image %s: no containers will be stopped", image.getName());
+                return Collections.emptyList();
+            }
+
+            return getContainersForPattern(queryService, imageNameMatcher, containerNameMatcher);
+        }
+
+        return ContainerNamingUtil.getContainersToStop(image,
+                containerNamePattern,
+                getBuildTimestamp(),
+                queryService.getContainersForImage(image.getName(), !keepContainer));
+    }
+
+    private Matcher getImageNameMatcher(String stopNamePattern) throws MojoExecutionException {
+        try {
+            String imageNameRegex = NamePatternUtil.convertNamePatternList(stopNamePattern, NamePatternUtil.IMAGE_FIELD, true);
+            if(imageNameRegex == null) {
+                log.debug("No image name patterns in stopNamePattern %s", stopNamePattern);
+                return null;
+            } else {
+                log.debug("Converted stopNamePattern %s into image name regular expression %s", stopNamePattern, imageNameRegex);
+                return Pattern.compile(imageNameRegex).matcher("");
+            }
+        } catch(IllegalArgumentException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
         }
     }
 
-    private boolean shouldStopContainer(Container container, PomLabel pomLabel, ImageConfiguration image) {
+    private Matcher getContainerNameMatcher(String stopNamePattern) throws MojoExecutionException {
+        try {
+            String containerNameRegex = NamePatternUtil.convertNamePatternList(stopNamePattern, NamePatternUtil.NAME_FIELD, true);;
+            if(containerNameRegex == null) {
+                log.debug("No container name patterns in stopNamePattern %s", stopNamePattern);
+                return null;
+            } else {
+                log.debug("Converted stopNamePattern %s into container name regular expression %s", stopNamePattern, containerNameRegex);
+                return Pattern.compile(containerNameRegex).matcher("");
+            }
+        } catch(IllegalArgumentException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+    }
+
+    private boolean containerMatchesPattern(Container container, Matcher imageNameMatcher, Matcher containerNameMatcher) {
+        if(imageNameMatcher != null && container.getImage() != null && imageNameMatcher.reset(container.getImage()).find()) {
+            log.debug("Container image %s matched stopNamePattern", container.getImage());
+            return true;
+        } else if(containerNameMatcher != null && container.getName() != null && containerNameMatcher.reset(container.getName()).find()) {
+            log.debug("Container name %s matched stopNamePattern", container.getName());
+            return true;
+        } else {
+            log.debug("Neither container image %s nor name %s matched stopNamePattern", container.getImage(), container.getName());
+            return false;
+        }
+    }
+
+    private boolean shouldStopContainer(Container container, GavLabel gavLabel) {
         if (isStopAllContainers()) {
             return true;
         }
-
-        RunImageConfiguration.NamingStrategy strategy = image.getRunConfiguration().getNamingStrategy();
-        if (RunImageConfiguration.NamingStrategy.alias.equals(strategy)) {
-            return container.getName().equals(image.getAlias());
-        }
-
-        String key = pomLabel.getKey();
+        String key = gavLabel.getKey();
         Map<String, String> labels = container.getLabels();
-        return labels.containsKey(key) && pomLabel.equals(new PomLabel(labels.get(key)));
+        return labels.containsKey(key) && gavLabel.equals(new GavLabel(labels.get(key)));
     }
 
     private boolean isStopAllContainers() {
@@ -124,7 +249,7 @@ public class StopMojo extends AbstractDockerMojo {
         return startCalled != null && startCalled;
     }
 
-    private Set<Network> getNetworksToRemove(QueryService queryService, PomLabel pomLabel) throws DockerAccessException {
+    private Set<Network> getNetworksToRemove(QueryService queryService, GavLabel gavLabel) throws IOException {
         if (!autoCreateCustomNetworks) {
             return Collections.emptySet();
         }
@@ -132,22 +257,32 @@ public class StopMojo extends AbstractDockerMojo {
         Set<Network> networks = queryService.getNetworks();
 
         for (ImageConfiguration image : getResolvedImages()) {
+
             final NetworkConfig config = image.getRunConfiguration().getNetworkingConfig();
-            if (config.isCustomNetwork()) {
-                Network network = getNetworkByName(networks, config.getCustomNetwork());
-                if (network != null) {
-                    customNetworks.add(network);
-                    for (Container container : getContainersToStop(queryService, image)) {
-                        if (!shouldStopContainer(container, pomLabel, image)) {
-                            // it's sill in use don't collect it
-                            customNetworks.remove(network);
-                        }
-                    }
+            if (!config.isCustomNetwork() || config.getName() == null) {
+                continue;
+            }
+            final Network network = getNetworkByName(networks, config.getCustomNetwork());
+            if (network == null) {
+                continue;
+            }
+            customNetworks.add(network);
+            Collection<Container> existingContainers =
+                ContainerNamingUtil.getContainersToStop(image,
+                                                        containerNamePattern,
+                                                        getBuildTimestamp(),
+                                                        queryService.getContainersForImage(image.getName(), !keepContainer));
+
+            for (Container container : existingContainers) {
+                if (!shouldStopContainer(container, gavLabel)) {
+                    // it's sill in use don't collect it
+                    customNetworks.remove(network);
                 }
             }
         }
         return customNetworks;
     }
+
     private Network getNetworkByName(Set<Network> networks, String networkName) {
         for (Network network : networks) {
             if (networkName.equals(network.getName())) {

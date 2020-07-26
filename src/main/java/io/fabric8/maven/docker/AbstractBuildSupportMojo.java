@@ -1,14 +1,15 @@
 package io.fabric8.maven.docker;
 
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.util.MojoParameters;
-
 import org.apache.maven.archiver.MavenArchiveConfiguration;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 
@@ -44,19 +45,21 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.target.dir", defaultValue="target/docker")
     private String outputDirectory;
 
+    @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
+    private List<MavenProject> reactorProjects;
+
 
     protected BuildService.BuildContext getBuildContext() throws MojoExecutionException {
         return new BuildService.BuildContext.Builder()
                 .buildArgs(buildArgs)
                 .mojoParameters(createMojoParameters())
-                .pullRegistry(pullRegistry)
-                .registryConfig(getRegistryConfig())
+                .registryConfig(getRegistryConfig(pullRegistry))
                 .build();
     }
 
     protected MojoParameters createMojoParameters() {
         return new MojoParameters(session, project, archive, mavenFileFilter, mavenFilterReader,
-                                  settings, sourceDirectory, outputDirectory);
+                                  settings, sourceDirectory, outputDirectory, reactorProjects);
     }
 
 }

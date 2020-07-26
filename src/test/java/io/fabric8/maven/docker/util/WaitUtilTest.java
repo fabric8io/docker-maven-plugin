@@ -195,7 +195,7 @@ public class WaitUtilTest {
         try {
             wait(700, new HttpPingChecker(httpPingUrl));
         } catch (TimeoutException | PreconditionFailedException exp) {
-
+            // expected
         }
     }
 

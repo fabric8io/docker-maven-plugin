@@ -39,6 +39,12 @@ public class EnvUtilTest {
     }
 
     @Test
+    public void removeEmptyEntries() {
+        assertEquals(ImmutableList.of("ein"),  EnvUtil.removeEmptyEntries(Arrays.asList(null, "", " ein", " ")));
+        assertEquals(ImmutableList.of(), EnvUtil.removeEmptyEntries(null));
+    }
+
+    @Test
     public void splitAtCommas() {
         Iterable<String> it = EnvUtil.splitAtCommasAndTrim(Arrays.asList("db,postgres:9:db", "postgres:db"));
         Iterable<String> expected = ImmutableList.of ("db", "postgres:9:db","postgres:db");
@@ -93,6 +99,7 @@ public class EnvUtilTest {
         Properties props = getTestProperties(
                 "bla.hello","world",
                 "bla.max","morlock",
+                "bla."+EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved",
                 "blub.not","aMap");
         Map<String,String> result = EnvUtil.extractFromPropertiesAsMap("bla", props);
         assertEquals(2,result.size());
@@ -106,6 +113,7 @@ public class EnvUtilTest {
                 "bla.2","world",
                 "bla.1","hello",
                 "bla.blub","last",
+                "bla."+EnvUtil.PROPERTY_COMBINE_POLICY_SUFFIX, "ignored-since-it-is-reserved",
                 "blub.1","unknown");
         List<String> result = EnvUtil.extractFromPropertiesAsList("bla", props);
         assertEquals(3,result.size());
@@ -176,4 +184,18 @@ public class EnvUtilTest {
     }
 
     private Object $(Object ... o) { return o; }
+
+    @Test
+    public void ensureRegistryHttpUrl() {
+        String[] data = {
+            "https://index.docker.io/v1/", "https://index.docker.io/v1/",
+            "index.docker.io/v1/", "https://index.docker.io/v1/",
+            "http://index.docker.io/v1/", "http://index.docker.io/v1/",
+            "registry.fuse-ignite.openshift.com", "https://registry.fuse-ignite.openshift.com"
+        };
+
+        for (int i = 0; i < data.length; i +=2) {
+            assertEquals(">> " + data[i], data[i+1], EnvUtil.ensureRegistryHttpUrl(data[i]));
+        }
+    }
 }

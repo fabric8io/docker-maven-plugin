@@ -1,6 +1,6 @@
 package io.fabric8.maven.docker.service;
 /*
- * 
+ *
  * Copyright 2016 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@ package io.fabric8.maven.docker.service;
 import java.util.*;
 
 import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WaitConfiguration;
 import org.junit.Before;
@@ -52,8 +52,8 @@ public class ContainerTrackerTest {
     @Test
     public void removeContainer() throws Exception {
         String data[][] = new String[][] {
-            {"1", "name1", "alias1", "100", "200", "stop1", "label1"},
-            {"2", "name2", "alias2", null, null, null, "label2"}
+            {"1", "name1", "alias1", "100", "200", "stop1", "label1", "false"},
+            {"2", "name2", "alias2", null, null, null, "label2", "true"}
         };
 
         List<ContainerTracker.ContainerShutdownDescriptor> descs = registerAtTracker(data);
@@ -72,9 +72,9 @@ public class ContainerTrackerTest {
     public void removeDescriptors() throws Exception {
 
         String data[][] = new String[][] {
-            { "1", "name1", "alias1", "100", "200", "stop1", "label1" },
-            { "2", "name2", "alias2", null, null, null, "label1" },
-            { "3", "name3", null, null, null, null, "label2" }
+            { "1", "name1", "alias1", "100", "200", "stop1", "label1", "true" },
+            { "2", "name2", "alias2", null, null, null, "label1", "false" },
+            { "3", "name3", null, null, null, null, "label2", "true" }
         };
 
         List<ContainerTracker.ContainerShutdownDescriptor> descs = registerAtTracker(data);
@@ -96,9 +96,9 @@ public class ContainerTrackerTest {
     @Test
     public void removeAll() throws Exception {
         String data[][] = new String[][] {
-            { "1", "name1", "alias1", "100", "200", "stop1", "label1" },
-            { "2", "name2", "alias2", null, null, null, "label1" },
-            { "3", "name3", null, null, null, null, "label2" }
+            { "1", "name1", "alias1", "100", "200", "stop1", "label1", "true" },
+            { "2", "name2", "alias2", null, null, null, "label1", "false" },
+            { "3", "name3", null, null, null, null, "label2", "false" }
         };
 
         List<ContainerTracker.ContainerShutdownDescriptor> descs = registerAtTracker(data);
@@ -124,6 +124,7 @@ public class ContainerTrackerTest {
         assertEquals(desc.getShutdownGracePeriod(),parseInt(d[3]));
         assertEquals(desc.getKillGracePeriod(),parseInt(d[4]));
         assertEquals(desc.getPreStop(),d[5]);
+        assertEquals(desc.isBreakOnError(), Boolean.parseBoolean(d[7]));
         assertNotNull(desc.getImageConfiguration());
     }
 
@@ -131,7 +132,7 @@ public class ContainerTrackerTest {
         List<ContainerTracker.ContainerShutdownDescriptor> descriptors = new ArrayList<>();
         for (String[] d : data) {
             ImageConfiguration imageConfig =
-                getImageConfiguration(d[1], d[2], parseInt(d[3]), parseInt(d[4]), d[5]);
+                getImageConfiguration(d[1], d[2], parseInt(d[3]), parseInt(d[4]), d[5], Boolean.parseBoolean(d[7]));
 
             tracker.registerContainer(d[0],
                                       imageConfig,
@@ -145,15 +146,15 @@ public class ContainerTrackerTest {
         return s != null ? Integer.parseInt(s) : 0;
     }
 
-    private PomLabel getPomLabel(String artifactId) {
-        return new PomLabel("io.fabric8",artifactId,"1.0.0");
+    private GavLabel getPomLabel(String artifactId) {
+        return new GavLabel("io.fabric8", artifactId, "1.0.0");
     }
 
     private ImageConfiguration getImageConfiguration(String name, String alias) {
-        return getImageConfiguration(name, alias, 0,0,null);
+        return getImageConfiguration(name, alias, 0,0,null,false);
     }
 
-    private ImageConfiguration getImageConfiguration(String name, String alias, int shutdown,int kill, String preStop) {
+    private ImageConfiguration getImageConfiguration(String name, String alias, int shutdown,int kill, String preStop, boolean breakOnError) {
         WaitConfiguration waitConfig = null;
         if (shutdown != 0 && kill != 0) {
             WaitConfiguration.Builder builder = new WaitConfiguration.Builder()
@@ -161,6 +162,7 @@ public class ContainerTrackerTest {
             .kill(kill);
             if (preStop != null) {
                 builder.preStop(preStop);
+                builder.breakOnError(breakOnError);
             }
             waitConfig = builder.build();
         }

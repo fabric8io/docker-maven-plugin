@@ -16,9 +16,10 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.util.Logger;
@@ -39,6 +40,16 @@ public class EcrExtendedAuth {
     private final String accountId;
     private final String region;
 
+    /**
+     * Is given the registry an ecr registry?
+     * 
+     * @param registry the registry name
+     * @return true, if the registry matches the ecr pattern
+     */
+    public static boolean isAwsRegistry(String registry) {
+        return (registry != null) && AWS_REGISTRY.matcher(registry).matches();
+    }
+    
     /**
      * Initialize an extended authentication for ecr registry.
      *
@@ -76,25 +87,25 @@ public class EcrExtendedAuth {
      * @throws MojoExecutionException
      */
     public AuthConfig extendedAuth(AuthConfig localCredentials) throws IOException, MojoExecutionException {
-        JSONObject jo = getAuthorizationToken(localCredentials);
+        JsonObject jo = getAuthorizationToken(localCredentials);
 
-        JSONArray authorizationDatas = jo.getJSONArray("authorizationData");
-        JSONObject authorizationData = authorizationDatas.getJSONObject(0);
-        String authorizationToken = authorizationData.getString("authorizationToken");
+        JsonArray authorizationDatas = jo.getAsJsonArray("authorizationData");
+        JsonObject authorizationData = authorizationDatas.get(0).getAsJsonObject();
+        String authorizationToken = authorizationData.get("authorizationToken").getAsString();
 
         return new AuthConfig(authorizationToken, "none");
     }
 
-    private JSONObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
+    private JsonObject getAuthorizationToken(AuthConfig localCredentials) throws IOException, MojoExecutionException {
         HttpPost request = createSignedRequest(localCredentials, new Date());
         return executeRequest(createClient(), request);
     }
 
     CloseableHttpClient createClient() {
-        return HttpClients.createDefault();
+        return HttpClients.custom().useSystemProperties().build();
     }
 
-    private JSONObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
+    private JsonObject executeRequest(CloseableHttpClient client, HttpPost request) throws IOException, MojoExecutionException {
         try {
             CloseableHttpResponse response = client.execute(request);
             int statusCode = response.getStatusLine().getStatusCode();
@@ -105,7 +116,7 @@ public class EcrExtendedAuth {
 
             HttpEntity entity = response.getEntity();
             Reader jr = new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8);
-            return new JSONObject(new JSONTokener(jr));
+            return new Gson().fromJson(jr, JsonObject.class);
         }
         finally {
             client.close();
@@ -113,7 +124,7 @@ public class EcrExtendedAuth {
     }
 
     HttpPost createSignedRequest(AuthConfig localCredentials, Date time) {
-        String host = "ecr." + region + ".amazonaws.com";
+        String host = "api.ecr." + region + ".amazonaws.com";
 
         logger.debug("Get ECR AuthorizationToken from %s", host);
 

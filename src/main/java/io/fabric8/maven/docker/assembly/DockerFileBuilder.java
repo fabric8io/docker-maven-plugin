@@ -23,6 +23,8 @@ public class DockerFileBuilder {
 
     private static final Joiner JOIN_ON_COMMA = Joiner.on("\",\"");
 
+    private static final Pattern ENV_VAR_PATTERN = Pattern.compile("^\\$(\\{[a-zA-Z0-9_]+\\}|[a-zA-Z0-9_]+).*");
+
     // Base image to use as from
     private String baseImage;
 
@@ -56,14 +58,17 @@ public class DockerFileBuilder {
     // list of ports to expose and environments to use
     private List<String> ports = new ArrayList<>();
 
+    // SHELL executable and params to be used with the runCmds see issue #1156 on github
+    private Arguments shell;
+
     // list of RUN Commands to run along with image build see issue #191 on github
     private List<String> runCmds = new ArrayList<>();
 
     // environment
-    private Map<String,String> envEntries = new HashMap<>();
+    private Map<String,String> envEntries = new LinkedHashMap<>();
 
     // image labels
-    private Map<String, String> labels = new HashMap<>();
+    private Map<String, String> labels = new LinkedHashMap<>();
 
     // exposed volumes
     private List<String> volumes = new ArrayList<>();
@@ -106,6 +111,7 @@ public class DockerFileBuilder {
 
         addCopy(b);
         addWorkdir(b);
+        addShell(b);
         addRun(b);
         addVolumes(b);
 
@@ -133,6 +139,7 @@ public class DockerFileBuilder {
             case cmd:
                 buildOption(healthString, DockerFileOption.HEALTHCHECK_INTERVAL, healthCheck.getInterval());
                 buildOption(healthString, DockerFileOption.HEALTHCHECK_TIMEOUT, healthCheck.getTimeout());
+                buildOption(healthString, DockerFileOption.HEALTHCHECK_START_PERIOD, healthCheck.getStartPeriod());
                 buildOption(healthString, DockerFileOption.HEALTHCHECK_RETRIES, healthCheck.getRetries());
                 buildArguments(healthString, DockerFileKeyword.CMD, false, healthCheck.getCmd());
                 break;
@@ -175,6 +182,11 @@ public class DockerFileBuilder {
         key.addTo(b, newline, arg);
     }
 
+    private static void buildArgumentsAsJsonFormat(StringBuilder b, DockerFileKeyword key, boolean newline, Arguments arguments) {
+        String arg = "[\""  + JOIN_ON_COMMA.join(arguments.asStrings()) + "\"]";
+        key.addTo(b, newline, arg);
+    }
+
     private static void buildOption(StringBuilder b, DockerFileOption option, Object value) {
         if (value != null) {
             option.addTo(b, value);
@@ -183,32 +195,32 @@ public class DockerFileBuilder {
 
     private void addCopy(StringBuilder b) {
         if (assemblyUser != null) {
-            String tmpDir = createTempDir();
-            addCopyEntries(b, tmpDir);
+            String[] userParts = assemblyUser.split(":");
 
-            String[] userParts = StringUtils.split(assemblyUser, ":");
-            String userArg = userParts.length > 1 ? userParts[0] + ":" + userParts[1] : userParts[0];
-            String chmod = "chown -R " + userArg + " " + tmpDir + " && cp -rp " + tmpDir + "/* / && rm -rf " + tmpDir;
-            if (userParts.length > 2) {
-                DockerFileKeyword.USER.addTo(b, "root");
-                DockerFileKeyword.RUN.addTo(b, chmod);
-                DockerFileKeyword.USER.addTo(b, userParts[2]);
-            } else {
-                DockerFileKeyword.RUN.addTo(b, chmod);
+            for (CopyEntry entry : copyEntries) {
+                if (userParts.length > 2) {
+                    DockerFileKeyword.USER.addTo(b, "root");
+                }
+                addCopyEntries(b, "", (userParts.length > 1 ?
+                        userParts[0] + ":" + userParts[1] :
+                        userParts[0]));
+                if (userParts.length > 2) {
+                    DockerFileKeyword.USER.addTo(b, userParts[2]);
+                }
             }
         } else {
-            addCopyEntries(b, "");
+            addCopyEntries(b, "", null);
         }
     }
 
-    private String createTempDir() {
-         return "/tmp/" + UUID.randomUUID().toString();
-    }
-
-    private void addCopyEntries(StringBuilder b, String topLevelDir) {
+    private void addCopyEntries(StringBuilder b, String topLevelDir, String ownerAndGroup) {
         for (CopyEntry entry : copyEntries) {
             String dest = topLevelDir + (basedir.equals("/") ? "" : basedir) + "/" + entry.destination;
-            DockerFileKeyword.COPY.addTo(b, entry.source, dest);
+            if (ownerAndGroup == null) {
+                DockerFileKeyword.COPY.addTo(b, entry.source, dest);
+            } else {
+                DockerFileKeyword.COPY.addTo(b, " --chown=" + ownerAndGroup, entry.source, dest);
+            }
         }
     }
 
@@ -225,14 +237,50 @@ public class DockerFileBuilder {
             String entries[] = new String[map.size()];
             int i = 0;
             for (Map.Entry<String, String> entry : map.entrySet()) {
-                entries[i++] = quote(entry.getKey()) + "=" + quote(entry.getValue());
+                entries[i++] = createKeyValue(entry.getKey(), entry.getValue());
             }
             keyword.addTo(b, entries);
         }
     }
 
-    private String quote(String value) {
-        return StringUtils.quoteAndEscape(value,'"');
+    /**
+     * Escape any slashes, quotes, and newlines int the value.  If any escaping occurred, quote the value.
+     * @param key The key
+     * @param value The value
+     * @return Escaped and quoted key="value"
+     */
+    private String createKeyValue(String key, String value) {
+        StringBuilder sb = new StringBuilder();
+        // no quoting the key; "Keys are alphanumeric strings which may contain periods (.) and hyphens (-)"
+        sb.append(key).append('=');
+        if (value == null || value.isEmpty()) {
+            return sb.append("\"\"").toString();
+        }
+	StringBuilder valBuf = new StringBuilder();
+	boolean toBeQuoted = false;
+        for (int i = 0; i < value.length(); ++i) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"':
+                case '\n':
+                case '\\':
+                    // escape the character
+                    valBuf.append('\\');
+                case ' ':
+                    // space needs quotes, too
+                    toBeQuoted = true;
+                default:
+                    // always append
+                    valBuf.append(c);
+            }
+        }
+        if (toBeQuoted) {
+            // need to keep quotes
+            sb.append('"').append(valBuf.toString()).append('"');
+        } else {
+            sb.append(value);
+        }
+        return sb.toString();
     }
 
     private void addPorts(StringBuilder b) {
@@ -266,6 +314,12 @@ public class DockerFileBuilder {
             String optimisedRunCmd = StringUtils.join(runCmds.iterator(), " && ");
             runCmds.clear();
             runCmds.add(optimisedRunCmd);
+        }
+    }
+
+    private void addShell(StringBuilder b) {
+        if (shell != null) {
+            buildArgumentsAsJsonFormat(b, DockerFileKeyword.SHELL, true, shell);
         }
     }
 
@@ -318,9 +372,9 @@ public class DockerFileBuilder {
 
     public DockerFileBuilder basedir(String dir) {
         if (dir != null) {
-            if (!dir.startsWith("/")) {
+            if (!dir.startsWith("/") && !ENV_VAR_PATTERN.matcher(dir).matches()) {
                 throw new IllegalArgumentException("'basedir' must be an absolute path starting with / (and not " +
-                                                   "'" + basedir + "')");
+                                                   "'" + basedir + "') or start with an environment variable");
             }
             basedir = dir;
         }
@@ -365,6 +419,16 @@ public class DockerFileBuilder {
     }
 
     /**
+     * Adds the SHELL Command plus params within the build image section
+     * @param shell
+     * @return
+     */
+    public DockerFileBuilder shell(Arguments shell) {
+        this.shell = shell;
+        return this;
+    }
+
+    /**
      * Adds the RUN Commands within the build image section
      * @param runCmds
      * @return
@@ -396,7 +460,6 @@ public class DockerFileBuilder {
     public DockerFileBuilder labels(Map<String,String> values) {
         if (values != null) {
             this.labels.putAll(values);
-            validateMap(labels);
         }
         return this;
     }

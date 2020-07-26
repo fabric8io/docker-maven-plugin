@@ -5,6 +5,17 @@ configuration. Such a property based configuration can be selected
 with an `<type>` of `properties`. As extra configuration a prefix for the
 properties can be defined which by default is `docker`.
 
+For single-image configurations it is also possible to active property
+based configuration via an externally set property.
+
+By default, property based configuration uses only properties, ignoring
+any `<build>` and `<run>` sections. To combine values from both sources,
+use the <<combining-property-config,property mode configuration>>.
+
+Properties are read from the Maven project (defined in `<properties>` or global
+Maven configuration from `settings.xml`) and, since 0.25.0, from any `-D`
+flags given to Maven (takes priority over project properties).
+
 .Example
 [source,xml]
 ----
@@ -12,6 +23,7 @@ properties can be defined which by default is `docker`.
   <external>
      <type>properties</type>
      <prefix>docker</prefix> <!-- this is the default -->
+     <mode>only</mode> <!-- this is the default -->
   </external>
 </image>
 ----
@@ -20,6 +32,7 @@ Given this example configuration a single image configuration is built
 up from the following properties, which correspond to the corresponding
 values in the `<build>` and `<run>` sections. A build configuration is only created
 when a `docker.from` or a `docker.fromExt` is set.
+
 
 .External properties
 [cols="1,5"]
@@ -51,11 +64,14 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.assembly.dockerFileDir*
 | specifies a directory containing an external Dockerfile that will be used to create the image. This is deprecated please use `docker.dockerFileDir` or `docker.dockerFile` instead.
 
-| *docker.nocache*
-| Don't use Docker's build cache.This can be overwritten by setting a system property `docker.nocache` when running Maven.
+| *docker.noCache*
+| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.noCache` when running Maven.
 
 | *docker.bind.idx*
 | Sets a list of paths to bind/expose in the container
+
+| *docker.buildArg.VARIABLE*
+| Set a ARG to be available during build of image. *Note*: this is handled separately from external configuration, and is always available. See <<property-buildargs,Build Args>> for more details.
 
 | *docker.capAdd.idx*
 | List of kernel capabilities to add to the container
@@ -68,6 +84,18 @@ when a `docker.from` or a `docker.fromExt` is set.
 
 | *docker.cmd*
 | Command to execute. This is used both when running a container and as default command when creating an image.
+
+| *docker.cpus*
+| Specify how much of the available CPU resources a container can use
+
+| *docker.cpuset*
+| Limit the container to specific CPUs or cores. This can be provided either as a comma-separated list or a hyphen-separated range.
+
+| *docker.cpushares*
+| Set the proportion of the host machine's cpu cycles available to the container
+
+| *docker.cacheFrom*
+| List of image names to use as cache sources
 
 | *docker.domainname*
 | Container domain name
@@ -94,16 +122,22 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Property part for the exposed container properties like internal IP addresses as described in <<start-overview, docker:start>>.
 
 | *docker.env.VARIABLE*
-| Sets an environment variable. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
+| Sets an environment variable used in build and run. E.g. `<docker.env.JAVA_OPTS>-Xmx512m</docker.env.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for building images and running containers. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
+
+| *docker.envBuild.VARIABLE*
+| Sets an environment variable used in build only. E.g. `<docker.envBuild.JAVA_OPTS>-Xmx512m</docker.envBuild.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is building images only. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
+
+| *docker.envRun.VARIABLE*
+| Sets an environment variable used in run only. E.g. `<docker.envRun.JAVA_OPTS>-Xmx512m</docker.envRun.JAVA_OPTS>` sets the environment variable `JAVA_OPTS`. Multiple such entries can be provided. This environment is used both for running containers only. The value cannot be empty but can contain Maven property names which are resolved before the Dockerfile is created.
 
 | *docker.envPropertyFile*
-| specifies the path to a property file whose properties are used as environment variables. The environment variables takes precedence over any other environment variables specified.
+| specifies the path to a property file whose properties are used as environment variables in run. The environment variables takes precedence over any other environment variables specified.
 
 | *docker.extraHosts.idx*
 | List of `host:ip` to add to `/etc/hosts`
 
 | *docker.filter*
-| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details. 
+| Enable and set the delimiters for property replacements. By default properties in the format `${..}` are replaced with Maven properties. You can switch off property replacement by setting this property to `false`. When using a single char like `@` then this is used as a delimiter (e.g `@...@`). See <<build-filtering, Filtering>> for more details.
 
 | *docker.from*
 | Base image for building an image. Must be set when an image is created (or `fromExt`)
@@ -123,14 +157,29 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.healthcheck.retries*
 | Number of retries for how often to retry a healthcheck until it is considered to have failed
 
+| *docker.healthcheck.startPeriod*
+| Initialization time for containers that need time to bootstrap. Probe failure during that period will not be counted towards the maximum number of retries. However, if a health check succeeds during the start period, the container is considered started and all consecutive failures will be counted towards the maximum number of retries. (in seconds or with a given time unit)
+
 | *docker.healthcheck.timeout*
 | Timeout after which a healthcheck command is considered to be failed (in seconds or with a given time unit)
 
 | *docker.hostname*
 | Container hostname
 
+| *docker.imagePropertyConfiguration*
+| Special property to activate property configuration without altering XML file (see <<combining-property-config-externally,Activating property configuration externally>>).
+
+| *docker.imagePullPolicy.build*
+| Specific pull policy used when building images. See <<image-pull-policy,imagePullPolicy>> for the possible values.
+
+| *docker.imagePullPolicy.run*
+| Specific pull policy used for downloading images to run. See <<image-pull-policy,imagePullPolicy>> for the possible values.
+
 | *docker.labels.LABEL*
 | Sets a label which works similarly like setting environment variables.
+
+| *docker.loadNamePattern*
+| Search the archive specified in `docker.dockerArchive` for the specified image name and creates a tag from the matched name to the build image name specified in `docker.name`.
 
 | *docker.log.enabled*
 | Use logging (default: `true`)
@@ -148,10 +197,10 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Name of an alternative log driver
 
 | *docker.log.driver.opts.VARIABLE*
-| Logging driver options (specified similar as in `docker.env.VARIABLE`)
+| Logging driver options (specified similarly as in `docker.env.VARIABLE`)
 
 | *docker.links.idx*
-| defines a list of links to other containers when starting a container. _idx_ can be any suffix which is not use except when _idx_ is numeric it specifies the order within the list (i.e. the list contains first a entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example `<docker.links.1>db</docker.links.1>` specifies a link to the image with alias 'db'.
+| defines a list of links to other containers when starting a container. _idx_ can be any suffix which is not used except when _idx_ is numeric it specifies the order within the list (i.e. the list contains first entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example `<docker.links.1>db</docker.links.1>` specifies a link to the image with alias 'db'.
 
 | *docker.maintainer*
 | defines the maintainer's email as used when building an image
@@ -177,6 +226,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.network.alias.idx*
 | One or more aliase for a custom network. Only used when the network mode is `custom`
 
+| *docker.noCache*
+| Don't use a cache when building the image
+
 | *docker.optimise*
 | if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
 
@@ -193,13 +245,16 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Container restart policy
 
 | *docker.restartPolicy.retry*
-| Max restrart retries if `on-failure` used
+| Max restart retries if `on-failure` used
 
 | *docker.run.idx*
 | List of commands to `RUN` when creating the image
 
 | *docker.securityOpts.idx*
 | List of `opt` elements to specify kernel security options to add to the container. For example `docker.securityOpt.1=seccomp=unconfined`
+
+| *docker.shmsize*
+| Size of `/dev/shm` in bytes.
 
 | *docker.tags.idx*
 | List of tags to apply to a built image
@@ -240,6 +295,9 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.wait.exec.preStop*
 | Command to execute before command stops.
 
+| *docker.wait.exec.breakOnError*
+| If set to "true" then stop the build if the a `postStart` or `preStop` command failed
+
 | *docker.wait.shutdown*
 | Time in milliseconds to wait between stopping a container and removing it.
 
@@ -262,14 +320,81 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Current Working dir for commands to run in when running containers
 |===
 
-Any other `<run>` or `<build>` sections are ignored when this handler
-is used. Multiple property configuration handlers can be used if they
+Multiple property configuration handlers can be used if they
 use different prefixes. As stated above the environment and ports
 configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.
 
-.Example
+[[combining-property-config]]
+.Combining property and XML configuration
+By default the property handler will only consider properties and ignore any other image
+configuration in the XML/POM file. This can be changed by adding the `<mode>`
+configuration (since version 0.25.0), which can have one of the following values:
+
+.Property mode
+[cols="1,5"]
+|===
+|`only`
+| Only look at properties, ignore any `<run>` or `<build>` sections for this image. This is the default, and also the behavior in versions before 0.25.0.
+
+|`override`
+| Use property if set, else fall back to value found in `<run>` or `<build>` sections for this image.
+
+|`fallback`
+| Use value found in `<run>` or `<build>` sections for this image, else fall back to to property value.
+
+|`skip`
+| Effectively disable properties, same as not specifying the `<external>` section at all.
+|===
+
+[[combining-property-config-externally]]
+.Activating property configuration externally
+It also possible to activate property configuration by setting the property `docker.imagePropertyConfiguration` to a
+valid `property mode`, without adding an `<external>` section. The plugin will then use any properties with default `docker.` prefix.
+This can be useful if most of the configuration is specified in XML/POM file, but there
+is need to override certain configuration values without altering the POM file (instead add this to a parent POM or
+global settings.xml).
+
+If set in parent POM, but not wanted in specific project, the property could be overriden locally with the value `skip`
+to disabled property configuration for that particular project.
+If set in settings.xml however, by Maven design, that value will always take precedence over any properties defined in
+pom.xml.
+
+For configurations with multiple images, using this property will by default produce an error. All images would then
+use the same `docker` property prefix, resulting in multiple identical configurations.
+This can be overruled by adding an explicit <external> configuration element with an explicit <prefix> to all
+images (or at least all but one). Normally you'd want to use different prefix for each image, but if explicitly set
+it does allow you to use the same prefix (even `docker`) on all images. This is useful in case you just want to share
+a few properties. This only makes sense when `property mode` is _override_ or _fallback_ and image-specific configuration
+are defined in the POM configuration.
+
+For examples, see <<externally-property-config-example, here>>
+
+.Merging POM and property values
+For some fields it may be desired to merge values from both POM and properties. For example, in a certain run environment
+we might want to inject a `http_proxy` environment variable, but we do not want to add this to the POM file.
+
+This is solved using a *Combine policy* which can be either `replace` or `merge`. Merge is only available for
+configuration of Map or List type. For scalar values such as strings and integers, it is not supported.
+For Maps, both sources are merged, with the priority source taking precedence. For Lists, they are concatenated, with values
+from the priority source being added first.
+
+Combine policy is specified per configuration key/property, and the default in most cases is currently `replace`. The following
+keys have `merge` as default policy:
+
+* docker.args
+* docker.envBuild
+* docker.envRun
+* docker.labels
+* docker.ports
+* docker.tags
+
+This can be overridden individually for all configuration keys (of map/list type) by setting an additional property suffixed `._combine`.
+For example, to not merge ports, set `docker.ports._combine=replace`, and to enable merging of dns, set `docker.dns._combine=merge`.
+
+
+.Example, properties only
 [source,xml]
 ----
 <properties>
@@ -302,3 +427,151 @@ run and build configuration sections.
   </plugins>
 </build>
 ----
+
+
+[[externally-property-config-example]]
+.Example, combining properties and XML/POM configuration
+[source,xml]
+----
+<properties>
+  <docker.assembly.descriptor>src/main/docker-assembly.xml</docker.assembly.descriptor>
+  <docker.env.CATALINA_OPTS>-Xmx32m</docker.env.CATALINA_OPTS>
+  <docker.label.version>${project.version}</docker.label.version>
+  <docker.ports.jolokia.port>8080</docker.ports.jolokia.port>
+  <docker.wait.url>http://localhost:${jolokia.port}/jolokia</docker.wait.url>
+</properties>
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <external>
+              <type>properties</type>
+              <prefix>docker</prefix>
+              <mode>override</mode>
+            </external>
+
+            <name>jolokia/demo</name>
+            <alias>service</alias>
+
+            <build>
+              <from>consol/tomcat:7.0</from>
+              <labels>
+                <software>tomcat</software>
+              </labels>
+            </build>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+This would build the same image as the previous example.
+If instead built with `mvn docker:build -Pdocker.from=console/tomcat:8.0 -Ddocker.tags.0=tc8-test` it would build from that image instead, and also add that tag to the image.
+
+If `-Ddocker.labels.status=beta` is added, the image would be given two labels: `status=beta` and `software=tomcat`.
+If `-Ddocker.labels._combine=replace` is added, the image would be given one label only: `status=beta`.
+
+
+.Example, external activation of property configuration, single image
+
+Global ~/.m2/settings.xml file:
+[source,xml]
+----
+<profiles>
+  <profile>
+    <id>http-proxy</id>
+    <properties>
+      <docker.buildArg.http_proxy>http://proxy.example.com:8080</docker.buildArg.http_proxy>
+      <docker.runArg.http_proxy>http://proxy.example.com:8080</docker.runArg.http_proxy>
+      <docker.imagePropertyConfiguration>override</docker.imagePropertyConfiguration>
+    </properties>
+  </profile>
+</profiles>
+----
+
+[source,xml]
+----
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <name>jolokia/demo</name>
+            <alias>service</alias>
+            <build>
+              <from>consol/tomcat:7.0</from>
+            </build>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+When the plugin is executed, on a machine with the given settings.xml, the plugin will see the `docker.imagePropertyConfiguration` configuration and enable
+the property merging feature. When building, it will inject the http_proxy build ARG, and when running, it will inject the http_proxy ENV variable.
+The rest of the configuration will be sourced from the XML, unless the Maven project has any other `docker.*` properties defined.
+
+
+.Example, external activation of property configuration, two images
+Using the same global ~/.m2/settings.xml file as in previous example, but with two image definitions and no extra configuration will cause
+an error, saying that you cannot use property docker.imagePropertyConfiguration on projects with multiple images.
+
+By adding an explicit external configuration directive with the same prefix in both images, this error is disabled.
+
+[source,xml]
+----
+<build>
+  <plugins>
+    <plugin>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <configuration>
+        <images>
+          <image>
+            <external>
+              <type>properties</type>
+              <prefix>docker</prefix>
+              <mode>override</mode>
+            </external>
+
+            <name>jolokia/demo</name>
+            <alias>service</alias>
+            <build>
+              <from>consol/tomcat:7.0</from>
+            </build>
+          </image>
+
+          <image>
+            <external>
+              <type>properties</type>
+              <prefix>docker</prefix>
+              <mode>override</mode>
+            </external>
+
+            <name>jolokia/demo2</name>
+            <alias>service2</alias>
+            <build>
+              <from>consol/tomcat:7.0</from>
+            </build>
+          </image>
+        </images>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+----
+
+The behaviour will now be same as previous example.
+Note that you must explicitly state `<mode>override</mode>`, otherwise it will use the default `only`.

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -12,17 +13,19 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
+import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
@@ -131,16 +134,16 @@ public class WatchService {
                                 imageConfig.getName(), mojoParameters);
                         dockerAccess.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(watcher);
-                    } catch (MojoExecutionException | IOException e) {
+                    } catch (MojoExecutionException | IOException | ExecException e) {
                         log.error("%s: Error when copying files to container %s: %s",
-                                imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
+                                  imageConfig.getDescription(), watcher.getContainerId(), e.getMessage());
                     }
                 }
             }
         };
     }
 
-    private void callPostExec(ImageWatcher watcher) throws DockerAccessException {
+    private void callPostExec(ImageWatcher watcher) throws DockerAccessException, ExecException {
         if (watcher.getPostExec() != null) {
             String containerId = watcher.getContainerId();
             runService.execInContainer(containerId, watcher.getPostExec(), watcher.getImageConfiguration());
@@ -170,7 +173,7 @@ public class WatchService {
                             watcher.getWatchContext().getImageCustomizer().execute(imageConfig);
                         }
 
-                        buildService.buildImage(imageConfig, buildContext);
+                        buildService.buildImage(imageConfig, null, buildContext, buildService.buildArchive(imageConfig, buildContext, "false"));
 
                         String name = imageConfig.getName();
                         watcher.setImageId(queryService.getImageId(name));
@@ -220,24 +223,38 @@ public class WatchService {
     }
 
     private Task<ImageWatcher> defaultContainerRestartTask() {
-        return new Task<ImageWatcher>() {
-            @Override
-            public void execute(ImageWatcher watcher) throws Exception {
-                // Stop old one
-                ImageConfiguration imageConfig = watcher.getImageConfiguration();
-                PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
-                String id = watcher.getContainerId();
+        return watcher -> {
+            // Stop old one
+            ImageConfiguration imageConfig = watcher.getImageConfiguration();
+            PortMapping mappedPorts = runService.createPortMapping(imageConfig.getRunConfiguration(), watcher.getWatchContext().getMojoParameters().getProject().getProperties());
+            String id = watcher.getContainerId();
 
-                String optionalPreStop = getPreStopCommand(imageConfig);
-                if (optionalPreStop != null) {
-                    runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
-                }
-                runService.stopPreviouslyStartedContainer(id, false, false);
-
-                // Start new one
-                watcher.setContainerId(runService.createAndStartContainer(imageConfig, mappedPorts, watcher.getWatchContext().getPomLabel(),
-                        watcher.getWatchContext().getMojoParameters().getProject().getProperties()));
+            String optionalPreStop = getPreStopCommand(imageConfig);
+            if (optionalPreStop != null) {
+                runService.execInContainer(id, optionalPreStop, watcher.getImageConfiguration());
             }
+            runService.stopPreviouslyStartedContainer(id, false, false);
+
+            // Start new one
+            StartContainerExecutor helper = new StartContainerExecutor.Builder()
+                    .dispatcher(watcher.watchContext.dispatcher)
+                    .follow(watcher.watchContext.follow)
+                    .log(log)
+                    .portMapping(mappedPorts)
+                    .gavLabel(watcher.watchContext.getGavLabel())
+                    .projectProperties(watcher.watchContext.mojoParameters.getProject().getProperties())
+                    .basedir(watcher.watchContext.mojoParameters.getProject().getBasedir())
+                    .imageConfig(imageConfig)
+                    .serviceHub(watcher.watchContext.hub)
+                    .logOutputSpecFactory(watcher.watchContext.serviceHubFactory.getLogOutputSpecFactory())
+                    .showLogs(watcher.watchContext.showLogs)
+                    .containerNamePattern(watcher.watchContext.containerNamePattern)
+                    .buildTimestamp(watcher.watchContext.buildTimestamp)
+                    .build();
+
+            String containerId = helper.startContainers();
+
+            watcher.setContainerId(containerId);
         };
     }
 
@@ -383,7 +400,7 @@ public class WatchService {
 
         private String watchPostExec;
 
-        private PomLabel pomLabel;
+        private GavLabel gavLabel;
 
         private boolean keepContainer;
 
@@ -394,6 +411,16 @@ public class WatchService {
         private Task<ImageConfiguration> imageCustomizer;
 
         private Task<ImageWatcher> containerRestarter;
+
+        private transient ServiceHub hub;
+        private transient ServiceHubFactory serviceHubFactory;
+        private transient LogDispatcher dispatcher;
+        private boolean follow;
+        private String showLogs;
+
+        private Date buildTimestamp;
+
+        private String containerNamePattern;
 
         public WatchContext() {
         }
@@ -422,8 +449,8 @@ public class WatchService {
             return watchPostExec;
         }
 
-        public PomLabel getPomLabel() {
-            return pomLabel;
+        public GavLabel getGavLabel() {
+            return gavLabel;
         }
 
         public boolean isKeepContainer() {
@@ -446,9 +473,17 @@ public class WatchService {
             return containerRestarter;
         }
 
+        public Date getBuildTimestamp() {
+            return buildTimestamp;
+        }
+
+        public String getContainerNamePattern() {
+            return containerNamePattern;
+        }
+
         public static class Builder {
 
-            private WatchContext context = new WatchContext();
+            private WatchContext context;
 
             public Builder() {
                 this.context = new WatchContext();
@@ -488,8 +523,8 @@ public class WatchService {
                 return this;
             }
 
-            public Builder pomLabel(PomLabel pomLabel) {
-                context.pomLabel = pomLabel;
+            public Builder pomLabel(GavLabel gavLabel) {
+                context.gavLabel = gavLabel;
                 return this;
             }
 
@@ -518,11 +553,45 @@ public class WatchService {
                 return this;
             }
 
+            public Builder follow(boolean follow) {
+                context.follow = follow;
+                return this;
+            }
+
+            public Builder showLogs(String showLogs) {
+                context.showLogs = showLogs;
+                return this;
+            }
+
+            public Builder hub(ServiceHub hub){
+                context.hub = hub;
+                return this;
+            }
+
+            public Builder serviceHubFactory(ServiceHubFactory serviceHubFactory){
+                context.serviceHubFactory = serviceHubFactory;
+                return this;
+            }
+
+            public Builder dispatcher(LogDispatcher dispatcher){
+                context.dispatcher = dispatcher;
+                return this;
+            }
+
+            public Builder buildTimestamp(Date buildTimestamp) {
+                context.buildTimestamp = buildTimestamp;
+                return this;
+            }
+
+            public Builder containerNamePattern(String containerNamePattern) {
+                context.containerNamePattern = containerNamePattern;
+                return this;
+            }
+
+
             public WatchContext build() {
                 return context;
             }
-
         }
     }
-
 }

@@ -1,6 +1,6 @@
 
 [[start-overview]]
-This goal creates and starts docker containers. This goals evaluates the configuration's `<run>` section of all given (and enabled images).
+This goal creates and starts docker containers. This goal evaluates the configuration's `<run>` section of all given (and enabled images).
 
 Also you can specify `docker.follow` as system property so that the `{plugin}:start` will never return but block until CTRL-C is pressed. That similar to the option `-i` for `docker run`. This will automatically switch on `showLogs` so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis). `{plugin}:run` is an alias for `{plugin}:start` with `docker.follow` enabled.
 

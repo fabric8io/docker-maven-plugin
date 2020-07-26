@@ -35,16 +35,23 @@ be specified by the certPath or machine configuration, or by the
 | `docker.autoCreate` `CustomNetworks`
 
 | *autoPull*
-a| Decide how to pull missing base images or images to start:
+a| Decide how to pull missing base images or images to start. This option is *deprecated*, please use <<image-pull-policy, imagePullPolicy>> instead.
 
- * `on` : Automatic download any missing images (default)
- * `off` : Automatic pulling is switched off
- * `always` : Pull images always even when they are already exist locally
- * `once` : For multi-module builds images are only checked once and pulled for the whole build.
+The following values are supported:
 
-By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option `-B`). A very simplified progress meter is provided when using no color output (i.e. with `-Ddocker.useColor=false`).
+ * `on` or `once`: Automatic download any missing images (default)
+ * `off` : Automatic pulling is switched off always
+ * `always` : Pull images always even when they already exist locally.
 
 | `docker.autoPull`
+
+| *buildArchiveOnly*
+a| Skip the actual Docker image build and only create the archive holding the Dockerfile and build context. The following values are supported:
+
+* `/path/to/archive` : Create the build tar archive as file with name `/path/to/archive` and then stop without doing the actual image build
+* `true` (or an empty value) : Skip building the image, but don't copy the generated build archive.
+* `false` : Build the image. This is the default behaviour.
+| `docker.buildArchiveOnly`
 
 | *certPath*
 | Path to SSL certificate when SSL is used for communicating with the Docker daemon. These certificates are normally stored in `~/.docker/`. With this configuration the path can be set explicitly. If not set, the fallback is first taken from the environment variable `DOCKER_CERT_PATH` and then as last resort `~/.docker/`. The keys in this are expected with it standard names `ca.pem`, `cert.pem` and `key.pem`. Please refer to the https://docs.docker.com/articles/https[Docker documentation] for more information about SSL security with Docker.
@@ -70,6 +77,17 @@ the URL is:
 | *filter*
 | In order to temporarily restrict the operation of plugin goals this configuration option can be used. Typically this will be set via the system property `docker.filter` when Maven is called. The value can be a single image name (either its alias or full name) or it can be a comma separated list with multiple image names. Any name which doesn't refer an image in the configuration will be ignored.
 | `docker.filter`
+
+| [[image-pull-policy]] *imagePullPolicy*
+a| Specify whether images should be pull when looking for base images while building or images for starting.
+This property can take the following values (case insensitive):
+
+ * `IfNotPresent`: Automatic download any missing images (default)
+ * `Never` : Automatic pulling is switched off always
+ * `Always` : Pull images always even when they already exist locally.
+
+By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option `-B`). A very simplified progress meter is provided when using no color output (i.e. with `-Ddocker.useColor=false`).
+| `docker.imagePullPolicy`
 
 | *logDate*
 | Date format which is used for printing out container logs. This configuration can be overwritten by individual run configurations and described below. The format is described in <<loggging,Logging>>.
@@ -116,7 +134,9 @@ the URL is:
 | `docker.skip.run`
 
 | *skipTag*
-| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`
+| If set to `true` this plugin won't add any tags to images that have been built with `{plugin}:build`. +
+If set to `true` this plugin won't push any tags with `{plugin}:push`. +
+If set to `true` this plugin won't remove any tags with `{plugin}:remove`. +
 | `docker.skip.tag`
 
 | *skipMachine*
@@ -132,7 +152,20 @@ the URL is:
 | `docker.useColor`
 
 | *verbose*
-| Boolean attribute for switching on verbose output on standard output (stdout). This includes detailed information like the build steps when doing a Docker build. Default is `false`
+| String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.
+
+The currently known groups are:
+
+build::
+ Print out Docker build instructions
+api::
+ API calls to the Docker daemons are logged
+all::
+ All levels are enabled
+
+If you set an empty string (or only e.g. `-Ddocker.verbose`) then the "build" group is enabled. You can also use "true" / "false" to switch on / off verbose logging.
+
+Default is that verbose logging is disabled.
 | `docker.verbose`
 |===
 
@@ -162,14 +195,17 @@ This plugin supports also Docker machine (which must be installed locally, of co
 | *autoCreate*
 | if set to `true` then a Docker machine will automatically created. Default is `false`.
 
+| *regenerateCertsAfterStart*
+| if set to `true` then certificates will be regenerated after starting the Docker Machine.  This is useful if using the AWS EC2 driver, which will assign machines new IP addresses after each start.  Default is `false`.
+
 | *createOptions*
 | Map with options for Docker machine when auto-creating a machine. See the docker machine documentation for possible options.
 |===
 
 
-When no Docker host is configured or available as environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but `autoCreate` is true, then the machine is created and started. Otherwise an error is printed. Please note, that a machine which has been created because of `autoCreate` gets never deleted by docker-maven-plugin. This needs to be done manually if required.
+When no Docker host is configured or available as an environment variable, then the configured Docker machine is used. If the machine exists but is not running, it is started automatically. If it does not exists but `autoCreate` is true, then the machine is created and started. Otherwise, an error is printed. Please note, that a machine which has been created because of `autoCreate` gets never deleted by docker-maven-plugin. This needs to be done manually if required.
 
-In absence of a `<machine>` configuration section the Maven property `docker.machine.name` can be used to provide the name of a Docker machine. Similarly the property `docker.machine.autoCreate` can be set to true for creating a Docker machine, too.
+In absence of a `<machine>` configuration section the Maven property `docker.machine.name` can be used to provide the name of a Docker machine. Similarly, the property `docker.machine.autoCreate` can be set to true for creating a Docker machine, too.
 
 You can use the property `docker.skip.machine` if you want to override the internal detection mechanism to always disable docker machine support.
 

@@ -17,6 +17,15 @@ mvn versions:set -DgenerateBackupPoms=false -DnewVersion=0.15.4
 
 * Run the build over the fabric8 CD Pipeline 
 
+or in the _classic_ way:
+
+```
+mvn -Dmaven.repo.local=/tmp/clean-repo -DdevelopmentVersion=0.23-SNAPSHOT -DreleaseVersion=0.23.0 -Dtag=v0.23.0 -Prelease release:prepare
+mvn -Dmaven.repo.local=/tmp/clean-repo -DdevelopmentVersion=0.23-SNAPSHOT -DreleaseVersion=0.23.0 -Dtag=v0.23.0 -Prelease release:perform
+```
+
+and then push to Maven central manually via https://oss.sonatype.org/
+
 ## Update from upstream
 
 ```

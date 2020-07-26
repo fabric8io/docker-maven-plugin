@@ -5,6 +5,10 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 |===
 | Element | Description | Property
 
+| <<container-name, *containerNamePattern*>>
+| Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
+| `docker.containerNamePattern`
+
 | *showLogs*
 | In order to switch on globally the logs *showLogs* can be used as global configuration (i.e. outside of `<images>`). If set it will print out all standard
  output and standard error messages for all containers started. As value the images for which logs should be shown can be given as a comma separated list.
@@ -34,6 +38,9 @@ The `<run>` configuration element knows the following sub elements:
 | <<misc-startup, *cmd*>>
 | Command which should be executed at the end of the container's startup. If not given, the image's default command is used. See <<misc-startup, Startup Arguments>> for details.
 
+| <<container-name, *containerNamePattern*>>
+| Pattern for naming the container when it is created. See <<container-name, Container Naming Strategy>> for details.
+
 | *domainname*
 | Domain name for the container
 
@@ -44,7 +51,7 @@ The `<run>` configuration element knows the following sub elements:
 | List of `host` elements specifying dns search domains
 
 | *entrypoint*
-| Entry point for the container. See <<misc-startup, Startup Arguments] for details.
+| Entry point for the container. See <<misc-startup, Startup Arguments>> for details.
 
 | <<misc-env, *env*>>
 | Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <<misc-env,Environment and Labels>>.
@@ -60,6 +67,9 @@ The `<run>` configuration element knows the following sub elements:
 
 | *hostname*
 | Hostname of the container
+
+| *imagePullPolicy*
+| Specific pull policy for downloading the image. This overwrites any global pull policy. See the global <<image-pull-policy, imagePullPolicy>> configuration option for the possible values and the default.
 
 | <<misc-env, *labels*>>
 | Labels which should be attached to the  container. They are specified in the typical maven property format as described in <<misc-env,Environment and Labels>>.
@@ -77,7 +87,7 @@ The `<run>` configuration element knows the following sub elements:
 | Total memory usage (memory + swap); use -1 to disable swap.
 
 | *namingStrategy*
-a| Naming strategy for how the container name is created:
+a| *This option is deprecated, please use a `containerNamePattern` instead* Naming strategy for how the container name is created:
 
 * *none* : uses randomly assigned names from docker (default)
 * *alias* : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists with this name.
@@ -94,6 +104,12 @@ a| Naming strategy for how the container name is created:
 | *privileged*
 | If `true` give container full access to host
 
+| *readOnly*
+| If `true` mount the container's root filesystem as read only
+
+| *autoRemove*
+| If `true` automatically remove the container when it exits. This has no effect if <<start-restart, Restart Policy>> has been set.
+
 | <<start-restart, *restartPolicy*>>
 | Restart Policy
 
@@ -105,6 +121,9 @@ a| Naming strategy for how the container name is created:
 
 | *skip*
 | If `true` disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.
+
+| *stopMode*
+| Specifies how to stop a running container. It supports the modes `graceful` and `kill` as values, with `graceful` being the default.
 
 | *tmpfs*
 a| List countaintin `<mount>` elements for directories to mount with a temporary filesystem. Optionally, mount options can be appended after a ':'. See below for an example.

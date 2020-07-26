@@ -90,7 +90,7 @@ public class HttpClientBuilder implements ClientBuilder {
 
             SSLContext sslContext =
                     SSLContexts.custom()
-                               .useProtocol(SSLConnectionSocketFactory.TLS)
+                               .setProtocol(SSLConnectionSocketFactory.TLS)
                                .loadKeyMaterial(keyStore, "docker".toCharArray())
                                .loadTrustMaterial(keyStore, null)
                                .build();

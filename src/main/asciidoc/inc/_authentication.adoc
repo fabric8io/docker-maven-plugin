@@ -5,16 +5,17 @@
 When pulling (via the `autoPull` mode of `{plugin}:start`) or pushing image, it
 might be necessary to authenticate against a Docker registry.
 
-There are five different locations searched for credentials.  In order, these are:
+There are six different locations searched for credentials.  In order, these are:
 
 * Providing system properties `docker.username` and `docker.password` from the outside.
+* Providing system properties `registry.username` and `registry.password` from the outside.
 * Using a `<authConfig>` section in the plugin configuration with `<username>` and `<password>` elements.
 * Using OpenShift configuration in `~/.config/kube`
 * Using a `<server>` configuration in `~/.m2/settings.xml`
-* Login into a registry with `docker login` (credentials in `~/.docker/config.json`)
+* Login into a registry with `docker login` (credentials in a credential helper or in `~/.docker/config.json`)
 
 Using the username and password directly in the `pom.xml` is not
-recommended since this is widely visible. This is most easiest and
+recommended since this is widely visible. This is easiest and
 transparent way, though. Using an `<authConfig>` is straight forward:
 
 [source,xml]
@@ -41,8 +42,7 @@ the outside:
 mvn -Ddocker.username=jolokia -Ddocker.password=s!cr!t {plugin}:push
 ----
 
-The most secure and also the most _mavenish_ way is to add a server to
-the Maven settings file `~/.m2/settings.xml`:
+The most _mavenish_ way is to add a server to the Maven settings file `~/.m2/settings.xml`:
 
 .Example
 [source,xml]
@@ -65,13 +65,19 @@ have a second account 'fabric8io' then use an `<id>docker.io/fabric8io</id>` for
 username with a slash to the id name. The default without username is only taken if no server entry with
 a username appended id is chosen.
 
-As a final fallback, this plugin consults `~/.docker/config.json` for getting to the credentials. Within this
-file credentials are stored when connecting to a registry with the command `docker login` from the command line.
+The most _secure_ way is to rely on docker's credential store or credential helper and read confidential information
+from an external credentials store, such as the native keychain of the operating system. Follow the instruction on
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store[the docker login documentation].
+
+As a final fallback, this plugin consults `$DOCKER_CONFIG/config.json` if `DOCKER_CONFIG` is set, or `~/.docker/config.json` if not, and reads credentials stored directly within this
+file. This unsafe behavior happened when connecting to a registry with the command `docker login` from the command line
+with older versions of docker (pre 1.13.0) or when docker is not configured to use a
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store[credential store].
 
 == Pull vs. Push Authentication
 
 The credentials lookup described above is valid for both push and
-pull operations. In order to narrow things down, credentials can be be
+pull operations. In order to narrow things down, credentials can be
 provided for pull or push operations alone:
 
 In an `<authConfig>` section a sub-section `<pull>` and/or `<push>`
@@ -116,7 +122,7 @@ mvn -Ddocker.registry=docker-registry.domain.com:80/default/myimage \
     -Ddocker.password=$(oc whoami -t)
 ----
 
-(note, that the image's user name part ("default" here") must
+(note, that the image's username part ("default" here") must
 correspond to an OpenShift project with the same name to which you
 currently connected account has access).
 
@@ -139,6 +145,8 @@ For dedicated _pull_ and _push_ configuration the system properties
 available as well as the configuration option `<useOpenShiftAuth>` in
 an `<pull>` or `<push>` section within the `<authConfig>`
 configuration.
+
+If `useOpenShiftAuth` is enabled then the OpenShift Konfiguration will be looked up in `$KUBECONFIG` or, if this environment variable is not set, in `~/.kube/config`.
 
 [[password-encryption]]
 == Password encryption
@@ -171,5 +179,45 @@ Some docker registries require additional steps to authenticate.
 link:https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_GetStarted.html[Amazon ECR] requires using an IAM access key to obtain temporary docker login credentials.
 The `docker:push` and `docker:pull` goals automatically execute this exchange for any registry of the form _<awsAccountId>_ *.dkr.ecr.* _<awsRegion>_ *.amazonaws.com*, unless the `skipExtendedAuth` configuration (`docker.skip.extendedAuth` property) is set true.
 
+Note that for an ECR repository with URI `123456789012.dkr.ecr.eu-west-1.amazonaws.com/example/image` the d-m-p's `docker.registry` should be set to `123456789012.dkr.ecr.eu-west-1.amazonaws.com` and `example/image` is the `<name>` of the image.
+
 You can use any IAM access key with the necessary permissions in any of the locations mentioned above except `~/.docker/config.json`.
 Use the IAM *Access key ID* as the username and the *Secret access key* as the password.
+In case you're using temporary security credentials provided by the AWS Security Token Service (AWS STS), you have to provide the *security token* as well.
+To do so, either specify the `docker.auth` system property or provide an `<auth>` element alongside username & password in the `authConfig`.
+
+d-m-p will attempt to read AWS credentials from some well-known spots in case there is no explicit configuration:
+
+* it will pick up ENV variables link:https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html[as documented for the AWS CLI]
+
+* it will pick up temporary credentials of link:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html[the IAM role of an EC2 instance]
+
+* it will pick up temporary credentials of link:https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html[the IAM role of a fargate task (OR ECS with EC2 with ECS_AWSVPC_BLOCK_IMDS as "true")]
+
+If any of these authentication information is accessible, it will be used.
+
+[NOTE]
+====
+For a more complete, robust and reliable authentication experience, you can add the AWS SDK for Java as a dependency.
+
+[source,xml]
+----
+<plugins>
+    <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <dependencies>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-core</artifactId>
+                <version>1.11.707</version>
+            </dependency>
+        </dependencies>
+    </plugin>
+</plugins>
+----
+
+This extra dependency allows the usage of all link:https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html[options] that the AWS default credential provider chain provides.
+
+If the AWS SDK is found in the classpath, it takes precedence over the custom AWS credentials lookup mechanisms listed above.
+====

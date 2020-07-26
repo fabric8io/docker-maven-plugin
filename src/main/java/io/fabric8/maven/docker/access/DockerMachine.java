@@ -68,6 +68,9 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
                     break;
                 case Stopped:
                     new StartCommand().execute();
+                    if (Boolean.TRUE == machine.getRegenerateCertsAfterStart()) {
+                        new RegenerateCertsCommand().execute();
+                    }
                     break;
             }
         }
@@ -156,7 +159,7 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
                 }
             }
             args.add(machine.getName());
-            return args.toArray(new String[args.size()]);
+            return args.toArray(new String[0]);
         }
 
         @Override
@@ -197,6 +200,32 @@ public class DockerMachine implements DockerConnectionDetector.DockerHostProvide
         @Override
         protected void end() {
             log.info("Started docker machine \"%s\" in %d seconds",machine.getName(), (System.currentTimeMillis() - start) / 1000);
+        }
+    }
+
+    // docker-machine regenerate-certs <name>
+    private class RegenerateCertsCommand extends ExternalCommand {
+
+        private long start;
+
+        RegenerateCertsCommand() {
+            super(DockerMachine.this.log);
+        }
+
+        @Override
+        protected String[] getArgs() {
+            return new String[]{"docker-machine", "regenerate-certs", "-f", machine.getName()};
+        }
+
+        @Override
+        protected void start() {
+            log.info("Regenerating certificates for \"%s\"", machine.getName());
+            start = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void end() {
+            log.info("Regenerated certificates for \"%s\" in %d seconds",machine.getName(), (System.currentTimeMillis() - start) / 1000);
         }
     }
 }

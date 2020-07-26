@@ -4,14 +4,13 @@ import java.io.*;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
-
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 /**
  * Utility class for building up a keystore which can be used in
@@ -21,6 +20,12 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
  * @since 20.10.14
  */
 public class KeyStoreUtil {
+
+    static {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     /**
      * Create a key stored holding certificates and secret keys from the given Docker key cert
@@ -46,21 +51,21 @@ public class KeyStoreUtil {
     static PrivateKey loadPrivateKey(String keyPath) throws IOException, GeneralSecurityException {
         try (Reader reader = new FileReader(keyPath);
             PEMParser parser = new PEMParser(reader)) {
-            Object readObject = parser.readObject();
-            if (readObject instanceof PEMKeyPair) {
-                PEMKeyPair keyPair = (PEMKeyPair) readObject;
-                return generatePrivateKey(keyPair.getPrivateKeyInfo());
-            } else if (readObject instanceof PrivateKeyInfo) {
-                return generatePrivateKey((PrivateKeyInfo) readObject);
+            Object readObject;
+            while ((readObject = parser.readObject()) != null) {
+                if (readObject instanceof PEMKeyPair) {
+                    PEMKeyPair keyPair = (PEMKeyPair) readObject;
+                    return generatePrivateKey(keyPair.getPrivateKeyInfo());
+                } else if (readObject instanceof PrivateKeyInfo) {
+                    return generatePrivateKey((PrivateKeyInfo) readObject);
+                }
             }
         }
         throw new GeneralSecurityException("Cannot generate private key from file: " + keyPath);
     }
 
-    private static PrivateKey generatePrivateKey(PrivateKeyInfo keyInfo) throws IOException, NoSuchAlgorithmException,
-            InvalidKeySpecException {
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyInfo.getEncoded());
-        return KeyFactory.getInstance("RSA").generatePrivate(keySpec);
+    private static PrivateKey generatePrivateKey(PrivateKeyInfo keyInfo) throws IOException {
+        return new JcaPEMKeyConverter().getPrivateKey(keyInfo);
     }
 
     private static void addCA(KeyStore keyStore, String caPath) throws IOException, KeyStoreException,

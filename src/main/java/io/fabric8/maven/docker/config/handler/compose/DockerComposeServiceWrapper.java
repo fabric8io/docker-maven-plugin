@@ -1,9 +1,21 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.util.VolumeBindingUtil;
 
 
 class DockerComposeServiceWrapper {
@@ -12,13 +24,20 @@ class DockerComposeServiceWrapper {
     private final String name;
     private final File composeFile;
     private final ImageConfiguration enclosingImageConfig;
+    private final File baseDir;
 
     DockerComposeServiceWrapper(String serviceName, File composeFile, Map<String, Object> serviceDefinition,
-                                ImageConfiguration enclosingImageConfig) {
+                                ImageConfiguration enclosingImageConfig, File baseDir) {
         this.name = serviceName;
         this.composeFile = composeFile;
         this.configuration = serviceDefinition;
         this.enclosingImageConfig = enclosingImageConfig;
+
+        if (!baseDir.isAbsolute()) {
+            throw new IllegalArgumentException(
+                    "Expected the base directory '" + baseDir + "' to be an absolute path.");
+        }
+        this.baseDir = baseDir;
     }
 
     String getAlias() {
@@ -164,7 +183,7 @@ class DockerComposeServiceWrapper {
             if (toJoin.size() > 1) {
                 throwIllegalArgumentException("'networks:' Only one custom network to join is supported currently");
             }
-            return new NetworkConfig(NetworkConfig.Mode.custom, name);
+            return new NetworkConfig(NetworkConfig.Mode.custom, toJoin.get(0));
         } else if (networks instanceof Map) {
             Map<String,Object> toJoin = (Map<String, Object>) networks;
             if (toJoin.size() > 1) {
@@ -174,11 +193,22 @@ class DockerComposeServiceWrapper {
             NetworkConfig ret = new NetworkConfig(NetworkConfig.Mode.custom, custom);
             Object aliases = toJoin.get(custom);
             if (aliases != null) {
-                if (!(aliases instanceof List)) {
-                    throwIllegalArgumentException("'networks:' Aliases must be given as a list of string");
-                }
-                for (String alias : (List<String>) aliases) {
-                    ret.addAlias(alias);
+                if (aliases instanceof List) {
+                    for (String alias : (List<String>) aliases) {
+                        ret.addAlias(alias);
+                    }
+                } else if (aliases instanceof Map) {
+                	Map<String, List<String>> map = (Map<String, List<String>>) aliases;
+                    if (map.containsKey("aliases")) {
+                        for (String alias : map.get("aliases")) {
+                            ret.addAlias(alias);
+                        }
+                    } else {
+                        throwIllegalArgumentException(
+                                "'networks:' Aliases must be given as a map of strings. 'aliases' key not founded");
+                    }
+                } else {
+                    throwIllegalArgumentException("'networks:' No aliases entry found in network config map");
                 }
             }
             return ret;
@@ -249,7 +279,14 @@ class DockerComposeServiceWrapper {
             builder.from(volumesFrom);
             added = true;
         }
-        return added ? builder.build() : null;
+
+        if (added) {
+            RunVolumeConfiguration configuration = builder.build();
+            VolumeBindingUtil.resolveRelativeVolumeBindings(baseDir, configuration);
+            return configuration;
+        }
+
+        return null;
     }
 
     String getDomainname() {
@@ -280,7 +317,7 @@ class DockerComposeServiceWrapper {
 
         RestartPolicy.Builder builder = new RestartPolicy.Builder();
         if (restart.contains(":")) {
-            String[] parts = restart.split("\\:", 2);
+            String[] parts = restart.split(":", 2);
             builder.name(parts[0]).retry(Integer.valueOf(parts[1]));
         }
         else {
@@ -310,11 +347,16 @@ class DockerComposeServiceWrapper {
     }
 
     public String getCpuSet() {
-        return asString("cpu_set");
+        return asString("cpuset");
     }
 
-    public String getCpuShares() {
-        return asString("cpu_shares");
+    public Long getCpuShares() {
+        return asLong("cpu_shares");
+    }
+
+    public Long getCpusCount(){
+        Double cpus = asDouble("cpus");
+        return convertToNanoCpus(cpus);
     }
 
     public List<String> getDevices() {
@@ -373,6 +415,14 @@ class DockerComposeServiceWrapper {
         return Collections.emptyMap();
     }
 
+    private Double asDouble(String key){
+        Double value = null;
+        if (configuration.containsKey(key)) {
+            value = Double.valueOf(configuration.get(key).toString());
+        }
+        return value;
+    }
+
     private Arguments asArguments(Object command, String label) {
         if (command instanceof String) {
             return new Arguments((String) command);
@@ -393,7 +443,16 @@ class DockerComposeServiceWrapper {
         return map;
     }
 
+    private Long convertToNanoCpus(Double cpus){
+        if(cpus == null){
+            return null;
+        }
+        return (long)(cpus * 1000000000);
+    }
+
     private void throwIllegalArgumentException(String msg) {
         throw new IllegalArgumentException(String.format("%s: %s - ", composeFile, name) + msg);
     }
+
 }
+

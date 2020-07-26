@@ -17,16 +17,17 @@ package io.fabric8.maven.docker.util;
  */
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Properties;
 
-import mockit.*;
-import mockit.integration.junit4.JMockit;
+import mockit.Expectations;
+import mockit.FullVerifications;
+import mockit.Injectable;
+import mockit.Tested;
 import org.apache.maven.project.MavenProject;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.fail;
@@ -35,7 +36,7 @@ import static org.junit.Assert.fail;
  * @author roland
  * @since 07/06/16
  */
-@RunWith(JMockit.class)
+
 public class ImageNameFormatterTest {
 
     @Injectable
@@ -66,19 +67,23 @@ public class ImageNameFormatterTest {
     @Test
     public void defaultUserName() throws Exception {
 
-        new Expectations() {{
-            project.getProperties(); result = new Properties();
-        }};
-        String[] data = {
+        final String[] data = {
             "io.fabric8", "fabric8",
             "io.FABRIC8", "fabric8",
             "io.fabric8.", "fabric8",
             "io.fabric8", "fabric8",
-            "io.fabric8___", "fabric8__",
-            "fabric8....", "fabric8"
+            "fabric8....", "fabric8",
+            "io.fabric8___", "fabric8__"
         };
+
         for (int i = 0; i < data.length; i+=2) {
-            new GroupIdExpectations(data[i]);
+
+            final int finalI = i;
+            new Expectations() {{
+                project.getProperties(); result = new Properties();
+                project.getGroupId(); result = data[finalI];
+            }};
+
             String value = formatter.format("%g");
             assertThat("Idx. " + i / 2,value, equalTo(data[i+1]));
         }
@@ -95,7 +100,12 @@ public class ImageNameFormatterTest {
 
     @Test
     public void tagWithProperty() throws Exception {
-        new PropertyLookupExpectations("docker.image.tag","1.2.3");
+        new Expectations() {{
+            Properties props = new Properties();
+            props.put("docker.image.tag","1.2.3");
+            project.getProperties(); result = props;
+
+        }};
         assertThat(formatter.format("%t"),equalTo("1.2.3"));
         new FullVerifications() {{ }};
     }
@@ -129,7 +139,13 @@ public class ImageNameFormatterTest {
 
     @Test
     public void groupIdWithProperty() throws Exception {
-        new PropertyLookupExpectations("docker.image.user","this.it..is");
+        new Expectations() {{
+            Properties props = new Properties();
+            props.put("docker.image.user","this.it..is");
+            project.getProperties(); result = props;
+
+        }};
+
         assertThat(formatter.format("%g/name"),equalTo("this.it..is/name"));
 
         new FullVerifications() {{ }};
@@ -137,17 +153,7 @@ public class ImageNameFormatterTest {
 
     private final class GroupIdExpectations extends Expectations {
         GroupIdExpectations(String groupId) {
-            project.getGroupId(); result = groupId;
         }
 
-    }
-
-    private final class PropertyLookupExpectations extends Expectations {
-
-        public PropertyLookupExpectations(String key, String value) {
-            Properties props = new Properties();
-            props.put(key,value);
-            project.getProperties(); result = props;
-        }
     }
 }

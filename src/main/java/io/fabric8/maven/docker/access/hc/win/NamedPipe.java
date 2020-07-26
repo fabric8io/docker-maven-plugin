@@ -17,6 +17,8 @@ import java.nio.charset.Charset;
 
 import io.fabric8.maven.docker.util.Logger;
 
+import static com.google.common.base.CharMatcher.ascii;
+
 final class NamedPipe extends Socket {
 
 	// Logging
@@ -140,7 +142,11 @@ final class NamedPipe extends Socket {
         return new FilterOutputStream(Channels.newOutputStream(channel)) {
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
-                log.debug("REQUEST %s", new String(b, off, len, Charset.forName("UTF-8")));
+                if(log.isDebugEnabled()){
+                    String request = new String(b, off, len, Charset.forName("UTF-8"));
+                    String logValue = ascii().matchesAllOf(request) ? request : "not logged due to non-ASCII characters. ";
+                    log.debug("REQUEST %s", logValue);
+                }
                 out.write(b, off, len);
             }
 

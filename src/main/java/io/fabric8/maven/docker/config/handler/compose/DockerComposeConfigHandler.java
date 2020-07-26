@@ -14,6 +14,9 @@ import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
 import org.yaml.snakeyaml.Yaml;
 
+import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveAbsolutely;
+import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveComposeFileAbsolutely;
+
 
 /**
  * Docker Compose handler for allowing a docker-compose file to be used
@@ -31,7 +34,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     // Enable later when issue above is fixed. In the meantime its declared in the components.xml, too
     // @Requirement(role = MavenReaderFilter.class)
-    private MavenReaderFilter readerFilter;
+    MavenReaderFilter readerFilter;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -39,7 +42,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         List<ImageConfiguration> resolved = new ArrayList<>();
 
         DockerComposeConfiguration handlerConfig = new DockerComposeConfiguration(unresolvedConfig.getExternalConfig());
-        File composeFile = resolveComposeFile(handlerConfig.getBasedir(), handlerConfig.getComposeFile(), project);
+        File composeFile = resolveComposeFileAbsolutely(handlerConfig.getBasedir(), handlerConfig.getComposeFile(), project);
 
         for (Object composeO : getComposeConfigurations(composeFile, project, session)) {
             Map<String, Object> compose = (Map<String, Object>) composeO;
@@ -49,7 +52,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 String serviceName = entry.getKey();
                 Map<String, Object> serviceDefinition = (Map<String, Object>) entry.getValue();
 
-                DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig);
+                DockerComposeServiceWrapper mapper = new DockerComposeServiceWrapper(serviceName, composeFile, serviceDefinition, unresolvedConfig, resolveAbsolutely(handlerConfig.getBasedir(), project));
                 resolved.add(buildImageConfiguration(mapper, composeFile.getParentFile(), unresolvedConfig, handlerConfig));
             }
         }
@@ -59,9 +62,13 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
 
     private void validateVersion(Map<String, Object> compose, File file) {
         Object version = compose.get("version");
-        if (version == null || !version.toString().trim().equals("2")) {
-            throw new ExternalConfigHandlerException("Only version 2 of the docker-compose format is supported for " + file);
+        if (version == null || !isVersion2(version.toString().trim())) {
+            throw new ExternalConfigHandlerException("Only version 2.x of the docker-compose format is supported for " + file);
         }
+    }
+
+    private boolean isVersion2(String version) {
+        return version.equals("2") || version.startsWith("2.");
     }
 
     private String extractDockerFilePath(DockerComposeServiceWrapper mapper, File parentDir) {
@@ -122,7 +129,6 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 project,
                 Collections.<String>emptyList(),
                 false,
-                null,
                 session,
                 null);
         //request.setEscapeString("$");
@@ -187,9 +193,10 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 // stop_signal not supported
                 .ulimits(wrapper.getUlimits())
                 .volumes(wrapper.getVolumeConfig())
-                // cpu_share n.s.
+                .cpuShares(wrapper.getCpuShares())
+                .cpus(wrapper.getCpusCount())
+                .cpuSet(wrapper.getCpuSet())
                 // cpu_quota n.s.
-                // cpuset n.s.
                 .domainname(wrapper.getDomainname())
                 .hostname(wrapper.getHostname())
                 // ipc n.s.
@@ -207,8 +214,4 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private File resolveComposeFile(String baseDir, String compose, MavenProject project) {
-        File yamlFile = new File(compose);
-        return yamlFile.isAbsolute() ? yamlFile :  new File(new File(project.getBasedir(),baseDir),compose);
-    }
 }

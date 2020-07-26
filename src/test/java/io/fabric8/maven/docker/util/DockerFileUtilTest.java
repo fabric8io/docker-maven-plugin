@@ -17,13 +17,22 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.MavenArtifactRepository;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
+import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
 
+import mockit.Mock;
+import mockit.MockUp;
+
+import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -35,8 +44,40 @@ public class DockerFileUtilTest {
     @Test
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
-        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, null, "false"));
+        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create()).get(0));
+    }
+
+    @Test
+    public void testMultiStage() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+             toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertEquals("fabric8/s1i-java", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
+    }
+
+    @Test
+    public void testMultiStageNamed() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_named_build_stages");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
+    }
+
+    @Test
+    public void testMultiStageNamedWithDuplicates() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_named_redundant_build_stages");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("centos", fromClauses.next());
+        assertEquals(false, fromClauses.hasNext());
+
     }
 
     private File copyToTempDir(String resource) throws IOException {
@@ -50,12 +91,7 @@ public class DockerFileUtilTest {
 
     @Test
     public void interpolate() throws Exception {
-        Properties props = new Properties();
-        props.put("base", "java");
-        props.put("name", "guenther");
-        props.put("age", "42");
-        props.put("ext", "png");
-
+        MojoParameters params = mockMojoParams();
         Map<String, String> filterMapping = new HashMap<>();
         filterMapping.put("none", "false");
         filterMapping.put("var", "${*}");
@@ -64,10 +100,12 @@ public class DockerFileUtilTest {
         for (Map.Entry<String, String> entry : filterMapping.entrySet()) {
             for (int i = 1; i < 2; i++) {
                 File dockerFile = getDockerfilePath(i, entry.getKey());
-                String expected =
-                    IOUtil.toString(new FileReader(dockerFile + ".expected"));
-                String actual = DockerFileUtil.interpolate(dockerFile, props, entry.getValue());
-                assertEquals(expected, actual);
+                File expectedDockerFile = new File(dockerFile.getParent(), dockerFile.getName() + ".expected");
+                File actualDockerFile = createTmpFile(dockerFile.getName());
+                FixedStringSearchInterpolator interpolator = DockerFileUtil.createInterpolator(params, entry.getValue());
+                FileUtils.write(actualDockerFile, DockerFileUtil.interpolate(dockerFile, interpolator), "UTF-8");
+                // Compare text lines without regard to EOL delimiters
+                assertEquals(FileUtils.readLines(expectedDockerFile), FileUtils.readLines(actualDockerFile));
             }
         }
     }
@@ -76,5 +114,28 @@ public class DockerFileUtilTest {
         ClassLoader classLoader = getClass().getClassLoader();
         return new File(classLoader.getResource(
             String.format("interpolate/%s/Dockerfile_%d", dir, i)).getFile());
+    }
+
+    private MojoParameters mockMojoParams() {
+        MavenProject project = new MavenProject();
+        project.setArtifactId("docker-maven-plugin");
+
+        Properties projectProperties = project.getProperties();
+        projectProperties.put("base", "java");
+        projectProperties.put("name", "guenther");
+        projectProperties.put("age", "42");
+        projectProperties.put("ext", "png");
+
+        Settings settings = new Settings();
+        ArtifactRepository localRepository = new MavenArtifactRepository() {
+            public String getBasedir() {
+                return "repository";
+            }
+        };
+        @SuppressWarnings("deprecation")
+        MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
+        session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue
+        session.getSystemProperties().put("user.name", "somebody"); // Java system property: -Duser.name=somebody
+        return new MojoParameters(session, project, null, null, null, settings, "src", "target", Collections.singletonList(project));
     }
 }

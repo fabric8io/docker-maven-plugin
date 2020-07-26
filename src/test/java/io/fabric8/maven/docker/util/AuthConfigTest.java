@@ -1,14 +1,17 @@
 package io.fabric8.maven.docker.util;
 
+import com.google.gson.JsonObject;
+
+import org.apache.commons.codec.binary.Base64;
+import org.junit.Test;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
-import org.apache.commons.codec.binary.Base64;
-import org.json.JSONObject;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author roland
@@ -20,31 +23,39 @@ public class AuthConfigTest {
     @Test
     public void simpleConstructor() {
         Map<String,String> map = new HashMap<String,String>();
-        map.put("username","roland");
-        map.put("password","secret");
-        map.put("email","roland@jolokia.org");
+        map.put(AuthConfig.AUTH_USERNAME,"roland");
+        map.put(AuthConfig.AUTH_PASSWORD,"#>secrets??");
+        map.put(AuthConfig.AUTH_EMAIL,"roland@jolokia.org");
         AuthConfig config = new AuthConfig(map);
         check(config);
     }
 
     @Test
     public void mapConstructor() {
-        AuthConfig config = new AuthConfig("roland","secret","roland@jolokia.org",null);
+        AuthConfig config = new AuthConfig("roland","#>secrets??","roland@jolokia.org",null);
         check(config);
     }
 
     @Test
     public void dockerLoginConstructor() {
-        AuthConfig config = new AuthConfig(Base64.encodeBase64String("roland:secret".getBytes()),"roland@jolokia.org");
+        AuthConfig config = new AuthConfig(Base64.encodeBase64String("roland:#>secrets??".getBytes()),"roland@jolokia.org");
         check(config);
     }
 
     private void check(AuthConfig config) {
+        // Since Base64.decodeBase64 handles URL-safe encoding, must explicitly check
+        // the correct characters are used
+        assertEquals(
+                "eyJ1c2VybmFtZSI6InJvbGFuZCIsInBhc3N3b3JkIjoiIz5zZWNyZXRzPz8iLCJlbWFpbCI6InJvbGFuZEBqb2xva2lhLm9yZyJ9",
+                config.toHeaderValue()
+        );
+
         String header = new String(Base64.decodeBase64(config.toHeaderValue()));
-        JSONObject data = new JSONObject(header);
-        assertEquals("roland",data.getString("username"));
-        assertEquals("secret",data.getString("password"));
-        assertEquals("roland@jolokia.org",data.getString("email"));
-        assertFalse(data.has("auth"));
+
+        JsonObject data = JsonFactory.newJsonObject(header);
+        assertEquals("roland",data.get(AuthConfig.AUTH_USERNAME).getAsString());
+        assertEquals("#>secrets??",data.get(AuthConfig.AUTH_PASSWORD).getAsString());
+        assertEquals("roland@jolokia.org",data.get(AuthConfig.AUTH_EMAIL).getAsString());
+        assertFalse(data.has(AuthConfig.AUTH_AUTH));
     }
 }

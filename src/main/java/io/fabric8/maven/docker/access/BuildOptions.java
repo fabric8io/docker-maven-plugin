@@ -16,9 +16,10 @@ package io.fabric8.maven.docker.access;/*
  */
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.json.JSONObject;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 /**
  * @author roland
@@ -60,9 +61,25 @@ public class BuildOptions {
         return this;
     }
 
+    public BuildOptions cacheFrom(List<String> cacheFrom) {
+        if (cacheFrom == null || cacheFrom.isEmpty()) {
+            options.remove("cachefrom");
+        } else {
+            options.put("cachefrom", JsonFactory.newJsonArray(cacheFrom).toString());
+        }
+        return this;
+    }
+
     public BuildOptions buildArgs(Map<String, String> buildArgs) {
         if (buildArgs != null && buildArgs.size() > 0) {
-            options.put("buildargs", new JSONObject(buildArgs).toString());
+            options.put("buildargs", JsonFactory.newJsonObject(buildArgs).toString());
+        }
+        return this;
+    }
+
+    public BuildOptions network(String network) {
+        if (network != null && !network.isEmpty()) {
+            options.put("networkmode", network);
         }
         return this;
     }

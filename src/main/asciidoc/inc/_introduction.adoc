@@ -5,7 +5,14 @@ This is a Maven plugin for managing Docker images and containers. It focuses on 
 
 == Building Images
 
-One purpose of this plugin is to create Docker images holding the actual application. This is done with the <<{plugin}:build>> goal. It is easy to include build artifacts and their dependencies into an image. Therefore, this plugin uses the assembly descriptor format from the maven-assembly-plugin to specify the content which will be added from a sub-directory in the image (`/maven` by default). Images that are built with this plugin can be pushed to public or private Docker registries with <<{plugin}:push>>.
+One purpose of this plugin is to create Docker images holding the actual application. This is done with the <<{plugin}:build>> goal. It is easy to include build artefacts and their dependencies into an image.
+
+Several ways for configuring the builds are supported:
+
+* An own configuration syntax can be used to create a Dockerfile. For specifying artefacts and other files, the plugin uses the assembly descriptor format from the maven-assembly-plugin to copy over those file into the Docker image.
+* An external Dockerfile can be specified in which Maven properties can be inserted. This is also the default mode, if only a single image should be built and a top-level `Dockerfile` exists. See <<simple-dockerfile-build,Simple Dockerfile build>> for details of this zero XML configuration mode.
+
+Images that are built with this plugin can be pushed to public or private Docker registries with <<{plugin}:push>>.
 
 == Running Containers
 
@@ -32,7 +39,7 @@ The `<build>` and `<run>` parts are optional and can be omitted.
 [[example]]
 == Example
 
-In the following examples two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <<{plugin}:start,<run> >> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <<{plugin}:build,<build> >> section. It creates an image which has artifacts and dependencies in the `/maven` directory (and which are specified with an assembly descriptor). Additionally it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the `<run>` section this port is mapped to a dynamically chosen port, and then assigned to the Maven property `${tomcat.port}`. This property could be used, for example, by an integration test to access this microservice. An important part is the `<links>` section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with `DB_`).
+In the following examples, two images are specified. One is the official PostgreSQL 9 image from Docker Hub, which internally is referenced with an alias "database". It only has a <<{plugin}:start,<run> >> section which declares that the startup should wait until the given text pattern is matched in the log output. Next is a "service" image, which has a <<{plugin}:build,<build> >> section. It creates an image which has artifacts and dependencies in the `/maven` directory (and which are specified with an assembly descriptor). Additionally, it specifies the startup command for the container, which in this example fires up a microservice from a jar file copied over via the assembly descriptor. It also exposes port 8080. In the `<run>` section this port is mapped to a dynamically chosen port and then assigned to the Maven property `${tomcat.port}`. This property could be used, for example, by an integration test to access this microservice. An important part is the `<links>` section which indicates that the image with the alias of "database" is linked into the "service" container, which can access the internal ports in the usual Docker way (via environment variables prefixed with `DB_`).
 
 Images can be specified in any order and the plugin will take care of the proper startup order (and will bail out if it detects circular dependencies).
 
@@ -89,7 +96,7 @@ Images can be specified in any order and the plugin will take care of the proper
 <3> Base image, in this case `java:8`
 <4> Content of the image can be specified with an <<build-assembly,assembly descriptor>>
 <5> <<misc-startup,Default command>> to run when a container is created.
-<6> <<{plugin}:run,Run configuration>> defines how a container should be created from this image
+<6> <<{plugin}:start,Run configuration>> defines how a container should be created from this image
 <7> <<start-port-mapping,Port mapping>> defines how container ports should be mapped to host ports
 <8> <<start-wait,Wait>> section which is a readiness check when starting the service
 <9> <<start-links,Network link>> describes how this service's container is linked to the database container
@@ -104,7 +111,7 @@ Some other highlights, in random order:
 * Waiting for a container to startup based on time, the reachability of an URL, or a pattern in the log output
 * Support for SSL <<authentication>> and OpenShift credentials
 * Docker machine support
-* Flexible registry handling (i.e. registries can be specified as meta data)
+* Flexible registry handling (i.e. registries can be specified as metadata)
 * Specification of <<password-encryption,encrypted>> registry passwords for push and pull in ~/.m2/settings.xml (i.e., outside the pom.xml)
 * Color output
 * <<{plugin}:watch,Watching>> on project changes and automatic recreation of image

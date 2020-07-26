@@ -1,9 +1,15 @@
 package io.fabric8.maven.docker.config;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-import io.fabric8.maven.docker.util.*;
+import io.fabric8.maven.docker.util.DeepCopy;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.ImageName;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.StartOrderResolver;
 import org.apache.maven.plugins.annotations.Parameter;
 
 /**
@@ -17,6 +23,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
     @Parameter
     private String alias;
+
+    @Parameter
+    private String stopNamePattern;
+
+    @Parameter
+    private String removeNamePattern;
 
     @Parameter
     private RunImageConfiguration run;
@@ -51,9 +63,30 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         this.name = name;
     }
 
+    /**
+     * Override externalConfiguration when defined via special property.
+     *
+     * @param externalConfiguration Map with alternative config
+     */
+    public void setExternalConfiguration(Map<String, String> externalConfiguration) {
+        this.external = externalConfiguration;
+    }
+
     @Override
 	public String getAlias() {
         return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public String getStopNamePattern() {
+        return stopNamePattern;
+    }
+
+    public String getRemoveNamePattern() {
+        return removeNamePattern;
     }
 
     public RunImageConfiguration getRunConfiguration() {
@@ -97,7 +130,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
     private void addLinks(RunImageConfiguration runConfig, List<String> ret) {
         // Custom networks can have circular links, no need to be considered for the starting order.
-        if (runConfig.getLinks() != null && !runConfig.getNetworkingConfig().isCustomNetwork()) {
+        if (!runConfig.getNetworkingConfig().isCustomNetwork()) {
             for (String[] link : EnvUtil.splitOnLastColon(runConfig.getLinks())) {
                 ret.add(link[0]);
             }
@@ -114,10 +147,8 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
     private void addDependsOn(RunImageConfiguration runConfig, List<String> ret) {
         // Only used in custom networks.
-        if (runConfig.getDependsOn() != null && runConfig.getNetworkingConfig().isCustomNetwork()) {
-            for (String link : runConfig.getDependsOn()) {
-                ret.add(link);
-            }
+        if (runConfig.getNetworkingConfig().isCustomNetwork()) {
+            ret.addAll(runConfig.getDependsOn());
         }
     }
 
@@ -125,7 +156,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         // If there is no explicit run configuration, its a data image
         // TODO: Probably add an explicit property so that a user can indicated whether it
         // is a data image or not on its own.
-        return getRunConfiguration() == null;
+        return run == null;
     }
 
     public String getDescription() {
@@ -182,6 +213,16 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
             return this;
         }
 
+        public Builder removeNamePattern(String removeNamePattern) {
+            config.removeNamePattern = removeNamePattern;
+            return this;
+        }
+
+        public Builder stopNamePattern(String stopNamePattern) {
+            config.stopNamePattern = stopNamePattern;
+            return this;
+        }
+
         public Builder runConfig(RunImageConfiguration runConfig) {
             config.run = runConfig;
             return this;
@@ -194,6 +235,11 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
         public Builder externalConfig(Map<String, String> externalConfig) {
             config.external = externalConfig;
+            return this;
+        }
+
+        public Builder registry(String registry) {
+            config.registry = registry;
             return this;
         }
 

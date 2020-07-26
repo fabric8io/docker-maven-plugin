@@ -19,6 +19,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.io.Files;
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Timestamp;
 
@@ -46,6 +47,7 @@ public class DefaultLogCallback implements LogCallback {
             } else {
                 SharedPrintStream cachedPs = printStreamMap.get(file);
                 if (cachedPs == null) {
+                    Files.createParentDirs(new File(file));
                     PrintStream ps = new PrintStream(new FileOutputStream(file), true);
                     cachedPs = new SharedPrintStream(ps);
                     printStreamMap.put(file, cachedPs);
@@ -83,6 +85,7 @@ public class DefaultLogCallback implements LogCallback {
     public void error(String error) {
         ps().println(error);
     }
+
     private void addLogEntry(PrintStream ps, LogEntry logEntry) {
         // TODO: Add the entry to a queue, and let the queue be picked up with a small delay from an extra
         // thread which then can sort the entries by time before printing it out in order to avoid race conditions.

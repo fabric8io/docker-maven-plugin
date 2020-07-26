@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.io.*;
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.io.Files;
 import org.apache.maven.shared.utils.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +38,7 @@ public class DefaultLogCallbackTest {
     public void before() throws IOException {
         file = File.createTempFile("logcallback", ".log");
         file.deleteOnExit();
-        spec = new LogOutputSpec.Builder().prefix("callback-test")
+        spec = new LogOutputSpec.Builder().prefix("callback-test> ")
                                           .file(file.toString()).build();
         callback = new DefaultLogCallback(spec);
         callback.open();
@@ -76,7 +78,7 @@ public class DefaultLogCallbackTest {
         PrintStream stdout = System.out;
         try {
             System.setOut(ps);
-            spec = new LogOutputSpec.Builder().prefix("stdout")
+            spec = new LogOutputSpec.Builder().prefix("stdout> ")
                     .build();
             callback = new DefaultLogCallback(spec);
             callback.open();
@@ -145,6 +147,18 @@ public class DefaultLogCallbackTest {
 
         // expect empty set
         assertThat(indexes, is(empty()));
+    }
+
+    @Test
+    public void shouldCreateParentDirs() throws IOException {
+        File dir = Files.createTempDir();
+        dir.deleteOnExit();
+        file = new File(dir, "non/existing/dirs/file.log");
+        spec = new LogOutputSpec.Builder().prefix("callback-test> ")
+                .file(file.toString()).build();
+        callback = new DefaultLogCallback(spec);
+        callback.open();
+        assertTrue(file.exists());
     }
 
     private class LoggerTask implements Runnable {

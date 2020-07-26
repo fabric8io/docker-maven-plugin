@@ -7,6 +7,7 @@
 # - dns (list)
 # - dns_search (list)
 #
+version: 2.2
 services:
   service:
     cap_add:
@@ -15,8 +16,9 @@ services:
       - CAP
     command: command.sh
     cgroup_parent: cgroup_parent
-    cpu_shares: 73
-    cpu_set: 0,1
+    cpu_shares: 1
+    cpuset: 0,1
+    cpus: 1
     devices:
     - "/dev/device:/dev/device"
     dns: 8.8.8.8
@@ -58,7 +60,13 @@ services:
     user: tomcat
     volumes:
       - /foo
-      - /tmp:/tmp
+      # mount /tmp with rw access control
+      - /tmp:/tmp:rw
+      # A named volume with access control
+      - namedvolume:/volume:ro
+      # ${project.build.directory}/test-classes/compose/version/ should actually exist, because
+      # src/test/resources/compose is recursively copied to target/test-classes/compose by the Maven lifecycle
+      - compose/version/:/tmp/version
     volumes_from:
       - from
     working_dir: foo

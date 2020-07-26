@@ -1,0 +1,4 @@
+version: 23.5
+services:
+  service:
+    image: image

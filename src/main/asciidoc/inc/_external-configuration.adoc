@@ -2,13 +2,13 @@
 [[external-configuration]]
 = External Configuration
 
-For special configuration needs there is the possibility to get the
+For special configuration needs, there is the possibility to get the
 runtime and build configuration from places outside the plugin's
 configuration. This is done with the help of `<external>`
 configuration sections which at least has a `<type>` subelement. This
 `<type>` element selects a specific so called "handler" which is
 responsible for creating the full image configuration. A handler can
-decided to use the `<run>` and `<build>` configuration which could
+decide to use the `<run>` and `<build>` configuration which could
 be provided in addition to this `<external>` section or it can decide
 to completely ignore any extra configuration option.
 
