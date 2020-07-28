@@ -1,10 +1,10 @@
 package io.fabric8.maven.docker.wait;
 
+import java.time.ZonedDateTime;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.Timestamp;
 
 class LogMatchCallback implements LogCallback {
 
@@ -21,7 +21,7 @@ class LogMatchCallback implements LogCallback {
     }
 
     @Override
-    public void log(int type, Timestamp timestamp, String txt) throws DoneException {
+    public void log(int type, ZonedDateTime timestamp, String txt) throws DoneException {
         logger.debug("LogWaitChecker: Trying to match '%s' [Pattern: %s] [thread: %d]",
                   txt, pattern.pattern(), Thread.currentThread().getId());
 

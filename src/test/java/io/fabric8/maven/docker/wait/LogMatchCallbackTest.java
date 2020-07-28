@@ -2,7 +2,7 @@ package io.fabric8.maven.docker.wait;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.util.TimestampFactory;
 import mockit.Expectations;
 import mockit.Mocked;
 import org.junit.Test;
@@ -27,7 +27,7 @@ public class LogMatchCallbackTest {
             times = 1;
         }};
 
-        logMatchCallback.log(1, new Timestamp(), patternString);
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), patternString);
     }
 
     @Test(expected = LogCallback.DoneException.class)
@@ -40,10 +40,10 @@ public class LogMatchCallbackTest {
             times = 1;
         }};
 
-        logMatchCallback.log(1, new Timestamp(), "LOG:  database system is ready to accept connections" );
-        logMatchCallback.log(1, new Timestamp(), "LOG:  autovacuum launcher started");
-        logMatchCallback.log(1, new Timestamp(), "LOG:  database system is shut down");
-        logMatchCallback.log(1, new Timestamp(), "LOG:  database system is ready to accept connections");
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections" );
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  autovacuum launcher started");
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is shut down");
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections");
     }
 
     @Test
@@ -56,7 +56,7 @@ public class LogMatchCallbackTest {
             times = 0;
         }};
 
-        logMatchCallback.log(1, new Timestamp(), "LOG:  database system is ready to accept connections" );
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "LOG:  database system is ready to accept connections" );
     }
 
     @Test(expected = LogCallback.DoneException.class)
@@ -69,7 +69,7 @@ public class LogMatchCallbackTest {
             times = 1;
         }};
 
-        logMatchCallback.log(1, new Timestamp(), "2017-11-21T12:44:43.678+0000 I NETWORK  [initandlisten] waiting for connections on port 27017" );
+        logMatchCallback.log(1, TimestampFactory.createTimestamp(), "2017-11-21T12:44:43.678+0000 I NETWORK  [initandlisten] waiting for connections on port 27017" );
     }
 
     @Test
