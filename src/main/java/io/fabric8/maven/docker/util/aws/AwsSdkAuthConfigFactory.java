@@ -43,9 +43,12 @@ public class AwsSdkAuthConfigFactory {
             } catch (UnsupportedEncodingException ignore) {
             }
             log.warn("Failed to fetch AWS credentials: %s", t.getMessage());
+            if (t.getCause() != null) {
+                log.warn("Caused by: %s", t.getCause().getMessage());
+            }
             log.warn("Please report a bug at https://github.com/fabric8io/docker-maven-plugin/issues/new%s",
                     issueTitle == null ? "" : "title=?" + issueTitle);
-            log.warn("%s", t);  
+            log.warn("%s", t);
             return null;
         }
     }
