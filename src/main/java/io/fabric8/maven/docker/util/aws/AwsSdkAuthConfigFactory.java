@@ -46,7 +46,7 @@ public class AwsSdkAuthConfigFactory {
             if (t.getCause() != null) {
                 log.warn("Caused by: %s", t.getCause().getMessage());
             }
-            log.warn("Please report a bug at https://github.com/fabric8io/docker-maven-plugin/issues/new%s",
+            log.warn("Please report a bug at https://github.com/fabric8io/docker-maven-plugin/issues/new?%s",
                     issueTitle == null ? "" : "title=?" + issueTitle);
             log.warn("%s", t);
             return null;
