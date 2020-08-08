@@ -20,7 +20,7 @@ described in <<build-buildargs,Build Args>>
 | *buildOptions*
 | Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile[Docker Remote API] and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `noCache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `squash`, `noCache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
@@ -88,6 +88,9 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 
 | *noCache*
 | Don't use Docker's build cache. This can be overwritten by setting a system property `docker.noCache` when running Maven.
+
+| *squash*
+| Squash newly built layers into a single new layer. This can be overwritten by setting a system property `docker.squash` when running Maven.
 
 | *cacheFrom*
 | A list of `<image>` elements specifying image names to use as cache sources.

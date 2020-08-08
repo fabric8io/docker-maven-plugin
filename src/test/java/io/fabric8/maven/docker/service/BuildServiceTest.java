@@ -227,7 +227,7 @@ public class BuildServiceTest {
                 .build();
         File dockerArchive = buildService.buildArchive(imageConfig, buildContext, "");
 
-        buildService.buildImage(imageConfig, params, nocache, Collections.<String, String>emptyMap(), dockerArchive);
+        buildService.buildImage(imageConfig, params, nocache, false, Collections.<String, String>emptyMap(), dockerArchive);
 
     }
 }
