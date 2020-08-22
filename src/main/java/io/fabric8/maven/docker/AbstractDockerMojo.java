@@ -30,6 +30,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -166,6 +167,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // maximum connection to use in parallel for connecting the docker host
     @Parameter(property = "docker.maxConnections", defaultValue = "100")
     private int maxConnections;
+
+    @Parameter(property = "docker.build.jib", defaultValue = "false")
+    public boolean jib;
+
+    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
+    public String sourceDirectory;
+
+    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
+    public String outputDirectory;
 
     // Authentication information
     @Parameter
@@ -370,7 +380,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @return <code >true</code> as the default value
      */
     protected boolean isDockerAccessRequired() {
-        return true;
+        return Boolean.FALSE.equals(jib);
     }
 
     /**

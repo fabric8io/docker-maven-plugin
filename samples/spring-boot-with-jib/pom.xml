@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.fabric8.dmp.samples</groupId>
+        <artifactId>dmp-sample-parent</artifactId>
+        <version>0.33-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>dmp-sample-spring-boot-jib</artifactId>
+    <version>0.33-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Docker Maven Plugin :: Spring Boot JIB</name>
+    <description>Docker Maven Plugin Example with Spring Boot With Build Mode JIB</description>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <docker.build.jib>true</docker.build.jib>
+        <docker.user>fabric8</docker.user>
+        <spring.version>2.3.3.RELEASE</spring.version>
+    </properties>
+
+    <dependencies>
+
+        <!-- Boot generator  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <!-- API, java.xml.bind module -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+
+        <!-- Runtime, com.sun.xml.bind module -->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+              <groupId>io.fabric8</groupId>
+              <artifactId>docker-maven-plugin</artifactId>
+              <version>0.33-SNAPSHOT</version>
+              <configuration>
+                <images>
+                  <image>
+                    <name>${docker.user}/spring-boot-dmp-sample-jib</name>
+                    <build>
+                      <from>fabric8/java-centos-openjdk8-jdk:1.5.6</from>
+                      <assembly>
+                        <descriptorRef>artifact</descriptorRef>
+                      </assembly>
+                      <cmd>java -jar /maven/${project.artifactId}-${project.version}.jar</cmd>
+                      <ports>
+                        <port>8080</port>
+                      </ports>
+                    </build>
+                  </image>
+                </images>
+              </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>Jib-With-Assembly</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <version>0.33-SNAPSHOT</version>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>${docker.user}/spring-boot-dmp-sample-jib</name>
+                                    <build>
+                                        <from>fabric8/java-centos-openjdk8-jdk:1.5.6</from>
+                                        <assembly>
+                                            <name>my-project-assembly</name>
+                                            <inline>
+                                                <id>copy-test-file</id>
+                                                <files>
+                                                    <file>
+                                                        <source>
+                                                            ${project.basedir}/static/testFile.txt
+                                                        </source>
+                                                        <outputDirectory>static</outputDirectory>
+                                                    </file>
+                                                    <file>
+                                                        <source>${project.basedir}/target/${project.artifactId}-${project.version}.jar</source>
+                                                        <outputDirectory>.</outputDirectory>
+                                                    </file>
+                                                </files>
+                                            </inline>
+                                            <targetDir>/deployments</targetDir>
+                                        </assembly>
+                                        <cmd>java -jar /my-project-assembly/${project.artifactId}-${project.version}.jar</cmd>
+                                        <ports>
+                                          <port>8080</port>
+                                        </ports>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

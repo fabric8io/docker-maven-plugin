@@ -105,6 +105,10 @@ By default a progress meter is printed out on the console, which is omitted when
 | Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don't put that number to low. Default is 100 which should be suitable for most of the cases.
 | `docker.maxConnections`
 
+| *jib*
+| Delegate Image Build process to https://github.com/GoogleContainerTools/jib[JIB], `false` by default. Note that this option is applicable only for <<docker:build,build>> and <<docker:push,push>> goals, other goals won't work if this is enabled(since they are dependent on docker)
+| `docker.build.jib`
+
 | *outputDirectory*
 | Default output directory to be used by this plugin. The default value is `target/docker` and is only used for the goal `{plugin}:build`.
 | `docker.target.dir`
