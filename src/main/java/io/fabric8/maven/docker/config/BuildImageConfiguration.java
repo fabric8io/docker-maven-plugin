@@ -165,6 +165,9 @@ public class BuildImageConfiguration implements Serializable {
     private Boolean skip;
 
     @Parameter
+    private Boolean skipPush;
+
+    @Parameter
     private ArchiveCompression compression = ArchiveCompression.none;
 
     @Parameter
@@ -325,6 +328,10 @@ public class BuildImageConfiguration implements Serializable {
         return skip != null ? skip : false;
     }
 
+    public boolean skipPush() {
+        return skipPush != null ? skipPush : false;
+    }
+
     public Boolean getNoCache() {
         return noCache != null ? noCache : nocache;
     }
@@ -335,6 +342,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public Boolean getSkip() {
         return skip;
+    }
+
+    public Boolean getSkipPush() {
+        return skipPush;
     }
 
     public ArchiveCompression getCompression() {
@@ -580,6 +591,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder skip(Boolean skip) {
             config.skip = skip;
+            return this;
+        }
+
+        public Builder skipPush(Boolean skipPush) {
+            config.skipPush = skipPush;
             return this;
         }
 

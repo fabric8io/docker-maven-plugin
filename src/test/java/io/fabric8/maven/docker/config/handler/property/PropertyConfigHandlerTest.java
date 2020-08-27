@@ -81,6 +81,14 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testSkipPush() {
+        assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_PUSH, false)).getBuildConfiguration().skipPush());
+        assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_PUSH, true)).getBuildConfiguration().skipPush());
+
+        assertFalse(resolveExternalImageConfig(new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.FROM), "busybox"}).getBuildConfiguration().skipPush());
+    }
+
+    @Test
     public void testSkipRun() {
         assertFalse(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, false)).getRunConfiguration().skip());
         assertTrue(resolveExternalImageConfig(getSkipTestData(ConfigKey.SKIP_RUN, true)).getRunConfiguration().skip());
