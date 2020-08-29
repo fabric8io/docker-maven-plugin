@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.33-SNAPSHOT**
+  - Support `ARG` in `FROM` (#859)
   - Handle authentication tokens returned from credential helpers ([#1348](https://github.com/fabric8io/docker-maven-plugin/issues/1348))
 
 * **0.33.0** (2020-01-21)
