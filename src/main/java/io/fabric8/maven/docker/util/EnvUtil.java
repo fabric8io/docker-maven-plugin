@@ -31,17 +31,17 @@ public class EnvUtil {
 
     public static final String MAVEN_PROPERTY_REGEXP = "\\s*\\$\\{\\s*([^}]+)\\s*}\\s*$";
 
-    // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
-    // docker installations.
-    public static final String DOCKER_HTTPS_PORT = "2376";
+    // Standard HTTPS port (IANA registered) is 2376.
+    // The other port 2375 with plain HTTP is used only in older docker installations.
+    public static final String DOCKER_HTTP_PORT = "2375";
 
     public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
 
     private EnvUtil() {}
 
-    // Convert docker host URL to an http URL
+    // Convert docker host URL to an HTTP(s) URL
     public static String convertTcpToHttpUrl(String connect) {
-        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        String protocol = connect.contains(":" + DOCKER_HTTP_PORT) ? "http:" : "https:";
         return connect.replaceFirst("^tcp:", protocol);
     }
 

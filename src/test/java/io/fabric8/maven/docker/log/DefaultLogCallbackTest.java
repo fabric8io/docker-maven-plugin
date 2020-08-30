@@ -8,6 +8,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.*;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +21,7 @@ import org.junit.Test;
 
 import io.fabric8.maven.docker.access.log.LogCallback;
 import io.fabric8.maven.docker.access.log.LogCallback.DoneException;
-import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.util.TimestampFactory;
 
 public class DefaultLogCallbackTest {
 
@@ -30,7 +31,7 @@ public class DefaultLogCallbackTest {
 
     private LogCallback callback;
 
-    private Timestamp ts;
+    private ZonedDateTime ts;
 
     private static final int NR_LOOPS = 100;
 
@@ -42,7 +43,7 @@ public class DefaultLogCallbackTest {
                                           .file(file.toString()).build();
         callback = new DefaultLogCallback(spec);
         callback.open();
-        ts = new Timestamp("2016-12-21T15:09:00.999666333Z");
+        ts = TimestampFactory.createTimestamp("2016-12-21T15:09:00.999666333Z");
     }
 
     @Test

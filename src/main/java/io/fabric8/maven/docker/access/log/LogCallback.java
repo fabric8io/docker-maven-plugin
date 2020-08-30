@@ -16,9 +16,8 @@ package io.fabric8.maven.docker.access.log;/*
  */
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.concurrent.CancellationException;
-
-import io.fabric8.maven.docker.util.Timestamp;
 
 /**
  * Interface called for each log line received from the docker host when asynchronous
@@ -36,7 +35,7 @@ public interface LogCallback {
      * @param txt log output
      * @throws CancellationException if thrown will stop the logging.
      */
-    void log(int type, Timestamp timestamp, String txt) throws DoneException;
+    void log(int type, ZonedDateTime timestamp, String txt) throws DoneException;
 
     /**
      * Method called in case on an error when reading the logs

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.time.ZonedDateTime;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,7 +29,7 @@ import com.google.common.io.ByteStreams;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
-import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.util.TimestampFactory;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -196,7 +197,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
                                          txt,(int) (txt.toCharArray())[0],(int) (txt.toCharArray())[1]));
             throw new LogCallback.DoneException();
         }
-        Timestamp ts = new Timestamp(matcher.group("timestamp"));
+        ZonedDateTime ts = TimestampFactory.createTimestamp(matcher.group("timestamp"));
         String logTxt = matcher.group("entry");
         callback.log(type, ts, logTxt);
     }

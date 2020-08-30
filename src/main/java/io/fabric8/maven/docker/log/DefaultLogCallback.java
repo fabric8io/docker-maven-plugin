@@ -16,12 +16,12 @@ package io.fabric8.maven.docker.log;/*
  */
 
 import java.io.*;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.io.Files;
 import io.fabric8.maven.docker.access.log.LogCallback;
-import io.fabric8.maven.docker.util.Timestamp;
 
 /**
  * @author roland
@@ -77,7 +77,7 @@ public class DefaultLogCallback implements LogCallback {
     }
 
     @Override
-    public void log(int type, Timestamp timestamp, String txt) {
+    public void log(int type, ZonedDateTime timestamp, String txt) {
         addLogEntry(ps(), new LogEntry(type, timestamp, txt));
     }
 
@@ -101,10 +101,10 @@ public class DefaultLogCallback implements LogCallback {
         // A single log-entry
     private static class LogEntry implements Comparable<LogEntry> {
         private final int type;
-        private final Timestamp timestamp;
+        private final ZonedDateTime timestamp;
         private final String text;
 
-        public LogEntry(int type, Timestamp timestamp, String text) {
+        public LogEntry(int type, ZonedDateTime timestamp, String text) {
             this.type = type;
             this.timestamp = timestamp;
             this.text = text;
@@ -114,7 +114,7 @@ public class DefaultLogCallback implements LogCallback {
             return type;
         }
 
-        public Timestamp getTimestamp() {
+        public ZonedDateTime getTimestamp() {
             return timestamp;
         }
 

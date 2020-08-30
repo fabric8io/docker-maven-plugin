@@ -15,11 +15,11 @@ package io.fabric8.maven.docker.util;/*
  * limitations under the License.
  */
 
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,25 +29,25 @@ import static org.junit.Assert.*;
  * @author roland
  * @since 25/11/14
  */
-public class TimestampTest {
+public class TimestampFactoryTest {
 
-    Timestamp ref;
+    ZonedDateTime ref;
 
     @Before
     public void setUp() throws Exception {
-        ref = new Timestamp("2014-11-24T22:34:00.761764812Z");
+        ref = TimestampFactory.createTimestamp("2014-11-24T22:34:00.761764812Z");
     }
 
 
     @Test
     public void testParse() throws Exception {
-        DateTime dt = ISODateTimeFormat.dateTime().parseDateTime("2014-11-24T22:34:00.761Z");
-        assertEquals(dt,ref.getDate());
+        ZonedDateTime dt = ZonedDateTime.parse("2014-11-24T22:34:00.761Z");
+        assertEquals(dt,ref);
     }
 
     @Test
     public void testDateCompare() throws Exception {
-        Timestamp ts = new Timestamp("2014-12-24T12:00:00.761764812Z");
+        ZonedDateTime ts = TimestampFactory.createTimestamp("2014-12-24T12:00:00.761764812Z");
         assertTrue(ref.compareTo(ts) < 0);
     }
 
@@ -55,15 +55,15 @@ public class TimestampTest {
 
     @Test
     public void testEquals() throws Exception {
-        Timestamp ts = new Timestamp("2014-11-24T22:34:00.761764812Z");
+        ZonedDateTime ts = TimestampFactory.createTimestamp("2014-11-24T22:34:00.761764812Z");
         assertEquals(0,ref.compareTo(ts));
         assertEquals(ref,ts);
     }
 
     @Test
     public void testHash() throws Exception {
-        Timestamp ts = new Timestamp("2014-11-24T22:34:00.761764812Z");
-        Set<Timestamp> set = new HashSet<>();
+        ZonedDateTime ts = TimestampFactory.createTimestamp("2014-11-24T22:34:00.761764812Z");
+        Set<ZonedDateTime> set = new HashSet<>();
         set.add(ref);
         set.add(ts);
         assertEquals(1,set.size());
@@ -71,28 +71,28 @@ public class TimestampTest {
 
     @Test
     public void testNanoCompare() throws Exception {
-        Timestamp ts = new Timestamp("2014-11-24T12:00:00.761764811Z");
+        ZonedDateTime ts = TimestampFactory.createTimestamp("2014-11-24T12:00:00.761764811Z");
         assertTrue(ref.compareTo(ts) > 0);
     }
 
     @Test
     public void testNoNanos() throws Exception {
-        Timestamp ts = new Timestamp("2014-11-24T12:00:00Z");
+        ZonedDateTime ts = TimestampFactory.createTimestamp("2014-11-24T12:00:00Z");
         assertTrue(ref.compareTo(ts) > 0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = DateTimeParseException.class)
     public void testInvalidSpec() throws Exception {
-        new Timestamp("");
+        TimestampFactory.createTimestamp("");
     }
 
     @Test
     public void testNumericTimeZoneOffset() throws Exception {
-        Timestamp ts3p = new Timestamp("2016-03-16T17:06:30.714387000+03");
-        Timestamp ts530p = new Timestamp("2016-03-16T17:06:30.714387000+05:30");
-        Timestamp ts4 = new Timestamp("2016-03-16T17:06:30.714387000-04:00");
-        Timestamp ts2 = new Timestamp("2016-03-16T17:06:30.714387000-02:00");
-        Timestamp tsz = new Timestamp("2016-03-16T17:06:30.714387000Z");
+        ZonedDateTime ts3p = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000+03");
+        ZonedDateTime ts530p = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000+05:30");
+        ZonedDateTime ts4 = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000-04:00");
+        ZonedDateTime ts2 = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000-02:00");
+        ZonedDateTime tsz = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000Z");
         assertTrue(ts2.compareTo(ts4) < 0);
         assertTrue(tsz.compareTo(ts2) < 0);
         assertTrue(ts3p.compareTo(ts4) < 0);
@@ -101,11 +101,11 @@ public class TimestampTest {
 
     @Test(expected = NullPointerException.class)
     public void testNullSpec() throws Exception {
-        new Timestamp(null);
+        TimestampFactory.createTimestamp(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = DateTimeParseException.class)
     public void testInvalidNanos() throws Exception {
-        Timestamp ts = new Timestamp("2014-11-24T12:00:00.abzeZ");
+        TimestampFactory.createTimestamp("2014-11-24T12:00:00.abzeZ");
     }
 }

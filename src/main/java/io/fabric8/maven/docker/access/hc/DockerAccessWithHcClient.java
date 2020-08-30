@@ -65,7 +65,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.Timestamp;
+import io.fabric8.maven.docker.util.TimestampFactory;
 
 /**
  * Implementation using <a href="http://hc.apache.org/">Apache HttpComponents</a>
@@ -178,7 +178,7 @@ public class DockerAccessWithHcClient implements DockerAccess {
                     try {
                         callback.open();
                         while ( (line = reader.readLine()) != null) {
-                            callback.log(1, new Timestamp(), line);
+                            callback.log(1, TimestampFactory.createTimestamp(), line);
                         }
                     } catch (LogCallback.DoneException e) {
                         // Ok, we stop here ...

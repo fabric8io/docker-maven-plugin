@@ -3,7 +3,6 @@ package io.fabric8.maven.docker.access.log;
 import com.google.common.base.Charsets;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
-import io.fabric8.maven.docker.util.Timestamp;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
@@ -31,6 +30,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import java.time.ZonedDateTime;
 
 public class LogRequestorTest {
     private static final String containerId = new RandomStringGenerator.Builder().build().generate(64);
@@ -71,7 +71,7 @@ public class LogRequestorTest {
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
         new Verifications() {{
-            callback.log(type.type, (Timestamp) any, anyString);
+            callback.log(type.type, (ZonedDateTime) any, anyString);
             times = 0;
         }};
     }
@@ -91,9 +91,9 @@ public class LogRequestorTest {
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
         new Verifications() {{
-            callback.log(type.type, (Timestamp) any, message0);
-            callback.log(type.type, (Timestamp) any, message1);
-            callback.log(type.type, (Timestamp) any, message2);
+            callback.log(type.type, (ZonedDateTime) any, message0);
+            callback.log(type.type, (ZonedDateTime) any, message1);
+            callback.log(type.type, (ZonedDateTime) any, message2);
         }};
     }
 
@@ -110,8 +110,8 @@ public class LogRequestorTest {
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
         new Verifications() {{
-            callback.log(type.type, (Timestamp) any, message0);
-            callback.log(type.type, (Timestamp) any, message1);
+            callback.log(type.type, (ZonedDateTime) any, message0);
+            callback.log(type.type, (ZonedDateTime) any, message1);
         }};
     }
 
@@ -142,9 +142,9 @@ public class LogRequestorTest {
         new LogRequestor(client, urlBuilder, containerId, callback).fetchLogs();
 
         new Verifications() {{
-            callback.log(type0.type, (Timestamp) any, msg0);
-            callback.log(type1.type, (Timestamp) any, msg1);
-            callback.log(type2.type, (Timestamp) any, msg2);
+            callback.log(type0.type, (ZonedDateTime) any, msg0);
+            callback.log(type1.type, (ZonedDateTime) any, msg1);
+            callback.log(type2.type, (ZonedDateTime) any, msg2);
         }};
     }
 
@@ -178,7 +178,7 @@ public class LogRequestorTest {
             // Should have called log() one time (for the first message). The message itself would
             // have been incorrect, since we gave it the wrong buffer length. The second message
             // fails to parse as the buffer runs out.
-            callback.log(type.type, (Timestamp) any, anyString);
+            callback.log(type.type, (ZonedDateTime) any, anyString);
             times = 1;
         }};
     }
@@ -199,7 +199,7 @@ public class LogRequestorTest {
 
         new Verifications() {{
             // No calls to .log() should be made, as message parsing fails.
-            callback.log(type.type, (Timestamp) any, anyString);
+            callback.log(type.type, (ZonedDateTime) any, anyString);
             times = 0;
         }};
     }
@@ -222,7 +222,7 @@ public class LogRequestorTest {
         assertThat("Entire InputStream read.", ((ByteArrayInputStream) inputStream).available(), equalTo(0));
         new Verifications() {{
             // .log() is only called once. The one byte that is left off is lost and never recorded.
-            callback.log(type.type, (Timestamp) any, message.substring(0, message.length() - 1));
+            callback.log(type.type, (ZonedDateTime) any, message.substring(0, message.length() - 1));
             times = 1;
         }};
     }
@@ -278,7 +278,7 @@ public class LogRequestorTest {
         setupMocks(inputStream);
 
         new Expectations() {{
-            callback.log(type.type, (Timestamp) any, anyString);
+            callback.log(type.type, (ZonedDateTime) any, anyString);
             times = 1;
         }};
 
