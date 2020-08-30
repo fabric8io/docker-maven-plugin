@@ -27,13 +27,13 @@ a| Dateformat to use for log timestamps. If `<date>` is not given no timestamp w
 (`-Ddocker.logDate=NONE`) for switching off otherwise enabled
 logging.
 * `DEFAULT` A default format in the form `HH:mm:ss.SSS`
-* `MEDIUM` Joda medium date time format
-* `SHORT` Joda short date time format
-* `LONG` Joda long date time format
+* `MEDIUM` java.time medium date time format
+* `SHORT` java.time short date time format
+* `LONG` java.time long date time format
 * `ISO8601` Full ISO-8601 formatted date time with milliseconds
 
 As an alternative a date-time format string as recognized by
-http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html[JodaTime] is possible. In order to set a consistent date format, the global configuration parameter `logDate` can be used.
+https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html[java.time] is possible. In order to set a consistent date format, the global configuration parameter `logDate` can be used.
 
 | *color*
 | Color used for coloring the prefix when coloring is enabled (i.e. if running in a console and `useColor` is set). The available colors are `YELLOW`, `CYAN`, `MAGENTA`, `GREEN`, `RED`, `BLUE`. If coloring is enabled and now color is provided a color is picked for you.
