@@ -113,19 +113,16 @@ public class BuildService {
         }
     }
 
-    public void tagImage(String imageName, ImageConfiguration imageConfig) throws DockerAccessException {
+    public void tagImage(ImageConfiguration imageConfig) throws DockerAccessException {
 
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
-        if (tags.size() > 0) {
+        if (!tags.isEmpty()) {
+            String imageName = imageConfig.getName();
             log.info("%s: Tag with %s", imageConfig.getDescription(), EnvUtil.stringJoin(tags, ","));
 
             for (String tag : tags) {
-                if (tag != null) {
-                    docker.tag(imageName, new ImageName(imageName, tag).getFullName(), true);
-                }
+                tagImage(imageName, tag, null);
             }
-
-            log.debug("Tagging image successful!");
         }
     }
 
@@ -197,6 +194,14 @@ public class BuildService {
                     throw exp;
                 }
             }
+        }
+    }
+
+    public void tagImage(String imageName, String tag, String repo) throws DockerAccessException {
+        if (tag != null) {
+            String fullImageName = new ImageName(imageName, tag).getNameWithOptionalRepository(repo);
+            docker.tag(imageName, fullImageName, true);
+            log.info("Tagging image %s successful!", fullImageName);
         }
     }
 
