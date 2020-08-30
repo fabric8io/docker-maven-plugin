@@ -3,6 +3,7 @@ package io.fabric8.maven.docker.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.gson.JsonNull;
 import org.junit.Before;
 import org.junit.Test;
 import com.google.gson.JsonArray;
@@ -43,6 +44,41 @@ public class ImageDetailsTest {
     }
 
     @Test
+    public void testImageWithRepoTags() {
+        givenImageData();
+        whenCreateImage();
+        thenRepoTagsSizeIs(2);
+    }
+
+    @Test
+    public void testImageWithNullRepoTags() {
+        givenAnImageWithNullRepoTags();
+        whenCreateImage();
+        thenRepoTagsSizeIs(0);
+    }
+
+    @Test
+    public void testImageWitEmptyRepoTags() {
+        givenAnImageWithEmptyRepoTags();
+        whenCreateImage();
+        thenRepoTagsSizeIs(0);
+    }
+
+    @Test
+    public void testImageWitNoRepoTags() {
+        whenCreateImage();
+        thenRepoTagsSizeIs(0);
+    }
+
+    private void givenAnImageWithNullRepoTags() {
+        json.add(ImageDetails.REPO_TAGS, JsonNull.INSTANCE);
+    }
+
+    private void givenAnImageWithEmptyRepoTags() {
+        json.add(ImageDetails.REPO_TAGS, new JsonArray());
+    }
+
+    @Test
     public void testCreateImage() throws Exception {
         givenImageData();
         whenCreateImage();
@@ -66,6 +102,10 @@ public class ImageDetailsTest {
 
     private void thenLabelsSizeIs(int size) {
         assertEquals(size, image.getLabels().size());
+    }
+
+    private void thenRepoTagsSizeIs(int size) {
+        assertEquals(size, image.getRepoTags().size());
     }
 
     private void thenValidateImage() {

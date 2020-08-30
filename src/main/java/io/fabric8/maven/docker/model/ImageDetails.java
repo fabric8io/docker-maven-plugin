@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -62,8 +63,8 @@ public class ImageDetails implements Image {
     public List<String> getRepoTags() {
         List<String> repoTags = new ArrayList<>();
 
-        if (json.has(REPO_TAGS)) {
-            for(JsonElement item : json.getAsJsonArray(REPO_TAGS)) {
+        if (json.has(REPO_TAGS) && json.get(REPO_TAGS) instanceof JsonArray) {
+            for (JsonElement item : json.getAsJsonArray(REPO_TAGS)) {
                 repoTags.add(item.getAsString());
             }
         }
