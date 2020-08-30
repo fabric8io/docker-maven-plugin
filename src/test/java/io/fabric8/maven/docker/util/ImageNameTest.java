@@ -183,6 +183,20 @@ public class ImageNameTest {
         }
     }
 
+    @Test
+    public void testGetNameWithOptionalRepository() {
+        // Given
+        ImageName imageName = new ImageName("sample/test-project:0.0.1");
+
+        // When
+        String imageWithOptionalRepo = imageName.getNameWithOptionalRepository("quay.io/test-user");
+        String imageWithNullOptionalRepo = imageName.getNameWithOptionalRepository(null);
+
+        // Then
+        assertEquals("quay.io/test-user/test-project:0.0.1", imageWithOptionalRepo);
+        assertEquals("sample/test-project:0.0.1", imageWithNullOptionalRepo);
+    }
+
     // =======================================================================================
     private static Res r() {
         return new Res();
