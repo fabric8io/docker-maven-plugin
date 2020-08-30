@@ -1,7 +1,10 @@
 # ChangeLog
 
 * **0.33-SNAPSHOT**
+  - Support `ARG` in `FROM` (#859)
   - Handle authentication tokens returned from credential helpers ([#1348](https://github.com/fabric8io/docker-maven-plugin/issues/1348))
+  - Migrate from joda-time to java.time ([#1025](https://github.com/fabric8io/docker-maven-plugin/issues/1025))
+    The handling of Y changes when the week straddle the New year ([Stack Overflow](https://stackoverflow.com/questions/26431882/difference-between-year-of-era-and-week-based-year))
 
 * **0.33.0** (2020-01-21)
   - Update to jnr-unixsocket 0.25 to solve concurrency issues ([#552](https://github.com/fabric8io/docker-maven-plugin/issues/552))

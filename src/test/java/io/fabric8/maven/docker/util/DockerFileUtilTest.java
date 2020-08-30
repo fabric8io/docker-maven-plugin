@@ -29,11 +29,9 @@ import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
 
-import mockit.Mock;
-import mockit.MockUp;
-
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author roland
@@ -56,7 +54,7 @@ public class DockerFileUtilTest {
 
         assertEquals("fabric8/s2i-java", fromClauses.next());
         assertEquals("fabric8/s1i-java", fromClauses.next());
-        assertEquals(false, fromClauses.hasNext());
+        assertFalse(fromClauses.hasNext());
     }
 
     @Test
@@ -66,7 +64,57 @@ public class DockerFileUtilTest {
                 toTest, FixedStringSearchInterpolator.create()).iterator();
 
         assertEquals("fabric8/s2i-java", fromClauses.next());
-        assertEquals(false, fromClauses.hasNext());
+        assertFalse(fromClauses.hasNext());
+    }
+
+    @Test
+    public void testMultiStageWithArgs() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_with_args");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create()).iterator();
+
+        assertEquals("fabric8/s2i-java:latest", fromClauses.next());
+        assertEquals("busybox:latest", fromClauses.next());
+        assertFalse(fromClauses.hasNext());
+    }
+
+    @Test
+    public void testExtractArgsFromDockerfile() {
+        assertEquals("{VERSION=latest, FULL_IMAGE=busybox:latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "VERSION:latest"}, new String[] {"ARG", "FULL_IMAGE=busybox:latest"})).toString());
+        assertEquals("{user1=someuser, buildno=1}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "user1=someuser"}, new String[]{"ARG", "buildno=1"})).toString());
+        assertEquals("{NPM_VERSION=latest, NODE_VERSION=latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG","NODE_VERSION=\"latest\""}, new String[]{"ARG",  "NPM_VERSION=\"latest\""})).toString());
+        assertEquals("{NPM_VERSION=latest, NODE_VERSION=latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG","NODE_VERSION='latest'"}, new String[]{"ARG",  "NPM_VERSION='latest'"})).toString());
+        assertEquals("{MESSAGE=argument with spaces}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[] {"ARG", "MESSAGE='argument with spaces'"})).toString());
+        assertEquals("{MESSAGE=argument with spaces}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[] {"ARG", "MESSAGE=\"argument with spaces\""})).toString());
+        assertEquals("{TARGETPLATFORM=}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "TARGETPLATFORM"})).toString());
+        assertEquals("{TARGETPLATFORM=}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "TARGETPLATFORM="})).toString());
+        assertEquals("{TARGETPLATFORM=}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "TARGETPLATFORM:"})).toString());
+        assertEquals("{MESSAGE=argument:two}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=argument:two"})).toString());
+        assertEquals("{MESSAGE2=argument=two}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE2=argument=two"})).toString());
+        assertEquals("{VER=0.0.3}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER=0.0.3"})).toString());
+        assertEquals("{VER={0.0.3}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={0.0.3}"})).toString());
+        assertEquals("{VER=[0.0.3]}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER=[0.0.3]"})).toString());
+        assertEquals("{VER={5,6}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={5,6}"})).toString());
+        assertEquals("{VER={5,6}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={5,6}"})).toString());
+        assertEquals("{VER={}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={}"})).toString());
+        assertEquals("{VER=====}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER====="})).toString());
+        assertEquals("{MESSAGE=:message}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=:message"})).toString());
+        assertEquals("{MYAPP_IMAGE=myorg/myapp:latest}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MYAPP_IMAGE=myorg/myapp:latest"})).toString());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidArgWithSpacesFromDockerfile() {
+        DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MY_IMAGE image with spaces"}));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidArgWithTrailingArgumentFromDockerfile() {
+        DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=foo bar"}));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidArgWithArrayWithSpaceFromDockerfile() {
+        DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=[5, 6]"}));
     }
 
     @Test
@@ -76,7 +124,7 @@ public class DockerFileUtilTest {
                 toTest, FixedStringSearchInterpolator.create()).iterator();
 
         assertEquals("centos", fromClauses.next());
-        assertEquals(false, fromClauses.hasNext());
+        assertFalse(fromClauses.hasNext());
 
     }
 
