@@ -173,6 +173,25 @@ public class BuildServiceTest {
         assertNotNull(dockerArchive);
     }
 
+    @Test
+    public void testTagImage() throws DockerAccessException, MojoExecutionException {
+        // Given
+        givenAnImageConfiguration(false);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+                .mojoParameters(mojoParameters)
+                .build();
+
+        // When
+        whenBuildImage(false, true);
+        buildService.tagImage(imageConfig.getName(), "1.1.0", "quay.io/someuser");
+
+        // Then
+        thenImageIsBuilt();
+        new Verifications() {{
+            docker.tag(imageConfig.getName(), "quay.io/someuser/build-image:1.1.0", true); times = 1;
+        }};
+    }
+
     private void givenAnImageConfiguration(Boolean cleanup) {
         BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
                 .cleanup(cleanup.toString())

@@ -82,7 +82,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
             buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);
         }
         if (!skipTag) {
-            buildService.tagImage(imageConfig.getName(), imageConfig);
+            buildService.tagImage(imageConfig);
         }
     }
 

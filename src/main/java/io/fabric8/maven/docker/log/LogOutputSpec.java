@@ -15,9 +15,11 @@ package io.fabric8.maven.docker.log;/*
  * limitations under the License.
  */
 
-import io.fabric8.maven.docker.util.Timestamp;
 import org.fusesource.jansi.Ansi;
-import org.joda.time.format.*;
+
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 
 import static org.fusesource.jansi.Ansi.Color.*;
 import static org.fusesource.jansi.Ansi.ansi;
@@ -62,7 +64,7 @@ public class LogOutputSpec {
         return logStdout;
     }
 
-    public String getPrompt(boolean withColor,Timestamp timestamp) {
+    public String getPrompt(boolean withColor, ZonedDateTime timestamp) {
         return formatTimestamp(timestamp,withColor) + formatPrefix(prefix, withColor);
     }
 
@@ -70,11 +72,11 @@ public class LogOutputSpec {
         return file;
     }
 
-    private String formatTimestamp(Timestamp timestamp,boolean withColor) {
+    private String formatTimestamp(ZonedDateTime timestamp, boolean withColor) {
         if (timeFormatter == null) {
             return "";
         }
-        String date = timeFormatter.print(timestamp.getDate());
+        String date = timeFormatter.format(timestamp);
         return (withColor ?
                 ansi().fgBright(BLACK).a(date).reset().toString() :
                 date) + " ";
@@ -138,24 +140,24 @@ public class LogOutputSpec {
                 || formatOrConstant.equalsIgnoreCase("FALSE")) {
                 timeFormatter = null;
             } else if (formatOrConstant.length() == 0 || formatOrConstant.equalsIgnoreCase("DEFAULT")) {
-                timeFormatter = DateTimeFormat.forPattern("HH:mm:ss.SSS");
+                timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
             } else if (formatOrConstant.equalsIgnoreCase("ISO8601")) {
-                timeFormatter = ISODateTimeFormat.dateTime();
+                timeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
             } else if (formatOrConstant.equalsIgnoreCase("SHORT")) {
-                timeFormatter = DateTimeFormat.shortDateTime();
+                timeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT);
             } else if (formatOrConstant.equalsIgnoreCase("MEDIUM")) {
-                timeFormatter = DateTimeFormat.mediumDateTime();
+                timeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
             } else if (formatOrConstant.equalsIgnoreCase("LONG")) {
-                timeFormatter = DateTimeFormat.longDateTime();
+                timeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG);
             } else {
                 try {
-                    timeFormatter = DateTimeFormat.forPattern(formatOrConstant);
+                    timeFormatter = DateTimeFormatter.ofPattern(formatOrConstant);
                 } catch (IllegalArgumentException exp) {
                     throw new IllegalArgumentException(
                             "Cannot parse log date specification '" + formatOrConstant + "'." +
                             "Must be either DEFAULT, NONE, ISO8601, SHORT, MEDIUM, LONG or a " +
-                            "format string parseable by DateTimeFormat. See " +
-                            "http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html");
+                            "format string parseable by DateTimeFormatter. See " +
+                            "https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html");
                 }
             }
             return this;

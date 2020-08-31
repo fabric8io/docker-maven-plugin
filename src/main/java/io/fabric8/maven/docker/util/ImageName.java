@@ -212,6 +212,17 @@ public class ImageName {
         return repository.startsWith(prefix) ? repository.substring(prefix.length()) : repository;
     }
 
+    public String getNameWithOptionalRepository(String optionalRepository) {
+        if (optionalRepository != null) {
+            String simpleName = getFullName();
+            String[] simpleNameParts = simpleName.split("/");
+            if (simpleNameParts.length > 0) {
+                return optionalRepository + "/" + simpleNameParts[simpleNameParts.length - 1];
+            }
+        }
+        return getFullName();
+    }
+
     /**
      * Check whether the given name validates agains the Docker rules for names
      *

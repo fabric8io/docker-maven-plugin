@@ -17,6 +17,7 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -55,21 +55,33 @@ public class DockerFileUtil {
      */
     public static List<String> extractBaseImages(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
+        Map<String, String> args = extractArgs(dockerFile, interpolator);
         Set<String> result = new LinkedHashSet<>();
         Set<String> fromAlias = new HashSet<>();
         for (String[] fromLine :  fromLines) {
             if (fromLine.length > 1) {
                 if (fromLine.length == 2) { // FROM image:tag use case
-                    result.add(fromLine[1]);
+                    result.add(resolveImageTagFromArgs(fromLine[1], args));
                 } else if (fromLine.length == 4) { // FROM image:tag AS alias use case
                     if (!fromAlias.contains(fromLine[1])) {
-                        result.add(fromLine[1]);
+                        result.add(resolveImageTagFromArgs(fromLine[1], args));
                     }
-                    fromAlias.add(fromLine[3]);
+                    fromAlias.add(resolveImageTagFromArgs(fromLine[3], args));
                 }
             }
         }
-        return result.stream().collect(Collectors.toList());
+        return new ArrayList<>(result);
+    }
+
+    /**
+     * Extract Args from dockerfile. All lines containing ARG is taken.
+     *
+     * @param dockerfile Docker File
+     * @param interpolator interpolator for replacement
+     * @return HashMap of arguments or empty collection if none is found
+     */
+    public static Map<String, String> extractArgs(File dockerfile, FixedStringSearchInterpolator interpolator) throws IOException {
+        return extractArgsFromLines(extractLines(dockerfile, "ARG", interpolator));
     }
 
     /**
@@ -137,6 +149,46 @@ public class DockerFileUtil {
                 .withExpressionMarkers(delimiters[0], delimiters[1]);
     }
 
+    /**
+     * Helper method for extractArgs(exposed for test)
+     *
+     * @param argLines list of string arrays containing lines with words
+     * @return map of parsed arguments
+     */
+    protected static Map<String, String> extractArgsFromLines(List<String[]> argLines) {
+        Map<String, String> result = new HashMap<>();
+        for (String[] argLine : argLines) {
+            if (argLine.length > 1) {
+                updateMapWithArgValue(result, argLine[1]);
+            }
+        }
+        return result;
+    }
+
+    private static String resolveImageTagFromArgs(String imageTagString, Map<String, String> args) {
+        if (imageTagString.startsWith("$")) { // FROM $IMAGE
+            String resolvedVal = resolveArgValueFromStrContainingArgKey(imageTagString, args);
+            if (resolvedVal != null) {
+                return resolvedVal;
+            }
+        } else { // FROM image:$TAG_ARG
+            String[] imageTagArr = imageTagString.split(":");
+            if (imageTagArr.length > 1) {
+                String tag = resolveArgValueFromStrContainingArgKey(imageTagArr[1], args);
+                if (tag != null) {
+                    return imageTagArr[0] + ":" + tag;
+                }
+            }
+        }
+        return imageTagString;
+    }
+
+    private static String resolveArgValueFromStrContainingArgKey(String argString, Map<String, String> args) {
+        if (argString.startsWith("$") && args.containsKey(argString.substring(1))) {
+            return args.get(argString.substring(1));
+        }
+        return null;
+    }
 
     private static Reader getFileReaderFromDir(File file) {
         if (file.exists() && file.length() != 0) {
@@ -196,4 +248,27 @@ public class DockerFileUtil {
         return new File(homeDir);
     }
 
+    private static void updateMapWithArgValue(Map<String, String> result, String argString) {
+        if (argString.contains("=") || argString.contains(":")) {
+            String[] argStringParts = argString.split("[=:]");
+            String argStringValue = argString.substring(argStringParts[0].length() + 1);
+            if (argStringValue.startsWith("\"") || argStringValue.startsWith("'")) {
+                // Replaces surrounding quotes
+                argStringValue = argStringValue.replaceAll("^\"|\"|'|'$", "");
+            } else {
+                validateArgValue(argStringValue);
+            }
+            result.put(argStringParts[0], argStringValue);
+        } else {
+            validateArgValue(argString);
+            result.put(argString.split("\\s+")[0], "");
+        }
+    }
+
+    private static void validateArgValue(String argStringParam) {
+        String[] argStringParts = argStringParam.split("\\s+");
+        if (argStringParts.length > 1) {
+            throw new IllegalArgumentException("Dockerfile parse error: ARG requires exactly one argument. Provided : " + argStringParam);
+        }
+    }
 }
