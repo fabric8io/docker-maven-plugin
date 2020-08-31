@@ -61,6 +61,11 @@ public class BuildOptions {
         return this;
     }
 
+    public BuildOptions squash(boolean squash) {
+        options.put("squash", squash ? "1" : "0");
+        return this;
+    }
+
     public BuildOptions cacheFrom(List<String> cacheFrom) {
         if (cacheFrom == null || cacheFrom.isEmpty()) {
             options.remove("cachefrom");

@@ -94,6 +94,7 @@ public enum ConfigKey {
     NETWORK_NAME("network.name"),
     NETWORK_ALIAS("network.alias"),
     NO_CACHE,
+    SQUASH,
     OPTIMISE,
     PORT_PROPERTY_FILE,
     PORTS(ValueCombinePolicy.Merge),

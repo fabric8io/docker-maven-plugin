@@ -84,7 +84,7 @@ public class LoadImageTest {
     }
 
     private void whenBuildImage() throws DockerAccessException, MojoExecutionException {
-        buildService.buildImage(imageConfig, params, false, Collections.<String, String>emptyMap(), new File("/maven-project/src/main/docker/test.tar"));
+        buildService.buildImage(imageConfig, params, false, false, Collections.<String, String>emptyMap(), new File("/maven-project/src/main/docker/test.tar"));
     }
 
     private void thenImageIsBuilt() throws DockerAccessException {

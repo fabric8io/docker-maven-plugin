@@ -122,6 +122,9 @@ public class BuildImageConfiguration implements Serializable {
     private Boolean noCache;
 
     @Parameter
+    private Boolean squash;
+
+    @Parameter
     private Boolean optimise;
 
     @Parameter
@@ -317,6 +320,13 @@ public class BuildImageConfiguration implements Serializable {
         return false;
     }
 
+    public boolean squash() {
+        if (squash != null) {
+            return squash;
+        }
+        return false;
+    }
+
     public boolean optimise() {
         return optimise != null ? optimise : false;
     }
@@ -327,6 +337,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public Boolean getNoCache() {
         return noCache != null ? noCache : nocache;
+    }
+
+    public Boolean getSquash() {
+        return squash != null ? squash : false;
     }
 
     public Boolean getOptimise() {
@@ -553,6 +567,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder noCache(Boolean noCache) {
             config.noCache = noCache;
+            return this;
+        }
+
+        public Builder squash(Boolean squash) {
+            config.squash = squash;
             return this;
         }
 
