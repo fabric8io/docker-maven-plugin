@@ -55,6 +55,9 @@ public class UrlBuilderTest {
                      builder.buildImage("image1", new BuildOptions(options).dockerfile("bla")));
         assertEquals("/1.0/build?cpusetcpus=1&dockerfile=holla&memswap=-1&t=image1",
                      builder.buildImage("image1", new BuildOptions(options).dockerfile("bla").addOption("dockerfile","holla")));
+        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=bla&memswap=-1&squash=1&t=image1",
+            builder.buildImage("image1", new BuildOptions(options).dockerfile("bla").squash(true)));
+
     }
 
     @Test
