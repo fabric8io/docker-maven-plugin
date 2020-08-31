@@ -230,7 +230,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | Don't use a cache when building the image
 
 | *docker.squash*
-| Squash newly built layers into a single new layer (API 1.25+, need to enable it in Daemon configuration file)
+| Squash newly built layers into a single layer (API 1.25+, need to be enabled in the Docker daemon configuration)
 
 | *docker.optimise*
 | if set to true then it will compress all the `runCmds` into a single RUN directive so that only one image layer is created.
