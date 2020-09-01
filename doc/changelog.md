@@ -6,6 +6,7 @@
   - Migrate from joda-time to java.time ([#1025](https://github.com/fabric8io/docker-maven-plugin/issues/1025))
     The handling of Y changes when the week straddle the New year ([Stack Overflow](https://stackoverflow.com/questions/26431882/difference-between-year-of-era-and-week-based-year))
   - Fix JSON error when parsin tafs (#1354)
+  - Add `skipPush` option to build image configuration ([#1243](https://github.com/fabric8io/docker-maven-plugin/issues/1243))
   - Support `squash` in build options to squash newly built layers into a single layer ([#785](https://github.com/fabric8io/docker-maven-plugin/issues/785)) 
 
 * **0.33.0** (2020-01-21)

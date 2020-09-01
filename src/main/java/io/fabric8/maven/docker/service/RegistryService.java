@@ -45,6 +45,11 @@ public class RegistryService {
                            int retries, RegistryConfig registryConfig, boolean skipTag) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            if (buildConfig.skipPush()) {
+                log.info("%s : Skipped pushing", imageConfig.getDescription());
+                continue;
+            }
+
             String name = imageConfig.getName();
             if (buildConfig != null) {
                 String configuredRegistry = EnvUtil.firstRegistryOf(

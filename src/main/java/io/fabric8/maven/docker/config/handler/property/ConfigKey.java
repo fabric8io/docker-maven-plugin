@@ -109,6 +109,7 @@ public enum ConfigKey {
     SECURITY_OPTS,
     SHMSIZE,
     SKIP_BUILD("skip.build"),
+    SKIP_PUSH,
     SKIP_RUN("skip.run"),
     STOP_NAME_PATTERN,
     TAGS(ValueCombinePolicy.Merge),

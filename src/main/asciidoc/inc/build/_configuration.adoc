@@ -110,6 +110,9 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property
 
+| *skipPush*
+| if set to true disables pushing of the image. This config option is best used together with a maven property
+
 | *skipTag*
 | If set to `true` this plugin won't add any tags to images. Property: `docker.skip.tag`
 

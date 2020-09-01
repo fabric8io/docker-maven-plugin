@@ -1,5 +1,8 @@
 package io.fabric8.maven.docker.service;
 
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,6 +31,7 @@ public class RegistryServiceTest {
 
     private Exception actualException;
 
+    // pull
     private String imageName;
     private ImagePullPolicy imagePullPolicy;
     private TestCacheStore cacheStore;
@@ -36,6 +40,9 @@ public class RegistryServiceTest {
     private boolean hasImage;
     private String registry;
     private Map authConfig;
+
+    // push
+    private ImageConfiguration imageConfiguration;
 
     @Mocked
     private DockerAccess docker;
@@ -190,7 +197,26 @@ public class RegistryServiceTest {
         thenNoExceptionThrown();
     }
 
+    @Test
+    public void pushImage() throws DockerAccessException {
+        givenAnImageConfiguration("user/test:1.0.1");
 
+        whenPushImage();
+
+        thenImageHasBeenPushed();
+        thenNoExceptionThrown();
+    }
+
+    @Test
+    public void pushImageSkipped() throws DockerAccessException {
+        givenAnImageConfiguration("user/test:1.0.1");
+        givenPushSkipped(true);
+
+        whenPushImage();
+
+        thenImageHasNotBeenPushed();
+        thenNoExceptionThrown();
+    }
 
     // ====================================================================================================
 
@@ -200,6 +226,18 @@ public class RegistryServiceTest {
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
         new Verifications() {{
             docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString); times = 0;
+        }};
+    }
+
+    private void thenImageHasNotBeenPushed() throws DockerAccessException {
+        new Verifications() {{
+            docker.pushImage(anyString, (AuthConfig) withNotNull(), anyString, anyInt); times = 0;
+        }};
+    }
+
+    private void thenImageHasBeenPushed() throws DockerAccessException {
+        new Verifications() {{
+            docker.pushImage(anyString, (AuthConfig) withNotNull(), anyString, anyInt);
         }};
     }
 
@@ -248,6 +286,18 @@ public class RegistryServiceTest {
         }
     }
 
+    private void whenPushImage() {
+        try {
+            RegistryService.RegistryConfig.Builder registryConfigBuilder =
+                    new RegistryService.RegistryConfig.Builder()
+                            .authConfigFactory(authConfigFactory)
+                            .authConfig(authConfig);
+            registryService.pushImages(Collections.singleton(imageConfiguration), 1, registryConfigBuilder.build(), false);
+        } catch (Exception e) {
+            this.actualException = e;
+        }
+    }
+
     private void givenImagePullPolicy(ImagePullPolicy policy) {
         this.imagePullPolicy = policy;
     }
@@ -278,6 +328,16 @@ public class RegistryServiceTest {
 
     private void givenAnImage(String imageName) {
         this.imageName = imageName;
+    }
+
+    private void givenAnImageConfiguration(String imageName) {
+        final BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().build();
+        imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
+    }
+
+    private void givenPushSkipped(boolean skipPush) {
+        final BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().skipPush(skipPush).build();
+        imageConfiguration = new ImageConfiguration.Builder(imageConfiguration).buildConfig(buildImageConfiguration).build();
     }
 
     private class TestCacheStore implements ImagePullManager.CacheStore {
