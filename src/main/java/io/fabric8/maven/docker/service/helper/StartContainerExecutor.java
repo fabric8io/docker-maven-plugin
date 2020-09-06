@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.codehaus.plexus.util.StringUtils;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -42,19 +41,19 @@ public class StartContainerExecutor {
 
     private StartContainerExecutor(){}
 
-    public ImmutablePair<String, Properties> startContainers() throws IOException, ExecException {
+    public String startContainers() throws IOException, ExecException {
         final Properties projProperties = projectProperties;
 
         final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
 
         showLogsIfRequested(containerId);
-        Properties exposedProperties = exposeContainerProps(containerId);
+        projProperties.putAll(queryContainerProperties(containerId));
         waitAndPostExec(containerId, projProperties);
 
-        return new ImmutablePair<>(containerId, exposedProperties);
+        return containerId;
     }
 
-    private Properties exposeContainerProps(String containerId)
+    public Properties queryContainerProperties(String containerId)
         throws DockerAccessException {
         String propKey = getExposedPropertyKeyPart();
         Properties exposedProperties = new Properties();

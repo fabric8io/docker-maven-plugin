@@ -255,9 +255,7 @@ public class StartContainerExecutorTest {
     // Given
     new Expectations() {{
       dockerAccess.createContainer((ContainerCreateConfig) any, anyString);
-      result = "container-name";
-
-      dockerAccess.getContainer(anyString);
+      result = "container-name";dockerAccess.getContainer(anyString);
       result = new ContainerDetails(JsonFactory.newJsonObject("{\"NetworkSettings\":{\"IPAddress\":\"192.168.1.2\"}}"));
 
       QueryService queryService = new QueryService(dockerAccess);
@@ -286,12 +284,11 @@ public class StartContainerExecutorTest {
             .build();
 
     // When
-    ImmutablePair<String, Properties> result = startContainerExecutor.startContainers();
-
+    String containerId = startContainerExecutor.startContainers();
+    Properties containerProps = startContainerExecutor.queryContainerProperties(containerId);
     // Then
-    assertNotNull(result);
-    assertEquals("container-name", result.getKey());
-    assertEquals("container-name", result.getValue().getProperty("docker.container.alias.id"));
-    assertEquals("192.168.1.2", result.getValue().getProperty("docker.container.alias.ip"));
+    assertEquals("container-name", containerId);
+    assertEquals("container-name", containerProps.getProperty("docker.container.alias.id"));
+    assertEquals("192.168.1.2", containerProps.getProperty("docker.container.alias.ip"));
   }
 }

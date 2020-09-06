@@ -298,9 +298,8 @@ public class StartMojo extends AbstractDockerMojo {
 
         startingContainers.submit(() -> {
 
-            ImmutablePair<String, Properties> containerIdToProperties = startExecutor.startContainers();
-            String containerId = containerIdToProperties.getKey();
-            project.getProperties().putAll(containerIdToProperties.getValue());
+            String containerId = startExecutor.startContainers();
+            project.getProperties().putAll(startExecutor.queryContainerProperties(containerId));
 
             // Update port-mapping writer
             portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());

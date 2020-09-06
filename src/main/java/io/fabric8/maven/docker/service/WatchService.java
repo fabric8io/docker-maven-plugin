@@ -254,9 +254,8 @@ public class WatchService {
                     .buildTimestamp(watcher.watchContext.buildTimestamp)
                     .build();
 
-            ImmutablePair<String, Properties> containerIdToProperties = helper.startContainers();
-            String containerId = containerIdToProperties.getKey();
-            watcher.watchContext.mojoParameters.getProject().getProperties().putAll(containerIdToProperties.getValue());
+            String containerId = helper.startContainers();
+            watcher.watchContext.mojoParameters.getProject().getProperties().putAll(helper.queryContainerProperties(containerId));
 
             watcher.setContainerId(containerId);
         };
