@@ -353,7 +353,8 @@ public class AuthConfigFactory {
         // get temporary credentials
         log.debug("Getting temporary security credentials from: %s", uri);
         try (CloseableHttpClient client = HttpClients.custom().useSystemProperties().build()) {
-            RequestConfig conf = RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
+            RequestConfig conf =
+                RequestConfig.custom().setConnectionRequestTimeout(1000).setConnectTimeout(1000)
                     .setSocketTimeout(1000).build();
             HttpGet request = new HttpGet(uri);
             request.setConfig(conf);

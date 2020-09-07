@@ -1,13 +1,35 @@
 package io.fabric8.maven.docker.service.helper;
 
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
+import io.fabric8.maven.docker.model.ContainerDetails;
+import io.fabric8.maven.docker.service.ContainerTracker;
+import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.RunService;
+import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.JsonFactory;
+import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
+import mockit.Mocked;
 import org.junit.Test;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Properties;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class StartContainerExecutorTest {
@@ -225,5 +247,46 @@ public class StartContainerExecutorTest {
 
     // Then
     assertTrue(actual);
+  }
+
+  @Test
+  public void testStartContainers(@Mocked ServiceHub hub, @Mocked DockerAccess dockerAccess, @Mocked ContainerTracker containerTracker, @Mocked Logger log) throws IOException, ExecException {
+    // Given
+    new Expectations() {{
+      dockerAccess.createContainer((ContainerCreateConfig) any, anyString);
+      result = "container-name";dockerAccess.getContainer(anyString);
+      result = new ContainerDetails(JsonFactory.newJsonObject("{\"NetworkSettings\":{\"IPAddress\":\"192.168.1.2\"}}"));
+
+      QueryService queryService = new QueryService(dockerAccess);
+      hub.getQueryService();
+      result = queryService;
+
+      hub.getRunService();
+      result = new RunService(dockerAccess, queryService, containerTracker, new LogOutputSpecFactory(true, true, null), log);
+    }};
+    Properties projectProps = new Properties();
+    StartContainerExecutor startContainerExecutor = new StartContainerExecutor.Builder()
+            .serviceHub(hub)
+            .projectProperties(projectProps)
+            .portMapping(new PortMapping(Collections.emptyList(), projectProps))
+            .gavLabel(new GavLabel("io.fabric8:test:0.1.0"))
+            .basedir(new File("/tmp/foo"))
+            .containerNamePattern("test-")
+            .buildTimestamp(new Date())
+            .exposeContainerProps("docker.container")
+            .imageConfig(new ImageConfiguration.Builder()
+                    .name("name")
+                    .alias("alias")
+                    .runConfig(new RunImageConfiguration.Builder()
+                            .build())
+                    .build())
+            .build();
+
+    // When
+    String containerId = startContainerExecutor.startContainer();
+    // Then
+    assertEquals("container-name", containerId);
+    assertEquals("container-name", projectProps.getProperty("docker.container.alias.id"));
+    assertEquals("192.168.1.2", projectProps.getProperty("docker.container.alias.ip"));
   }
 }
