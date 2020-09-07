@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,12 +21,11 @@ import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.StringUtils;
@@ -254,9 +252,7 @@ public class WatchService {
                     .buildTimestamp(watcher.watchContext.buildTimestamp)
                     .build();
 
-            String containerId = helper.startContainers();
-            watcher.watchContext.mojoParameters.getProject().getProperties().putAll(helper.queryContainerProperties(containerId));
-
+            String containerId = helper.startContainer();
             watcher.setContainerId(containerId);
         };
     }

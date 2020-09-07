@@ -15,7 +15,6 @@ import io.fabric8.maven.docker.util.JsonFactory;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Test;
 
 import io.fabric8.maven.docker.config.ImageConfiguration;
@@ -284,11 +283,10 @@ public class StartContainerExecutorTest {
             .build();
 
     // When
-    String containerId = startContainerExecutor.startContainers();
-    Properties containerProps = startContainerExecutor.queryContainerProperties(containerId);
+    String containerId = startContainerExecutor.startContainer();
     // Then
     assertEquals("container-name", containerId);
-    assertEquals("container-name", containerProps.getProperty("docker.container.alias.id"));
-    assertEquals("192.168.1.2", containerProps.getProperty("docker.container.alias.ip"));
+    assertEquals("container-name", projectProps.getProperty("docker.container.alias.id"));
+    assertEquals("192.168.1.2", projectProps.getProperty("docker.container.alias.ip"));
   }
 }

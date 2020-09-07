@@ -41,13 +41,14 @@ public class StartContainerExecutor {
 
     private StartContainerExecutor(){}
 
-    public String startContainers() throws IOException, ExecException {
+    public String startContainer() throws IOException, ExecException {
         final Properties projProperties = projectProperties;
 
         final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
 
         showLogsIfRequested(containerId);
-        projProperties.putAll(queryContainerProperties(containerId));
+        Properties exposedProps = queryContainerProperties(containerId);
+        projProperties.putAll(exposedProps);
         waitAndPostExec(containerId, projProperties);
 
         return containerId;

@@ -42,7 +42,6 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.StartOrderResolver;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -179,7 +178,6 @@ public class StartMojo extends AbstractDockerMojo {
                     waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
                 }
             }
-
             portMappingPropertyWriteHelper.write();
 
             if (follow) {
@@ -298,12 +296,10 @@ public class StartMojo extends AbstractDockerMojo {
 
         startingContainers.submit(() -> {
 
-            String containerId = startExecutor.startContainers();
-            project.getProperties().putAll(startExecutor.queryContainerProperties(containerId));
+            String containerId = startExecutor.startContainer();
 
             // Update port-mapping writer
             portMappingPropertyWriteHelper.add(portMapping, runConfig.getPortPropertyFile());
-
 
             return new StartedContainer(imageConfig, containerId);
         });
