@@ -72,7 +72,7 @@ endif::[]
 A provided `<from>` takes precedence over the name given here. This tag is useful for extensions of this plugin like the https://maven.fabric8.io[fabric8-maven-plugin] which can evaluate the additional information given here.
 
 | *autoPull*
-| Whether we need to pull a newer version of image.
+| If the base image should be automatically pulled if not already present. Same semantic as the global `autoPull` option, but specific to this build configuration.
 
 | <<build-healthcheck, *healthCheck*>>
 | Definition of a health check as described in <<build-healthcheck, Healthcheck>>
