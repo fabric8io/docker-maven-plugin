@@ -24,6 +24,8 @@ import java.util.Map;
 import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author roland
@@ -74,6 +76,15 @@ public class BuildConfigTest {
     }
 
     @Test
+    public void autoPull() {
+        BuildOptions opts = new BuildOptions().autoPull("true");
+        assertEquals("true", opts.getOptions().get("pull"));
+
+        opts = new BuildOptions().autoPull(null);
+        assertFalse(opts.getOptions().containsKey("pull"));
+    }
+
+    @Test
     public void buildArgs() {
         Map<String,String> args = Collections.singletonMap("arg1","blub");
         BuildOptions opts = new BuildOptions().buildArgs(args);
@@ -96,23 +107,23 @@ public class BuildConfigTest {
 
     @Test
     public void cacheFrom() {
-        BuildOptions opts = new BuildOptions().cacheFrom(Arrays.asList("foo/bar:latest"));
+        BuildOptions opts = new BuildOptions().cacheFrom(Collections.singletonList("foo/bar:latest"));
         assertEquals("[\"foo/bar:latest\"]", opts.getOptions().get("cachefrom"));
 
         opts.cacheFrom(Arrays.asList("foo/bar:latest", "foo/baz:1.0"));
         assertEquals("[\"foo/bar:latest\",\"foo/baz:1.0\"]", opts.getOptions().get("cachefrom"));
 
-        opts.cacheFrom(Arrays.asList());
-        assertEquals(null, opts.getOptions().get("cachefrom"));
+        opts.cacheFrom(Collections.emptyList());
+        assertNull(opts.getOptions().get("cachefrom"));
 
         opts.cacheFrom(null);
-        assertEquals(null, opts.getOptions().get("cachefrom"));
+        assertNull(opts.getOptions().get("cachefrom"));
     }
 
     @Test
     public void network() {
         BuildOptions opts = new BuildOptions().network(null);
-        assertEquals(null, opts.getOptions().get("networkmode"));
+        assertNull(opts.getOptions().get("networkmode"));
 
         opts.network("host");
         assertEquals("host", opts.getOptions().get("networkmode"));

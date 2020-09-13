@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.PatternSyntaxException;
 
+import io.fabric8.maven.docker.config.ImagePullPolicy;
 import org.apache.maven.plugin.MojoExecutionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
@@ -172,6 +173,7 @@ public class BuildService {
         // auto is now supported by docker, consider switching?
         BuildOptions opts =
                 new BuildOptions(buildConfig.getBuildOptions())
+                        .autoPull(calculateAutoPullFromImagePullPolicy(buildConfig.getImagePullPolicy()))
                         .dockerfile(getDockerfileName(buildConfig))
                         .forceRemove(cleanupMode.isRemove())
                         .noCache(noCache)
@@ -440,6 +442,13 @@ public class BuildService {
 
     private boolean isEmpty(String str) {
         return str == null || str.isEmpty();
+    }
+
+    static String calculateAutoPullFromImagePullPolicy(String imagePullPolicy) {
+        if (imagePullPolicy != null) {
+            return Boolean.toString(!imagePullPolicy.equals(ImagePullPolicy.Never.name()));
+        }
+        return Boolean.FALSE.toString();
     }
 
 

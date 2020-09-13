@@ -27,18 +27,34 @@ import io.fabric8.maven.docker.util.JsonFactory;
  */
 public class BuildOptions {
 
-    private Map<String, String> options;
+    private final Map<String, String> options;
 
     public BuildOptions() {
-        this(new HashMap<String, String>());
+        this(new HashMap<>());
     }
 
     public BuildOptions(Map<String, String> options) {
-        this.options = options != null ? new HashMap<>(options) : new HashMap<String, String>();
+        this.options = options != null ? new HashMap<>(options) : new HashMap<>();
     }
 
     public BuildOptions addOption(String key, String value) {
         options.put(key,value);
+        return this;
+    }
+
+    public BuildOptions autoPull(String autoPull) {
+        if (autoPull != null) {
+            switch (autoPull.toLowerCase()) {
+                case "always":
+                case "true" :
+                case "ifnotpresent":
+                    options.put("pull", Boolean.TRUE.toString());
+                    break;
+                case "false":
+                case "never":
+                    options.put("pull", Boolean.FALSE.toString());
+            }
+        }
         return this;
     }
 

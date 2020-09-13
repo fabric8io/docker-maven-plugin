@@ -18,6 +18,9 @@ public class BuildImageConfiguration implements Serializable {
     public static final String DEFAULT_FILTER = "${*}";
     public static final String DEFAULT_CLEANUP = "try";
 
+    @Parameter
+    private String autoPull;
+
     /**
      * Directory is used as build context.
      * If not specified, dockerfile's parent directory is used as build context.
@@ -183,6 +186,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public boolean isDockerFileMode() {
         return dockerFileFile != null;
+    }
+
+    public String getAutoPull() {
+        return autoPull;
     }
 
     public String getLoadNamePattern() {
@@ -420,6 +427,11 @@ public class BuildImageConfiguration implements Serializable {
             } else {
                 this.config = DeepCopy.copy(that);
             }
+        }
+
+        public Builder autoPull(String autoPull) {
+            config.autoPull = autoPull;
+            return this;
         }
 
         public Builder contextDir(String dir) {
