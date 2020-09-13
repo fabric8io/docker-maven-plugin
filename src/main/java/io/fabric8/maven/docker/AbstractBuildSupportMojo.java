@@ -39,12 +39,6 @@ abstract public class AbstractBuildSupportMojo extends AbstractDockerMojo {
     @Parameter(property = "docker.pull.registry")
     private String pullRegistry;
 
-    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
-    private String sourceDirectory;
-
-    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
-    private String outputDirectory;
-
     @Parameter( defaultValue = "${reactorProjects}", required = true, readonly = true )
     private List<MavenProject> reactorProjects;
 

@@ -9,6 +9,7 @@
   - Add `skipPush` option to build image configuration ([#1243](https://github.com/fabric8io/docker-maven-plugin/issues/1243))
   - docker.container.<alias>.ip property is no longer set ([#1242](https://github.com/fabric8io/docker-maven-plugin/issues/1242))
   - Support `squash` in build options to squash newly built layers into a single layer ([#785](https://github.com/fabric8io/docker-maven-plugin/issues/785)) 
+  - Support for JIB mode([#1277](https://github.com/fabric8io/docker-maven-plugin/pull/1277))
 
 * **0.33.0** (2020-01-21)
   - Update to jnr-unixsocket 0.25 to solve concurrency issues ([#552](https://github.com/fabric8io/docker-maven-plugin/issues/552))
