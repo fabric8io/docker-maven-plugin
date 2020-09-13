@@ -106,7 +106,7 @@ By default a progress meter is printed out on the console, which is omitted when
 | `docker.maxConnections`
 
 | *jib*
-| Delegate Image Build process to https://github.com/GoogleContainerTools/jib[JIB], `false` by default. Note that this option is applicable only for <<docker:build,build>> and <<docker:push,push>> goals, other goals won't work if this is enabled(since they are dependent on docker)
+| Delegate Image Build process to https://github.com/GoogleContainerTools/jib[JIB], `false` by default. Note that this option is applicable only for <<docker:build,build>> and <<docker:push,push>> goals, other goals won't work if this is enabled (since they dependend on Docker specific features)
 | `docker.build.jib`
 
 | *outputDirectory*
