@@ -41,39 +41,42 @@ public class StartContainerExecutor {
 
     private StartContainerExecutor(){}
 
-    public String startContainers() throws IOException, ExecException {
+    public String startContainer() throws IOException, ExecException {
         final Properties projProperties = projectProperties;
 
         final String containerId = hub.getRunService().createAndStartContainer(imageConfig, portMapping, gavLabel, projProperties, basedir, containerNamePattern, buildDate);
 
         showLogsIfRequested(containerId);
-        exposeContainerProps(containerId);
+        Properties exposedProps = queryContainerProperties(containerId);
+        projProperties.putAll(exposedProps);
         waitAndPostExec(containerId, projProperties);
 
         return containerId;
     }
 
-    private void exposeContainerProps(String containerId)
+    public Properties queryContainerProperties(String containerId)
         throws DockerAccessException {
         String propKey = getExposedPropertyKeyPart();
+        Properties exposedProperties = new Properties();
 
         if (StringUtils.isNotEmpty(exposeContainerProps) && StringUtils.isNotEmpty(propKey)) {
             Container container = hub.getQueryService().getMandatoryContainer(containerId);
 
             String prefix = addDot(exposeContainerProps) + addDot(propKey);
-            projectProperties.put(prefix + "id", containerId);
+            exposedProperties.put(prefix + "id", containerId);
             String ip = container.getIPAddress();
             if (StringUtils.isNotEmpty(ip)) {
-                projectProperties.put(prefix + "ip", ip);
+                exposedProperties.put(prefix + "ip", ip);
             }
 
             Map<String, String> nets = container.getCustomNetworkIpAddresses();
             if (nets != null) {
                 for (Map.Entry<String, String> entry : nets.entrySet()) {
-                    projectProperties.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());
+                    exposedProperties.put(prefix + addDot("net") + addDot(entry.getKey()) + "ip", entry.getValue());
                 }
             }
         }
+        return exposedProperties;
     }
 
     String getExposedPropertyKeyPart() {

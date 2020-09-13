@@ -21,9 +21,9 @@ import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.log.LogDispatcher;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.util.Task;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -252,8 +252,7 @@ public class WatchService {
                     .buildTimestamp(watcher.watchContext.buildTimestamp)
                     .build();
 
-            String containerId = helper.startContainers();
-
+            String containerId = helper.startContainer();
             watcher.setContainerId(containerId);
         };
     }
