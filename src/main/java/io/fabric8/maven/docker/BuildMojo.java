@@ -16,6 +16,7 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.ImagePullPolicy;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ImagePullManager;
+import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -76,8 +77,23 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
         BuildService.BuildContext buildContext = getBuildContext();
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(imageConfig.getBuildConfiguration()), determineAutoPull(imageConfig.getBuildConfiguration()));
-        BuildService buildService = hub.getBuildService();
+        proceedWithBuildProcess(hub, buildContext, imageConfig, pullManager);
+    }
 
+    private void proceedWithBuildProcess(ServiceHub hub, BuildService.BuildContext buildContext, ImageConfiguration imageConfig, ImagePullManager pullManager) throws MojoExecutionException, IOException {
+        if (Boolean.TRUE.equals(jib)) {
+            proceedWithJibBuild(hub, buildContext, imageConfig);
+        } else {
+            proceedWithDockerBuild(hub.getBuildService(), buildContext, imageConfig, pullManager);
+        }
+    }
+
+    private void proceedWithJibBuild(ServiceHub hub, BuildService.BuildContext buildContext, ImageConfiguration imageConfig) throws MojoExecutionException {
+        log.info("Building Container image with [[B]]JIB(Java Image Builder)[[B]] mode");
+        new JibBuildService(hub, createMojoParameters(), log).build(imageConfig, buildContext.getRegistryConfig());
+    }
+
+    private void proceedWithDockerBuild(BuildService buildService, BuildService.BuildContext buildContext, ImageConfiguration imageConfig, ImagePullManager pullManager) throws MojoExecutionException, IOException {
         File buildArchiveFile = buildService.buildArchive(imageConfig, buildContext, resolveBuildArchiveParameter());
         if (Boolean.FALSE.equals(shallBuildArchiveOnly())) {
             buildService.buildImage(imageConfig, pullManager, buildContext, buildArchiveFile);

@@ -64,6 +64,14 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     }
 
     /**
+     * Changes image registry to specified one
+     * @param registry string value for registry to be modified
+     */
+    public void setRegistry(String registry) {
+        this.registry = registry;
+    }
+
+    /**
      * Override externalConfiguration when defined via special property.
      *
      * @param externalConfiguration Map with alternative config

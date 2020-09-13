@@ -37,6 +37,7 @@
     <maven.version>3.3.9</maven.version>
     <jmockit.version>1.43</jmockit.version>
     <surefire.version>3.0.0-M2</surefire.version>
+    <jib-core.version>0.12.0</jib-core.version>
   </properties>
 
   <dependencies>
@@ -158,6 +159,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.google.cloud.tools</groupId>
+      <artifactId>jib-core</artifactId>
+      <version>${jib-core.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
       <version>1.26</version>
@@ -166,7 +173,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>29.0-android</version>
+      <version>27.0.1-jre</version>
     </dependency>
 
     <dependency>

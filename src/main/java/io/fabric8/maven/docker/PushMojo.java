@@ -1,8 +1,12 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.service.BuildService;
+import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 
+import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -41,6 +45,22 @@ public class PushMojo extends AbstractDockerMojo {
             return;
         }
 
+        if (Boolean.TRUE.equals(jib)) {
+            executeJibPush(hub);
+        } else {
+            executeDockerPush(hub);
+        }
+    }
+
+    private void executeDockerPush(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
         hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
     }
+
+    private void executeJibPush(ServiceHub hub) throws MojoExecutionException {
+        log.info("Pushing Container image with [[B]]JIB(Java Image Builder)[[B]] mode");
+        JibBuildService jibBuildService = new JibBuildService(hub, new MojoParameters(session, project, null, null, null,
+                settings, sourceDirectory, outputDirectory, null), log);
+        jibBuildService.push(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+    }
+
 }
