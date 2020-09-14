@@ -1,5 +1,5 @@
 package io.fabric8.maven.docker.util;/*
- * 
+ *
  * Copyright 2014 Roland Huss
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,7 +88,7 @@ public class TimestampFactoryTest {
 
     @Test
     public void testNumericTimeZoneOffset() throws Exception {
-        ZonedDateTime ts3p = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000+03");
+        ZonedDateTime ts3p = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000+03:00");
         ZonedDateTime ts530p = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000+05:30");
         ZonedDateTime ts4 = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000-04:00");
         ZonedDateTime ts2 = TimestampFactory.createTimestamp("2016-03-16T17:06:30.714387000-02:00");
