@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.33.0,</span>
-<span id="revdate">2020-01-21</span>
+<span id="revnumber">version 0.34.0,</span>
+<span id="revdate">2020-09-14</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -585,8 +585,9 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#docker:logs">5.7. <strong>docker:logs</strong></a></li>
 <li><a href="#docker:source">5.8. <strong>docker:source</strong></a></li>
 <li><a href="#docker:save">5.9. <strong>docker:save</strong></a></li>
-<li><a href="#docker:volume-create">5.10. <strong>docker:volume-create</strong></a></li>
-<li><a href="#docker:volume-remove">5.11. <strong>docker:volume-remove</strong></a></li>
+<li><a href="#docker:tag">5.10. <strong>docker:tag</strong></a></li>
+<li><a href="#docker:volume-create">5.11. <strong>docker:volume-create</strong></a></li>
+<li><a href="#docker:volume-remove">5.12. <strong>docker:volume-remove</strong></a></li>
 </ul>
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
@@ -617,7 +618,7 @@ table.CodeRay td.code>pre{padding:0}
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>&#169; 2015 - 2019 The original authors.</p>
+<p>&#169; 2015 - 2020 The original authors.</p>
 </div>
 <!-- toc disabled -->
 </div>
@@ -852,7 +853,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.33.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.34.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1125,6 +1126,11 @@ This property can take the following values (case insensitive):</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maxConnections</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of parallel connections are allowed to be opened to the Docker Host. For parsing log output, a connection needs to be kept open (as well for the wait features), so don&#8217;t put that number to low. Default is 100 which should be suitable for most of the cases.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.maxConnections</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>jib</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delegate Image Build process to <a href="https://github.com/GoogleContainerTools/jib">JIB</a>, <code>false</code> by default. Note that this option is applicable only for <a href="#docker:build">build</a> and <a href="#docker:push">push</a> goals, other goals won&#8217;t work if this is enabled (since they dependend on Docker specific features)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.build.jib</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputDirectory</strong></p></td>
@@ -2061,7 +2067,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>buildOptions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 <a href="https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile">Docker Remote API</a> and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>noCache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>squash</code>, <code>noCache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
@@ -2150,6 +2156,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use Docker&#8217;s build cache. This can be overwritten by setting a system property <code>docker.noCache</code> when running Maven.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>squash</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Squash newly built layers into a single new layer. This can be overwritten by setting a system property <code>docker.squash</code> when running Maven.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheFrom</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;image&gt;</code> elements specifying image names to use as cache sources.</p></td>
 </tr>
@@ -2172,6 +2182,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skip</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to true disables building of the image. This config option is best used together with a maven property</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipPush</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">if set to true disables pushing of the image. This config option is best used together with a maven property</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipTag</strong></p></td>
@@ -3674,13 +3688,13 @@ logging.</p>
 <p><code>DEFAULT</code> A default format in the form <code>HH:mm:ss.SSS</code></p>
 </li>
 <li>
-<p><code>MEDIUM</code> Joda medium date time format</p>
+<p><code>MEDIUM</code> java.time medium date time format</p>
 </li>
 <li>
-<p><code>SHORT</code> Joda short date time format</p>
+<p><code>SHORT</code> java.time short date time format</p>
 </li>
 <li>
-<p><code>LONG</code> Joda long date time format</p>
+<p><code>LONG</code> java.time long date time format</p>
 </li>
 <li>
 <p><code>ISO8601</code> Full ISO-8601 formatted date time with milliseconds</p>
@@ -3689,7 +3703,7 @@ logging.</p>
 </div>
 <div class="paragraph">
 <p>As an alternative a date-time format string as recognized by
-<a href="http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html">JodaTime</a> is possible. In order to set a consistent date format, the global configuration parameter <code>logDate</code> can be used.</p>
+<a href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">java.time</a> is possible. In order to set a consistent date format, the global configuration parameter <code>logDate</code> can be used.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -4397,7 +4411,61 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 </table>
 </div>
 <div class="sect2">
-<h3 id="docker:volume-create">5.10. <strong>docker:volume-create</strong></h3>
+<h3 id="docker:tag">5.10. <strong>docker:tag</strong></h3>
+<div class="paragraph">
+<p>The <code>docker:tag</code> tags an image so that it becomes part of a repository. You can use it to tag an already built image. Here is an example of it&#8217;s usage:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code>~/work/repos/docker-maven-plugin/samples/zero-config : $ mvn docker:tag -Ddocker.image.tag=0.9.0
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -----------&lt; io.fabric8.dmp.samples:demp-sample-zero-config &gt;-----------
+[INFO] Building demp-sample-zero-config 0.33-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- docker-maven-plugin:0.33-SNAPSHOT:tag (default-cli) @ demp-sample-zero-config ---
+[INFO] DOCKER&gt; Tagging image samples/demp-sample-zero-config:0.9.0 successful!
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.155 s
+[INFO] Finished at: 2020-06-27T14:05:33+05:30
+[INFO] ------------------------------------------------------------------------
+~/work/repos/docker-maven-plugin/samples/zero-config : $ docker images | grep 0.9.0
+samples/demp-sample-zero-config                        0.9.0                       ac5c5991505d        About an hour ago   479MB</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 27. Supported options</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 50%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>tagName</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The name of the new tag.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.image.tag</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>repo</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The repository to tag in. For example, <code>someuser/someimage</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.image.repo</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="docker:volume-create">5.11. <strong>docker:volume-create</strong></h3>
 <div class="paragraph">
 <p>This goals creates one or more standalone <a href="https://docs.docker.com/engine/tutorials/dockervolumes/">Docker volume</a>, which can be referenced in a <a href="#docker:start"><strong>docker:start</strong></a> configuration for linking to a volume during runtime.
 Each volume has therefore a unique and referenceable name. Beside the volume driver and driver options can be specified.</p>
@@ -4431,7 +4499,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Volume configuration</caption>
+<caption class="title">Table 28. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -4463,7 +4531,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </table>
 </div>
 <div class="sect2">
-<h3 id="docker:volume-remove">5.11. <strong>docker:volume-remove</strong></h3>
+<h3 id="docker:volume-remove">5.12. <strong>docker:volume-remove</strong></h3>
 <div class="paragraph">
 <p>This goals is the counterpart to <a href="#docker:volume-create"><strong>docker:volume-create</strong></a> and removes a volume.
 Docker volumes are configured outside of Docker images, but can be referenced by them.
@@ -4492,7 +4560,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Volume configuration</caption>
+<caption class="title">Table 29. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -4578,7 +4646,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. 
 when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. External properties</caption>
+<caption class="title">Table 30. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4841,6 +4909,10 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Don&#8217;t use a cache when building the image</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.squash</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Squash newly built layers into a single layer (API 1.25+, need to be enabled in the Docker daemon configuration)</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.optimise</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">if set to true then it will compress all the <code>runCmds</code> into a single RUN directive so that only one image layer is created.</p></td>
 </tr>
@@ -4976,7 +5048,7 @@ configuration in the XML/POM file. This can be changed by adding the <code>&lt;m
 configuration (since version 0.25.0), which can have one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. Property mode</caption>
+<caption class="title">Table 31. Property mode</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -5307,7 +5379,7 @@ Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</cod
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Docker compose configuration</caption>
+<caption class="title">Table 32. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -5833,8 +5905,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.33.0<br>
-Last updated 2020-01-21 09:06:54 UTC
+Version 0.34.0<br>
+Last updated 2020-09-14 06:43:00 UTC
 </div>
 </div>
 </body>
