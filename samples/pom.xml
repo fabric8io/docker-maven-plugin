@@ -21,7 +21,7 @@
 
   <groupId>io.fabric8.dmp.samples</groupId>
   <artifactId>dmp-sample-parent</artifactId>
-  <version>0.34.0</version>
+  <version>0.34-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <url>http://www.jolokia.org</url>

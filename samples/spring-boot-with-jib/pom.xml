@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.fabric8.dmp.samples</groupId>
         <artifactId>dmp-sample-parent</artifactId>
-        <version>0.34.0</version>
+        <version>0.34-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -14,7 +14,6 @@
     <version>0.33-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Docker Maven Plugin :: Spring Boot JIB</name>
     <description>Docker Maven Plugin Example with Spring Boot With Build Mode JIB</description>
 
     <distributionManagement>
