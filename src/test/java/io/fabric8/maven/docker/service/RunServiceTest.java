@@ -398,6 +398,7 @@ public class RunServiceTest {
                         .memorySwap(1L)
                         .cpus(1000000000L)
                         .cpuSet("0,1")
+                        .isolation("default")
                         .cpuShares(1L)
                         .env(env())
                         .cmd("date")

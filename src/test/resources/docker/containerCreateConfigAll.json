@@ -64,6 +64,7 @@
         "Soft":2048
       }
     ],
+    "Isolation": "default",
     "CpuShares":1,
     "NanoCpus": 1000000000,
     "CpusetCpus":"0,1",

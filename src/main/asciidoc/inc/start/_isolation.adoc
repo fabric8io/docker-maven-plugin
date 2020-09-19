@@ -1,0 +1,30 @@
+==== Specify isolation technology for container
+
+The following configuration option under <run> session is equivalent of `--isolation <value>` when running a docker container
+
+.Example
+[source,xml]
+<run>
+    <isolation>hyperv</isolation>
+</run>
+
+This option is useful in situations where you are running Docker containers on Windows. The --isolation <value> option sets a container's isolation technology. On Linux, the only supported is the default option which uses Linux namespaces.
+
+.On Windows, isolation can take one of these values:
+[cols="1,5"]
+|===
+|Value |Description
+
+|default
+|Use the value specified by the Docker daemon's --exec-opt or system default (see below).
+
+|process
+|Shared-kernel namespace isolation (not supported on Windows client operating systems older than Windows 10 1809).
+
+|hyperv
+|Hyper-V hypervisor partition-based isolation.
+|===
+
+The default isolation on Windows server operating systems is process. The default isolation on Windows client operating systems is hyperv. An attempt to start a container on a client operating system older than Windows 10 1809 with --isolation process will fail.
+
+See https://docs.docker.com/engine/reference/commandline/run/#specify-isolation-technology-for-container---isolation[isolation technology for container] for a detailed description.

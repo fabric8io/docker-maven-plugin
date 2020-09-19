@@ -6,6 +6,13 @@
   - `assembly.inline` is removed when external properties are enabled ([1082](https://github.com/fabric8io/docker-maven-plugin/issues/1082))
   - Fix Support for Podman REST API(when configured) Related to ([1330](https://github.com/fabric8io/docker-maven-plugin/issues/1330))
   - Fix ignored `SHELL` directive when provided in XML configuration (#1418)
+  - Restore support for getting a random container name ([1352](https://github.com/fabric8io/docker-maven-plugin/issues/1352))
+  - Provide exception messages that occurred during stop ([1435](https://github.com/fabric8io/docker-maven-plugin/pull/1435))
+  - Make Maven build Reproducible ([1406](https://github.com/fabric8io/docker-maven-plugin/pull/1406))
+  - Fix Windows tests ([1416](https://github.com/fabric8io/docker-maven-plugin/pull/1417))
+  - Add a skipPom parameter, skipping a project if packaging is pom ([1388](https://github.com/fabric8io/docker-maven-plugin/pull/1388))
+  - Add support for config to specify isolation technology for container ([1376](https://github.com/fabric8io/docker-maven-plugin/pull/1376))
+  - Add Docker build cache friendly example utilizing Spring Boot Layered JAR and Maven Assembly Plugin ([1412](https://github.com/fabric8io/docker-maven-plugin/pull/1412))
   
 * **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))

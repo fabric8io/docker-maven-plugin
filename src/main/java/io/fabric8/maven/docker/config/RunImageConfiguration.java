@@ -108,6 +108,9 @@ public class RunImageConfiguration implements Serializable {
     private List<String> extraHosts;
 
     @Parameter
+    private String isolation;
+
+    @Parameter
     private Long cpuShares;
 
     @Parameter
@@ -255,6 +258,8 @@ public class RunImageConfiguration implements Serializable {
     public Long getMemorySwap() {
         return memorySwap;
     }
+
+    public String getIsolation() { return isolation; }
 
     public Long getCpuShares() {
         return cpuShares;
@@ -588,6 +593,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder log(LogConfiguration log) {
             config.log = log;
+            return this;
+        }
+
+        public Builder isolation (String isolation) {
+            config.isolation = isolation;
             return this;
         }
 
