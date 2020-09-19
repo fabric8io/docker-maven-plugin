@@ -43,6 +43,7 @@ public enum ConfigKey {
     CLEANUP,
     CPUS,
     CPUSET,
+    ISOLATION,
     CPUSHARES,
     CACHE_FROM,
     CMD,

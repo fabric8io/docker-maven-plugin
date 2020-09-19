@@ -68,6 +68,8 @@ public class ContainerHostConfig {
         return addAsArray("DnsSearch", dnsSearch);
     }
 
+    public ContainerHostConfig isolation(String isolation) { return  add("Isolation",isolation); }
+
     public ContainerHostConfig cpuShares(Long cpuShares) {
         return add("CpuShares", cpuShares);
     }

@@ -16,6 +16,7 @@ services:
       - CAP
     command: command.sh
     cgroup_parent: cgroup_parent
+    isolation: default
     cpu_shares: 1
     cpuset: 0,1
     cpus: 1

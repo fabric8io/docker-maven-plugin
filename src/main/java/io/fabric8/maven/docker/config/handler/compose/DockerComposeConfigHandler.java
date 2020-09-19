@@ -193,6 +193,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 // stop_signal not supported
                 .ulimits(wrapper.getUlimits())
                 .volumes(wrapper.getVolumeConfig())
+                .isolation(wrapper.getIsolation())
                 .cpuShares(wrapper.getCpuShares())
                 .cpus(wrapper.getCpusCount())
                 .cpuSet(wrapper.getCpuSet())

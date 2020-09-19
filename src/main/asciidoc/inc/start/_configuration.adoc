@@ -80,6 +80,9 @@ The `<run>` configuration element knows the following sub elements:
 | <<start-logging, *log*>>
 | Log configuration for whether and how log messages from the running containers should be printed. This also can configure the https://docs.docker.com/engine/admin/logging/overview[log driver] to use. See <<start-logging,Logging>> for a detailed description.
 
+| <<start-isolation, *isolation*>>
+| This option sets container's isolation technology. See <<start-isolation,Isolation>> for a detailed description.
+
 | *memory*
 | Memory limit in bytes.
 

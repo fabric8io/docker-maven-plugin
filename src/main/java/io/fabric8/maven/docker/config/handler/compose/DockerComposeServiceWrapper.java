@@ -350,6 +350,8 @@ class DockerComposeServiceWrapper {
         return asString("cpuset");
     }
 
+    public String getIsolation() {return  asString("isolation"); }
+
     public Long getCpuShares() {
         return asLong("cpu_shares");
     }

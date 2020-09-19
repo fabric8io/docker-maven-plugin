@@ -378,6 +378,7 @@ public class RunService {
                 .logConfig(runConfig.getLogConfiguration())
                 .tmpfs(runConfig.getTmpfs())
                 .ulimits(runConfig.getUlimits())
+                .isolation(runConfig.getIsolation())
                 .cpuShares(runConfig.getCpuShares())
                 .cpus(runConfig.getCpus())
                 .cpuSet(runConfig.getCpuSet())

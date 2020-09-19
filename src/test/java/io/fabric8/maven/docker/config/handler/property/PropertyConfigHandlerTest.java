@@ -1024,6 +1024,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals((Long) 1L, runConfig.getMemory());
         assertEquals((Long) 1L, runConfig.getMemorySwap());
         assertEquals((Long) 1000000000L, runConfig.getCpus());
+        assertEquals("default",runConfig.getIsolation());
         assertEquals((Long) 1L, runConfig.getCpuShares());
         assertEquals("0,1", runConfig.getCpuSet());
         assertEquals("/tmp/envProps.txt",runConfig.getEnvPropertyFile());
@@ -1108,6 +1109,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.SECURITY_OPTS) + ".1", "seccomp=unconfined",
             k(ConfigKey.CPUS), "1000000000",
             k(ConfigKey.CPUSET), "0,1",
+            k(ConfigKey.ISOLATION),"default",
             k(ConfigKey.CPUSHARES), "1",
             k(ConfigKey.CMD), "command.sh",
             k(ConfigKey.DNS) + ".1", "8.8.8.8",
