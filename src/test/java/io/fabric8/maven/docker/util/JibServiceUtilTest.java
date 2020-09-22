@@ -87,6 +87,7 @@ public class JibServiceUtilTest {
         // Then
         assertTrue(wasNewFileCreated);
         new Verifications() {{
+
             FileEntriesLayer fileEntriesLayer;
             containerBuilder.addFileEntriesLayer(fileEntriesLayer = withCapture());
 
