@@ -53,9 +53,9 @@ public class DockerFileUtil {
      * @param interpolator interpolator for replacing properties
      * @return LinkedList of base images name or empty collection if none is found.
      */
-    public static List<String> extractBaseImages(File dockerFile, FixedStringSearchInterpolator interpolator) throws IOException {
+    public static List<String> extractBaseImages(File dockerFile, FixedStringSearchInterpolator interpolator, Map<String, String> argsFromBuildConfig) throws IOException {
         List<String[]> fromLines = extractLines(dockerFile, "FROM", interpolator);
-        Map<String, String> args = extractArgs(dockerFile, interpolator);
+        Map<String, String> args = extractArgs(dockerFile, argsFromBuildConfig, interpolator);
         Set<String> result = new LinkedHashSet<>();
         Set<String> fromAlias = new HashSet<>();
         for (String[] fromLine :  fromLines) {
@@ -80,8 +80,8 @@ public class DockerFileUtil {
      * @param interpolator interpolator for replacement
      * @return HashMap of arguments or empty collection if none is found
      */
-    public static Map<String, String> extractArgs(File dockerfile, FixedStringSearchInterpolator interpolator) throws IOException {
-        return extractArgsFromLines(extractLines(dockerfile, "ARG", interpolator));
+    public static Map<String, String> extractArgs(File dockerfile, Map<String, String> argsFromBuildConfig, FixedStringSearchInterpolator interpolator) throws IOException {
+        return extractArgsFromLines(extractLines(dockerfile, "ARG", interpolator), argsFromBuildConfig);
     }
 
     /**
@@ -155,14 +155,23 @@ public class DockerFileUtil {
      * @param argLines list of string arrays containing lines with words
      * @return map of parsed arguments
      */
-    protected static Map<String, String> extractArgsFromLines(List<String[]> argLines) {
+    static Map<String, String> extractArgsFromLines(List<String[]> argLines, Map<String, String> argsFromBuildConfig) {
         Map<String, String> result = new HashMap<>();
         for (String[] argLine : argLines) {
             if (argLine.length > 1) {
-                updateMapWithArgValue(result, argLine[1]);
+                updateMapWithArgValue(result, argsFromBuildConfig, argLine[1]);
             }
         }
         return result;
+    }
+
+    static String resolveArgValueFromStrContainingArgKey(String argString, Map<String, String> args) {
+        if (argString.startsWith("$") && args.containsKey(argString.substring(1))) {
+            return args.get(argString.substring(1));
+        } else if (argString.startsWith("${") && argString.endsWith("}") && args.containsKey(argString.substring(2, argString.length() - 1))) {
+            return args.get(argString.substring(2, argString.length() - 1));
+        }
+        return null;
     }
 
     private static String resolveImageTagFromArgs(String imageTagString, Map<String, String> args) {
@@ -181,13 +190,6 @@ public class DockerFileUtil {
             }
         }
         return imageTagString;
-    }
-
-    private static String resolveArgValueFromStrContainingArgKey(String argString, Map<String, String> args) {
-        if (argString.startsWith("$") && args.containsKey(argString.substring(1))) {
-            return args.get(argString.substring(1));
-        }
-        return null;
     }
 
     private static Reader getFileReaderFromDir(File file) {
@@ -248,7 +250,7 @@ public class DockerFileUtil {
         return new File(homeDir);
     }
 
-    private static void updateMapWithArgValue(Map<String, String> result, String argString) {
+    private static void updateMapWithArgValue(Map<String, String> result, Map<String, String> args, String argString) {
         if (argString.contains("=") || argString.contains(":")) {
             String[] argStringParts = argString.split("[=:]");
             String argStringValue = argString.substring(argStringParts[0].length() + 1);
@@ -261,8 +263,16 @@ public class DockerFileUtil {
             result.put(argStringParts[0], argStringValue);
         } else {
             validateArgValue(argString);
-            result.put(argString.split("\\s+")[0], "");
+            result.putAll(fetchArgsFromBuildConfiguration(argString, args));
         }
+    }
+
+    private static Map<String, String> fetchArgsFromBuildConfiguration(String argString, Map<String, String> args) {
+        Map<String, String> argFromBuildConfig = new HashMap<>();
+        if (args != null) {
+            argFromBuildConfig.put(argString, args.getOrDefault(argString, ""));
+        }
+        return argFromBuildConfig;
     }
 
     private static void validateArgValue(String argStringParam) {
