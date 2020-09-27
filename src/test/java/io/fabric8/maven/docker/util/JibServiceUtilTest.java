@@ -1,10 +1,11 @@
 package io.fabric8.maven.docker.util;
 
-import com.google.cloud.tools.jib.api.AbsoluteUnixPath;
-import com.google.cloud.tools.jib.api.ImageFormat;
 import com.google.cloud.tools.jib.api.JibContainerBuilder;
-import com.google.cloud.tools.jib.api.LayerConfiguration;
-import com.google.cloud.tools.jib.api.Port;
+import com.google.cloud.tools.jib.api.buildplan.AbsoluteUnixPath;
+import com.google.cloud.tools.jib.api.buildplan.FileEntriesLayer;
+import com.google.cloud.tools.jib.api.buildplan.ImageFormat;
+import com.google.cloud.tools.jib.api.buildplan.Port;
+
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -86,13 +87,14 @@ public class JibServiceUtilTest {
         // Then
         assertTrue(wasNewFileCreated);
         new Verifications() {{
-            LayerConfiguration layerConfiguration;
-            containerBuilder.addLayer(layerConfiguration = withCapture());
 
-            assertNotNull(layerConfiguration);
-            assertEquals(1, layerConfiguration.getLayerEntries().size());
-            assertEquals(temporaryFile.toPath(), layerConfiguration.getLayerEntries().get(0).getSourceFile());
-            assertEquals(AbsoluteUnixPath.get(temporaryFile.getAbsolutePath().substring(4)), layerConfiguration.getLayerEntries().get(0).getExtractionPath());
+            FileEntriesLayer fileEntriesLayer;
+            containerBuilder.addFileEntriesLayer(fileEntriesLayer = withCapture());
+
+            assertNotNull(fileEntriesLayer);
+            assertEquals(1, fileEntriesLayer.getEntries().size());
+            assertEquals(temporaryFile.toPath(), fileEntriesLayer.getEntries().get(0).getSourceFile());
+            assertEquals(AbsoluteUnixPath.get(temporaryFile.getAbsolutePath().substring(4)), fileEntriesLayer.getEntries().get(0).getExtractionPath());
         }};
     }
 
