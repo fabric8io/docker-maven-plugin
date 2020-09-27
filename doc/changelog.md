@@ -1,5 +1,8 @@
 # ChangeLog
 
+* **0.34-SNAPSHOT**
+  - Fix NPE with "skipPush" and no build configuration given
+  
 * **0.34.0** (2020-09-13)
   - Support `ARG` in `FROM` ([#859](https://github.com/fabric8io/docker-maven-plugin/issues/859))
   - Handle authentication tokens returned from credential helpers ([#1348](https://github.com/fabric8io/docker-maven-plugin/issues/1348))
