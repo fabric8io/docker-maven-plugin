@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.34-SNAPSHOT**
+* **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
   - upgrade to jib-core 0.15.0 ([#1378](https://github.com/fabric8io/docker-maven-plugin/issues/1378))
   - Plugin now resolves ARG provided in BuildImageConfiguration ([#1373](https://github.com/fabric8io/docker-maven-plugin/issues/1373))
