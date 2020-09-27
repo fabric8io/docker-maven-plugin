@@ -208,6 +208,16 @@ public class RegistryServiceTest {
     }
 
     @Test
+    public void pushImageWithoutBuildConfig() throws DockerAccessException {
+        givenAnImageConfigurationWithoutBuildConfig("user/test:1.0.1");
+
+        whenPushImage();
+
+        thenImageHasNotBeenPushed();
+        thenNoExceptionThrown();
+    }
+
+    @Test
     public void pushImageSkipped() throws DockerAccessException {
         givenAnImageConfiguration("user/test:1.0.1");
         givenPushSkipped(true);
@@ -333,6 +343,10 @@ public class RegistryServiceTest {
     private void givenAnImageConfiguration(String imageName) {
         final BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().build();
         imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
+    }
+
+    private void givenAnImageConfigurationWithoutBuildConfig(String imageName) {
+        imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(null).build();
     }
 
     private void givenPushSkipped(boolean skipPush) {
