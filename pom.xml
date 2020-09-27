@@ -37,7 +37,7 @@
     <maven.version>3.3.9</maven.version>
     <jmockit.version>1.43</jmockit.version>
     <surefire.version>3.0.0-M2</surefire.version>
-    <jib-core.version>0.12.0</jib-core.version>
+    <jib-core.version>0.15.0</jib-core.version>
   </properties>
 
   <dependencies>
@@ -173,7 +173,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>27.0.1-jre</version>
+      <version>29.0-jre</version>
     </dependency>
 
     <dependency>
@@ -240,7 +240,7 @@
 
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.2</version>
+        <version>3.8.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
