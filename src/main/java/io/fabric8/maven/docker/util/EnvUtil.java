@@ -141,7 +141,7 @@ public class EnvUtil {
     /**
      * Remove empty members of a list.
      * @param input A list of String
-     * @return A list of Non-Empty (length>0) String
+     * @return A list of Non-Empty (length&gt;0) String
      */
     @Nonnull
     public static List<String> removeEmptyEntries(@Nullable List<String> input) {
@@ -215,7 +215,7 @@ public class EnvUtil {
      * Extract part of given properties as a map. The given prefix is used to find the properties,
      * the rest of the property name is used as key for the map.
      *
-     * NOTE: If key is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored! This is reserved for combine policy tweaking.
+     * NOTE: If key is "._combine"  it is ignored! This is reserved for combine policy tweaking.
      *
      * @param prefix prefix which specifies the part which should be extracted as map
      * @param properties properties to extract from
@@ -244,7 +244,7 @@ public class EnvUtil {
      * given properties from which the list should be extracted, the rest is used as a numeric index. If the rest
      * is not numeric, the order is not determined (all those props are appended to the end of the list)
      *
-     * NOTE: If suffix/index is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored!
+     * NOTE: If suffix/index is "._combine"  it is ignored!
      * This is reserved for combine policy tweaking.
      *
      * @param prefix for selecting the properties from which the list should be extracted
