@@ -32,6 +32,7 @@ import org.junit.Test;
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author roland
@@ -133,6 +134,11 @@ public class DockerFileUtilTest {
     public void testResolveArgValueFromStrContainingArgKey() {
         assertEquals("latest", DockerFileUtil.resolveArgValueFromStrContainingArgKey("$VERSION", Collections.singletonMap("VERSION", "latest")));
         assertEquals("test", DockerFileUtil.resolveArgValueFromStrContainingArgKey("${project.scope}", Collections.singletonMap("project.scope", "test")));
+        assertEquals("test", DockerFileUtil.resolveArgValueFromStrContainingArgKey("$ad", Collections.singletonMap("ad", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("bla$ad", Collections.singletonMap("ad", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("${foo}bar", Collections.singletonMap("foo", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("bar${foo}", Collections.singletonMap("foo", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("$ad", Collections.emptyMap()));
     }
 
     private File copyToTempDir(String resource) throws IOException {
