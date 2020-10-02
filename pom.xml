@@ -38,6 +38,7 @@
     <jmockit.version>1.43</jmockit.version>
     <surefire.version>3.0.0-M2</surefire.version>
     <jib-core.version>0.15.0</jib-core.version>
+    <httpclient.version>4.5.10</httpclient.version>
   </properties>
 
   <dependencies>
@@ -102,7 +103,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.5</version>
+      <version>${httpclient.version}</version>
     </dependency>
 
     <dependency>

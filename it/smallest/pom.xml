@@ -2,15 +2,15 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.fabric8.dmp.samples</groupId>
-    <artifactId>dmp-sample-parent</artifactId>
-    <version>0.29-SNAPSHOT</version>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.34-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>fabric8io</groupId>
-  <artifactId>dmp-sample-smallest</artifactId>
-  <version>0.29-SNAPSHOT</version>
+  <artifactId>dmp-it-smallest</artifactId>
+  <version>0.34-SNAPSHOT</version>
 
   <build>
     <plugins>

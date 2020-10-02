@@ -89,7 +89,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
 
     private void proceedWithJibBuild(ServiceHub hub, BuildService.BuildContext buildContext, ImageConfiguration imageConfig) throws MojoExecutionException {
         log.info("Building Container image with [[B]]JIB(Java Image Builder)[[B]] mode");
-        new JibBuildService(hub, createMojoParameters(), log).build(imageConfig, buildContext.getRegistryConfig());
+        new JibBuildService(hub, createMojoParameters(), log).build(jibImageFormat, imageConfig, buildContext.getRegistryConfig());
     }
 
     private void proceedWithDockerBuild(BuildService buildService, BuildService.BuildContext buildContext, ImageConfiguration imageConfig, ImagePullManager pullManager) throws MojoExecutionException, IOException {

@@ -171,6 +171,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.build.jib", defaultValue = "false")
     public boolean jib;
 
+    @Parameter(property = "docker.build.jib.imageFormat", defaultValue = "docker")
+    public String jibImageFormat;
+
     @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
     public String sourceDirectory;
 
