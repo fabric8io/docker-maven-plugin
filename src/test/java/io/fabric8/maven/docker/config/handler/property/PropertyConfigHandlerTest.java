@@ -669,9 +669,34 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestAssemblyData()));
         assertEquals(1, configs.size());
 
-        AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
+        List<AssemblyConfiguration> assemblies = configs.get(0).getBuildConfiguration().getAssemblyConfigurations();
+        assertEquals(1, assemblies.size());
+
+        AssemblyConfiguration config = assemblies.get(0);
         assertEquals("user", config.getUser());
         assertEquals("project", config.getDescriptorRef());
+        assertFalse(config.exportTargetDir());
+        assertTrue(config.isIgnorePermissions());
+    }
+
+    @Test
+    public void testMultipleAssemblies() {
+        List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestMultipleAssemblyData()));
+        assertEquals(1, configs.size());
+
+        List<AssemblyConfiguration> assemblies = configs.get(0).getBuildConfiguration().getAssemblyConfigurations();
+        assertEquals(2, assemblies.size());
+
+        AssemblyConfiguration config = assemblies.get(0);
+        assertEquals("user", config.getUser());
+        assertEquals("project", config.getDescriptorRef());
+        assertFalse(config.exportTargetDir());
+        assertTrue(config.isIgnorePermissions());
+
+        config = assemblies.get(1);
+        assertEquals("user", config.getUser());
+        assertEquals("artifact", config.getDescriptorRef());
+        assertEquals("art", config.getName());
         assertFalse(config.exportTargetDir());
         assertTrue(config.isIgnorePermissions());
     }
@@ -1019,7 +1044,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
          * validate only the descriptor is required and defaults are all used, 'testAssembly' validates
          * all options can be set
          */
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAssemblyConfigurations();
+        assertEquals(1, assemblyConfigurations.size());
+
+        AssemblyConfiguration assemblyConfig = assemblyConfigurations.get(0);
 
         assertEquals("/maven", assemblyConfig.getTargetDir());
         assertEquals("assembly.xml", assemblyConfig.getDescriptor());
@@ -1129,6 +1157,24 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.ASSEMBLY_USER), "user",
             k(ConfigKey.NAME), "image",
             };
+    }
+
+    private String[] getTestMultipleAssemblyData() {
+        return new String[] {
+                k(ConfigKey.FROM), "busybox",
+                k(ConfigKey.ASSEMBLIES) + ".1." + k(ConfigKey.ASSEMBLY_BASEDIR), "/basedir",
+                k(ConfigKey.ASSEMBLIES) + ".1." + k(ConfigKey.ASSEMBLY_DESCRIPTOR_REF), "project",
+                k(ConfigKey.ASSEMBLIES) + ".1." + k(ConfigKey.ASSEMBLY_EXPORT_BASEDIR), "false",
+                k(ConfigKey.ASSEMBLIES) + ".1." + k(ConfigKey.ASSEMBLY_IGNORE_PERMISSIONS), "true",
+                k(ConfigKey.ASSEMBLIES) + ".1." + k(ConfigKey.ASSEMBLY_USER), "user",
+                k(ConfigKey.ASSEMBLIES) + ".2." + k(ConfigKey.ASSEMBLY_BASEDIR), "/basedir",
+                k(ConfigKey.ASSEMBLIES) + ".2." + k(ConfigKey.ASSEMBLY_DESCRIPTOR_REF), "artifact",
+                k(ConfigKey.ASSEMBLIES) + ".2." + k(ConfigKey.ASSEMBLY_EXPORT_BASEDIR), "false",
+                k(ConfigKey.ASSEMBLIES) + ".2." + k(ConfigKey.ASSEMBLY_IGNORE_PERMISSIONS), "true",
+                k(ConfigKey.ASSEMBLIES) + ".2." + k(ConfigKey.ASSEMBLY_USER), "user",
+                k(ConfigKey.ASSEMBLIES) + ".2." + k(ConfigKey.ASSEMBLY_NAME), "art",
+                k(ConfigKey.NAME), "image",
+        };
     }
 
     private String[] getTestData() {

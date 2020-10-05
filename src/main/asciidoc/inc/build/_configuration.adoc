@@ -8,6 +8,9 @@ of an image configuration. The following configuration options are supported:
 |===
 | Element | Description
 
+| <<config-image-build-assembly, *assemblies*>>
+| Specifies multiple assembly configurations as described in <<build-assembly,Build Assembly>>
+
 | <<config-image-build-assembly, *assembly*>>
 | specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
 

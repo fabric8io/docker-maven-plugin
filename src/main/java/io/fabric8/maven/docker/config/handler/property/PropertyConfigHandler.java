@@ -132,6 +132,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
     }
 
 
+    @SuppressWarnings("deprecation")
     private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider, MavenProject project) {
         BuildImageConfiguration config = fromConfig.getBuildConfiguration();
         if (!buildConfigured(config, valueProvider, project)) {
@@ -147,6 +148,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
                 .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
                 .assembly(extractAssembly(config == null ? null : config.getAssemblyConfiguration(), valueProvider))
+                .assemblies(extractAssemblies(config == null ? null : config.getAssemblyConfigurations(), valueProvider))
                 .env(CollectionUtils.mergeMaps(
                         valueProvider.getMap(ENV_BUILD, config == null ? null : config.getEnv()),
                         valueProvider.getMap(ENV, Collections.<String, String>emptyMap())
@@ -240,9 +242,29 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             .build();
     }
 
+    private List<AssemblyConfiguration> extractAssemblies(List<AssemblyConfiguration> config, ValueProvider valueProvider) {
+        List<ValueProvider> assemblyConfigProviders = valueProvider.getNestedList(ASSEMBLIES);
+        List<AssemblyConfiguration> assemblies = new ArrayList<>();
+
+        int count = Math.max(assemblyConfigProviders.size(), config == null ? 0 : config.size());
+
+        for (int i = 0; i < count; i++) {
+            AssemblyConfiguration fromConfig = config == null || i >= config.size() ? null : config.get(i);
+
+            if (i >= assemblyConfigProviders.size()) {
+                assemblies.add(fromConfig);
+            } else {
+                ValueProvider provider = assemblyConfigProviders.get(i);
+                assemblies.add(extractAssembly(fromConfig, provider));
+            }
+        }
+
+        return assemblies;
+    }
+
     @SuppressWarnings("deprecation")
     private AssemblyConfiguration extractAssembly(AssemblyConfiguration config, ValueProvider valueProvider) {
-        return new AssemblyConfiguration.Builder()
+        AssemblyConfiguration.Builder builder = new AssemblyConfiguration.Builder()
                 .targetDir(valueProvider.getString(ASSEMBLY_BASEDIR, config == null ? null : config.getTargetDir()))
                 .descriptor(valueProvider.getString(ASSEMBLY_DESCRIPTOR, config == null ? null : config.getDescriptor()))
                 .descriptorRef(valueProvider.getString(ASSEMBLY_DESCRIPTOR_REF, config == null ? null : config.getDescriptorRef()))
@@ -252,9 +274,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .permissions(valueProvider.getString(ASSEMBLY_PERMISSIONS, config == null ? null : config.getPermissionsRaw()))
                 .user(valueProvider.getString(ASSEMBLY_USER, config == null ? null : config.getUser()))
                 .mode(valueProvider.getString(ASSEMBLY_MODE, config == null ? null : config.getModeRaw()))
-                .tarLongFileMode(valueProvider.getString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()))
                 .assemblyDef(config == null ? null : config.getInline())
-                .build();
+                .tarLongFileMode(valueProvider.getString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()));
+        String name = valueProvider.getString(ASSEMBLY_NAME, config == null ? null : config.getName());
+        if (name != null) {
+            builder.name(name);
+        }
+        return builder.build();
     }
 
     private HealthCheckConfiguration extractHealthCheck(HealthCheckConfiguration config, ValueProvider valueProvider) {

@@ -44,6 +44,7 @@ public class ValueProvider {
     private BooleanValueExtractor booleanValueExtractor;
     private DoubleValueExtractor doubleValueExtractor;
     private PropertiesListValueExtractor propertiesListValueExtractor;
+    private NestedValueExtractor nestedValueExtractor;
 
     /**
      * Initiates ValueProvider which is to work with data from the given properties.
@@ -68,6 +69,7 @@ public class ValueProvider {
         booleanValueExtractor = new BooleanValueExtractor();
         doubleValueExtractor = new DoubleValueExtractor();
         propertiesListValueExtractor = new PropertiesListValueExtractor();
+        nestedValueExtractor = new NestedValueExtractor();
     }
 
     public String getString(ConfigKey key, String fromConfig) {
@@ -123,6 +125,11 @@ public class ValueProvider {
         };
 
         return arbitraryExtractor.getFromPreferredSource(prefix, key, fromConfig);
+    }
+
+    public List<ValueProvider> getNestedList(ConfigKey key) {
+        List<ValueProvider> nested = nestedValueExtractor.getFromPreferredSource(prefix, key, null);
+        return nested == null ? Collections.emptyList() : nested;
     }
 
     /**
@@ -327,6 +334,34 @@ public class ValueProvider {
                 merged.addAll(value);
             }
             return merged;
+        }
+    }
+
+    private class NestedValueExtractor extends ValueExtractor<List<ValueProvider>> {
+
+        @Override
+        protected List<ValueProvider> withPrefix(String prefix, ConfigKey key, Properties properties) {
+            Map<String, String> props = extractFromPropertiesAsMap(key.asPropertyKey(prefix), properties);
+
+            if (props == null) {
+                return Collections.emptyList();
+            }
+
+            Properties nestedProperties = new Properties();
+            nestedProperties.putAll(props);
+
+            Map<Integer, ValueProvider> res = new TreeMap<>();
+            for(Map.Entry<String, String> entry : props.entrySet()) {
+                String pfx = entry.getKey().substring(0, entry.getKey().indexOf('.'));
+                try {
+                    int n = Integer.parseInt(pfx);
+                    res.computeIfAbsent(n, k -> new ValueProvider(pfx + '.' + prefix, nestedProperties, propertyMode));
+                } catch (NumberFormatException ex) {
+                    // Skip this entry
+                }
+            }
+
+            return new ArrayList<>(res.values());
         }
     }
 }

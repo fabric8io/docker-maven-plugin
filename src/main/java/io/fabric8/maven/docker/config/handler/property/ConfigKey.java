@@ -25,11 +25,13 @@ public enum ConfigKey {
 
     ALIAS,
     ARGS(ValueCombinePolicy.Merge),
+    ASSEMBLIES,
     ASSEMBLY_BASEDIR("assembly.baseDir"),
     ASSEMBLY_DESCRIPTOR("assembly.descriptor"),
     ASSEMBLY_DESCRIPTOR_REF("assembly.descriptorRef"),
     ASSEMBLY_EXPORT_BASEDIR("assembly.exportBaseDir"),
     ASSEMBLY_IGNORE_PERMISSIONS("assembly.ignorePermissions"),
+    ASSEMBLY_NAME("assembly.name"),
     ASSEMBLY_PERMISSIONS("assembly.permissions"),
     ASSEMBLY_DOCKER_FILE_DIR("assembly.dockerFileDir"),
     ASSEMBLY_USER("assembly.user"),

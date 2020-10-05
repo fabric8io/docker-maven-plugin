@@ -7,6 +7,7 @@ import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.assembly.BuildDirs;
 import io.fabric8.maven.docker.config.ArchiveCompression;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
@@ -58,14 +59,14 @@ public class JibBuildService {
 
             File dockerTarArchive = getAssemblyTarArchive(imageConfig, serviceHub, mojoParameters, log);
 
-            if (imageConfig.getBuildConfiguration().getAssemblyConfiguration() != null) {
+            for (AssemblyConfiguration assemblyConfiguration : imageConfig.getBuildConfiguration().getAssemblyConfigurations()) {
                 // TODO: Improve Assembly Manager so that the effective assemblyFileEntries computed can be properly shared
                 // the call to DockerAssemblyManager.getInstance().createDockerTarArchive should not be necessary,
                 // files should be added using the AssemblyFileEntry list. DockerAssemblyManager, should provide
                 // a common way to achieve this so that both the tar builder and any other builder could get a hold of
                 // archive customizers, file entries, etc.
                 AssemblyFiles assemblyFiles = serviceHub.getDockerAssemblyManager()
-                        .getAssemblyFiles(imageConfig.getName(), imageConfig.getBuildConfiguration(), mojoParameters, log);
+                        .getAssemblyFiles(imageConfig.getName(), assemblyConfiguration, mojoParameters, log);
                 final Map<File, AssemblyFiles.Entry> files = assemblyFiles
                         .getUpdatedEntriesAndRefresh().stream()
                         .collect(Collectors.toMap(AssemblyFiles.Entry::getDestFile, Function.identity(), (oldV, newV) -> newV));

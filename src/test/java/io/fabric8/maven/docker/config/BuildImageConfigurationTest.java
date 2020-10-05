@@ -18,6 +18,7 @@ package io.fabric8.maven.docker.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
@@ -208,5 +209,14 @@ public class BuildImageConfigurationTest {
         assertEquals(none, config.getCompression());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void multipleAssembliesUniqueNames() {
+        AssemblyConfiguration assemblyConfigurationOne = new AssemblyConfiguration.Builder().name("foo").build();
+        AssemblyConfiguration assemblyConfigurationTwo = new AssemblyConfiguration.Builder().name("foo").build();
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        assemblies(Arrays.asList(assemblyConfigurationOne, assemblyConfigurationTwo)).build();
 
+        config.initAndValidate(logger);
+    }
 }

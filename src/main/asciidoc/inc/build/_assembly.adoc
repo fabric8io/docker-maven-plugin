@@ -1,5 +1,9 @@
 
-The `<assembly>` element within `<build>` is has an XML struture and defines how build artifacts and other files can enter the Docker image.
+The `<assembly>` element within `<build>` has an XML structure and defines how build artifacts and other files can enter the Docker image.
+Multiple `<assembly>` elements may be specified by adding them to an `<assemblies>` element.
+If both `<assembly>` and `<assemblies>` are present in `<build>`, the `<assembly>` element is treated as if it were the last child of `<assemblies>`.
+
+When multiple assemblies are provided, each will be added as a separate layer in the image.
 
 [[config-image-build-assembly]]
 .Assembly Configuration (<<config-image, <image> >> : <<config-image-build, <build> >>)
@@ -9,6 +13,7 @@ The `<assembly>` element within `<build>` is has an XML struture and defines how
 
 | *name*
 | Assembly name, which is `maven` by default. This name is used for the archives and directories created during the build. This directory holds the files specified by the assembly. If an <<external-dockerfile,external Dockerfile>> is used than this name is also the relative directory which contains the assembly files.
+  If multiple assemblies are provided, they must each have a unique name.
 
 | *targetDir*
 | Directory under which the files and artifacts contained in the assembly will be copied within the container. The default value for this is `/<assembly name>`, so `/maven` if *name* is not set to a different value. This option has no meaning when an <<external-dockerfile,external Dockerfile>> is used.
@@ -106,14 +111,23 @@ used for `descriptorRef`:
 | *artifact*
 | Attaches only the project's artifact but no dependencies.
 
+| *dependencies*
+| Attaches only the project's dependencies. Also, when a `classpath` file exists in the target directory, this will be added too.
+
+| *release-dependencies*
+| Attaches only the project's released (non-snapshot) dependencies.
+
+| *snapshot-dependencies*
+| Attaches only the project's snapshot dependencies.
+
 | *project*
-| Attaches the whole Maven project but with out the `target/` directory.
+| Attaches the whole Maven project but without the `target/` directory.
 
 | *rootWar*
 | Copies the artifact as `ROOT.war` to the exposed directory. I.e. Tomcat will then deploy the war under the root context.
 |===
 
-.Example
+.Examples
 [source,xml]
 ----
 <images>
@@ -124,9 +138,42 @@ used for `descriptorRef`:
          .....
 ----
 
-will add the created artifact with the name `${project.build.finalName}.${artifact.extension}` and all jar dependencies in the the `targetDir` (which is `/maven` by default).
+will add the created artifact with the name `${project.build.finalName}.${artifact.extension}` and all jar dependencies in the `targetDir` (which is `/maven` by default).
 
 All declared files end up in the configured `targetDir` (or `/maven` by default) in the created image.
+
+[source,xml]
+----
+<images>
+  <image>
+    <build>
+      <assemblies>
+        <assembly>
+            <name>deps-release</name>
+            <descriptorRef>release-dependencies</descriptorRef>
+            <targetDir>/work/lib</targetDir>
+        </assembly>
+        <assembly>
+            <name>deps-snapshot</name>
+            <descriptorRef>snapshot-dependencies</descriptorRef>
+            <targetDir>/work/lib</targetDir>
+        </assembly>
+        <assembly>
+            <descriptorRef>artifact</descriptorRef>
+            <targetDir>/work</targetDir>
+        </assembly>
+      </assemblies>
+      .....
+    </build>
+  </image>
+</images>
+----
+
+will create three layers:
+
+. Release dependencies (in jar format) added to /work/lib
+. Snapshot dependencies (in jar format) added to /work/lib
+. The created artifact with the name `${project.build.finalName}.${artifact.extension}` added to /work
 
 .Maven peculiarities when including the artifact
 If the assembly references the artifact to build with this pom, it is required that the `package` phase is included in the run. Otherwise the artifact file, can't be found by `docker:build`. This is an old https://issues.apache.org/jira/browse/MASSEMBLY-94[outstanding issue] of the assembly plugin which probably can't be fixed because of the way how Maven works. We tried hard to workaround this issue and in 90% of all cases, you won't experience any problem. However, when the following warning happens which might lead to the given error:

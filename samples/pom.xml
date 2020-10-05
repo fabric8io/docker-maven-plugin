@@ -65,5 +65,6 @@
     <module>spring-boot-with-jib</module>
     <module>build-cache</module>
     <module>copy-from-container</module>
+    <module>multi-assembly</module>
   </modules>
 </project>
