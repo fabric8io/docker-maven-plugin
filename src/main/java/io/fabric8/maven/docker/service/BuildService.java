@@ -392,8 +392,8 @@ public class BuildService {
         String fromImage;
         fromImage = buildConfig.getFrom();
         if (fromImage == null) {
-            AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
-            if (assemblyConfig == null) {
+            List<AssemblyConfiguration> assemblyConfig = buildConfig.getAssemblyConfigurations();
+            if (assemblyConfig.isEmpty()) {
                 fromImage = DockerAssemblyManager.DEFAULT_DATA_BASE_IMAGE;
             }
         }

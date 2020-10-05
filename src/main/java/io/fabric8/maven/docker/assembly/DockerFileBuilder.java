@@ -193,34 +193,46 @@ public class DockerFileBuilder {
         }
     }
 
-    private void addCopy(StringBuilder b) {
-        if (assemblyUser != null) {
-            String[] userParts = assemblyUser.split(":");
+    private String userForEntry(CopyEntry copyEntry) {
+        if (copyEntry.user != null) {
+            return copyEntry.user;
+        }
+        return assemblyUser;
+    }
 
-            for (CopyEntry entry : copyEntries) {
+    private String targetDirForEntry(CopyEntry copyEntry) {
+        if (copyEntry.target != null) {
+            return copyEntry.target.equals("/") ? "" : copyEntry.target;
+        }
+        return basedir.equals("/") ? "" : basedir;
+    }
+
+    private void addCopy(StringBuilder b) {
+        for (CopyEntry entry : copyEntries) {
+            String entryUser = userForEntry(entry);
+            if (entryUser != null) {
+                String[] userParts = entryUser.split(":");
                 if (userParts.length > 2) {
                     DockerFileKeyword.USER.addTo(b, "root");
                 }
-                addCopyEntries(b, "", (userParts.length > 1 ?
+                addCopyEntries(b, entry, "", (userParts.length > 1 ?
                         userParts[0] + ":" + userParts[1] :
                         userParts[0]));
                 if (userParts.length > 2) {
                     DockerFileKeyword.USER.addTo(b, userParts[2]);
                 }
+            } else {
+                addCopyEntries(b, entry, "", null);
             }
-        } else {
-            addCopyEntries(b, "", null);
         }
     }
 
-    private void addCopyEntries(StringBuilder b, String topLevelDir, String ownerAndGroup) {
-        for (CopyEntry entry : copyEntries) {
-            String dest = topLevelDir + (basedir.equals("/") ? "" : basedir) + "/" + entry.destination;
-            if (ownerAndGroup == null) {
-                DockerFileKeyword.COPY.addTo(b, entry.source, dest);
-            } else {
-                DockerFileKeyword.COPY.addTo(b, " --chown=" + ownerAndGroup, entry.source, dest);
-            }
+    private void addCopyEntries(StringBuilder b, CopyEntry entry, String topLevelDir, String ownerAndGroup) {
+        String dest = topLevelDir + targetDirForEntry(entry) + "/" + entry.destination;
+        if (ownerAndGroup == null) {
+            DockerFileKeyword.COPY.addTo(b, entry.source, dest);
+        } else {
+            DockerFileKeyword.COPY.addTo(b, "--chown=" + ownerAndGroup, entry.source, dest);
         }
     }
 
@@ -330,6 +342,12 @@ public class DockerFileBuilder {
 	}
 
     private void addVolumes(StringBuilder b) {
+        for (CopyEntry e : copyEntries) {
+            if (e.export != null ? e.export : baseImage == null) {
+                addVolume(b, targetDirForEntry(e));
+            }
+        }
+
         if (exportTargetDir != null ? exportTargetDir : baseImage == null) {
             addVolume(b, basedir);
         }
@@ -411,6 +429,11 @@ public class DockerFileBuilder {
         return this;
     }
 
+    public DockerFileBuilder add(String source, String destination, String target, String user, Boolean exportTarget) {
+        this.copyEntries.add(new CopyEntry(source, destination, target, user, exportTarget));
+        return this;
+    }
+
     public DockerFileBuilder expose(List<String> ports) {
         if (ports != null) {
             this.ports.addAll(ports);
@@ -487,7 +510,11 @@ public class DockerFileBuilder {
 
     // All entries required, destination is relative to exportDir
     private static final class CopyEntry {
-        private String source,destination;
+        private String source;
+        private String destination;
+        private String target;
+        private String user;
+        private Boolean export;
 
         private CopyEntry(String src, String dest) {
             source = src;
@@ -499,6 +526,13 @@ public class DockerFileBuilder {
             while (destination.startsWith("/")) {
                 destination = destination.substring(1);
             }
+        }
+
+        public CopyEntry(String src, String dest, String target, String user, Boolean exportTarget) {
+            this(src, dest);
+            this.target = target;
+            this.user = user;
+            this.export = exportTarget;
         }
     }
 

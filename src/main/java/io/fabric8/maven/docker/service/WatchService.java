@@ -16,6 +16,7 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.access.PortMapping;
 import io.fabric8.maven.docker.assembly.AssemblyFiles;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.WatchMode;
@@ -76,17 +77,18 @@ public class WatchService {
 
                 ArrayList<String> tasks = new ArrayList<>();
 
-                if (imageConfig.getBuildConfiguration() != null &&
-                        imageConfig.getBuildConfiguration().getAssemblyConfiguration() != null) {
-                    if (watcher.isCopy()) {
-                        String containerBaseDir = imageConfig.getBuildConfiguration().getAssemblyConfiguration().getTargetDir();
-                        schedule(executor, createCopyWatchTask(watcher, context.getMojoParameters(), containerBaseDir), interval);
-                        tasks.add("copying artifacts");
-                    }
+                if (imageConfig.getBuildConfiguration() != null) {
+                    for (AssemblyConfiguration assemblyConfiguration : imageConfig.getBuildConfiguration().getAssemblyConfigurations()) {
+                        if (watcher.isCopy()) {
+                            String containerBaseDir = assemblyConfiguration.getTargetDir();
+                            schedule(executor, createCopyWatchTask(watcher, assemblyConfiguration.getName(), context.getMojoParameters(), containerBaseDir), interval);
+                            tasks.add("copying artifacts");
+                        }
 
-                    if (watcher.isBuild()) {
-                        schedule(executor, createBuildWatchTask(watcher, context.getMojoParameters(), watchMode == WatchMode.both, buildContext), interval);
-                        tasks.add("rebuilding");
+                        if (watcher.isBuild()) {
+                            schedule(executor, createBuildWatchTask(watcher, assemblyConfiguration.getName(), context.getMojoParameters(), watchMode == WatchMode.both, buildContext), interval);
+                            tasks.add("rebuilding");
+                        }
                     }
                 }
 
@@ -118,17 +120,18 @@ public class WatchService {
     }
 
     private Runnable createCopyWatchTask(final ImageWatcher watcher,
+                                         final String assemblyName,
                                          final MojoParameters mojoParameters, final String containerBaseDir) throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
 
-        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
+        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, assemblyName, mojoParameters);
         return new Runnable() {
             @Override
             public void run() {
                 List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
                 if (entries != null && entries.size() > 0) {
                     try {
-                        log.info("%s: Assembly changed. Copying changed files to container ...", imageConfig.getDescription());
+                        log.info("%s: Assembly %s changed. Copying changed files to container ...", imageConfig.getDescription(), assemblyName);
 
                         File changedFilesArchive = archiveService.createChangedFilesArchive(entries, files.getAssemblyDirectory(),
                                 imageConfig.getName(), mojoParameters);
@@ -151,12 +154,13 @@ public class WatchService {
     }
 
     private Runnable createBuildWatchTask(final ImageWatcher watcher,
+                                          final String assemblyName,
                                           final MojoParameters mojoParameters, final boolean doRestart, final BuildService.BuildContext buildContext)
             throws MojoExecutionException {
         final ImageConfiguration imageConfig = watcher.getImageConfiguration();
-        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, mojoParameters);
+        final AssemblyFiles files = archiveService.getAssemblyFiles(imageConfig, assemblyName, mojoParameters);
         if (files.isEmpty()) {
-            log.error("No assembly files for %s. Are you sure you invoked together with the `package` goal?", imageConfig.getDescription());
+            log.error("No %s assembly files for %s. Are you sure you invoked together with the `package` goal?", assemblyName, imageConfig.getDescription());
             throw new MojoExecutionException("No files to watch found for " + imageConfig);
         }
 
@@ -166,7 +170,7 @@ public class WatchService {
                 List<AssemblyFiles.Entry> entries = files.getUpdatedEntriesAndRefresh();
                 if (entries != null && entries.size() > 0) {
                     try {
-                        log.info("%s: Assembly changed. Rebuild ...", imageConfig.getDescription());
+                        log.info("%s: Assembly %s changed. Rebuild ...", imageConfig.getDescription(), assemblyName);
 
                         if (watcher.getWatchContext().getImageCustomizer() != null) {
                             log.info("%s: Customizing the image ...", imageConfig.getDescription());

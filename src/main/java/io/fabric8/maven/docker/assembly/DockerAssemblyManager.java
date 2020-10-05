@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.config.Arguments;
@@ -76,8 +77,8 @@ public class DockerAssemblyManager {
     @Requirement
     private ArchiverManager archiverManager;
 
-    @Requirement(hint = "track")
-    private Archiver trackArchiver;
+    @Requirement
+    private TrackArchiverCollection trackArchivers;
 
     /**
      * Extract a docker tar archive into the given directory.
@@ -132,13 +133,13 @@ public class DockerAssemblyManager {
             throws MojoExecutionException {
 
         final BuildDirs buildDirs = createBuildDirs(imageName, params);
-        final AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
+        final List<AssemblyConfiguration> assemblyConfigurations = buildConfig.getAssemblyConfigurations();
 
         final List<ArchiverCustomizer> archiveCustomizers = new ArrayList<>();
 
         // Build up assembly. In dockerfile mode this must be added explicitly in the Dockerfile with an ADD
-        if (hasAssemblyConfiguration(assemblyConfig)) {
-            createAssemblyArchive(assemblyConfig, params, buildDirs);
+        if (hasAssemblyConfiguration(assemblyConfigurations)) {
+            createAssemblyArchives(assemblyConfigurations, params, buildDirs);
         }
         try {
             if (buildConfig.isDockerFileMode()) {
@@ -165,7 +166,7 @@ public class DockerAssemblyManager {
 
                         // If the content is added as archive, then we need to add the Dockerfile from the builddir
                         // directly to docker.tar (as the output builddir is not picked up in archive mode)
-                        if (isArchive(assemblyConfig)) {
+                        if (isArchive(assemblyConfigurations)) {
                             String name = dockerFile.getName();
                             archiver.addFile(new File(buildDirs.getOutputDirectory(), name), name);
                         }
@@ -176,7 +177,7 @@ public class DockerAssemblyManager {
                 });
             } else {
                 // Create custom docker file in output dir
-                DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfig);
+                DockerFileBuilder builder = createDockerFileBuilder(buildConfig, assemblyConfigurations);
                 builder.write(buildDirs.getOutputDirectory());
                 // Add own Dockerfile
                 final File dockerFile = new File(buildDirs.getOutputDirectory(), DOCKERFILE_NAME);
@@ -190,19 +191,17 @@ public class DockerAssemblyManager {
             }
 
             // If required make all files in the assembly executable
-            if (assemblyConfig != null) {
-                AssemblyConfiguration.PermissionMode mode = assemblyConfig.getPermissions();
-                if (mode == AssemblyConfiguration.PermissionMode.exec ||
-                    mode == AssemblyConfiguration.PermissionMode.auto && EnvUtil.isWindows()) {
-                    archiveCustomizers.add(new AllFilesExecCustomizer(log));
-                }
+            if (assemblyConfigurations.stream().anyMatch(assemblyConfig ->
+                    assemblyConfig.getPermissions() == AssemblyConfiguration.PermissionMode.exec ||
+                    assemblyConfig.getPermissions() == AssemblyConfiguration.PermissionMode.auto && EnvUtil.isWindows())) {
+                archiveCustomizers.add(new AllFilesExecCustomizer(log));
             }
 
             if (finalCustomizer != null) {
                 archiveCustomizers.add(finalCustomizer);
             }
 
-            return createBuildTarBall(buildDirs, archiveCustomizers, assemblyConfig, buildConfig.getCompression());
+            return createBuildTarBall(buildDirs, archiveCustomizers, assemblyConfigurations, buildConfig.getCompression());
 
         } catch (IOException e) {
             throw new MojoExecutionException(String.format("Cannot create %s in %s", DOCKERFILE_NAME, buildDirs.getOutputDirectory()), e);
@@ -229,32 +228,43 @@ public class DockerAssemblyManager {
 
     // visible for testing
     void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
-        if (assemblyConfig == null) {
-           return;
+        List<AssemblyConfiguration> assemblyConfigs = buildConfig.getAssemblyConfigurations();
+        if (assemblyConfigs.isEmpty()) {
+            return;
         }
 
-        String name = assemblyConfig.getName();
-            for (String keyword : new String[] { "ADD", "COPY" }) {
-                List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, interpolator);
-                for (String[] line : lines) {
-                    if (!line[0].startsWith("#")) {
-                        // Skip command flags like --chown
-                        int i;
-                        for (i = 1; i < line.length; i++) {
-                            String component = line[i];
-                            if (!component.startsWith("--")) {
-                                break;
-                            }
-                        }
+        for (AssemblyConfiguration assemblyConfig : assemblyConfigs) {
+            verifyAssemblyReferenced(dockerFile, interpolator, log, assemblyConfig);
+        }
+    }
 
-                        // contains an ADD/COPY ... targetDir .... All good.
-                        if (i < line.length && line[i].contains(name)) {
-                            return;
-                        }
-                    }
+    private String firstNonOptionArgument(String[] line) {
+        return Arrays.stream(line)
+                .skip(1)
+                .filter(component -> !component.startsWith("--"))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void verifyAssemblyReferenced(File dockerFile, FixedStringSearchInterpolator interpolator, Logger log, AssemblyConfiguration assemblyConfig) throws IOException {
+        String name = assemblyConfig.getName();
+        for (String keyword : new String[] { "ADD", "COPY" }) {
+            List<String[]> lines = DockerFileUtil.extractLines(dockerFile, keyword, interpolator);
+            for (String[] line : lines) {
+                if (line[0].startsWith("#")) {
+                    // Skip comment lines
+                    continue;
+                }
+
+                // Skip command flags like --chown
+                String firstArg = firstNonOptionArgument(line);
+
+                // contains an ADD/COPY ... targetDir .... All good.
+                if (firstArg != null && firstArg.contains(name)) {
+                    return;
                 }
             }
+        }
         log.warn("Dockerfile %s does not contain an ADD or COPY directive to include assembly created at %s. Ignoring assembly.",
                  dockerFile.getPath(), name);
     }
@@ -263,24 +273,23 @@ public class DockerAssemblyManager {
      * Extract all files with a tracking archiver. These can be used to track changes in the filesystem and triggering
      * a rebuild of the image if needed ('docker:watch')
      */
-    public AssemblyFiles getAssemblyFiles(String name, BuildImageConfiguration buildConfig, MojoParameters mojoParams, Logger log)
+    public AssemblyFiles getAssemblyFiles(String name, AssemblyConfiguration assemblyConfig, MojoParameters mojoParams, Logger log)
             throws InvalidAssemblerConfigurationException, ArchiveCreationException, AssemblyFormattingException, MojoExecutionException {
 
         BuildDirs buildDirs = createBuildDirs(name, mojoParams);
 
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         String assemblyName = assemblyConfig.getName();
         DockerAssemblyConfigurationSource source =
                         new DockerAssemblyConfigurationSource(mojoParams, buildDirs, assemblyConfig);
         Assembly assembly = getAssemblyConfig(assemblyConfig, source);
 
 
-        synchronized (trackArchiver) {
-            MappingTrackArchiver ta = (MappingTrackArchiver) trackArchiver;
-            ta.init(log, assemblyName);
+        synchronized (trackArchivers) {
+            trackArchivers.init(log, assemblyName);
             assembly.setId("tracker");
-            assemblyArchiver.createArchive(assembly, assemblyName, "track", source, false, null);
-            return ta.getAssemblyFiles(mojoParams.getSession());
+            File trackArchiverDestFile = assemblyArchiver.createArchive(assembly, assemblyName, "track", source, false, null);
+            trackArchivers.get(assemblyName).setDestFile(trackArchiverDestFile);
+            return trackArchivers.getAssemblyFiles(mojoParams.getSession(), assemblyName);
         }
     }
 
@@ -297,10 +306,21 @@ public class DockerAssemblyManager {
                  assemblyConfig.getDescriptorRef() != null);
     }
 
+    private boolean hasAssemblyConfiguration(List<AssemblyConfiguration> assemblyConfig) {
+        return assemblyConfig != null &&
+               !assemblyConfig.isEmpty() &&
+               assemblyConfig.stream().anyMatch(this::hasAssemblyConfiguration);
+    }
+
     private boolean isArchive(AssemblyConfiguration assemblyConfig) {
         return hasAssemblyConfiguration(assemblyConfig) &&
                assemblyConfig.getMode() != null &&
                assemblyConfig.getMode().isArchive();
+    }
+
+    private boolean isArchive(List<AssemblyConfiguration> assemblyConfig) {
+        return assemblyConfig != null &&
+                assemblyConfig.stream().anyMatch(this::isArchive);
     }
 
     public File createChangedFilesArchive(List<AssemblyFiles.Entry> entries, File assemblyDirectory,
@@ -329,7 +349,7 @@ public class DockerAssemblyManager {
 
     // Create final tar-ball to be used for building the archive to send to the Docker daemon
     private File createBuildTarBall(BuildDirs buildDirs, List<ArchiverCustomizer> archiverCustomizers,
-                                    AssemblyConfiguration assemblyConfig, ArchiveCompression compression) throws MojoExecutionException {
+                                    List<AssemblyConfiguration> assemblyConfig, ArchiveCompression compression) throws MojoExecutionException {
         File archive = new File(buildDirs.getTemporaryRootDirectory(), "docker-build." + compression.getFileSuffix());
         try {
             TarArchiver archiver = createBuildArchiver(buildDirs.getOutputDirectory(), archive, assemblyConfig);
@@ -408,30 +428,39 @@ public class DockerAssemblyManager {
         return archiveDir;
     }
 
-    private TarArchiver createBuildArchiver(File outputDir, File archive, AssemblyConfiguration assemblyConfig) throws NoSuchArchiverException {
+    private TarArchiver createBuildArchiver(File outputDir, File archive, List<AssemblyConfiguration> assemblyConfigs) throws NoSuchArchiverException {
         TarArchiver archiver = (TarArchiver) archiverManager.getArchiver(TAR_ARCHIVER_TYPE);
         archiver.setLongfile(TarLongFileMode.posix);
 
-        AssemblyMode mode = assemblyConfig != null ? assemblyConfig.getMode() : null;
-        if (mode != null && mode.isArchive()) {
-            DefaultArchivedFileSet archiveSet =
-                    DefaultArchivedFileSet.archivedFileSet(new File(outputDir,  assemblyConfig.getName() + "." + mode.getExtension()));
-            archiveSet.setPrefix(assemblyConfig.getName() + "/");
-            archiveSet.setIncludingEmptyDirectories(true);
-            archiveSet.setUsingDefaultExcludes(false);
-            archiver.addArchivedFileSet(archiveSet);
-        } else {
+        boolean needsDefaultFileSet = assemblyConfigs.isEmpty();
+
+        for (AssemblyConfiguration assemblyConfig : assemblyConfigs) {
+            AssemblyMode mode = assemblyConfig != null ? assemblyConfig.getMode() : null;
+            if (mode != null && mode.isArchive()) {
+                DefaultArchivedFileSet archiveSet =
+                        DefaultArchivedFileSet.archivedFileSet(new File(outputDir, assemblyConfig.getName() + "." + mode.getExtension()));
+                archiveSet.setPrefix(assemblyConfig.getName() + "/");
+                archiveSet.setIncludingEmptyDirectories(true);
+                archiveSet.setUsingDefaultExcludes(false);
+                archiver.addArchivedFileSet(archiveSet);
+            } else {
+                needsDefaultFileSet = true;
+            }
+        }
+
+        if (needsDefaultFileSet) {
             DefaultFileSet fileSet = DefaultFileSet.fileSet(outputDir);
             fileSet.setUsingDefaultExcludes(false);
             archiver.addFileSet(fileSet);
         }
+
         archiver.setDestFile(archive);
         return archiver;
     }
 
     // visible for testing
     @SuppressWarnings("deprecation")
-    DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, AssemblyConfiguration assemblyConfig) {
+    DockerFileBuilder createDockerFileBuilder(BuildImageConfiguration buildConfig, List<AssemblyConfiguration> assemblyConfigs) {
         DockerFileBuilder builder =
                 new DockerFileBuilder()
                         .env(buildConfig.getEnv())
@@ -447,11 +476,15 @@ public class DockerAssemblyManager {
         if (buildConfig.getWorkdir() != null) {
             builder.workdir(buildConfig.getWorkdir());
         }
-        if (assemblyConfig != null) {
-            builder.add(assemblyConfig.getName(), "")
-                   .basedir(assemblyConfig.getTargetDir())
-                   .assemblyUser(assemblyConfig.getUser())
-                   .exportTargetDir(assemblyConfig.exportTargetDir());
+        if (assemblyConfigs != null && !assemblyConfigs.isEmpty() && assemblyConfigs.stream().anyMatch(Objects::nonNull)) {
+            for (AssemblyConfiguration assemblyConfig : assemblyConfigs) {
+                if (assemblyConfig != null) {
+                    builder.add(assemblyConfig.getName(), "", assemblyConfig.getTargetDir(), assemblyConfig.getUser(), assemblyConfig.exportTargetDir())
+                            .basedir(assemblyConfig.getTargetDir())
+                            .assemblyUser(assemblyConfig.getUser())
+                            .exportTargetDir(assemblyConfig.exportTargetDir());
+                }
+            }
         } else {
             builder.exportTargetDir(false);
         }
@@ -478,6 +511,13 @@ public class DockerAssemblyManager {
         }
 
         return builder;
+    }
+
+    private void createAssemblyArchives(List<AssemblyConfiguration> assemblyConfigurations, MojoParameters params, BuildDirs buildDirs)
+            throws MojoExecutionException {
+        for (AssemblyConfiguration assemblyConfig : assemblyConfigurations) {
+            createAssemblyArchive(assemblyConfig, params, buildDirs);
+        }
     }
 
     private void createAssemblyArchive(AssemblyConfiguration assemblyConfig, MojoParameters params, BuildDirs buildDirs)

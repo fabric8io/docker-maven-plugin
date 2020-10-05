@@ -166,6 +166,11 @@ public class AssemblyConfiguration implements Serializable {
             return isEmpty ? null : config;
         }
 
+        public Builder name(String name) {
+            config.name = set(name);
+            return this;
+        }
+
         public Builder targetDir(String targetDir) {
             config.targetDir = set(targetDir);
             return this;

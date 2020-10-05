@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 
@@ -240,6 +240,17 @@ public class DockerFileBuilderTest {
         assertTrue(pattern.matcher(dockerFile).find());
     }
 
+    @Test
+    public void testAssemblyWithTargetSettings() {
+        String dockerFile = new DockerFileBuilder().assemblyUser("test:test:test")
+                .add("a","a/nested", null, null, true)
+                .add("b","b/deeper/nested", null, "jboss:jboss:jboss", false)
+                .content();
+        assertThat(dockerfileToList(dockerFile), hasItem("COPY --chown=test:test a /maven/a/nested"));
+        assertThat(dockerfileToList(dockerFile), hasItem("COPY --chown=jboss:jboss b /maven/b/deeper/nested"));
+        assertThat(dockerfileToList(dockerFile), hasItem("VOLUME [\"/maven\"]"));
+    }
+
 
     @Test
     public void testExportBaseDir() {
@@ -295,6 +306,24 @@ public class DockerFileBuilderTest {
                 continue;
             }
             dockerfileMap.put(commandAndArguments[0], commandAndArguments[1]);
+        }
+        scanner.close();
+        return dockerfileMap;
+    }
+
+    private static List<String> dockerfileToList(String dockerFile) {
+        final List<String> dockerfileMap = new ArrayList<>();
+        final Scanner scanner = new Scanner(dockerFile);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            if (line.trim().length() == 0) {
+                continue;
+            }
+            String[] commandAndArguments = line.trim().split("\\s+", 2);
+            if (commandAndArguments.length < 2) {
+                continue;
+            }
+            dockerfileMap.add(line.trim());
         }
         scanner.close();
         return dockerfileMap;
