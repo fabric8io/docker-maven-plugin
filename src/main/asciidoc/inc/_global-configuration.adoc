@@ -137,6 +137,9 @@ By default a progress meter is printed out on the console, which is omitted when
 | If set dont push any images even when `{plugin}:push` is called.
 | `docker.skip.push`
 
+| *skipPom*
+| If set to `true` this plugin will skip every projects, where `project.packaging` is set to `pom`. Property: `docker.skip.pom`
+
 | *skipRun*
 | If set dont create and start any containers with `{plugin}:start` or `{plugin}:run`
 | `docker.skip.run`
