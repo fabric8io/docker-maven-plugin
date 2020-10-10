@@ -20,6 +20,7 @@ import io.fabric8.maven.docker.assembly.AssemblyFiles;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.model.Image;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -97,10 +98,10 @@ public class JibServiceUtil {
         }
     }
 
-    public static JibContainerBuilder containerFromImageConfiguration(
+    public static JibContainerBuilder containerFromImageConfiguration(String jibImageFormat,
             ImageConfiguration imageConfiguration, Credential pullRegistryCredential) throws InvalidImageReferenceException {
         final JibContainerBuilder containerBuilder = Jib.from(getRegistryImage(getBaseImage(imageConfiguration), pullRegistryCredential))
-                .setFormat(ImageFormat.OCI);
+                .setFormat(getImageFormat(jibImageFormat));
         return populateContainerBuilderFromImageConfiguration(containerBuilder, imageConfiguration);
     }
 
@@ -200,6 +201,13 @@ public class JibServiceUtil {
             tagSet.add(tempImage.getTag());
         }
         return tagSet;
+    }
+
+    static ImageFormat getImageFormat(String jibImageFormat) {
+        if (jibImageFormat != null && jibImageFormat.toLowerCase().equalsIgnoreCase("oci")) {
+                return ImageFormat.OCI;
+        }
+        return ImageFormat.Docker;
     }
 
     private static void submitPushToJib(TarImage baseImage, RegistryImage targetImage, ExecutorService jibBuildExecutor, Logger logger) throws InterruptedException, ExecutionException, RegistryException, CacheDirectoryCreationException, IOException {

@@ -1,4 +1,4 @@
-package io.fabric8.dmp.samples.dockerfile;
+package io.fabric8.dmp.itests.dockerfile;
 
 import java.io.File;
 import java.io.IOException;

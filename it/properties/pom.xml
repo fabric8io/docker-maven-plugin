@@ -8,14 +8,14 @@
   -->
 
   <parent>
-    <groupId>io.fabric8.dmp.samples</groupId>
-    <artifactId>dmp-sample-parent</artifactId>
-    <version>0.29-SNAPSHOT</version>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.34-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>dmp-sample-properties</artifactId>
-  <version>0.29-SNAPSHOT</version>
+  <artifactId>dmp-it-properties</artifactId>
+  <version>0.34-SNAPSHOT</version>
   <packaging>docker-build</packaging>
 
   <build>
@@ -23,6 +23,7 @@
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
+        <version>${project.version}</version>
         <executions>
           <execution>
             <id>start</id>

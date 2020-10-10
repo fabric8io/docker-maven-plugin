@@ -11,16 +11,16 @@
   -->
 
   <parent>
-    <groupId>io.fabric8.dmp.samples</groupId>
-    <artifactId>dmp-sample-parent</artifactId>
-    <version>0.29-SNAPSHOT</version>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.34-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
 
   <groupId>io.fabric8</groupId>
-  <artifactId>dmp-sample-log</artifactId>
-  <version>0.29-SNAPSHOT</version>
+  <artifactId>dmp-it-log</artifactId>
+  <version>0.34-SNAPSHOT</version>
 
   <build>
     <plugins>

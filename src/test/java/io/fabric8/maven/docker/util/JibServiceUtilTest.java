@@ -27,6 +27,7 @@ import java.util.Set;
 
 import static io.fabric8.maven.docker.util.JibServiceUtil.BUSYBOX;
 import static io.fabric8.maven.docker.util.JibServiceUtil.containerFromImageConfiguration;
+import static io.fabric8.maven.docker.util.JibServiceUtil.getImageFormat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,7 +53,7 @@ public class JibServiceUtilTest {
         // Given
         ImageConfiguration imageConfiguration = getSampleImageConfiguration();
         // When
-        JibContainerBuilder jibContainerBuilder = containerFromImageConfiguration(imageConfiguration, null);
+        JibContainerBuilder jibContainerBuilder = containerFromImageConfiguration(ImageFormat.Docker.name(), imageConfiguration, null);
         // Then
         // @formatter:off
         new Verifications() {{
@@ -68,7 +69,7 @@ public class JibServiceUtilTest {
             times = 1;
             jibContainerBuilder.setVolumes(new HashSet<>(Collections.singletonList(AbsoluteUnixPath.get("/mnt/volume1"))));
             times = 1;
-            jibContainerBuilder.setFormat(ImageFormat.OCI);
+            jibContainerBuilder.setFormat(ImageFormat.Docker);
             times = 1;
         }};
         // @formatter:on
@@ -120,6 +121,13 @@ public class JibServiceUtilTest {
     @Test
     public void testGetFullImageNameWithProvidedTag() {
         assertEquals("test/test-project:0.0.1", JibServiceUtil.getFullImageName(getSampleImageConfiguration(), "0.0.1"));
+    }
+
+    @Test
+    public void testGetImageFormat() {
+        assertEquals(ImageFormat.Docker, JibServiceUtil.getImageFormat("Docker"));
+        assertEquals(ImageFormat.OCI, JibServiceUtil.getImageFormat("OCI"));
+        assertEquals(ImageFormat.OCI, JibServiceUtil.getImageFormat("oci"));
     }
 
     private ImageConfiguration getSampleImageConfiguration() {

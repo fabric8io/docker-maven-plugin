@@ -17,7 +17,6 @@ import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +44,7 @@ public class JibBuildService {
         this.log = log;
     }
 
-    public void build(ImageConfiguration imageConfig, RegistryService.RegistryConfig registryConfig) throws MojoExecutionException {
+    public void build(String jibImageFormat, ImageConfiguration imageConfig, RegistryService.RegistryConfig registryConfig) throws MojoExecutionException {
         try {
             log.info("[[B]]JIB[[B]] image build started");
             if (imageConfig.getBuildConfiguration().isDockerFileMode()) {
@@ -55,7 +54,7 @@ public class JibBuildService {
             BuildDirs buildDirs = new BuildDirs(imageConfig.getName(), mojoParameters);
             final Credential pullRegistryCredential = getRegistryCredentials(
                     registryConfig, false, imageConfig, log);
-            final JibContainerBuilder containerBuilder = containerFromImageConfiguration(imageConfig, pullRegistryCredential);
+            final JibContainerBuilder containerBuilder = containerFromImageConfiguration(jibImageFormat, imageConfig, pullRegistryCredential);
 
             File dockerTarArchive = getAssemblyTarArchive(imageConfig, serviceHub, mojoParameters, log);
 

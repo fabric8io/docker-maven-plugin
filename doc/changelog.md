@@ -1,5 +1,9 @@
 # ChangeLog
 
+* 0.34-SNAPSHOT
+  - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
+  - Loading Image tarball into docker daemon fails in JIB mode ([1385](https://github.com/fabric8io/docker-maven-plugin/issues/1385))
+
 * **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
   - upgrade to jib-core 0.15.0 ([#1378](https://github.com/fabric8io/docker-maven-plugin/issues/1378))
