@@ -43,6 +43,8 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class DockerFileUtil {
 
+    private static final String ARG_PATTERN_REGEX = "\\$(?:\\{(.*)\\}|(.*))";
+
     private DockerFileUtil() {}
 
     /**
@@ -166,10 +168,14 @@ public class DockerFileUtil {
     }
 
     static String resolveArgValueFromStrContainingArgKey(String argString, Map<String, String> args) {
-        if (argString.startsWith("$") && args.containsKey(argString.substring(1))) {
-            return args.get(argString.substring(1));
-        } else if (argString.startsWith("${") && argString.endsWith("}") && args.containsKey(argString.substring(2, argString.length() - 1))) {
-            return args.get(argString.substring(2, argString.length() - 1));
+        Pattern argPattern = Pattern.compile(ARG_PATTERN_REGEX);
+        Matcher matcher = argPattern.matcher(argString);
+        if (matcher.matches()) {
+            if (matcher.group(1) != null) {
+                return args.get(matcher.group(1));
+            } else if (matcher.group(2) != null) {
+                return args.get(matcher.group(2));
+            }
         }
         return null;
     }
