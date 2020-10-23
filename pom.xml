@@ -39,6 +39,7 @@
     <surefire.version>3.0.0-M2</surefire.version>
     <jib-core.version>0.15.0</jib-core.version>
     <httpclient.version>4.5.10</httpclient.version>
+    <excludedGroups>io.fabric8.maven.docker.UnixOnlyTests</excludedGroups>
     <project.build.outputTimestamp>2020-11-14T11:57:00Z</project.build.outputTimestamp>
   </properties>
 
@@ -591,7 +592,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-	    <version>${surefire.version}</version>
+            <version>${surefire.version}</version>
             <configuration>
               <systemPropertyVariables>
                 <!-- JaCoCo runtime must know where to dump coverage: -->
@@ -645,6 +646,15 @@
         </plugins>
         <defaultGoal>generate-resources asciidoctor:process-asciidoc</defaultGoal>
       </build>
+    </profile>
+    <profile>
+      <id>unix-test</id>
+      <activation>
+        <os><family>unix</family></os>
+      </activation>
+      <properties>
+        <excludedGroups/>
+      </properties>
     </profile>
   </profiles>
 </project>
