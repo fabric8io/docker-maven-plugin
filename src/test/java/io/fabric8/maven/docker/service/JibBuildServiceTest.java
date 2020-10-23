@@ -101,7 +101,7 @@ public class JibBuildServiceTest {
 
         // Then
         assertNotNull(tarArchive);
-        assertEquals("/target/test/testimage/0.0.1/tmp/docker-build.tar".replace('/', File.separatorChar),
+        assertEquals(new File("/target/test/testimage/0.0.1/tmp/docker-build.tar").getPath(),
                 tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
     }
 
@@ -118,7 +118,7 @@ public class JibBuildServiceTest {
 
         // Then
         assertNotNull(tarArchive);
-        assertEquals("/target/test/testimage/0.0.1/tmp/docker-build.tar".replace('/', File.separatorChar),
+        assertEquals(new File("/target/test/testimage/0.0.1/tmp/docker-build.tar").getPath(),
                 tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
     }
 
