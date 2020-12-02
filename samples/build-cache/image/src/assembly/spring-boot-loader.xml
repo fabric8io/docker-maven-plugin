@@ -1,0 +1,17 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+  <id>spring-boot-loader</id>
+  <formats>
+    <format>tar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <outputDirectory>${app-classes.output.dir}</outputDirectory>
+      <directory>${app-layers.dir}/spring-boot-loader</directory>
+      <fileMode>0444</fileMode>
+      <directoryMode>0555</directoryMode>
+    </fileSet>
+  </fileSets>
+</assembly>
