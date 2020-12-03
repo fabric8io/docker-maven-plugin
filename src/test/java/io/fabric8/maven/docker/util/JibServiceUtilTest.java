@@ -19,6 +19,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import java.util.Set;
 
 import static io.fabric8.maven.docker.util.JibServiceUtil.BUSYBOX;
 import static io.fabric8.maven.docker.util.JibServiceUtil.containerFromImageConfiguration;
-import static io.fabric8.maven.docker.util.JibServiceUtil.getImageFormat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -81,21 +81,22 @@ public class JibServiceUtilTest {
         File temporaryDirectory = Files.createTempDirectory("jib-test").toFile();
         File temporaryFile = new File(temporaryDirectory, "foo.txt");
         boolean wasNewFileCreated = temporaryFile.createNewFile();
+        String tmpRoot = temporaryDirectory.getParent();
 
         // When
-        JibServiceUtil.copyToContainer(containerBuilder, temporaryDirectory, "/tmp", Collections.emptyMap());
+        JibServiceUtil.copyToContainer(containerBuilder, temporaryDirectory, tmpRoot, Collections.emptyMap());
 
         // Then
         assertTrue(wasNewFileCreated);
         new Verifications() {{
-
             FileEntriesLayer fileEntriesLayer;
             containerBuilder.addFileEntriesLayer(fileEntriesLayer = withCapture());
 
             assertNotNull(fileEntriesLayer);
             assertEquals(1, fileEntriesLayer.getEntries().size());
             assertEquals(temporaryFile.toPath(), fileEntriesLayer.getEntries().get(0).getSourceFile());
-            assertEquals(AbsoluteUnixPath.get(temporaryFile.getAbsolutePath().substring(4)), fileEntriesLayer.getEntries().get(0).getExtractionPath());
+            assertEquals(AbsoluteUnixPath.fromPath(Paths.get(temporaryFile.getAbsolutePath().substring(tmpRoot.length()))),
+                    fileEntriesLayer.getEntries().get(0).getExtractionPath());
         }};
     }
 
