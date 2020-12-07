@@ -411,6 +411,7 @@ public class DockerAssemblyManager {
                         .env(buildConfig.getEnv())
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
+                        .shell(buildConfig.getShell())
                         .run(buildConfig.getRunCmds())
                         .volumes(buildConfig.getVolumes())
                         .user(buildConfig.getUser());
