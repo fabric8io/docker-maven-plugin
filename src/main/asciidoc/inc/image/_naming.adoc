@@ -50,6 +50,9 @@ When specifying the container name pattern the following placeholders can be use
 | *%i*
 | An index which is incremented if a container has already been created. With this parameter it is easily possible to have multiple, similar containers. See the example below for more details.
 
+| *%r*
+| A random container name choosen by the docker engine.
+
 |===
 
 You can combine the placeholders in any combination and will be resolved during `docker:start`, `docker:stop` and `docker:watch`.

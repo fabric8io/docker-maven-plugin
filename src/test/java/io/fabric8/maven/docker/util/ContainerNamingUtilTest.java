@@ -41,6 +41,28 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
+    public void testRandom() {
+        Assert.assertEquals(null,
+                ContainerNamingUtil.formatContainerName(
+                    imageConfiguration("jolokia/jolokia_demo","nameAlias", "%r"),
+                    null,
+                    new Date(123456),
+                    Collections.emptySet()));
+    }
+    
+    @Test
+    public void testMixedRandom() {
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
+            Assert.assertEquals(null,
+                    ContainerNamingUtil.formatContainerName(
+                        imageConfiguration("jolokia/jolokia_demo","nameAlias", "%r-extra"),
+                        null,
+                        new Date(123456),
+                        Collections.emptySet()));
+        });              
+    }
+
+    @Test
     public void testTimestamp() {
         Assert.assertEquals("123456",
                             ContainerNamingUtil.formatContainerName(

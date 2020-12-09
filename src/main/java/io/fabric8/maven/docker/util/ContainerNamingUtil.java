@@ -35,15 +35,15 @@ public class ContainerNamingUtil {
         String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
         Set<String> existingContainersNames = extractContainerNames(existingContainers);
 
-        final String partiallyApplied =
-            replacePlaceholders(
-                containerNamePattern,
-                image.getName(),
-                image.getAlias(),
-                buildTimestamp);
+        // don't replace if we want a random container name
+        String partiallyApplied = containerNamePattern == null ? null :
+                replacePlaceholders(
+                        containerNamePattern,
+                        image.getName(),
+                        image.getAlias(),
+                        buildTimestamp);
 
-
-        if (partiallyApplied.contains(INDEX_PLACEHOLDER)) {
+        if (partiallyApplied != null && partiallyApplied.contains(INDEX_PLACEHOLDER)) {
             for (long i = 1; i < Long.MAX_VALUE; i++) {
                 final String withIndexApplied = partiallyApplied.replaceAll(INDEX_PLACEHOLDER, String.valueOf(i));
                 if (!existingContainersNames.contains(withIndexApplied)) {
@@ -71,19 +71,18 @@ public class ContainerNamingUtil {
         String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
 
         // Only special treatment for indexed container names
-        if (!containerNamePattern.contains(INDEX_PLACEHOLDER)) {
+        if (containerNamePattern == null || !containerNamePattern.contains(INDEX_PLACEHOLDER)) {
             return containers;
         }
 
         final String partiallyApplied =
-            replacePlaceholders(
-                containerNamePattern,
-                image.getName(),
-                image.getAlias(),
-                buildTimestamp);
+                replacePlaceholders(
+                        containerNamePattern,
+                        image.getName(),
+                        image.getAlias(),
+                        buildTimestamp);
 
         return keepOnlyLastIndexedContainer(containers, partiallyApplied);
-
     }
 
     // ========================================================================================================
@@ -143,7 +142,7 @@ public class ContainerNamingUtil {
         RunImageConfiguration runConfig = image.getRunConfiguration();
         if (runConfig != null) {
             if (runConfig.getContainerNamePattern() != null) {
-                return runConfig.getContainerNamePattern();
+                return getContainerNamingPattern(runConfig.getContainerNamePattern());
             }
             if (runConfig.getNamingStrategy() == RunImageConfiguration.NamingStrategy.alias) {
                 return "%a";
@@ -151,8 +150,19 @@ public class ContainerNamingUtil {
         }
         return defaultContainerNamePattern != null ? defaultContainerNamePattern : DEFAULT_CONTAINER_NAME_PATTERN;
     }
-
+    
     private static String cleanImageName(final String imageName) {
         return new ImageName(imageName).getSimpleName().replaceAll("[^a-zA-Z0-9_.-]+", "_");
+    }
+    
+    private static String getContainerNamingPattern(String pattern) {
+        if (pattern.contains("%r")) {
+            if (pattern.length() > 2) {
+                throw new IllegalArgumentException("Invalid use of container naming pattern '%r'"); 
+            }                       
+            return null;
+        }
+        
+        return pattern;
     }
 }
