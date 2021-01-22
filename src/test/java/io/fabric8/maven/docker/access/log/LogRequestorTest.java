@@ -2,6 +2,7 @@ package io.fabric8.maven.docker.access.log;
 
 import com.google.common.base.Charsets;
 import io.fabric8.maven.docker.access.UrlBuilder;
+import io.fabric8.maven.docker.access.log.LogCallback.DoneException;
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import mockit.Expectations;
 import mockit.Mocked;
@@ -29,6 +30,8 @@ import java.util.regex.Matcher;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import java.time.ZonedDateTime;
 
@@ -298,6 +301,27 @@ public class LogRequestorTest {
         new LogRequestor(client, urlBuilder, containerId, callback).run();
     }
 
+    @Test
+    public void testcallLogCallbackDoneException() throws DoneException
+    {
+    	final LogRequestor requestor = new LogRequestor(client,urlBuilder, "containerId",callback);
+    	assertNotNull(requestor);
+    	
+    	assertThrows(DoneException.class, ()-> requestor.callLogCallback(-1, "txt"));
+    }
+    
+    /*
+     * Should roll-over and use default timestamp
+     */
+    @Test
+    public void testcallLogCallbackInvalidTimestamp() throws DoneException
+    {
+    	final LogRequestor requestor = new LogRequestor(client,urlBuilder, "containerId",callback);
+    	assertNotNull(requestor);
+    	
+    	requestor.callLogCallback(-1, "<timestamp> <entry> </timestamp>");
+    }
+    
     private void setupMocks(final InputStream inputStream) throws Exception {
         new Expectations() {{
             RequestUtil.newGet(anyString);
