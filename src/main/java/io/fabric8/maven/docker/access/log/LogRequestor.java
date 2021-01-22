@@ -190,14 +190,20 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
     }
 
-    private void callLogCallback(int type, String txt) throws LogCallback.DoneException {
+    protected void callLogCallback(int type, String txt) throws LogCallback.DoneException {
         Matcher matcher = LOG_LINE.matcher(txt);
         if (!matcher.matches()) {
             callback.error(String.format("Invalid log format for '%s' (expected: \"<timestamp> <txt>\") [%04x %04x]",
                                          txt,(int) (txt.toCharArray())[0],(int) (txt.toCharArray())[1]));
             throw new LogCallback.DoneException();
         }
-        ZonedDateTime ts = TimestampFactory.createTimestamp(matcher.group("timestamp"));
+        ZonedDateTime ts;
+        try {
+        	ts = TimestampFactory.createTimestamp(matcher.group("timestamp"));
+        }
+        catch (java.time.format.DateTimeParseException ex1) {
+        	ts = TimestampFactory.createTimestamp();
+        }
         String logTxt = matcher.group("entry");
         callback.log(type, ts, logTxt);
     }
