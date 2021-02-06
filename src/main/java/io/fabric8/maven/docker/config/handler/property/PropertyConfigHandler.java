@@ -247,6 +247,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .user(valueProvider.getString(ASSEMBLY_USER, config == null ? null : config.getUser()))
                 .mode(valueProvider.getString(ASSEMBLY_MODE, config == null ? null : config.getModeRaw()))
                 .tarLongFileMode(valueProvider.getString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()))
+                .assemblyDef(config == null ? null : config.getInline())
                 .build();
     }
 
