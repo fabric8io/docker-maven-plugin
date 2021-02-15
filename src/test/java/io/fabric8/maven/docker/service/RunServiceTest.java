@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.StopMode;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.util.GavLabel;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
@@ -44,6 +45,7 @@ import mockit.Mocked;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
@@ -275,6 +277,38 @@ public class RunServiceTest {
         }};
 
         runService.stopContainer(container, createImageConfig(SHUTDOWN_WAIT, 0), false, false);
+    }
+
+    @Test
+    public void testWithMultipleStopExceptions() throws Exception {
+        GavLabel testLabel = new GavLabel("Im:A:Test");
+
+        String firstName = "first-container:latest";
+        ImageConfiguration first = new ImageConfiguration();
+        first.setName(firstName);
+
+        String secondName = "second-container:latest";
+        ImageConfiguration second = new ImageConfiguration();
+        second.setName(secondName);
+
+        tracker.registerContainer(firstName, first, testLabel);
+        tracker.registerContainer(secondName, second, testLabel);
+
+        LogOutputSpecFactory logOutputSpecFactory = new LogOutputSpecFactory(true, true, null);
+
+        new Expectations(){{
+           docker.stopContainer(firstName, 0); result = new DockerAccessException("TEST one");
+           docker.stopContainer(secondName, 0); result = new DockerAccessException("TEST two");
+        }};
+
+        runService = new RunService(docker, queryService, tracker, logOutputSpecFactory, log);
+
+        try {
+            runService.stopStartedContainers(false, true, true, testLabel);
+            fail("Should have thrown exception");
+        } catch (DockerAccessException | ExecException e) {
+            assertEquals(e.getLocalizedMessage(), "(TEST two,TEST one)");
+        }
     }
 
     @Test
