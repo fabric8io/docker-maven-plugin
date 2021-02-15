@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -222,10 +223,16 @@ public class RunService {
 			thrownExceptions.add(exc);
         }
 		if (!thrownExceptions.isEmpty()) {
-			DockerAccessException exception = new DockerAccessException("At least one exception thrown during container removal.");
+		    StringJoiner description = new StringJoiner(",", "(", ")");
 			for (DockerAccessException dae : thrownExceptions) {
-				exception.addSuppressed(dae);
+			    description.add(dae.getLocalizedMessage());
 			}
+
+            DockerAccessException exception = new DockerAccessException(description.toString());
+            for (DockerAccessException dae : thrownExceptions) {
+                exception.addSuppressed(dae);
+            }
+
 			throw exception;
 		}
     }
