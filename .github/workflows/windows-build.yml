@@ -1,0 +1,24 @@
+name: Windows Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build:
+    name: Windows Java ${{ matrix.java }} Maven
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        java: [8, 11]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Build Project
+        run: mvn clean install
