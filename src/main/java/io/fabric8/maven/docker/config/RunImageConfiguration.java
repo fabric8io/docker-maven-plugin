@@ -71,7 +71,7 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private Long memory;
 
-    // total memory (swap + ram) in bytes, -1 to disable
+    // total memory (swap + ram) in bytes; set equal to memory to disable; set to -1 to allow unlimited swap
     @Parameter
     private Long memorySwap;
 
