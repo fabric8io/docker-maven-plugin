@@ -132,7 +132,7 @@ public class WatchService {
 
                         File changedFilesArchive = archiveService.createChangedFilesArchive(entries, files.getAssemblyDirectory(),
                                 imageConfig.getName(), mojoParameters);
-                        dockerAccess.copyArchive(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
+                        dockerAccess.copyArchiveToContainer(watcher.getContainerId(), changedFilesArchive, containerBaseDir);
                         callPostExec(watcher);
                     } catch (MojoExecutionException | IOException | ExecException e) {
                         log.error("%s: Error when copying files to container %s: %s",

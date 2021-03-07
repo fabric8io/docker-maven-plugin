@@ -47,6 +47,17 @@ public class ArchiveService {
     }
 
     /**
+     * Extracts an archive returned when copying file or directory from container.
+     *
+     * @param archiveFile a tar archive to extract
+     * @param destinationDirectory directory where to place extracted content
+     * @throws MojoExecutionException if an error occurs during extracting.
+     */
+    public void extractDockerCopyArchive(File archiveFile, File destinationDirectory) throws MojoExecutionException {
+        dockerAssemblyManager.extractDockerTarArchive(archiveFile, destinationDirectory);
+    }
+
+    /**
      * Create the tar file container the source for building an image. This tar can be used directly for
      * uploading to a Docker daemon for creating the image
      *

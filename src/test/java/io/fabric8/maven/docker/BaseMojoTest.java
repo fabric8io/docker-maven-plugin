@@ -1,7 +1,12 @@
 package io.fabric8.maven.docker;
 
 import static io.fabric8.maven.docker.AbstractDockerMojo.CONTEXT_KEY_LOG_DISPATCHER;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,13 +18,19 @@ import org.apache.maven.monitor.logging.DefaultLog;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.CopyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration.Builder;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
+import io.fabric8.maven.docker.service.ArchiveService;
 import io.fabric8.maven.docker.service.QueryService;
+import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.AnsiLogger;
@@ -32,6 +43,9 @@ import mockit.Mocked;
 
 public class BaseMojoTest {
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
     @Injectable
     protected Logger log;
 
@@ -42,10 +56,16 @@ public class BaseMojoTest {
     protected QueryService queryService;
 
     @Mocked
+    protected RegistryService registryService;
+
+    @Mocked
     protected RunService runService;
 
     @Mocked
     protected DockerAccess dockerAccess;
+
+    @Mocked
+    protected ArchiveService archiveService;
 
     @Mocked
     protected MavenProject mavenProject;
@@ -62,6 +82,7 @@ public class BaseMojoTest {
     protected String projectGroupId;
     protected String projectArtifactId;
     protected String projectVersion;
+    protected String projectBaseDirectory;
     protected String projectBuildDirectory;
 
     protected GavLabel projectGavLabel;
@@ -120,6 +141,23 @@ public class BaseMojoTest {
                 .build();
     }
 
+    protected ImageConfiguration singleImageWithCopy(List<CopyConfiguration.Entry> entries) {
+        return singleImageWithCopyNamePatternAndCopyEntries(null, entries);
+    }
+
+    protected ImageConfiguration singleImageWithCopyNamePatternAndCopyEntries(String copyNamePattern,
+            List<CopyConfiguration.Entry> entries) {
+        final CopyConfiguration.Builder copyConfigBuilder = new CopyConfiguration.Builder();
+        if (entries != null) {
+            copyConfigBuilder.entries(entries);
+        }
+        final Builder builder = new Builder().name("example:latest");
+        if (copyNamePattern != null) {
+            builder.copyNamePattern(copyNamePattern);
+        }
+        return builder.copyConfig(copyConfigBuilder.build()).build();
+    }
+
     protected List<ImageConfiguration> twoImagesWithBuild() {
         ImageConfiguration image1 = new ImageConfiguration.Builder()
                 .name("example1:latest")
@@ -144,7 +182,12 @@ public class BaseMojoTest {
         projectGroupId = "mock.group";
         projectArtifactId = "mock-artifact";
         projectVersion = "1.0.0-MOCK";
-        projectBuildDirectory = "mock-target";
+        try {
+            projectBaseDirectory = temporaryFolder.newFolder("mock-base").getAbsolutePath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        projectBuildDirectory = new File(projectBaseDirectory, "mock-target").getAbsolutePath();
         projectGavLabel = new GavLabel(projectGroupId, projectArtifactId, projectVersion);
 
         new Expectations() {{
@@ -153,6 +196,7 @@ public class BaseMojoTest {
             mavenProject.getGroupId(); result = projectGroupId; minTimes = 0;
             mavenProject.getArtifactId(); result = projectArtifactId; minTimes = 0;
             mavenProject.getVersion(); result = projectVersion; minTimes = 0;
+            mavenProject.getBasedir(); result = projectBaseDirectory; minTimes = 0;
             mavenBuild.getDirectory(); result = projectBuildDirectory; minTimes = 0;
         }};
 
@@ -168,5 +212,37 @@ public class BaseMojoTest {
     protected void givenResolvedImages(AbstractDockerMojo mojo, List<ImageConfiguration> resolvedImages) {
         Deencapsulation.setField(mojo, "images", resolvedImages);
         Deencapsulation.setField(mojo, "resolvedImages", resolvedImages);
+    }
+
+    protected void givenPluginContext(AbstractDockerMojo mojo, Object key, Object value) {
+        mojo.getPluginContext().put(key, value);
+    }
+
+    protected void givenCopyAll(AbstractDockerMojo mojo) {
+        Deencapsulation.setField(mojo, "copyAll", true);
+    }
+
+    protected File resolveMavenProjectPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        File file = new File(path);
+        if (file.isAbsolute()) {
+            return file;
+        }
+        return new File(projectBaseDirectory, path);
+    }
+
+    protected void assertAbsolutePathEquals(final File expected, final File actual) {
+        if (expected == null) {
+            assertNull(actual);
+        } else {
+            assertNotNull(actual);
+            try {
+                assertEquals(expected.getCanonicalPath(), actual.getCanonicalPath());
+            } catch (IOException e) {
+                throw new AssertionError(e);
+            }
+        }
     }
 }

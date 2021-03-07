@@ -1,0 +1,76 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-builder-parent</artifactId>
+    <version>0.34-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>dmp-it-builder-app</artifactId>
+  <packaging>pom</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.fabric8.dmp.itests</groupId>
+      <artifactId>dmp-it-builder-builder-image</artifactId>
+      <type>pom</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-from-builder</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <images>
+                <image>
+                  <name>${builder.image}</name>
+                  <copy>
+                    <entries>
+                      <entry>
+                        <containerPath>${builder.output.file}</containerPath>
+                        <hostDirectory>${project.build.directory}</hostDirectory>
+                      </entry>
+                    </entries>
+                  </copy>
+                </image>
+              </images>
+              <createContainers>true</createContainers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-artifact</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>${project.build.directory}/${builder.output.fileName}</file>
+                  <type>tar.gz</type>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

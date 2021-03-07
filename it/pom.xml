@@ -59,5 +59,6 @@
     <module>log</module>
     <module>run-java</module>
     <module>spring-boot-with-jib</module>
+    <module>builder</module>
   </modules>
 </project>

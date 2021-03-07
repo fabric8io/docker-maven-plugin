@@ -47,7 +47,7 @@ public class LogsMojo extends AbstractDockerMojo {
                     doLogging(logDispatcher, image, container.getId());
                 }
             } else {
-                Container container = queryService.getLatestContainerForImage(imageName);
+                Container container = queryService.getLatestContainerForImage(imageName, false);
                 if (container != null) {
                     doLogging(logDispatcher, image, container.getId());
                 }

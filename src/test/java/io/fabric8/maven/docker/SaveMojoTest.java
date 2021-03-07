@@ -248,13 +248,17 @@ public class SaveMojoTest extends BaseMojoTest {
 
     private void thenImageIsSaved(String name, String fileName, ArchiveCompression compression) throws DockerAccessException {
         new Verifications() {{
-            dockerAccess.saveImage(name, fileName, compression);
+            final String image;
+            dockerAccess.saveImage(name, image = withCapture(), compression);
+            assertAbsolutePathEquals(resolveMavenProjectPath(fileName), resolveMavenProjectPath(image));
         }};
     }
 
     private void thenArtifactAttached(String type, String classifier, String fileName) {
         new Verifications() {{
-            mavenProjectHelper.attachArtifact(mavenProject, type, classifier, new File(fileName));
+            final File artifact;
+            mavenProjectHelper.attachArtifact(mavenProject, type, classifier, artifact = withCapture());
+            assertAbsolutePathEquals(resolveMavenProjectPath(fileName), artifact);
         }};
     }
 }

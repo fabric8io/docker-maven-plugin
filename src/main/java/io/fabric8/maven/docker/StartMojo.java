@@ -34,7 +34,6 @@ import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.RunVolumeConfiguration;
 import io.fabric8.maven.docker.config.VolumeConfiguration;
 import io.fabric8.maven.docker.log.LogDispatcher;
-import io.fabric8.maven.docker.service.ImagePullManager;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.RegistryService;
 import io.fabric8.maven.docker.service.RunService;
@@ -332,14 +331,11 @@ public class StartMojo extends AbstractDockerMojo {
 
             // Still to check: How to work with linking, volumes, etc ....
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
+            RegistryService registryService = hub.getRegistryService();
+
+            pullImage(queryService, registryService, imageConfig, pullRegistry);
+
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
-
-            RegistryService.RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-            ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfig), autoPull);
-
-            hub.getRegistryService().pullImageWithPolicy(imageConfig.getName(), pullManager, registryConfig,
-                                                         queryService.hasImage(imageConfig.getName()));
-
             NetworkConfig config = runConfig.getNetworkingConfig();
             List<String> bindMounts = extractBindMounts(runConfig.getVolumeConfiguration());
             List<VolumeConfiguration> volumes = getVolumes();
@@ -360,10 +356,6 @@ public class StartMojo extends AbstractDockerMojo {
             return Collections.emptyList();
         }
         return volumeConfiguration.getBind() != null ? volumeConfiguration.getBind() : Collections.emptyList();
-    }
-
-    private String determinePullPolicy(RunImageConfiguration runConfig) {
-        return runConfig.getImagePullPolicy() != null ? runConfig.getImagePullPolicy() : imagePullPolicy;
     }
 
     private List<String> filterOutNonAliases(Set<String> imageAliases, List<String> dependencies) {

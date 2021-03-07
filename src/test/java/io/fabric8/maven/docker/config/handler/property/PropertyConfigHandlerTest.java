@@ -31,6 +31,7 @@ import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ConfigHelper;
+import io.fabric8.maven.docker.config.CopyConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
 import io.fabric8.maven.docker.config.RestartPolicy;
@@ -884,6 +885,38 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     }
 
     @Test
+    public void testCopyConfiguration() {
+        imageConfiguration = new ImageConfiguration.Builder()
+                .externalConfig(new HashMap<>())
+                .copyConfig(new CopyConfiguration.Builder()
+                        .entries(Collections.singletonList(new CopyConfiguration.Entry("/test4/path", "project/dir")))
+                        .build())
+                .build();
+
+        makeExternalConfigUse(PropertyMode.Override);
+
+        final List<ImageConfiguration> configs = resolveImage(
+                imageConfiguration, props(
+                        k(ConfigKey.NAME), "image",
+                        k(ConfigKey.FROM), "base",
+                        k(ConfigKey.COPY_ENTRIES) + ".1", "/test1",
+                        k(ConfigKey.COPY_ENTRIES) + ".2." + CopyConfiguration.CONTAINER_PATH_PROPERTY, "/test2",
+                        k(ConfigKey.COPY_ENTRIES) + ".2." + CopyConfiguration.HOST_DIRECTORY_PROPERTY, "/root/dir",
+                        k(ConfigKey.COPY_ENTRIES) + ".3." + CopyConfiguration.CONTAINER_PATH_PROPERTY, "/test3/path",
+                        k(ConfigKey.COPY_ENTRIES) + ".3." + CopyConfiguration.HOST_DIRECTORY_PROPERTY, "project/dir"
+                ));
+
+        assertEquals(1, configs.size());
+        final CopyConfiguration copyConfig = configs.get(0).getCopyConfiguration();
+        final List<CopyConfiguration.Entry> copyEntries = copyConfig.getEntries();
+
+        assertEquals(3, copyEntries.size());
+        assertCopyEntryEquals(new CopyConfiguration.Entry("/test1", null), copyEntries.get(0));
+        assertCopyEntryEquals(new CopyConfiguration.Entry("/test2", "/root/dir"), copyEntries.get(1));
+        assertCopyEntryEquals(new CopyConfiguration.Entry("/test3/path", "project/dir"), copyEntries.get(2));
+    }
+
+    @Test
     public void testNoAssembly() throws Exception {
         Properties props = props(k(ConfigKey.NAME), "image");
         //List<ImageConfiguration> configs = configHandler.resolve(imageConfiguration, props);
@@ -1180,5 +1213,10 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
     	assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getSoft(), actual.getSoft());
         assertEquals(expected.getHard(), actual.getHard());
+    }
+
+    private void assertCopyEntryEquals(CopyConfiguration.Entry expected, CopyConfiguration.Entry actual) {
+        assertEquals(expected.getContainerPath(), actual.getContainerPath());
+        assertEquals(expected.getHostDirectory(), actual.getHostDirectory());
     }
 }

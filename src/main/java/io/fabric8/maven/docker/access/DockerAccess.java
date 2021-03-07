@@ -141,17 +141,27 @@ public interface DockerAccess {
      */
     void killContainer(String containerId) throws DockerAccessException;
 
-    /** Copy an archive (must be a tar) into a running container
-     * Get all containers matching a certain label. This might not be a cheap operation especially if many containers
-     * are running. Use with care.
+    /**
+     * Copy an archive (must be a tar) into a running container.
      *
      * @param containerId container to copy into
      * @param archive local archive to copy into
      * @param targetPath target path to use
      * @throws DockerAccessException if the archive could not be copied
      */
-    void copyArchive(String containerId, File archive, String targetPath)
+    void copyArchiveToContainer(String containerId, File archive, String targetPath)
             throws DockerAccessException;
+
+    /**
+     * Copy file or directory from container as a tar archive.
+     *
+     * @param containerId container to copy from
+     * @param containerPath source path of a container to copy
+     * @param archive local tar archive to copy into
+     * @throws DockerAccessException if the archive could not be copied
+     */
+    void copyArchiveFromContainer(String containerId, String containerPath, File archive)
+        throws DockerAccessException;
 
     /**
      * Get logs for a container up to now synchronously.

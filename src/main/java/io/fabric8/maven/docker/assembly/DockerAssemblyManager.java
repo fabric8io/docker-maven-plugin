@@ -33,10 +33,13 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.PathTool;
 import org.apache.maven.shared.utils.io.FileUtils;
 import org.codehaus.plexus.archiver.Archiver;
+import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
 import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.archiver.tar.TarArchiver;
 import org.codehaus.plexus.archiver.tar.TarLongFileMode;
+import org.codehaus.plexus.archiver.tar.TarUnArchiver;
+import org.codehaus.plexus.archiver.tar.TarUnArchiver.UntarCompressionMethod;
 import org.codehaus.plexus.archiver.util.DefaultArchivedFileSet;
 import org.codehaus.plexus.archiver.util.DefaultFileSet;
 import org.codehaus.plexus.component.annotations.Component;
@@ -62,6 +65,8 @@ public class DockerAssemblyManager {
     public static final String DOCKER_INCLUDE = ".maven-dockerinclude";
     public static final String DOCKERFILE_NAME = "Dockerfile";
 
+    private static final String TAR_ARCHIVER_TYPE = "tar";
+
     @Requirement
     private AssemblyArchiver assemblyArchiver;
 
@@ -73,6 +78,27 @@ public class DockerAssemblyManager {
 
     @Requirement(hint = "track")
     private Archiver trackArchiver;
+
+    /**
+     * Extract a docker tar archive into the given directory.
+     *
+     * @param archiveFile a tar archive to extract
+     * @param destinationDirectory directory where to place extracted content
+     * @throws MojoExecutionException if an error occurs during extracting.
+     */
+    public void extractDockerTarArchive(File archiveFile, File destinationDirectory) throws MojoExecutionException {
+        try {
+            TarUnArchiver unArchiver = (TarUnArchiver) archiverManager.getUnArchiver(TAR_ARCHIVER_TYPE);
+            unArchiver.setCompression(UntarCompressionMethod.NONE);
+            unArchiver.setSourceFile(archiveFile);
+            unArchiver.setDestDirectory(destinationDirectory);
+            unArchiver.extract();
+        } catch (NoSuchArchiverException e) {
+            throw new MojoExecutionException("No archiver found for file " + archiveFile, e);
+        } catch (ArchiverException e) {
+            throw new MojoExecutionException("Cannot extract archive " + archiveFile, e);
+        }
+    }
 
     /**
      * Create an docker tar archive from the given configuration which can be send to the Docker host for
@@ -353,7 +379,7 @@ public class DockerAssemblyManager {
 
     private File createChangedFilesTarBall(File archive, File archiveDir) throws MojoExecutionException {
         try {
-            TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
+            TarArchiver archiver = (TarArchiver) archiverManager.getArchiver(TAR_ARCHIVER_TYPE);
             archiver.setLongfile(TarLongFileMode.posix);
             archiver.addFileSet(DefaultFileSet.fileSet(archiveDir));
             archiver.setDestFile(archive);
@@ -383,7 +409,7 @@ public class DockerAssemblyManager {
     }
 
     private TarArchiver createBuildArchiver(File outputDir, File archive, AssemblyConfiguration assemblyConfig) throws NoSuchArchiverException {
-        TarArchiver archiver = (TarArchiver) archiverManager.getArchiver("tar");
+        TarArchiver archiver = (TarArchiver) archiverManager.getArchiver(TAR_ARCHIVER_TYPE);
         archiver.setLongfile(TarLongFileMode.posix);
 
         AssemblyMode mode = assemblyConfig != null ? assemblyConfig.getMode() : null;
