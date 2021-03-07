@@ -63,5 +63,6 @@
     <module>log</module>
     <module>run-java</module>
     <module>spring-boot-with-jib</module>
+    <module>build-cache</module>
   </modules>
 </project>

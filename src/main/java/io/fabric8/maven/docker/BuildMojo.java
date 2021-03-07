@@ -39,8 +39,14 @@ public class BuildMojo extends AbstractBuildSupportMojo {
     @Parameter(property = "docker.skip.build", defaultValue = "false")
     protected boolean skipBuild;
 
+    @Parameter(property = "docker.skip.pom", defaultValue = "false")
+    protected boolean skipPom;
+
     @Parameter(property = "docker.name", defaultValue = "")
     protected String name;
+
+    @Parameter(defaultValue = "${project.packaging}", required = true)
+    protected String packaging;
 
     /**
      * Skip Sending created tarball to docker daemon
@@ -145,7 +151,7 @@ public class BuildMojo extends AbstractBuildSupportMojo {
         BuildImageConfiguration buildConfig = aImageConfig.getBuildConfiguration();
 
         if (buildConfig != null) {
-            if(buildConfig.skip()) {
+            if(buildConfig.skip() || (skipPom && packaging.equalsIgnoreCase("pom"))) {
                 log.info("%s : Skipped building", aImageConfig.getDescription());
             } else {
                 buildAndTag(hub, aImageConfig);
