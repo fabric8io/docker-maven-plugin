@@ -81,10 +81,10 @@ The `<run>` configuration element knows the following sub elements:
 | Log configuration for whether and how log messages from the running containers should be printed. This also can configure the https://docs.docker.com/engine/admin/logging/overview[log driver] to use. See <<start-logging,Logging>> for a detailed description.
 
 | *memory*
-| Memory limit in bytes
+| Memory limit in bytes.
 
 | *memorySwap*
-| Total memory usage (memory + swap); use -1 to disable swap.
+| Total memory limit (memory + swap) in bytes. Set `memorySwap` equal to `memory` to disable swap. Set to `-1` to allow unlimited swap.
 
 | *namingStrategy*
 a| *This option is deprecated, please use a `containerNamePattern` instead* Naming strategy for how the container name is created:

@@ -99,7 +99,7 @@ public class JibServiceUtil {
     }
 
     public static JibContainerBuilder containerFromImageConfiguration(String jibImageFormat,
-            ImageConfiguration imageConfiguration, Credential pullRegistryCredential) throws InvalidImageReferenceException {
+                                                                      ImageConfiguration imageConfiguration, Credential pullRegistryCredential) throws InvalidImageReferenceException {
         final JibContainerBuilder containerBuilder = Jib.from(getRegistryImage(getBaseImage(imageConfiguration), pullRegistryCredential))
                 .setFormat(getImageFormat(jibImageFormat));
         return populateContainerBuilderFromImageConfiguration(containerBuilder, imageConfiguration);
@@ -205,7 +205,7 @@ public class JibServiceUtil {
 
     static ImageFormat getImageFormat(String jibImageFormat) {
         if (jibImageFormat != null && jibImageFormat.toLowerCase().equalsIgnoreCase("oci")) {
-                return ImageFormat.OCI;
+            return ImageFormat.OCI;
         }
         return ImageFormat.Docker;
     }
