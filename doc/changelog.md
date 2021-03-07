@@ -5,7 +5,8 @@
   - Loading Image tarball into docker daemon fails in JIB mode ([1385](https://github.com/fabric8io/docker-maven-plugin/issues/1385))
   - `assembly.inline` is removed when external properties are enabled ([1082](https://github.com/fabric8io/docker-maven-plugin/issues/1082))
   - Fix Support for Podman REST API(when configured) Related to ([1330](https://github.com/fabric8io/docker-maven-plugin/issues/1330))
-
+  - Fix ignored `SHELL` directive when provided in XML configuration (#1418)
+  
 * **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
   - upgrade to jib-core 0.15.0 ([#1378](https://github.com/fabric8io/docker-maven-plugin/issues/1378))

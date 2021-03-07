@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 
+import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.util.AnsiLogger;
@@ -39,6 +40,7 @@ import org.codehaus.plexus.util.ReflectionUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class DockerAssemblyManagerTest {
 
@@ -60,13 +62,27 @@ public class DockerAssemblyManagerTest {
     @Test
     public void testNoAssembly() {
         BuildImageConfiguration buildConfig = new BuildImageConfiguration();
-        AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
 
-        DockerFileBuilder builder = assemblyManager.createDockerFileBuilder(buildConfig, assemblyConfig);
-        String content = builder.content();
+        String content =
+            assemblyManager.createDockerFileBuilder(
+                buildConfig, buildConfig.getAssemblyConfiguration()).content();
 
         assertFalse(content.contains("COPY"));
         assertFalse(content.contains("VOLUME"));
+    }
+
+    @Test
+    public void testShellIsSet() {
+        BuildImageConfiguration buildConfig =
+            new BuildImageConfiguration.Builder().shell(
+                new Arguments.Builder().withShell("/bin/sh echo hello").build())
+                                                 .build();
+
+        DockerFileBuilder builder =
+            assemblyManager.createDockerFileBuilder(buildConfig, buildConfig.getAssemblyConfiguration());
+        String content = builder.content();
+
+        assertTrue(content.contains("SHELL [\"/bin/sh\",\"echo\",\"hello\"]"));
     }
 
     @Test
