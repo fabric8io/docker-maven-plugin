@@ -6,7 +6,7 @@ package io.fabric8.maven.docker.config.handler.property;
  *
  * @author Johan Ström
  */
-enum PropertyMode {
+public enum PropertyMode {
     Only,
     Override,
     Fallback,
@@ -22,8 +22,9 @@ enum PropertyMode {
      * @throws IllegalArgumentException if empty or invalid names
      */
     static PropertyMode parse(String name) {
-        if(name == null)
+        if(name == null) {
             return PropertyMode.Only;
+        }
 
         name = name.toLowerCase();
         for (PropertyMode e : PropertyMode.values()) {

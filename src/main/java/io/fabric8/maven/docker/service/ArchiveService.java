@@ -23,9 +23,9 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
-import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
-import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
+import org.apache.maven.plugins.assembly.InvalidAssemblerConfigurationException;
+import org.apache.maven.plugins.assembly.archive.ArchiveCreationException;
+import org.apache.maven.plugins.assembly.format.AssemblyFormattingException;
 
 import java.io.File;
 import java.util.List;

@@ -12,13 +12,13 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.22.1</version>
+    <version>0.34-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
 
-  <artifactId>helloworld</artifactId>
-  <version>0.22.1</version>
+  <artifactId>dmp-sample-helloworld</artifactId>
+  <version>0.34-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>dmp-sample-helloworld</name>
 
@@ -26,7 +26,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

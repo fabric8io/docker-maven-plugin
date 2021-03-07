@@ -19,7 +19,7 @@ import static io.fabric8.maven.docker.util.EnvUtil.*;
  * For {@link PropertyMode#Fallback} we use the config value if it is non-null, else the property value.
  *
  * For Override and Fallback mode, merging may take place as dictated by the {@link ValueCombinePolicy}
- * defined in the {@link ConfigKey}, or as overriden by the property &lt;prefix.someproperty&gt<b>._combine</b>
+ * defined in the {@link ConfigKey}, or as overridden by the property &lt;prefix.someproperty&gt;<b>._combine</b>
  * ({@link EnvUtil#PROPERTY_COMBINE_POLICY_SUFFIX}).
  *
  * If {@link ValueCombinePolicy#Replace} is used, only the prioritized value (first non-null) is used.
@@ -42,6 +42,7 @@ public class ValueProvider {
     private IntValueExtractor intValueExtractor;
     private LongValueExtractor longValueExtractor;
     private BooleanValueExtractor booleanValueExtractor;
+    private DoubleValueExtractor doubleValueExtractor;
 
     /**
      * Initiates ValueProvider which is to work with data from the given properties.
@@ -64,6 +65,7 @@ public class ValueProvider {
         intValueExtractor = new IntValueExtractor();
         longValueExtractor = new LongValueExtractor();
         booleanValueExtractor = new BooleanValueExtractor();
+        doubleValueExtractor = new DoubleValueExtractor();
     }
 
     public String getString(ConfigKey key, String fromConfig) {
@@ -76,8 +78,9 @@ public class ValueProvider {
 
     public int getInt(ConfigKey key, Integer fromConfig) {
         Integer integer = getInteger(key, fromConfig);
-        if(integer == null)
+        if(integer == null) {
             return 0;
+        }
         return integer;
     }
 
@@ -101,6 +104,20 @@ public class ValueProvider {
         return mapValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 
+    public Double getDouble(ConfigKey key, Double fromConfig){
+        return doubleValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
+    }
+
+    public <T> T getObject(ConfigKey key, T fromConfig, final com.google.common.base.Function<String, T> converter) {
+        ValueExtractor<T> arbitraryExtractor = new ValueExtractor<T>() {
+            @Override
+            protected T withPrefix(String prefix, ConfigKey key, Properties properties) {
+                return converter.apply(properties.getProperty(key.asPropertyKey(prefix)));
+            }
+        };
+
+        return arbitraryExtractor.getFromPreferredSource(prefix, key, fromConfig);
+    }
 
     /**
      * Helper base class for picking values out of the the Properties class and/or config value.
@@ -110,8 +127,9 @@ public class ValueProvider {
      */
     private abstract class ValueExtractor<T> {
         T getFromPreferredSource(String prefix, ConfigKey key, T fromConfig) {
-            if(propertyMode == PropertyMode.Skip)
+            if(propertyMode == PropertyMode.Skip) {
                 return fromConfig;
+            }
 
             List<T> values = new ArrayList<>();
 
@@ -127,16 +145,20 @@ public class ValueProvider {
                 case Only:
                     return fromProperty;
                 case Override:
-                    if(fromProperty != null)
+                    if(fromProperty != null) {
                         values.add(fromProperty);
-                    if(fromConfig != null)
+                    }
+                    if(fromConfig != null) {
                         values.add(fromConfig);
+                    }
                     break;
                 case Fallback:
-                    if(fromConfig != null)
+                    if(fromConfig != null) {
                         values.add(fromConfig);
-                    if(fromProperty != null)
+                    }
+                    if(fromProperty != null) {
                         values.add(fromProperty);
+                    }
                     break;
                 default:
                     throw new AssertionError("Invalid PropertyMode");
@@ -213,7 +235,13 @@ public class ValueProvider {
         }
     }
 
-
+    private class DoubleValueExtractor extends ValueExtractor<Double> {
+        @Override
+        protected Double withPrefix(String prefix, ConfigKey key, Properties properties) {
+            String prop = properties.getProperty(key.asPropertyKey(prefix));
+            return prop == null ? null : Double.valueOf(prop);
+        }
+    }
 
     private abstract class ListValueExtractor<T> extends ValueExtractor<List<T>> {
         @Override

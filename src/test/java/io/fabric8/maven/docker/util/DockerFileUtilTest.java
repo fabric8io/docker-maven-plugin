@@ -17,14 +17,11 @@ package io.fabric8.maven.docker.util;/*
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -32,11 +29,10 @@ import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.util.IOUtil;
 import org.junit.Test;
 
-import mockit.Mock;
-import mockit.MockUp;
-
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author roland
@@ -47,8 +43,102 @@ public class DockerFileUtilTest {
     @Test
     public void testSimple() throws Exception {
         File toTest = copyToTempDir("Dockerfile_from_simple");
-        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImage(
-            toTest, FixedStringSearchInterpolator.create()));
+        assertEquals("fabric8/s2i-java", DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).get(0));
+    }
+
+    @Test
+    public void testMultiStage() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+             toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertEquals("fabric8/s1i-java", fromClauses.next());
+        assertFalse(fromClauses.hasNext());
+    }
+
+    @Test
+    public void testMultiStageNamed() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_named_build_stages");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).iterator();
+
+        assertEquals("fabric8/s2i-java", fromClauses.next());
+        assertFalse(fromClauses.hasNext());
+    }
+
+    @Test
+    public void testMultiStageWithArgs() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_with_args");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).iterator();
+
+        assertEquals("fabric8/s2i-java:latest", fromClauses.next());
+        assertEquals("busybox:latest", fromClauses.next());
+        assertFalse(fromClauses.hasNext());
+    }
+
+    @Test
+    public void testExtractArgsFromDockerfile() {
+        assertEquals("{VERSION=latest, FULL_IMAGE=busybox:latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "VERSION:latest"}, new String[] {"ARG", "FULL_IMAGE=busybox:latest"}), Collections.emptyMap()).toString());
+        assertEquals("{user1=someuser, buildno=1}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "user1=someuser"}, new String[]{"ARG", "buildno=1"}), Collections.emptyMap()).toString());
+        assertEquals("{NPM_VERSION=latest, NODE_VERSION=latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG","NODE_VERSION=\"latest\""}, new String[]{"ARG",  "NPM_VERSION=\"latest\""}), Collections.emptyMap()).toString());
+        assertEquals("{NPM_VERSION=latest, NODE_VERSION=latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG","NODE_VERSION='latest'"}, new String[]{"ARG",  "NPM_VERSION='latest'"}), Collections.emptyMap()).toString());
+        assertEquals("{MESSAGE=argument with spaces}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[] {"ARG", "MESSAGE='argument with spaces'"}), Collections.emptyMap()).toString());
+        assertEquals("{MESSAGE=argument with spaces}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[] {"ARG", "MESSAGE=\"argument with spaces\""}), Collections.emptyMap()).toString());
+        assertEquals("{TARGETPLATFORM=}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "TARGETPLATFORM"}), Collections.emptyMap()).toString());
+        assertEquals("{TARGETPLATFORM=}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "TARGETPLATFORM="}), Collections.emptyMap()).toString());
+        assertEquals("{TARGETPLATFORM=}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "TARGETPLATFORM:"}), Collections.emptyMap()).toString());
+        assertEquals("{MESSAGE=argument:two}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=argument:two"}), Collections.emptyMap()).toString());
+        assertEquals("{MESSAGE2=argument=two}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE2=argument=two"}), Collections.emptyMap()).toString());
+        assertEquals("{VER=0.0.3}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER=0.0.3"}), Collections.emptyMap()).toString());
+        assertEquals("{VER={0.0.3}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={0.0.3}"}), Collections.emptyMap()).toString());
+        assertEquals("{VER=[0.0.3]}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER=[0.0.3]"}), Collections.emptyMap()).toString());
+        assertEquals("{VER={5,6}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={5,6}"}), Collections.emptyMap()).toString());
+        assertEquals("{VER={5,6}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={5,6}"}), Collections.emptyMap()).toString());
+        assertEquals("{VER={}}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER={}"}), Collections.emptyMap()).toString());
+        assertEquals("{VER=====}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "VER====="}), Collections.emptyMap()).toString());
+        assertEquals("{MESSAGE=:message}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=:message"}), Collections.emptyMap()).toString());
+        assertEquals("{MYAPP_IMAGE=myorg/myapp:latest}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MYAPP_IMAGE=myorg/myapp:latest"}), Collections.emptyMap()).toString());
+        assertEquals("{busyboxVersion=latest}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "busyboxVersion"}), Collections.singletonMap("busyboxVersion", "latest")).toString());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidArgWithSpacesFromDockerfile() {
+        DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MY_IMAGE image with spaces"}), Collections.emptyMap());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidArgWithTrailingArgumentFromDockerfile() {
+        DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=foo bar"}), Collections.emptyMap());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidArgWithArrayWithSpaceFromDockerfile() {
+        DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=[5, 6]"}), Collections.emptyMap());
+    }
+
+    @Test
+    public void testMultiStageNamedWithDuplicates() throws Exception {
+        File toTest = copyToTempDir("Dockerfile_multi_stage_named_redundant_build_stages");
+        Iterator<String> fromClauses = DockerFileUtil.extractBaseImages(
+                toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).iterator();
+
+        assertEquals("centos", fromClauses.next());
+        assertFalse(fromClauses.hasNext());
+
+    }
+
+    @Test
+    public void testResolveArgValueFromStrContainingArgKey() {
+        assertEquals("latest", DockerFileUtil.resolveArgValueFromStrContainingArgKey("$VERSION", Collections.singletonMap("VERSION", "latest")));
+        assertEquals("test", DockerFileUtil.resolveArgValueFromStrContainingArgKey("${project.scope}", Collections.singletonMap("project.scope", "test")));
+        assertEquals("test", DockerFileUtil.resolveArgValueFromStrContainingArgKey("$ad", Collections.singletonMap("ad", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("bla$ad", Collections.singletonMap("ad", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("${foo}bar", Collections.singletonMap("foo", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("bar${foo}", Collections.singletonMap("foo", "test")));
+        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("$ad", Collections.emptyMap()));
     }
 
     private File copyToTempDir(String resource) throws IOException {
@@ -98,12 +188,11 @@ public class DockerFileUtilTest {
         projectProperties.put("ext", "png");
 
         Settings settings = new Settings();
-        ArtifactRepository localRepository = new MockUp<ArtifactRepository>() {
-            @Mock
+        ArtifactRepository localRepository = new MavenArtifactRepository() {
             public String getBasedir() {
                 return "repository";
             }
-        }.getMockInstance();
+        };
         @SuppressWarnings("deprecation")
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date(System.currentTimeMillis()));
         session.getUserProperties().setProperty("cliOverride", "cliValue"); // Maven CLI override: -DcliOverride=cliValue

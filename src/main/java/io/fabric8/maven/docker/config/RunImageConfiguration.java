@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import javax.annotation.Nonnull;
 
 /**
  * @author roland
@@ -71,7 +71,7 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private Long memory;
 
-    // total memory (swap + ram) in bytes, -1 to disable
+    // total memory (swap + ram) in bytes; set equal to memory to disable; set to -1 to allow unlimited swap
     @Parameter
     private Long memorySwap;
 
@@ -107,13 +107,38 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private List<String> extraHosts;
 
+    @Parameter
+    private Long cpuShares;
+
+    @Parameter
+    private Long cpus;
+
+    @Parameter
+    private String cpuSet;
+
     // Port mapping. Can contain symbolic names in which case dynamic
     // ports are used
     @Parameter
     private List<String> ports;
 
+    /**
+     * @deprecated
+     */
     @Parameter
+    @Deprecated
     private NamingStrategy namingStrategy;
+
+    /**
+     * A pattern to define the naming of the container where
+     *
+     * - %a for the "alias" mode
+     * - %n for the image name
+     * - %t for a timestamp
+     * - %i for an increasing index of container names
+     *
+     */
+    @Parameter
+    private String containerNamePattern;
 
     /**
      * Property key part used to expose the container ip when running.
@@ -148,12 +173,24 @@ public class RunImageConfiguration implements Serializable {
 
     @Parameter
     private Boolean skip;
-
+    
     /**
      * Policy for pulling the image to start
      */
     @Parameter
     private String imagePullPolicy;
+
+    // Mount the container's root filesystem as read only
+    @Parameter
+    private Boolean readOnly;
+
+    // Automatically remove the container when it exists
+    @Parameter
+    private Boolean autoRemove;
+
+    // How to stop a container
+    @Parameter
+    private StopMode stopMode;
 
     public RunImageConfiguration() { }
 
@@ -217,6 +254,18 @@ public class RunImageConfiguration implements Serializable {
 
     public Long getMemorySwap() {
         return memorySwap;
+    }
+
+    public Long getCpuShares() {
+        return cpuShares;
+    }
+
+    public Long getCpus() {
+        return cpus;
+    }
+
+    public String getCpuSet() {
+        return cpuSet;
     }
 
     @Nonnull
@@ -300,7 +349,11 @@ public class RunImageConfiguration implements Serializable {
         return tmpfs;
     }
 
+    /**
+     * @deprecated
+     */
     // Naming scheme for how to name container
+    @Deprecated // for backward compatibility, us containerNamePattern instead
     public enum NamingStrategy {
         /**
          * No extra naming
@@ -310,15 +363,6 @@ public class RunImageConfiguration implements Serializable {
          * Use the alias as defined in the configuration
          */
         alias
-    }
-
-    public NamingStrategy getNamingStrategy() {
-        return namingStrategy == null ? NamingStrategy.none : namingStrategy;
-    }
-
-    public NamingStrategy getNamingStrategyRaw() {
-        return namingStrategy;
-
     }
 
     public String getExposedPropertyKey() {
@@ -347,6 +391,33 @@ public class RunImageConfiguration implements Serializable {
 
     public String getImagePullPolicy() {
         return imagePullPolicy;
+    }
+
+    public String getContainerNamePattern() {
+        return containerNamePattern;
+    }
+
+    public Boolean getReadOnly() {
+        return readOnly;
+    }
+
+    public Boolean getAutoRemove() {
+        return autoRemove;
+    }
+
+    public StopMode getStopMode() {
+        if (stopMode == null) {
+            return StopMode.graceful;
+        }
+        return stopMode;
+    }
+
+    /**
+     * @deprecated use {@link #getContainerNamePattern} instead
+     */
+    @Deprecated
+    public NamingStrategy getNamingStrategy() {
+        return namingStrategy;
     }
 
     // ======================================================================================
@@ -397,13 +468,6 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder domainname(String domainname) {
             config.domainname = domainname;
-            return this;
-        }
-
-        public Builder entrypoint(String entrypoint) {
-            if (entrypoint != null) {
-                config.entrypoint = new Arguments(entrypoint);
-            }
             return this;
         }
 
@@ -527,6 +591,30 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder cpuShares(Long cpuShares){
+            config.cpuShares = cpuShares;
+            return this;
+        }
+
+        public Builder cpus(Long cpus){
+            config.cpus = cpus;
+            return this;
+        }
+
+        public Builder cpuSet(String cpuSet){
+            config.cpuSet = cpuSet;
+            return this;
+        }
+
+        public Builder containerNamePattern(String pattern) {
+            config.containerNamePattern = pattern;
+            return this;
+        }
+
+        /**
+         * @deprecated use {@link #containerNamePattern} instead
+         */
+        @Deprecated
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
                     NamingStrategy.none :
@@ -534,6 +622,10 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        /**
+         * @deprecated use {@link #containerNamePattern} instead
+         */
+        @Deprecated
         public Builder namingStrategy(NamingStrategy namingStrategy) {
             config.namingStrategy = namingStrategy;
             return this;
@@ -559,6 +651,11 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder stopMode(StopMode stopMode) {
+            config.stopMode = stopMode;
+            return this;
+        }
+
         public Builder imagePullPolicy(String imagePullPolicy) {
             if (imagePullPolicy != null) {
                 config.imagePullPolicy = imagePullPolicy;
@@ -566,6 +663,15 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
+        public Builder readOnly(Boolean readOnly) {
+            config.readOnly = readOnly;
+            return this;
+        }
+
+        public Builder autoRemove(Boolean autoRemove) {
+            config.autoRemove = autoRemove;
+            return this;
+        }
 
         public RunImageConfiguration build() {
             return config;

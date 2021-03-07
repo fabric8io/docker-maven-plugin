@@ -45,8 +45,8 @@ public class NetworkConfig implements Serializable {
     }
 
     /**
-     * Legacy constructor using the &lt;net> config
-     * @param net net, encapsulating mode & name.
+     * Legacy constructor using the &lt;net&gt; config
+     * @param net net, encapsulating mode &amp; name.
      */
     public NetworkConfig(String net) {
         initLegacyNetSpec(net);

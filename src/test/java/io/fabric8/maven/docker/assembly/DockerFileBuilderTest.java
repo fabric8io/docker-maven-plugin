@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import io.fabric8.maven.docker.config.*;
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.HealthCheckConfiguration;
-import io.fabric8.maven.docker.config.HealthCheckMode;
-
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
@@ -21,6 +18,7 @@ public class DockerFileBuilderTest {
     @Test
     public void testBuildDockerFile() throws Exception {
         Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        Arguments b = Arguments.Builder.get().withParam("/bin/sh").withParam("-c").build();
         String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
                 .baseImage("image")
                 .cmd(a)
@@ -31,6 +29,28 @@ public class DockerFileBuilderTest {
                 .workdir("/tmp")
                 .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
                 .volumes(Collections.singletonList("/vol1"))
+                .shell(b)
+                .run(Arrays.asList("echo something", "echo second"))
+                .content();
+        String expected = loadFile("docker/Dockerfile.test");
+        assertEquals(expected, stripCR(dockerfileContent));
+    }
+
+    @Test
+    public void testBuildDockerShellArgumentsForShell() throws Exception {
+        Arguments a = Arguments.Builder.get().withParam("c1").withParam("c2").build();
+        Arguments b = new Arguments("/bin/sh -c");
+        String dockerfileContent = new DockerFileBuilder().add("/src", "/dest")
+                .baseImage("image")
+                .cmd(a)
+                .env(ImmutableMap.of("foo", "bar"))
+                .basedir("/export")
+                .expose(Collections.singletonList("8080"))
+                .maintainer("maintainer@example.com")
+                .workdir("/tmp")
+                .labels(ImmutableMap.of("com.acme.foobar", "How are \"you\" ?"))
+                .volumes(Collections.singletonList("/vol1"))
+                .shell(b)
                 .run(Arrays.asList("echo something", "echo second"))
                 .content();
         String expected = loadFile("docker/Dockerfile.test");
@@ -182,9 +202,9 @@ public class DockerFileBuilderTest {
 
     @Test
     public void testHealthCheckCmdParams() {
-        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd("echo hello").interval("5s").timeout("3s").retries(4).build();
+        HealthCheckConfiguration hc = new HealthCheckConfiguration.Builder().cmd(new Arguments("echo hello")).interval("5s").timeout("3s").startPeriod("30s").retries(4).build();
         String dockerfileContent = new DockerFileBuilder().healthCheck(hc).content();
-        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --retries=4 CMD echo hello"));
+        assertThat(dockerfileToMap(dockerfileContent), hasEntry("HEALTHCHECK", "--interval=5s --timeout=3s --start-period=30s --retries=4 CMD echo hello"));
     }
 
     @Test
@@ -208,10 +228,7 @@ public class DockerFileBuilderTest {
     public void testAssemblyUserWithChown() {
         String dockerFile = new DockerFileBuilder().assemblyUser("jboss:jboss:jboss")
                                                    .add("a","a/nested").add("b","b/deeper/nested").content();
-        String EXPECTED_REGEXP = "chown\\s+-R\\s+jboss:jboss\\s+([^\\s]+)"
-                                 + "\\s+&&\\s+cp\\s+-rp\\s+\\1/\\*\\s+/\\s+&&\\s+rm\\s+-rf\\s+\\1";
-        Pattern pattern = Pattern.compile(EXPECTED_REGEXP);
-        assertTrue(pattern.matcher(dockerFile).find());
+        assertThat(dockerfileToMap(dockerFile), hasEntry("COPY", "--chown=jboss:jboss b /maven/b/deeper/nested"));
     }
 
     @Test
@@ -230,6 +247,16 @@ public class DockerFileBuilderTest {
         assertFalse(new DockerFileBuilder().baseImage("java").basedir("/export").content().contains("/export"));
         assertTrue(new DockerFileBuilder().baseImage("java").exportTargetDir(true).basedir("/export").content().contains("/export"));
         assertFalse(new DockerFileBuilder().baseImage("java").exportTargetDir(false).basedir("/export").content().contains("/export"));
+    }
+
+    @Test
+    public void testTargetDirStartsWithEnvVar() {
+        assertTrue(new DockerFileBuilder().basedir("${FOO}").content().contains("${FOO}"));
+        assertTrue(new DockerFileBuilder().basedir("$FOO").content().contains("$FOO"));
+        assertTrue(new DockerFileBuilder().basedir("${FOO}/").content().contains("${FOO}"));
+        assertTrue(new DockerFileBuilder().basedir("$FOO/").content().contains("$FOO"));
+        assertTrue(new DockerFileBuilder().basedir("${FOO}/bar").content().contains("${FOO}/bar"));
+        assertTrue(new DockerFileBuilder().basedir("$FOO/bar").content().contains("$FOO/bar"));
     }
 
     @Test

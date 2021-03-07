@@ -1,10 +1,14 @@
 package io.fabric8.maven.docker;
 
 import java.io.File;
-import java.util.*;
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
+import com.google.common.collect.ImmutableList;
 import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ConfigHelper;
@@ -23,9 +27,10 @@ import io.fabric8.maven.docker.service.ServiceHubFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.GavLabel;
 import io.fabric8.maven.docker.util.ImageNameFormatter;
 import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.PomLabel;
+import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
@@ -35,11 +40,13 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+import org.fusesource.jansi.Ansi;
 
 /**
  * Base class for this plugin.
@@ -118,8 +125,8 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     protected boolean useColor;
 
     // For verbose output
-    @Parameter(property = "docker.verbose", defaultValue = "false")
-    protected boolean verbose;
+    @Parameter(property = "docker.verbose")
+    protected String verbose;
 
     // The date format to use when putting out logs
     @Parameter(property = "docker.logDate")
@@ -161,6 +168,18 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter(property = "docker.maxConnections", defaultValue = "100")
     private int maxConnections;
 
+    @Parameter(property = "docker.build.jib", defaultValue = "false")
+    public boolean jib;
+
+    @Parameter(property = "docker.build.jib.imageFormat", defaultValue = "docker")
+    public String jibImageFormat;
+
+    @Parameter(property = "docker.source.dir", defaultValue="src/main/docker")
+    public String sourceDirectory;
+
+    @Parameter(property = "docker.target.dir", defaultValue="target/docker")
+    public String outputDirectory;
+
     // Authentication information
     @Parameter
     private RegistryAuthConfiguration authConfig;
@@ -176,6 +195,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      */
     @Parameter
     private List<ImageConfiguration> images;
+
+    /**
+     * Image configurations configured via maps to allow overriding.
+     */
+    @Parameter
+    private Map<String, ImageConfiguration> imagesMap;
 
     // Docker-machine configuration
     @Parameter
@@ -203,33 +228,40 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
-            log = new AnsiLogger(getLog(), useColor, verbose, !settings.getInteractiveMode(), getLogPrefix());
-            authConfigFactory.setLog(log);
+            boolean ansiRestore = Ansi.isEnabled();
+            log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix());
 
-            LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
-
-            ConfigHelper.validateExternalPropertyActivation(project, images);
-
-            // The 'real' images configuration to use (configured images + externally resolved images)
-            this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
-            DockerAccess access = null;
             try {
-                if (isDockerAccessRequired()) {
-                    DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
-                    access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
+                authConfigFactory.setLog(log);
+                imageConfigResolver.setLog(log);
+
+                LogOutputSpecFactory logSpecFactory = new LogOutputSpecFactory(useColor, logStdout, logDate);
+
+                ConfigHelper.validateExternalPropertyActivation(project, getAllImages());
+
+                DockerAccess access = null;
+                try {
+                    // The 'real' images configuration to use (configured images + externally resolved images)
+                    this.minimalApiVersion = initImageConfiguration(getBuildTimestamp());
+                    if (isDockerAccessRequired()) {
+                        DockerAccessFactory.DockerAccessContext dockerAccessContext = getDockerAccessContext();
+                        access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
+                    }
+                    ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
+                    executeInternal(serviceHub);
+                } catch (IOException | ExecException exp) {
+                    logException(exp);
+                    throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
+                } catch (MojoExecutionException exp) {
+                    logException(exp);
+                    throw exp;
+                } finally {
+                    if (access != null) {
+                        access.shutdown();
+                    }
                 }
-                ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
-                executeInternal(serviceHub);
-            } catch (DockerAccessException | ExecException exp) {
-                logException(exp);
-                throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
-            } catch (MojoExecutionException exp) {
-                logException(exp);
-                throw exp;
             } finally {
-                if (access != null) {
-                    access.shutdown();
-                }
+                Ansi.setEnabled(ansiRestore);
             }
         }
     }
@@ -270,7 +302,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * call or a new current date is created
      * @return timestamp to use
      */
-    protected synchronized Date getBuildTimestamp() throws MojoExecutionException {
+    protected synchronized Date getBuildTimestamp() throws IOException {
         Date now = (Date) getPluginContext().get(CONTEXT_KEY_BUILD_TIMESTAMP);
         if (now == null) {
             now = getReferenceDate();
@@ -281,7 +313,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // Get the reference date for the build. By default this is picked up
     // from an existing build date file. If this does not exist, the current date is used.
-    protected Date getReferenceDate() throws MojoExecutionException {
+    protected Date getReferenceDate() throws IOException {
         Date referenceDate = EnvUtil.loadTimestamp(getBuildTimestampFile());
         return referenceDate != null ? referenceDate : new Date();
     }
@@ -299,12 +331,21 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         return AnsiLogger.DEFAULT_LOG_PREFIX;
     }
 
+    /**
+     * Determine whether to enable colorized log messages
+     * @return true if log statements should be colorized
+     */
+    private boolean useColorForLogging() {
+        return useColor && MessageUtils.isColorEnabled()
+                && !(EnvUtil.isWindows() && !EnvUtil.isMaven350OrLater(session));
+    }
+
     // Resolve and customize image configuration
     private String initImageConfiguration(Date buildTimeStamp)  {
         // Resolve images
         resolvedImages = ConfigHelper.resolveImages(
             log,
-            images,                  // Unresolved images
+                getAllImages(), // Unresolved images
             new ConfigHelper.Resolver() {
                     @Override
                     public List<ImageConfiguration> resolve(ImageConfiguration image) {
@@ -315,12 +356,15 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             this);                     // customizer (can be overwritten by a subclass)
 
         // Check for simple Dockerfile mode
-        if (resolvedImages.isEmpty()) {
-            File topDockerfile = new File(project.getBasedir(),"Dockerfile");
-            if (topDockerfile.exists()) {
+        File topDockerfile = new File(project.getBasedir(),"Dockerfile");
+        if (topDockerfile.exists()) {
+            if (resolvedImages.isEmpty()) {
                 resolvedImages.add(createSimpleDockerfileConfig(topDockerfile));
+            } else if (resolvedImages.size() == 1 && resolvedImages.get(0).getBuildConfiguration() == null) {
+                resolvedImages.set(0, addSimpleDockerfileConfig(resolvedImages.get(0), topDockerfile));
             }
         }
+
         // Initialize configuration and detect minimal API version
         return ConfigHelper.initAndValidate(resolvedImages, apiVersion, new ImageNameFormatter(project, buildTimeStamp), log);
     }
@@ -339,7 +383,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @return <code >true</code> as the default value
      */
     protected boolean isDockerAccessRequired() {
-        return true;
+        return Boolean.FALSE.equals(jib);
     }
 
     /**
@@ -348,7 +392,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
      * @param serviceHub context for accessing backends
      */
     protected abstract void executeInternal(ServiceHub serviceHub)
-        throws DockerAccessException, ExecException, MojoExecutionException;
+        throws IOException, ExecException, MojoExecutionException;
 
     // =============================================================================================
 
@@ -380,9 +424,9 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
 
     // =================================================================================
 
-    protected PomLabel getPomLabel() {
+    protected GavLabel getGavLabel() {
         // Label used for this run
-        return new PomLabel(project.getGroupId(),project.getArtifactId(),project.getVersion());
+        return new GavLabel(project.getGroupId(), project.getArtifactId(), project.getVersion());
     }
 
     protected LogDispatcher getLogDispatcher(ServiceHub hub) {
@@ -392,6 +436,22 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             getPluginContext().put(CONTEXT_KEY_LOG_DISPATCHER, dispatcher);
         }
         return dispatcher;
+    }
+
+    private ImmutableList<ImageConfiguration> getAllImages() {
+        ImmutableList.Builder<ImageConfiguration> allImages = ImmutableList.builder();
+        if (images != null) {
+            allImages.addAll(images);
+        }
+        if (imagesMap != null) {
+            imagesMap.forEach((alias, config) -> {
+                if (config.getAlias() == null) {
+                    config.setAlias(alias);
+                }
+                allImages.add(config);
+            });
+        }
+        return allImages.build();
     }
 
     public ImagePullManager getImagePullManager(String imagePullPolicy, String autoPull) {
@@ -432,4 +492,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
             .buildConfig(buildConfig)
             .build();
     }
+
+    private ImageConfiguration addSimpleDockerfileConfig(ImageConfiguration image, File dockerfile) {
+        BuildImageConfiguration buildConfig =
+            new BuildImageConfiguration.Builder()
+                .dockerFile(dockerfile.getPath())
+                .build();
+        return new ImageConfiguration.Builder(image).buildConfig(buildConfig).build();
+    }
+
+
 }

@@ -15,12 +15,13 @@ package io.fabric8.maven.docker;/*
  * limitations under the License.
  */
 
-import io.fabric8.maven.docker.access.DockerAccessException;
+import java.io.IOException;
+
 import io.fabric8.maven.docker.config.WatchMode;
 import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.WatchService;
-
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -61,6 +62,12 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     private String watchPostExec;
 
     /**
+     * Naming pattern for how to name containers when started
+     */
+    @Parameter(property = "docker.containerNamePattern")
+    private String containerNamePattern = ContainerNamingUtil.DEFAULT_CONTAINER_NAME_PATTERN;
+
+    /**
      * Whether to create the customs networks (user-defined bridge networks) before starting automatically
      */
     @Parameter(property = "docker.autoCreateCustomNetworks", defaultValue = "false")
@@ -70,16 +77,16 @@ public class WatchMojo extends AbstractBuildSupportMojo {
     private int retries;
 
     @Override
-    protected synchronized void executeInternal(ServiceHub hub) throws DockerAccessException,
+    protected synchronized void executeInternal(ServiceHub hub) throws IOException,
                                                                        MojoExecutionException {
 
         BuildService.BuildContext buildContext = getBuildContext();
-        WatchService.WatchContext watchContext = getWatchContext();
+        WatchService.WatchContext watchContext = getWatchContext(hub);
 
         hub.getWatchService().watch(watchContext, buildContext, getResolvedImages(), retries);
     }
 
-    protected WatchService.WatchContext getWatchContext() throws MojoExecutionException {
+    protected WatchService.WatchContext getWatchContext(ServiceHub hub) throws IOException {
         return new WatchService.WatchContext.Builder()
                 .watchInterval(watchInterval)
                 .watchMode(watchMode)
@@ -89,9 +96,23 @@ public class WatchMojo extends AbstractBuildSupportMojo {
                 .keepContainer(keepContainer)
                 .keepRunning(keepRunning)
                 .removeVolumes(removeVolumes)
-                .pomLabel(getPomLabel())
+                .containerNamePattern(containerNamePattern)
+                .buildTimestamp(getBuildTimestamp())
+                .pomLabel(getGavLabel())
                 .mojoParameters(createMojoParameters())
+                .follow(follow())
+                .showLogs(showLogs())
+                .serviceHubFactory(serviceHubFactory)
+                .hub(hub)
+                .dispatcher(getLogDispatcher(hub))
                 .build();
     }
 
+    private String showLogs() {
+        return System.getProperty("docker.showLogs");
+    }
+
+    private boolean follow() {
+        return Boolean.valueOf(System.getProperty("docker.follow", "false"));
+    }
 }

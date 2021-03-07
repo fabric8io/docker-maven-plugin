@@ -19,16 +19,17 @@ import mockit.MockUp;
 import mockit.Tested;
 import mockit.Verifications;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.repository.MavenArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.assembly.AssemblerConfigurationSource;
-import org.apache.maven.plugin.assembly.InvalidAssemblerConfigurationException;
-import org.apache.maven.plugin.assembly.archive.ArchiveCreationException;
-import org.apache.maven.plugin.assembly.archive.AssemblyArchiver;
-import org.apache.maven.plugin.assembly.format.AssemblyFormattingException;
-import org.apache.maven.plugin.assembly.io.AssemblyReadException;
-import org.apache.maven.plugin.assembly.io.AssemblyReader;
-import org.apache.maven.plugin.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.AssemblerConfigurationSource;
+import org.apache.maven.plugins.assembly.InvalidAssemblerConfigurationException;
+import org.apache.maven.plugins.assembly.archive.ArchiveCreationException;
+import org.apache.maven.plugins.assembly.archive.AssemblyArchiver;
+import org.apache.maven.plugins.assembly.format.AssemblyFormattingException;
+import org.apache.maven.plugins.assembly.io.AssemblyReadException;
+import org.apache.maven.plugins.assembly.io.AssemblyReader;
+import org.apache.maven.plugins.assembly.model.Assembly;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
@@ -90,7 +91,7 @@ public class DockerAssemblyManagerTest {
 
         BuildImageConfiguration buildConfig = createBuildConfig();
 
-        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, new AnsiLogger(new SystemStreamLog(),true,true));
+        assemblyManager.getAssemblyFiles("testImage", buildConfig, mojoParams, new AnsiLogger(new SystemStreamLog(),true,"build"));
     }
 
     @Test
@@ -158,12 +159,12 @@ public class DockerAssemblyManagerTest {
 
     private MojoParameters mockMojoParams(MavenProject project) {
         Settings settings = new Settings();
-        ArtifactRepository localRepository = new MockUp<ArtifactRepository>() {
+        ArtifactRepository localRepository = new MavenArtifactRepository() {
             @Mock
             public String getBasedir() {
                 return "repository";
             }
-        }.getMockInstance();
+        };
         @SuppressWarnings("deprecation")
         MavenSession session = new MavenSession(null, settings, localRepository, null, null, Collections.<String>emptyList(), ".", null, null, new Date());
         return new MojoParameters(session, project, null, null, null, settings, "src", "target", Collections.singletonList(project));

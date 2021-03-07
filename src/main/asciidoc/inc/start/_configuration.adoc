@@ -5,6 +5,10 @@ In addition to the <<global-configuration>>, this goal supports the following gl
 |===
 | Element | Description | Property
 
+| <<container-name, *containerNamePattern*>>
+| Default pattern for naming all containers when they are created. See <<container-name, Container Names>> for details.
+| `docker.containerNamePattern`
+
 | *retries*
 | If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
 | `docker.pull.retries`
@@ -37,6 +41,9 @@ The `<run>` configuration element knows the following sub elements:
 | <<misc-startup, *cmd*>>
 | Command which should be executed at the end of the container's startup. If not given, the image's default command is used. See <<misc-startup, Startup Arguments>> for details.
 
+| <<container-name, *containerNamePattern*>>
+| Pattern for naming the container when it is created. See <<container-name, Container Naming Strategy>> for details.
+
 | *domainname*
 | Domain name for the container
 
@@ -47,7 +54,7 @@ The `<run>` configuration element knows the following sub elements:
 | List of `host` elements specifying dns search domains
 
 | *entrypoint*
-| Entry point for the container. See <<misc-startup, Startup Arguments] for details.
+| Entry point for the container. See <<misc-startup, Startup Arguments>> for details.
 
 | <<misc-env, *env*>>
 | Environment variables as subelements which are set during startup of the container. They are specified in the typical maven property format as described <<misc-env,Environment and Labels>>.
@@ -77,13 +84,13 @@ The `<run>` configuration element knows the following sub elements:
 | Log configuration for whether and how log messages from the running containers should be printed. This also can configure the https://docs.docker.com/engine/admin/logging/overview[log driver] to use. See <<start-logging,Logging>> for a detailed description.
 
 | *memory*
-| Memory limit in bytes
+| Memory limit in bytes.
 
 | *memorySwap*
-| Total memory usage (memory + swap); use -1 to disable swap.
+| Total memory limit (memory + swap) in bytes. Set `memorySwap` equal to `memory` to disable swap. Set to `-1` to allow unlimited swap.
 
 | *namingStrategy*
-a| Naming strategy for how the container name is created:
+a| *This option is deprecated, please use a `containerNamePattern` instead* Naming strategy for how the container name is created:
 
 * *none* : uses randomly assigned names from docker (default)
 * *alias* : uses the `alias` specified in the `image` configuration. An error is thrown, if a container already exists with this name.
@@ -100,6 +107,12 @@ a| Naming strategy for how the container name is created:
 | *privileged*
 | If `true` give container full access to host
 
+| *readOnly*
+| If `true` mount the container's root filesystem as read only
+
+| *autoRemove*
+| If `true` automatically remove the container when it exits. This has no effect if <<start-restart, Restart Policy>> has been set.
+
 | <<start-restart, *restartPolicy*>>
 | Restart Policy
 
@@ -111,6 +124,9 @@ a| Naming strategy for how the container name is created:
 
 | *skip*
 | If `true` disable creating and starting of the container. This option is best used together with a Maven property which can be set from the outside.
+
+| *stopMode*
+| Specifies how to stop a running container. It supports the modes `graceful` and `kill` as values, with `graceful` being the default.
 
 | *tmpfs*
 a| List countaintin `<mount>` elements for directories to mount with a temporary filesystem. Optionally, mount options can be appended after a ':'. See below for an example.

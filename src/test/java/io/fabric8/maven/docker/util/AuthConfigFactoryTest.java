@@ -1,7 +1,29 @@
 package io.fabric8.maven.docker.util;
 
-import mockit.*;
-import mockit.integration.junit4.JMockit;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.net.InetAddress;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.util.aws.AwsSdkAuthConfigFactory;
+import mockit.Expectations;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.Mocked;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Server;
 import org.apache.maven.settings.Settings;
@@ -11,37 +33,36 @@ import org.codehaus.plexus.util.Base64;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.hamcrest.Matchers;
-import io.fabric8.maven.docker.access.AuthConfig;
-import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static java.util.Collections.singletonMap;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static java.util.UUID.randomUUID;
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author roland
  * @since 29.07.14
  */
-@RunWith(JMockit.class)
+
 public class AuthConfigFactoryTest {
 
     public static final String ECR_NAME = "123456789012.dkr.ecr.bla.amazonaws.com";
+
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
     @Mocked
     Settings settings;
@@ -53,7 +74,12 @@ public class AuthConfigFactoryTest {
 
     private boolean isPush = true;
 
-    public static final class MockSecDispatcher extends MockUp<SecDispatcher> {
+    private GsonBuilder gsonBuilder;
+
+    private HttpServer httpServer;
+
+
+    public static final class MockSecDispatcher implements SecDispatcher {
         @Mock
         public String decrypt(String password) {
             return password;
@@ -68,13 +94,23 @@ public class AuthConfigFactoryTest {
 
     @Before
     public void containerSetup() throws ComponentLookupException {
-        final SecDispatcher secDispatcher = new MockSecDispatcher().getMockInstance();
+        final SecDispatcher secDispatcher = new MockSecDispatcher();
         new Expectations() {{
             container.lookup(SecDispatcher.ROLE, "maven"); minTimes = 0; result = secDispatcher;
 
         }};
         factory = new AuthConfigFactory(container);
         factory.setLog(log);
+
+        gsonBuilder = new GsonBuilder();
+    }
+
+    @After
+    public void shutdownHttpServer() {
+        if (httpServer != null) {
+            httpServer.stop();
+            httpServer = null;
+        }
     }
 
     @Test
@@ -102,6 +138,50 @@ public class AuthConfigFactoryTest {
         }
     }
 
+    private void testSystemProperty(String prefix) throws Exception {
+        System.setProperty(prefix + ".username", "roland");
+        System.setProperty(prefix + ".password", "secret");
+        System.setProperty(prefix + ".email", "roland@jolokia.org");
+        try {
+            AuthConfig config = factory.createAuthConfig(true, false, null, settings, null, null);
+            verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
+        } finally {
+            System.clearProperty(prefix + ".username");
+            System.clearProperty(prefix + ".password");
+            System.clearProperty(prefix + ".email");
+        }
+    }
+
+    @Test
+    public void testDockerSystemProperty() throws Exception {
+        testSystemProperty("docker");
+    }
+
+    @Test
+    public void testRegistrySystemProperty() throws Exception {
+        testSystemProperty("registry");
+    }
+
+    @Test
+    public void testDockerSystemPropertyHasPrecedence() throws Exception {
+        System.setProperty("docker.username", "roland");
+        System.setProperty("docker.password", "secret");
+        System.setProperty("docker.email", "roland@jolokia.org");
+        System.setProperty("registry.username", "_roland");
+        System.setProperty("registry.password", "_secret1");
+        System.setProperty("registry.email", "_1roland@jolokia.org");
+        try {
+            AuthConfig config = factory.createAuthConfig(true, false, null, settings, null, null);
+            verifyAuthConfig(config, "roland", "secret", "roland@jolokia.org");
+        } finally {
+            System.clearProperty("docker.username");
+            System.clearProperty("docker.password");
+            System.clearProperty("docker.email");
+            System.clearProperty("registry.username");
+            System.clearProperty("registry.password");
+            System.clearProperty("registry.email");
+        }
+    }
 
     @Test
     public void testDockerAuthLogin() throws Exception {
@@ -127,13 +207,37 @@ public class AuthConfigFactoryTest {
     }
 
     @Test
-    public void testDockerLoginIgnoreAuthWhenCredentialHelperAvailable() throws MojoExecutionException, IOException {
+    public void testDockerLoginFallsBackToAuthWhenCredentialHelperDoesNotMatchDomain() throws MojoExecutionException, IOException {
         executeWithTempHomeDir(new HomeDirExecutor() {
             @Override
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
-                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","localhost:5000");
+                verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginNoAuthConfigFoundWhenCredentialHelperDoesNotMatchDomainOrAuth() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),null,singletonMap("registry1", "credHelper1-does-not-exist"));
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","does-not-exist-either:5000");
                 assertNull(config);
+            }
+        });
+    }
+
+    @Test
+    public void testDockerLoginNoErrorWhenEmailInAuthConfigContainsNullValue() throws MojoExecutionException, IOException {
+        executeWithTempHomeDir(new HomeDirExecutor() {
+            @Override
+            public void exec(File homeDir) throws IOException, MojoExecutionException {
+                writeDockerConfigJson(createDockerConfig(homeDir),"roland", "pass", null, "registry:5000", true);
+                AuthConfig config = factory.createAuthConfig(isPush,false,null,settings,"roland","registry:5000");
+                assertNotNull(config);
             }
         });
     }
@@ -145,9 +249,9 @@ public class AuthConfigFactoryTest {
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
-                expectedException.expectCause(Matchers.<Throwable>allOf(
+                expectedException.expectCause(Matchers.allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credHelper1-does-not-exist get'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland","registry1");
             }
@@ -161,9 +265,9 @@ public class AuthConfigFactoryTest {
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
-                expectedException.expectCause(Matchers.<Throwable>allOf(
+                expectedException.expectCause(Matchers.allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland",null);
             }
@@ -177,9 +281,9 @@ public class AuthConfigFactoryTest {
             public void exec(File homeDir) throws IOException, MojoExecutionException {
                 writeDockerConfigJson(createDockerConfig(homeDir),"credsStore-does-not-exist",singletonMap("registry1", "credHelper1-does-not-exist"));
                 expectedException.expect(MojoExecutionException.class);
-                expectedException.expectCause(Matchers.<Throwable>allOf(
+                expectedException.expectCause(Matchers.allOf(
                         instanceOf(IOException.class),
-                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist version'"))
+                        hasProperty("message",startsWith("Failed to start 'docker-credential-credsStore-does-not-exist get'"))
                 ));
                 factory.createAuthConfig(isPush,false,null,settings,"roland","registry2");
             }
@@ -188,6 +292,7 @@ public class AuthConfigFactoryTest {
 
     private void executeWithTempHomeDir(HomeDirExecutor executor) throws IOException, MojoExecutionException {
         String userHome = System.getProperty("user.home");
+        environmentVariables.clear("KUBECONFIG");
         try {
             File tempDir = Files.createTempDirectory("d-m-p").toFile();
             System.setProperty("user.home", tempDir.getAbsolutePath());
@@ -204,7 +309,7 @@ public class AuthConfigFactoryTest {
 
     private void checkDockerAuthLogin(File homeDir,String configRegistry,String lookupRegistry)
             throws IOException, MojoExecutionException {
-        writeDockerConfigJson(createDockerConfig(homeDir), "roland", "secret", "roland@jolokia.org", configRegistry);
+        writeDockerConfigJson(createDockerConfig(homeDir), "roland", "secret", "roland@jolokia.org", configRegistry, false);
         AuthConfig config = factory.createAuthConfig(isPush, false, null, settings, "roland", lookupRegistry);
         verifyAuthConfig(config,"roland","secret","roland@jolokia.org");
     }
@@ -217,43 +322,51 @@ public class AuthConfigFactoryTest {
     }
 
     private void writeDockerConfigJson(File dockerDir, String user, String password,
-                                       String email, String registry) throws IOException {
+                                       String email, String registry, boolean shouldSerializeNulls) throws IOException {
         File configFile = new File(dockerDir,"config.json");
 
-        JSONObject config = new JSONObject();
+        JsonObject config = new JsonObject();
         addAuths(config,user,password,email,registry);
 
         try (Writer writer = new FileWriter(configFile)){
-            config.write(writer);
+            if (shouldSerializeNulls) {
+                gsonBuilder.serializeNulls();
+            }
+            gsonBuilder.create().toJson(config, writer);
         }
     }
 
     private void writeDockerConfigJson(File dockerDir,String credsStore,Map<String,String> credHelpers) throws IOException {
         File configFile = new File(dockerDir,"config.json");
 
-        JSONObject config = new JSONObject();
+        JsonObject config = new JsonObject();
         if (!credHelpers.isEmpty()){
-            config.put("credHelpers",credHelpers);
+            config.add("credHelpers", JsonFactory.newJsonObject(credHelpers));
         }
 
         if (credsStore!=null) {
-            config.put("credsStore",credsStore);
+            config.addProperty("credsStore",credsStore);
         }
 
         addAuths(config,"roland","secret","roland@jolokia.org", "localhost:5000");
 
         try (Writer writer = new FileWriter(configFile)){
-            config.write(writer);
+            gsonBuilder.create().toJson(config, writer);
         }
     }
 
-    private void addAuths(JSONObject config,String user,String password,String email,String registry) {
-        JSONObject auths = new JSONObject();
-        JSONObject value = new JSONObject();
-        value.put("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
-        value.put("email",email);
-        auths.put(registry,value);
-        config.put("auths",auths);
+    private void addAuths(JsonObject config,String user,String password,String email,String registry) {
+        JsonObject auths = new JsonObject();
+        JsonObject value = new JsonObject();
+        value.addProperty("auth", new String(Base64.encodeBase64((user + ":" + password).getBytes())));
+        if (email == null) {
+            value.add("email", JsonNull.INSTANCE);
+        } else {
+            value.addProperty("email", email);
+        }
+
+        auths.add(registry, value);
+        config.add("auths",auths);
     }
 
     @Test
@@ -315,7 +428,7 @@ public class AuthConfigFactoryTest {
                 Map<String,String> authConfigMap = new HashMap<>();
                 authConfigMap.put("useOpenShiftAuth","true");
                 expectedException.expect(MojoExecutionException.class);
-                expectedException.expectMessage(startsWith("Authentication configured for OpenShift, but no active user and/or token found in ~/.config/kube."));
+                expectedException.expectMessage(containsString(".kube/config"));
                 factory.createAuthConfig(isPush,false,authConfigMap,settings,"roland",null);
             }
         });
@@ -413,6 +526,84 @@ public class AuthConfigFactoryTest {
         });
     }
 
+    @Test
+    public void getAuthConfigViaAwsSdk() throws MojoExecutionException {
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        new MockedAwsSdkAuthConfigFactory(accessKeyId, secretAccessKey);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, null);
+    }
+
+    @Test
+    public void ecsTaskRole() throws IOException, MojoExecutionException {
+        givenAwsSdkIsDisabled();
+        String containerCredentialsUri = "/v2/credentials/" + randomUUID().toString();
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        String sessionToken = randomUUID().toString();
+        givenEcsMetadataService(containerCredentialsUri, accessKeyId, secretAccessKey, sessionToken);
+        setupEcsMetadataConfiguration(httpServer, containerCredentialsUri);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
+    }
+
+    @Test
+    public void fargateTaskRole() throws IOException, MojoExecutionException {
+        givenAwsSdkIsDisabled();
+        String containerCredentialsUri = "v2/credentials/" + randomUUID().toString();
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        String sessionToken = randomUUID().toString();
+        givenEcsMetadataService("/" + containerCredentialsUri, accessKeyId, secretAccessKey, sessionToken);
+        setupEcsMetadataConfiguration(httpServer, containerCredentialsUri);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
+    }
+
+    @Test
+    public void awsTemporaryCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        String sessionToken = randomUUID().toString();
+        environmentVariables.set("AWS_ACCESS_KEY_ID", accessKeyId);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", secretAccessKey);
+        environmentVariables.set("AWS_SESSION_TOKEN", sessionToken);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, sessionToken);
+    }
+
+    @Test
+    public void awsStaticCredentialsArePickedUpFromEnvironment() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
+        String accessKeyId = randomUUID().toString();
+        String secretAccessKey = randomUUID().toString();
+        environmentVariables.set("AWS_ACCESS_KEY_ID", accessKeyId);
+        environmentVariables.set("AWS_SECRET_ACCESS_KEY", secretAccessKey);
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        verifyAuthConfig(authConfig, accessKeyId, secretAccessKey, null, null);
+    }
+
+    @Test
+    public void incompleteAwsCredentialsAreIgnored() throws MojoExecutionException {
+        givenAwsSdkIsDisabled();
+        environmentVariables.set("AWS_ACCESS_KEY_ID", randomUUID().toString());
+
+        AuthConfig authConfig = factory.createAuthConfig(false, true, null, settings, "user", ECR_NAME);
+
+        assertNull(authConfig);
+    }
 
     private void setupServers() {
         new Expectations() {{
@@ -442,13 +633,84 @@ public class AuthConfigFactoryTest {
         };
     }
 
-    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
-        JSONObject params = new JSONObject(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())));
-        assertEquals(username,params.get("username"));
-        assertEquals(password,params.get("password"));
+    private void givenEcsMetadataService(String containerCredentialsUri, String accessKeyId, String secretAccessKey, String sessionToken) throws IOException {
+        httpServer =
+            ServerBootstrap.bootstrap()
+                           .setLocalAddress(InetAddress.getLoopbackAddress())
+                           .registerHandler("*", (request, response, context) -> {
+                               System.out.println("REQUEST: " + request.getRequestLine());
+                               if (containerCredentialsUri.matches(request.getRequestLine().getUri())) {
+                                   response.setEntity(new StringEntity(gsonBuilder.create().toJson(ImmutableMap.of(
+                                       "AccessKeyId", accessKeyId,
+                                       "SecretAccessKey", secretAccessKey,
+                                       "Token", sessionToken
+                                                                                                                  ))));
+                               } else {
+                                   response.setStatusCode(SC_NOT_FOUND);
+                               }
+                           })
+                           .create();
+        httpServer.start();
+    }
+
+    private void setupEcsMetadataConfiguration(HttpServer httpServer, String containerCredentialsUri) {
+        environmentVariables.set("ECS_METADATA_ENDPOINT", "http://" +
+                httpServer.getInetAddress().getHostAddress()+":" + httpServer.getLocalPort());
+        environmentVariables.set("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", containerCredentialsUri);
+    }
+
+    private void verifyAuthConfig(AuthConfig config, String username, String password, String email, String auth) {
+        assertNotNull(config);
+        JsonObject params = gsonBuilder.create().fromJson(new String(Base64.decodeBase64(config.toHeaderValue().getBytes())), JsonObject.class);
+        assertEquals(username, params.get(AuthConfig.AUTH_USERNAME).getAsString());
+        assertEquals(password, params.get(AuthConfig.AUTH_PASSWORD).getAsString());
         if (email != null) {
-            assertEquals(email, params.get("email"));
+            assertEquals(email, params.get(AuthConfig.AUTH_EMAIL).getAsString());
         }
+        if (auth != null) {
+            assertEquals(auth, params.get(AuthConfig.AUTH_AUTH).getAsString());
+        }
+    }
+
+    private void verifyAuthConfig(AuthConfig config, String username, String password, String email) {
+        verifyAuthConfig(config, username, password, email, null);
+    }
+
+    private static void givenAwsSdkIsDisabled() {
+        new DisableAwsSdkAuthConfigFactory();
+    }
+
+    private static class MockedAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
+        private final String accessKeyId;
+        private final String secretAccessKey;
+
+        public MockedAwsSdkAuthConfigFactory(String accessKeyId, String secretAccessKey) {
+            this.accessKeyId = accessKeyId;
+            this.secretAccessKey = secretAccessKey;
+        }
+
+        @Mock
+        public void $init(Logger log) {
+        }
+
+        @Mock
+        public AuthConfig createAuthConfig() {
+            return new AuthConfig(accessKeyId, secretAccessKey, null,null);
+        }
+
+    }
+
+    private static class DisableAwsSdkAuthConfigFactory extends MockUp<AwsSdkAuthConfigFactory> {
+
+        @Mock
+        public void $init(Logger log) {
+        }
+
+        @Mock
+        public AuthConfig createAuthConfig() {
+            return null;
+        }
+
     }
 
 }

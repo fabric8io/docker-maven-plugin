@@ -6,10 +6,8 @@ import io.fabric8.maven.docker.access.log.LogGetHandle;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author roland
  * @since 25/03/2017
  */
-@RunWith(JMockit.class)
+
 public class LogWaitCheckerTest {
 
     @Mocked

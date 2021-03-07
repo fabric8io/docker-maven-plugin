@@ -47,7 +47,11 @@ public class RegistryService {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
             String name = imageConfig.getName();
             if (buildConfig != null) {
-                String configuredRegistry = EnvUtil.fistRegistryOf(
+                if (buildConfig.skipPush()) {
+                    log.info("%s : Skipped pushing", imageConfig.getDescription());
+                    continue;
+                }
+                String configuredRegistry = EnvUtil.firstRegistryOf(
                     new ImageName(imageConfig.getName()).getRegistry(),
                     imageConfig.getRegistry(),
                     registryConfig.getRegistry());
@@ -94,11 +98,11 @@ public class RegistryService {
 
         ImageName imageName = new ImageName(image);
         long time = System.currentTimeMillis();
-        String actualRegistry = EnvUtil.fistRegistryOf(
+        String actualRegistry = EnvUtil.firstRegistryOf(
             imageName.getRegistry(),
             registryConfig.getRegistry());
         docker.pullImage(imageName.getFullName(),
-                         createAuthConfig(false, null, actualRegistry, registryConfig), actualRegistry, retries);
+                         createAuthConfig(false, imageName.getUser(), actualRegistry, registryConfig), actualRegistry, retries);
         log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
         pullManager.pulled(image);
 

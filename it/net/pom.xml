@@ -1,0 +1,149 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Sample project for demonstrating the various network modes
+
+  Call it with 'mvn install' and one of the following profiles:
+
+  * "container" : Container connecting to another container's network
+  * "bridge"    : Bridge mode
+  * "host"      : Host mode
+  * "custom"    : Custom network 'test-network' (must be created with 'docker network create test-network' in advance)
+  -->
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.34-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-it-net</artifactId>
+  <version>0.34-SNAPSHOT</version>
+
+  <profiles>
+    <profile>
+      <!-- "box1" connects to the network of "box2" which is bridged -->
+      <id>container</id>
+      <activation><activeByDefault>true</activeByDefault></activation>
+      <properties>
+        <box1.net>container:box2</box1.net>
+        <box2.net>bridge</box2.net>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Both images in "bridge" mode -->
+      <id>bridge</id>
+      <properties>
+        <box1.net>bridge</box1.net>
+        <box2.net>bridge</box2.net>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Both images in "host" mode -->
+      <id>host</id>
+      <properties>
+        <box1.net>host</box1.net>
+        <box2.net>host</box2.net>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Both images with no networking -->
+      <id>none</id>
+      <properties>
+        <box1.net>none</box1.net>
+        <box2.net>none</box2.net>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Both images in a custom network 'test-network' which needs to be created beforehand -->
+      <id>custom</id>
+      <properties>
+        <box1.net>test-network</box1.net>
+        <box2.net>test-network</box2.net>
+      </properties>
+    </profile>
+
+  </profiles>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <watchInterval>500</watchInterval>
+          <logDate>default</logDate>
+          <verbose>true</verbose>
+          <autoPull>always</autoPull>
+          <images>
+            <image>
+              <alias>box1</alias>
+              <name>busybox</name>
+              <run>
+                <namingStrategy>alias</namingStrategy>
+                <net>${box1.net}</net>
+                <cmd>
+                  <exec>
+                    <args>sh</args>
+                    <args>-c</args>
+                    <args>ip address | grep "inet "; echo "finish"; tail -f /dev/null</args>
+                  </exec>
+                </cmd>
+                <log>
+                  <prefix>1</prefix> <color>cyan</color>
+                </log>
+                <wait>
+                  <log>finish</log>
+                </wait>
+              </run>
+            </image>
+            <image>
+              <alias>box2</alias>
+              <name>busybox</name>
+              <run>
+                <net>${box2.net}</net>
+                <namingStrategy>alias</namingStrategy>
+                <cmd>
+                  <exec>
+                    <args>sh</args>
+                    <args>-c</args>
+                    <args>ip address | grep "inet "; echo "finish"; tail -f /dev/null</args>
+                  </exec>
+                </cmd>
+                <log>
+                  <prefix>2</prefix> <color>blue</color>
+                </log>
+                <wait>
+                  <log>finish</log>
+                </wait>
+              </run>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

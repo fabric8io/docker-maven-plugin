@@ -15,9 +15,27 @@ package io.fabric8.maven.docker.config.handler.property;/*
  * limitations under the License.
  */
 
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.Supplier;
 
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.AssemblyConfiguration;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.HealthCheckConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.LogConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.UlimitConfig;
+import io.fabric8.maven.docker.config.WaitConfiguration;
+import io.fabric8.maven.docker.config.WatchImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.util.EnvUtil;
 import org.apache.maven.execution.MavenSession;
@@ -34,9 +52,12 @@ import static io.fabric8.maven.docker.config.handler.property.ConfigKey.*;
 // @Component(role = ExternalConfigHandler.class)
 public class PropertyConfigHandler implements ExternalConfigHandler {
 
+    public static final String TYPE_NAME = "properties";
+    public static final String DEFAULT_PREFIX = "docker";
+
     @Override
     public String getType() {
-        return "properties";
+        return TYPE_NAME;
     }
 
     @Override
@@ -45,48 +66,79 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         Map<String, String> externalConfig = fromConfig.getExternalConfig();
         String prefix = getPrefix(externalConfig);
         Properties properties = EnvUtil.getPropertiesWithSystemOverrides(project);
-        PropertyMode propertyMode = PropertyMode.parse(externalConfig.get("mode"));
+        PropertyMode propertyMode = getMode(externalConfig);
         ValueProvider valueProvider = new ValueProvider(prefix, properties, propertyMode);
 
         RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
-        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider);
+        BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider, project);
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
+        String removeNamePattern = valueProvider.getString(REMOVE_NAME_PATTERN, fromConfig.getRemoveNamePattern());
+        String stopNamePattern = valueProvider.getString(STOP_NAME_PATTERN, fromConfig.getStopNamePattern());
 
         if (name == null) {
             throw new IllegalArgumentException(String.format("Mandatory property [%s] is not defined", NAME));
         }
-        
+
         return Collections.singletonList(
                 new ImageConfiguration.Builder()
                         .name(name)
                         .alias(alias)
+                        .removeNamePattern(removeNamePattern)
+                        .stopNamePattern(stopNamePattern)
                         .runConfig(run)
                         .buildConfig(build)
                         .watchConfig(watch)
                         .build());
     }
 
+    private boolean isStringValueNull(ValueProvider valueProvider, BuildImageConfiguration config, ConfigKey key, Supplier<String> supplier) {
+        return valueProvider.getString(key, config == null ? null : supplier.get()) != null;
+    }
     // Enable build config only when a `.from.`, `.dockerFile.`, or `.dockerFileDir.` is configured
-    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider) {
-        return valueProvider.getString(FROM, config == null ? null : config.getFrom()) != null ||
-                valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null ||
-                valueProvider.getString(DOCKER_FILE, config == null || config.getDockerFile() == null ? null : config.getDockerFile().getAbsolutePath()) != null ||
-                valueProvider.getString(DOCKER_FILE_DIR, config == null || config.getDockerArchive() == null ? null : config.getDockerArchive().getAbsolutePath()) != null;
+    private boolean buildConfigured(BuildImageConfiguration config, ValueProvider valueProvider, MavenProject project) {
+
+
+        if (isStringValueNull(valueProvider, config, FROM, () -> config.getFrom())) {
+            return true;
+        }
+
+        if (valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()) != null) {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE, () -> config.getDockerFileRaw() ))  {
+            return true;
+        }
+        if (isStringValueNull(valueProvider, config, DOCKER_ARCHIVE, () -> config.getDockerArchiveRaw())) {
+            return true;
+        }
+
+        if (isStringValueNull(valueProvider, config, CONTEXT_DIR, () -> config.getContextDirRaw())) {
+            return true;
+        }
+
+        if (isStringValueNull(valueProvider, config, DOCKER_FILE_DIR, () -> config.getDockerFileDirRaw())) {
+            return true;
+        }
+
+        // Simple Dockerfile mode
+        return new File(project.getBasedir(),"Dockerfile").exists();
     }
 
 
-    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider) {
+    private BuildImageConfiguration extractBuildConfiguration(ImageConfiguration fromConfig, ValueProvider valueProvider, MavenProject project) {
         BuildImageConfiguration config = fromConfig.getBuildConfiguration();
-        if (!buildConfigured(config, valueProvider)) {
+        if (!buildConfigured(config, valueProvider, project)) {
             return null;
         }
 
         return new BuildImageConfiguration.Builder()
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
                 .cleanup(valueProvider.getString(CLEANUP, config == null ? null : config.getCleanup()))
-                .nocache(valueProvider.getBoolean(NOCACHE, config == null ? null : config.getNoCache()))
+                .noCache(valueProvider.getBoolean(NO_CACHE, config == null ? null : config.getNoCache()))
+                .squash(valueProvider.getBoolean(SQUASH, config == null ? null : config.getSquash()))
+                .cacheFrom(valueProvider.getString(CACHE_FROM, config == null ? null : (config.getCacheFrom() == null ? null : config.getCacheFrom().toString())))
                 .optimise(valueProvider.getBoolean(OPTIMISE, config == null ? null : config.getOptimise()))
                 .entryPoint(extractArguments(valueProvider, ENTRYPOINT, config == null ? null : config.getEntryPoint()))
                 .assembly(extractAssembly(config == null ? null : config.getAssemblyConfiguration(), valueProvider))
@@ -97,6 +149,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .args(valueProvider.getMap(ARGS, config == null ? null : config.getArgs()))
                 .labels(valueProvider.getMap(LABELS, config == null ? null : config.getLabels()))
                 .ports(extractPortValues(config == null ? null : config.getPorts(), valueProvider))
+                .shell(extractArguments(valueProvider, SHELL, config == null ? null : config.getShell()))
                 .runCmds(valueProvider.getList(RUN, config == null ? null : config.getRunCmds()))
                 .from(valueProvider.getString(FROM, config == null ? null : config.getFrom()))
                 .fromExt(valueProvider.getMap(FROM_EXT, config == null ? null : config.getFromExt()))
@@ -106,8 +159,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .maintainer(valueProvider.getString(MAINTAINER, config == null ? null : config.getMaintainer()))
                 .workdir(valueProvider.getString(WORKDIR, config == null ? null : config.getWorkdir()))
                 .skip(valueProvider.getBoolean(SKIP_BUILD, config == null ? null : config.getSkip()))
+                .skipPush(valueProvider.getBoolean(SKIP_PUSH, config == null ? null : config.getSkipPush()))
                 .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_BUILD, config == null ? null : config.getImagePullPolicy()))
+                .contextDir(valueProvider.getString(CONTEXT_DIR, config == null ? null : config.getContextDirRaw()))
                 .dockerArchive(valueProvider.getString(DOCKER_ARCHIVE, config == null ? null : config.getDockerArchiveRaw()))
+                .loadNamePattern(valueProvider.getString(LOAD_NAME_PATTERN, config == null ? null : config.getLoadNamePattern()))
                 .dockerFile(valueProvider.getString(DOCKER_FILE, config == null ? null : config.getDockerFileRaw()))
                 .dockerFileDir(valueProvider.getString(DOCKER_FILE_DIR, config == null ? null : config.getDockerFileDirRaw()))
                 .buildOptions(valueProvider.getMap(BUILD_OPTIONS, config == null ? null : config.getBuildOptions()))
@@ -122,7 +178,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         if (config.isDefault()) {
             config = null;
         }
-        
+
         return new RunImageConfiguration.Builder()
                 .capAdd(valueProvider.getList(CAP_ADD, config == null ? null : config.getCapAdd()))
                 .capDrop(valueProvider.getList(CAP_DROP, config == null ? null : config.getCapDrop()))
@@ -146,7 +202,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .links(valueProvider.getList(LINKS, config == null ? null : config.getLinks()))
                 .memory(valueProvider.getLong(MEMORY, config == null ? null : config.getMemory()))
                 .memorySwap(valueProvider.getLong(MEMORY_SWAP, config == null ? null : config.getMemorySwap()))
-                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategyRaw() == null ? null : config.getNamingStrategyRaw().name()))
+                .namingStrategy(valueProvider.getString(NAMING_STRATEGY, config == null || config.getNamingStrategy() == null ? null : config.getNamingStrategy().name()))
                 .exposedPropertyKey(valueProvider.getString(EXPOSED_PROPERTY_KEY, config == null ? null : config.getExposedPropertyKey()))
                 .portPropertyFile(valueProvider.getString(PORT_PROPERTY_FILE, config == null ? null : config.getPortPropertyFile()))
                 .ports(valueProvider.getList(PORTS, config == null ? null : config.getPorts()))
@@ -162,6 +218,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .imagePullPolicy(valueProvider.getString(IMAGE_PULL_POLICY_RUN, config == null ? null : config.getImagePullPolicy()))
                 .ulimits(extractUlimits(config == null ? null : config.getUlimits(), valueProvider))
                 .tmpfs(valueProvider.getList(TMPFS, config == null ? null : config.getTmpfs()))
+                .cpuShares(valueProvider.getLong(CPUSHARES, config == null ? null : config.getCpuShares()))
+                .cpus(valueProvider.getLong(CPUS, config == null ? null : config.getCpus()))
+                .cpuSet(valueProvider.getString(CPUSET, config == null ? null : config.getCpuSet()))
+                .readOnly(valueProvider.getBoolean(READ_ONLY, config == null ? null : config.getReadOnly()))
+                .autoRemove(valueProvider.getBoolean(AUTO_REMOVE, config == null ? null : config.getAutoRemove()))
                 .build();
     }
 
@@ -186,6 +247,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .user(valueProvider.getString(ASSEMBLY_USER, config == null ? null : config.getUser()))
                 .mode(valueProvider.getString(ASSEMBLY_MODE, config == null ? null : config.getModeRaw()))
                 .tarLongFileMode(valueProvider.getString(ASSEMBLY_TARLONGFILEMODE, config == null ? null : config.getTarLongFileMode()))
+                .assemblyDef(config == null ? null : config.getInline())
                 .build();
     }
 
@@ -195,6 +257,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
             return new HealthCheckConfiguration.Builder()
                     .interval(valueProvider.getString(HEALTHCHECK_INTERVAL, config == null ? null : config.getInterval()))
                     .timeout(valueProvider.getString(HEALTHCHECK_TIMEOUT, config == null ? null : config.getTimeout()))
+                    .startPeriod(valueProvider.getString(HEALTHCHECK_START_PERIOD, config == null ? null : config.getStartPeriod()))
                     .retries(valueProvider.getInteger(HEALTHCHECK_RETRIES, config == null ? null : config.getRetries()))
                     .mode(valueProvider.getString(HEALTHCHECK_MODE, config == null || config.getMode() == null ? null : config.getMode().name()))
                     .cmd(extractArguments(valueProvider, HEALTHCHECK_CMD, config == null ? null : config.getCmd()))
@@ -219,13 +282,8 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return ret;
     }
 
-    private String extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
-        String rawAlternative = null;
-        if (alternative != null) {
-            rawAlternative = alternative.getShell();
-        }
-
-        return valueProvider.getString(configKey, rawAlternative);
+    private Arguments extractArguments(ValueProvider valueProvider, ConfigKey configKey, Arguments alternative) {
+        return valueProvider.getObject(configKey, alternative, raw -> raw != null ? new Arguments(raw) : null);
     }
 
     private RestartPolicy extractRestartPolicy(RestartPolicy config, ValueProvider valueProvider) {
@@ -239,17 +297,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         LogConfiguration.Builder builder = new LogConfiguration.Builder()
             .color(valueProvider.getString(LOG_COLOR, config == null ? null : config.getColor()))
             .date(valueProvider.getString(LOG_DATE, config == null ? null : config.getDate()))
+            .file(valueProvider.getString(LOG_FILE, config == null ? null : config.getFileLocation()))
             .prefix(valueProvider.getString(LOG_PREFIX, config == null ? null : config.getPrefix()))
             .logDriverName(valueProvider.getString(LOG_DRIVER_NAME, config == null || config.getDriver() == null ? null : config.getDriver().getName()))
             .logDriverOpts(valueProvider.getMap(LOG_DRIVER_OPTS, config == null || config.getDriver() == null ? null : config.getDriver().getOpts()));
 
         Boolean configEnabled = config != null ? config.isEnabled() : null;
         Boolean enabled = valueProvider.getBoolean(LOG_ENABLED, configEnabled);
-
-        if (enabled == null) {
-            enabled = configEnabled == Boolean.TRUE || !builder.isBlank();
-        }
-        
         builder.enabled(enabled);
         return builder.build();
     }
@@ -322,11 +376,36 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .build();
     }
 
-    private String getPrefix(Map<String, String> externalCconfig) {
-        String prefix = externalCconfig.get("prefix");
+    private static String getPrefix(Map<String, String> externalConfig) {
+        String prefix = externalConfig.get("prefix");
         if (prefix == null) {
-            prefix = "docker";
+            prefix = DEFAULT_PREFIX;
         }
         return prefix;
+    }
+
+    private static PropertyMode getMode(Map<String, String> externalConfig) {
+        return PropertyMode.parse(externalConfig.get("mode"));
+    }
+
+    public static boolean canCoexistWithOtherPropertyConfiguredImages(Map<String, String> externalConfig) {
+        if(externalConfig == null || externalConfig.isEmpty()) {
+            return false;
+        }
+
+        if(!TYPE_NAME.equals(externalConfig.get("type")))
+        {
+            // This images loads config from something totally different
+            return true;
+        }
+
+        if(externalConfig.get("prefix") != null)
+        {
+            // This image has a specified prefix. If multiple images have explicitly set docker. as prefix we
+            // assume user know what they are doing and allow it.
+            return true;
+        }
+
+        return false;
     }
 }

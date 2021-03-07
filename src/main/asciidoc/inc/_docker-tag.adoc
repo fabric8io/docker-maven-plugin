@@ -1,0 +1,38 @@
+[[docker:tag]]
+== *docker:tag*
+
+The `{plugin}:tag` tags an image so that it becomes part of a repository. You can use it to tag an already built image. Here is an example of it's usage:
+
+[source]
+----
+~/work/repos/docker-maven-plugin/samples/zero-config : $ mvn docker:tag -Ddocker.image.tag=0.9.0
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -----------< io.fabric8.dmp.samples:demp-sample-zero-config >-----------
+[INFO] Building demp-sample-zero-config 0.33-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- docker-maven-plugin:0.33-SNAPSHOT:tag (default-cli) @ demp-sample-zero-config ---
+[INFO] DOCKER> Tagging image samples/demp-sample-zero-config:0.9.0 successful!
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.155 s
+[INFO] Finished at: 2020-06-27T14:05:33+05:30
+[INFO] ------------------------------------------------------------------------
+~/work/repos/docker-maven-plugin/samples/zero-config : $ docker images | grep 0.9.0
+samples/demp-sample-zero-config                        0.9.0                       ac5c5991505d        About an hour ago   479MB
+----
+.Supported options
+[cols="1,2,1"]
+|===
+| Element | Description | Property
+
+| *tagName*
+| The name of the new tag.
+| `docker.image.tag`
+
+| *repo*
+| The repository to tag in. For example, `someuser/someimage`.
+| `docker.image.repo`
+|===

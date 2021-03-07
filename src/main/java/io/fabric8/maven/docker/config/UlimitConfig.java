@@ -69,13 +69,14 @@ public class UlimitConfig implements Serializable {
     }
 
     public String serialize() {
-        if(hard != null && soft != null)
+        if(hard != null && soft != null) {
             return name + "="+hard+":"+soft;
-        else if(hard != null)
+        } else if(hard != null) {
             return name + "="+hard;
-        else if(soft != null)
+        } else if(soft != null) {
             return name + "=:"+soft;
-        else
+        } else {
             return null;
+        }
     }
 }

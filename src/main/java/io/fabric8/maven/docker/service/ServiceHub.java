@@ -45,12 +45,14 @@ public class ServiceHub {
     private final VolumeService volumeService;
     private final WatchService watchService;
     private final WaitService waitService;
+    private final DockerAssemblyManager dockerAssemblyManager;
 
     ServiceHub(DockerAccess dockerAccess, ContainerTracker containerTracker, BuildPluginManager pluginManager,
                DockerAssemblyManager dockerAssemblyManager, MavenProject project, MavenSession session,
                Logger logger, LogOutputSpecFactory logSpecFactory) {
 
         this.dockerAccess = dockerAccess;
+        this.dockerAssemblyManager = dockerAssemblyManager;
 
         mojoExecutionService = new MojoExecutionService(project, session, pluginManager);
         archiveService = new ArchiveService(dockerAssemblyManager, logger);
@@ -172,6 +174,10 @@ public class ServiceHub {
      */
     public MojoExecutionService getMojoExecutionService() {
         return mojoExecutionService;
+    }
+
+    public DockerAssemblyManager getDockerAssemblyManager() {
+        return dockerAssemblyManager;
     }
 
     private synchronized void checkDockerAccessInitialization() {

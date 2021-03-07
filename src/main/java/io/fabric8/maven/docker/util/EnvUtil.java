@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.utils.io.FileUtils;
@@ -30,17 +31,17 @@ public class EnvUtil {
 
     public static final String MAVEN_PROPERTY_REGEXP = "\\s*\\$\\{\\s*([^}]+)\\s*}\\s*$";
 
-    // Standard HTTPS port (IANA registered). The other 2375 with plain HTTP is used only in older
-    // docker installations.
-    public static final String DOCKER_HTTPS_PORT = "2376";
+    // Standard HTTPS port (IANA registered) is 2376.
+    // The other port 2375 with plain HTTP is used only in older docker installations.
+    public static final String DOCKER_HTTP_PORT = "2375";
 
     public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
 
     private EnvUtil() {}
 
-    // Convert docker host URL to an http URL
+    // Convert docker host URL to an HTTP(s) URL
     public static String convertTcpToHttpUrl(String connect) {
-        String protocol = connect.contains(":" + DOCKER_HTTPS_PORT) ? "https:" : "http:";
+        String protocol = connect.contains(":" + DOCKER_HTTP_PORT) ? "http:" : "https:";
         return connect.replaceFirst("^tcp:", protocol);
     }
 
@@ -140,7 +141,7 @@ public class EnvUtil {
     /**
      * Remove empty members of a list.
      * @param input A list of String
-     * @return A list of Non-Empty (length>0) String
+     * @return A list of Non-Empty (length&gt;0) String
      */
     @Nonnull
     public static List<String> removeEmptyEntries(@Nullable List<String> input) {
@@ -214,7 +215,7 @@ public class EnvUtil {
      * Extract part of given properties as a map. The given prefix is used to find the properties,
      * the rest of the property name is used as key for the map.
      *
-     * NOTE: If key is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored! This is reserved for combine policy tweaking.
+     * NOTE: If key is "._combine"  it is ignored! This is reserved for combine policy tweaking.
      *
      * @param prefix prefix which specifies the part which should be extracted as map
      * @param properties properties to extract from
@@ -243,7 +244,7 @@ public class EnvUtil {
      * given properties from which the list should be extracted, the rest is used as a numeric index. If the rest
      * is not numeric, the order is not determined (all those props are appended to the end of the list)
      *
-     * NOTE: If suffix/index is "._combine" ({@link #PROPERTY_COMBINE_POLICY_SUFFIX)} it is ignored!
+     * NOTE: If suffix/index is "._combine"  it is ignored!
      * This is reserved for combine policy tweaking.
      *
      * @param prefix for selecting the properties from which the list should be extracted
@@ -364,7 +365,7 @@ public class EnvUtil {
      * @param checkFirst list of registries to check
      * @return registry found or null if none.
      */
-    public static String fistRegistryOf(String ... checkFirst) {
+    public static String firstRegistryOf(String ... checkFirst) {
         for (String registry : checkFirst) {
             if (registry != null) {
                 return registry;
@@ -372,6 +373,15 @@ public class EnvUtil {
         }
         // Check environment as last resort
         return System.getenv("DOCKER_REGISTRY");
+    }
+
+    // sometimes registries might be specified with https? schema, sometimes not
+    public static String ensureRegistryHttpUrl(String registry) {
+        if (registry.toLowerCase().startsWith("http")) {
+            return registry;
+        }
+        // Default to https:// schema
+        return "https://" + registry;
     }
 
     public static File prepareAbsoluteOutputDirPath(MojoParameters params, String dir, String path) {
@@ -387,7 +397,13 @@ public class EnvUtil {
         if (file.isAbsolute()) {
             return file;
         }
-        return new File(new File(params.getProject().getBasedir(), directory), path);
+
+        File baseDir = new File(directory);
+        if (!baseDir.isAbsolute()) {
+            baseDir = new File(params.getProject().getBasedir(), directory);
+        }
+
+        return new File(baseDir, path);
     }
 
     // create a timestamp file holding time in epoch seconds
@@ -408,7 +424,7 @@ public class EnvUtil {
         }
     }
 
-    public static Date loadTimestamp(File tsFile) throws MojoExecutionException {
+    public static Date loadTimestamp(File tsFile) throws IOException {
         try {
             if (tsFile.exists()) {
                 String ts = FileUtils.fileRead(tsFile);
@@ -417,7 +433,7 @@ public class EnvUtil {
                 return null;
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Cannot read timestamp " + tsFile,e);
+            throw new IOException("Cannot read timestamp " + tsFile,e);
         }
     }
 
@@ -425,34 +441,10 @@ public class EnvUtil {
         return System.getProperty("os.name").toLowerCase().contains("windows");
     }
 
-    /**
-     * Validate that the provided filename is a valid Windows filename.
-     *
-     * The validation of the Windows filename is copied from stackoverflow: https://stackoverflow.com/a/6804755
-     *
-     * @param filename the filename
-     * @return filename is a valid Windows filename
-     */
-    public static boolean isValidWindowsFileName(String filename) {
-
-        Pattern pattern = Pattern.compile(
-            "# Match a valid Windows filename (unspecified file system).          \n" +
-            "^                                # Anchor to start of string.        \n" +
-            "(?!                              # Assert filename is not: CON, PRN, \n" +
-            "  (?:                            # AUX, NUL, COM1, COM2, COM3, COM4, \n" +
-            "    CON|PRN|AUX|NUL|             # COM5, COM6, COM7, COM8, COM9,     \n" +
-            "    COM[1-9]|LPT[1-9]            # LPT1, LPT2, LPT3, LPT4, LPT5,     \n" +
-            "  )                              # LPT6, LPT7, LPT8, and LPT9...     \n" +
-            "  (?:\\.[^.]*)?                  # followed by optional extension    \n" +
-            "  $                              # and end of string                 \n" +
-            ")                                # End negative lookahead assertion. \n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F]*     # Zero or more valid filename chars.\n" +
-            "[^<>:\"/\\\\|?*\\x00-\\x1F\\ .]  # Last char is not a space or dot.  \n" +
-            "$                                # Anchor to end of string.            ",
-            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
-        Matcher matcher = pattern.matcher(filename);
-        boolean isMatch = matcher.matches();
-        return isMatch;
+    public static boolean isMaven350OrLater(MavenSession mavenSession) {
+        // Maven enforcer and help:evaluate goals both use mavenSession.getSystemProperties(),
+        // and it turns out that System.getProperty("maven.version") does not return the value.
+        String mavenVersion = mavenSession.getSystemProperties().getProperty("maven.version", "3");
+        return greaterOrEqualsVersion(mavenVersion, "3.5.0");
     }
-
 }

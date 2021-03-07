@@ -2,19 +2,22 @@ package io.fabric8.maven.docker.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import io.fabric8.maven.docker.access.AuthConfig;
-import io.fabric8.maven.docker.access.util.ExternalCommand;
+import com.google.gson.JsonObject;
+
 import org.apache.maven.plugin.MojoExecutionException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import java.io.IOException;
 import java.util.List;
+
+import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.util.ExternalCommand;
 
 public class CredentialHelperClient {
 
     static final String SECRET_KEY = "Secret";
     static final String USERNAME_KEY = "Username";
+    static final String TOKEN_USERNAME = "<token>";
+
     private final String credentialHelperName;
     private final Logger log;
 
@@ -27,29 +30,37 @@ public class CredentialHelperClient {
         return credentialHelperName;
     }
 
-    public String getVersion() throws MojoExecutionException {
+    public String getVersion() {
         try {
             return new VersionCommand().getVersion();
         } catch (IOException e) {
-            throw new MojoExecutionException("Error getting the version of the configured credential helper",e);
+            return null;
         }
     }
 
     public AuthConfig getAuthConfig(String registryToLookup) throws MojoExecutionException {
         try {
-            final GetCommand getCommand = new GetCommand();
-            return toAuthConfig(getCommand.getCredentialNode("https://" + registryToLookup));
+            JsonObject creds = new GetCommand().getCredentialNode(registryToLookup);
+            if (creds == null) {
+                creds = new GetCommand().getCredentialNode(EnvUtil.ensureRegistryHttpUrl(registryToLookup));
+            }
+            return toAuthConfig(creds);
         } catch (IOException e) {
             throw new MojoExecutionException("Error getting the credentials for " + registryToLookup + " from the configured credential helper",e);
         }
     }
 
-    private AuthConfig toAuthConfig(JSONObject credential){
+    AuthConfig toAuthConfig(JsonObject credential){
         if (credential == null) {
             return null;
         }
-        String password = credential.getString(CredentialHelperClient.SECRET_KEY);
-        String userKey = credential.getString(CredentialHelperClient.USERNAME_KEY);
+        String password = credential.get(CredentialHelperClient.SECRET_KEY).getAsString();
+        String userKey = credential.get(CredentialHelperClient.USERNAME_KEY).getAsString();
+        if(TOKEN_USERNAME.equals(userKey)) {
+            // If userKey is <token>, the password is actually a token
+            return new AuthConfig(null, null, null, null, password);
+        }
+
         return new AuthConfig(userKey,password, null,null);
     }
 
@@ -69,15 +80,12 @@ public class CredentialHelperClient {
 
         @Override
         protected void processLine(String line) {
-            log.info("Credentials helper reply for \"%s\" is %s",CredentialHelperClient.this.credentialHelperName,line);
+            log.verbose(Logger.LogVerboseCategory.BUILD,"Credentials helper reply for \"%s\" is %s",CredentialHelperClient.this.credentialHelperName,line);
             version = line;
         }
 
         public String getVersion() throws IOException {
             execute();
-            if (version == null) {
-                log.verbose("The credentials helper \"%s\" didn't return a version string",CredentialHelperClient.this.credentialHelperName);
-            }
             return version;
         }
     }
@@ -101,7 +109,7 @@ public class CredentialHelperClient {
             reply.add(line);
         }
 
-        public JSONObject getCredentialNode(String registryToLookup) throws IOException {
+        public JsonObject getCredentialNode(String registryToLookup) throws IOException {
             try {
                 execute(registryToLookup);
             } catch (IOException ex) {
@@ -111,7 +119,7 @@ public class CredentialHelperClient {
                     throw ex;
                 }
             }
-            JSONObject credentials = new JSONObject(new JSONTokener(Joiner.on('\n').join(reply)));
+            JsonObject credentials = JsonFactory.newJsonObject(Joiner.on('\n').join(reply));
             if (!credentials.has(SECRET_KEY) || !credentials.has(USERNAME_KEY)) {
                 return null;
             }

@@ -17,13 +17,18 @@ package io.fabric8.maven.docker.service;/*
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.lang.reflect.InvocationTargetException;
 
-import mockit.*;
-import mockit.integration.junit4.JMockit;
+import mockit.Expectations;
+import mockit.Injectable;
+import mockit.Mocked;
+import mockit.Tested;
+import mockit.Verifications;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Plugin;
-import org.apache.maven.plugin.*;
+import org.apache.maven.plugin.BuildPluginManager;
+import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.descriptor.MojoDescriptor;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.project.MavenProject;
@@ -32,13 +37,12 @@ import org.codehaus.plexus.configuration.xml.XmlPlexusConfiguration;
 import org.codehaus.plexus.util.xml.Xpp3DomBuilder;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * @author roland
  * @since 01/07/15
  */
-@RunWith(JMockit.class)
+
 public class MojoExecutionServiceTest {
 
     @Tested
@@ -63,27 +67,39 @@ public class MojoExecutionServiceTest {
 
     @Test
     public void straight() throws Exception {
-        expectNewPlugin();
-        expectDescriptor();
-        overrideGetPluginDescriptor();
+        standardSetup();
         executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME);
 
         new Verifications() {{}};
     }
 
+    private void standardSetup() throws Exception {
+        new Expectations() {{
+            project.getPlugin(PLUGIN_NAME);
+            result = new Plugin();
+            pluginDescriptor.getMojo(GOAL_NAME);
+            result = createPluginDescriptor();
+
+            pluginManager.executeMojo(session, (MojoExecution) any);
+            executionService.getPluginDescriptor((MavenProject) any, (Plugin) any);
+        }};
+    }
+
     @Test
     public void straightWithExecutionId() throws Exception {
-        expectNewPlugin();
-        expectDescriptor();
-        overrideGetPluginDescriptor();
+        standardSetup();
         executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME + "#1");
     }
 
     @Test(expected = MojoExecutionException.class)
     public void noDescriptor() throws Exception {
-        expectNewPlugin();
-        expectNoDescriptor();
-        overrideGetPluginDescriptor();
+        new Expectations() {{
+            project.getPlugin(PLUGIN_NAME);
+            result = new Plugin();
+            pluginDescriptor.getMojo(GOAL_NAME);
+            result = null;
+            executionService.getPluginDescriptor((MavenProject) any, (Plugin) any);
+        }};
         executionService.callPluginGoal(PLUGIN_NAME + ":" + GOAL_NAME);
 
         new Verifications() {{}};
@@ -106,22 +122,6 @@ public class MojoExecutionServiceTest {
 
     // ============================================================================================
 
-    private Expectations expectNewPlugin() {
-        return new Expectations() {{
-            project.getPlugin(PLUGIN_NAME);
-            result = new Plugin();
-        }};
-    }
-
-    private Expectations expectDescriptor() throws IOException, XmlPullParserException, PluginConfigurationException, MojoFailureException, MojoExecutionException, PluginManagerException {
-        return new Expectations() {{
-            pluginDescriptor.getMojo(GOAL_NAME);
-            result = createPluginDescriptor();
-
-            pluginManager.executeMojo(session, (MojoExecution) any);
-        }};
-    }
-
     private MojoDescriptor createPluginDescriptor() throws XmlPullParserException, IOException {
         MojoDescriptor descriptor = new MojoDescriptor();
         PlexusConfiguration config = new XmlPlexusConfiguration(Xpp3DomBuilder.build(new StringReader("<config name='test'><test>1</test></config>")));
@@ -129,16 +129,4 @@ public class MojoExecutionServiceTest {
         return descriptor;
     }
 
-    private Expectations expectNoDescriptor() {
-        return new Expectations() {{
-            pluginDescriptor.getMojo(GOAL_NAME);
-            result = null;
-        }};
-    }
-
-    private Expectations overrideGetPluginDescriptor() throws NoSuchMethodException, InvocationTargetException, InvalidPluginDescriptorException, IllegalAccessException, PluginResolutionException, PluginNotFoundException, PluginDescriptorParsingException, MojoFailureException {
-        return new Expectations() {{
-            executionService.getPluginDescriptor((MavenProject) any,(Plugin) any);
-        }};
-    }
 }

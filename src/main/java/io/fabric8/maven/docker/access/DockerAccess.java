@@ -11,6 +11,7 @@ import io.fabric8.maven.docker.log.LogOutputSpec;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ExecDetails;
+import io.fabric8.maven.docker.model.Image;
 import io.fabric8.maven.docker.model.Network;
 
 /**
@@ -65,14 +66,24 @@ public interface DockerAccess {
     String getImageId(String name) throws DockerAccessException;
 
     /**
+     * List all containers from the Docker server.
+     *
+     * @param all whether to fetch also stopped containers. If false only running containers are returned
+     * @return list of <code>Container</code> objects or an empty list if none is found
+     * @throws DockerAccessException if the request fails
+     */
+    List<Container> listContainers(boolean all) throws DockerAccessException;
+
+    /**
      * Get all containers which are build from an image. By default only the last containers are considered but this
      * can be tuned with a global parameters.
      *
      * @param image for which its container are looked up
+     * @param all whether to fetch also stopped containers. If false only running containers are returned
      * @return list of <code>Container</code> objects or an empty list if none is found
      * @throws DockerAccessException if the request fails
      */
-    List<Container> getContainersForImage(String image) throws DockerAccessException;
+    List<Container> getContainersForImage(String image, boolean all) throws DockerAccessException;
 
     /**
      * Starts a previously set up exec instance (via {@link #createExecContainer(String, Arguments)} container
@@ -122,6 +133,14 @@ public interface DockerAccess {
      */
     void stopContainer(String containerId, int killWait) throws DockerAccessException;
 
+    /**
+     * Kill a container
+     *
+     * @param containerId the container id
+     * @throws DockerAccessException if container failed to be killed
+     */
+    void killContainer(String containerId) throws DockerAccessException;
+
     /** Copy an archive (must be a tar) into a running container
      * Get all containers matching a certain label. This might not be a cheap operation especially if many containers
      * are running. Use with care.
@@ -160,6 +179,14 @@ public interface DockerAccess {
      * @throws DockerAccessException if the container couldn't be removed.
      */
     void removeContainer(String containerId, boolean removeVolumes) throws DockerAccessException;
+
+    /**
+     * List the containers on the server
+     * @param all if true, return untagged images
+     * @return the images list (may be empty but never null)
+     * @throws DockerAccessException if the list couldn't be retrieved
+     */
+    List<Image> listImages(boolean all) throws DockerAccessException;
 
     /**
      * Load an image from an archive.

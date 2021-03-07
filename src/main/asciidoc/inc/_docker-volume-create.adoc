@@ -13,7 +13,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
     <volumes>
        <volume>
          <name>temp-volume</name>
-         <driver>local</Driver>
+         <driver>local</driver>
          <opts>
            <type>tmpfs</type>
            <device>tmpfs</device>
@@ -30,7 +30,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 ----
 
 [[volume-create-configuration]]
-=== Configuration
+.Configuration
 
 The following options are available when creating volumes:
 

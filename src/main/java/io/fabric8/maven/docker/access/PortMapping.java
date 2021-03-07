@@ -1,16 +1,24 @@
 package io.fabric8.maven.docker.access;
 
-import java.io.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.util.EnvUtil;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
  * Entity holding port mappings which can be set through the configuration.
@@ -122,27 +130,27 @@ public class PortMapping {
      *
      * @return 'PortBindings' object or null if no port mappings are used.
      */
-    JSONObject toDockerPortBindingsJson() {
+    JsonObject toDockerPortBindingsJson() {
         Map<String, Integer> portMap = getContainerPortToHostPortMap();
         if (!portMap.isEmpty()) {
-            JSONObject portBindings = new JSONObject();
+            JsonObject portBindings = new JsonObject();
             Map<String, String> bindToMap = getBindToHostMap();
 
             for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
                 String containerPortSpec = entry.getKey();
                 Integer hostPort = entry.getValue();
 
-                JSONObject o = new JSONObject();
-                o.put("HostPort", hostPort != null ? hostPort.toString() : "");
+                JsonObject o = new JsonObject();
+                o.addProperty("HostPort", hostPort != null ? hostPort.toString() : "");
 
                 if (bindToMap.containsKey(containerPortSpec)) {
-                    o.put("HostIp", bindToMap.get(containerPortSpec));
+                    o.addProperty("HostIp", bindToMap.get(containerPortSpec));
                 }
 
-                JSONArray array = new JSONArray();
-                array.put(o);
+                JsonArray array = new JsonArray();
+                array.add(o);
 
-                portBindings.put(containerPortSpec, array);
+                portBindings.add(containerPortSpec, array);
             }
             return portBindings;
         } else {
@@ -155,39 +163,43 @@ public class PortMapping {
      *
      * @return port mappings as JSON array or null if no mappings exist
      */
-    public JSONArray toJson() {
+    public JsonArray toJson() {
         Map<String, Integer> portMap = getContainerPortToHostPortMap();
-        if (!portMap.isEmpty()) {
-            JSONArray ret = new JSONArray();
-            Map<String, String> bindToMap = getBindToHostMap();
-
-            for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
-                JSONObject mapping = new JSONObject();
-                String containerPortSpec = entry.getKey();
-                Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(entry.getKey());
-                if (!matcher.matches()) {
-                    throw new IllegalStateException("Internal error: " + entry.getKey() +
-                                                    " doesn't contain protocol part and doesn't match "
-                                                    + PROTOCOL_SPLIT_PATTERN);
-                }
-                mapping.put("containerPort", Integer.parseInt(matcher.group(1)));
-                if (matcher.group(2) != null) {
-                    mapping.put("protocol", matcher.group(2));
-                }
-                Integer hostPort = entry.getValue();
-                if (hostPort != null) {
-                    mapping.put("hostPort", hostPort);
-                }
-
-                if (bindToMap.containsKey(containerPortSpec)) {
-                    mapping.put("hostIP", bindToMap.get(containerPortSpec));
-                }
-                ret.put(mapping);
-            }
-            return ret;
-        } else {
+        if (portMap.isEmpty()) {
             return null;
         }
+
+        JsonArray ret = new JsonArray();
+        Map<String, String> bindToMap = getBindToHostMap();
+
+        for (Map.Entry<String, Integer> entry : portMap.entrySet()) {
+            JsonObject mapping = new JsonObject();
+            String containerPortSpec = entry.getKey();
+            Matcher matcher = PROTOCOL_SPLIT_PATTERN.matcher(entry.getKey());
+            if (!matcher.matches()) {
+                throw new IllegalStateException("Internal error: " + entry.getKey() +
+                                                " doesn't contain protocol part and doesn't match "
+                                                + PROTOCOL_SPLIT_PATTERN);
+            }
+
+            mapping.addProperty("containerPort", Integer.parseInt(matcher.group(1)));
+            if (matcher.group(2) != null) {
+                mapping.addProperty("protocol", matcher.group(2));
+            }
+
+            Integer hostPort = entry.getValue();
+            if (hostPort != null) {
+                mapping.addProperty("hostPort", hostPort);
+            }
+
+            if (bindToMap.containsKey(containerPortSpec)) {
+                mapping.addProperty("hostIP", bindToMap.get(containerPortSpec));
+            }
+
+            ret.add(mapping);
+        }
+
+        return ret;
     }
 
     // ==========================================================================================================

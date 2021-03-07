@@ -2,7 +2,7 @@
 [[docker:source]]
 == *docker:source*
 
-The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <<{plugin}:build> >>.
+The `{plugin}:source` target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <<{plugin}:build>>.
 
 By default, only the first image configuration is used for creating the source archive.
 You can export all image configurations by setting the `sourceMode` configuration to `all`:

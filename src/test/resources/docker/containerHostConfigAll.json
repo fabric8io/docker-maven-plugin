@@ -1,25 +1,60 @@
 {
-    "Binds": [ "/host_tmp:/container_tmp" ],
-    "Links": [ "db1:db1", "db2:db2" ],
-    "PortBindings": { "22/tcp": [ { "HostIp" : "0.0.0.0", "HostPort": "11022" }] },
-    "ShmSize": 1024,
-    "Privileged":true,
-    "Dns": ["8.8.8.8"],
-    "DnsSearch": ["domain.com"],
-    "ExtraHosts" : ["localhost:127.0.0.1"],
-    "VolumesFrom": [ "parentContainer", "otherContainer" ],
-    "CapAdd": ["NET_ADMIN"],
-    "CapDrop": ["MKNOD"],
-    "SecurityOpt": [ "seccomp=unconfined" ],
-    "Memory": 1,
-    "MemorySwap": 1,
-    "NetworkMode": "custom_network",
-    "RestartPolicy": { "Name": "on-failure", "MaximumRetryCount": 1 },
-    "Ulimits":[
-    	{
-    		"Name":"memlock",
-    		"Hard":1024,
-    		"Soft":2048
-    	}
+  "ExtraHosts":[
+    "localhost:127.0.0.1"
+  ],
+  "Links":[
+    "db1:db1",
+    "db2:db2"
+  ],
+  "PortBindings":{
+    "22/tcp":[
+      {
+        "HostPort":"11022",
+        "HostIp":"0.0.0.0"
+      }
     ]
+  },
+  "Privileged":true,
+  "ShmSize":1024,
+  "Dns":[
+    "8.8.8.8"
+  ],
+  "DnsSearch":[
+    "domain.com"
+  ],
+  "CapAdd":[
+    "NET_ADMIN"
+  ],
+  "CapDrop":[
+    "MKNOD"
+  ],
+  "SecurityOpt":[
+    "seccomp=unconfined"
+  ],
+  "Memory":1,
+  "MemorySwap":1,
+  "RestartPolicy":{
+    "Name":"on-failure",
+    "MaximumRetryCount":1
+  },
+  "Ulimits":[
+    {
+      "Name":"memlock",
+      "Hard":1024,
+      "Soft":2048
+    }
+  ],
+  "CpuShares":1,
+  "NanoCpus":1000000000,
+  "CpusetCpus":"0,1",
+  "ReadonlyRootfs":false,    
+  "AutoRemove":false,    
+  "Binds":[
+    "/host_tmp:/container_tmp"
+  ],
+  "VolumesFrom":[
+    "parentContainer",
+    "otherContainer"
+  ],
+  "NetworkMode":"custom_network"
 }

@@ -2,15 +2,17 @@ package io.fabric8.maven.docker.assembly;
 
 /**
  * Fields for  a dockerfile
- * @author Paris Apostolopoulos <javapapo@mac.com>
- * @author Christian Fischer <sw-dev@computerlyrik.de>
+ * @author Paris Apostolopoulos &lt;javapapo@mac.com&gt;
+ * @author Christian Fischer &lt;sw-dev@computerlyrik.de&gt;
  * @since 13.06.05
  */
 public enum DockerFileKeyword
 {
     MAINTAINER,
+    ADD,
     EXPOSE,
     FROM,
+    SHELL,
     RUN,
     WORKDIR,
     ENTRYPOINT,

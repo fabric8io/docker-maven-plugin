@@ -1,6 +1,6 @@
 
 [[build-overview]]
-There are two different modes how Images can be built:
+There are two different modes how images can be built:
 
 .Inline plugin configuration
 With an inline plugin configuration all information required to build the image is contained in the plugin configuration. By default its the standard XML based configuration for the plugin but can be switched to a property based configuration syntax as described in the section <<external-configuration,External configuration>>. The XML configuration syntax is recommended because of its more structured and typed nature.
@@ -11,9 +11,10 @@ When using this mode, the Dockerfile is created on the fly with all instructions
 .External Dockerfile or Docker archive
 Alternatively an external Dockerfile template or Docker archive can be used. This mode is switched on by using one of these three configuration options within
 
-* *dockerFileDir* specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is `Dockerfile` by default but can be also set with the option `dockerFile` (see below).
-* *dockerFile* specifies a specific Dockerfile path. The Docker build context directory is set to `dockerFileDir` if given. If not the directory by default is the directory in which the Dockerfile is stored.
-* *dockerArchive* specifies a previously saved image archive to load directly. Such a tar archive can be created with `docker save`. If a `dockerArchive` is provided, no `dockerFile` or `dockerFileDir` must be given.
+* *contextDir* specifies docker build context if an external dockerfile is located outside of Docker build context. If not specified, Dockerfile's parent directory is used as build context.
+* *dockerFile* specifies a specific Dockerfile path. The Docker build context directory is set to `contextDir` if given. If not the directory by default is the directory in which the Dockerfile is stored.
+* *dockerArchive* specifies a previously saved image archive to load directly. Such a tar archive can be created with `docker save` or the <<{plugin}:save>> goal. If a `dockerArchive` is provided, no `dockerFile` or `dockerFileDir` must be given.
+* *dockerFileDir* (_deprecated_, use *contextDir*) specifies a directory containing a Dockerfile that will be used to create the image. The name of the Dockerfile is `Dockerfile` by default but can be also set with the option `dockerFile` (see below).
 
 All paths can be either absolute or relative paths (except when both `dockerFileDir` and `dockerFile` are provided in which case `dockerFile` must not be absolute). A relative path is looked up in `${project.basedir}/src/main/docker` by default. You can make it easily an absolute path by using `${project.basedir}` in your configuration.
 
@@ -26,7 +27,7 @@ The files of the assembly are stored in a build context relative directory `mave
 E.g. the files can be added with
 
 .Example
-[source,dockerfils]
+[source,dockerfile]
 ----
 COPY maven/ /my/target/directory
 ----
@@ -34,20 +35,44 @@ COPY maven/ /my/target/directory
 so that the assembly files will end up in `/my/target/directory` within the container.
 
 If this directory contains a `.maven-dockerignore` (or alternatively, a `.maven-dockerexclude` file), then it is used for excluding files for the build. Each line in this file is treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. It is similar to `.dockerignore` when using Docker but has a slightly different syntax (hence the different name).
+<<ex-build-dockerexclude>> is an  example which excludes all compiled Java classes.
 
-If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin].
+[[ex-build-dockerexclude]]
+.Example `.maven-dockerexclude` or `.maven-dockerignore`
+====
+[source]
+----
+target/classes/**  # <1>
+----
+<1> Exclude all compiled classes
+====
+
+
+If this directory contains a `.maven-dockerinclude` file, then it is used for including only those files for the build. Each line in this file is also treated as a http://ant.apache.org/manual/Types/fileset.html[FileSet exclude pattern] as used by the http://maven.apache.org/plugins/maven-assembly-plugin[maven-assembly-plugin]. <<ex-build-dockerinclude>> shows how to include only jar file that have build to the Docker build context.
+
+[[ex-build-dockerinclude]]
+.Example `.maven-dockerinclude`
+====
+[source]
+----
+target/*.jar  # <1>
+----
+<1> Only add jar file to you Docker build context.
+====
 
 Except for the <<build-assembly,assembly configuration>> all other configuration options are ignored for now.
 
 [[simple-dockerfile-build]]
-.Simple Dockerfile mode
+.Simple Dockerfile build
 
 When only a single image should be built with a Dockerfile no XML configuration is needed at all.
 All what need to be done is to place a `Dockerfile` into the top-level module directory, alongside to `pom.xml`.
-You can still configure <<global-configuration, global aspect>> in the plugin configuration, but as soon as you add an `<image>` in the XML configuration, you need to configure also the build explicitly.
+You can still configure <<global-configuration, global aspects>> in the plugin configuration, but as soon as you add an `<image>` in the XML configuration, you need to configure also the build explicitly.
 
-The image name is by default set from the Maven coordinates: `${project.groupId}/${project.artifactId}:${project.version}`
-This name can be overwritten with a property `docker.name` which can also hold placeholders as described in <<image-name-placeholders,Name placeholders>>.
+The image name is by default set from the Maven coordinates (`%g/%a:%l`, see <<image-name,Image Name >> for an explanation of the params which are essentially the Maven GAV)
+This name can be set with the property `docker.name`.
+
+If you want to add some `<run>` configuration to this image for starting it with `docker:run` then you can add an image configuration but without a `<build>` section in which case the Dockerfile will be picked up, too. This works only for a single image, though.
 
 [[build-filtering]]
 .Filtering
@@ -86,3 +111,62 @@ The following example uses a Dockerfile in the directory
  ...
 </plugin>
 ----
+
+[[build-plugin]]
+.Build Plugins
+
+This plugin supports so call *dmp-plugins* which are used during the build phase.
+dmp-plugins are enabled by just declaring a dependency in the plugin declaration:
+
+[source, xml]
+----
+<plugin>
+  <groupId>io.fabric8</groupId>
+  <artifactId>docker-maven-plugin</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>run-java-sh</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+  </dependencies>
+</plugin>
+----
+
+These plugins contain a descriptor `META-INF/maven/io.fabric8/dmp-plugin` with class names, line-by-line:
+
+[source]
+----
+io.fabric8.runsh.RunShLoader
+----
+
+During a build with `docker:build`, those classes are loaded and certain fixed method are called.
+
+The following methods are supported:
+
+[[build-plugin-methods]]
+[cols="1,5"]
+|===
+| Method | Description
+
+| *addExtraFiles*
+| A _static_ method called by dmp with a single `File` argument. This will point to a directory `docker-extra` which can be referenced easily by a Dockerfile or an assembly. A dmp plugin typically will create an own subdirectory to avoid a clash with other dmp-plugins.
+|===
+
+If a configured plugin does not provide method of this name and signature, then it will be simply ignored.
+Also, no interface needs to be implemented to keep the coupling low.
+
+The following official dmp-plugins are known and supported:
+
+[[build-plugins-official]]
+[cols="1,1,5"]
+|===
+| Name | G,A | Description
+
+| https://github.com/fabric8io-images/run-java-sh[run-java.sh]
+| `fabric8.io`, `run-java`
+| General purpose startup script fo running Java applications. The dmp plugin creates a `target/docker-extra/run-java/run-java.sh` which can be included in a Dockerfile (see the example above). See the https://github.com/fabric8io-images/run-java-sh[run-java.sh Documentation] for more details.
+|===
+
+Check out `samples/run-java` for a fully working example.

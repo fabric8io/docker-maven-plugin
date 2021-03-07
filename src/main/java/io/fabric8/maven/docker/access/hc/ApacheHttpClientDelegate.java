@@ -2,20 +2,28 @@ package io.fabric8.maven.docker.access.hc;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.google.common.net.MediaType;
-import io.fabric8.maven.docker.access.hc.http.HttpRequestException;
-import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
-import org.apache.http.*;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+
+import io.fabric8.maven.docker.access.hc.http.HttpRequestException;
+import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 
 public class ApacheHttpClientDelegate {
 
@@ -49,8 +57,7 @@ public class ApacheHttpClientDelegate {
 
     public static class StatusCodeResponseHandler implements ResponseHandler<Integer> {
         @Override
-        public Integer handleResponse(HttpResponse response)
-            throws IOException {
+        public Integer handleResponse(HttpResponse response) {
             return response.getStatusLine().getStatusCode();
         }
 
@@ -115,31 +122,36 @@ public class ApacheHttpClientDelegate {
 
     // =========================================================================================
 
-    private HttpUriRequest addDefaultHeaders(HttpUriRequest req) {
+    private HttpUriRequest addDefaultHeaders(HttpUriRequest req, Object body) {
         req.addHeader(HttpHeaders.ACCEPT, "*/*");
-        req.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        if (body instanceof File) {
+            req.addHeader(HttpHeaders.CONTENT_TYPE, URLConnection.guessContentTypeFromName(((File)body).getName()));
+        }
+        if (body != null && !req.containsHeader(HttpHeaders.CONTENT_TYPE)) {
+            req.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+        }
         return req;
     }
 
 
     private HttpUriRequest newDelete(String url) {
-        return addDefaultHeaders(new HttpDelete(url));
+        return addDefaultHeaders(new HttpDelete(url), null);
     }
 
     private HttpUriRequest newGet(String url) {
-        return addDefaultHeaders(new HttpGet(url));
+        return addDefaultHeaders(new HttpGet(url), null);
     }
 
     private HttpUriRequest newPut(String url, Object body) {
         HttpPut put = new HttpPut(url);
         setEntityIfGiven(put, body);
-        return addDefaultHeaders(put);
+        return addDefaultHeaders(put, body);
     }
 
     private HttpUriRequest newPost(String url, Object body) {
         HttpPost post = new HttpPost(url);
         setEntityIfGiven(post, body);
-        return addDefaultHeaders(post);
+        return addDefaultHeaders(post, body);
     }
 
 

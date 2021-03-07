@@ -17,23 +17,25 @@ package io.fabric8.maven.docker.config;
  */
 
 import java.io.File;
+import java.io.IOException;
 
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static io.fabric8.maven.docker.config.ArchiveCompression.gzip;
 import static io.fabric8.maven.docker.config.ArchiveCompression.none;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author roland
  * @since 04/04/16
  */
-@RunWith(JMockit.class)
+
 public class BuildImageConfigurationTest {
 
     @Mocked
@@ -50,11 +52,25 @@ public class BuildImageConfigurationTest {
     public void simpleDockerfile() {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
-                dockerFile("src/docker/Dockerfile").build();
+                dockerFile("src/main/docker/Dockerfile").build();
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
-        assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
+        assertEquals(config.getDockerFile(),new File("src/main/docker/Dockerfile"));
+        assertEquals(config.getContextDir(),new File("src/main/docker"));
     }
+
+    @Test
+    // Tests fix for #1200
+    public void simpleDockerfileWithoutParentDir() {
+        BuildImageConfiguration config =
+            new BuildImageConfiguration.Builder().
+                dockerFile("Dockerfile").build();
+        config.initAndValidate(logger);
+        assertTrue(config.isDockerFileMode());
+        assertEquals(config.getDockerFile(),new File("Dockerfile"));
+        assertEquals(config.getContextDir(), new File(""));
+    }
+
 
     @Test
     public void simpleDockerfileDir() {
@@ -64,6 +80,7 @@ public class BuildImageConfigurationTest {
         config.initAndValidate(logger);
         assertTrue(config.isDockerFileMode());
         assertEquals(config.getDockerFile(),new File("src/docker/Dockerfile"));
+        assertFalse(config.getContextDir().isAbsolute());
     }
 
     @Test
@@ -82,8 +99,55 @@ public class BuildImageConfigurationTest {
         BuildImageConfiguration config =
             new BuildImageConfiguration.Builder().
                 dockerFileDir("/tmp/").
-                dockerFile("/Dockerfile").build();
+                dockerFile(new File("Dockerfile").getAbsolutePath()).build();
         config.initAndValidate(logger);
+    }
+
+    @Test
+    public void contextDir() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        contextDir("target").build();
+        config.initAndValidate(logger);
+        assertEquals(new File("target"), config.getContextDir());
+    }
+
+    @Test
+    public void contextDirAndDockerfile() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        dockerFile("src/docker/Dockerfile").
+                        contextDir("target").build();
+        config.initAndValidate(logger);
+        assertEquals(new File("target/src/docker/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target"), config.getContextDir());
+    }
+
+    @Test
+    public void contextDirAndDockerfileDir() {
+        BuildImageConfiguration config =
+                new BuildImageConfiguration.Builder().
+                        dockerFileDir("src/docker").
+                        contextDir("target").build();
+        config.initAndValidate(logger);
+        assertEquals(new File("target/Dockerfile"), config.getDockerFile());
+        assertEquals(new File("target"), config.getContextDir());
+    }
+
+    @Test
+    public void contextDirAndAbsoluteDockerfile() throws IOException {
+        File tempDockerFile = File.createTempFile("Dockerfile", "");
+        tempDockerFile.deleteOnExit();
+        BuildImageConfiguration config = new BuildImageConfiguration.Builder()
+                .dockerFile(tempDockerFile.getAbsolutePath())
+                .contextDir("target")
+                .build();
+
+        // If contextDir is given and the dockerFile is an absolute path.
+        // The Dockerfile should then be copied over.
+        config.initAndValidate(logger);
+        assertEquals(new File(tempDockerFile.getAbsolutePath()), config.getDockerFile());
+        assertEquals(new File("target"), config.getContextDir());
     }
 
     @Test

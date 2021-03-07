@@ -27,7 +27,7 @@ import io.fabric8.maven.docker.util.EnvUtil;
  * @author roland
  * @since 27/02/15
  */
-class BuildDirs {
+public class BuildDirs {
 
     private final String buildTopDir;
     private final MojoParameters params;
@@ -36,24 +36,24 @@ class BuildDirs {
      * Constructor building up the the output directories
      *
      * @param imageName image name for the image to build
-     * @param params mojo params holding base and global outptput dir
+     * @param params mojo params holding base and global output dir
      */
-    BuildDirs(String imageName, MojoParameters params) {
+    public BuildDirs(String imageName, MojoParameters params) {
         this.params = params;
         // Replace tag separator with a slash to avoid problems
         // with OSs which gets confused by colons.
-        this.buildTopDir = imageName != null ? imageName.replace(':', '/') : null;
+        this.buildTopDir = imageName != null ? imageName.replace(':', File.separatorChar).replace("/", File.separator) : null;
     }
 
-    File getOutputDirectory() {
+    public File getOutputDirectory() {
         return getDir("build");
     }
 
-    File getWorkingDirectory() {
+    public File getWorkingDirectory() {
         return getDir("work");
     }
 
-    File getTemporaryRootDirectory() {
+    public File getTemporaryRootDirectory() {
         return getDir("tmp");
     }
 

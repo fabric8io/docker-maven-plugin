@@ -25,6 +25,12 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     private String alias;
 
     @Parameter
+    private String stopNamePattern;
+
+    @Parameter
+    private String removeNamePattern;
+
+    @Parameter
     private RunImageConfiguration run;
 
     @Parameter
@@ -58,6 +64,14 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     }
 
     /**
+     * Changes image registry to specified one
+     * @param registry string value for registry to be modified
+     */
+    public void setRegistry(String registry) {
+        this.registry = registry;
+    }
+
+    /**
      * Override externalConfiguration when defined via special property.
      *
      * @param externalConfiguration Map with alternative config
@@ -69,6 +83,18 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     @Override
 	public String getAlias() {
         return alias;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public String getStopNamePattern() {
+        return stopNamePattern;
+    }
+
+    public String getRemoveNamePattern() {
+        return removeNamePattern;
     }
 
     public RunImageConfiguration getRunConfiguration() {
@@ -130,9 +156,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
     private void addDependsOn(RunImageConfiguration runConfig, List<String> ret) {
         // Only used in custom networks.
         if (runConfig.getNetworkingConfig().isCustomNetwork()) {
-            for (String link : runConfig.getDependsOn()) {
-                ret.add(link);
-            }
+            ret.addAll(runConfig.getDependsOn());
         }
     }
 
@@ -140,7 +164,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         // If there is no explicit run configuration, its a data image
         // TODO: Probably add an explicit property so that a user can indicated whether it
         // is a data image or not on its own.
-        return getRunConfiguration() == null;
+        return run == null;
     }
 
     public String getDescription() {
@@ -194,6 +218,16 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
 
         public Builder alias(String alias) {
             config.alias = alias;
+            return this;
+        }
+
+        public Builder removeNamePattern(String removeNamePattern) {
+            config.removeNamePattern = removeNamePattern;
+            return this;
+        }
+
+        public Builder stopNamePattern(String stopNamePattern) {
+            config.stopNamePattern = stopNamePattern;
             return this;
         }
 

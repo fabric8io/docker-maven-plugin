@@ -37,6 +37,9 @@ public class ImageName {
     // Tag name
     private String tag;
 
+    // Digest
+    private String digest;
+
     // User name
     private String user;
 
@@ -60,39 +63,35 @@ public class ImageName {
         if (fullName == null) {
             throw new NullPointerException("Image name must not be null");
         }
+
+        // set digest to null as default
+        digest = null;
+        // check if digest is part of fullName, if so -> extract it
+        if(fullName.contains("@sha256")) { // Of it contains digest
+            String[] digestParts = fullName.split("@");
+            digest = digestParts[1];
+            fullName = digestParts[0];
+        }
+
+        // check for tag
         Pattern tagPattern = Pattern.compile("^(.+?)(?::([^:/]+))?$");
         Matcher matcher = tagPattern.matcher(fullName);
         if (!matcher.matches()) {
             throw new IllegalArgumentException(fullName + " is not a proper image name ([registry/][repo][:port]");
         }
-        tag = givenTag != null ?
-                givenTag :
-                matcher.groupCount() > 1 ? matcher.group(2) : null;
+        // extract tag if it exists
+        tag = givenTag != null ? givenTag : matcher.group(2);
         String rest = matcher.group(1);
 
-        String[] parts = rest.split("\\s*/\\s*");
-        if (parts.length == 1) {
-            registry = null;
-            user = null;
-            repository = parts[0];
-        } else if (parts.length >= 2) {
-            if (isRegistry(parts[0])) {
-                registry = parts[0];
-                if (parts.length > 2) {
-                    user = parts[1];
-                    repository = joinTail(parts);
-                } else {
-                    user = null;
-                    repository = parts[1];
-                }
-            } else {
-                registry = null;
-                user = parts[0];
-                repository = rest;
-            }
-        }
+        // extract registry, repository, user
+        parseComponentsBeforeTag(rest);
 
-        if (tag == null) {
+        /*
+         * set tag to latest if tag AND digest are null
+         * if digest is not null but tag is -> leave it!
+         *  -> in case of "image_name@sha256" it is not required to get resolved to "latest"
+         */
+        if (tag == null && digest == null) {
             tag = "latest";
         }
 
@@ -109,6 +108,10 @@ public class ImageName {
 
     public String getTag() {
         return tag;
+    }
+
+    public String getDigest() {
+        return digest;
     }
 
     public boolean hasRegistry() {
@@ -179,7 +182,14 @@ public class ImageName {
      * @return full name with original registry (if set) or optional registry (if not <code>null</code>).
      */
     public String getFullName(String optionalRegistry) {
-        return getNameWithoutTag(optionalRegistry) + ":" + tag;
+        String fullName = getNameWithoutTag(optionalRegistry);
+        if (tag != null) {
+            fullName = fullName +  ":" + tag;
+        }
+        if(digest != null) {
+            fullName = fullName + "@" + digest;
+        }
+        return fullName;
     }
 
     /**
@@ -202,6 +212,17 @@ public class ImageName {
         return repository.startsWith(prefix) ? repository.substring(prefix.length()) : repository;
     }
 
+    public String getNameWithOptionalRepository(String optionalRepository) {
+        if (optionalRepository != null) {
+            String simpleName = getFullName();
+            String[] simpleNameParts = simpleName.split("/");
+            if (simpleNameParts.length > 0) {
+                return optionalRepository + "/" + simpleNameParts[simpleNameParts.length - 1];
+            }
+        }
+        return getFullName();
+    }
+
     /**
      * Check whether the given name validates agains the Docker rules for names
      *
@@ -216,13 +237,14 @@ public class ImageName {
     // Validate parts and throw an IllegalArgumentException if a part is not valid
     private void doValidate() {
         List<String> errors = new ArrayList<>();
-        // Stripp of user from repository name
+        // Strip off user from repository name
         String image = user != null ? repository.substring(user.length() + 1) : repository;
         Object[] checks = new Object[] {
             "registry", DOMAIN_REGEXP, registry,
             "image", IMAGE_NAME_REGEXP, image,
             "user", NAME_COMP_REGEXP, user,
-            "tag", TAG_REGEXP, tag
+            "tag", TAG_REGEXP, tag,
+            "digest", DIGEST_REGEXP, digest
         };
         for (int i = 0; i < checks.length; i +=3) {
             String value = (String) checks[i + 2];
@@ -241,6 +263,30 @@ public class ImageName {
             }
             buf.append("See http://bit.ly/docker_image_fmt for more details");
             throw new IllegalArgumentException(buf.toString());
+        }
+    }
+
+    private void parseComponentsBeforeTag(String rest) {
+        String[] parts = rest.split("\\s*/\\s*");
+        if (parts.length == 1) {
+            registry = null;
+            user = null;
+            repository = parts[0];
+        } else if (parts.length >= 2) {
+            if (isRegistry(parts[0])) {
+                registry = parts[0];
+                if (parts.length > 2) {
+                    user = parts[1];
+                    repository = joinTail(parts);
+                } else {
+                    user = null;
+                    repository = parts[1];
+                }
+            } else {
+                registry = null;
+                user = parts[0];
+                repository = rest;
+            }
         }
     }
 
@@ -270,4 +316,6 @@ public class ImageName {
 
     // https://github.com/docker/docker/blob/04da4041757370fb6f85510c8977c5a18ddae380/vendor/github.com/docker/distribution/reference/regexp.go#L37
     private final Pattern TAG_REGEXP = Pattern.compile("^[\\w][\\w.-]{0,127}$");
+
+    private final Pattern DIGEST_REGEXP = Pattern.compile("^sha256:[a-z0-9]{32,}$");
 }

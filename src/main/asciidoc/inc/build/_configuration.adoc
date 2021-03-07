@@ -20,10 +20,13 @@ described in <<build-buildargs,Build Args>>
 | *buildOptions*
 | Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile[Docker Remote API] and are restricted to simple options
-(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `nocache`, `cleanup` for `forcerm=1` and `buildArgs`) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
+(e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `squash`, `noCache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *cleanup*
 | Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
+
+| [[context-dir]]*contextDir*
+| Path to a directory used for the build's context. You can specify the `Dockerfile` to use with *dockerFile*, which by default is the Dockerfile found in the `contextDir`. The Dockerfile can be also located outside of the `contextDir`, if provided with an absolute file path. See <<external-dockerfile, External Dockerfile>> for details.
 
 | <<misc-startup, *cmd*>>
 | A command to execute by default (i.e. if no command is provided when a container for this image is started). See <<misc-startup,Startup Arguments>> for details.
@@ -34,9 +37,8 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 | *dockerFile*
 | Path to a `Dockerfile` which also triggers _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
 
-| *dockerFileDir*
-| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details.
-
+| *dockerFileDir* (_deprecated_ in favor of *<<context-dir, contextDir>>*)
+| Path to a directory holding a `Dockerfile` and switch on _Dockerfile mode_. See <<external-dockerfile, External Dockerfile>> for details. _This option is deprecated in favor of _contextDir_ and will be removed for the next major release_.
 
 | *dockerArchive*
 | Path to a saved image archive which is then imported. See <<external-dockerfile, Docker archive>> for details.
@@ -75,20 +77,32 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 | *imagePullPolicy*
 | Specific pull policy for the base image. This overwrites any global pull policy. See the globale configuration option <<image-pull-policy, imagePullPolicy>> for the possible values and the default.
 
+| [[build-config-load-name-pattern]]*loadNamePattern*
+a| Scan the archive specified in `dockerArchive` and find the actual repository and tag in the archive that matches this <<name-patterns, name pattern>>. After loading the archive, link the <<config-image, image name>> configured in the POM to the repository and tag matched in the archive.
+
 | <<misc-env, *labels*>>
 | Labels  as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *maintainer*
 | The author (`MAINTAINER`) field for the generated image
 
-| *nocache*
-| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.nocache` when running Maven.
+| *noCache*
+| Don't use Docker's build cache. This can be overwritten by setting a system property `docker.noCache` when running Maven.
+
+| *squash*
+| Squash newly built layers into a single new layer. This can be overwritten by setting a system property `docker.squash` when running Maven.
+
+| *cacheFrom*
+| A list of `<image>` elements specifying image names to use as cache sources.
 
 | *optimise*
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
 
 | *ports*
 | The exposed ports which is a list of `<port>` elements, one for each port to expose. Whitespace is trimmed from each element and empty elements are ignored. The format can be either pure numerical ("8080") or with the protocol attached ("8080/tcp").
+
+| *shell*
+| Shell to be used for the *runCmds*. It contains *arg* elements which are defining the executable and its params.
 
 | *retries*
 | If pulling an image is required, how often should a pull be retried before giving up. This useful for flaky registries which tend to return 500 error codes from time to time. The default is 0 which means no retry at all.
@@ -98,6 +112,9 @@ A provided `<from>` takes precedence over the name given here. This tag is usefu
 
 | *skip*
 | if set to true disables building of the image. This config option is best used together with a maven property
+
+| *skipPush*
+| if set to true disables pushing of the image. This config option is best used together with a maven property
 
 | *skipTag*
 | If set to `true` this plugin won't add any tags to images. Property: `docker.skip.tag`
@@ -138,6 +155,17 @@ remote API.
   <buildOptions>
     <shmsize>2147483648</shmsize>
   </buildOptions>
+
+  <shell>
+    <exec>
+      <arg>/bin/sh</arg>
+      <arg>-c</arg>
+    </exec>
+  </shell>
+  <runCmds>
+    <run>groupadd -r appUser</run>
+    <run>useradd -r -g appUser appUser</run>
+  </runCmds>
 
   <entryPoint>
     <!-- exec form for ENTRYPOINT -->

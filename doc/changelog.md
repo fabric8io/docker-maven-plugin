@@ -1,5 +1,148 @@
 # ChangeLog
 
+* 0.34-SNAPSHOT
+  - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
+  - Loading Image tarball into docker daemon fails in JIB mode ([1385](https://github.com/fabric8io/docker-maven-plugin/issues/1385))
+  - `assembly.inline` is removed when external properties are enabled ([1082](https://github.com/fabric8io/docker-maven-plugin/issues/1082))
+  - Fix Support for Podman REST API(when configured) Related to ([1330](https://github.com/fabric8io/docker-maven-plugin/issues/1330))
+
+* **0.34.1** (2020-09-27)
+  - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
+  - upgrade to jib-core 0.15.0 ([#1378](https://github.com/fabric8io/docker-maven-plugin/issues/1378))
+  - Plugin now resolves ARG provided in BuildImageConfiguration ([#1373](https://github.com/fabric8io/docker-maven-plugin/issues/1373))
+
+* **0.34.0** (2020-09-13)
+  - Support `ARG` in `FROM` ([#859](https://github.com/fabric8io/docker-maven-plugin/issues/859))
+  - Handle authentication tokens returned from credential helpers ([#1348](https://github.com/fabric8io/docker-maven-plugin/issues/1348))
+  - Migrate from joda-time to java.time ([#1025](https://github.com/fabric8io/docker-maven-plugin/issues/1025))
+    The handling of Y changes when the week straddle the New year ([Stack Overflow](https://stackoverflow.com/questions/26431882/difference-between-year-of-era-and-week-based-year))
+  - Fix JSON error when parsin tafs ([#1354](https://github.com/fabric8io/docker-maven-plugin/issues/1354))
+  - Add `skipPush` option to build image configuration ([#1243](https://github.com/fabric8io/docker-maven-plugin/issues/1243))
+  - docker.container.<alias>.ip property is no longer set ([#1242](https://github.com/fabric8io/docker-maven-plugin/issues/1242))
+  - Support `squash` in build options to squash newly built layers into a single layer ([#785](https://github.com/fabric8io/docker-maven-plugin/issues/785)) 
+  - Support for JIB mode([#1277](https://github.com/fabric8io/docker-maven-plugin/pull/1277))
+
+* **0.33.0** (2020-01-21)
+  - Update to jnr-unixsocket 0.25 to solve concurrency issues ([#552](https://github.com/fabric8io/docker-maven-plugin/issues/552))
+  - Udate ECR AuthorizationToken URL to new endpoint ([#1317](https://github.com/fabric8io/docker-maven-plugin/issues/1317))
+  - Allow including `com.amazonaws:aws-java-sdk-core` as plugin dependency to pick up various forms of AWS credentials with which to authenticate at AWS ECR ([#1311](https://github.com/fabric8io/docker-maven-plugin/issues/1311))
+
+* **0.32.0** (2020-01-08)
+  - Support building dockerFile without pushing it to docker server ([#1197](https://github.com/fabric8io/docker-maven-plugin/issues/1197))
+  - Update to jnr-unixsocket 0.23
+  - Add null check for null instance in config.json for email ([#1262](https://github.com/fabric8io/docker-maven-plugin/issues/1262))
+  - Allow merging of image configurations using `<imagesMap>` ([#1259](https://github.com/fabric8io/docker-maven-plugin/issues/1259))
+  - Update to joda-time 2.10.4 ([#706](https://github.com/fabric8io/docker-maven-plugin/issues/706))
+  - Add docker:build support for 'network' option ([#1030](https://github.com/fabric8io/docker-maven-plugin/issues/1030))
+  - Avoiding chown to reduce the image size ([#544](https://github.com/fabric8io/docker-maven-plugin/issues/544))
+    (_Note: Assembly user format `user:user:user` with the third user option has been marked deprecated
+    and will not be available in future versions of plugin_)
+  - Failure referencing a previous staged image in FROM clause ([#1264](https://github.com/fabric8io/docker-maven-plugin/issues/1264))
+  - Treat bridged and default network mode the same ([#1234](https://github.com/fabric8io/docker-maven-plugin/issues/1234))
+  - Fix NPE when cacheFrom is missing from config ([#1274](https://github.com/fabric8io/docker-maven-plugin/issues/1274))
+  - Fix healthy option regression introduced in 0.25.0 ([#1279](https://github.com/fabric8io/docker-maven-plugin/issues/1279))
+  - Allow killing and removing all spawned containers ([#1182](https://github.com/fabric8io/docker-maven-plugin/issues/1182))
+  - Deprecated "authToken" for ECR authentication in favor of "auth" ([#1286](https://github.com/fabric8io/docker-maven-plugin/issues/1286))
+  - Allow overriding of existing image in creation of temporary one with same tag before push ([#838](https://github.com/fabric8io/docker-maven-plugin/issues/838))
+  - Pick up AWS credentials from ENV variables ([#1310](https://github.com/fabric8io/docker-maven-plugin/issues/1310))
+  - Fix accidentally disabled logging under certain conditions ([#1291](https://github.com/fabric8io/docker-maven-plugin/issues/1291))
+  - When stopping containers, try harder to remove containers, even if one fails ([#1251](https://github.com/fabric8io/docker-maven-plugin/issues/1251))
+  - Added integration tests ([#1209](https://github.com/fabric8io/docker-maven-plugin/issues/1209))
+
+* **0.31.0** (2019-08-10)
+  - Fix test cases on Windows ([#1220](https://github.com/fabric8io/docker-maven-plugin/issues/1220))
+  - ECR credentials from IAM Task role for ECS Fargate deployment ([#1233](https://github.com/fabric8io/docker-maven-plugin/issues/1233))
+  - Fix bug in properties names extracted from docker config json file ([#1237](https://github.com/fabric8io/docker-maven-plugin/issues/1237))
+  - Fix that portPropertyFile is not written anymore ([#1112](https://github.com/fabric8io/docker-maven-plugin/issues/1112))
+  - Use identity token if found in Docker config.json ([#1249](https://github.com/fabric8io/docker-maven-plugin/issues/1249))
+  - Allow also starting with an environment variable in `targetDir` of an aseembly config instead of insisting on only absolute path-names ([#1244](https://github.com/fabric8io/docker-maven-plugin/issues/1244))
+  - Support for pattern matching in `docker:stop` and `docker:remove` ([#1215](https://github.com/fabric8io/docker-maven-plugin/issues/1215))
+  - Increase interoperability with docker-java by accepting `registry.username` and `registry.password`, too ([#1245](https://github.com/fabric8io/docker-maven-plugin/issues/1245))
+
+* **0.30.0** (2019-04-21)
+  - Restore ANSI color to Maven logging if disabled during plugin execution and enable color for Windows with Maven 3.5.0 or later. Color logging is enabled by default, but disabled if the Maven CLI disables color (e.g. in batch mode) ([#1108](https://github.com/fabric8io/docker-maven-plugin/issues/1108))
+  - Fix NPE if docker:save is called with -Dfile=file-name-only.tar ([#1203](https://github.com/fabric8io/docker-maven-plugin/issues/1203))
+  - Fix NPE in BuildImageConfiguration ([#1200](https://github.com/fabric8io/docker-maven-plugin/issues/1200))
+  - Improve GZIP compression performance for docker:save ([#1205](https://github.com/fabric8io/docker-maven-plugin/issues/1205))
+  - Allow docker:save to attach image archive as a project artifact ([#1210](https://github.com/fabric8io/docker-maven-plugin/pull/1210))
+  - Use pattern to detect image name in archive loaded during build and tag with image name from the project configuration ([#1207](https://github.com/fabric8io/docker-maven-plugin/issues/1207))
+  - Add 'cacheFrom' option to specify images to use as cache sources ([#1132](https://github.com/fabric8io/docker-maven-plugin/issues/1132))
+
+Renamed "nocache" to "noCache" for consistencies reason. "nocache" is still supported but deprecated and will be removed in a future version. Same is true for the global system property "docker.nocache" which is renamed to "docker.noCache" 
+
+* **0.29.0** (2019-04-08)
+  - Avoid failing docker:save when no images with build configuration are present ([#1185](https://github.com/fabric8io/docker-maven-plugin/issues/1185))
+  - Reintroduce minimal API-VERSION parameter in order to support docker versions below apiVersion 1.25
+  - docs: Correct default image naming
+  - Proxy settings are being ignored ([#1148](https://github.com/fabric8io/docker-maven-plugin/issues/1148))
+  - close api version http connection ([#1152](https://github.com/fabric8io/docker-maven-plugin/issues/1152))
+  - Log more information when verbose=true  ([#917](https://github.com/fabric8io/docker-maven-plugin/issues/917))
+  - Obtain container ip address from custom network for tcp/http wait
+  - Fix http (SSL) ping with 'allowAllHosts' flag enabled
+  - Update to jnr-unixsocket 0.22
+  - Enhance @sha256 digest for tags in FROM (image_name:image_tag@sha256<digest>) ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
+  - Support docker SHELL setting for runCmds ([#1157](https://github.com/fabric8io/docker-maven-plugin/issues/1157))
+  - Added 'autoRemove' option for running containers ([#1179](https://github.com/fabric8io/docker-maven-plugin/issues/1179))
+  - Added support for AWS EC2 instance roles when pushing to AWS ECR ([#1186](https://github.com/fabric8io/docker-maven-plugin/issues/1186))
+  - Introduce `contextDir` configuration option which would be used to specify docker build context ([#1189](https://github.com/fabric8io/docker-maven-plugin/issues/1189))
+  - Add support for auto-pulling multiple base image for multi stage builds ([#1057](https://github.com/fabric8io/docker-maven-plugin/issues/1057))
+  - Fix usage of credential helper that do not support 'version' command ([#1159](https://github.com/fabric8io/docker-maven-plugin/issues/1159))
+
+Please note that `dockerFileDir` is now deprecated in favor of `contextDir` which also allows absolute paths to Dockerfile with 
+`dockerFile` and it will be removed in 1.0.0. It's still supported in this release but users are suggested to migrate to 
+`contextDir` instead.
+  
+* **0.28.0** (2018-12-13)
+  - Update to JMockit 1.43
+  - Compiles with Java 11
+  - Update to jnr-unixsocket version to 0.21 ([#1089](https://github.com/fabric8io/docker-maven-plugin/issues/1089))
+  - Add 'readOnly' option for docker:run cto mount container's root fs read-only ([#1125](https://github.com/fabric8io/docker-maven-plugin/issues/1125))
+  - Provide container properties to the wait configuration execution ([#1111](https://github.com/fabric8io/docker-maven-plugin/issues/1111))
+  - Allow @sha256 digest for tags in FROM ([#541](https://github.com/fabric8io/docker-maven-plugin/issues/541))
+
+* **0.27.2** (2018-10-05)
+  - Fix NPE regression related to volumes (again) ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
+  - Fix NPE when stopping containers with autoCreateCustomNetworks ([#1097](https://github.com/fabric8io/docker-maven-plugin/issues/1097))
+  - Smarter API version handling ([#1060](https://github.com/fabric8io/docker-maven-plugin/issues/1060))
+  - Fix regression when calling the credential helper for authentication, leading to an exception because of the usage of an already shutdown executor service ([#1098](https://github.com/fabric8io/docker-maven-plugin/issues/1098))
+  - Add support for CPU configurations with compose ([#1102](https://github.com/fabric8io/docker-maven-plugin/issues/1102))
+
+* **0.27.1** (2018-09-28)
+  - Fix NPE when no volume configuration is present ([#1091](https://github.com/fabric8io/docker-maven-plugin/issues/1091))
+  - Allow credentialhelper look up the registry without scheme prefix ([#1068](https://github.com/fabric8io/docker-maven-plugin/issues/1068))
+
+* **0.27.0** (2018-09-26)
+  - Jump to Java 8 as minimal Java version
+  - Fix NPE in docker:remove-volumes when no volume configuration is given ([#1086](https://github.com/fabric8io/docker-maven-plugin/issues/1086))
+  - Fix NPE when no networks are configured ([#1055](https://github.com/fabric8io/docker-maven-plugin/issues/1055))
+  - Fix Base64 encoding for X-Registry-Auth used for Docker authentication ([#1084](https://github.com/fabric8io/docker-maven-plugin/issues/1084))
+  - Fix property configuration based's build detection ([#1078](https://github.com/fabric8io/docker-maven-plugin/issues/1078))
+  - Introduce container name patterns for naming containers ([#931](https://github.com/fabric8io/docker-maven-plugin/issues/931))
+  - Respect environment variables DOCKER_CONFIG, KUBECONFIG for looking up credentials ([#1083](https://github.com/fabric8io/docker-maven-plugin/issues/1083))
+  - Change from org.json with Gson for less restrictive licensing ([#1016](https://github.com/fabric8io/docker-maven-plugin/issues/1016)) ([#1064](https://github.com/fabric8io/docker-maven-plugin/issues/1064))
+  - Fix missing actions in a watch restart ([#1070](https://github.com/fabric8io/docker-maven-plugin/issues/1070))
+  - Fix for creating volumes with proper configuration during "docker:start" ([#986](https://github.com/fabric8io/docker-maven-plugin/issues/986))
+  - Fix logging failure on Windows ([#873](https://github.com/fabric8io/docker-maven-plugin/issues/873))
+
+* **0.26.1** (2018-07-20)
+  - Simple Dockerfile triggered also when only a single run section is given
+  - Sample added for how to use run-java-sh in simple dockerfile mode
+  - Allow both cred helpers and auth in Docker config ([#1041](https://github.com/fabric8io/docker-maven-plugin/issues/1041))
+
+* **0.26.0** (2018-05-16)
+  - Always create missing target directory for docker:save ([#1013](https://github.com/fabric8io/docker-maven-plugin/issues/1013))
+  - d-m-p plugins for adding extra files introduced. See documentation for more information.
+  - Update assembly plugin to 3.1.0 ([#1021](https://github.com/fabric8io/docker-maven-plugin/issues/1021))
+  - Add option for regenerating certificates after starting Docker Machine ([#1019](https://github.com/fabric8io/docker-maven-plugin/issues/1019))
+  - Add `startPeriod` to `healthCheck` ([#961](https://github.com/fabric8io/docker-maven-plugin/issues/961))
+  - Unbreak setting of entrypoint in `exec` form when property mode is enabled ([#1020](https://github.com/fabric8io/docker-maven-plugin/issues/1020))
+  - Fix enabling of log configuration ([#1010](https://github.com/fabric8io/docker-maven-plugin/issues/1010))
+  - Add possibility to use `docker.imagePropertyConfiguration` with multiple images ([#1001](https://github.com/fabric8io/docker-maven-plugin/issues/1001))
+  - Fix network aliases management for docker-compose mode ([#1000](https://github.com/fabric8io/docker-maven-plugin/issues/1000))
+
+* **0.25.2** (2018-04-14)
+  - Fix for docker login issue with index.docker.io using a credential helper ([#946](https://github.com/fabric8io/docker-maven-plugin/issues/946))
+
 * **0.25.1** (2018-04-12)
   - Fix regression which broke labels and env with space ([#988](https://github.com/fabric8io/docker-maven-plugin/issues/988))
   - Fix and enhanced zero-config Dockerfile mode
@@ -78,7 +221,7 @@ Please note that now filtering in an external Dockerfiles is switched on by defa
   - Allow multi line matches in log output ([#628](https://github.com/fabric8io/docker-maven-plugin/issues/628))
   - Add a wait condition on a healthcheck when starting up containers ([#719](https://github.com/fabric8io/docker-maven-plugin/issues/719))
   - Don't use authentication from config when no "auth" is set ([#731](https://github.com/fabric8io/docker-maven-plugin/issues/731))
-
+  
 * **0.20.0** (2017-02-17)
   - Removed `build-nofork` and `source-nofork` in favor for a more direct solution which prevents forking of the lifecycle. Please refer the documentation, chapter "Assembly" for more information about this.
 

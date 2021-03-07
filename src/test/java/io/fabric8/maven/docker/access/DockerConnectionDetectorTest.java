@@ -24,15 +24,17 @@ public class DockerConnectionDetectorTest {
         String dockerHost = System.getenv("DOCKER_HOST");
         if (dockerHost != null) {
             assertEquals(dockerHost.replaceFirst("^tcp:/",""), detector.detectConnectionParameter(null, null).getUrl().replaceFirst("^https?:/", ""));
-        } else if (System.getProperty("os.name").equalsIgnoreCase("Windows 10")) {
+        } else if (System.getProperty("os.name").contains("Windows")) {
         	try {
                 assertEquals("npipe:////./pipe/docker_engine", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
+        	    // expected if no unix socket
             }
         } else {
             try {
                 assertEquals("unix:///var/run/docker.sock", detector.detectConnectionParameter(null, null).getUrl());
             } catch (IllegalArgumentException expectedIfNoUnixSocket) {
+                // expected if no unix socket
             }
         }
     }

@@ -15,11 +15,13 @@ package io.fabric8.maven.docker.access;/*
  * limitations under the License.
  */
 
+import org.junit.Test;
+
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-import org.json.JSONObject;
-import org.junit.Test;
+import io.fabric8.maven.docker.util.JsonFactory;
 
 import static org.junit.Assert.assertEquals;
 
@@ -52,6 +54,18 @@ public class BuildConfigTest {
     }
 
     @Test
+    public void squash() {
+        BuildOptions opts = new BuildOptions().squash(true);
+        assertEquals(1, opts.getOptions().size());
+        assertEquals("1", opts.getOptions().get("squash"));
+        opts.squash(false);
+        assertEquals("0", opts.getOptions().get("squash"));
+        opts.addOption("squash","1");
+        assertEquals("1", opts.getOptions().get("squash"));
+        assertEquals(1, opts.getOptions().size());
+    }
+
+    @Test
     public void dockerfile() {
         BuildOptions opts = new BuildOptions().dockerfile("blub");
         assertEquals("blub", opts.getOptions().get("dockerfile"));
@@ -63,7 +77,7 @@ public class BuildConfigTest {
     public void buildArgs() {
         Map<String,String> args = Collections.singletonMap("arg1","blub");
         BuildOptions opts = new BuildOptions().buildArgs(args);
-        assertEquals(new JSONObject(args).toString(), opts.getOptions().get("buildargs"));
+        assertEquals(JsonFactory.newJsonObject(args).toString(), opts.getOptions().get("buildargs"));
         opts = new BuildOptions().buildArgs(null);
         assertEquals(0, opts.getOptions().size());
 
@@ -78,5 +92,29 @@ public class BuildConfigTest {
         assertEquals("0", opts.getOptions().get("nocache"));
         opts.addOption("nocache","1");
         assertEquals("1", opts.getOptions().get("nocache"));
+    }
+
+    @Test
+    public void cacheFrom() {
+        BuildOptions opts = new BuildOptions().cacheFrom(Arrays.asList("foo/bar:latest"));
+        assertEquals("[\"foo/bar:latest\"]", opts.getOptions().get("cachefrom"));
+
+        opts.cacheFrom(Arrays.asList("foo/bar:latest", "foo/baz:1.0"));
+        assertEquals("[\"foo/bar:latest\",\"foo/baz:1.0\"]", opts.getOptions().get("cachefrom"));
+
+        opts.cacheFrom(Arrays.asList());
+        assertEquals(null, opts.getOptions().get("cachefrom"));
+
+        opts.cacheFrom(null);
+        assertEquals(null, opts.getOptions().get("cachefrom"));
+    }
+
+    @Test
+    public void network() {
+        BuildOptions opts = new BuildOptions().network(null);
+        assertEquals(null, opts.getOptions().get("networkmode"));
+
+        opts.network("host");
+        assertEquals("host", opts.getOptions().get("networkmode"));
     }
 }

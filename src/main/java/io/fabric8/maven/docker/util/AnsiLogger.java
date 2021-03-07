@@ -1,6 +1,10 @@
 package io.fabric8.maven.docker.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,7 +32,8 @@ public class AnsiLogger implements Logger {
     private final String prefix;
     private final boolean batchMode;
 
-    private boolean verbose;
+    private boolean isVerbose = false;
+    private List<LogVerboseCategory> verboseModes = null;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
     static Ansi.Color
@@ -48,19 +53,20 @@ public class AnsiLogger implements Logger {
     // Whether to use ANSI codes
     private boolean useAnsi;
 
-    public AnsiLogger(Log log, boolean useColor, boolean verbose) {
+
+    public AnsiLogger(Log log, boolean useColor, String verbose) {
         this(log, useColor, verbose, false);
     }
 
-    public AnsiLogger(Log log, boolean useColor, boolean verbose, boolean batchMode) {
+    public AnsiLogger(Log log, boolean useColor, String verbose, boolean batchMode) {
         this(log, useColor, verbose, batchMode, DEFAULT_LOG_PREFIX);
     }
 
-    public AnsiLogger(Log log, boolean useColor, boolean verbose, boolean batchMode, String prefix) {
+    public AnsiLogger(Log log, boolean useColor, String verbose, boolean batchMode, String prefix) {
         this.log = log;
-        this.verbose = verbose;
         this.prefix = prefix;
         this.batchMode = batchMode;
+        checkVerboseLoggingEnabled(verbose);
         initializeColor(useColor);
     }
 
@@ -77,8 +83,8 @@ public class AnsiLogger implements Logger {
     }
 
     /** {@inheritDoc} */
-    public void verbose(String message, Object ... params) {
-        if (verbose) {
+    public void verbose(LogVerboseCategory logVerboseCategory, String message, Object ... params) {
+        if (isVerbose && verboseModes != null && verboseModes.contains(logVerboseCategory)) {
             log.info(ansi().fgBright(BLACK).a(prefix).a(format(message, params)).reset().toString());
         }
     }
@@ -106,7 +112,7 @@ public class AnsiLogger implements Logger {
     }
 
     public boolean isVerboseEnabled() {
-        return verbose;
+        return isVerbose;
     }
 
     /**
@@ -198,8 +204,7 @@ public class AnsiLogger implements Logger {
     }
 
     private void initializeColor(boolean useColor) {
-        // sl4j simple logger used by Maven seems to escape ANSI escapes on Windows
-        this.useAnsi = useColor && System.console() != null && !log.isDebugEnabled() && !isWindows();
+        this.useAnsi = useColor && !log.isDebugEnabled();
         if (useAnsi) {
             AnsiConsole.systemInstall();
             Ansi.setEnabled(true);
@@ -207,11 +212,6 @@ public class AnsiLogger implements Logger {
         else {
             Ansi.setEnabled(false);
         }
-    }
-
-    private boolean isWindows() {
-        String os = System.getProperty("os.name");
-        return os != null && os.toLowerCase().startsWith("windows");
     }
 
     private void println(String txt) {
@@ -243,20 +243,33 @@ public class AnsiLogger implements Logger {
 
     // Emphasize parts encloses in "[[*]]" tags
     private String evaluateEmphasis(String message, Ansi.Color msgColor) {
-        // Split with delimiters [[.]]. See also http://stackoverflow.com/a/2206545/207604
-        String prepared = message.replaceAll("\\[\\[(.)]]","[[]]$1[[]]");
-        String[] parts = prepared.split("\\[\\[]]");
+        // Split but keep the content by splitting on [[ and ]] separately when they
+        // are followed or preceded by their counterpart. This lets the split retain
+        // the character in the center.
+        String[] parts = message.split("(\\[\\[(?=.]])|(?<=\\[\\[.)]])");
         if (parts.length == 1) {
             return message;
         }
+        // The split up string is comprised of a leading plain part, followed
+        // by groups of colorization that are <SET> color-part <RESET> plain-part.
+        // To avoid emitting needless color changes, we skip the set or reset
+        // if the subsequent part is empty.
         String msgColorS = ansi().fg(msgColor).toString();
         StringBuilder ret = new StringBuilder(parts[0]);
-        boolean colorOpen = true;
-        for (int i = 1; i < parts.length; i+=2) {
-            ret.append(colorOpen ? getEmphasisColor(parts[i]) : msgColorS);
-            colorOpen = !colorOpen;
-            if (i+1 < parts.length) {
-                ret.append(parts[i+1]);
+
+        for (int i = 1; i < parts.length; i += 4) {
+            boolean colorPart = i + 1 < parts.length && parts[i + 1].length() > 0;
+            boolean plainPart = i + 3 < parts.length && parts[i + 3].length() > 0;
+
+            if (colorPart) {
+                ret.append(getEmphasisColor(parts[i]));
+                ret.append(parts[i + 1]);
+                if(plainPart) {
+                    ret.append(msgColorS);
+                }
+            }
+            if (plainPart) {
+                ret.append(parts[i + 3]);
             }
         }
         return ret.toString();
@@ -287,5 +300,47 @@ public class AnsiLogger implements Logger {
         } else {
             return "";
         }
+    }
+
+    private void checkVerboseLoggingEnabled(String verbose) {
+        if (verbose == null || verbose.equalsIgnoreCase("false")) {
+            this.isVerbose = false;
+            return;
+        }
+        if (verbose.equalsIgnoreCase("all")) {
+            this.isVerbose = true;
+            this.verboseModes = Arrays.asList(LogVerboseCategory.values());
+            return;
+        }
+        if (verbose.equals("") || verbose.equalsIgnoreCase("true")) {
+            this.isVerbose = true;
+            this.verboseModes = Collections.singletonList(LogVerboseCategory.BUILD);
+            return;
+        }
+
+        this.verboseModes = getVerboseModesFromString(verbose);
+        this.isVerbose = true;
+    }
+
+    private Boolean checkBackwardVersionValues(String verbose) {
+        if (verbose.isEmpty()) {
+            return Boolean.TRUE;
+        }
+        if (verbose.equalsIgnoreCase("true") || verbose.equalsIgnoreCase("false")) {
+            return Boolean.parseBoolean(verbose.toLowerCase());
+        }
+        return null;
+    }
+
+    private List<LogVerboseCategory> getVerboseModesFromString(String groups) {
+        List<LogVerboseCategory> ret = new ArrayList<>();
+        for (String group : groups.split(",")) {
+            try {
+                ret.add(LogVerboseCategory.valueOf(group.toUpperCase()));
+            } catch (Exception exp) {
+                log.info("log: Unknown verbosity group " + groups + ". Ignoring...");
+            }
+        }
+        return ret;
     }
 }

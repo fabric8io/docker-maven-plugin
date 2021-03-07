@@ -1,23 +1,25 @@
 package io.fabric8.maven.docker.model;
 
-import java.util.Collections;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ContainerListElementTest {
 
     private Container container;
 
-    private JSONObject json;
+    private JsonObject json;
 
     @Before
     public void setup() {
-        json = new JSONObject();
+        json = new JsonObject();
     }
 
     @Test
@@ -31,7 +33,7 @@ public class ContainerListElementTest {
 
     @Test
     public void testContaierWithPorts() {
-        givenAContaierWithPorts();
+        givenAContainerWithPorts();
         whenCreateContainer();
         thenPortBindingSizeIs(2);
         thenMapContainsPortSpecOnly("80/tcp");
@@ -70,39 +72,46 @@ public class ContainerListElementTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void testNoNameInListElement() {
-        new ContainersListElement(new JSONObject()).getName();
+        new ContainersListElement(new JsonObject()).getName();
     }
 
-    private void addToArray(JSONArray array, int index, String key, Object value) {
-        array.getJSONObject(index).put(key, value);
+    private void addToArray(JsonArray array, int index, String key, String value) {
+        array.get(index).getAsJsonObject().addProperty(key, value);
     }
 
-    private JSONObject createPortData(int port, String type) {
-        JSONObject ports = new JSONObject();
-        ports.put("PrivatePort", port);
-        ports.put(ContainersListElement.TYPE, type);
+    private void addToArray(JsonArray array, int index, String key, Integer value) {
+        array.get(index).getAsJsonObject().addProperty(key, value);
+    }
+
+    private JsonObject createPortData(int port, String type) {
+        JsonObject ports = new JsonObject();
+        ports.addProperty("PrivatePort", port);
+        ports.addProperty(ContainersListElement.TYPE, type);
 
         return ports;
     }
 
-    private void givenAContaierWithPorts() {
-        json.append(ContainersListElement.PORTS, createPortData(80, "tcp"));
-        json.append(ContainersListElement.PORTS, createPortData(52, "udp"));
+    private void givenAContainerWithPorts() {
+        JsonArray array = new JsonArray();
+        array.add(createPortData(80, "tcp"));
+        array.add(createPortData(52, "udp"));
+
+        json.add(ContainersListElement.PORTS, array);
     }
 
 
     private void givenAContainerWithLabels() {
-        JSONObject labels = new JSONObject();
-        labels.put("key1", "value1");
-        labels.put("key2", "value2");
+        JsonObject labels = new JsonObject();
+        labels.addProperty("key1", "value1");
+        labels.addProperty("key2", "value2");
 
-        json.put(ContainerDetails.LABELS, labels);
+        json.add(ContainerDetails.LABELS, labels);
     }
 
     private void givenAContainerWithMappedPorts() {
-        givenAContaierWithPorts();
+        givenAContainerWithPorts();
 
-        JSONArray array = json.getJSONArray(ContainersListElement.PORTS);
+        JsonArray array = json.getAsJsonArray(ContainersListElement.PORTS);
 
         addToArray(array, 0, ContainersListElement.IP, "0.0.0.0");
         addToArray(array, 0, ContainersListElement.PUBLIC_PORT, 32771);
@@ -112,15 +121,15 @@ public class ContainerListElementTest {
     }
 
     private void givenAContainerWithoutPorts() {
-        json.put("Ports", Collections.emptyList());
+        json.add("Ports", new JsonArray());
     }
 
     private void givenContainerData() {
-        json.put(ContainersListElement.CREATED,1420559251485L);
-        json.put(ContainersListElement.ID, "1234AF1234AF");
-        json.put(ContainersListElement.IMAGE, "9876CE");
-        json.put(ContainersListElement.STATUS, "Up 16 seconds");
-        json.put(ContainersListElement.PORTS, new JSONArray());
+        json.addProperty(ContainersListElement.CREATED,1420559251485L);
+        json.addProperty(ContainersListElement.ID, "1234AF1234AF");
+        json.addProperty(ContainersListElement.IMAGE, "9876CE");
+        json.addProperty(ContainersListElement.STATUS, "Up 16 seconds");
+        json.add(ContainersListElement.PORTS, new JsonArray());
     }
 
     private void thenLabelsContains(String key, String value) {

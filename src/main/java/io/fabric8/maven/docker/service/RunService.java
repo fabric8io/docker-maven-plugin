@@ -1,5 +1,7 @@
 package io.fabric8.maven.docker.service;
 
+import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
+
 /*
  *
  * Copyright 2014 Roland Huss
@@ -18,23 +20,47 @@ package io.fabric8.maven.docker.service;
  */
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import io.fabric8.maven.docker.access.ContainerCreateConfig;
+import io.fabric8.maven.docker.access.ContainerHostConfig;
+import io.fabric8.maven.docker.access.ContainerNetworkingConfig;
+import io.fabric8.maven.docker.access.DockerAccess;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
+import io.fabric8.maven.docker.access.NetworkCreateConfig;
+import io.fabric8.maven.docker.access.PortMapping;
+import io.fabric8.maven.docker.config.Arguments;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.NetworkConfig;
+import io.fabric8.maven.docker.config.RestartPolicy;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
+import io.fabric8.maven.docker.config.RunVolumeConfiguration;
+import io.fabric8.maven.docker.config.StopMode;
+import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ExecDetails;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.access.*;
-import io.fabric8.maven.docker.config.*;
 import io.fabric8.maven.docker.model.Network;
-import io.fabric8.maven.docker.util.*;
-import io.fabric8.maven.docker.wait.WaitUtil;
+import io.fabric8.maven.docker.util.ContainerNamingUtil;
+import io.fabric8.maven.docker.util.EnvUtil;
+import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.Logger;
+import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
-
-import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolumeBindings;
+import io.fabric8.maven.docker.wait.WaitUtil;
 
 
 /**
@@ -99,25 +125,32 @@ public class RunService {
      * Create and start a container with the given image configuration.
      * @param imageConfig image configuration holding the run information and the image name
      * @param portMapping container port mapping
-     * @param mavenProps properties to fill in with dynamically assigned ports
-     * @param pomLabel label to tag the started container with
+     * @param gavLabel label to tag the started container with
      *
+     * @param properties properties to fill in with dynamically assigned ports
+     * @param defaultContainerNamePattern pattern to use for naming containers. Can be null in which case a default pattern is used
+     * @param buildTimestamp date which should be used as the timestamp when calculating container names
      * @return the container id
      *
      * @throws DockerAccessException if access to the docker backend fails
      */
     public String createAndStartContainer(ImageConfiguration imageConfig,
                                           PortMapping portMapping,
-                                          PomLabel pomLabel,
-                                          Properties mavenProps,
-                                          File baseDir) throws DockerAccessException {
+                                          GavLabel gavLabel,
+                                          Properties properties,
+                                          File baseDir,
+                                          String defaultContainerNamePattern,
+                                          Date buildTimestamp) throws DockerAccessException {
         RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
         String imageName = imageConfig.getName();
-        String containerName = calculateContainerName(imageConfig.getAlias(), runConfig.getNamingStrategy());
-        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, pomLabel, mavenProps, baseDir);
+
+        Collection<Container> existingContainers = queryService.getContainersForImage(imageName, true);
+        String containerName = ContainerNamingUtil.formatContainerName(imageConfig, defaultContainerNamePattern, buildTimestamp, existingContainers);
+
+        ContainerCreateConfig config = createContainerConfig(imageName, runConfig, portMapping, gavLabel, properties, baseDir);
 
         String id = docker.createContainer(config, containerName);
-        startContainer(imageConfig, id, pomLabel);
+        startContainer(imageConfig, id, gavLabel);
 
         if (portMapping.needsPropertiesUpdate()) {
             updateMappedPortsAndAddresses(id, portMapping);
@@ -171,14 +204,30 @@ public class RunService {
     public void stopStartedContainers(boolean keepContainer,
                                       boolean removeVolumes,
                                       boolean removeCustomNetworks,
-                                      PomLabel pomLabel)
+                                      GavLabel gavLabel)
         throws DockerAccessException, ExecException {
+		List<DockerAccessException> thrownExceptions = new ArrayList<>();
         Set<Network> networksToRemove = new HashSet<>();
-        for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(pomLabel)) {
-            collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
-            shutdown(descriptor, keepContainer, removeVolumes);
+        for (ContainerTracker.ContainerShutdownDescriptor descriptor : tracker.removeShutdownDescriptors(gavLabel)) {
+			try {
+				collectCustomNetworks(networksToRemove, descriptor, removeCustomNetworks);
+				shutdown(descriptor, keepContainer, removeVolumes);
+			} catch (DockerAccessException exc) {
+				thrownExceptions.add(exc);
+			}
+		}
+		try {
+			removeCustomNetworks(networksToRemove);
+		} catch (DockerAccessException exc) {
+			thrownExceptions.add(exc);
         }
-        removeCustomNetworks(networksToRemove);
+		if (!thrownExceptions.isEmpty()) {
+			DockerAccessException exception = new DockerAccessException("At least one exception thrown during container removal.");
+			for (DockerAccessException dae : thrownExceptions) {
+				exception.addSuppressed(dae);
+			}
+			throw exception;
+		}
     }
 
     private void collectCustomNetworks(Set<Network> networksToRemove, ContainerTracker.ContainerShutdownDescriptor descriptor, boolean removeCustomNetworks) throws DockerAccessException {
@@ -252,7 +301,7 @@ public class RunService {
 
     // visible for testing
     ContainerCreateConfig createContainerConfig(String imageName, RunImageConfiguration runConfig, PortMapping mappedPorts,
-                                                PomLabel pomLabel, Properties mavenProps, File baseDir)
+                                                GavLabel gavLabel, Properties mavenProps, File baseDir)
             throws DockerAccessException {
         try {
             ContainerCreateConfig config = new ContainerCreateConfig(imageName)
@@ -263,7 +312,7 @@ public class RunService {
                     .entrypoint(runConfig.getEntrypoint())
                     .exposedPorts(mappedPorts.getContainerPorts())
                     .environment(runConfig.getEnvPropertyFile(), runConfig.getEnv(), mavenProps)
-                    .labels(mergeLabels(runConfig.getLabels(), pomLabel))
+                    .labels(mergeLabels(runConfig.getLabels(), gavLabel))
                     .command(runConfig.getCmd())
                     .hostConfig(createContainerHostConfig(runConfig, mappedPorts, baseDir));
             RunVolumeConfiguration volumeConfig = runConfig.getVolumeConfiguration();
@@ -286,7 +335,7 @@ public class RunService {
         }
     }
 
-    private Map<String, String> mergeLabels(Map<String, String> labels, PomLabel runIdLabel) {
+    private Map<String, String> mergeLabels(Map<String, String> labels, GavLabel runIdLabel) {
         Map<String,String> ret = new HashMap<>();
         if (labels != null) {
             ret.putAll(labels);
@@ -321,7 +370,12 @@ public class RunService {
                 .restartPolicy(restartPolicy.getName(), restartPolicy.getRetry())
                 .logConfig(runConfig.getLogConfiguration())
                 .tmpfs(runConfig.getTmpfs())
-                .ulimits(runConfig.getUlimits());
+                .ulimits(runConfig.getUlimits())
+                .cpuShares(runConfig.getCpuShares())
+                .cpus(runConfig.getCpus())
+                .cpuSet(runConfig.getCpuSet())
+                .readonlyRootfs(runConfig.getReadOnly())
+                .autoRemove(runConfig.getAutoRemove());
 
         addVolumeConfig(config, runConfig, baseDir);
         addNetworkingConfig(config, runConfig);
@@ -381,16 +435,6 @@ public class RunService {
     }
 
 
-    private String calculateContainerName(String alias, RunImageConfiguration.NamingStrategy namingStrategy) {
-        if (namingStrategy == RunImageConfiguration.NamingStrategy.none) {
-            return null;
-        }
-        if (alias == null) {
-            throw new IllegalArgumentException("A naming scheme 'alias' requires an image alias to be set");
-        }
-        return alias;
-    }
-
     // checkAllContainers: false = only running containers are considered
     private String findContainerId(String imageNameOrAlias, boolean checkAllContainers) throws DockerAccessException {
         String id = lookupContainer(imageNameOrAlias);
@@ -405,10 +449,10 @@ public class RunService {
         return id;
     }
 
-    private void startContainer(ImageConfiguration imageConfig, String id, PomLabel pomLabel) throws DockerAccessException {
+    private void startContainer(ImageConfiguration imageConfig, String id, GavLabel gavLabel) throws DockerAccessException {
         log.info("%s: Start container %s",imageConfig.getDescription(), id);
         docker.startContainer(id);
-        tracker.registerContainer(id, imageConfig, pomLabel);
+        tracker.registerContainer(id, imageConfig, gavLabel);
     }
 
     private void updateMappedPortsAndAddresses(String containerId, PortMapping mappedPorts) throws DockerAccessException {
@@ -424,6 +468,7 @@ public class RunService {
         throws DockerAccessException, ExecException {
 
         String containerId = descriptor.getContainerId();
+        StopMode stopMode = descriptor.getStopMode();
         if (descriptor.getPreStop() != null) {
             try {
                 execInContainer(containerId, descriptor.getPreStop(), descriptor.getImageConfiguration());
@@ -438,24 +483,33 @@ public class RunService {
             }
         }
 
-        int killGracePeriod = adjustGracePeriod(descriptor.getKillGracePeriod());
-        log.debug("shutdown will wait max of %d seconds before removing container", killGracePeriod);
+        if (stopMode.equals(StopMode.graceful)) {
+            int killGracePeriod = adjustGracePeriod(descriptor.getKillGracePeriod());
+            log.debug("shutdown will wait max of %d seconds before removing container", killGracePeriod);
 
-        long waited;
-        if (killGracePeriod == 0) {
-            docker.stopContainer(containerId, 0);
-            waited = 0;
-        } else {
-            waited = shutdownAndWait(containerId, killGracePeriod);
+            long waited;
+            if (killGracePeriod == 0) {
+                docker.stopContainer(containerId, 0);
+                waited = 0;
+            } else {
+                waited = shutdownAndWait(containerId, killGracePeriod);
+            }
+            log.info("%s: Stop%s container %s after %s ms",
+                    descriptor.getDescription(),
+                    (keepContainer ? "" : " and removed"),
+                    containerId.substring(0, 12), waited);
+        } else if (stopMode.equals(StopMode.kill)) {
+            docker.killContainer(containerId);
+            log.info("%s: Killed%s container %s.",
+                    descriptor.getDescription(),
+                    (keepContainer ? "" : " and removed"),
+                    containerId.subSequence(0, 12));
         }
         if (!keepContainer) {
             removeContainer(descriptor, removeVolumes, containerId);
         }
 
-        log.info("%s: Stop%s container %s after %s ms",
-                descriptor.getDescription(),
-                (keepContainer ? "" : " and removed"),
-                containerId.substring(0, 12), waited);
+
     }
 
     public void createCustomNetworkIfNotExistant(String customNetwork) throws DockerAccessException {
@@ -467,8 +521,20 @@ public class RunService {
     }
 
     public void removeCustomNetworks(Collection<Network> networks) throws DockerAccessException {
+		List<DockerAccessException> thrownExceptions = new ArrayList<>();
         for (Network network : networks) {
-            docker.removeNetwork(network.getId());
+			try {
+				docker.removeNetwork(network.getId());
+			} catch (DockerAccessException exc) {
+				thrownExceptions.add(exc);
+			}
+		}
+		if (!thrownExceptions.isEmpty()) {
+			DockerAccessException exception = new DockerAccessException("At least one exception was thrown while trying to remove custom networks.");
+			for (DockerAccessException dae : thrownExceptions) {
+				exception.addSuppressed(dae);
+			}
+			throw exception;
         }
     }
 
@@ -515,5 +581,40 @@ public class RunService {
         }
 
         return waited;
+    }
+
+    /**
+     * Creates a Volume if a volume is referred to during startup in bind mount mapping and
+     * a VolumeConfiguration exists
+     *
+     * @param hub Service hub
+     * @param binds volume binds present in ImageConfiguration
+     * @param volumes VolumeConfigs present
+     * @return List of volumes created
+     * @throws DockerAccessException
+     */
+    public List<String> createVolumesAsPerVolumeBinds(ServiceHub hub, List<String> binds, List<VolumeConfiguration> volumes)
+            throws DockerAccessException {
+
+        Map<String, Integer> indexMap = new HashMap<>();
+        List<String> volumesCreated = new ArrayList<>();
+
+        for (int index = 0; index < volumes.size(); index++) {
+            indexMap.put(volumes.get(index).getName(), index);
+        }
+
+        for (String bind : binds) {
+            if (bind.contains(":")) {
+                String name = bind.substring(0, bind.indexOf(':'));
+                Integer volumeConfigIndex = indexMap.get(name);
+                if (volumeConfigIndex != null) {
+                    VolumeConfiguration volumeConfig = volumes.get(volumeConfigIndex);
+                    hub.getVolumeService().createVolume(volumeConfig);
+                    volumesCreated.add(volumeConfig.getName());
+                }
+            }
+        }
+
+        return volumesCreated;
     }
 }

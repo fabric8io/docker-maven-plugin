@@ -17,7 +17,6 @@ import io.fabric8.maven.docker.access.hc.DockerAccessWithHcClient;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.DockerMachineConfiguration;
 import io.fabric8.maven.docker.model.Container.PortBinding;
-import io.fabric8.maven.docker.service.DockerAccessFactory;
 import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 
@@ -52,13 +51,13 @@ public class DockerAccessIT {
     private final DockerAccessWithHcClient dockerClient;
 
     public DockerAccessIT() throws IOException {
-        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, true);
+        AnsiLogger logger = new AnsiLogger(new SystemStreamLog(), true, "build");
         String url = createDockerConnectionDetector(logger).detectConnectionParameter(null,null).getUrl();
         this.dockerClient = createClient(url, logger);
     }
 
     private DockerConnectionDetector createDockerConnectionDetector(Logger logger) {
-        DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false");
+        DockerMachineConfiguration machine = new DockerMachineConfiguration("default","false","false");
         return new DockerConnectionDetector(
             Collections.<DockerConnectionDetector.DockerHostProvider>singletonList(new DockerMachine(logger, machine)));
     }
@@ -110,7 +109,7 @@ public class DockerAccessIT {
     private DockerAccessWithHcClient createClient(String baseUrl, Logger logger) {
         try {
             String certPath = createDockerConnectionDetector(logger).detectConnectionParameter(null,null).getCertPath();
-            return new DockerAccessWithHcClient("v" + DockerAccessFactory.API_VERSION, baseUrl, certPath, 20, logger);
+            return new DockerAccessWithHcClient(baseUrl, certPath, 20, logger);
         } catch (@SuppressWarnings("unused") IOException e) {
             // not using ssl, so not going to happen
             logger.error(e.getMessage());
