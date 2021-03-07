@@ -54,9 +54,8 @@ public class JibBuildServiceTest {
     public void testGetRegistryCredentialsForPush() throws MojoExecutionException {
         // Given
         ImageConfiguration imageConfiguration = getImageConfiguration();
-        Map authConfig = Collections.emptyMap();
         RegistryService.RegistryConfig registryConfig = new RegistryService.RegistryConfig.Builder()
-                .authConfig(authConfig)
+                .authConfig(Collections.emptyMap())
                 .authConfigFactory(authConfigFactory)
                 .settings(settings)
                 .build();
@@ -75,9 +74,8 @@ public class JibBuildServiceTest {
     public void testGetRegistryCredentialsForPull() throws MojoExecutionException {
         // Given
         ImageConfiguration imageConfiguration = getImageConfiguration();
-        Map authConfig = Collections.emptyMap();
         RegistryService.RegistryConfig registryConfig = new RegistryService.RegistryConfig.Builder()
-                .authConfig(authConfig)
+                .authConfig(Collections.emptyMap())
                 .authConfigFactory(authConfigFactory)
                 .settings(settings)
                 .build();
@@ -103,7 +101,8 @@ public class JibBuildServiceTest {
 
         // Then
         assertNotNull(tarArchive);
-        assertEquals("/target/test/testimage/0.0.1/tmp/docker-build.tar", tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
+        assertEquals("/target/test/testimage/0.0.1/tmp/docker-build.tar".replace('/', File.separatorChar),
+                tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
     }
 
 
@@ -119,7 +118,8 @@ public class JibBuildServiceTest {
 
         // Then
         assertNotNull(tarArchive);
-        assertEquals("/target/test/testimage/0.0.1/tmp/docker-build.tar", tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
+        assertEquals("/target/test/testimage/0.0.1/tmp/docker-build.tar".replace('/', File.separatorChar),
+                tarArchive.getAbsolutePath().substring(projectBaseDir.getAbsolutePath().length()));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class JibBuildServiceTest {
         // Then
         // @formatter:off
         new Verifications() {{
-            JibServiceUtil.jibPush((ImageConfiguration)any, (Credential)any, (File)any, logger); times = 0;
+            JibServiceUtil.jibPush((ImageConfiguration) any, (Credential) any, (File) any, logger); times = 0;
         }};
         // @formatter:on
     }
@@ -179,7 +179,6 @@ public class JibBuildServiceTest {
 
     @java.lang.SuppressWarnings("squid:S00112")
     private void setupServiceHubExpectations(File projectBaseDir) {
-
         new Expectations() {{
             project.getBasedir();
             result = projectBaseDir;
@@ -189,13 +188,12 @@ public class JibBuildServiceTest {
 
             params.getProject();
             result = project;
-
         }};
     }
 
     private void setupDockerAssemblyExpectations(File projectBaseDir) throws MojoExecutionException {
         new Expectations() {{
-            dockerAssemblyManager.createDockerTarArchive(anyString, params, (BuildImageConfiguration)any, logger, null);
+            dockerAssemblyManager.createDockerTarArchive(anyString, params, (BuildImageConfiguration) any, logger, null);
             result = new File(projectBaseDir, "target/test/testimage/0.0.1/tmp/docker-build.tar");
 
             serviceHub.getDockerAssemblyManager();
@@ -209,6 +207,5 @@ public class JibBuildServiceTest {
             authConfigFactory.createAuthConfig(anyBoolean, registryConfig.isSkipExtendedAuth(), registryConfig.getAuthConfig(), registryConfig.getSettings(), null, anyString);
             result = new AuthConfig("testuser" + (isPush ? "push" : "pull"), "testpass", "foo@example.com", null, null);
         }};
-
     }
 }
