@@ -20,7 +20,6 @@ import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.QueryService;
 import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.NamePatternUtil;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -31,7 +30,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +48,8 @@ import java.util.stream.Collectors;
  */
 @Mojo(name = "remove", defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class RemoveMojo extends AbstractDockerMojo {
+
+    private static final String REMOVE_NAME_PATTERN_CONFIG = "removeNamePattern";
 
     // Should all configured images should be removed?
     @Parameter(property = "docker.removeAll")
@@ -123,7 +123,7 @@ public class RemoveMojo extends AbstractDockerMojo {
     private Collection<String> getImageNamesToRemoveForMojo(ServiceHub hub)
             throws MojoExecutionException, DockerAccessException {
         if(removeNamePattern != null) {
-            Matcher imageNameMatcher = getImageNameMatcher(removeNamePattern);
+            Matcher imageNameMatcher = getImageNameMatcher(removeNamePattern, REMOVE_NAME_PATTERN_CONFIG);
 
             if(imageNameMatcher == null) {
                 log.warn("There are no image name patterns in removeNamePattern for docker:remove");
@@ -140,7 +140,8 @@ public class RemoveMojo extends AbstractDockerMojo {
             throws MojoExecutionException, DockerAccessException {
 
         if(imageConfiguration.getRemoveNamePattern() != null) {
-            Matcher imageNameMatcher = getImageNameMatcher(imageConfiguration.getRemoveNamePattern());
+            Matcher imageNameMatcher = getImageNameMatcher(imageConfiguration.getRemoveNamePattern(),
+                    REMOVE_NAME_PATTERN_CONFIG);
 
             if(imageNameMatcher == null) {
                 log.warn("There are no image name patterns in removeNamePattern for image %s: no images will be removed", imageConfiguration.getName());
@@ -151,21 +152,6 @@ public class RemoveMojo extends AbstractDockerMojo {
         }
 
         return Collections.singleton(imageConfiguration.getName());
-    }
-
-    private Matcher getImageNameMatcher(String removeNamePattern) throws MojoExecutionException {
-        try {
-            String imageNameRegex = NamePatternUtil.convertNamePatternList(removeNamePattern, NamePatternUtil.IMAGE_FIELD, true);
-            if(imageNameRegex == null) {
-                log.debug("No image name patterns in removeNamePattern %s", removeNamePattern);
-                return null;
-            } else {
-                log.debug("Converted removeNamePattern %s into image name regular expression %s", removeNamePattern, imageNameRegex);
-                return Pattern.compile(imageNameRegex).matcher("");
-            }
-        } catch(IllegalArgumentException e) {
-            throw new MojoExecutionException(e.getMessage(), e);
-        }
     }
 
     private void removeImage(ServiceHub hub, String name) throws DockerAccessException {

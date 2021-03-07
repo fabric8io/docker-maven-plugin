@@ -139,14 +139,25 @@ public class QueryService {
      * Get the id of the latest container started for an image
      *
      * @param image for which its container are looked up
+     * @param all if true, fetch stopped containers as well as running containers.
      * @return container or <code>null</code> if no container has been started for this image.
      * @throws DockerAccessException if the request fails
      */
-    public Container getLatestContainerForImage(String image) throws DockerAccessException {
+    public Container getLatestContainerForImage(String image, boolean all) throws DockerAccessException {
+        return getLatestContainer(getContainersForImage(image, all));
+    }
+
+    /**
+     * Finds the latest container.
+     *
+     * @param containers containers to find the latest.
+     * @return the latest container or <code>null</code> if given <code>containers</code> is empty.
+     */
+    public Container getLatestContainer(List<Container> containers) {
         long newest = 0;
         Container result = null;
 
-        for (Container container : getContainersForImage(image, false)) {
+        for (Container container : containers) {
             long timestamp = container.getCreated();
 
             if (timestamp < newest) {

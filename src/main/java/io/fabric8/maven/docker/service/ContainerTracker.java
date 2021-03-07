@@ -93,6 +93,22 @@ public class ContainerTracker {
         return descriptors;
     }
 
+    /**
+     * Get all shutdown descriptors for a given pom label.
+     * The descriptors are returned in order of their registration.
+     * If no pom label is given, then all descriptors are returned.
+     *
+     * @param gavLabel the label for which to get the descriptors or <code>null</code> for all descriptors
+     * @return the descriptors for the given label or an empty collection
+     */
+    public synchronized List<ContainerShutdownDescriptor> getShutdownDescriptors(GavLabel gavLabel) {
+        if (gavLabel == null) {
+            // All entries are requested
+            return new ArrayList<>(shutdownDescriptorPerContainerMap.values());
+        }
+        return getFromPomLabelMap(gavLabel);
+    }
+
     // ========================================================
 
     private void updatePomLabelMap(GavLabel gavLabel, ContainerShutdownDescriptor descriptor) {
@@ -164,6 +180,14 @@ public class ContainerTracker {
         if (descriptors == null) {
             descriptors = new ArrayList<>();
         } return descriptors;
+    }
+
+    private List<ContainerShutdownDescriptor> getFromPomLabelMap(GavLabel gavLabel) {
+        List<ContainerShutdownDescriptor> descriptors = shutdownDescriptorPerPomLabelMap.get(gavLabel);
+        if (descriptors == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(descriptors);
     }
 
     private void clearAllMaps() {

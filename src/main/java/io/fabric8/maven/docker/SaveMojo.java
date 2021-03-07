@@ -86,10 +86,13 @@ public class SaveMojo extends AbstractDockerMojo {
 		return false;
 	}
 
-	private String getFileName(String iName) throws MojoExecutionException {
+	private String getFileName(String iName) {
 	    String configuredFileName = getConfiguredFileName();
 	    if (configuredFileName != null) {
-	        return configuredFileName;
+            if (new File(configuredFileName).isAbsolute()) {
+                return configuredFileName;
+            }
+            return new File(project.getBasedir(), configuredFileName).getAbsolutePath();
         }
 		if (saveAlias != null) {
 			return completeCalculatedFileName(saveAlias +
@@ -114,8 +117,8 @@ public class SaveMojo extends AbstractDockerMojo {
         return saveFile;
     }
 
-    private String completeCalculatedFileName(String file) throws MojoExecutionException {
-        return project.getBuild().getDirectory() + "/" + file.replace("/","-");
+    private String completeCalculatedFileName(String file) {
+        return new File(project.getBuild().getDirectory(), file.replace("/","-")).getAbsolutePath();
     }
 
     private void ensureSaveDir(String fileName) throws MojoExecutionException {

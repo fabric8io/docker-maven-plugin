@@ -114,6 +114,55 @@ public class ContainerTrackerTest {
         assertEquals(0,tracker.removeShutdownDescriptors(null).size());
     }
 
+    @Test
+    public void getEmptyDescriptors() {
+        List<ContainerTracker.ContainerShutdownDescriptor> actual = tracker.getShutdownDescriptors(getPomLabel("label1"));
+
+        assertNotNull(actual);
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void getDescriptors() {
+        String[][] data = new String[][] {
+                { "1", "name1", "alias1", "100", "200", "stop1", "label1", "true" },
+                { "2", "name2", "alias2", null, null, null, "label1", "false" },
+                { "3", "name3", null, null, null, null, "label2", "true" }
+        };
+        registerAtTracker(data);
+
+        List<ContainerTracker.ContainerShutdownDescriptor> actual = tracker.getShutdownDescriptors(getPomLabel("label1"));
+
+        assertEquals(2, actual.size());
+        verifyDescriptor(data[0], actual.get(0));
+        verifyDescriptor(data[1], actual.get(1));
+
+        assertNotNull(tracker.lookupContainer("name1"));
+        assertNotNull(tracker.lookupContainer("alias1"));
+        assertNotNull(tracker.lookupContainer("name2"));
+        assertNotNull(tracker.lookupContainer("alias2"));
+        assertNotNull(tracker.lookupContainer("name3"));
+    }
+
+    @Test
+    public void getAllDescriptors() {
+        String[][] data = new String[][] {
+                { "1", "name1", "alias1", "100", "200", "stop1", "label1", "true" },
+                { "2", "name2", "alias2", null, null, null, "label1", "false" },
+                { "3", "name3", null, null, null, null, "label2", "false" }
+        };
+        registerAtTracker(data);
+
+        List<ContainerTracker.ContainerShutdownDescriptor> actual = tracker.getShutdownDescriptors(null);
+
+        assertEquals(3, actual.size());
+        verifyDescriptor(data[0], actual.get(0));
+        verifyDescriptor(data[1], actual.get(1));
+        verifyDescriptor(data[2], actual.get(2));
+
+        assertEquals(3, tracker.getShutdownDescriptors(null).size());
+    }
+
     private void verifyDescriptor(String[] d, ContainerTracker.ContainerShutdownDescriptor desc) {
         assertNotNull(desc);
         assertEquals(desc.getContainerId(),d[0]);

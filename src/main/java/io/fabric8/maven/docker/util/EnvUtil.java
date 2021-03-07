@@ -279,6 +279,69 @@ public class EnvUtil {
         return ret.size() > 0 ? ret : null;
     }
 
+    public static List<Properties> extractFromPropertiesAsListOfProperties(String prefix, Properties properties) {
+        final String prefixDot = prefix + ".";
+        final int prefixDotLength = prefixDot.length();
+
+        final Map<Integer,Properties> ordered = new TreeMap<>();
+        final Map<String, Properties> rest = new TreeMap<>();
+
+        Enumeration<?> names = properties.propertyNames();
+        while (names.hasMoreElements()) {
+            final String key = (String) names.nextElement();
+            if (!propMatchesPrefix(prefixDot, key)) {
+                continue;
+            }
+            final String propertyKey = key.substring(prefixDotLength);
+            if (PROPERTY_COMBINE_POLICY_SUFFIX.equals(propertyKey)) {
+                continue;
+            }
+            final int firstDotIndex = propertyKey.indexOf('.');
+            final String entryName = getKeyBefore(propertyKey, firstDotIndex);
+            final String entryPropertyKey = getKeyAfter(propertyKey, firstDotIndex);
+            final String entryPropertyValue = properties.getProperty(key);
+            try {
+                final int entryIndex = Integer.parseInt(entryName);
+                final Properties entry = ordered.get(entryIndex);
+                if (entry == null) {
+                    ordered.put(entryIndex, newProperties(entryPropertyKey, entryPropertyValue));
+                } else {
+                    entry.put(entryPropertyKey, entryPropertyValue);
+                }
+            } catch (NumberFormatException ignored) {
+                final Properties entry = rest.get(entryName);
+                if (entry == null) {
+                    rest.put(entryName, newProperties(entryPropertyKey, entryPropertyValue));
+                } else {
+                    entry.put(entryPropertyKey, entryPropertyValue);
+                }
+            }
+        }
+        final List<Properties> all = new ArrayList<>(ordered.values());
+        all.addAll(rest.values());
+        return all.isEmpty() ? null : all;
+    }
+
+    private static String getKeyBefore(String name, int separatorIndex) {
+        if (separatorIndex == -1) {
+            return name;
+        }
+        return name.substring(0, separatorIndex);
+    }
+
+    private static String getKeyAfter(String name, int separatorIndex) {
+        if (separatorIndex == -1 || separatorIndex >= name.length()) {
+            return "";
+        }
+        return name.substring(separatorIndex + 1);
+    }
+
+    private static Properties newProperties(Object key, Object value) {
+        final Properties properties = new Properties();
+        properties.put(key, value);
+        return properties;
+    }
+
     /**
      * Extract from a Maven property which is in the form ${name} the name.
      *

@@ -113,6 +113,7 @@ public enum ConfigKey {
     SKIP_PUSH,
     SKIP_RUN("skip.run"),
     STOP_NAME_PATTERN,
+    COPY_NAME_PATTERN,
     TAGS(ValueCombinePolicy.Merge),
     TMPFS,
     ULIMITS,
@@ -139,6 +140,7 @@ public enum ConfigKey {
     WATCH_MODE("watch.mode"),
     WATCH_POSTGOAL("watch.postGoal"),
     WATCH_POSTEXEC("watch.postExec"),
+    COPY_ENTRIES("copy.entries"),
     WORKDIR,
     WORKING_DIR;
 

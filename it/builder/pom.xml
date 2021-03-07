@@ -1,0 +1,98 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+  Integration test which implements Builder pattern (https://docs.docker.com/develop/develop-images/multistage-build/).
+
+  Call it with: 'mvn verify'
+
+  The test does the following:
+
+  * Creates a Docker image with built 'hello world' application. The application is built as part of the image build.
+    This image is considered as 'builder image'. It contains tools required for building of the application as well as
+    archived built application binary.
+  * Creates a temporary container of the builder image.
+  * Copies archived 'hello world' application from the temporary container into the 'target' directory of
+    the 'app' submodule of this project.
+  * Removes the temporary container.
+  * Attaches the archive with built 'hello world' application as an artifact of the 'app' submodule.
+  * Creates a Docker image which contains just 'hello world' application. This image is considered as application image
+    and doesn't contain anything except application and its runtime (if any required). Application binary is taken from
+    the artifact of the 'app' submodule, i.e. from archive built within the builder image.
+  * Creates and starts a container of the application image as part of integration test.
+    This container starts 'hello world' application which prints message and stops with zero exit code.
+  * Stops and removes the container with 'hello world' application.
+  -->
+
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.34-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>dmp-it-builder-parent</artifactId>
+  <packaging>pom</packaging>
+
+  <properties>
+    <project.build.outputTimestamp>1970-01-01T00:00:00Z</project.build.outputTimestamp>
+    <resource.delimiter>@</resource.delimiter>
+    <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
+    <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+    <docker.verbose>true</docker.verbose>
+    <builder.output.fileName>dmp-it-builder-app.tar.gz</builder.output.fileName>
+    <builder.output.file>/${builder.output.fileName}</builder.output.file>
+    <builder.image>${project.groupId}-dmp-it-builder:${project.version}-builder</builder.image>
+    <app.image>${project.groupId}-dmp-it-builder:${project.version}</app.image>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.fabric8.dmp.itests</groupId>
+        <artifactId>dmp-it-builder-builder-image</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>io.fabric8.dmp.itests</groupId>
+        <artifactId>dmp-it-builder-app</artifactId>
+        <version>${project.version}</version>
+        <type>tar.gz</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <modules>
+    <module>app-image</module>
+    <module>app</module>
+    <module>builder-image</module>
+  </modules>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>${maven-assembly-plugin.version}</version>
+          <configuration>
+            <delimiters>
+              <delimiter>${resource.delimiter}</delimiter>
+            </delimiters>
+            <overrideUid>0</overrideUid>
+            <overrideUserName>root</overrideUserName>
+            <overrideGid>0</overrideGid>
+            <overrideGroupName>root</overrideGroupName>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>

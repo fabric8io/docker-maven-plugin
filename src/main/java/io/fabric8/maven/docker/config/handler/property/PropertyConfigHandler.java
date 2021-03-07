@@ -26,6 +26,7 @@ import java.util.function.Supplier;
 import io.fabric8.maven.docker.config.Arguments;
 import io.fabric8.maven.docker.config.AssemblyConfiguration;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.CopyConfiguration;
 import io.fabric8.maven.docker.config.HealthCheckConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.config.LogConfiguration;
@@ -72,9 +73,11 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         RunImageConfiguration run = extractRunConfiguration(fromConfig, valueProvider);
         BuildImageConfiguration build = extractBuildConfiguration(fromConfig, valueProvider, project);
         WatchImageConfiguration watch = extractWatchConfig(fromConfig, valueProvider);
+        CopyConfiguration copyConfig = extractCopyConfig(fromConfig, valueProvider);
         String name = valueProvider.getString(NAME, fromConfig.getName());
         String alias = valueProvider.getString(ALIAS, fromConfig.getAlias());
         String removeNamePattern = valueProvider.getString(REMOVE_NAME_PATTERN, fromConfig.getRemoveNamePattern());
+        String copyNamePattern = valueProvider.getString(COPY_NAME_PATTERN, fromConfig.getCopyNamePattern());
         String stopNamePattern = valueProvider.getString(STOP_NAME_PATTERN, fromConfig.getStopNamePattern());
 
         if (name == null) {
@@ -86,10 +89,12 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                         .name(name)
                         .alias(alias)
                         .removeNamePattern(removeNamePattern)
+                        .copyNamePattern(copyNamePattern)
                         .stopNamePattern(stopNamePattern)
                         .runConfig(run)
                         .buildConfig(build)
                         .watchConfig(watch)
+                        .copyConfig(copyConfig)
                         .build());
     }
 
@@ -347,6 +352,13 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
                 .postExec(valueProvider.getString(WATCH_POSTEXEC, config == null ? null : config.getPostExec()))
                 .mode(valueProvider.getString(WATCH_POSTGOAL, config == null || config.getMode() == null ? null : config.getMode().name()))
                 .build();
+    }
+
+    private CopyConfiguration extractCopyConfig(ImageConfiguration fromConfig, ValueProvider valueProvider) {
+        final CopyConfiguration config = fromConfig.getCopyConfiguration();
+        final List<Properties> entriesProperties = config == null ? null : config.getEntriesAsListOfProperties();
+        return new CopyConfiguration.Builder()
+                .entriesAsListOfProperties(valueProvider.getPropertiesList(COPY_ENTRIES, entriesProperties)).build();
     }
 
     private List<UlimitConfig> extractUlimits(List<UlimitConfig> config, ValueProvider valueProvider) {

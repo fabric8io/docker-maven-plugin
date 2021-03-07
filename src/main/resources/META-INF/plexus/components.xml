@@ -22,6 +22,7 @@
               <package>org.apache.maven.plugins:maven-jar-plugin:jar,${project.groupId}:${project.artifactId}:build</package>
               <pre-integration-test>${project.groupId}:${project.artifactId}:start</pre-integration-test>
               <integration-test>org.apache.maven.plugins:maven-failsafe-plugin:integration-test</integration-test>
+              <post-integration-test>${project.groupId}:${project.artifactId}:copy</post-integration-test>
               <verify>${project.groupId}:${project.artifactId}:stop,org.apache.maven.plugins:maven-failsafe-plugin:verify</verify>
               <deploy>${project.groupId}:${project.artifactId}:push</deploy>
             </phases>

@@ -43,6 +43,7 @@ public class ValueProvider {
     private LongValueExtractor longValueExtractor;
     private BooleanValueExtractor booleanValueExtractor;
     private DoubleValueExtractor doubleValueExtractor;
+    private PropertiesListValueExtractor propertiesListValueExtractor;
 
     /**
      * Initiates ValueProvider which is to work with data from the given properties.
@@ -66,6 +67,7 @@ public class ValueProvider {
         longValueExtractor = new LongValueExtractor();
         booleanValueExtractor = new BooleanValueExtractor();
         doubleValueExtractor = new DoubleValueExtractor();
+        propertiesListValueExtractor = new PropertiesListValueExtractor();
     }
 
     public String getString(ConfigKey key, String fromConfig) {
@@ -106,6 +108,10 @@ public class ValueProvider {
 
     public Double getDouble(ConfigKey key, Double fromConfig){
         return doubleValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
+    }
+
+    public List<Properties> getPropertiesList(ConfigKey key, List<Properties> fromConfig) {
+        return propertiesListValueExtractor.getFromPreferredSource(prefix, key, fromConfig);
     }
 
     public <T> T getObject(ConfigKey key, T fromConfig, final com.google.common.base.Function<String, T> converter) {
@@ -303,6 +309,22 @@ public class ValueProvider {
                 } else {
                     merged.putAll(value);
                 }
+            }
+            return merged;
+        }
+    }
+
+    private class PropertiesListValueExtractor extends ValueExtractor<List<Properties>> {
+        @Override
+        protected List<Properties> withPrefix(String prefix, ConfigKey key, Properties properties) {
+            return extractFromPropertiesAsListOfProperties(key.asPropertyKey(prefix), properties);
+        }
+
+        @Override
+        protected List<Properties> merge(ConfigKey key, List<List<Properties>> values) {
+            List<Properties> merged = new ArrayList<>();
+            for (List<Properties> value : values) {
+                merged.addAll(value);
             }
             return merged;
         }
