@@ -38,7 +38,6 @@ import io.fabric8.maven.docker.access.NetworkCreateConfig;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.VolumeCreateConfig;
 import io.fabric8.maven.docker.access.chunked.BuildJsonResponseHandler;
-import io.fabric8.maven.docker.access.chunked.EntityStreamReaderUtil;
 import io.fabric8.maven.docker.access.chunked.PullOrPushResponseJsonHandler;
 import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.BodyAndStatusResponseHandler;
 import io.fabric8.maven.docker.access.hc.ApacheHttpClientDelegate.HttpBodyAndStatus;
@@ -761,25 +760,6 @@ public class DockerAccessWithHcClient implements DockerAccess {
 
     private static boolean isSSL(String url) {
         return url != null && url.toLowerCase().startsWith("https");
-    }
-
-    // Preparation for performing requests
-    private static class HcChunkedResponseHandlerWrapper implements ResponseHandler<Object> {
-
-        private EntityStreamReaderUtil.JsonEntityResponseHandler handler;
-
-        HcChunkedResponseHandlerWrapper(EntityStreamReaderUtil.JsonEntityResponseHandler handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public Object handleResponse(HttpResponse response) throws IOException {
-            try (InputStream stream = response.getEntity().getContent()) {
-                // Parse text as json
-                EntityStreamReaderUtil.processJsonStream(handler, stream);
-            }
-            return null;
-        }
     }
 
     public String fetchApiVersionFromServer(String baseUrl, ApacheHttpClientDelegate delegate) throws IOException {

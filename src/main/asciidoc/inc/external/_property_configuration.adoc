@@ -206,10 +206,10 @@ when a `docker.from` or a `docker.fromExt` is set.
 | defines the maintainer's email as used when building an image
 
 | *docker.memory*
-| Container memory (in bytes)
+| Memory limit in bytes.
 
 | *docker.memorySwap*
-| Total memory (swap + memory) `-1` to disable swap
+| Total memory limit (memory + swap) in bytes. Set `docker.memorySwap` equal to `docker.memory` to disable swap. Set to `-1` to allow unlimited swap.
 
 | *docker.name*
 | Image name

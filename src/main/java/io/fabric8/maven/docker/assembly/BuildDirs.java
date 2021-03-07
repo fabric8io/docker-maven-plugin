@@ -36,13 +36,13 @@ public class BuildDirs {
      * Constructor building up the the output directories
      *
      * @param imageName image name for the image to build
-     * @param params mojo params holding base and global outptput dir
+     * @param params mojo params holding base and global output dir
      */
     public BuildDirs(String imageName, MojoParameters params) {
         this.params = params;
         // Replace tag separator with a slash to avoid problems
         // with OSs which gets confused by colons.
-        this.buildTopDir = imageName != null ? imageName.replace(':', '/') : null;
+        this.buildTopDir = imageName != null ? imageName.replace(':', File.separatorChar).replace("/", File.separator) : null;
     }
 
     public File getOutputDirectory() {

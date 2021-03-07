@@ -39,6 +39,7 @@
     <surefire.version>3.0.0-M2</surefire.version>
     <jib-core.version>0.15.0</jib-core.version>
     <httpclient.version>4.5.10</httpclient.version>
+    <project.build.outputTimestamp>2020-11-14T11:57:00Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>
@@ -253,7 +254,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.5</version>
+        <version>3.6.0</version>
         <configuration>
           <goalPrefix>docker</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -317,7 +318,7 @@
       <plugin>
         <groupId>org.codehaus.plexus</groupId>
         <artifactId>plexus-component-metadata</artifactId>
-        <version>1.7.1</version>
+        <version>2.1.0</version>
         <configuration>
           <staticMetadataDirectory>${basedir}/target/filtered-resources/META-INF/plexus</staticMetadataDirectory>
         </configuration>
@@ -336,12 +337,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
-          <version>2.5.3</version>
+          <version>3.0.0-M1</version>
         </plugin>
 
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>3.2.0</version>
           <configuration>
             <archive>
               <addMavenDescriptor>true</addMavenDescriptor>
@@ -357,7 +358,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.2.0</version>
         </plugin>
 
         <plugin>
