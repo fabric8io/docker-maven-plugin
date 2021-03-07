@@ -41,18 +41,17 @@ When specifying the container name pattern the following placeholders can be use
 | *%a*
 | The `<alias>` of an image which must be set. The alias is set in the top-level image configuration
 
+| *%e*
+| Choose an empty container name, which will let the docker engine chose a random container name automatically. This placeholder must be given as single value to `containerNamePattern` when used.
+
 | *%n*
-| A sanitized version of the imag's short name from which this container is created. "Sanitized" means that any non letter, digit, dot or dash is replaced by an underscore.
+| A sanitized version of the image's short name from which this container is created. "Sanitized" means that any non letter, digit, dot or dash is replaced by an underscore.
 
 | *%t*
 | The build time stamp. This is the timestamp which created during the building of an image and locally cached. A rebuild of the image will update the timestamp.
 
 | *%i*
 | An index which is incremented if a container has already been created. With this parameter it is easily possible to have multiple, similar containers. See the example below for more details.
-
-| *%r*
-| A random container name choosen by the docker engine.
-
 |===
 
 You can combine the placeholders in any combination and will be resolved during `docker:start`, `docker:stop` and `docker:watch`.
