@@ -44,6 +44,7 @@ import mockit.Expectations;
 import mockit.Mocked;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -303,12 +304,8 @@ public class RunServiceTest {
 
         runService = new RunService(docker, queryService, tracker, logOutputSpecFactory, log);
 
-        try {
-            runService.stopStartedContainers(false, true, true, testLabel);
-            fail("Should have thrown exception");
-        } catch (DockerAccessException | ExecException e) {
-            assertEquals(e.getLocalizedMessage(), "(TEST two,TEST one)");
-        }
+        Exception thrownException = assertThrows(DockerAccessException.class, () -> runService.stopStartedContainers(false, true, true, testLabel));
+        assertEquals("(TEST two,TEST one)", thrownException.getLocalizedMessage());
     }
 
     @Test
