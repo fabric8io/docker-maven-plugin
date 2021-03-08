@@ -205,7 +205,7 @@ public class DockerAssemblyManager {
     void verifyGivenDockerfile(File dockerFile, BuildImageConfiguration buildConfig, FixedStringSearchInterpolator interpolator, Logger log) throws IOException {
         AssemblyConfiguration assemblyConfig = buildConfig.getAssemblyConfiguration();
         if (assemblyConfig == null) {
-            return;
+           return;
         }
 
         String name = assemblyConfig.getName();
@@ -411,6 +411,7 @@ public class DockerAssemblyManager {
                         .env(buildConfig.getEnv())
                         .labels(buildConfig.getLabels())
                         .expose(buildConfig.getPorts())
+                        .shell(buildConfig.getShell())
                         .run(buildConfig.getRunCmds())
                         .volumes(buildConfig.getVolumes())
                         .user(buildConfig.getUser());

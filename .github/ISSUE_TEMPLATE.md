@@ -4,7 +4,7 @@
 
 ### Info
 
-* d-m-p version :
+* docker-maven-plugin version :
 * Maven version (`mvn -v`) :
 ```
 
