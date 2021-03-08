@@ -41,6 +41,28 @@ public class ContainerNamingUtilTest {
     }
 
     @Test
+    public void testRandom() {
+        Assert.assertEquals(null,
+                ContainerNamingUtil.formatContainerName(
+                    imageConfiguration("jolokia/jolokia_demo","nameAlias", ContainerNamingUtil.EMPTY_NAME_PLACEHOLDER),
+                    null,
+                    new Date(123456),
+                    Collections.emptySet()));
+    }
+
+    @Test
+    public void testMixedRandom() {
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
+            Assert.assertEquals(null,
+                    ContainerNamingUtil.formatContainerName(
+                        imageConfiguration("jolokia/jolokia_demo","nameAlias", ContainerNamingUtil.EMPTY_NAME_PLACEHOLDER + "-extra"),
+                        null,
+                        new Date(123456),
+                        Collections.emptySet()));
+        });
+    }
+
+    @Test
     public void testTimestamp() {
         Assert.assertEquals("123456",
                             ContainerNamingUtil.formatContainerName(
@@ -74,7 +96,7 @@ public class ContainerNamingUtilTest {
     public void testAll() {
         Assert.assertEquals("prefix-1-nameAlias-jolokia_demo-123456-postfix",
                             ContainerNamingUtil.formatContainerName(
-                                imageConfiguration("jolokia/jolokia_demo","nameAlias", "prefix-%i-%a-%n-%t-postfix"),
+                                imageConfiguration("jolokia/jolokia_demo","nameAlias", "prefix-" + ContainerNamingUtil.INDEX_PLACEHOLDER + "-%a-%n-%t-postfix"),
                                 null,
                                 new Date(123456),
                                 Collections.emptySet()));

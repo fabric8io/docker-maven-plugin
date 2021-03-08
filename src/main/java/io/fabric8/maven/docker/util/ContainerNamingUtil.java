@@ -20,7 +20,8 @@ import io.fabric8.maven.docker.model.Container;
  */
 public class ContainerNamingUtil {
 
-    private static final String INDEX_PLACEHOLDER = "%i";
+    static final String INDEX_PLACEHOLDER = "%i";
+    static final String EMPTY_NAME_PLACEHOLDER = "%e";
 
     public static final String DEFAULT_CONTAINER_NAME_PATTERN = "%n-%i";
 
@@ -35,13 +36,15 @@ public class ContainerNamingUtil {
         String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
         Set<String> existingContainersNames = extractContainerNames(existingContainers);
 
-        final String partiallyApplied =
-            replacePlaceholders(
-                containerNamePattern,
-                image.getName(),
-                image.getAlias(),
-                buildTimestamp);
+        if (shouldUseEmptyName(containerNamePattern)) {
+            return null;
+        }
 
+        String partiallyApplied = replacePlaceholders(
+                        containerNamePattern,
+                        image.getName(),
+                        image.getAlias(),
+                        buildTimestamp);
 
         if (partiallyApplied.contains(INDEX_PLACEHOLDER)) {
             for (long i = 1; i < Long.MAX_VALUE; i++) {
@@ -70,20 +73,18 @@ public class ContainerNamingUtil {
 
         String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
 
-        // Only special treatment for indexed container names
-        if (!containerNamePattern.contains(INDEX_PLACEHOLDER)) {
+        if (shouldUseEmptyName(containerNamePattern) || !containerNamePattern.contains(INDEX_PLACEHOLDER)) {
             return containers;
         }
 
         final String partiallyApplied =
-            replacePlaceholders(
-                containerNamePattern,
-                image.getName(),
-                image.getAlias(),
-                buildTimestamp);
+                replacePlaceholders(
+                        containerNamePattern,
+                        image.getName(),
+                        image.getAlias(),
+                        buildTimestamp);
 
         return keepOnlyLastIndexedContainer(containers, partiallyApplied);
-
     }
 
     // ========================================================================================================
@@ -155,4 +156,12 @@ public class ContainerNamingUtil {
     private static String cleanImageName(final String imageName) {
         return new ImageName(imageName).getSimpleName().replaceAll("[^a-zA-Z0-9_.-]+", "_");
     }
+
+    private static boolean shouldUseEmptyName(String pattern) {
+        if (pattern.contains(EMPTY_NAME_PLACEHOLDER) && !pattern.equals(EMPTY_NAME_PLACEHOLDER)) {
+            throw new IllegalArgumentException("Invalid use of container naming pattern " + EMPTY_NAME_PLACEHOLDER);
+        }
+        return pattern.equals(EMPTY_NAME_PLACEHOLDER);
+    }
+
 }
