@@ -40,6 +40,8 @@ import io.fabric8.maven.docker.config.WaitConfiguration;
 import io.fabric8.maven.docker.config.handler.AbstractConfigHandlerTest;
 import mockit.Expectations;
 import mockit.Mocked;
+import org.apache.maven.plugins.assembly.model.Assembly;
+import org.apache.maven.plugins.assembly.model.DependencySet;
 import org.apache.maven.project.MavenProject;
 import org.junit.Before;
 import org.junit.Test;
@@ -671,6 +673,28 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals("project", config.getDescriptorRef());
         assertFalse(config.exportTargetDir());
         assertTrue(config.isIgnorePermissions());
+    }
+
+    @Test
+    public void testAssemblyInline() throws Exception {
+        Assembly assembly = new Assembly();
+        assembly.addDependencySet(new DependencySet());
+
+        imageConfiguration = new ImageConfiguration.Builder()
+                        .registry("docker.io")
+                        .name("test")
+                        .buildConfig(new BuildImageConfiguration.Builder()
+                                .assembly(new AssemblyConfiguration.Builder().assemblyDef(assembly).build())
+                                .build())
+                        .externalConfig(externalConfigMode(PropertyMode.Only))
+                        .build();
+
+        List<ImageConfiguration> configs = resolveImage(imageConfiguration, props(getTestAssemblyData()));
+        assertEquals(1, configs.size());
+
+        AssemblyConfiguration config = configs.get(0).getBuildConfiguration().getAssemblyConfiguration();
+        assertNotNull(config.getInline());
+        assertEquals(1, config.getInline().getDependencySets().size());
     }
 
     @Test
