@@ -13,6 +13,7 @@
   - Add a skipPom parameter, skipping a project if packaging is pom ([1388](https://github.com/fabric8io/docker-maven-plugin/pull/1388))
   - Add support for config to specify isolation technology for container ([1376](https://github.com/fabric8io/docker-maven-plugin/pull/1376))
   - Add Docker build cache friendly example utilizing Spring Boot Layered JAR and Maven Assembly Plugin ([1412](https://github.com/fabric8io/docker-maven-plugin/pull/1412))
+  - Retry port mapping to avoid race condition where complete port information may not be initially available in Docker Engine 20.10.5 ([1447](https://github.com/fabric8io/docker-maven-plugin/pull/1447))
   
 * **0.34.1** (2020-09-27)
   - Fix NPE with "skipPush" and no build configuration given ([#1381](https://github.com/fabric8io/docker-maven-plugin/issues/1381))
