@@ -133,6 +133,13 @@ public class ContainerDetailsTest {
         thenValidateContainer();
     }
 
+    @Test(expected = PortBindingException.class)
+    public void testCreateContainerWithEmptyPortBindings() throws Exception {
+        givenAContainerWithUnboundPorts();
+        whenCreateContainer();
+        container.getPortBindings();
+    }
+
     private JsonArray createHostIpAndPort(int port, String ip) {
         JsonObject object = new JsonObject();
 
@@ -171,6 +178,15 @@ public class ContainerDetailsTest {
 
     private void givenAContainerWithoutPorts() {
         json.add(ContainerDetails.NETWORK_SETTINGS, new JsonObject());
+    }
+    
+    private void givenAContainerWithUnboundPorts() {
+        JsonObject ports = new JsonObject();
+        ports.add("80/tcp", new JsonArray());
+        ports.add("52/udp", new JsonArray());
+        JsonObject networkSettings = new JsonObject();
+        networkSettings.add(ContainerDetails.PORTS, ports);
+        json.add(ContainerDetails.NETWORK_SETTINGS, networkSettings);
     }
 
     private void givenContainerData() {

@@ -20,6 +20,7 @@ import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolu
  */
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,6 +56,7 @@ import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.ContainerDetails;
 import io.fabric8.maven.docker.model.ExecDetails;
 import io.fabric8.maven.docker.model.Network;
+import io.fabric8.maven.docker.model.PortBindingException;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.GavLabel;
@@ -62,6 +64,8 @@ import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.StartOrderResolver;
 import io.fabric8.maven.docker.wait.WaitTimeoutException;
 import io.fabric8.maven.docker.wait.WaitUtil;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 
 
 /**
@@ -464,12 +468,23 @@ public class RunService {
     }
 
     private void updateMappedPortsAndAddresses(String containerId, PortMapping mappedPorts) throws DockerAccessException {
-        Container container = queryService.getMandatoryContainer(containerId);
-        if (container.isRunning()) {
-            mappedPorts.updateProperties(container.getPortBindings());
-        } else {
-            log.warn("Container %s is not running anymore, can not extract dynamic ports",containerId);
-        }
+        RetryPolicy<Void> retryPolicy = new RetryPolicy<Void>()
+                .withMaxAttempts(10)
+                .withDelay(Duration.ofMillis(250))
+                .handle(PortBindingException.class)
+                .onFailedAttempt(f -> log.debug("Failed to update mapped ports for container %s (attempt %d), retrying", 
+                        containerId, f.getAttemptCount()))
+                .onRetriesExceeded(f -> log.warn("Failed to update mapped ports for container %s after %d retries", 
+                        containerId, f.getAttemptCount()));
+        
+        Failsafe.with(retryPolicy).run(() -> {
+            Container container = queryService.getMandatoryContainer(containerId);
+            if (container.isRunning()) {
+                mappedPorts.updateProperties(container.getPortBindings());
+            } else {
+                log.warn("Container %s is not running anymore, can not extract dynamic ports", containerId);
+            }
+        });
     }
 
     private void shutdown(ContainerTracker.ContainerShutdownDescriptor descriptor, boolean keepContainer, boolean removeVolumes)

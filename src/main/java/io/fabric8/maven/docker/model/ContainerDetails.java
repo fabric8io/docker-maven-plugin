@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 
@@ -196,8 +198,12 @@ public class ContainerDetails implements Container {
             if (ports.get(port).isJsonNull()) {
                 addPortMapping(port, (PortBinding) null, portBindings);
             } else {
+                JsonArray hostMappings = ports.getAsJsonArray(port);
+                if (hostMappings.isJsonNull() || hostMappings.size() == 0) {
+                    throw new PortBindingException(port, ports);
+                }
                 // use the first entry in the array
-                JsonObject hostConfig = ports.getAsJsonArray(port).get(0).getAsJsonObject();
+                JsonObject hostConfig = hostMappings.get(0).getAsJsonObject();
                 addPortMapping(port, hostConfig, portBindings);
             }
         }
