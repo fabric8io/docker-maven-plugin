@@ -38,6 +38,7 @@ include::inc/_docker-save.adoc[]
 include::inc/_docker-tag.adoc[]
 include::inc/_docker-volume-create.adoc[]
 include::inc/_docker-volume-remove.adoc[]
+include::inc/_docker-copy.adoc[]
 
 include::inc/_external-configuration.adoc[]
 
