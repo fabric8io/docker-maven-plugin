@@ -1,0 +1,33 @@
+[[docker:copy]]
+== *docker:copy*
+
+Goal for copying file or directory from a container. When called `createContainers=true`, then all images which are configured in the project are iterated. For each image a temporary container is created (but not started) before the copying and is removed after completion of the copying, even if the copying failed.
+
+When called with `createContainers=false` option (default value) and together with <<docker:start>> goal, then only the containers started by that goal are examined. Otherwise, containers matching images configured in the project are searched and the copying is performed from the found containers only.
+
+[[Supported-Properties-Apply]]
+=== Supported Properties For Apply goal
+
+.Other options available with apply goal
+[cols="1,6,1"]
+|===
+| Element | Description | Property
+
+| *createContainers*
+| Whether to create containers or to copy from existing containers.
+
+  Defaults to `false`.
+| `docker.createContainers`
+
+| *containerNamePattern*
+| Naming pattern for how to name containers when created.
+
+  Defaults to default container naming pattern (`%n-%i`)
+| `docker.containerNamePattern`
+
+| *copyAll*
+| Whether to copy from all containers matching configured images or only from the newest ones.
+
+  Defaults to default container naming pattern (`%n-%i`)
+| `docker.copyAll`
+|===
