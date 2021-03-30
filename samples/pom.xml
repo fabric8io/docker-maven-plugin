@@ -64,5 +64,6 @@
     <module>run-java</module>
     <module>spring-boot-with-jib</module>
     <module>build-cache</module>
+    <module>copy-from-container</module>
   </modules>
 </project>

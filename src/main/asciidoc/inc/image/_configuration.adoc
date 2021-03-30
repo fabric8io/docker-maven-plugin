@@ -25,6 +25,9 @@ ifeval::["{plugin}" == "docker"]
 | Element which describe how containers should be
 created and run when <<{plugin}:start>> is called. If this image is only used a _data container_ (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.
 
+| <<config-image-copy, *copy*>>
+| Describes how files and directories of containers should be copied when <<{plugin}:copy>> is called. This element is optional.
+
 | <<external-configuration, *external*>>
 | Specification of external configuration as an alternative to this XML based configuration with `<run>` and `<build>`. It contains a `<type>` element specifying the handler for getting the configuration. See <<external-configuration,External configuration>> for details.
 endif::[]
@@ -36,5 +39,10 @@ remove rather than just using the name.
 | *stopNamePattern*
 | When containers associated with this image will be stopped by <<{plugin}:stop>>, use this <<name-patterns, pattern list>>
 to find containers to remove rather than just using the associated container name.
+
+| [[config-image-copyNamePattern]]*copyNamePattern*
+| When copying files and directories defined in <<config-image-copy, copy>> element of the image configuration
+with <<{plugin}:copy>> goal, use this <<name-patterns, pattern>> to find containers to copy from.
+This element is optional.
 
 |===
