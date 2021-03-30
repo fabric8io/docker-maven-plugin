@@ -33,12 +33,12 @@ include::inc/_docker-push.adoc[]
 include::inc/_docker-watch.adoc[]
 include::inc/_docker-remove.adoc[]
 include::inc/_docker-logs.adoc[]
+include::inc/_docker-copy.adoc[]
 include::inc/_docker-source.adoc[]
 include::inc/_docker-save.adoc[]
 include::inc/_docker-tag.adoc[]
 include::inc/_docker-volume-create.adoc[]
 include::inc/_docker-volume-remove.adoc[]
-include::inc/_docker-copy.adoc[]
 
 include::inc/_external-configuration.adoc[]
 

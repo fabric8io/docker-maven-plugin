@@ -23,6 +23,7 @@
                 <phase>generate-resources</phase>
                 <goals>
                   <goal>start</goal>
+                  <!-- Copy from container created and started by start goal -->
                   <goal>copy</goal>
                   <goal>stop</goal>
                 </goals>
@@ -34,6 +35,7 @@
                         <entries>
                           <entry>
                             <containerPath>/etc/hosts</containerPath>
+                            <!-- Absolute path -->
                             <hostDirectory>${project.build.directory}</hostDirectory>
                           </entry>
                         </entries>
@@ -69,12 +71,14 @@
                         <entries>
                           <entry>
                             <containerPath>/dev</containerPath>
+                            <!-- Relative bath based on project.basedir -->
                             <hostDirectory>target</hostDirectory>
                           </entry>
                         </entries>
                       </copy>
                     </image>
                   </images>
+                  <!-- Copy from temporary container created (but not started) by copy goal -->
                   <createContainers>true</createContainers>
                 </configuration>
               </execution>

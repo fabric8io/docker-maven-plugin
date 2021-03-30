@@ -85,6 +85,21 @@ when a `docker.from` or a `docker.fromExt` is set.
 | *docker.cmd*
 | Command to execute. This is used both when running a container and as default command when creating an image.
 
+| *docker.copy.entries.idx.containerPath*
+| `containerPath` sub element of <<config-image-copy-entry,copy configuration entry>>.
+`idx` can be an integer number, or a string. Empty string is allowed.
+
+`idx` defines order of copying.
+Entries which `idx` is an integer number are copied first in ascending order by the parsed value of `idx`.
+Entries which `idx` is not an integer number are copied second in ascending alphabetical order by `idx`.
+
+| *docker.copy.entries.idx.hostDirectory*
+| `hostDirectory` sub element of <<config-image-copy-entry,copy configuration entry>>.
+`idx` should match the one from `docker.copy.entries.idx.containerPath` external property.
+
+| *docker.copyNamePattern*
+| Set <<config-image-copyNamePattern,copyNamePattern>> of image configuration.
+
 | *docker.cpus*
 | Specify how much of the available CPU resources a container can use
 

@@ -33,8 +33,9 @@ Then, each specific image configuration has three parts:
 * A general image part containing the image name and alias.
 * A <<{plugin}:build,<build> >> configuration specifying how images are built
 * A <<{plugin}:start,<run> >> configuration describing how containers should be created and started.
+* A <<config-image-copy,<copy> >> configuration describing how files and directories from containers should be copied to the host.
 
-The `<build>` and `<run>` parts are optional and can be omitted.
+The `<build>`, `<run>` and `<copy>` parts are optional and can be omitted.
 
 [[example]]
 == Example
@@ -53,29 +54,38 @@ Images can be specified in any order and the plugin will take care of the proper
       <name>fabric8/docker-demo:${project.version}</name>
 
       <build> <!--2-->
-         <from>java:8</from> <!--3-->
-         <assembly>
-           <descriptor>docker-assembly.xml</descriptor> <!--4-->
-         </assembly>
-         <cmd> <!--5-->
-            <shell>java -jar /maven/service.jar</shell>
-         </cmd>
+        <from>java:8</from> <!--3-->
+        <assembly>
+          <descriptor>docker-assembly.xml</descriptor> <!--4-->
+        </assembly>
+        <cmd> <!--5-->
+          <shell>java -jar /maven/service.jar</shell>
+        </cmd>
       </build>
 
       <run> <!--6-->
-         <ports> <!--7-->
-           <port>tomcat.port:8080</port>
-         </ports>
-         <wait> <!--8-->
-           <http>
-              <url>http://localhost:${tomcat.port}/access</url>
-           </http>
-           <time>10000</time>
-         </wait>
-         <links> <!--9-->
-           <link>database:db</link>
-         </links>
-       </run>
+        <ports> <!--7-->
+          <port>tomcat.port:8080</port>
+        </ports>
+        <wait> <!--8-->
+          <http>
+            <url>http://localhost:${tomcat.port}/access</url>
+          </http>
+          <time>10000</time>
+        </wait>
+        <links> <!--9-->
+          <link>database:db</link>
+        </links>
+      </run>
+
+      <copy> <!--12-->
+        <entries>
+          <entry>
+            <containerPath>/etc/hosts</containerPath> <!--13-->
+            <hostDirectory>${project.build.directory}</hostDirectory> <!--14-->
+          </entry>
+        </entries>
+      </copy>
     </image>
 
     <image>
@@ -102,6 +112,9 @@ Images can be specified in any order and the plugin will take care of the proper
 <9> <<start-links,Network link>> describes how this service's container is linked to the database container
 <10> Second image is a plain database image which is only needed for running (hence there is no `<build>` section). The alias is used in the network link section above
 <11> Wait until the corresponding output appears on stdout when starting the Docker container.
+<12> <<config-image-copy,Copy configuration>> defines what files and directories of a container should be copied to the host by <<{plugin}:copy>> goal
+<13> Defines what file of a container should be copied to the host
+<14> Defines target directory of the host to place the file copied from a container
 
 == Features
 

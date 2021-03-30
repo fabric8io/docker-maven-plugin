@@ -1,33 +1,137 @@
+
 [[docker:copy]]
 == *docker:copy*
 
-Goal for copying file or directory from a container. When called `createContainers=true`, then all images which are configured in the project are iterated. For each image a temporary container is created (but not started) before the copying and is removed after completion of the copying, even if the copying failed.
+This goal copies files and directories from a container.
+When called, then all images which are configured in the project and having <<config-image-copy, copy>> element in the <<config-image,image configuration>> are iterated.
 
-When called with `createContainers=false` option (default value) and together with <<docker:start>> goal, then only the containers started by that goal are examined. Otherwise, containers matching images configured in the project are searched and the copying is performed from the found containers only.
+In addition to the <<global-configuration>>, this goal supports the following configuration options:
 
-[[Supported-Properties-Apply]]
-=== Supported Properties For Apply goal
-
-.Other options available with apply goal
-[cols="1,6,1"]
+.Copy options
+[cols="1,5,1"]
 |===
 | Element | Description | Property
 
 | *createContainers*
-| Whether to create containers or to copy from existing containers.
+a| Whether to create temporary containers or to copy from existing containers.
 
-  Defaults to `false`.
+If `true` then a temporary container is created (but not started) before the copying and is removed after completion of the copying, even if the copying failed.
+Container image is pulled from registry following <<image-pull-policy,imagePullPolicy>>.
+
+If `false` then copying from existing containers:
+
+* If the goal is called together with <<{plugin}:start>> goal, then the copying is performed only from containers started by that goal.
+* Otherwise, the copying is performed from containers matching configured image and <<config-image-copyNamePattern,copyNamePattern>> property of image configuration is examined:
+** If `copyNamePattern` pattern is defined, then it is used to match containers.
+** Otherwise, image name is used to match containers, i.e. containers created from the image with the same name are examined.
+
+Temporary containers are created and removed or existing containers are examined in the order of <<config-image, image>> configurations.
+
+Defaults to `false`.
 | `docker.createContainers`
 
-| *containerNamePattern*
-| Naming pattern for how to name containers when created.
+| *pullRegistry*
+| The registry used for pulling image when creating temporary container and <<image-pull-policy,imagePullPolicy>> allows or requires pulling respective image.
+Ignored if `createContainers` is `false`.
 
-  Defaults to default container naming pattern (`%n-%i`)
+| `docker.pull.registry`
+
+| *containerNamePattern*
+| Naming <<name-patterns, pattern>> for how to name containers when created.
+
+Ignored if `createContainers` is `false`.
+
+Defaults to default container naming pattern (`%n-%i`).
 | `docker.containerNamePattern`
 
 | *copyAll*
-| Whether to copy from all containers matching configured images or only from the newest ones.
+| Whether to copy from all matching containers or only from the newest ones.
 
-  Defaults to default container naming pattern (`%n-%i`)
+Ignored if `createContainers` is `true`.
+
+Defaults to `false`.
 | `docker.copyAll`
 |===
+
+The `copy` image configuration element is honored by the goal and has the following sub elements:
+
+[[config-image-copy]]
+.Copy configuration (<<config-image>>)
+[cols="1,5"]
+|===
+| Element | Description
+
+| *entries*
+| List of items to copy from a container. Each item is wrapped with `<entry>` and `</entry>` tags.
+Refer to <<config-image-copy-entry,Copy entry format>> for the format of a single list item.
+Copying is performed in the order of list items.
+
+Optional, i.e. can be omitted or can have an empty list of items.
+
+|===
+
+Each item in the `entries` list of `copy` element consists of the following sub elements:
+
+[[config-image-copy-entry]]
+.Copy entry format
+[cols="2,5"]
+|===
+| Element | Description
+
+| *containerPath*
+| Path to a container file or a container directory, which needs to be copied.
+If the path is not absolute, then it is considered relative to the container working directory.
+
+| *hostDirectory*
+| Path to a host directory where a copied file or a copied directory needs to be placed.
+"host" means the machine where the `copy` goal is executed, i.e. where respective maven project is built.
+
+If the path is not absolute, then it is considered relative to the maven project base directory.
+If a container directory is copied, then a directory with the same name is created under the path defined by `hostDirectory`,
+i.e. a whole container directory is copied but not just its content.
+
+Optional. If omitted then project base directory is used.
+
+|===
+
+.Example of copy configuration
+[source,xml]
+----
+<plugin>
+  <artifactId>docker-maven-plugin</artifactId>
+  <!-- ..... -->
+  <configuration>
+    <images>
+      <image>
+        <!-- ..... -->
+        <copy>
+          <entries>
+            <!-- Copy this file first -->
+            <entry>
+              <!-- The container file to copy -->
+              <containerPath>/etc/hosts</containerPath>
+              <!--
+                   Absolute path.
+                   ${project.build.directory}/hosts file will be created as a result of copying
+                   and the content of container /etc/hosts file will be placed there.
+               -->
+              <hostDirectory>${project.build.directory}</hostDirectory>
+            </entry>
+            <!-- Copy this directory second -->
+            <entry>
+              <!-- The container directory to copy -->
+              <containerPath>/dev</containerPath>
+              <!--
+                   Relative bath based on project.basedir.
+                   ${project.basedir}/target/dev directory will be created as a result of copying
+                   and the content of container /dev directory will be placed there.
+               -->
+              <hostDirectory>target</hostDirectory>
+            </entry>
+          </entries>
+        </copy>
+      </image>
+    </images>
+  </configuration>
+</plugin>
+----
