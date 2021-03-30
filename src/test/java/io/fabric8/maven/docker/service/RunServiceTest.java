@@ -371,7 +371,7 @@ public class RunServiceTest {
         new Expectations() {{
             docker.createContainer(withAny(new ContainerCreateConfig("img")), anyString); result = "containerId";
             portMapping.needsPropertiesUpdate(); result = true;
-            queryService.getMandatoryContainer("containerId"); result = container; times = 10;
+            queryService.getMandatoryContainer("containerId"); result = container; times = 20;
             container.isRunning(); result = true;
             container.getPortBindings(); result = new PortBindingException("5432/tcp", new Gson().fromJson("{\"5432/tcp\": []}", JsonObject.class));
         }};
