@@ -21,6 +21,7 @@ import static io.fabric8.maven.docker.util.VolumeBindingUtil.resolveRelativeVolu
 
 import java.io.File;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -469,8 +470,8 @@ public class RunService {
 
     private void updateMappedPortsAndAddresses(String containerId, PortMapping mappedPorts) throws DockerAccessException {
         RetryPolicy<Void> retryPolicy = new RetryPolicy<Void>()
-                .withMaxAttempts(10)
-                .withDelay(Duration.ofMillis(250))
+                .withMaxAttempts(20)
+                .withBackoff(10, 100, ChronoUnit.MILLIS)
                 .handle(PortBindingException.class)
                 .onFailedAttempt(f -> log.debug("Failed to update mapped ports for container %s (attempt %d), retrying", 
                         containerId, f.getAttemptCount()))
