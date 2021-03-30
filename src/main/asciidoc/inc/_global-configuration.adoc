@@ -138,7 +138,8 @@ By default a progress meter is printed out on the console, which is omitted when
 | `docker.skip.push`
 
 | *skipPom*
-| If set to `true` this plugin will skip every projects, where `project.packaging` is set to `pom`. Property: `docker.skip.pom`
+| If set to `true` this plugin will skip every projects, where `project.packaging` is set to `pom`.
+| `docker.skip.pom`
 
 | *skipRun*
 | If set dont create and start any containers with `{plugin}:start` or `{plugin}:run`
