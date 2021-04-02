@@ -1,6 +1,8 @@
 # ChangeLog
 
 * **0.35-SNAPSHOT**:
+  - CI builds with Maven Wrapper to ensure that Maven Wrapper files and configuration are correct ([1450](https://github.com/fabric8io/docker-maven-plugin/issues/1450))
+
 
 * **0.35.0** (2021-04-04)
   - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
