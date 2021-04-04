@@ -45,7 +45,7 @@ You can use Maven variables in the path specifications. This should even work fo
 ----
 
 You can also use relative paths.  Relative paths are interpreted relative to the Maven project base directory.  Paths
-that begin with `~` are interpreted relative to the JVM's `user.home` directory.
+that begin with `~` are interpreted relative to the JVM's `HOME` or `user.home` directory.
 
 .Example with relative paths
 [source,xml]

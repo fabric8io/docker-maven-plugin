@@ -23,7 +23,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +35,8 @@ import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import io.fabric8.maven.docker.assembly.DockerAssemblyConfigurationSource;
 import org.yaml.snakeyaml.Yaml;
 
+import static io.fabric8.maven.docker.util.EnvUtil.getUserHome;
+
 
 /**
  * Utility class for dealing with dockerfiles
@@ -45,8 +46,6 @@ import org.yaml.snakeyaml.Yaml;
 public class DockerFileUtil {
 
     private static final String ARG_PATTERN_REGEX = "\\$(?:\\{(.*)\\}|(.*))";
-    // injection point for unit tests
-    private static UnaryOperator<String> systemGetEnv = System::getenv;
 
     private DockerFileUtil() {}
 
@@ -252,11 +251,7 @@ public class DockerFileUtil {
     }
 
     private static File getHomeDir() {
-        String homeDir = systemGetEnv.apply("HOME");
-        if (homeDir == null) {
-            homeDir = System.getProperty("user.home");
-        }
-        return new File(homeDir);
+        return new File(getUserHome());
     }
 
     private static void updateMapWithArgValue(Map<String, String> result, Map<String, String> args, String argString) {

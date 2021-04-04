@@ -6,6 +6,8 @@ import java.util.*;
 import io.fabric8.maven.docker.access.util.LocalSocketUtil;
 import io.fabric8.maven.docker.util.*;
 
+import static io.fabric8.maven.docker.util.EnvUtil.getUserHome;
+
 /**
  * Detector for determining the Docker access mechanism
  */
@@ -167,7 +169,7 @@ public class DockerConnectionDetector {
             this.certPath = certPath != null ? certPath : System.getenv("DOCKER_CERT_PATH");
             // Try default locations as last resort
             if (this.certPath == null) {
-                File dockerHome = new File(System.getProperty("user.home") + "/.docker");
+                File dockerHome = new File(getUserHome() + "/.docker");
                 if (dockerHome.isDirectory()) {
                     String[] entries = dockerHome.list(SuffixFileFilter.PEM_FILTER);
                     if (entries == null) {
