@@ -22,13 +22,13 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.34-SNAPSHOT</version>
+    <version>0.35.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.fabric8</groupId>
   <artifactId>dmp-sample-cargo-jolokia</artifactId>
-  <version>0.34-SNAPSHOT</version>
+  <version>0.35.0</version>
 
   <url>http://www.jolokia.org</url>
 
