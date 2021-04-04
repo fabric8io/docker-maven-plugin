@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.34.1,</span>
-<span id="revdate">2020-09-27</span>
+<span id="revnumber">version 0.35.0,</span>
+<span id="revdate">2021-04-04</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -576,6 +576,7 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#start-volumes">5.2.8. Volumes</a></li>
 <li><a href="#start-wait">5.2.9. Wait</a></li>
 <li><a href="#start-logging">5.2.10. Logging</a></li>
+<li><a href="#start-isolation">5.2.11. Isolation</a></li>
 </ul>
 </li>
 <li><a href="#docker:stop">5.3. <strong>docker:stop</strong></a></li>
@@ -583,11 +584,12 @@ table.CodeRay td.code>pre{padding:0}
 <li><a href="#docker:watch">5.5. <strong>docker:watch</strong></a></li>
 <li><a href="#docker:remove">5.6. <strong>docker:remove</strong></a></li>
 <li><a href="#docker:logs">5.7. <strong>docker:logs</strong></a></li>
-<li><a href="#docker:source">5.8. <strong>docker:source</strong></a></li>
-<li><a href="#docker:save">5.9. <strong>docker:save</strong></a></li>
-<li><a href="#docker:tag">5.10. <strong>docker:tag</strong></a></li>
-<li><a href="#docker:volume-create">5.11. <strong>docker:volume-create</strong></a></li>
-<li><a href="#docker:volume-remove">5.12. <strong>docker:volume-remove</strong></a></li>
+<li><a href="#docker:copy">5.8. <strong>docker:copy</strong></a></li>
+<li><a href="#docker:source">5.9. <strong>docker:source</strong></a></li>
+<li><a href="#docker:save">5.10. <strong>docker:save</strong></a></li>
+<li><a href="#docker:tag">5.11. <strong>docker:tag</strong></a></li>
+<li><a href="#docker:volume-create">5.12. <strong>docker:volume-create</strong></a></li>
+<li><a href="#docker:volume-remove">5.13. <strong>docker:volume-remove</strong></a></li>
 </ul>
 </li>
 <li><a href="#external-configuration">6. External Configuration</a>
@@ -685,10 +687,13 @@ table.CodeRay td.code>pre{padding:0}
 <li>
 <p>A <a href="#docker:start">&lt;run&gt; </a> configuration describing how containers should be created and started.</p>
 </li>
+<li>
+<p>A <a href="#config-image-copy">&lt;copy&gt; </a> configuration describing how files and directories from containers should be copied to the host.</p>
+</li>
 </ul>
 </div>
 <div class="paragraph">
-<p>The <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> parts are optional and can be omitted.</p>
+<p>The <code>&lt;build&gt;</code>, <code>&lt;run&gt;</code> and <code>&lt;copy&gt;</code> parts are optional and can be omitted.</p>
 </div>
 </div>
 <div class="sect2">
@@ -709,29 +714,38 @@ table.CodeRay td.code>pre{padding:0}
       <span class="tag">&lt;name&gt;</span>fabric8/docker-demo:${project.version}<span class="tag">&lt;/name&gt;</span>
 
       <span class="tag">&lt;build&gt;</span> <i class="conum" data-value="2"></i><b>(2)</b>
-         <span class="tag">&lt;from&gt;</span>java:8<span class="tag">&lt;/from&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
-         <span class="tag">&lt;assembly&gt;</span>
-           <span class="tag">&lt;descriptor&gt;</span>docker-assembly.xml<span class="tag">&lt;/descriptor&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
-         <span class="tag">&lt;/assembly&gt;</span>
-         <span class="tag">&lt;cmd&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
-            <span class="tag">&lt;shell&gt;</span>java -jar /maven/service.jar<span class="tag">&lt;/shell&gt;</span>
-         <span class="tag">&lt;/cmd&gt;</span>
+        <span class="tag">&lt;from&gt;</span>java:8<span class="tag">&lt;/from&gt;</span> <i class="conum" data-value="3"></i><b>(3)</b>
+        <span class="tag">&lt;assembly&gt;</span>
+          <span class="tag">&lt;descriptor&gt;</span>docker-assembly.xml<span class="tag">&lt;/descriptor&gt;</span> <i class="conum" data-value="4"></i><b>(4)</b>
+        <span class="tag">&lt;/assembly&gt;</span>
+        <span class="tag">&lt;cmd&gt;</span> <i class="conum" data-value="5"></i><b>(5)</b>
+          <span class="tag">&lt;shell&gt;</span>java -jar /maven/service.jar<span class="tag">&lt;/shell&gt;</span>
+        <span class="tag">&lt;/cmd&gt;</span>
       <span class="tag">&lt;/build&gt;</span>
 
       <span class="tag">&lt;run&gt;</span> <i class="conum" data-value="6"></i><b>(6)</b>
-         <span class="tag">&lt;ports&gt;</span> <i class="conum" data-value="7"></i><b>(7)</b>
-           <span class="tag">&lt;port&gt;</span>tomcat.port:8080<span class="tag">&lt;/port&gt;</span>
-         <span class="tag">&lt;/ports&gt;</span>
-         <span class="tag">&lt;wait&gt;</span> <i class="conum" data-value="8"></i><b>(8)</b>
-           <span class="tag">&lt;http&gt;</span>
-              <span class="tag">&lt;url&gt;</span>http://localhost:${tomcat.port}/access<span class="tag">&lt;/url&gt;</span>
-           <span class="tag">&lt;/http&gt;</span>
-           <span class="tag">&lt;time&gt;</span>10000<span class="tag">&lt;/time&gt;</span>
-         <span class="tag">&lt;/wait&gt;</span>
-         <span class="tag">&lt;links&gt;</span> <i class="conum" data-value="9"></i><b>(9)</b>
-           <span class="tag">&lt;link&gt;</span>database:db<span class="tag">&lt;/link&gt;</span>
-         <span class="tag">&lt;/links&gt;</span>
-       <span class="tag">&lt;/run&gt;</span>
+        <span class="tag">&lt;ports&gt;</span> <i class="conum" data-value="7"></i><b>(7)</b>
+          <span class="tag">&lt;port&gt;</span>tomcat.port:8080<span class="tag">&lt;/port&gt;</span>
+        <span class="tag">&lt;/ports&gt;</span>
+        <span class="tag">&lt;wait&gt;</span> <i class="conum" data-value="8"></i><b>(8)</b>
+          <span class="tag">&lt;http&gt;</span>
+            <span class="tag">&lt;url&gt;</span>http://localhost:${tomcat.port}/access<span class="tag">&lt;/url&gt;</span>
+          <span class="tag">&lt;/http&gt;</span>
+          <span class="tag">&lt;time&gt;</span>10000<span class="tag">&lt;/time&gt;</span>
+        <span class="tag">&lt;/wait&gt;</span>
+        <span class="tag">&lt;links&gt;</span> <i class="conum" data-value="9"></i><b>(9)</b>
+          <span class="tag">&lt;link&gt;</span>database:db<span class="tag">&lt;/link&gt;</span>
+        <span class="tag">&lt;/links&gt;</span>
+      <span class="tag">&lt;/run&gt;</span>
+
+      <span class="tag">&lt;copy&gt;</span> <i class="conum" data-value="12"></i><b>(12)</b>
+        <span class="tag">&lt;entries&gt;</span>
+          <span class="tag">&lt;entry&gt;</span>
+            <span class="tag">&lt;containerPath&gt;</span>/etc/hosts<span class="tag">&lt;/containerPath&gt;</span> <i class="conum" data-value="13"></i><b>(13)</b>
+            <span class="tag">&lt;hostDirectory&gt;</span>${project.build.directory}<span class="tag">&lt;/hostDirectory&gt;</span> <i class="conum" data-value="14"></i><b>(14)</b>
+          <span class="tag">&lt;/entry&gt;</span>
+        <span class="tag">&lt;/entries&gt;</span>
+      <span class="tag">&lt;/copy&gt;</span>
     <span class="tag">&lt;/image&gt;</span>
 
     <span class="tag">&lt;image&gt;</span>
@@ -794,6 +808,18 @@ table.CodeRay td.code>pre{padding:0}
 <td><i class="conum" data-value="11"></i><b>11</b></td>
 <td>Wait until the corresponding output appears on stdout when starting the Docker container.</td>
 </tr>
+<tr>
+<td><i class="conum" data-value="12"></i><b>12</b></td>
+<td><a href="#config-image-copy">Copy configuration</a> defines what files and directories of a container should be copied to the host by <a href="#docker:copy"><strong>docker:copy</strong></a> goal</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="13"></i><b>13</b></td>
+<td>Defines what file of a container should be copied to the host</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="14"></i><b>14</b></td>
+<td>Defines target directory of the host to place the file copied from a container</td>
+</tr>
 </table>
 </div>
 </div>
@@ -853,7 +879,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.34.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.35.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1133,6 +1159,11 @@ This property can take the following values (case insensitive):</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.build.jib</code></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>jibImageFormat</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Format of the image to be built. Values can be <code>oci</code> and <code>docker</code> with <code>docker</code> as default value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.build.jib.imageFormat</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputDirectory</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default output directory to be used by this plugin. The default value is <code>target/docker</code> and is only used for the goal <code>docker:build</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.target.dir</code></p></td>
@@ -1161,6 +1192,11 @@ This property can take the following values (case insensitive):</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipPush</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If set dont push any images even when <code>docker:push</code> is called.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.push</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipPom</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set to <code>true</code> this plugin will skip every projects, where <code>project.packaging</code> is set to <code>pom</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.skip.pom</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>skipRun</strong></p></td>
@@ -1328,6 +1364,10 @@ linking images together or for specifying it with the global <strong>image</stro
 created and run when <a href="#docker:start"><strong>docker:start</strong></a> is called. If this image is only used a <em>data container</em> (i.e. is supposed only to be mounted as a volume) for exporting artifacts via volumes this section can be missing.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-copy"><strong>copy</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Describes how files and directories of containers should be copied when <a href="#docker:copy"><strong>docker:copy</strong></a> is called. This element is optional.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#external-configuration"><strong>external</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Specification of external configuration as an alternative to this XML based configuration with <code>&lt;run&gt;</code> and <code>&lt;build&gt;</code>. It contains a <code>&lt;type&gt;</code> element specifying the handler for getting the configuration. See <a href="#external-configuration">External configuration</a> for details.</p></td>
 </tr>
@@ -1340,6 +1380,12 @@ remove rather than just using the name.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>stopNamePattern</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">When containers associated with this image will be stopped by <a href="#docker:stop"><strong>docker:stop</strong></a>, use this <a href="#name-patterns">pattern list</a>
 to find containers to remove rather than just using the associated container name.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="config-image-copyNamePattern"></a><strong>copyNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When copying files and directories defined in <a href="#config-image-copy">copy</a> element of the image configuration
+with <a href="#docker:copy"><strong>docker:copy</strong></a> goal, use this <a href="#name-patterns">pattern</a> to find containers to copy from.
+This element is optional.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1455,8 +1501,12 @@ If neither is given, then by default the pattern <code>%n-%i</code> is used.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The <code>&lt;alias&gt;</code> of an image which must be set. The alias is set in the top-level image configuration</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%e</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choose an empty container name, which will let the docker engine chose a random container name automatically. This placeholder must be given as single value to <code>containerNamePattern</code> when used.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%n</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the imag&#8217;s short name from which this container is created. "Sanitized" means that any non letter, digit, dot or dash is replaced by an underscore.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A sanitized version of the image&#8217;s short name from which this container is created. "Sanitized" means that any non letter, digit, dot or dash is replaced by an underscore.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
@@ -1763,6 +1813,11 @@ in the next sections.</p>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:copy"><strong>docker:copy</strong></a></strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Copy container files and directories to the host</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">post-integration-test</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><a href="#docker:source"><strong>docker:source</strong></a></strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Attach docker build archive to Maven project</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">package</p></td>
@@ -2053,6 +2108,10 @@ of an image configuration. The following configuration options are supported:</p
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build-assembly"><strong>assemblies</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specifies multiple assembly configurations as described in <a href="#build-assembly">Build Assembly</a></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#config-image-build-assembly"><strong>assembly</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">specifies the assembly configuration as described in <a href="#build-assembly">Build Assembly</a></p></td>
 </tr>
@@ -2269,7 +2328,12 @@ remote API.</p>
 <div class="sect3">
 <h4 id="build-assembly">5.1.2. Assembly</h4>
 <div class="paragraph">
-<p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> is has an XML struture and defines how build artifacts and other files can enter the Docker image.</p>
+<p>The <code>&lt;assembly&gt;</code> element within <code>&lt;build&gt;</code> has an XML structure and defines how build artifacts and other files can enter the Docker image.
+Multiple <code>&lt;assembly&gt;</code> elements may be specified by adding them to an <code>&lt;assemblies&gt;</code> element.
+If both <code>&lt;assembly&gt;</code> and <code>&lt;assemblies&gt;</code> are present in <code>&lt;build&gt;</code>, the <code>&lt;assembly&gt;</code> element is treated as if it were the last child of <code>&lt;assemblies&gt;</code>.</p>
+</div>
+<div class="paragraph">
+<p>When multiple assemblies are provided, each will be added as a separate layer in the image.</p>
 </div>
 <table id="config-image-build-assembly" class="tableblock frame-all grid-all spread">
 <caption class="title">Table 6. Assembly Configuration (<a href="#config-image">&lt;image&gt; </a> : <a href="#config-image-build">&lt;build&gt; </a>)</caption>
@@ -2286,7 +2350,8 @@ remote API.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>name</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Assembly name, which is <code>maven</code> by default. This name is used for the archives and directories created during the build. This directory holds the files specified by the assembly. If an <a href="#external-dockerfile">external Dockerfile</a> is used than this name is also the relative directory which contains the assembly files.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assembly name, which is <code>maven</code> by default. This name is used for the archives and directories created during the build. This directory holds the files specified by the assembly. If an <a href="#external-dockerfile">external Dockerfile</a> is used than this name is also the relative directory which contains the assembly files.
+  If multiple assemblies are provided, they must each have a unique name.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>targetDir</strong></p></td>
@@ -2439,8 +2504,20 @@ used for <code>descriptorRef</code>:</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Attaches only the project&#8217;s artifact but no dependencies.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>dependencies</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches only the project&#8217;s dependencies. Also, when a <code>classpath</code> file exists in the target directory, this will be added too.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>release-dependencies</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches only the project&#8217;s released (non-snapshot) dependencies.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>snapshot-dependencies</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches only the project&#8217;s snapshot dependencies.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>project</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches the whole Maven project but with out the <code>target/</code> directory.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attaches the whole Maven project but without the <code>target/</code> directory.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>rootWar</strong></p></td>
@@ -2449,7 +2526,7 @@ used for <code>descriptorRef</code>:</p>
 </tbody>
 </table>
 <div class="listingblock">
-<div class="title">Example</div>
+<div class="title">Examples</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;images&gt;</span>
   <span class="tag">&lt;image&gt;</span>
@@ -2460,10 +2537,53 @@ used for <code>descriptorRef</code>:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>will add the created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code> and all jar dependencies in the the <code>targetDir</code> (which is <code>/maven</code> by default).</p>
+<p>will add the created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code> and all jar dependencies in the <code>targetDir</code> (which is <code>/maven</code> by default).</p>
 </div>
 <div class="paragraph">
 <p>All declared files end up in the configured <code>targetDir</code> (or <code>/maven</code> by default) in the created image.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;images&gt;</span>
+  <span class="tag">&lt;image&gt;</span>
+    <span class="tag">&lt;build&gt;</span>
+      <span class="tag">&lt;assemblies&gt;</span>
+        <span class="tag">&lt;assembly&gt;</span>
+            <span class="tag">&lt;name&gt;</span>deps-release<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;descriptorRef&gt;</span>release-dependencies<span class="tag">&lt;/descriptorRef&gt;</span>
+            <span class="tag">&lt;targetDir&gt;</span>/work/lib<span class="tag">&lt;/targetDir&gt;</span>
+        <span class="tag">&lt;/assembly&gt;</span>
+        <span class="tag">&lt;assembly&gt;</span>
+            <span class="tag">&lt;name&gt;</span>deps-snapshot<span class="tag">&lt;/name&gt;</span>
+            <span class="tag">&lt;descriptorRef&gt;</span>snapshot-dependencies<span class="tag">&lt;/descriptorRef&gt;</span>
+            <span class="tag">&lt;targetDir&gt;</span>/work/lib<span class="tag">&lt;/targetDir&gt;</span>
+        <span class="tag">&lt;/assembly&gt;</span>
+        <span class="tag">&lt;assembly&gt;</span>
+            <span class="tag">&lt;descriptorRef&gt;</span>artifact<span class="tag">&lt;/descriptorRef&gt;</span>
+            <span class="tag">&lt;targetDir&gt;</span>/work<span class="tag">&lt;/targetDir&gt;</span>
+        <span class="tag">&lt;/assembly&gt;</span>
+      <span class="tag">&lt;/assemblies&gt;</span>
+      .....
+    <span class="tag">&lt;/build&gt;</span>
+  <span class="tag">&lt;/image&gt;</span>
+<span class="tag">&lt;/images&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>will create three layers:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Release dependencies (in jar format) added to /work/lib</p>
+</li>
+<li>
+<p>Snapshot dependencies (in jar format) added to /work/lib</p>
+</li>
+<li>
+<p>The created artifact with the name <code>${project.build.finalName}.${artifact.extension}</code> added to /work</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
 <div class="title">Maven peculiarities when including the artifact</div>
@@ -2753,7 +2873,7 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <p>This goal creates and starts docker containers. This goal evaluates the configuration&#8217;s <code>&lt;run&gt;</code> section of all given (and enabled images).</p>
 </div>
 <div class="paragraph">
-<p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis). <code>docker:run</code> is an alias for <code>docker:start</code> with <code>docker.follow</code> enabled.</p>
+<p>Also you can specify <code>docker.follow</code> as system property so that the <code>docker:start</code> will never return but block until CTRL-C is pressed. That is similar to the option <code>-i</code> for <code>docker run</code>. This will automatically switch on <code>showLogs</code> so that you can see what is happening within the container. Also, after stopping with CTRL-C, the container is stopped (but not removed so that you can make postmortem analysis). <code>docker:run</code> is an alias for <code>docker:start</code> with <code>docker.follow</code> enabled.</p>
 </div>
 <div class="paragraph">
 <p>By default container specific properties are exposed as Maven properties. These properties have the format <code>docker.container.&lt;alias&gt;.&lt;prop&gt;</code> where <code>&lt;alias&gt;</code> is the name of the container (see below) and <code>&lt;prop&gt;</code> is one of the following container properties:</p>
@@ -2915,12 +3035,16 @@ useful when using predefined Docker arguments for setting proxies transparently.
 <td class="tableblock halign-left valign-top"><p class="tableblock">Log configuration for whether and how log messages from the running containers should be printed. This also can configure the <a href="https://docs.docker.com/engine/admin/logging/overview">log driver</a> to use. See <a href="#start-logging">Logging</a> for a detailed description.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#start-isolation"><strong>isolation</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This option sets container&#8217;s isolation technology. See <a href="#start-isolation">Isolation</a> for a detailed description.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>memory</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Memory limit in bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory limit in bytes.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>memorySwap</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Total memory usage (memory + swap); use -1 to disable swap.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total memory limit (memory + swap) in bytes. Set <code>memorySwap</code> equal to <code>memory</code> to disable swap. Set to <code>-1</code> to allow unlimited swap.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>namingStrategy</strong></p></td>
@@ -3454,7 +3578,7 @@ DB_PORT_5432_TCP_ADDR=172.17.0.5</code></pre>
 </div>
 <div class="paragraph">
 <p>You can also use relative paths.  Relative paths are interpreted relative to the Maven project base directory.  Paths
-that begin with <code>~</code> are interpreted relative to the JVM&#8217;s <code>user.home</code> directory.</p>
+that begin with <code>~</code> are interpreted relative to the JVM&#8217;s <code>HOME</code> or <code>user.home</code> directory.</p>
 </div>
 <div class="listingblock">
 <div class="title">Example with relative paths</div>
@@ -3748,6 +3872,59 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="start-isolation">5.2.11. Isolation</h4>
+<div class="sect4">
+<h5 id="specify-isolation-technology-for-container">Specify isolation technology for container</h5>
+<div class="paragraph">
+<p>The following configuration option under &lt;run&gt; session is equivalent of <code>--isolation &lt;value&gt;</code> when running a docker container</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;run&gt;</span>
+    <span class="tag">&lt;isolation&gt;</span>hyperv<span class="tag">&lt;/isolation&gt;</span>
+<span class="tag">&lt;/run&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This option is useful in situations where you are running Docker containers on Windows. The --isolation &lt;value&gt; option sets a container&#8217;s isolation technology. On Linux, the only supported is the default option which uses Linux namespaces.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 19. On Windows, isolation can take one of these values:</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">default</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the value specified by the Docker daemon&#8217;s --exec-opt or system default (see below).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">process</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Shared-kernel namespace isolation (not supported on Windows client operating systems older than Windows 10 1809).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">hyperv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hyper-V hypervisor partition-based isolation.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The default isolation on Windows server operating systems is process. The default isolation on Windows client operating systems is hyperv. An attempt to start a container on a client operating system older than Windows 10 1809 with --isolation process will fail.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="https://docs.docker.com/engine/reference/commandline/run/#specify-isolation-technology-for-container---isolation">isolation technology for container</a> for a detailed description.</p>
+</div>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="docker:stop">5.3. <strong>docker:stop</strong></h3>
@@ -3771,7 +3948,7 @@ This is equivalent to the options <code>--log-driver=gelf --log-opt gelf-address
 <code>allContainers</code>, <code>keepContainer</code>, <code>keepRunning</code> and <code>removeVolumes</code>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 19. Stop configuration</caption>
+<caption class="title">Table 20. Stop configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3837,7 +4014,7 @@ the global option <code>filter</code> (see <a href="#global-configuration">Globa
 <p>By default a progress meter is printed out on the console, which is omitted when using Maven in batch mode (option <code>-B</code>). A very simplified progress meter is provided when using no color output (i.e. with <code>-Ddocker.useColor=false</code>).</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 20. Push options</caption>
+<caption class="title">Table 21. Push options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -3947,7 +4124,7 @@ to do this manually.</p>
 <p>This maven goal can be configured with the following top-level parameters:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 21. Watch configuration</caption>
+<caption class="title">Table 22. Watch configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4033,7 +4210,7 @@ below how this can be specified.</p>
 <p>Image specific watch configuration goes into an extra image-level <code>&lt;watch&gt;</code> section (i.e. <code>&lt;image&gt;&lt;watch&gt;...&lt;/watch&gt;&lt;/image&gt;</code>). The following parameters are recognized:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 22. Watch configuration for a single image</caption>
+<caption class="title">Table 23. Watch configuration for a single image</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4117,7 +4294,7 @@ running container when <code>mode</code> is <code>copy</code>.</p></td>
 You can tune this by setting the property <code>removeMode</code> (property: <code>docker.removeMode</code>) to one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 23. removeMode Values</caption>
+<caption class="title">Table 24. removeMode Values</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4173,7 +4350,7 @@ You can tune this by setting the property <code>removeMode</code> (property: <co
 </ul>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 24. Remove options</caption>
+<caption class="title">Table 25. Remove options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4212,7 +4389,7 @@ configuration of the configured images. The following system
 properties can the behaviour of this goal:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 25. Logging options</caption>
+<caption class="title">Table 26. Logging options</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4250,7 +4427,193 @@ properties can the behaviour of this goal:</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="docker:source">5.8. <strong>docker:source</strong></h3>
+<h3 id="docker:copy">5.8. <strong>docker:copy</strong></h3>
+<div class="paragraph">
+<p>This goal copies files and directories from a container.
+When called, then all images which are configured in the project and having <a href="#config-image-copy">copy</a> element in the <a href="#config-image">image configuration</a> are iterated.</p>
+</div>
+<div class="paragraph">
+<p>In addition to the <a href="#global-configuration">Global configuration</a>, this goal supports the following configuration options:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 27. Copy options</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 71.4285%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>createContainers</strong></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Whether to create temporary containers or to copy from existing containers.</p>
+</div>
+<div class="paragraph">
+<p>If <code>true</code> then a temporary container is created (but not started) before the copying and is removed after completion of the copying, even if the copying failed.
+Container image is pulled from registry following <a href="#image-pull-policy">imagePullPolicy</a>.</p>
+</div>
+<div class="paragraph">
+<p>If <code>false</code> then copying from existing containers:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the goal is called together with <a href="#docker:start"><strong>docker:start</strong></a> goal, then the copying is performed only from containers started by that goal.</p>
+</li>
+<li>
+<p>Otherwise, the copying is performed from containers matching configured image and <a href="#config-image-copyNamePattern">copyNamePattern</a> property of image configuration is examined:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>If <code>copyNamePattern</code> pattern is defined, then it is used to match containers.</p>
+</li>
+<li>
+<p>Otherwise, image name is used to match containers, i.e. containers created from the image with the same name are examined.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Temporary containers are created and removed or existing containers are examined in the order of <a href="#config-image">image</a> configurations.</p>
+</div>
+<div class="paragraph">
+<p>Defaults to <code>false</code>.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.createContainers</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>pullRegistry</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The registry used for pulling image when creating temporary container and <a href="#image-pull-policy">imagePullPolicy</a> allows or requires pulling respective image.
+Ignored if <code>createContainers</code> is <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.pull.registry</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>containerNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Naming <a href="#name-patterns">pattern</a> for how to name containers when created.</p>
+<p class="tableblock">Ignored if <code>createContainers</code> is <code>false</code>.</p>
+<p class="tableblock">Defaults to default container naming pattern (<code>%n-%i</code>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.containerNamePattern</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>copyAll</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Whether to copy from all matching containers or only from the newest ones.</p>
+<p class="tableblock">Ignored if <code>createContainers</code> is <code>true</code>.</p>
+<p class="tableblock">Defaults to <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.copyAll</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The <code>copy</code> image configuration element is honored by the goal and has the following sub elements:</p>
+</div>
+<table id="config-image-copy" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 28. Copy configuration (<a href="#config-image">Image Configuration</a>)</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>entries</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of items to copy from a container. Each item is wrapped with <code>&lt;entry&gt;</code> and <code>&lt;/entry&gt;</code> tags.
+Refer to <a href="#config-image-copy-entry">Copy entry format</a> for the format of a single list item.
+Copying is performed in the order of list items.</p>
+<p class="tableblock">Optional, i.e. can be omitted or can have an empty list of items.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Each item in the <code>entries</code> list of <code>copy</code> element consists of the following sub elements:</p>
+</div>
+<table id="config-image-copy-entry" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 29. Copy entry format</caption>
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 71.4286%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Element</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>containerPath</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a container file or a container directory, which needs to be copied.
+If the path is not absolute, then it is considered relative to the container working directory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>hostDirectory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Path to a host directory where a copied file or a copied directory needs to be placed.
+"host" means the machine where the <code>copy</code> goal is executed, i.e. where respective maven project is built.</p>
+<p class="tableblock">If the path is not absolute, then it is considered relative to the maven project base directory.
+If a container directory is copied, then a directory with the same name is created under the path defined by <code>hostDirectory</code>,
+i.e. a whole container directory is copied but not just its content.</p>
+<p class="tableblock">Optional. If omitted then project base directory is used.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="title">Example of copy configuration</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
+  <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
+  <span class="comment">&lt;!-- ..... --&gt;</span>
+  <span class="tag">&lt;configuration&gt;</span>
+    <span class="tag">&lt;images&gt;</span>
+      <span class="tag">&lt;image&gt;</span>
+        <span class="comment">&lt;!-- ..... --&gt;</span>
+        <span class="tag">&lt;copy&gt;</span>
+          <span class="tag">&lt;entries&gt;</span>
+            <span class="comment">&lt;!-- Copy this file first --&gt;</span>
+            <span class="tag">&lt;entry&gt;</span>
+              <span class="comment">&lt;!-- The container file to copy --&gt;</span>
+              <span class="tag">&lt;containerPath&gt;</span>/etc/hosts<span class="tag">&lt;/containerPath&gt;</span>
+              <span class="comment">&lt;!--
+                   Absolute path.
+                   ${project.build.directory}/hosts file will be created as a result of copying
+                   and the content of container /etc/hosts file will be placed there.
+               --&gt;</span>
+              <span class="tag">&lt;hostDirectory&gt;</span>${project.build.directory}<span class="tag">&lt;/hostDirectory&gt;</span>
+            <span class="tag">&lt;/entry&gt;</span>
+            <span class="comment">&lt;!-- Copy this directory second --&gt;</span>
+            <span class="tag">&lt;entry&gt;</span>
+              <span class="comment">&lt;!-- The container directory to copy --&gt;</span>
+              <span class="tag">&lt;containerPath&gt;</span>/dev<span class="tag">&lt;/containerPath&gt;</span>
+              <span class="comment">&lt;!--
+                   Relative bath based on project.basedir.
+                   ${project.basedir}/target/dev directory will be created as a result of copying
+                   and the content of container /dev directory will be placed there.
+               --&gt;</span>
+              <span class="tag">&lt;hostDirectory&gt;</span>target<span class="tag">&lt;/hostDirectory&gt;</span>
+            <span class="tag">&lt;/entry&gt;</span>
+          <span class="tag">&lt;/entries&gt;</span>
+        <span class="tag">&lt;/copy&gt;</span>
+      <span class="tag">&lt;/image&gt;</span>
+    <span class="tag">&lt;/images&gt;</span>
+  <span class="tag">&lt;/configuration&gt;</span>
+<span class="tag">&lt;/plugin&gt;</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="docker:source">5.9. <strong>docker:source</strong></h3>
 <div class="paragraph">
 <p>The <code>docker:source</code> target can be used to attach a docker build archive containing the Dockerfile and all added files to the Maven project with a certain classifier. It reuses the configuration from <a href="#docker:build"><strong>docker:build</strong></a>.</p>
 </div>
@@ -4307,7 +4670,7 @@ The classifier is calculated as <code>docker-&lt;alias&gt;</code> so when the al
 </div>
 </div>
 <div class="sect2">
-<h3 id="docker:save">5.9. <strong>docker:save</strong></h3>
+<h3 id="docker:save">5.10. <strong>docker:save</strong></h3>
 <div class="paragraph">
 <p>The <code>docker:save</code> target saves an image defined in the build configuration to a local file, analogous to <code>docker save</code>.
 If the option <code>saveFile</code> is not set, the file name is calculated automatically:</p>
@@ -4368,7 +4731,7 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 <p>Note that using overriding the default to use <code>docker</code> or <code>docker-%a</code> may lead to a conflict if a source archive is also attached with <a href="#docker:source"><strong>docker:source</strong></a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 26. Save options</caption>
+<caption class="title">Table 30. Save options</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -4411,7 +4774,7 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 </table>
 </div>
 <div class="sect2">
-<h3 id="docker:tag">5.10. <strong>docker:tag</strong></h3>
+<h3 id="docker:tag">5.11. <strong>docker:tag</strong></h3>
 <div class="paragraph">
 <p>The <code>docker:tag</code> tags an image so that it becomes part of a repository. You can use it to tag an already built image. Here is an example of it&#8217;s usage:</p>
 </div>
@@ -4437,7 +4800,7 @@ samples/demp-sample-zero-config                        0.9.0                    
 </div>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 27. Supported options</caption>
+<caption class="title">Table 31. Supported options</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 50%;">
@@ -4465,7 +4828,7 @@ samples/demp-sample-zero-config                        0.9.0                    
 </table>
 </div>
 <div class="sect2">
-<h3 id="docker:volume-create">5.11. <strong>docker:volume-create</strong></h3>
+<h3 id="docker:volume-create">5.12. <strong>docker:volume-create</strong></h3>
 <div class="paragraph">
 <p>This goals creates one or more standalone <a href="https://docs.docker.com/engine/tutorials/dockervolumes/">Docker volume</a>, which can be referenced in a <a href="#docker:start"><strong>docker:start</strong></a> configuration for linking to a volume during runtime.
 Each volume has therefore a unique and referenceable name. Beside the volume driver and driver options can be specified.</p>
@@ -4499,7 +4862,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 <p>The following options are available when creating volumes:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 28. Volume configuration</caption>
+<caption class="title">Table 32. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -4531,7 +4894,7 @@ Each volume has therefore a unique and referenceable name. Beside the volume dri
 </table>
 </div>
 <div class="sect2">
-<h3 id="docker:volume-remove">5.12. <strong>docker:volume-remove</strong></h3>
+<h3 id="docker:volume-remove">5.13. <strong>docker:volume-remove</strong></h3>
 <div class="paragraph">
 <p>This goals is the counterpart to <a href="#docker:volume-create"><strong>docker:volume-create</strong></a> and removes a volume.
 Docker volumes are configured outside of Docker images, but can be referenced by them.
@@ -4560,7 +4923,7 @@ The configuration is the same as for <a href="#docker:volume-create"><strong>doc
 <p>The configuration is quite simple. Only the name of the volume to delete is required.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 29. Volume configuration</caption>
+<caption class="title">Table 33. Volume configuration</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -4646,7 +5009,7 @@ values in the <code>&lt;build&gt;</code> and <code>&lt;run&gt;</code> sections. 
 when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 30. External properties</caption>
+<caption class="title">Table 34. External properties</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -4715,6 +5078,23 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cmd</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Command to execute. This is used both when running a container and as default command when creating an image.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.copy.entries.idx.containerPath</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>containerPath</code> sub element of <a href="#config-image-copy-entry">copy configuration entry</a>.
+<code>idx</code> can be an integer number, or a string. Empty string is allowed.</p>
+<p class="tableblock"><code>idx</code> defines order of copying.
+Entries which <code>idx</code> is an integer number are copied first in ascending order by the parsed value of <code>idx</code>.
+Entries which <code>idx</code> is not an integer number are copied second in ascending alphabetical order by <code>idx</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.copy.entries.idx.hostDirectory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>hostDirectory</code> sub element of <a href="#config-image-copy-entry">copy configuration entry</a>.
+<code>idx</code> should match the one from <code>docker.copy.entries.idx.containerPath</code> external property.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.copyNamePattern</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set <a href="#config-image-copyNamePattern">copyNamePattern</a> of image configuration.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cpus</strong></p></td>
@@ -4878,11 +5258,11 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.memory</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Container memory (in bytes)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory limit in bytes.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.memorySwap</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Total memory (swap + memory) <code>-1</code> to disable swap</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total memory limit (memory + swap) in bytes. Set <code>docker.memorySwap</code> equal to <code>docker.memory</code> to disable swap. Set to <code>-1</code> to allow unlimited swap.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.name</strong></p></td>
@@ -5048,7 +5428,7 @@ configuration in the XML/POM file. This can be changed by adding the <code>&lt;m
 configuration (since version 0.25.0), which can have one of the following values:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 31. Property mode</caption>
+<caption class="title">Table 35. Property mode</caption>
 <colgroup>
 <col style="width: 16.6666%;">
 <col style="width: 83.3334%;">
@@ -5379,7 +5759,7 @@ Note that you must explicitly state <code>&lt;mode&gt;override&lt;/mode&gt;</cod
 <p>The following options can be provided:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 32. Docker compose configuration</caption>
+<caption class="title">Table 36. Docker compose configuration</caption>
 <colgroup>
 <col style="width: 14.2857%;">
 <col style="width: 71.4285%;">
@@ -5905,8 +6285,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.34.1<br>
-Last updated 2020-09-27 16:45:56 UTC
+Version 0.35.0<br>
+Last updated 2021-04-04 14:45:07 UTC
 </div>
 </div>
 </body>
