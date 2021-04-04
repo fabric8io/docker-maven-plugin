@@ -1,5 +1,7 @@
 # ChangeLog
 
+* **0.35-SNAPSHOT**:
+
 * **0.35.0** (2021-04-04)
   - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
   - Loading Image tarball into docker daemon fails in JIB mode ([1385](https://github.com/fabric8io/docker-maven-plugin/issues/1385))
