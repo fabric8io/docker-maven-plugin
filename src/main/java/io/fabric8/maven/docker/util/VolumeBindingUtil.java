@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static io.fabric8.maven.docker.util.DockerPathUtil.resolveAbsolutely;
+import static io.fabric8.maven.docker.util.EnvUtil.getUserHome;
 
 /**
  * Utility methods for working with Docker volume bindings.
@@ -169,7 +170,7 @@ public class VolumeBindingUtil {
         if (isRelativePath(localPath)) {
             File resolvedFile;
             if (isUserHomeRelativePath(localPath)) {
-                resolvedFile = resolveAbsolutely(prepareUserHomeRelativePath(localPath), System.getProperty("user.home"));
+                resolvedFile = resolveAbsolutely(prepareUserHomeRelativePath(localPath), getUserHome());
             } else {
                 if (!baseDir.isAbsolute()) {
                     throw new IllegalArgumentException("Base directory '" + baseDir + "' must be absolute.");

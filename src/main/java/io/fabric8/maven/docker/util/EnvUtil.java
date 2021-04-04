@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +37,9 @@ public class EnvUtil {
     public static final String DOCKER_HTTP_PORT = "2375";
 
     public static final String PROPERTY_COMBINE_POLICY_SUFFIX = "_combine";
+
+    // injection point for unit tests
+    private static UnaryOperator<String> systemGetEnv = System::getenv;
 
     private EnvUtil() {}
 
@@ -509,5 +513,17 @@ public class EnvUtil {
         // and it turns out that System.getProperty("maven.version") does not return the value.
         String mavenVersion = mavenSession.getSystemProperties().getProperty("maven.version", "3");
         return greaterOrEqualsVersion(mavenVersion, "3.5.0");
+    }
+
+    /**
+     * Get User's HOME directory path
+     * @return a String value for user's home directory
+     */
+    public static String getUserHome() {
+        String homeDir = systemGetEnv.apply("HOME");
+        if (homeDir == null) {
+            homeDir =  System.getProperty("user.home");
+        }
+        return homeDir;
     }
 }

@@ -300,7 +300,7 @@ public class AuthConfigFactoryTest {
         String userHome = System.getProperty("user.home");
         environmentVariables.clear("KUBECONFIG");
         try {
-            Field envField = DockerFileUtil.class.getDeclaredField("systemGetEnv");
+            Field envField = EnvUtil.class.getDeclaredField("systemGetEnv");
             ReflectionAccessor.getInstance().makeAccessible(envField);
             @SuppressWarnings("unchecked")
             UnaryOperator<String> origEnv = (UnaryOperator<String>) envField.get(null);
