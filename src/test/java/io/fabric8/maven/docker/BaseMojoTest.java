@@ -141,6 +141,16 @@ public class BaseMojoTest {
                 .build();
     }
 
+    protected ImageConfiguration singleImageWithRunAndAlias(String alias) {
+        return new ImageConfiguration.Builder()
+                .name("example:latest")
+                .alias(alias)
+                .runConfig(new RunImageConfiguration.Builder()
+                        .cmd("echo")
+                        .build())
+                .build();
+    }
+
     protected ImageConfiguration singleImageWithCopy(List<CopyConfiguration.Entry> entries) {
         return singleImageWithCopyNamePatternAndCopyEntries(null, entries);
     }
