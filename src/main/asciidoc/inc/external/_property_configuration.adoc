@@ -368,7 +368,7 @@ For example:
 <docker.tags.current>latest</docker.tags.current>
 ----
 
-The _idx_ suffixe defines the order of copying. Entries which _idx_ is an integer number are copied first in ascending order by the parsed value of _idx_. Entries which _idx_ is not an integer number are copied second in ascending alphabetical order by _idx_.
+The _idx_ suffix defines the order of copying. Entries which _idx_ is an integer number are copied first in ascending order by the parsed value of _idx_. Entries which _idx_ is not an integer number are copied second in ascending alphabetical order by _idx_.
 
 [[combining-property-config]]
 .Combining property and XML configuration
