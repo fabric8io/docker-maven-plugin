@@ -1,22 +1,8 @@
 package io.fabric8.maven.docker.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.file.Files;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.regex.PatternSyntaxException;
-
-import org.apache.maven.plugin.MojoExecutionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -27,13 +13,15 @@ import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.model.ImageArchiveManifest;
 import io.fabric8.maven.docker.model.ImageArchiveManifestEntry;
-import io.fabric8.maven.docker.util.DockerFileUtil;
-import io.fabric8.maven.docker.util.EnvUtil;
-import io.fabric8.maven.docker.util.ImageArchiveUtil;
-import io.fabric8.maven.docker.util.ImageName;
-import io.fabric8.maven.docker.util.Logger;
-import io.fabric8.maven.docker.util.MojoParameters;
-import io.fabric8.maven.docker.util.NamePatternUtil;
+import io.fabric8.maven.docker.util.*;
+import org.apache.maven.plugin.MojoExecutionException;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.regex.PatternSyntaxException;
 
 public class BuildService {
 
@@ -66,6 +54,7 @@ public class BuildService {
 
         if (imagePullManager != null) {
             autoPullBaseImage(imageConfig, imagePullManager, buildContext);
+            autoPullCacheFromImage(imageConfig, imagePullManager, buildContext);
         }
 
         buildImage(imageConfig, buildContext.getMojoParameters(), checkForNocache(imageConfig), checkForSquash(imageConfig), addBuildArgs(buildContext), buildArchiveFile);
@@ -384,6 +373,20 @@ public class BuildService {
         for (String fromImage : fromImages) {
             if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
                 registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+            }
+        }
+    }
+
+    private void autoPullCacheFromImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext) throws MojoExecutionException {
+        if (imageConfig.getBuildConfiguration().getCacheFrom() == null) {
+            return;
+        }
+
+        for (String cacheFromImage : imageConfig.getBuildConfiguration().getCacheFrom()) {
+            try {
+                registryService.pullImageWithPolicy(cacheFromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(cacheFromImage));
+            } catch (DockerAccessException e) {
+                log.warn("Could not pull cacheFrom image: '%s'. Reason: %s", cacheFromImage , e.getMessage());
             }
         }
     }

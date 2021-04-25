@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.35-SNAPSHOT**:
+  - Add pulling of `cacheFrom` images during build ([1457](https://github.com/fabric8io/docker-maven-plugin/issues/1457))
 
 * **0.35.0** (2021-04-04)
   - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
