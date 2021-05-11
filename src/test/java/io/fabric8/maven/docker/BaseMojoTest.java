@@ -47,7 +47,7 @@ public class BaseMojoTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Injectable
-    protected Logger log;
+    protected AnsiLogger log;
 
     @Mocked
     protected ServiceHub serviceHub;

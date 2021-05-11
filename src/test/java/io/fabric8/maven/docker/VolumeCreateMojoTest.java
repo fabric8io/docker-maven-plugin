@@ -2,6 +2,7 @@ package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.service.ServiceHub;
+import io.fabric8.maven.docker.util.AnsiLogger;
 import io.fabric8.maven.docker.util.Logger;
 import mockit.Injectable;
 import mockit.Mocked;
@@ -13,7 +14,7 @@ import org.junit.Test;
 public class VolumeCreateMojoTest {
 
     @Injectable
-    Logger log;
+    AnsiLogger log;
 
     @Tested(fullyInitialized = false)
     private VolumeCreateMojo volumeCreateMojo;
