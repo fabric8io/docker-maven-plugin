@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.apache.maven.plugin.logging.Log;
 import org.codehaus.plexus.util.StringUtils;
@@ -90,50 +92,50 @@ public class AnsiLogger implements Logger, Closeable {
     /** {@inheritDoc} */
     public void debug(String message, Object ... params) {
         if (isDebugEnabled()) {
-            if (outputFile != null) {
-                pw.println(format(message, params));
-            } else {
-                log.debug(prefix + format(message, params));
-            }
+            logOrPrintToFile(
+                    log -> true,
+                    log -> log.debug(prefix + format(message, params)),
+                    message,
+                    params);
         }
     }
 
     /** {@inheritDoc} */
     public void info(String message, Object ... params) {
-        if (outputFile != null && log.isInfoEnabled()) {
-            pw.println(format(message, params));
-        } else {
-            log.info(colored(message, COLOR_INFO, true, params));
-        }
+        logOrPrintToFile(
+                log -> log.isInfoEnabled(),
+                log -> log.info(colored(message, COLOR_INFO, true, params)),
+                message,
+                params);
     }
 
     /** {@inheritDoc} */
     public void verbose(LogVerboseCategory logVerboseCategory, String message, Object ... params) {
         if (isVerbose && verboseModes != null && verboseModes.contains(logVerboseCategory)) {
-            if (outputFile != null) {
-                pw.println(format(message, params));
-            } else {
-                log.info(ansi().fgBright(BLACK).a(prefix).a(format(message, params)).reset().toString());
-            }
+            logOrPrintToFile(
+                    log -> true,
+                    log -> log.info(ansi().fgBright(BLACK).a(prefix).a(format(message, params)).reset().toString()),
+                    message,
+                    params);
         }
     }
 
     /** {@inheritDoc} */
     public void warn(String message, Object ... params) {
-        if (outputFile != null && log.isWarnEnabled()) {
-            pw.println(format(message, params));
-        } else {
-            log.warn(colored(message, COLOR_WARNING, true, params));
-        }
+        logOrPrintToFile(
+                log -> log.isWarnEnabled(),
+                log -> log.warn(colored(message, COLOR_WARNING, true, params)),
+                message,
+                params);
     }
 
     /** {@inheritDoc} */
     public void error(String message, Object ... params) {
-        if (outputFile != null && log.isErrorEnabled()) {
-            pw.println(format(message, params));
-        } else {
-            log.error(colored(message, COLOR_ERROR, true, params));
-        }
+        logOrPrintToFile(
+                log -> log.isErrorEnabled(),
+                log -> log.error(colored(message, COLOR_ERROR, true, params)),
+                message,
+                params);
     }
 
     @Override
@@ -385,6 +387,14 @@ public class AnsiLogger implements Logger, Closeable {
             }
         }
         return ret;
+    }
+
+    private void logOrPrintToFile(Predicate<Log> logPredicate, Consumer<Log> logConsumer, String message, Object ... params) {
+        if (outputFile != null && logPredicate.test(log)) {
+            pw.println(format(message, params));
+        } else {
+            logConsumer.accept(log);
+        }
     }
 
     @Override

@@ -268,12 +268,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                         access = dockerAccessFactory.createDockerAccess(dockerAccessContext);
                     }
                     ServiceHub serviceHub = serviceHubFactory.createServiceHub(project, session, access, log, logSpecFactory);
-                    try {
-                        executeInternal(serviceHub);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        throw ex;
-                    }
+                    executeInternal(serviceHub);
                 } catch (IOException | ExecException exp) {
                     logException(exp);
                     throw new MojoExecutionException(log.errorMessage(exp.getMessage()), exp);
