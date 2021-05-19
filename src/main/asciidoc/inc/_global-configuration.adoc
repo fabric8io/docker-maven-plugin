@@ -163,6 +163,10 @@ If set to `true` this plugin won't remove any tags with `{plugin}:remove`. +
 | Whether to use colored log output. By default this is switched on when running on a console, off otherwise.
 | `docker.useColor`
 
+| *outputFile*
+| If specified, this parameter will cause the logs to be written to the path specified, instead of writing to the console.
+| `outputFile`
+
 | *verbose*
 | String attribute for switching on verbose output on standard output (stdout). It takes a comma separated list of string values to switch on various verbosity groups.
 
