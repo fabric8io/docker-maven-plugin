@@ -5,7 +5,8 @@
   - Using <external> properties in image configuration disables Docker cache during build ([1455](https://github.com/fabric8io/docker-maven-plugin/issues/1455))
   - Update documentation to clearly state that `docker.cacheFrom.idx` is a _list_ property and should always be used with a `idx` suffix. With this change, `docker.cacheFrom` (without _idx_) is not considered anymore.
   - A placeholder in docker.image.tag isn't replaced by the final result when used during docker:build ([1468](https://github.com/fabric8io/docker-maven-plugin/issues/1468))
-  
+  - Add a property(`outputFile`) to dump the output of Docker commands to file ([1472]https://github.com/fabric8io/docker-maven-plugin/pull/1472)
+
 * **0.35.0** (2021-04-04)
   - Building 'spring-boot-with-jib' sample fails with NoSuchMethodError ([1384](https://github.com/fabric8io/docker-maven-plugin/issues/1384))
   - Loading Image tarball into docker daemon fails in JIB mode ([1385](https://github.com/fabric8io/docker-maven-plugin/issues/1385))
