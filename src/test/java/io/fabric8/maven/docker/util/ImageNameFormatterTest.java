@@ -124,6 +124,19 @@ public class ImageNameFormatterTest {
     }
 
     @Test
+    public void tagWithDockerImageTagSet() {
+        new Expectations() {{
+            project.getArtifactId(); result = "docker-maven-plugin";
+            project.getGroupId(); result = "io.fabric8";
+            project.getVersion(); result = "1.2.3-SNAPSHOT";
+            project.getProperties(); result = new Properties();
+        }};
+        project.getProperties().setProperty("docker.image.tag", "%l");
+
+        assertThat(formatter.format("%g/%a:%l"), equalTo("fabric8/docker-maven-plugin:latest"));
+    }
+
+    @Test
     public void nonSnapshotArtifact() throws Exception {
         new Expectations() {{
             project.getArtifactId(); result = "docker-maven-plugin";
