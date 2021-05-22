@@ -211,7 +211,7 @@ public class JibServiceUtil {
     }
 
     private static void submitPushToJib(TarImage baseImage, RegistryImage targetImage, ExecutorService jibBuildExecutor, Logger logger) throws InterruptedException, ExecutionException, RegistryException, CacheDirectoryCreationException, IOException {
-        Jib.from(baseImage).containerize(Containerizer.to(targetImage)
+        Jib.from(baseImage).setCreationTime(Instant.now()).containerize(Containerizer.to(targetImage)
                 .setAllowInsecureRegistries(true)
                 .setExecutorService(jibBuildExecutor)
                 .addEventHandler(LogEvent.class, log(logger))

@@ -11,7 +11,6 @@
     </parent>
 
     <artifactId>dmp-sample-spring-boot-jib</artifactId>
-    <version>0.33-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <description>Docker Maven Plugin Example with Spring Boot With Build Mode JIB</description>
@@ -34,6 +33,7 @@
         <docker.build.jib>true</docker.build.jib>
         <docker.user>fabric8</docker.user>
         <spring.version>2.3.3.RELEASE</spring.version>
+        <dmp.version>${project.version}</dmp.version>
     </properties>
 
     <dependencies>
@@ -84,7 +84,7 @@
             <plugin>
               <groupId>io.fabric8</groupId>
               <artifactId>docker-maven-plugin</artifactId>
-              <version>0.33-SNAPSHOT</version>
+              <version>${dmp.version}</version>
               <configuration>
                 <images>
                   <image>
