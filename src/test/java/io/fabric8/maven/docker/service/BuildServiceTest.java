@@ -154,6 +154,45 @@ public class BuildServiceTest {
     }
 
     @Test
+    public void testBuildImageWithCacheFrom_ShouldPullImage() throws Exception {
+        BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
+                .cleanup("false")
+                .cacheFrom("fabric8/s1i-java")
+                .dockerFile(DockerFileUtilTest.class.getResource("Dockerfile_from_simple").getPath())
+                .filter("false")
+                .build();
+
+        buildConfig.initAndValidate(logger);
+
+        imageConfig = new ImageConfiguration.Builder()
+                .name("build-image")
+                .alias("build-alias")
+                .buildConfig(buildConfig)
+                .build();
+
+        final ImagePullManager pullManager = new ImagePullManager(null,null, null);
+        final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
+                .mojoParameters(mojoParameters)
+                .build();
+
+        new Expectations(mojoParameters) {{
+            mojoParameters.getProject(); result = mavenProject;
+            mavenProject.getProperties(); result = new Properties();
+        }};
+
+        File buildArchive = buildService.buildArchive(imageConfig, buildContext, "");
+        buildService.buildImage(imageConfig, pullManager, buildContext, buildArchive);
+
+        //verify that tries to pull both images
+        new Verifications() {{
+            queryService.hasImage("fabric8/s2i-java");
+            registryService.pullImageWithPolicy("fabric8/s2i-java",  pullManager, buildContext.getRegistryConfig(), false);
+            queryService.hasImage("fabric8/s1i-java");
+            registryService.pullImageWithPolicy("fabric8/s1i-java",  pullManager, buildContext.getRegistryConfig(), false);
+        }};
+    }
+
+    @Test
     public void testDockerBuildArchiveOnly() throws Exception {
         givenAnImageConfiguration(true);
         final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()

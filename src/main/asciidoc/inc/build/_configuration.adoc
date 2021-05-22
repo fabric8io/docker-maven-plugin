@@ -96,7 +96,7 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 | Squash newly built layers into a single new layer. This can be overwritten by setting a system property `docker.squash` when running Maven.
 
 | *cacheFrom*
-| A list of `<image>` elements specifying image names to use as cache sources.
+| A list of `<image>` elements specifying image names to use as cache sources. During image build, it will attempt to pull these images, but not fail the build. Follows `imagePullPolicy` semantics.
 
 | *optimise*
 | if set to true then it will compress all the `runCmds` into a single `RUN` directive so that only one image layer is created.
