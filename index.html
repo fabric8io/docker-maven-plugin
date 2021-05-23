@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.35.0,</span>
-<span id="revdate">2021-04-04</span>
+<span id="revnumber">version 0.36.0,</span>
+<span id="revdate">2021-05-23</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -879,7 +879,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.35.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.36.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1224,6 +1224,11 @@ If set to <code>true</code> this plugin won&#8217;t remove any tags with <code>d
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>useColor</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Whether to use colored log output. By default this is switched on when running on a console, off otherwise.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.useColor</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>outputFile</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If specified, this parameter will cause the logs to be written to the path specified, instead of writing to the console.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputFile</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>verbose</strong></p></td>
@@ -2220,7 +2225,7 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cacheFrom</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;image&gt;</code> elements specifying image names to use as cache sources.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of <code>&lt;image&gt;</code> elements specifying image names to use as cache sources. During image build, it will attempt to pull these images, but not fail the build. Follows <code>imagePullPolicy</code> semantics.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>optimise</strong></p></td>
@@ -2724,10 +2729,10 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entrypoint&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- shell form  --&gt;</span>
    <span class="tag">&lt;shell&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/shell&gt;</span>
-<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
+<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2736,14 +2741,14 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entrypoint&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
    <span class="comment">&lt;!-- exec form  --&gt;</span>
    <span class="tag">&lt;exec&gt;</span>
      <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
      <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
      <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
    <span class="tag">&lt;/exec&gt;</span>
-<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
+<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2753,7 +2758,7 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="title">Example</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="comment">&lt;!-- shell form  --&gt;</span>
-<span class="tag">&lt;entrypoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
+<span class="tag">&lt;entryPoint&gt;</span>java -jar $HOME/server.jar<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2762,12 +2767,12 @@ or <a href="https://docs.docker.com/reference/builder/#cmd">cmd</a> for a contai
 <div class="listingblock">
 <div class="title">Example</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entrypoint&gt;</span>
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;entryPoint&gt;</span>
   <span class="comment">&lt;!-- exec form  --&gt;</span>
   <span class="tag">&lt;arg&gt;</span>java<span class="tag">&lt;/arg&gt;</span>
   <span class="tag">&lt;arg&gt;</span>-jar<span class="tag">&lt;/arg&gt;</span>
   <span class="tag">&lt;arg&gt;</span>/opt/demo/server.jar<span class="tag">&lt;/arg&gt;</span>
-<span class="tag">&lt;/entrypoint&gt;</span></code></pre>
+<span class="tag">&lt;/entryPoint&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -4784,10 +4789,10 @@ If the option <code>saveFile</code> is not set, the file name is calculated auto
 [INFO] Scanning for projects...
 [INFO]
 [INFO] -----------&lt; io.fabric8.dmp.samples:demp-sample-zero-config &gt;-----------
-[INFO] Building demp-sample-zero-config 0.33-SNAPSHOT
+[INFO] Building demp-sample-zero-config
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
-[INFO] --- docker-maven-plugin:0.33-SNAPSHOT:tag (default-cli) @ demp-sample-zero-config ---
+[INFO] --- docker-maven-plugin:dmpversion:tag (default-cli) @ demp-sample-zero-config ---
 [INFO] DOCKER&gt; Tagging image samples/demp-sample-zero-config:0.9.0 successful!
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
@@ -5057,7 +5062,7 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.bind.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a list of paths to bind/expose in the container</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a list of paths to bind/expose in the container. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.buildArg.VARIABLE</strong></p></td>
@@ -5065,11 +5070,11 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capAdd.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to add to the container</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to add to the container. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.capDrop.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to remove from the container</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of kernel capabilities to remove from the container. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cleanup</strong></p></td>
@@ -5109,8 +5114,8 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 <td class="tableblock halign-left valign-top"><p class="tableblock">Set the proportion of the host machine&#8217;s cpu cycles available to the container</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cacheFrom</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of image names to use as cache sources</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cacheFrom.idx</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Defines a list of image names to use as cache sources. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.domainname</strong></p></td>
@@ -5118,11 +5123,11 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dns.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of dns servers to use</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of dns servers to use. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dnsSearch.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of dns search domains</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of dns search domains. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.dockerArchive</strong></p></td>
@@ -5162,7 +5167,8 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.extraHosts.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host:ip</code> to add to <code>/etc/hosts</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>host:ip</code> to add to <code>/etc/hosts</code>.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.filter</strong></p></td>
@@ -5250,7 +5256,8 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.links.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of links to other containers when starting a container. <em>idx</em> can be any suffix which is not used except when <em>idx</em> is numeric it specifies the order within the list (i.e. the list contains first entries with numeric indexes sorted and the all non-numeric indexes in arbitrary order). For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link to the image with alias 'db'.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of links to other containers when starting a container. For example <code>&lt;docker.links.1&gt;db&lt;/docker.links.1&gt;</code> specifies a link to the image with alias 'db'.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.maintainer</strong></p></td>
@@ -5282,7 +5289,8 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.network.alias.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">One or more aliase for a custom network. Only used when the network mode is <code>custom</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One or more aliase for a custom network. Only used when the network mode is <code>custom</code>.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.noCache</strong></p></td>
@@ -5302,7 +5310,8 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.ports.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a port mapping. For example <code>&lt;docker.ports.1&gt;jolokia.ports:8080&lt;docker.ports.1&gt;</code> maps the container port 8080 dynamically to a host port and assigns this host port to the Maven property <code>${jolokia.port}</code>. See <a href="#_port-mapping">Port mapping</a> for possible mapping options. When creating images images only the right most port is used for exposing the port. For providing multiple port mappings, the index should be count up.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sets a port mapping. For example <code>&lt;docker.ports.1&gt;jolokia.ports:8080&lt;docker.ports.1&gt;</code> maps the container port 8080 dynamically to a host port and assigns this host port to the Maven property <code>${jolokia.port}</code>. See <a href="#_port-mapping">Port mapping</a> for possible mapping options. When creating images images only the right most port is used for exposing the port. For providing multiple port mappings, the index should be count up.
+See <a href="#list-properties">List Properties</a> for more information about list properties.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.registry</strong></p></td>
@@ -5318,11 +5327,13 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.run.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of commands to <code>RUN</code> when creating the image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of commands to <code>RUN</code> when creating the image.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.securityOpts.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>opt</code> elements to specify kernel security options to add to the container. For example <code>docker.securityOpt.1=seccomp=unconfined</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of <code>opt</code> elements to specify kernel security options to add to the container. For example <code>docker.securityOpt.1=seccomp=unconfined</code>.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.shmsize</strong></p></td>
@@ -5330,15 +5341,18 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tags.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of tags to apply to a built image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of tags to apply to a built image.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.tmpfs.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">One or more mount points for a <strong>tmpfs</strong>. Add mount options after a <code>:</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One or more mount points for a <strong>tmpfs</strong>. Add mount options after a <code>:</code>.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.ulimits.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Ulimits for the container. Ulimit is specified with a soft and hard limit <code>&lt;type&gt;=&lt;soft limit&gt;[:&lt;hard limit&gt;]</code>. For example <code>docker.ulimits.1=memlock=-1:-1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ulimits for the container. Ulimit is specified with a soft and hard limit <code>&lt;type&gt;=&lt;soft limit&gt;[:&lt;hard limit&gt;]</code>. For example <code>docker.ulimits.1=memlock=-1:-1</code>.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.user</strong></p></td>
@@ -5346,11 +5360,12 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.volumes.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of volumes to expose when building an image</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of volumes to expose when building an image. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.volumesFrom.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of image aliases from which the volumes should be mounted of the container. The list semantics is the same as for links (see above). For examples <code>&lt;docker.volumesFrom.1&gt;data&lt;/docker.volumesFrom.1&gt;</code> will mount all volumes exported by the <code>data</code> image.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defines a list of image aliases from which the volumes should be mounted of the container. For examples <code>&lt;docker.volumesFrom.1&gt;data&lt;/docker.volumesFrom.1&gt;</code> will mount all volumes exported by the <code>data</code> image.
+See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.http.url</strong></p></td>
@@ -5398,7 +5413,7 @@ Entries which <code>idx</code> is not an integer number are copied second in asc
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.tcp.port.idx</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">List of ports to use for a TCP check.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of ports to use for a TCP check. See <a href="#list-properties">List Properties</a>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.wait.kill</strong></p></td>
@@ -5420,6 +5435,23 @@ use different prefixes. As stated above the environment and ports
 configuration are both used for running container and building
 images. If you need a separate configuration you should use explicit
 run and build configuration sections.</p>
+</div>
+<div id="list-properties" class="paragraph">
+<div class="title">List Properties</div>
+<p>List properties refer to XML configurations items that accept a list of values, like <code>&lt;build&gt;&lt;tag&gt;</code> or <code>&lt;run&gt;&lt;ports&gt;</code>. To specify values using properties, you must declare a property for each value you want to add to the list, and add a <em>idx</em> suffix to the property name to determine its position in the resulting list.
+For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;docker.ports.1&gt;</span>80<span class="tag">&lt;docker.ports.1&gt;</span>
+<span class="tag">&lt;docker.ports.2&gt;</span>8080<span class="tag">&lt;docker.ports.2&gt;</span>
+
+<span class="tag">&lt;docker.tags.jenkins&gt;</span>${BUILD_TIMESTAMP}<span class="tag">&lt;/docker.tags.jenkins&gt;</span>
+<span class="tag">&lt;docker.tags.current&gt;</span>latest<span class="tag">&lt;/docker.tags.current&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <em>idx</em> suffix defines the order of copying. Entries which <em>idx</em> is an integer number are copied first in ascending order by the parsed value of <em>idx</em>. Entries which <em>idx</em> is not an integer number are copied second in ascending alphabetical order by <em>idx</em>.</p>
 </div>
 <div id="combining-property-config" class="paragraph">
 <div class="title">Combining property and XML configuration</div>
@@ -5496,22 +5528,22 @@ keys have <code>merge</code> as default policy:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>docker.args</p>
+<p><code>docker.args</code></p>
 </li>
 <li>
-<p>docker.envBuild</p>
+<p><code>docker.envBuild</code></p>
 </li>
 <li>
-<p>docker.envRun</p>
+<p><code>docker.envRun</code></p>
 </li>
 <li>
-<p>docker.labels</p>
+<p><code>docker.labels</code></p>
 </li>
 <li>
-<p>docker.ports</p>
+<p><code>docker.ports</code></p>
 </li>
 <li>
-<p>docker.tags</p>
+<p><code>docker.tags</code></p>
 </li>
 </ul>
 </div>
@@ -6285,8 +6317,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.35.0<br>
-Last updated 2021-04-04 14:45:07 UTC
+Version 0.36.0<br>
+Last updated 2021-05-22 15:28:06 IST
 </div>
 </div>
 </body>
