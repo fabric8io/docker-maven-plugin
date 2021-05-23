@@ -1,6 +1,6 @@
 # ChangeLog
 
-* **0.35-SNAPSHOT**:
+* **0.36.0** (2021-05-23)
   - CI builds with Maven Wrapper to ensure that Maven Wrapper files and configuration are correct ([1450](https://github.com/fabric8io/docker-maven-plugin/issues/1450))
   - Using <external> properties in image configuration disables Docker cache during build ([1455](https://github.com/fabric8io/docker-maven-plugin/issues/1455))
   - Update documentation to clearly state that `docker.cacheFrom.idx` is a _list_ property and should always be used with a `idx` suffix. With this change, `docker.cacheFrom` (without _idx_) is not considered anymore.
