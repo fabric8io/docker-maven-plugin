@@ -37,7 +37,7 @@
     <maven.version>3.3.9</maven.version>
     <jmockit.version>1.43</jmockit.version>
     <surefire.version>3.0.0-M2</surefire.version>
-    <jib-core.version>0.15.0</jib-core.version>
+    <jib-core.version>0.18.0</jib-core.version>
     <httpclient.version>4.5.10</httpclient.version>
     <excludedGroups>io.fabric8.maven.docker.UnixOnlyTests</excludedGroups>
     <project.build.outputTimestamp>2020-11-14T11:57:00Z</project.build.outputTimestamp>
@@ -176,7 +176,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>29.0-jre</version>
+      <version>30.1-jre</version>
     </dependency>
 
     <dependency>
