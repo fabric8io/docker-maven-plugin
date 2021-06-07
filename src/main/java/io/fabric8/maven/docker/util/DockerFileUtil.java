@@ -64,12 +64,12 @@ public class DockerFileUtil {
         Set<String> fromAlias = new HashSet<>();
         for (String[] fromLine :  fromLines) {
             if (fromLine.length > 1) {
-                if (fromLine.length == 2) { // FROM image:tag use case
+                if (!fromAlias.contains(fromLine[1])) {
+                    // Image is NOT referring to an already declared alias
                     result.add(resolveImageTagFromArgs(fromLine[1], args));
-                } else if (fromLine.length == 4) { // FROM image:tag AS alias use case
-                    if (!fromAlias.contains(fromLine[1])) {
-                        result.add(resolveImageTagFromArgs(fromLine[1], args));
-                    }
+                }
+                if (fromLine.length == 4) { // FROM image:tag AS alias use case
+                    // Image alias is declared - track it
                     fromAlias.add(resolveImageTagFromArgs(fromLine[3], args));
                 }
             }
