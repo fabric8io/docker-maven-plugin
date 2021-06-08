@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.36-SNAPSHOT**
+  - Fix multi-stage builds when an image refers to another image named/aliased up in the Dockerfile ([1443](https://github.com/fabric8io/docker-maven-plugin/issues/1443))
 
 * **0.36.0** (2021-05-23)
   - CI builds with Maven Wrapper to ensure that Maven Wrapper files and configuration are correct ([1450](https://github.com/fabric8io/docker-maven-plugin/issues/1450))
