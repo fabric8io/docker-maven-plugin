@@ -59,16 +59,13 @@ jobs:
         key: dmp-sonar-pr-{{ checksum "pom.xml" }}
     - run: |
         if [ -n "${CIRCLE_PR_NUMBER}" ]; then
-          mvn clean -Pjacoco org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
+          mvn clean -Pjacoco,sonar org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
              -Dsonar.pullrequest.base=master \
              -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} \
              -Dsonar.pullrequest.key=${CIRCLE_PR_NUMBER} \
              -Dsonar.pullrequest.provider=GitHub \
              -Dsonar.pullrequest.github.repository=fabric8io/docker-maven-plugin \
              -Dsonar.github.oauth=${GITHUB_COMMENT_TOKEN} \
-             -Dsonar.host.url=https://sonarcloud.io \
-             -Dsonar.organization=default \
-             -Dsonar.login=${SONARQUBE_TOKEN}
         else
           echo "No Sonar PR analysis as this is not a pull request"
         fi
@@ -87,10 +84,7 @@ jobs:
     - restore_cache:
         key: dmp-sonar-{{ checksum "pom.xml" }}
     - run: |
-        mvn clean -Pjacoco org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar \
-        -Dsonar.host.url=https://sonarcloud.io \
-        -Dsonar.organization=default \
-        -Dsonar.login=${SONARQUBE_TOKEN}
+        mvn clean -Pjacoco,sonar org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
     - save_cache:
         key: dmp-sonar-{{ checksum "pom.xml" }}
         paths:
