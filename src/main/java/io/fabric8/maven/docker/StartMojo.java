@@ -23,6 +23,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.fabric8.maven.docker.access.DockerAccessException;
@@ -41,6 +43,10 @@ import io.fabric8.maven.docker.service.ServiceHub;
 import io.fabric8.maven.docker.service.helper.StartContainerExecutor;
 import io.fabric8.maven.docker.util.ContainerNamingUtil;
 import io.fabric8.maven.docker.util.StartOrderResolver;
+import io.fabric8.maven.docker.wait.ExitChecker;
+import io.fabric8.maven.docker.wait.PreconditionFailedException;
+import io.fabric8.maven.docker.wait.WaitTimeoutException;
+import io.fabric8.maven.docker.wait.WaitUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -140,7 +146,7 @@ public class StartMojo extends AbstractDockerMojo {
             // All aliases which are provided in the image configuration:
             final Set<String> imageAliases = new HashSet<>();
             // Remember all aliases which has been started
-            final Set<String> startedContainerAliases = new HashSet<>();
+            final Set<StartedContainer> startedContainers = new HashSet<>();
 
             // All images to to start
             Queue<ImageConfiguration> imagesWaitingToStart = prepareStart(hub, queryService, runService, imageAliases);
@@ -151,6 +157,7 @@ public class StartMojo extends AbstractDockerMojo {
             // Prepare the shutdown hook for stopping containers if we are going to follow them.  Add the hook before starting any
             // of the containers so that partial or aborted starts will behave the same as fully-successful ones.
             if (follow) {
+                log.info("Shutdown-hook for expected stoppings added");
                 runService.addShutdownHookForStoppingContainers(keepContainer, removeVolumes, autoCreateCustomNetworks);
             }
 
@@ -158,7 +165,7 @@ public class StartMojo extends AbstractDockerMojo {
             while (!hasBeenAllImagesStarted(imagesWaitingToStart, imagesStarting)) {
 
                 final List<ImageConfiguration> imagesReadyToStart =
-                    getImagesWhoseDependenciesHasStarted(imagesWaitingToStart, startedContainerAliases, imageAliases);
+                    getImagesWhoseDependenciesHasStarted(imagesWaitingToStart, startedContainers, imageAliases);
 
                 for (final ImageConfiguration image : imagesReadyToStart) {
 
@@ -169,18 +176,40 @@ public class StartMojo extends AbstractDockerMojo {
                     imagesWaitingToStart.remove(image);
 
                     if (!startParallel) {
-                        waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
+                        waitForStartedContainer(containerStartupService, startedContainers, imagesStarting);
                     }
                 }
 
                 if (startParallel) {
-                    waitForStartedContainer(containerStartupService, startedContainerAliases, imagesStarting);
+                    waitForStartedContainer(containerStartupService, startedContainers, imagesStarting);
                 }
             }
+            log.info("All containers started!");
             portMappingPropertyWriteHelper.write();
 
             if (follow) {
-                wait();
+                log.info("Wait for containers finish - %s!", startedContainers.stream().map(sc->sc.imageConfig.getAlias() +"[" + sc.containerId + "]").collect(Collectors.joining(", ")));
+                try {
+                    WaitUtil.wait(
+                            new WaitUtil.Precondition() {
+                                      @Override
+                                      public boolean isOk() {
+                                          return true;
+                                      }
+
+                                      @Override
+                                      public void cleanup() {
+
+                                      }
+                            },
+                            Integer.MAX_VALUE,
+                            startedContainers.stream().map(cid -> new ExitChecker(queryService, cid.containerId)).collect(Collectors.toSet()));
+                } catch (WaitTimeoutException e) {
+                    log.warn("Infinite timeout timeouted!");
+                } catch (PreconditionFailedException e) {
+                    log.error("Null precondition fails!");
+                }
+                log.info("All container stopped - finalized ...");
             }
 
             success = true;
@@ -203,14 +232,14 @@ public class StartMojo extends AbstractDockerMojo {
 
     private void waitForStartedContainer(
             final ExecutorCompletionService<StartedContainer> containerStartupService,
-            final Set<String> startedContainerAliases, final Queue<ImageConfiguration> imagesStarting)
+            final Set<StartedContainer> startedContainerAliases, final Queue<ImageConfiguration> imagesStarting)
             throws InterruptedException, IOException, ExecException {
         final Future<StartedContainer> startedContainerFuture = containerStartupService.take();
         try {
             final StartedContainer startedContainer = startedContainerFuture.get();
             final ImageConfiguration imageConfig = startedContainer.imageConfig;
-
-            updateAliasesSet(startedContainerAliases, imageConfig.getAlias());
+            log.info("sc: %s,%s", startedContainer.containerId, imageConfig.getAlias());
+            updateAliasesSet(startedContainerAliases, startedContainer);
 
             // All done with this image
             imagesStarting.remove(imageConfig);
@@ -256,7 +285,7 @@ public class StartMojo extends AbstractDockerMojo {
         }
     }
 
-    private void updateAliasesSet(Set<String> aliasesSet, String alias) {
+    private <T> void updateAliasesSet(Set<T> aliasesSet, T alias) {
         // Add the alias to the set only when it is set. When it's
         // not set it cant be used in the dependency resolution anyway, so we are ignoring
         // it hence.
@@ -306,7 +335,7 @@ public class StartMojo extends AbstractDockerMojo {
 
     // Pick out all images who can be started right now because all their dependencies has been started
     private List<ImageConfiguration> getImagesWhoseDependenciesHasStarted(Queue<ImageConfiguration> imagesRemaining,
-                                                                          Set<String> containersStarted,
+                                                                          Set<StartedContainer> containersStarted,
                                                                           Set<String> aliases) {
         final List<ImageConfiguration> ret = new ArrayList<>();
 
@@ -314,7 +343,7 @@ public class StartMojo extends AbstractDockerMojo {
         for (ImageConfiguration imageWaitingToStart : imagesRemaining) {
             List<String> allDependencies = imageWaitingToStart.getDependencies();
             List<String> aliasDependencies = filterOutNonAliases(aliases, allDependencies);
-            if (containersStarted.containsAll(aliasDependencies)) {
+            if (aliasDependencies.stream().allMatch(ad -> containersStarted.stream().map(sc -> sc.imageConfig.getAlias()).anyMatch(Predicate.isEqual(ad)))) {
                 ret.add(imageWaitingToStart);
             }
         }

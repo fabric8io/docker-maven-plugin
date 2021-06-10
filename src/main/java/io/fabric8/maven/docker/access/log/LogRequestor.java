@@ -59,6 +59,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
 
     private final UrlBuilder urlBuilder;
 
+    InputStream is = null;
+    private boolean finished = true;
+
     /**
      * Create a helper object for requesting log entries synchronously ({@link #fetchLogs()}) or asynchronously ({@link #start()}.
      *
@@ -98,6 +101,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
     // Fetch log asynchronously as stream and follow stream
     public void run() {
         try {
+            finished = false;
             callback.open();
             this.request = getLogRequest(true);
             final HttpResponse response = client.execute(request);
@@ -105,7 +109,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
         } catch (LogCallback.DoneException e) {
             // Signifies we're finished with the log stream.
         } catch (IOException e) {
-            callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
+            if (!finished) {
+                callback.error("IO Error while requesting logs: " + e + " " + Thread.currentThread().getName());
+            }
         } finally {
             callback.close();
         }
@@ -181,12 +187,15 @@ public class LogRequestor extends Thread implements LogGetHandle {
             throw new LogCallback.DoneException();
         }
 
-        try (InputStream is = response.getEntity().getContent()) {
+        is = response.getEntity().getContent();
+        try {
             while (true) {
                 if (!readStreamFrame(is)) {
                     return;
                 }
             }
+        } finally {
+            is.close();
         }
     }
 
@@ -209,7 +218,9 @@ public class LogRequestor extends Thread implements LogGetHandle {
     @Override
     public void finish() {
         if (request != null) {
-            request.abort();
+            finished = true;
+            final HttpUriRequest req = request;
+            new Thread(req::abort).start();
             request = null;
         }
     }

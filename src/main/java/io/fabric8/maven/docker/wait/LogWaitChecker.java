@@ -42,7 +42,11 @@ public class LogWaitChecker implements WaitChecker, LogWaitCheckerCallback {
     @Override
     public void cleanUp() {
         if (logHandle != null) {
-            logHandle.finish();
+            try {
+                logHandle.finish();
+            } catch (UnsupportedOperationException e) {
+                log.warn("abort not supported - continue!");
+            }
         }
     }
 
