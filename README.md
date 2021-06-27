@@ -23,6 +23,7 @@ It works with Maven 3.0.5 and Docker 1.6.0 or later.
 | [`docker:save`](https://fabric8io.github.io/docker-maven-plugin/#docker:save)                   | Save image to a file                             |                         |
 | [`docker:volume-create`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-create) | Create a volume to share data between containers | pre-integration-test    |
 | [`docker:volume-remove`](https://fabric8io.github.io/docker-maven-plugin/#docker:volume-remove) | Remove a created volume                          | post-integration-test   |
+| [`docker:copy`](https://fabric8io.github.io/docker-maven-plugin/#docker:copy)                   | Copy files and directories from a container      | post-integration-test   |
 
 #### Documentation
 

@@ -65,7 +65,7 @@ jobs:
              -Dsonar.pullrequest.key=${CIRCLE_PR_NUMBER} \
              -Dsonar.pullrequest.provider=GitHub \
              -Dsonar.pullrequest.github.repository=fabric8io/docker-maven-plugin \
-             -Dsonar.github.oauth=${GITHUB_COMMENT_TOKEN} \
+             -Dsonar.github.oauth=${GITHUB_COMMENT_TOKEN}
         else
           echo "No Sonar PR analysis as this is not a pull request"
         fi
