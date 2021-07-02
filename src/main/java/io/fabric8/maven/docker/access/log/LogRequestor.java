@@ -30,7 +30,6 @@ import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.access.util.RequestUtil;
 import io.fabric8.maven.docker.util.TimestampFactory;
-import io.fabric8.maven.docker.wait.WaitUtil;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
@@ -184,23 +183,10 @@ public class LogRequestor extends Thread implements LogGetHandle {
         }
 
         final InputStream is = response.getEntity().getContent();
-
-        try {
-            while (true) {
-                if (!readStreamFrame(is)) {
-                    return;
-                }
-            }
-        } finally {
-            // When finish() returns, request == null
-            while (request != null) {
-                WaitUtil.sleep(500);
-            }
-            
-            if ((is != null)) {
-                System.out.println("*** Calling is.close...");
-                is.close();
-                System.out.println("*** Calling is.close: done.");
+       
+        while (true) {
+            if (!readStreamFrame(is)) {
+                return;
             }
         }
     }
@@ -224,9 +210,7 @@ public class LogRequestor extends Thread implements LogGetHandle {
     @Override
     public void finish() {
         if (request != null) {
-            System.out.println("*** Calling request.abort...");
             request.abort();
-            System.out.println("*** Calling request.abort: done.");
             request = null;
         }
     }
