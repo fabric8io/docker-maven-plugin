@@ -139,6 +139,23 @@ public class ContainerNamingUtilTest {
         Assert.assertEquals(container2, filtered.iterator().next());
     }
 
+    @Test
+    public void testContainersToStopWithAlias() {
+        new Expectations() {{
+            container1.getName();result = "container-1";
+            container2.getName();result = "container-2";
+
+        }};
+        Collection<Container> containers = Arrays.asList(container1, container2);
+        Collection<Container> filtered = ContainerNamingUtil.getContainersToStop(
+                imageConfiguration("jolokia/jolokia_demo","container-2", "%a"),
+                null,
+                new Date(123456),
+                containers);
+        Assert.assertEquals(1, filtered.size());
+        Assert.assertEquals(container2, filtered.iterator().next());
+    }
+
     private ImageConfiguration imageConfiguration(String name, String alias, String containerNamePattern) {
         ImageConfiguration.Builder builder = new ImageConfiguration.Builder().name(name).alias(alias);
         if (containerNamePattern != null) {

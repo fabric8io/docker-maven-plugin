@@ -286,8 +286,7 @@ public class StopMojoTest extends BaseMojoTest {
      * Mock project with one image, query service indicates three running images, none labelled,
      * but allContainers is true.
      *
-     * The containers are named with ascending indices - but this doesn't match the container
-     * name pattern, so all are stopped.
+     * One container matches the name pattern and the others not, so that not all containers are stopped.
      *
      * @throws IOException
      * @throws MojoExecutionException
@@ -300,12 +299,12 @@ public class StopMojoTest extends BaseMojoTest {
 
         givenAllContainersIsTrue();
 
-        givenRunningContainer(running1, "container-id-1", "example-1");
+        givenRunningContainer(running1, "container-id-1", "example");
         givenRunningContainer(running2, "container-id-2", "example-2");
         givenRunningContainer(running3, "container-id-3", "example-3");
         givenContainersAreRunningForImage("example:latest", running1, running2, running3);
 
-        // If name pattern doesn't contain index placeholder, all containers are stopped
+        // If name pattern doesn't contain index placeholder then matching containers are stopped
         Deencapsulation.setField(stopMojo, "containerNamePattern", "%n");
 
         whenMojoExecutes();
@@ -313,8 +312,44 @@ public class StopMojoTest extends BaseMojoTest {
         thenContainerLookupByImageOccurs("example:latest");
         thenListContainersIsNotCalled();
         thenContainerIsStopped("container-id-1", false, false);
+        thenContainerIsNotStopped("container-id-2");
+        thenContainerIsNotStopped("container-id-3");
+    }
+
+    /**
+     * Mock project with one image, query service indicates three running images, none labelled,
+     * but allContainers is true.
+     *
+     * The containers are named with ascending indices - but this doesn't match the container
+     * name pattern, so all are stopped.
+     *
+     * @throws IOException
+     * @throws MojoExecutionException
+     * @throws ExecException
+     */
+    @Test
+    public void stopWithAliasNamePattern(@Mocked Container running1, @Mocked Container running2,
+            @Mocked Container running3) throws IOException, MojoExecutionException, ExecException {
+        this.consoleLogger.setThreshold(0);
+        givenProjectWithResolvedImage(singleImageWithRunAndAlias("example-2"));
+
+        givenAllContainersIsTrue();
+
+        givenRunningContainer(running1, "container-id-1", "example-1");
+        givenRunningContainer(running2, "container-id-2", "example-2");
+        givenRunningContainer(running3, "container-id-3", "example-3");
+        givenContainersAreRunningForImage("example:latest", running1, running2, running3);
+
+        // If name pattern doesn't contain index placeholder, all containers are stopped
+        Deencapsulation.setField(stopMojo, "containerNamePattern", "%a");
+
+        whenMojoExecutes();
+
+        thenContainerLookupByImageOccurs("example:latest");
+        thenListContainersIsNotCalled();
+        thenContainerIsNotStopped("container-id-1");
         thenContainerIsStopped("container-id-2", false, false);
-        thenContainerIsStopped("container-id-3", false, false);
+        thenContainerIsNotStopped("container-id-3");
     }
 
     /**

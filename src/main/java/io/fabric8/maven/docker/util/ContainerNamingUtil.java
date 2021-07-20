@@ -60,11 +60,21 @@ public class ContainerNamingUtil {
     }
 
     /**
-     * Keep only the entry with the higest index if an indexed naming scheme for container has been chosen.
+     * Keep only the entry with the higest index if an indexed naming scheme for container has been chosen or if the container name
+     * pattern doesn't contain any index placeholders then filter containers (analog
+     * {@link #formatContainerName(ImageConfiguration, String, Date, Collection)} but with stopping them in mind).<br>
+     *<br>
+     *The placeholders of the containerNamePattern are resolved as follows:<br>
+     *<ul>
+     *<li>%a is replaced with the image alias</li>
+     *<li>%n is replaced with the image name</li>
+     *<li>%t is replaced with any date (regex \d{10,})</li>
+     *<li>%i is replaced with any number (regex \d+)</li>
+     *</ul>
      * @param image the image from which to the the container pattern
      * @param buildTimestamp the timestamp for the build
      * @param containers the list of existing containers
-     * @return a list with potentially lower indexed entries removed
+     * @return filtered container instances, maybe empty but never null
      */
     public static Collection<Container> getContainersToStop(final ImageConfiguration image,
                                                             final String defaultContainerNamePattern,
@@ -73,21 +83,42 @@ public class ContainerNamingUtil {
 
         String containerNamePattern = extractContainerNamePattern(image, defaultContainerNamePattern);
 
-        if (shouldUseEmptyName(containerNamePattern) || !containerNamePattern.contains(INDEX_PLACEHOLDER)) {
+        if (shouldUseEmptyName(containerNamePattern)) {
             return containers;
         }
 
-        final String partiallyApplied =
-                replacePlaceholders(
-                        containerNamePattern,
-                        image.getName(),
-                        image.getAlias(),
-                        buildTimestamp);
+        // if the pattern contains an index placeholder -> we have to stick to the old approach (backward compatibility)
+        if (containerNamePattern.contains(INDEX_PLACEHOLDER)) {
+            final String partiallyApplied =
+                    replacePlaceholders(
+                            containerNamePattern,
+                            image.getName(),
+                            image.getAlias(),
+                            buildTimestamp);
 
-        return keepOnlyLastIndexedContainer(containers, partiallyApplied);
+            return keepOnlyLastIndexedContainer(containers, partiallyApplied);
+        }
+
+        return replacePlaceholdersAndFilterContainers(containers, image, containerNamePattern);
     }
 
+
     // ========================================================================================================
+
+    private static Collection<Container> replacePlaceholdersAndFilterContainers(Collection<Container> containers, ImageConfiguration image,
+            String containerNamePattern) {
+        Map<String, FormatParameterReplacer.Lookup> lookups = new HashMap<>();
+        lookups.put("a", () -> image.getAlias());
+        lookups.put("n", () -> cleanImageName(image.getName()));
+        lookups.put("t", () -> "\\d{10,}");
+        lookups.put("i", () -> "\\d+");
+
+        String appliedContainerNamePattern = new FormatParameterReplacer(lookups).replace(containerNamePattern);
+
+        return containers.stream()
+                .filter(container -> container.getName().matches(appliedContainerNamePattern))
+                .collect(Collectors.toList());
+    }
 
     private static String replacePlaceholders(String containerNamePattern, String imageName, String nameAlias, Date buildTimestamp) {
 
