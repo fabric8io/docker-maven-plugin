@@ -1,7 +1,7 @@
 # ChangeLog
 
 * **0.36-SNAPSHOT**
-
+  - Fix stop mojo by taking container name pattern into account (#1168)
 * **0.36.1** (2021-06-27)
   - Fix multi-stage builds when an image refers to another image named/aliased up in the Dockerfile ([1443](https://github.com/fabric8io/docker-maven-plugin/issues/1443))
   - Revert part of #965 in LogRequestor ([1480](https://github.com/fabric8io/docker-maven-plugin/pull/1480))
