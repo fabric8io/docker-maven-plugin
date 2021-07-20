@@ -142,9 +142,43 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
         private final Date now;
 
         private enum Mode {
-            PLAIN,
-            SNAPSHOT_WITH_TIMESTAMP,
-            SNAPSHOT_LATEST
+            PLAIN('v') {
+                public String doTransform(String tag, Date now) {
+                    return tag;
+                }
+            },
+            SNAPSHOT_WITH_TIMESTAMP('t') {
+                public String doTransform(String tag, Date now) {
+                    if (tag.endsWith("-SNAPSHOT")) {
+                        return "snapshot-" + new SimpleDateFormat("yyMMdd-HHmmss-SSSS").format(now);
+                    }
+                    return tag;
+                }
+            },
+            SNAPSHOT_LATEST('l') {
+                public String doTransform(String tag, Date now) {
+                    if (tag.endsWith("-SNAPSHOT")) {
+                        return "latest";
+                    }
+                    return tag;
+                }
+            };
+
+            private final char letter;
+
+            Mode(char letter) {
+                this.letter = letter;
+            }
+
+            protected abstract String doTransform(String tag, Date now);
+
+            public String transform(MavenProject project, String tag, Date now) {
+                // In case the Maven property is also a placeholder, replace it as well
+                if (Strings.isNullOrEmpty(tag) || tag.equals("%" + letter)) {
+                   tag = project.getVersion();
+                }
+                return doTransform(tag, now);
+            }
         }
 
         private DefaultTagLookup(MavenProject project, Mode mode, Date now) {
@@ -155,21 +189,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
         public String lookup() {
             String tag = getProperty(DOCKER_IMAGE_TAG);
-            if (!Strings.isNullOrEmpty(tag)) {
-                return tag;
-            }
-
-            tag = project.getVersion();
-            if (mode != Mode.PLAIN) {
-                if (tag.endsWith("-SNAPSHOT")) {
-                    if (mode == Mode.SNAPSHOT_WITH_TIMESTAMP) {
-                        tag = "snapshot-" + new SimpleDateFormat("yyMMdd-HHmmss-SSSS").format(now);
-                    } else if (mode == Mode.SNAPSHOT_LATEST) {
-                        tag = "latest";
-                    }
-                }
-            }
-            return tag;
+            return mode.transform(project, tag, now);
         }
     }
 

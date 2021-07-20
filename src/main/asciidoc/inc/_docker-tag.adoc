@@ -9,10 +9,10 @@ The `{plugin}:tag` tags an image so that it becomes part of a repository. You ca
 [INFO] Scanning for projects...
 [INFO]
 [INFO] -----------< io.fabric8.dmp.samples:demp-sample-zero-config >-----------
-[INFO] Building demp-sample-zero-config 0.33-SNAPSHOT
+[INFO] Building demp-sample-zero-config 
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
-[INFO] --- docker-maven-plugin:0.33-SNAPSHOT:tag (default-cli) @ demp-sample-zero-config ---
+[INFO] --- docker-maven-plugin:dmpversion:tag (default-cli) @ demp-sample-zero-config ---
 [INFO] DOCKER> Tagging image samples/demp-sample-zero-config:0.9.0 successful!
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS

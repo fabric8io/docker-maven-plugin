@@ -103,6 +103,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Component
     protected DockerAccessFactory dockerAccessFactory;
 
+    // Redirect the plugin output to a file
+    @Parameter(property = "outputFile")
+    private String outputFile;
+
     @Parameter(property = "docker.autoPull")
     protected String autoPull;
 
@@ -222,7 +226,7 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     // Handler dealing with authentication credentials
     private AuthConfigFactory authConfigFactory;
 
-    protected Logger log;
+    protected AnsiLogger log;
 
     private String minimalApiVersion;
 
@@ -238,7 +242,14 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!skip) {
             boolean ansiRestore = Ansi.isEnabled();
-            log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix());
+            File output = null;
+            if (outputFile != null) {
+                output = new File(outputFile);
+                if (output.exists()) {
+                    output.delete();
+                }
+            }
+            log = new AnsiLogger(getLog(), useColorForLogging(), verbose, !settings.getInteractiveMode(), getLogPrefix(), output);
 
             try {
                 authConfigFactory.setLog(log);
@@ -271,6 +282,11 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 }
             } finally {
                 Ansi.setEnabled(ansiRestore);
+                try {
+                    log.close();
+                } catch (IOException exp) {
+                    logException(exp);
+                }
             }
         }
     }

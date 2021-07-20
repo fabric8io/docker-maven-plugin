@@ -5,7 +5,7 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-builder-parent</artifactId>
-    <version>0.35-SNAPSHOT</version>
+    <version>0.36-SNAPSHOT</version>
   </parent>
 
   <artifactId>dmp-it-builder-app-image</artifactId>

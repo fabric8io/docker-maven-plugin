@@ -782,7 +782,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     @Test
     public void testCacheFrom() {
-        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CACHE_FROM), "foo/bar:latest", k(ConfigKey.FROM), "base"};
+        String[] testData = new String[] {k(ConfigKey.NAME), "image", k(ConfigKey.CACHE_FROM)+".1", "foo/bar:latest", k(ConfigKey.FROM), "base"};
 
         ImageConfiguration config = resolveExternalImageConfig(testData);
         assertEquals(Collections.singletonList("foo/bar:latest"), config.getBuildConfiguration().getCacheFrom());
@@ -801,7 +801,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
                         "docker.from", "busybox"
                 ));
 
-        assertNull(configs.get(0).getBuildConfiguration().getCacheFrom().get(0));
+        assertNull(configs.get(0).getBuildConfiguration().getCacheFrom());
     }
 
     @Test
@@ -1014,7 +1014,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
 
     private ImageConfiguration resolveExternalImageConfig(String[] testData) {
         Map<String, String> external = new HashMap<>();
-        external.put("type", "props");
+        external.put("type", "properties");
 
         ImageConfiguration config = new ImageConfiguration.Builder().name("image").alias("alias").externalConfig(external).build();
 

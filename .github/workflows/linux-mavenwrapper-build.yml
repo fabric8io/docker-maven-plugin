@@ -1,4 +1,4 @@
-name: Windows Maven Build
+name: Linux Maven Wrapper Build
 
 on:
   push:
@@ -8,11 +8,11 @@ on:
 
 jobs:
   build:
-    name: Windows Java ${{ matrix.java }} Maven
-    runs-on: windows-latest
+    name: Linux Java ${{ matrix.java }} Maven Wrapper
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [8, 11]
+        java: [11]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -21,4 +21,4 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Build Project
-        run: mvn clean install
+        run: ./mvnw -B -C -V -ntp clean install

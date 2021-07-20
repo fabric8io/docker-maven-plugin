@@ -181,11 +181,17 @@ public class LogRequestor extends Thread implements LogGetHandle {
             throw new LogCallback.DoneException();
         }
 
-        try (InputStream is = response.getEntity().getContent()) {
+        final InputStream is = response.getEntity().getContent();
+
+        try {
             while (true) {
                 if (!readStreamFrame(is)) {
                     return;
                 }
+            }
+        } finally {
+            if ((is != null) && (is.available() > 0)) {
+                is.close();
             }
         }
     }
