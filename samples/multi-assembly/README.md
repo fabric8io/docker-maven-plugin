@@ -48,7 +48,7 @@ To build project issue this command:
 [INFO] Scanning for projects...
 [INFO]
 [INFO] ----------< io.fabric8.dmp.samples:dmp-sample-multi-assembly >----------
-[INFO] Building dmp-sample-multi-assembly 0.36-SNAPSHOT
+[INFO] Building dmp-sample-multi-assembly 0.37.0
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
 [INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ dmp-sample-multi-assembly ---
@@ -69,9 +69,9 @@ To build project issue this command:
 [INFO] No tests to run.
 [INFO]
 [INFO] --- maven-jar-plugin:3.2.0:jar (default-jar) @ dmp-sample-multi-assembly ---
-[INFO] Building jar: C:\Source\Other\docker-maven-plugin\samples\multi-assembly\target\dmp-sample-multi-assembly-0.36-SNAPSHOT.jar
+[INFO] Building jar: C:\Source\Other\docker-maven-plugin\samples\multi-assembly\target\dmp-sample-multi-assembly-0.37.0.jar
 [INFO]
-[INFO] --- docker-maven-plugin:0.36-SNAPSHOT:build (docker-build) @ dmp-sample-multi-assembly ---
+[INFO] --- docker-maven-plugin:0.37.0:build (docker-build) @ dmp-sample-multi-assembly ---
 [INFO] Copying files to C:\Source\Other\docker-maven-plugin\samples\multi-assembly\target\docker\fabric8\dmp-sample-multi-assembly\build\deps
 [INFO] Copying files to C:\Source\Other\docker-maven-plugin\samples\multi-assembly\target\docker\fabric8\dmp-sample-multi-assembly\build\maven
 [INFO] Building tar: C:\Source\Other\docker-maven-plugin\samples\multi-assembly\target\docker\fabric8\dmp-sample-multi-assembly\tmp\docker-build.tar
@@ -90,7 +90,7 @@ To build project issue this command:
 [INFO] DOCKER> Step 4/5 : COPY maven /app/
 [INFO] DOCKER>
 [INFO] DOCKER> ---> 95f28fe7c902
-[INFO] DOCKER> Step 5/5 : CMD java -jar /app/dmp-sample-multi-assembly-0.36-SNAPSHOT.jar
+[INFO] DOCKER> Step 5/5 : CMD java -jar /app/dmp-sample-multi-assembly-0.37.0.jar
 [INFO] DOCKER>
 [INFO] DOCKER> ---> Running in 6a784e62c7db
 [INFO] DOCKER> Removing intermediate container 6a784e62c7db
@@ -110,7 +110,7 @@ You can verify that the image contains multiple layers using:
 > docker history --no-trunc fabric8/dmp-sample-multi-assembly:latest
 ```text
 IMAGE                                                                     CREATED             CREATED BY                                                                                                                                               SIZE                COMMENT
-sha256:97d2a21984a25b3e278a784c2ef8078fcf677d322e6e73bb847baf8ee6bd7ef4   9 minutes ago       /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "java -jar /app/dmp-sample-multi-assembly-0.36-SNAPSHOT.jar"]                                                     0B
+sha256:97d2a21984a25b3e278a784c2ef8078fcf677d322e6e73bb847baf8ee6bd7ef4   9 minutes ago       /bin/sh -c #(nop)  CMD ["/bin/sh" "-c" "java -jar /app/dmp-sample-multi-assembly-0.37.0.jar"]                                                     0B
 sha256:95f28fe7c9021870b123580d608b0b98da56507507873e354868235373363fce   9 minutes ago       /bin/sh -c #(nop) COPY dir:a8f75e88983c2f1f68b80d3566291efed7b22db12c90389955fba7c78777a078 in /app/                                                     11.2kB
 sha256:5e275cc1bdd35f730d79c96918986a313917f3fbdba57a1ff44d977361a11739   12 days ago         /bin/sh -c #(nop) COPY dir:a04b4e112f340915a2989954b7849d7b1426bac844c51935882d24dd3eacee06 in /app/lib/                                                 13.6MB
 sha256:2c5801f680604456b3111fb0a567c7403989478fe01fd0c81ab56f0ef28b7dca   12 days ago         /bin/sh -c #(nop)  EXPOSE 8080                                                                                                                           0B
