@@ -41,7 +41,7 @@ public class PushMojo extends AbstractDockerMojo {
      */
     @Override
     public void executeInternal(ServiceHub hub) throws DockerAccessException, MojoExecutionException {
-        if (skipPush) {
+        if (skipPush || shouldSkipPom()) {
             return;
         }
 

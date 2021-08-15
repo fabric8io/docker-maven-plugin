@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.39-SNAPSHOT** :
+  - `skipPom` is ignored by "push" goal ([1482](https://github.com/fabric8io/docker-maven-plugin/issues/1482))
   - Cleanup dangling images as a result of image tagging, auto-pulling a base image, or auto-pulling a cacheFrom image ([#1513](https://github.com/fabric8io/docker-maven-plugin/pull/1513)) @rkhmelichek
   - Enable Create Image (pull) HTTP API option ([#1516](https://github.com/fabric8io/docker-maven-plugin/issues/1516)) @rohanKanojia
 

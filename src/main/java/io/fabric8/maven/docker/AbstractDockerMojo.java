@@ -222,6 +222,12 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
     @Parameter
     private DockerMachineConfiguration machine;
 
+    @Parameter(defaultValue = "${project.packaging}", required = true)
+    protected String packaging;
+
+    @Parameter(property = "docker.skip.pom", defaultValue = "false")
+    protected boolean skipPom;
+
     // Images resolved with external image resolvers and hooks for subclass to
     // mangle the image configurations.
     private List<ImageConfiguration> resolvedImages;
@@ -576,6 +582,10 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfiguration), autoPull);
         RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
         registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, imageConfig.getBuildConfiguration());
+    }
+
+    protected boolean shouldSkipPom() {
+        return skipPom && packaging.equalsIgnoreCase("pom");
     }
 
     private boolean containerMatchesPattern(Container container, Matcher imageNameMatcher, Matcher containerNameMatcher,
