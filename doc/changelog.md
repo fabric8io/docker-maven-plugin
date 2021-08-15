@@ -1,5 +1,7 @@
 # ChangeLog
 
+* **0.37-SNAPSHOT**:
+
 * **0.37.0** (2021-08-15)
   - Fix stop mojo by taking container name pattern into account (#1168)
   - Wait for request.abort to finish before calling `is.close()` (#1103)

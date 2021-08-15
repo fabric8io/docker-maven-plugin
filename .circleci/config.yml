@@ -42,7 +42,7 @@ jobs:
           mvn clean install -DskipTests
           PROJECT_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
           cd it/
-          find . -type f -exec sed -i 's/0.37.0/'"$PROJECT_VERSION"'/g' {} +
+          find . -type f -exec sed -i 's/0.37-SNAPSHOT/'"$PROJECT_VERSION"'/g' {} +
           mvn clean install
     - save_cache:
         key: dmp-{{ checksum "pom.xml" }}

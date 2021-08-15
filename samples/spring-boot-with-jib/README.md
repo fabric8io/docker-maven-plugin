@@ -45,23 +45,23 @@ To build project issue this command:
 [INFO] Scanning for projects...
 [INFO] 
 [INFO] ---------< io.fabric8.dmp.samples:dmp-sample-spring-boot-jib >----------
-[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37.0
+[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37-SNAPSHOT
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
-[INFO] --- docker-maven-plugin:0.37.0:build (default-cli) @ dmp-sample-spring-boot-jib ---
+[INFO] --- docker-maven-plugin:0.37-SNAPSHOT:build (default-cli) @ dmp-sample-spring-boot-jib ---
 [INFO] DOCKER> Building Container image with JIB(Java Image Builder) mode
 [INFO] DOCKER> JIB image build started
 [INFO] DOCKER> Preparing assembly files
 [INFO] Copying files to /home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-dmp-sample-jib/build/maven
 [INFO] Building tar: /home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-dmp-sample-jib/tmp/docker-build.tar
-[WARNING] Cannot include project artifact: io.fabric8.dmp.samples:dmp-sample-spring-boot-jib:jar:0.37.0; it doesn't have an associated file or directory.
+[WARNING] Cannot include project artifact: io.fabric8.dmp.samples:dmp-sample-spring-boot-jib:jar:0.37-SNAPSHOT; it doesn't have an associated file or directory.
 [WARNING] The following patterns were never triggered in this artifact inclusion filter:
 o  'io.fabric8.dmp.samples:dmp-sample-spring-boot-jib'
 JIB> Base image 'fabric8/java-centos-openjdk8-jdk:1.5.6' does not use a specific image digest - build may not be reproducible
 JIB> Containerizing application with the following files:                                                                    
 JIB> 	:                                                                                                                      
 JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-dmp-sample-jib/build/maven
-JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-dmp-sample-jib/build/maven/dmp-sample-spring-boot-jib-0.37.0.jar
+JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-dmp-sample-jib/build/maven/dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar
 JIB> 	:                                                                                                                      
 JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-dmp-sample-jib/build/Dockerfile
 JIB> Getting manifest for base image fabric8/java-centos-openjdk8-jdk:1.5.6...                                               
@@ -70,7 +70,7 @@ JIB> Building  layer...
 JIB> The base image requires auth. Trying again for fabric8/java-centos-openjdk8-jdk:1.5.6...                                
 JIB> Retrieving registry credentials for registry-1.docker.io...                                                             
 JIB> Using base image with digest: sha256:92530aa1eb4c49e3b1d033f94e9cd4dc891d49922459e13f84e59c9d68d800eb                   
-JIB> Container program arguments set to [java, -jar, /maven/dmp-sample-spring-boot-jib-0.37.0.jar]                    
+JIB> Container program arguments set to [java, -jar, /maven/dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar]                    
 JIB> Building image to tar file...                                                                                           
 JIB> [========================      ] 80.0% complete > writing to tar file
 JIB> [==============================] 100.0% complete
@@ -104,15 +104,15 @@ spring-boot-with-jib : $ mvn docker:push
 [INFO] Scanning for projects...
 [INFO] 
 [INFO] ---------< io.fabric8.dmp.samples:dmp-sample-spring-boot-jib >----------
-[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37.0
+[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37-SNAPSHOT
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
-[INFO] --- docker-maven-plugin:0.37.0:push (default-cli) @ dmp-sample-spring-boot-jib ---
+[INFO] --- docker-maven-plugin:0.37-SNAPSHOT:push (default-cli) @ dmp-sample-spring-boot-jib ---
 [INFO] DOCKER> Pushing Container image with JIB(Java Image Builder) mode
 [INFO] DOCKER> This push refers to: rohankanojia/spring-boot-dmp-sample-jib
 JIB> Containerizing application with the following files:                                                                    
 JIB> Retrieving registry credentials for registry-1.docker.io...                                                             
-JIB> Container program arguments set to [java, -jar, /maven/dmp-sample-spring-boot-jib-0.37.0.jar] (inherited from base image)
+JIB> Container program arguments set to [java, -jar, /maven/dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar] (inherited from base image)
 JIB> Pushing manifest for latest...                                                                                          
 
 JIB> [==============================] 100.0% complete
@@ -136,10 +136,10 @@ spring-boot-with-jib : $ mvn docker:build -PJib-With-Assembly
 [INFO] Scanning for projects...
 [INFO] 
 [INFO] ---------< io.fabric8.dmp.samples:dmp-sample-spring-boot-jib >----------
-[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37.0
+[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37-SNAPSHOT
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
-[INFO] --- docker-maven-plugin:0.37.0:build (default-cli) @ dmp-sample-spring-boot-jib ---
+[INFO] --- docker-maven-plugin:0.37-SNAPSHOT:build (default-cli) @ dmp-sample-spring-boot-jib ---
 [INFO] DOCKER> Building Container image with JIB(Java Image Builder) mode
 [INFO] DOCKER> JIB image build started
 [INFO] DOCKER> Preparing assembly files
@@ -150,7 +150,7 @@ JIB> 	:
 JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-sample/build/my-project-assembly
 JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-sample/build/my-project-assembly/static
 JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-sample/build/my-project-assembly/static/testFile.txt
-JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-sample/build/my-project-assembly/dmp-sample-spring-boot-jib-0.37.0.jar
+JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-sample/build/my-project-assembly/dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar
 JIB> 	:                                                                                                                      
 JIB> 		/home/rohaan/work/repos/docker-maven-plugin/samples/spring-boot-with-jib/target/docker/rohankanojia/spring-boot-sample/build/Dockerfile
 JIB> Getting manifest for base image fabric8/java-centos-openjdk8-jdk:1.5.6...                                               
@@ -159,7 +159,7 @@ JIB> Building  layer...
 JIB> The base image requires auth. Trying again for fabric8/java-centos-openjdk8-jdk:1.5.6...                                
 JIB> Retrieving registry credentials for registry-1.docker.io...                                                             
 JIB> Using base image with digest: sha256:92530aa1eb4c49e3b1d033f94e9cd4dc891d49922459e13f84e59c9d68d800eb                   
-JIB> Container program arguments set to [java, -jar, /my-project-assembly/dmp-sample-spring-boot-jib-0.37.0.jar]      
+JIB> Container program arguments set to [java, -jar, /my-project-assembly/dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar]      
 JIB> Building image to tar file...                                                                                           
 JIB> [========================      ] 80.0% complete > writing to tar file
 JIB> [==============================] 100.0% complete
@@ -180,15 +180,15 @@ spring-boot-with-jib : $ mvn docker:push -PJib-With-Assembly
 [INFO] Scanning for projects...
 [INFO] 
 [INFO] ---------< io.fabric8.dmp.samples:dmp-sample-spring-boot-jib >----------
-[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37.0
+[INFO] Building Docker Maven Plugin :: Spring Boot JIB 0.37-SNAPSHOT
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
-[INFO] --- docker-maven-plugin:0.37.0:push (default-cli) @ dmp-sample-spring-boot-jib ---
+[INFO] --- docker-maven-plugin:0.37-SNAPSHOT:push (default-cli) @ dmp-sample-spring-boot-jib ---
 [INFO] DOCKER> Pushing Container image with JIB(Java Image Builder) mode
 [INFO] DOCKER> This push refers to: rohankanojia/spring-boot-sample
 JIB> Containerizing application with the following files:                                                                    
 JIB> Retrieving registry credentials for registry-1.docker.io...                                                             
-JIB> Container program arguments set to [java, -jar, /my-project-assembly/dmp-sample-spring-boot-jib-0.37.0.jar] (inherited from base image)
+JIB> Container program arguments set to [java, -jar, /my-project-assembly/dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar] (inherited from base image)
 JIB> [====================          ] 66.7% complete > pushing blob sha256:0a2b4dc56d7e822495adcdfa8a2c2316e9ae420d84a6JIB> Skipping push; BLOB already exists on target registry : digest: sha256:707713df6baa24192428099d6444fed7fe3c91dc10bad2742b7350f0147b1b3b, size: 8851
 JIB> [====================          ] 67.7% complete > pushing blob sha256:0a2b4dc56d7e822495adcdfa8a2c2316e9ae420d84a6JIB> Skipping push; BLOB already exists on target registry : digest: sha256:109b828942fdee847c02ec43b13105bf0d1bc1701675a4306781193f11c997df, size: 6543
 JIB> [=====================         ] 68.7% complete > pushing blob sha256:0a2b4dc56d7e822495adcdfa8a2c2316e9ae420d84a6JIB> Skipping push; BLOB already exists on target registry : digest: sha256:a44f5f69f08a44895565ad9cdfa05f3378a46205cf81c64de068efed4f644a46, size: 467
@@ -218,7 +218,7 @@ spring-boot-with-jib : $ docker container run -it rohankanojia/spring-boot-sampl
 Dockerfile         bin          dev  home  lib64  mnt                  opt   root  sbin  sys  usr
 anaconda-post.log  deployments  etc  lib   media  my-project-assembly  proc  run   srv   tmp  var
 [root@c402fe994291 /]# ls my-project-assembly/
-dmp-sample-spring-boot-jib-0.37.0.jar  static
+dmp-sample-spring-boot-jib-0.37-SNAPSHOT.jar  static
 [root@c402fe994291 /]# ls my-project-assembly/static/
 testFile.txt
 [root@c402fe994291 /]# cat my-project-assembly/static/testFile.txt 
