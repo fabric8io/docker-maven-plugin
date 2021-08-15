@@ -1,7 +1,9 @@
 # ChangeLog
 
-* **0.36-SNAPSHOT**
+* **0.37.0** (2021-08-15)
   - Fix stop mojo by taking container name pattern into account (#1168)
+  - Wait for request.abort to finish before calling `is.close()` (#1103)
+
 * **0.36.1** (2021-06-27)
   - Fix multi-stage builds when an image refers to another image named/aliased up in the Dockerfile ([1443](https://github.com/fabric8io/docker-maven-plugin/issues/1443))
   - Revert part of #965 in LogRequestor ([1480](https://github.com/fabric8io/docker-maven-plugin/pull/1480))
