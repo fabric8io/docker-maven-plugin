@@ -19,6 +19,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.MavenArtifactRepository;
@@ -32,7 +33,6 @@ import org.junit.Test;
 import static io.fabric8.maven.docker.util.PathTestUtil.createTmpFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author roland
@@ -135,13 +135,19 @@ public class DockerFileUtilTest {
 
     @Test
     public void testResolveArgValueFromStrContainingArgKey() {
-        assertEquals("latest", DockerFileUtil.resolveArgValueFromStrContainingArgKey("$VERSION", Collections.singletonMap("VERSION", "latest")));
-        assertEquals("test", DockerFileUtil.resolveArgValueFromStrContainingArgKey("${project.scope}", Collections.singletonMap("project.scope", "test")));
-        assertEquals("test", DockerFileUtil.resolveArgValueFromStrContainingArgKey("$ad", Collections.singletonMap("ad", "test")));
-        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("bla$ad", Collections.singletonMap("ad", "test")));
-        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("${foo}bar", Collections.singletonMap("foo", "test")));
-        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("bar${foo}", Collections.singletonMap("foo", "test")));
-        assertNull(DockerFileUtil.resolveArgValueFromStrContainingArgKey("$ad", Collections.emptyMap()));
+        assertEquals("latest", DockerFileUtil.resolveImageTagFromArgs("$VERSION", Collections.singletonMap("VERSION", "latest")));
+        assertEquals("test", DockerFileUtil.resolveImageTagFromArgs("${project.scope}", Collections.singletonMap("project.scope", "test")));
+        assertEquals("test", DockerFileUtil.resolveImageTagFromArgs("$ad", Collections.singletonMap("ad", "test")));
+        assertEquals("blatest", DockerFileUtil.resolveImageTagFromArgs("bla$ad", Collections.singletonMap("ad", "test")));
+        assertEquals("testbar", DockerFileUtil.resolveImageTagFromArgs("${foo}bar", Collections.singletonMap("foo", "test")));
+        assertEquals("bartest", DockerFileUtil.resolveImageTagFromArgs("bar${foo}", Collections.singletonMap("foo", "test")));
+        assertEquals("$ad", DockerFileUtil.resolveImageTagFromArgs("$ad", Collections.emptyMap()));
+    }
+
+    @Test
+    public void testFindAllArgsDefinedInString() {
+        assertEquals(ImmutableSet.of("REPO_1", "IMAGE-1", "VERSION"), DockerFileUtil.findAllArgs("$REPO_1/bar${IMAGE-1}foo:$VERSION"));
+        assertEquals(Collections.emptySet(), DockerFileUtil.findAllArgs("${invalidArg"));
     }
 
     private File copyToTempDir(String resource) throws IOException {
