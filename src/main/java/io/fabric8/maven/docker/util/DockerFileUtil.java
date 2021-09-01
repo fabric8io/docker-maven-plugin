@@ -45,7 +45,7 @@ import static io.fabric8.maven.docker.util.EnvUtil.getUserHome;
  */
 public class DockerFileUtil {
 
-    private static final String ARG_PATTERN_REGEX = "\\$(?:\\{(.*)\\}|(.*))";
+    private static final String ARG_PATTERN_REGEX = "\\$([\\w|\\-|\\.]+)|\\$\\{([\\w|\\-|\\.]+)\\}";
 
     private DockerFileUtil() {}
 
@@ -169,35 +169,29 @@ public class DockerFileUtil {
         return result;
     }
 
-    static String resolveArgValueFromStrContainingArgKey(String argString, Map<String, String> args) {
-        Pattern argPattern = Pattern.compile(ARG_PATTERN_REGEX);
-        Matcher matcher = argPattern.matcher(argString);
-        if (matcher.matches()) {
-            if (matcher.group(1) != null) {
-                return args.get(matcher.group(1));
-            } else if (matcher.group(2) != null) {
-                return args.get(matcher.group(2));
+    static String resolveImageTagFromArgs(String imageTagString, Map<String, String> args) {
+        String resolvedImageString = imageTagString;
+        Set<String> foundArgs = findAllArgs(imageTagString);
+        for (String foundArg : foundArgs) {
+            if (args.containsKey(foundArg)) {
+                resolvedImageString = resolvedImageString.replaceFirst(String.format("\\$\\{*%s\\}*", foundArg),
+                        args.get(foundArg));
             }
         }
-        return null;
+        return resolvedImageString;
     }
 
-    private static String resolveImageTagFromArgs(String imageTagString, Map<String, String> args) {
-        if (imageTagString.startsWith("$")) { // FROM $IMAGE
-            String resolvedVal = resolveArgValueFromStrContainingArgKey(imageTagString, args);
-            if (resolvedVal != null) {
-                return resolvedVal;
-            }
-        } else { // FROM image:$TAG_ARG
-            String[] imageTagArr = imageTagString.split(":");
-            if (imageTagArr.length > 1) {
-                String tag = resolveArgValueFromStrContainingArgKey(imageTagArr[1], args);
-                if (tag != null) {
-                    return imageTagArr[0] + ":" + tag;
-                }
+    static Set<String> findAllArgs(String imageTagString) {
+        Matcher m = Pattern.compile(ARG_PATTERN_REGEX).matcher(imageTagString);
+        Set<String> args = new HashSet<>();
+        while(m.find()){
+            if(m.group(1)!=null){
+                args.add(m.group(1));
+            }else if(m.group(2)!=null){
+                args.add(m.group(2));
             }
         }
-        return imageTagString;
+        return args;
     }
 
     private static Reader getFileReaderFromDir(File file) {
