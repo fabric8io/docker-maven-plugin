@@ -257,18 +257,27 @@ public class DockerFileUtil {
     private static void updateMapWithArgValue(Map<String, String> result, Map<String, String> args, String argString) {
         if (argString.contains("=") || argString.contains(":")) {
             String[] argStringParts = argString.split("[=:]");
-            String argStringValue = argString.substring(argStringParts[0].length() + 1);
+            String argStringKey = argStringParts[0];
+            String argStringValue = determineFinalArgValue(argString, argStringParts, args);
             if (argStringValue.startsWith("\"") || argStringValue.startsWith("'")) {
                 // Replaces surrounding quotes
                 argStringValue = argStringValue.replaceAll("^\"|\"|'|'$", "");
             } else {
                 validateArgValue(argStringValue);
             }
-            result.put(argStringParts[0], argStringValue);
+            result.put(argStringKey, argStringValue);
         } else {
             validateArgValue(argString);
             result.putAll(fetchArgsFromBuildConfiguration(argString, args));
         }
+    }
+
+    private static String determineFinalArgValue(String argString, String[] argStringParts, Map<String, String> args) {
+        String argStringValue = argString.substring(argStringParts[0].length() + 1);
+        if(args == null){
+            return argStringValue;
+        }
+        return args.getOrDefault(argStringParts[0], argStringValue);
     }
 
     private static Map<String, String> fetchArgsFromBuildConfiguration(String argString, Map<String, String> args) {
