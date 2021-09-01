@@ -76,6 +76,7 @@ public class DockerFileUtilTest {
 
         assertEquals("fabric8/s2i-java:latest", fromClauses.next());
         assertEquals("busybox:latest", fromClauses.next());
+        assertEquals("docker.io/library/openjdk:latest", fromClauses.next());
         assertFalse(fromClauses.hasNext());
     }
 
@@ -102,6 +103,7 @@ public class DockerFileUtilTest {
         assertEquals("{MESSAGE=:message}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MESSAGE=:message"}), Collections.emptyMap()).toString());
         assertEquals("{MYAPP_IMAGE=myorg/myapp:latest}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MYAPP_IMAGE=myorg/myapp:latest"}), Collections.emptyMap()).toString());
         assertEquals("{busyboxVersion=latest}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "busyboxVersion"}), Collections.singletonMap("busyboxVersion", "latest")).toString());
+        assertEquals("{busyboxVersion=slim}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "busyboxVersion=latest"}), Collections.singletonMap("busyboxVersion", "slim")).toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
