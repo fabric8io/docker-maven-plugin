@@ -1,15 +1,25 @@
 package io.fabric8.maven.docker.config;
 
+import java.io.File;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+
 import io.fabric8.maven.docker.util.DeepCopy;
 import io.fabric8.maven.docker.util.EnvUtil;
 import io.fabric8.maven.docker.util.Logger;
 import io.fabric8.maven.docker.util.MojoParameters;
 import org.apache.maven.plugins.annotations.Parameter;
-
-import javax.annotation.Nonnull;
-import java.io.File;
-import java.io.Serializable;
-import java.util.*;
 
 /**
  * @author roland
@@ -430,6 +440,12 @@ public class BuildImageConfiguration implements Serializable {
 
     public File getAbsoluteDockerTarPath(MojoParameters mojoParams) {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerArchive().getPath());
+    }
+
+    public void initTags(ConfigHelper.NameFormatter nameFormatter) {
+        if (tags != null) {
+            tags = tags.stream().map(nameFormatter::format).collect(Collectors.toList());
+        }
     }
 
     public static class Builder {
