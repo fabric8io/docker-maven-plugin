@@ -34,6 +34,7 @@ import org.apache.maven.project.MavenProject;
  */
 public class ImageNameFormatter implements ConfigHelper.NameFormatter {
 
+    public static final String TIMESTAMP_FORMAT = "yyMMdd-HHmmss-SSSS";
 
     private final FormatParameterReplacer formatParamReplacer;
 
@@ -70,6 +71,9 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
         lookups.put("v", new DefaultTagLookup(project, DefaultTagLookup.Mode.PLAIN, now));
         lookups.put("t", new DefaultTagLookup(project, DefaultTagLookup.Mode.SNAPSHOT_WITH_TIMESTAMP, now));
         lookups.put("l", new DefaultTagLookup(project, DefaultTagLookup.Mode.SNAPSHOT_LATEST, now));
+
+        // Simple Timestamp
+        lookups.put("T", new DefaultTimestampLookup(project, now));
         return lookups;
     }
 
@@ -107,7 +111,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
             }
             String groupId = project.getGroupId();
             while (groupId.endsWith(".")) {
-                groupId = groupId.substring(0,groupId.length() - 1);
+                groupId = groupId.substring(0, groupId.length() - 1);
             }
             int idx = groupId.lastIndexOf(".");
             return sanitizeName(groupId.substring(idx != -1 ? idx + 1 : 0));
@@ -150,7 +154,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
             SNAPSHOT_WITH_TIMESTAMP('t') {
                 public String doTransform(String tag, Date now) {
                     if (tag.endsWith("-SNAPSHOT")) {
-                        return "snapshot-" + new SimpleDateFormat("yyMMdd-HHmmss-SSSS").format(now);
+                        return "snapshot-" + new SimpleDateFormat(TIMESTAMP_FORMAT).format(now);
                     }
                     return tag;
                 }
@@ -175,7 +179,7 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
             public String transform(MavenProject project, String tag, Date now) {
                 // In case the Maven property is also a placeholder, replace it as well
                 if (Strings.isNullOrEmpty(tag) || tag.equals("%" + letter)) {
-                   tag = project.getVersion();
+                    tag = project.getVersion();
                 }
                 return doTransform(tag, now);
             }
@@ -190,6 +194,21 @@ public class ImageNameFormatter implements ConfigHelper.NameFormatter {
         public String lookup() {
             String tag = getProperty(DOCKER_IMAGE_TAG);
             return mode.transform(project, tag, now);
+        }
+    }
+
+    private static class DefaultTimestampLookup extends AbstractLookup {
+        // timestamp indicating now
+        private final Date now;
+
+
+        private DefaultTimestampLookup(MavenProject project, Date now) {
+            super(project);
+            this.now = now;
+        }
+
+        public String lookup() {
+            return new SimpleDateFormat(TIMESTAMP_FORMAT).format(now);
         }
     }
 
