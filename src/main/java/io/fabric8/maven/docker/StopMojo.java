@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -70,6 +71,41 @@ public class StopMojo extends AbstractDockerMojo {
 
     @Parameter(property = "docker.stopNamePattern")
     private String stopNamePattern;
+
+    /**
+     * If true, the containers are not stopped right away, but when the build is finished (success or failed).
+     */
+    @Parameter(property = "docker.executeStopOnVMShutdown", defaultValue = "false")
+    private boolean executeStopOnVMShutdown;
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        if (this.executeStopOnVMShutdown) {
+            this.executeStopOnVMShutdown = false;
+           if (!invokedTogetherWithDockerStart()) {
+                throw new MojoExecutionException("docker:stop with executeStopOnVMShutdown is only possible if" +
+                        " the docker containers started within the same maven session.");
+            }
+
+            try {
+                // HttpDelete class is not used during start mojo, so we need to load it and initialize it. It is not
+                // possible to load classes in the shutdown hook as
+                Class.forName("org.apache.http.client.methods.HttpDelete", true, this.getClass().getClassLoader());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    super.execute();
+                } catch (MojoExecutionException | MojoFailureException e) {
+                    e.printStackTrace();
+                }
+            }));
+        } else {
+            super.execute();
+        }
+    }
 
     @Override
     protected void executeInternal(ServiceHub hub) throws MojoExecutionException, IOException, ExecException {
