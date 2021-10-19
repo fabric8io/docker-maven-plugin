@@ -2,6 +2,7 @@
 
 * **0.37-SNAPSHOT**:
   - Allow replacement in tags. Added a new replacement `%T` which always adds a timestamp. ([#1491](https://github.com/fabric8io/docker-maven-plugin/pull/1491))
+  - Only push the `latest` tag if no other tags where specified in jib mode. This can break your build, if you rely on the automatic `latest` tag. ([#1498](https://github.com/fabric8io/docker-maven-plugin/pull/1498))
 
 * **0.37.0** (2021-08-15)
   - Fix stop mojo by taking container name pattern into account (#1168)

@@ -140,7 +140,7 @@ public class JibBuildServiceTest {
         // Then
         // @formatter:off
         new Verifications() {{
-            JibServiceUtil.jibPush((ImageConfiguration) any, (Credential) any, (File) any, logger); times = 0;
+            JibServiceUtil.jibPush((ImageConfiguration) any, (Credential) any, (File) any, false, logger); times = 0;
         }};
         // @formatter:on
     }
@@ -164,6 +164,7 @@ public class JibBuildServiceTest {
                     imageConfiguration,
                     Credential.from("testuserpush", "testpass"),
                     (File)any,
+                    false,
                     logger);
             times = 1;
         }};

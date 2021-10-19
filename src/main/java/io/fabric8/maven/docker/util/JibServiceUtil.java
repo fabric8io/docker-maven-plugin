@@ -123,14 +123,18 @@ public class JibServiceUtil {
      * @param tarArchive         tar archive built during build goal
      * @param log                Logger
      */
-    public static void jibPush(ImageConfiguration imageConfiguration, Credential pushCredentials, File tarArchive, Logger log) {
-        BuildImageConfiguration buildImageConfiguration = imageConfiguration.getBuildConfiguration();
-        String imageName = getFullImageName(imageConfiguration, null);
+    public static void jibPush(ImageConfiguration imageConfiguration, Credential pushCredentials, File tarArchive, boolean skipTag, Logger log) {
+        BuildImageConfiguration buildConfig = imageConfiguration.getBuildConfiguration();
         try {
-            for (String tag : getAllImageTags(buildImageConfiguration.getTags(), imageName)) {
-                String imageNameWithTag = getFullImageName(imageConfiguration, tag);
-                log.info("Pushing image: %s", imageNameWithTag);
-                pushImage(TarImage.at(tarArchive.toPath()), imageNameWithTag, pushCredentials, log);
+            if (!skipTag && !buildConfig.getTags().isEmpty()) {
+                for (String tag : buildConfig.getTags()) {
+                    String imageNameWithTag = getFullImageName(imageConfiguration, tag);
+                    log.info("Pushing image: %s", imageNameWithTag);
+                    pushImage(TarImage.at(tarArchive.toPath()), imageNameWithTag, pushCredentials, log);
+                }
+            } else {
+                String imageName = getFullImageName(imageConfiguration, null);
+                pushImage(TarImage.at(tarArchive.toPath()), imageName, pushCredentials, log);
             }
         } catch (IllegalStateException e) {
             log.error("Exception occurred while pushing the image: %s", imageConfiguration.getName());
@@ -192,15 +196,6 @@ public class JibServiceUtil {
                 .map(AbsoluteUnixPath::get)
                 .ifPresent(containerBuilder::setWorkingDirectory);
         return containerBuilder;
-    }
-
-    static Set<String> getAllImageTags(List<String> tags, String imageName) {
-        ImageName tempImage = new ImageName(imageName);
-        Set<String> tagSet = tags.stream().filter(Objects::nonNull).collect(Collectors.toSet());
-        if (!tempImage.getTag().isEmpty()) {
-            tagSet.add(tempImage.getTag());
-        }
-        return tagSet;
     }
 
     static ImageFormat getImageFormat(String jibImageFormat) {
