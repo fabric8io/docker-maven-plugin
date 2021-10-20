@@ -59,16 +59,16 @@ public class RegistryService {
 
                 AuthConfig authConfig = createAuthConfig(true, new ImageName(name).getUser(), configuredRegistry, registryConfig);
 
-                long start = System.currentTimeMillis();
-                docker.pushImage(name, authConfig, configuredRegistry, retries);
-                log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
-
-                if (!skipTag) {
-                    for (String tag : imageConfig.getBuildConfiguration().getTags()) {
+                if (!skipTag && !buildConfig.getTags().isEmpty()) {
+                    for (String tag : buildConfig.getTags()) {
                         if (tag != null) {
                             docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
                         }
                     }
+                } else {
+                    long start = System.currentTimeMillis();
+                    docker.pushImage(name, authConfig, configuredRegistry, retries);
+                    log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
                 }
             }
         }
