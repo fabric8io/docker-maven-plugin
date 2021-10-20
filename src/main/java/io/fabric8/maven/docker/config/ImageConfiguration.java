@@ -202,6 +202,7 @@ public class ImageConfiguration implements StartOrderResolver.Resolvable, Serial
         String minimalApiVersion = null;
         if (build != null) {
             minimalApiVersion = build.initAndValidate(log);
+            build.initTags(nameFormatter);
         }
         if (run != null) {
             minimalApiVersion = EnvUtil.extractLargerVersion(minimalApiVersion, run.initAndValidate());

@@ -2,6 +2,8 @@
 ## Image Names
 When specifying the image name in the configuration with the `<name>` field you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.
 
+Replacements can also be used in `<tag>` fields within the the tags of any build configuration.
+
 [cols="1,5"]
 |===
 | Placeholder | Description
@@ -20,6 +22,9 @@ When specifying the image name in the configuration with the `<name>` field you 
 
 | *%t*
 | If the project version ends with `-SNAPSHOT` this placeholder resolves to `snapshot-<timestamp>` where timestamp has the date format `yyMMdd-HHmmss-SSSS` (eg `snapshot-`). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.
+
+| *%T*
+| Timestamp with the format `yyMMdd-HHmmss-SSSS`.
 |===
 
 ifeval::["{plugin}" == "docker"]

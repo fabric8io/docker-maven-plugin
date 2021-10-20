@@ -2,8 +2,12 @@ package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
@@ -14,11 +18,14 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -201,7 +208,7 @@ public class RegistryServiceTest {
     public void pushImage() throws DockerAccessException {
         givenAnImageConfiguration("user/test:1.0.1");
 
-        whenPushImage();
+        whenPushImageTagSkipped();
 
         thenImageHasBeenPushed();
         thenNoExceptionThrown();
@@ -211,7 +218,7 @@ public class RegistryServiceTest {
     public void pushImageWithoutBuildConfig() throws DockerAccessException {
         givenAnImageConfigurationWithoutBuildConfig("user/test:1.0.1");
 
-        whenPushImage();
+        whenPushImageTagSkipped();
 
         thenImageHasNotBeenPushed();
         thenNoExceptionThrown();
@@ -222,10 +229,36 @@ public class RegistryServiceTest {
         givenAnImageConfiguration("user/test:1.0.1");
         givenPushSkipped(true);
 
-        whenPushImage();
+        whenPushImageTagSkipped();
 
         thenImageHasNotBeenPushed();
         thenNoExceptionThrown();
+    }
+
+    @Test
+    public void testPushedImageTags() throws MojoExecutionException, DockerAccessException {
+
+        List<String> imageNames = new ArrayList<>();
+        new Expectations() {{
+            docker.pushImage(withCapture(imageNames), (AuthConfig) withNotNull(), anyString, anyInt);
+        }};
+
+
+        givenAnImageConfiguration("without-tags");
+        whenPushImageTagSkipped();
+        // latest tag is used, because no other tags are specified
+        assertEquals(imageConfiguration.getName(), imageNames.get(0));
+
+
+        givenAnImageConfigurationWithTags("with-tags");
+        whenPushImageTagSkipped(true);
+        whenPushImageTagSkipped();
+        // latest tag is used, because skipTag = true
+        assertEquals(imageConfiguration.getName(), imageNames.get(1));
+
+        // skipTag = false => both specified tags have to be pushed
+        assertEquals(imageConfiguration.getName()+":foo", imageNames.get(2));
+        assertEquals(imageConfiguration.getName()+":bar", imageNames.get(3));
     }
 
     // ====================================================================================================
@@ -296,13 +329,17 @@ public class RegistryServiceTest {
         }
     }
 
-    private void whenPushImage() {
+    private void whenPushImageTagSkipped() {
+        whenPushImageTagSkipped(false);
+    }
+
+    private void whenPushImageTagSkipped(boolean skipTag) {
         try {
             RegistryService.RegistryConfig.Builder registryConfigBuilder =
                     new RegistryService.RegistryConfig.Builder()
                             .authConfigFactory(authConfigFactory)
                             .authConfig(authConfig);
-            registryService.pushImages(Collections.singleton(imageConfiguration), 1, registryConfigBuilder.build(), false);
+            registryService.pushImages(Collections.singleton(imageConfiguration), 1, registryConfigBuilder.build(), skipTag);
         } catch (Exception e) {
             this.actualException = e;
         }
@@ -342,6 +379,11 @@ public class RegistryServiceTest {
 
     private void givenAnImageConfiguration(String imageName) {
         final BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().build();
+        imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
+    }
+
+    private void givenAnImageConfigurationWithTags(String imageName) {
+        final BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().tags(Arrays.asList("foo", "bar")).build();
         imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
     }
 
