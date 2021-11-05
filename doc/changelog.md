@@ -4,6 +4,9 @@
   - Allow replacement in tags. Added a new replacement `%T` which always adds a timestamp. ([#1491](https://github.com/fabric8io/docker-maven-plugin/pull/1491))
   - Only push the `latest` tag if no other tags where specified in docker mode. This can break your build, if you rely on the automatic `latest` tag. ([#1496](https://github.com/fabric8io/docker-maven-plugin/pull/1496))
   - Only push the `latest` tag if no other tags where specified in jib mode. This can break your build, if you rely on the automatic `latest` tag. ([#1498](https://github.com/fabric8io/docker-maven-plugin/pull/1498))
+  - Deprecate `entrypoint` parameter in `<run>` configuration ([1488](https://github.com/fabric8io/docker-maven-plugin/pull/1488))
+
+**Note:** `entrypoint` parameter in `<run>` configuration is marked as deprecated. Users are advised to use `entryPoint` parameter instead.
 
 * **0.37.0** (2021-08-15)
   - Fix stop mojo by taking container name pattern into account (#1168)

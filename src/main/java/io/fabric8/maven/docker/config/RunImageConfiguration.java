@@ -47,9 +47,16 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private List<String> dependsOn;
 
-    // container entry point
+    /**
+     * container entry point
+     * @deprecated This field would be removed in upcoming releases. Use <code>entryPoint</code> instead.
+     */
     @Parameter
+    @Deprecated
     private Arguments entrypoint;
+
+    @Parameter
+    private Arguments entryPoint;
 
     // container hostname
     @Parameter
@@ -201,6 +208,9 @@ public class RunImageConfiguration implements Serializable {
         if (entrypoint != null) {
             entrypoint.validate();
         }
+        if (entryPoint != null) {
+            entryPoint.validate();
+        }
         if (cmd != null) {
             cmd.validate();
         }
@@ -227,7 +237,10 @@ public class RunImageConfiguration implements Serializable {
     }
 
     public Arguments getEntrypoint() {
-        return entrypoint;
+        if (entrypoint != null) {
+            return entrypoint;
+        }
+        return entryPoint;
     }
 
     public String getHostname() {
@@ -478,6 +491,7 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder entrypoint(Arguments args) {
             config.entrypoint = args;
+            config.entryPoint = args;
             return this;
         }
 

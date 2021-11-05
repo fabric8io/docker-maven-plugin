@@ -29,10 +29,10 @@ Either shell or params should be specified.
 .Example
 [source,xml]
 ----
-<entrypoint>
+<entryPoint>
    <!-- shell form  -->
    <shell>java -jar $HOME/server.jar</shell>
-</entrypoint>
+</entryPoint>
 ----
 
 or
@@ -40,14 +40,14 @@ or
 .Example
 [source,xml]
 ----
-<entrypoint>
+<entryPoint>
    <!-- exec form  -->
    <exec>
      <arg>java</arg>
      <arg>-jar</arg>
      <arg>/opt/demo/server.jar</arg>
    </exec>
-</entrypoint>
+</entryPoint>
 ----
 
 This can be formulated also more dense with:
@@ -56,7 +56,7 @@ This can be formulated also more dense with:
 [source,xml]
 ----
 <!-- shell form  -->
-<entrypoint>java -jar $HOME/server.jar</entrypoint>
+<entryPoint>java -jar $HOME/server.jar</entryPoint>
 ----
 
 or
@@ -64,11 +64,11 @@ or
 .Example
 [source,xml]
 ----
-<entrypoint>
+<entryPoint>
   <!-- exec form  -->
   <arg>java</arg>
   <arg>-jar</arg>
   <arg>/opt/demo/server.jar</arg>
-</entrypoint>
+</entryPoint>
 ----
 
