@@ -721,9 +721,10 @@ public class BuildImageConfiguration implements Serializable {
         List<AssemblyConfiguration> assemblyConfigurations = getAssemblyConfigurations();
         Set<String> assemblyNames = new HashSet<>();
         for (AssemblyConfiguration config : assemblyConfigurations) {
-            boolean wasElementAbsent = assemblyNames.add(config.getName());
+            String assemblyName = config.getName();
+            boolean wasElementAbsent = assemblyNames.add(assemblyName);
             if (!wasElementAbsent) {
-                log.error("Multiple assemblies use the name %s. Please assign each assembly a unique name.");
+                log.error("Multiple assemblies use the name \"%s\". Please assign each assembly a unique name.", assemblyName);
                 throw new IllegalArgumentException("Assembly names must be unique");
             }
         }
