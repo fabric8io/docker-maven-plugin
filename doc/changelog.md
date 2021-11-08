@@ -5,6 +5,7 @@
   - Only push the `latest` tag if no other tags where specified in docker mode. This can break your build, if you rely on the automatic `latest` tag. ([#1496](https://github.com/fabric8io/docker-maven-plugin/pull/1496))
   - Only push the `latest` tag if no other tags where specified in jib mode. This can break your build, if you rely on the automatic `latest` tag. ([#1498](https://github.com/fabric8io/docker-maven-plugin/pull/1498))
   - Deprecate `entrypoint` parameter in `<run>` configuration ([1488](https://github.com/fabric8io/docker-maven-plugin/pull/1488))
+  - Add support for `executeStopOnVMShutdown` flag in `docker:stop` goal to stop containers after build completion ([1492](https://github.com/fabric8io/docker-maven-plugin/pull/1492))
 
 **Note:** `entrypoint` parameter in `<run>` configuration is marked as deprecated. Users are advised to use `entryPoint` parameter instead.
 

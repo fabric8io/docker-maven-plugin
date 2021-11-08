@@ -92,14 +92,14 @@ public class StopMojo extends AbstractDockerMojo {
                 // possible to load classes in the shutdown hook as
                 Class.forName("org.apache.http.client.methods.HttpDelete", true, this.getClass().getClassLoader());
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                log.error("Failure in loading org.apache.http.client.methods.HttpDelete class: %s", e.getMessage());
             }
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     super.execute();
                 } catch (MojoExecutionException | MojoFailureException e) {
-                    e.printStackTrace();
+                    log.error("Failure in stopping container: %s", e.getMessage());
                 }
             }));
         } else {
