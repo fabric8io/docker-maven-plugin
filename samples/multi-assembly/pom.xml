@@ -6,12 +6,12 @@
     <parent>
         <groupId>io.fabric8.dmp.samples</groupId>
         <artifactId>dmp-sample-parent</artifactId>
-        <version>0.37-SNAPSHOT</version>
+        <version>0.38.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>dmp-sample-multi-assembly</artifactId>
-    <version>0.37-SNAPSHOT</version>
+    <version>0.38.0</version>
     <packaging>jar</packaging>
 
     <description>Docker Maven Plugin Example with Spring Boot with Multiple Layers</description>
