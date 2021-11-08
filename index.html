@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.37.0,</span>
-<span id="revdate">2021-08-15</span>
+<span id="revnumber">version 0.38.0,</span>
+<span id="revdate">2021-11-09</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -879,7 +879,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.37.0<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.38.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -1441,6 +1441,9 @@ identical image configurations.</p>
 <div class="paragraph">
 <p>When specifying the image name in the configuration with the <code>&lt;name&gt;</code> field you can use several placeholders which are replaced during runtime by this plugin. In addition you can use regular Maven properties which are resolved by Maven itself.</p>
 </div>
+<div class="paragraph">
+<p>Replacements can also be used in <code>&lt;tag&gt;</code> fields within the the tags of any build configuration.</p>
+</div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -1472,6 +1475,10 @@ identical image configurations.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%t</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">If the project version ends with <code>-SNAPSHOT</code> this placeholder resolves to <code>snapshot-&lt;timestamp&gt;</code> where timestamp has the date format <code>yyMMdd-HHmmss-SSSS</code> (eg <code>snapshot-</code>). This feature is especially useful during development in oder to avoid conflicts when images are to be updated which are still in use. You need to take care yourself of cleaning up old images afterwards, though.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>%T</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timestamp with the format <code>yyMMdd-HHmmss-SSSS</code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -4000,6 +4007,12 @@ removed (depending on the values of <code>keepContainer</code> and <code>keepRun
 independently of whether there is an <a href="#image-configuration">image configuration</a>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.stopNamePattern</code></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>executeStopOnVMShutdown</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If <code>true</code>, the containers are not stopped right away, but when the build is finished (success or failed).</p>
+<p class="tableblock">Defaults to <code>false</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docker.executeStopOnVMShutdown</code></p></td>
+</tr>
 </tbody>
 </table>
 <div class="listingblock">
@@ -6317,8 +6330,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.37.0<br>
-Last updated 2021-08-15 18:18:21 UTC
+Version 0.38.0<br>
+Last updated 2021-06-27 16:27:39 IST
 </div>
 </div>
 </body>
