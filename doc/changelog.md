@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.39-SNAPSHOT** :
+  - Update to jnr-unixsocket 0.38.14 to solve UnsatisfiedLinkError on Apple M1 #1257
 
 * **0.38.0** (2021-11-09):
   - Allow replacement in tags. Added a new replacement `%T` which always adds a timestamp. ([#1491](https://github.com/fabric8io/docker-maven-plugin/pull/1491))
