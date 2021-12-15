@@ -90,7 +90,7 @@ public class JibBuildService {
                 JibServiceUtil.jibPush(
                         imageConfiguration,
                         getRegistryCredentials(registryConfig, true, imageConfiguration, log),
-                        getBuildTarArchive(imageConfiguration, mojoParameters), skipTag,
+                        getBuildTarArchive(imageConfiguration, mojoParameters),
                         log
                 );
             }
