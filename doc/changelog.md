@@ -2,6 +2,7 @@
 
 * **0.39-SNAPSHOT** :
   - Update to jnr-unixsocket 0.38.14 to solve UnsatisfiedLinkError on Apple M1 #1257
+  - Revert "Only push the `latest` tag if no other tags where specified in jib mode. This can break your build, if you rely on the automatic `latest` tag." ([#1510](https://github.com/fabric8io/docker-maven-plugin/pull/1510))
 
 * **0.38.0** (2021-11-09):
   - Allow replacement in tags. Added a new replacement `%T` which always adds a timestamp. ([#1491](https://github.com/fabric8io/docker-maven-plugin/pull/1491))
