@@ -5,12 +5,13 @@ jobs:
   doc:
     working_directory: ~/fabric8io/dmp-docs
     docker:
-    - image: circleci/node:9-browsers
+    - image: circleci/openjdk:11
     steps:
     - checkout
     - run:
-      - git config --global user.email "circleci@fabric8.io"
-      - git config --global user.name "CircleCI"
+        command: |
+          git config --global user.email "circleci@fabric8.io"
+          git config --global user.name "CircleCI"
     - run: ./doc/ci-docs.sh
 
   # Run unit tests
