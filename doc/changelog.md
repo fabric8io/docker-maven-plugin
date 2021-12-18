@@ -1,6 +1,8 @@
 # ChangeLog
 
 * **0.39-SNAPSHOT** :
+
+* **0.38.1** (2021-12-18):
   - Update to jnr-unixsocket 0.38.14 to solve UnsatisfiedLinkError on Apple M1 ([#1257](https://github.com/fabric8io/docker-maven-plugin/pull/1507)) @henningn
   - Revert "Only push the `latest` tag if no other tags where specified in jib mode. This can break your build, if you rely on the automatic `latest` tag." ([#1510](https://github.com/fabric8io/docker-maven-plugin/pull/1510)) @Postremus
   - Revert "Only push the `latest` tag if no other tags where specified in docker mode. This can break your build, if you rely on the automatic `latest` tag." ([#1509](https://github.com/fabric8io/docker-maven-plugin/pull/1509)) @Postremus
