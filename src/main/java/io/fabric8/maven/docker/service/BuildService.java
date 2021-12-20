@@ -364,6 +364,7 @@ public class BuildService {
     private void autoPullBaseImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext)
             throws DockerAccessException, MojoExecutionException {
         BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        CleanupMode cleanupMode = buildConfig.cleanupMode();
 
         if (buildConfig.getDockerArchive() != null) {
             // No auto pull needed in archive mode
@@ -382,7 +383,16 @@ public class BuildService {
         }
         for (String fromImage : fromImages) {
             if (fromImage != null && !DockerAssemblyManager.SCRATCH_IMAGE.equals(fromImage)) {
+                String oldImageId = null;
+                if (cleanupMode.isRemove()) {
+                    oldImageId = queryService.getImageId(fromImage);
+                }
+
                 registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+
+                String newImageId = queryService.getImageId(fromImage);
+
+                removeDanglingImage(fromImage, oldImageId, newImageId, cleanupMode);
             }
         }
     }
