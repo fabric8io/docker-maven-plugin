@@ -222,7 +222,7 @@ public class BuildServiceTest {
 
         // When
         whenBuildImage(false, true);
-        buildService.tagImage(imageConfig.getName(), "1.1.0", "quay.io/someuser");
+        buildService.tagImage(imageConfig.getName(), "1.1.0", "quay.io/someuser", imageConfig.getBuildConfiguration().cleanupMode());
 
         // Then
         thenImageIsBuilt();

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.service.ServiceHub;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -33,7 +34,9 @@ public class TagMojo extends AbstractDockerMojo {
 
         List<ImageConfiguration> imageConfigs = getResolvedImages();
         for (ImageConfiguration imageConfig : imageConfigs) {
-            hub.getBuildService().tagImage(imageConfig.getName(), tagName, repo);
+            BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+
+            hub.getBuildService().tagImage(imageConfig.getName(), tagName, repo, buildConfig.cleanupMode());
         }
     }
 }
