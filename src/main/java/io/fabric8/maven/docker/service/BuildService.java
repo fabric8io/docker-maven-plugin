@@ -387,17 +387,29 @@ public class BuildService {
         }
     }
 
-    private void autoPullCacheFromImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext) throws MojoExecutionException {
+    private void autoPullCacheFromImage(ImageConfiguration imageConfig, ImagePullManager imagePullManager, BuildContext buildContext) throws DockerAccessException, MojoExecutionException {
         if (imageConfig.getBuildConfiguration().getCacheFrom() == null) {
             return;
         }
 
-        for (String cacheFromImage : imageConfig.getBuildConfiguration().getCacheFrom()) {
+        BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+        CleanupMode cleanupMode = buildConfig.cleanupMode();
+
+        for (String cacheFromImage : buildConfig.getCacheFrom()) {
+            String oldImageId = null;
+            if (cleanupMode.isRemove()) {
+                oldImageId = queryService.getImageId(cacheFromImage);
+            }
+
             try {
                 registryService.pullImageWithPolicy(cacheFromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(cacheFromImage));
             } catch (DockerAccessException e) {
                 log.warn("Could not pull cacheFrom image: '%s'. Reason: %s", cacheFromImage, e.getMessage());
             }
+
+            String newImageId = queryService.getImageId(cacheFromImage);
+
+            removeDanglingImage(cacheFromImage, oldImageId, newImageId, cleanupMode);
         }
     }
 
