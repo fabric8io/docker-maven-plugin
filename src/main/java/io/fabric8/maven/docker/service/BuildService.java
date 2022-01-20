@@ -183,7 +183,7 @@ public class BuildService {
         String newImageId = doBuildImage(imageName, dockerArchive, opts);
         log.info("%s: Built image %s", imageConfig.getDescription(), newImageId);
 
-        removeDanglingImage(imageName, oldImageId, newImageId, cleanupMode);
+        removeDanglingImage(imageName, oldImageId, newImageId, cleanupMode, true);
     }
 
     public void tagImage(String imageName, String tag, String repo, CleanupMode cleanupMode) throws DockerAccessException {
@@ -200,7 +200,7 @@ public class BuildService {
 
             String newImageId = queryService.getImageId(fullImageName);
 
-            removeDanglingImage(fullImageName, oldImageId, newImageId, cleanupMode);
+            removeDanglingImage(fullImageName, oldImageId, newImageId, cleanupMode, false);
         }
     }
 
@@ -392,7 +392,7 @@ public class BuildService {
 
                 String newImageId = queryService.getImageId(fromImage);
 
-                removeDanglingImage(fromImage, oldImageId, newImageId, cleanupMode);
+                removeDanglingImage(fromImage, oldImageId, newImageId, cleanupMode, false);
             }
         }
     }
@@ -419,7 +419,7 @@ public class BuildService {
 
             String newImageId = queryService.getImageId(cacheFromImage);
 
-            removeDanglingImage(cacheFromImage, oldImageId, newImageId, cleanupMode);
+            removeDanglingImage(cacheFromImage, oldImageId, newImageId, cleanupMode, false);
         }
     }
 
@@ -451,18 +451,34 @@ public class BuildService {
         return fromImage;
     }
 
-    private void removeDanglingImage(String oldImageName, String oldImageId, String newImageId, CleanupMode cleanupMode) throws DockerAccessException {
+    private void removeDanglingImage(String oldImageName, String oldImageId, String newImageId, CleanupMode cleanupMode, boolean force) throws DockerAccessException {
         if (oldImageId != null && !oldImageId.equals(newImageId)) {
-            try {
-                docker.removeImage(oldImageId, true);
-                log.info("%s: Removed dangling image %s", oldImageName, oldImageId);
-            } catch (DockerAccessException exp) {
-                if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
-                    log.warn("%s: %s (dangling image)%s", oldImageName, exp.getMessage(),
-                            (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
-                } else {
-                    throw exp;
+            if (force) {
+                removeImage(oldImageName, oldImageId, cleanupMode, true);
+            } else {
+                // Verify that the image is indeed dangling and remove it (or skip removal altogether).
+                List<String> oldImageTags = docker.getImageTags(oldImageId);
+                if (oldImageTags != null) {
+                    if (!oldImageTags.isEmpty()) {
+                        removeImage(oldImageName, oldImageId, cleanupMode, false);
+                    } else {
+                        log.warn("%s: Skipped removing image %s; still tagged with: ", oldImageName, oldImageId, String.join(",", oldImageTags));
+                    }
                 }
+            }
+        }
+    }
+
+    private void removeImage(String oldImageName, String oldImageId, CleanupMode cleanupMode, boolean force) throws DockerAccessException {
+        try {
+            docker.removeImage(oldImageId, force);
+            log.info("%s: Removed dangling image %s", oldImageName, oldImageId);
+        } catch (DockerAccessException exp) {
+            if (cleanupMode == CleanupMode.TRY_TO_REMOVE) {
+                log.warn("%s: %s (dangling image)%s", oldImageName, exp.getMessage(),
+                        (exp.getCause() != null ? " [" + exp.getCause().getMessage() + "]" : ""));
+            } else {
+                throw exp;
             }
         }
     }

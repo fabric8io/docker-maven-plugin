@@ -468,6 +468,22 @@ public class DockerAccessWithHcClient implements DockerAccess {
         return imageDetails.get("Id").getAsString().substring(0, 12);
     }
 
+    @Override
+    public List<String> getImageTags(String name) throws DockerAccessException {
+        HttpBodyAndStatus response = inspectImage(name);
+        if (response.getStatusCode() == HTTP_NOT_FOUND) {
+            return null;
+        }
+        JsonObject imageDetails = JsonFactory.newJsonObject(response.getBody());
+        JsonArray tagsArr = imageDetails.get("RepoTags").getAsJsonArray();
+        if (tagsArr.size() == 0) {
+            return Collections.emptyList();
+        }
+        List<String> tags = new ArrayList<>();
+        tagsArr.forEach(tag-> tags.add(tag.getAsString()));
+        return tags;
+    }
+
     private HttpBodyAndStatus inspectImage(String name) throws DockerAccessException {
         String url = urlBuilder.inspectImage(name);
         try {
