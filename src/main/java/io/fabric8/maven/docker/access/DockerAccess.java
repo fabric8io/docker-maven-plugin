@@ -66,6 +66,14 @@ public interface DockerAccess {
     String getImageId(String name) throws DockerAccessException;
 
     /**
+     * Get the list of tags of a given image name or <code>null</code> if no such image exists
+     *
+     * @param name name to lookup
+     * @return the list of image tags or <code>null</code>
+     */
+    List<String> getImageTags(String name) throws DockerAccessException;
+
+    /**
      * List all containers from the Docker server.
      *
      * @param all whether to fetch also stopped containers. If false only running containers are returned
