@@ -80,7 +80,7 @@ when a `docker.from` or a `docker.fromExt` is set.
 | List of kernel capabilities to remove from the container. See <<list-properties>>.
 
 | *docker.cleanup*
-| Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` (which wont fail the build if removing fails), other possible values are `none` (no cleanup) or `remove` (remove but fail if unsuccessful)
+| Cleanup dangling (untagged) images after each build, including any stopped containers created from them. Also cleanup dangling images as a result of image tagging, auto-pulling a base image, or auto-pulling a cacheFrom image. Default is `try`, which tries to remove the old image, but doesn't fail the build if this is not possible (e.g. because the image is still used by a running container). Other possible values are `remove`, if you want to fail the build, or `none`, to skip cleanup altogether.
 
 | *docker.cmd*
 | Command to execute. This is used both when running a container and as default command when creating an image.

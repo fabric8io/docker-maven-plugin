@@ -26,7 +26,7 @@ https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-imag
 (e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `squash`, `noCache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
 
 | *cleanup*
-| Cleanup dangling (untagged) images after each build (including any containers created from them). Default is `try` which tries to remove the old image, but doesn't fail the build if this is not possible because e.g. the image is still used by a running container. Use `remove` if you want to fail the build and `none` if no cleanup is requested.
+| Cleanup dangling (untagged) images after each build, including any stopped containers created from them. Also cleanup dangling images as a result of image tagging, auto-pulling a base image, or auto-pulling a cacheFrom image. Default is `try`, which tries to remove the old image, but doesn't fail the build if this is not possible (e.g. because the image is still used by a running container). Other possible values are `remove`, if you want to fail the build, or `none`, to skip cleanup altogether.
 
 | [[context-dir]]*contextDir*
 | Path to a directory used for the build's context. You can specify the `Dockerfile` to use with *dockerFile*, which by default is the Dockerfile found in the `contextDir`. The Dockerfile can be also located outside of the `contextDir`, if provided with an absolute file path. See <<external-dockerfile, External Dockerfile>> for details.
