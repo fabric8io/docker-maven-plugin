@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.39-SNAPSHOT** :
+  - Cleanup dangling images as a result of image tagging, auto-pulling a base image, or auto-pulling a cacheFrom image ([#1513](https://github.com/fabric8io/docker-maven-plugin/pull/1513)) @rkhmelichek
 
 * **0.38.1** (2021-12-18):
   - Update to jnr-unixsocket 0.38.14 to solve UnsatisfiedLinkError on Apple M1 ([#1257](https://github.com/fabric8io/docker-maven-plugin/pull/1507)) @henningn
