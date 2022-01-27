@@ -111,7 +111,7 @@
     <dependency>
       <groupId>com.github.jnr</groupId>
       <artifactId>jnr-unixsocket</artifactId>
-      <version>0.38.14</version>
+      <version>0.38.17</version>
     </dependency>
 
     <dependency>
