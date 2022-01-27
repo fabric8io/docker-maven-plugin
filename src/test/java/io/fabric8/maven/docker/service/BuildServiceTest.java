@@ -1,8 +1,10 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 
+import java.util.List;
 import java.util.Properties;
 
 
@@ -11,6 +13,7 @@ import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.assembly.DockerAssemblyManager;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.CleanupMode;
 import io.fabric8.maven.docker.util.DockerFileUtilTest;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import io.fabric8.maven.docker.util.Logger;
@@ -81,7 +84,7 @@ public class BuildServiceTest {
 
     @Test
     public void testBuildImageWithCleanup() throws Exception {
-        givenAnImageConfiguration(true);
+        givenAnImageConfiguration(Boolean.TRUE.toString());
         givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
         whenBuildImage(true,false);
         thenImageIsBuilt();
@@ -90,7 +93,7 @@ public class BuildServiceTest {
 
     @Test
     public void testBuildImageWithNoCleanup() throws Exception {
-        givenAnImageConfiguration(false);
+        givenAnImageConfiguration(Boolean.FALSE.toString());
         givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
         whenBuildImage(false,false);
         thenImageIsBuilt();
@@ -99,7 +102,7 @@ public class BuildServiceTest {
 
     @Test
     public void testCleanupCachedImage() throws Exception {
-        givenAnImageConfiguration(true);
+        givenAnImageConfiguration(Boolean.TRUE.toString());
         givenImageIds(OLD_IMAGE_ID, OLD_IMAGE_ID);
         whenBuildImage(false, false);
         thenImageIsBuilt();
@@ -108,7 +111,7 @@ public class BuildServiceTest {
 
     @Test
     public void testCleanupNoExistingImage() throws Exception {
-        givenAnImageConfiguration(true);
+        givenAnImageConfiguration(Boolean.TRUE.toString());
         givenImageIds(null, NEW_IMAGE_ID);
         whenBuildImage(false, false);
         thenImageIsBuilt();
@@ -190,7 +193,7 @@ public class BuildServiceTest {
 
     @Test
     public void testDockerBuildArchiveOnly() throws Exception {
-        givenAnImageConfiguration(true);
+        givenAnImageConfiguration(Boolean.TRUE.toString());
         final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
                 .mojoParameters(mojoParameters)
                 .build();
@@ -200,7 +203,7 @@ public class BuildServiceTest {
 
     @Test (expected = MojoExecutionException.class)
     public void testDockerBuildArchiveOnlyWithInvalidPath() throws MojoExecutionException{
-        givenAnImageConfiguration(true);
+        givenAnImageConfiguration(Boolean.TRUE.toString());
         final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
                 .mojoParameters(mojoParameters)
                 .build();
@@ -211,7 +214,7 @@ public class BuildServiceTest {
     @Test
     public void testTagImage() throws DockerAccessException, MojoExecutionException {
         // Given
-        givenAnImageConfiguration(false);
+        givenAnImageConfiguration(Boolean.FALSE.toString());
         final BuildService.BuildContext buildContext = new BuildService.BuildContext.Builder()
                 .mojoParameters(mojoParameters)
                 .build();
@@ -227,9 +230,49 @@ public class BuildServiceTest {
         }};
     }
 
-    private void givenAnImageConfiguration(Boolean cleanup) {
+    @Test
+    public void tagImage_whenForceFalseAndDanglingImagesTagsPresent_thenImageNotRemoved() throws DockerAccessException, MojoExecutionException {
+        // Given
+        givenAnImageConfiguration(CleanupMode.REMOVE.toParameter());
+        givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
+        givenImageWithIdBeforeAndAfterTag("quay.io/someuser/build-image:1.1.0", "oldimage", "newimage");
+        givenImageTags("oldimage", Arrays.asList("t1", "t2"));
+
+        // When
+        whenBuildImage(true, true);
+        buildService.tagImage(imageConfig.getName(), "1.1.0", "quay.io/someuser", imageConfig.getBuildConfiguration().cleanupMode());
+
+        // Then
+        thenImageIsBuilt();
+        new Verifications() {{
+            docker.tag(imageConfig.getName(), "quay.io/someuser/build-image:1.1.0", true); times = 1;
+            docker.removeImage(withEqual("oldimage"), anyBoolean); times = 0;
+        }};
+    }
+
+    @Test
+    public void tagImage_whenForceFalseAndNoDanglingTags_thenImageRemoved() throws DockerAccessException, MojoExecutionException {
+        // Given
+        givenAnImageConfiguration(CleanupMode.REMOVE.toParameter());
+        givenImageIds(OLD_IMAGE_ID, NEW_IMAGE_ID);
+        givenImageWithIdBeforeAndAfterTag("quay.io/someuser/build-image:1.1.0", "oldimage", "newimage");
+        givenImageTags("oldimage", Collections.emptyList());
+
+        // When
+        whenBuildImage(true, true);
+        buildService.tagImage(imageConfig.getName(), "1.1.0", "quay.io/someuser", imageConfig.getBuildConfiguration().cleanupMode());
+
+        // Then
+        thenImageIsBuilt();
+        new Verifications() {{
+            docker.tag(imageConfig.getName(), "quay.io/someuser/build-image:1.1.0", true); times = 1;
+            docker.removeImage(withEqual("oldimage"), anyBoolean); times = 1;
+        }};
+    }
+
+    private void givenAnImageConfiguration(String cleanup) {
         BuildImageConfiguration buildConfig = new BuildImageConfiguration.Builder()
-                .cleanup(cleanup.toString())
+                .cleanup(cleanup)
                 .build();
 
         imageConfig = new ImageConfiguration.Builder()
@@ -243,6 +286,23 @@ public class BuildServiceTest {
         this.oldImageId = oldImageId;
         new Expectations() {{
             queryService.getImageId(imageConfig.getName()); result = new String[] { oldImageId, newImageId };
+        }};
+    }
+
+    private void givenImageWithIdBeforeAndAfterTag(final String name, final String oldImageId, final String newImageId) throws DockerAccessException {
+        new Expectations() {{
+            queryService.getImageId(name);
+            result = oldImageId;
+            result = newImageId;
+            docker.getImageTags("oldimage");
+            result = Collections.emptyList();
+        }};
+    }
+
+    private void givenImageTags(final String name, List<String> imageTags) throws DockerAccessException {
+        new Expectations() {{
+            docker.getImageTags(name);
+            result = imageTags;
         }};
     }
 
