@@ -459,7 +459,7 @@ public class BuildService {
                 // Verify that the image is indeed dangling and remove it (or skip removal altogether).
                 List<String> oldImageTags = docker.getImageTags(oldImageId);
                 if (oldImageTags != null) {
-                    if (!oldImageTags.isEmpty()) {
+                    if (oldImageTags.isEmpty()) {
                         removeImage(oldImageName, oldImageId, cleanupMode, false);
                     } else {
                         log.warn("%s: Skipped removing image %s; still tagged with: ", oldImageName, oldImageId, String.join(",", oldImageTags));
