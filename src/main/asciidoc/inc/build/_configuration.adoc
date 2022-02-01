@@ -89,6 +89,9 @@ a| Scan the archive specified in `dockerArchive` and find the actual repository 
 | *maintainer*
 | The author (`MAINTAINER`) field for the generated image
 
+| *network*
+| Set the networking mode for the RUN instructions during build
+
 | *noCache*
 | Don't use Docker's build cache. This can be overwritten by setting a system property `docker.noCache` when running Maven.
 
