@@ -59,7 +59,7 @@ public class ServiceHub {
 
         if (dockerAccess != null) {
             queryService = new QueryService(dockerAccess);
-            registryService = new RegistryService(dockerAccess, logger);
+            registryService = new RegistryService(dockerAccess, queryService, logger);
             runService = new RunService(dockerAccess, queryService, containerTracker, logSpecFactory, logger);
             buildService = new BuildService(dockerAccess, queryService, registryService, archiveService, logger);
             volumeService = new VolumeService(dockerAccess);

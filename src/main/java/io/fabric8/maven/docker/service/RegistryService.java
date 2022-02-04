@@ -2,9 +2,11 @@ package io.fabric8.maven.docker.service;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
@@ -18,16 +20,20 @@ import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Settings;
 
+import javax.management.Query;
+
 /**
  * Allows to interact with registries, eg. to push/pull images.
  */
 public class RegistryService {
 
     private final DockerAccess docker;
+    private final QueryService queryService;
     private final Logger log;
 
-    RegistryService(DockerAccess docker, Logger log) {
+    RegistryService(DockerAccess docker, QueryService queryService, Logger log) {
         this.docker = docker;
+        this.queryService = queryService;
         this.log = log;
     }
 
@@ -76,14 +82,17 @@ public class RegistryService {
 
 
     /**
-     * Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
-     * is not existent, throw an error
-     * @param registryConfig registry configuration
+     *  Check an image, and, if <code>autoPull</code> is set to true, fetch it. Otherwise if the image
+     *  is not existent, throw an error
      *
-     * @throws DockerAccessException
-     * @throws MojoExecutionException
+     * @param image image which is required to be pulled
+     * @param pullManager image pull manager
+     * @param registryConfig registry configuration
+     * @param buildImageConfiguration image build configuration
+     * @throws DockerAccessException in case of error in contacting docker daemon
+     * @throws MojoExecutionException in case of any other misc failure
      */
-    public void pullImageWithPolicy(String image, ImagePullManager pullManager, RegistryConfig registryConfig, boolean hasImage)
+    public void pullImageWithPolicy(String image, ImagePullManager pullManager, RegistryConfig registryConfig, BuildImageConfiguration buildImageConfiguration)
         throws DockerAccessException, MojoExecutionException {
 
         // Already pulled, so we don't need to take care
@@ -92,18 +101,21 @@ public class RegistryService {
         }
 
         // Check if a pull is required
-        if (!imageRequiresPull(hasImage, pullManager.getImagePullPolicy(), image)) {
+        if (!imageRequiresPull(queryService.hasImage(image), pullManager.getImagePullPolicy(), image)) {
             return;
         }
 
-        ImageName imageName = new ImageName(image);
-        long time = System.currentTimeMillis();
-        String actualRegistry = EnvUtil.firstRegistryOf(
-            imageName.getRegistry(),
-            registryConfig.getRegistry());
+        final ImageName imageName = new ImageName(image);
+        final long pullStartTime = System.currentTimeMillis();
+        final String actualRegistry = EnvUtil.firstRegistryOf(imageName.getRegistry(), registryConfig.getRegistry());
+        final CreateImageOptions createImageOptions = new CreateImageOptions(buildImageConfiguration != null ? buildImageConfiguration.getCreateImageOptions() : Collections.emptyMap())
+            .fromImage(imageName.getNameWithoutTag(actualRegistry))
+            .tag(imageName.getDigest() != null ? imageName.getDigest() : imageName.getTag());
+
         docker.pullImage(imageName.getFullName(),
-                         createAuthConfig(false, imageName.getUser(), actualRegistry, registryConfig), actualRegistry);
-        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(time));
+            createAuthConfig(false, null, actualRegistry, registryConfig),
+            actualRegistry, createImageOptions);
+        log.info("Pulled %s in %s", imageName.getFullName(), EnvUtil.formatDurationTill(pullStartTime));
         pullManager.pulled(image);
 
         if (actualRegistry != null && !imageName.hasRegistry()) {

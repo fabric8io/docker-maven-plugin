@@ -18,6 +18,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import io.fabric8.maven.docker.access.CreateImageOptions;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
@@ -518,10 +519,9 @@ public class DockerAccessWithHcClient implements DockerAccess {
     }
 
     @Override
-    public void pullImage(String image, AuthConfig authConfig, String registry)
+    public void pullImage(String image, AuthConfig authConfig, String registry, CreateImageOptions options)
             throws DockerAccessException {
-        ImageName name = new ImageName(image);
-        String pullUrl = urlBuilder.pullImage(name, registry);
+        String pullUrl = urlBuilder.pullImage(options);
 
         try {
             delegate.post(pullUrl, null, createAuthHeader(authConfig),

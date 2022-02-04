@@ -146,10 +146,8 @@ public class BuildServiceTest {
 
         //verify that tries to pull both images
         new Verifications() {{
-            queryService.hasImage("fabric8/s2i-java");
-            registryService.pullImageWithPolicy("fabric8/s2i-java",  pullManager, buildContext.getRegistryConfig(), false);
-            queryService.hasImage("fabric8/s1i-java");
-            registryService.pullImageWithPolicy("fabric8/s1i-java",  pullManager, buildContext.getRegistryConfig(), false);
+            registryService.pullImageWithPolicy("fabric8/s2i-java",  pullManager, buildContext.getRegistryConfig(), buildConfig);
+            registryService.pullImageWithPolicy("fabric8/s1i-java",  pullManager, buildContext.getRegistryConfig(), buildConfig);
         }};
     }
 
@@ -185,10 +183,8 @@ public class BuildServiceTest {
 
         //verify that tries to pull both images
         new Verifications() {{
-            queryService.hasImage("fabric8/s2i-java");
-            registryService.pullImageWithPolicy("fabric8/s2i-java",  pullManager, buildContext.getRegistryConfig(), false);
-            queryService.hasImage("fabric8/s1i-java");
-            registryService.pullImageWithPolicy("fabric8/s1i-java",  pullManager, buildContext.getRegistryConfig(), false);
+            registryService.pullImageWithPolicy("fabric8/s2i-java",  pullManager, buildContext.getRegistryConfig(), buildConfig);
+            registryService.pullImageWithPolicy("fabric8/s1i-java",  pullManager, buildContext.getRegistryConfig(), buildConfig);
         }};
     }
 

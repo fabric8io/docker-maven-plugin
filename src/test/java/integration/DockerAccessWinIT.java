@@ -122,7 +122,7 @@ public class DockerAccessWinIT {
     }
 
     private void testPullImage() throws DockerAccessException {
-        dockerClient.pullImage(IMAGE, null, null);
+        dockerClient.pullImage(IMAGE, null, null, null);
         assertTrue(hasImage(IMAGE));
     }
 

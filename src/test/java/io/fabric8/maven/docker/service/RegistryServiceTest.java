@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.service;
 
+import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
 import java.util.Collections;
@@ -19,6 +20,7 @@ import mockit.Verifications;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -53,13 +55,16 @@ public class RegistryServiceTest {
     @Mocked
     private AuthConfigFactory authConfigFactory;
 
+    @Mocked
+    private QueryService queryService;
+
     @Before
     public void setup() {
         reset();
     }
 
     private void reset() {
-        registryService = new RegistryService(docker, logger);
+        registryService = new RegistryService(docker, queryService, logger);
         cacheStore = new TestCacheStore();
         authConfig = new HashMap();
 
@@ -75,6 +80,7 @@ public class RegistryServiceTest {
         for (boolean hasImage : new boolean[]{ false, true }) {
             reset();
             givenAnImage();
+            givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
             givenImagePullPolicy(ImagePullPolicy.Always);
             givenHasImage(hasImage);
 
@@ -87,6 +93,7 @@ public class RegistryServiceTest {
         for (boolean hasImage : new boolean[]{ false, true }) {
             reset();
             givenAnImage();
+            givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
             givenAutoPullMode(AutoPullMode.ALWAYS);
             givenHasImage(hasImage);
 
@@ -106,6 +113,7 @@ public class RegistryServiceTest {
     @Test
     public void pullImageAlwaysWhenPreviouslyPulled() throws Exception {
         givenAnImage();
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenHasImage(false);
         givenPreviousPulled(true);
         givenImagePullPolicy(ImagePullPolicy.Always);
@@ -125,6 +133,7 @@ public class RegistryServiceTest {
     @Test
     public void alreadyPulled() throws DockerAccessException {
         givenAnImage();
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenPreviousPulled(true);
 
         whenAutoPullImage();
@@ -152,6 +161,7 @@ public class RegistryServiceTest {
     public void policyNeverWithImageNotAvailable() throws DockerAccessException {
         givenAnImage();
         givenHasImage(false);
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenPreviousPulled(false);
         givenImagePullPolicy(ImagePullPolicy.Never);
 
@@ -169,6 +179,7 @@ public class RegistryServiceTest {
 
     @Test
     public void pullWithCustomRegistry() throws DockerAccessException {
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAnImage("myregistry.com/user/test:1.0.1");
         givenHasImage(false);
         givenPreviousPulled(false);
@@ -183,7 +194,39 @@ public class RegistryServiceTest {
     }
 
     @Test
+    public void pullImageWithPolicy_pullPolicyAlwaysAndBuildConfiguration_shouldPull() throws DockerAccessException {
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder()
+            .createImageOptions(Collections.singletonMap("platform", "linux/amd64"))
+            .build();
+        imageConfiguration = new ImageConfiguration.Builder()
+            .name("myregistry.com/user/app:1.0.1")
+            .buildConfig(buildImageConfiguration).build();
+        givenAnImage("myregistry.com/user/test:1.0.1");
+        givenHasImage(false);
+        givenPreviousPulled(false);
+        givenRegistry("anotherRegistry.com");
+        givenImagePullPolicy(ImagePullPolicy.Always);
+
+        whenAutoPullImage();
+
+        new Verifications() {{
+            String pulledImage;
+            CreateImageOptions createImageOptions;
+            docker.pullImage(pulledImage = withCapture(), (AuthConfig) any, anyString, createImageOptions = withCapture());
+            times = 1;
+
+            assertEquals("myregistry.com/user/test:1.0.1", pulledImage);
+            assertNotNull(createImageOptions);
+            assertEquals(3, createImageOptions.getOptions().size());
+            assertEquals("linux/amd64", createImageOptions.getOptions().get("platform"));
+            assertEquals("1.0.1", createImageOptions.getOptions().get("tag"));
+            assertEquals("myregistry.com/user/test", createImageOptions.getOptions().get("fromImage"));
+        }};
+    }
+
+    @Test
     public void tagForCustomRegistry() throws DockerAccessException {
+        givenAnImageConfiguration("myregistry.com/user/app:1.0.1");
         givenAnImage("user/test:1.0.1");
         givenHasImage(false);
         givenPreviousPulled(false);
@@ -235,7 +278,7 @@ public class RegistryServiceTest {
     }
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString); times = 0;
+            docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString, (CreateImageOptions) any); times = 0;
         }};
     }
 
@@ -270,7 +313,7 @@ public class RegistryServiceTest {
 
     private void thenImageHasBeenPulledWithRegistry(final String registry) throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(imageName, (AuthConfig) withNotNull(), registry);
+            docker.pullImage(imageName, (AuthConfig) withNotNull(), registry, (CreateImageOptions) any);
         }};
         assertTrue(cacheStore.get(imageName) != null);
     }
@@ -288,7 +331,7 @@ public class RegistryServiceTest {
             if (registry != null) {
                 registryConfigBuilder.registry(registry);
             }
-            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), hasImage);
+            registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), imageConfiguration.getBuildConfiguration());
 
         } catch (Exception e) {
             //e.printStackTrace();
