@@ -191,6 +191,17 @@ public class BuildImageConfiguration implements Serializable {
     @Parameter
     private Map<String,String> buildOptions;
 
+    /**
+     * Map specifying the create image options to provide to the docker daemon when pulling or importing an image.
+     *
+     * <p> These options map to the ones listed as query parameters in the Docker Remote API and are restricted to
+     * simple options (e.g.: fromImage, fromSrc, platform).
+     *
+     * @see <a href="https://docs.docker.com/engine/api/v1.41/#operation/ImageCreate">Docker Engine API v1.41</a>
+     */
+    @Parameter
+    private Map<String, String> createImageOptions;
+
     // Path to Dockerfile to use, initialized lazily ....
     private File dockerFileFile, dockerArchiveFile;
 
@@ -403,6 +414,10 @@ public class BuildImageConfiguration implements Serializable {
 
     public Map<String, String> getBuildOptions() {
         return buildOptions;
+    }
+
+    public Map<String, String> getCreateImageOptions() {
+        return createImageOptions;
     }
 
     public Arguments getEntryPoint() {
@@ -666,6 +681,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder buildOptions(Map<String,String> buildOptions) {
             config.buildOptions = buildOptions;
+            return this;
+        }
+
+        public Builder createImageOptions(Map<String, String> createImageOptions) {
+            config.createImageOptions = createImageOptions;
             return this;
         }
 

@@ -21,6 +21,7 @@ import java.net.*;
 import java.util.HashMap;
 
 import io.fabric8.maven.docker.access.BuildOptions;
+import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.util.ImageName;
 import org.junit.Test;
@@ -122,9 +123,9 @@ public class UrlBuilderTest {
     public void pullImage() throws URISyntaxException {
         UrlBuilder builder = new UrlBuilder("", "1.0");
         assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1&tag=latest"),
-                     new URI(builder.pullImage(new ImageName("t1:latest"), "reg")));
+                     new URI(builder.pullImage(new CreateImageOptions().fromImage("reg/t1").tag("latest"))));
         assertEquals(new URI("/1.0/images/create?fromImage=reg%2Ft1&tag=latest"),
-                     new URI(builder.pullImage(new ImageName("t1"), "reg")));
+                     new URI(builder.pullImage(new CreateImageOptions().fromImage("reg/t1").tag("latest"))));
     }
 
     @Test

@@ -106,8 +106,7 @@ public class CopyMojo extends AbstractDockerMojo {
                 continue;
             }
             try (ContainerRemover containerRemover = new ContainerRemover(log, runService, removeVolumes)) {
-                String containerId = createContainer(runService, registryService, queryService, imageConfiguration,
-                        gavLabel);
+                String containerId = createContainer(runService, registryService, imageConfiguration, gavLabel);
                 containerRemover.setContainerId(containerId);
                 log.debug("Created %s container from %s image", containerId, imageName);
                 copy(dockerAccess, archiveService, containerId, imageName, copyConfiguration);
@@ -189,10 +188,9 @@ public class CopyMojo extends AbstractDockerMojo {
         return latestContainer == null ? Collections.emptyList() : Collections.singletonList(latestContainer);
     }
 
-    private String createContainer(RunService runService, RegistryService registryService, QueryService queryService,
-            ImageConfiguration imageConfiguration, GavLabel gavLabel) throws IOException, MojoExecutionException {
+    private String createContainer(RunService runService, RegistryService registryService, ImageConfiguration imageConfiguration, GavLabel gavLabel) throws IOException, MojoExecutionException {
         Properties projectProperties = project.getProperties();
-        pullImage(queryService, registryService, imageConfiguration, pullRegistry);
+        pullImage(registryService, imageConfiguration, pullRegistry);
         return runService.createContainer(imageConfiguration,
                 runService.createPortMapping(imageConfiguration.getRunConfiguration(), projectProperties), gavLabel,
                 projectProperties, project.getBasedir(), containerNamePattern, getBuildTimestamp());

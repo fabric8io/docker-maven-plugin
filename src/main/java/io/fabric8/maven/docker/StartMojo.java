@@ -333,7 +333,7 @@ public class StartMojo extends AbstractDockerMojo {
             //String imageName = new ImageName(imageConfig.getName()).getFullNameWithTag(registry);
             RegistryService registryService = hub.getRegistryService();
 
-            pullImage(queryService, registryService, imageConfig, pullRegistry);
+            pullImage(registryService, imageConfig, pullRegistry);
 
             RunImageConfiguration runConfig = imageConfig.getRunConfiguration();
             NetworkConfig config = runConfig.getNetworkingConfig();

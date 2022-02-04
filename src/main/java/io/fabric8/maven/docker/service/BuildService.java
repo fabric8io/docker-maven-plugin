@@ -388,7 +388,7 @@ public class BuildService {
                     oldImageId = queryService.getImageId(fromImage);
                 }
 
-                registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(fromImage));
+                registryService.pullImageWithPolicy(fromImage, imagePullManager, buildContext.getRegistryConfig(), buildConfig);
 
                 String newImageId = queryService.getImageId(fromImage);
 
@@ -412,7 +412,7 @@ public class BuildService {
             }
 
             try {
-                registryService.pullImageWithPolicy(cacheFromImage, imagePullManager, buildContext.getRegistryConfig(), queryService.hasImage(cacheFromImage));
+                registryService.pullImageWithPolicy(cacheFromImage, imagePullManager, buildContext.getRegistryConfig(), buildConfig);
             } catch (DockerAccessException e) {
                 log.warn("Could not pull cacheFrom image: '%s'. Reason: %s", cacheFromImage, e.getMessage());
             }

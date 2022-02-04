@@ -2,6 +2,7 @@ package io.fabric8.maven.docker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
+import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.DockerAccess;
 import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.ExecException;
@@ -49,6 +51,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.utils.StringUtils;
 import org.apache.maven.shared.utils.logging.MessageUtils;
 import org.codehaus.plexus.PlexusConstants;
 import org.codehaus.plexus.PlexusContainer;
@@ -566,13 +569,13 @@ public abstract class AbstractDockerMojo extends AbstractMojo implements Context
                 .collect(Collectors.toList());
     }
 
-    protected void pullImage(QueryService queryService, RegistryService registryService, ImageConfiguration imageConfig,
-            String pullRegistry) throws MojoExecutionException, DockerAccessException {
+    protected void pullImage(RegistryService registryService, ImageConfiguration imageConfig,
+                             String pullRegistry) throws MojoExecutionException, DockerAccessException {
         String imageName = imageConfig.getName();
         RunImageConfiguration runConfiguration = imageConfig.getRunConfiguration();
         ImagePullManager pullManager = getImagePullManager(determinePullPolicy(runConfiguration), autoPull);
         RegistryConfig registryConfig = getRegistryConfig(pullRegistry);
-        registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, queryService.hasImage(imageName));
+        registryService.pullImageWithPolicy(imageName, pullManager, registryConfig, imageConfig.getBuildConfiguration());
     }
 
     private boolean containerMatchesPattern(Container container, Matcher imageNameMatcher, Matcher containerNameMatcher,

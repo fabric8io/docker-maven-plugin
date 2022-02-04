@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import io.fabric8.maven.docker.access.AuthConfig;
+import io.fabric8.maven.docker.access.CreateImageOptions;
+import io.fabric8.maven.docker.access.DockerAccessException;
 import io.fabric8.maven.docker.access.hc.util.ClientBuilder;
 import io.fabric8.maven.docker.config.ArchiveCompression;
 import io.fabric8.maven.docker.model.Container;
@@ -22,6 +24,7 @@ import mockit.Verifications;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,6 +49,9 @@ public class DockerAccessWithHcClientTest {
 
     @Mocked
     private ApacheHttpClientDelegate mockDelegate;
+
+    @Mocked
+    private CloseableHttpResponse mockedResponse;
 
     @Mocked
     private Logger mockLogger;
@@ -200,6 +206,22 @@ public class DockerAccessWithHcClientTest {
         givenTheGetWillFail();
         whenSaveImage();
         thenImageWasNotSaved();
+    }
+
+    @Test
+    public void testPullImage() throws Exception {
+        givenAnImageName("test");
+        whenPullImage();
+        thenImageWasPulled();
+    }
+
+    @Test
+    public void testPullImageThrowsException() throws Exception{
+        givenAnImageName("test");
+        givenPostCallThrowsException();
+        final DockerAccessException dae = assertThrows(DockerAccessException.class, this::whenPullImage);
+        assertTrue(dae.getMessage().contains("Unable to pull 'test' from registry 'registry'"));
+        assertTrue(dae.getMessage().contains("Problem with images/create"));
     }
 
     private void givenAnImageName(String imageName) {
@@ -444,5 +466,27 @@ public class DockerAccessWithHcClientTest {
 
     private String getImageNameWithRegistry() {
         return registry + "/" + imageName;
+    }
+
+    private void givenPostCallThrowsException() throws IOException {
+        new Expectations() {{
+            mockDelegate.post(anyString, withNull(), (Map) any, (HcChunkedResponseHandlerWrapper) any, 200);
+            result = new IOException("Problem with images/create");
+        }};
+    }
+
+    private void thenImageWasPulled() throws IOException {
+        new Verifications() {{
+            String postUrl;
+            mockDelegate.post(postUrl = withCapture(), withNull(), (Map) any, (HcChunkedResponseHandlerWrapper) any, 200);
+            times = 1;
+
+            assertNotNull(postUrl);
+            assertTrue(postUrl.endsWith("/images/create"));
+        }};
+    }
+
+    private void whenPullImage() throws DockerAccessException {
+        client.pullImage("test", null, "registry", new CreateImageOptions());
     }
 }

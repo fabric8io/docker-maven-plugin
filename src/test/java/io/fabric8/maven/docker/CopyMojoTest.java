@@ -167,7 +167,6 @@ public class CopyMojoTest extends BaseMojoTest {
         givenCreateContainersIsTrue();
         givenPullRegistry(pullRegistry);
         givenContainerNamePattern(containerNamePattern);
-        givenImageDoesntExist(image);
         givenCreatedContainerId(temporaryContainerId);
 
         whenMojoExecutes();
@@ -191,7 +190,6 @@ public class CopyMojoTest extends BaseMojoTest {
         givenCreateContainersIsTrue();
         givenPullRegistry(pullRegistry);
         givenContainerNamePattern(containerNamePattern);
-        givenImageExists(image);
         givenCreatedContainerId(temporaryContainerId);
 
         whenMojoExecutes();
@@ -212,7 +210,6 @@ public class CopyMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(image);
         givenCreateContainersIsTrue();
         givenContainerNamePattern(containerNamePattern);
-        givenImageExists(image);
         givenCreatedContainerId(temporaryContainerId);
 
         whenMojoExecutes();
@@ -231,7 +228,6 @@ public class CopyMojoTest extends BaseMojoTest {
 
         givenProjectWithResolvedImage(image);
         givenCreateContainersIsTrue();
-        givenImageExists(image);
         givenCreatedContainerId(temporaryContainerId);
 
         whenMojoExecutes();
@@ -253,7 +249,6 @@ public class CopyMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(image);
         givenCreateContainersIsTrue();
         givenContainerNamePattern(containerNamePattern);
-        givenImageExists(image);
         givenCreatedContainerId(temporaryContainerId);
         givenExceptionWhenCopyingArchiveFromContainer(temporaryContainerId, copyException);
 
@@ -282,7 +277,6 @@ public class CopyMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(image);
         givenCreateContainersIsTrue();
         givenContainerNamePattern(containerNamePattern);
-        givenImageExists(image);
         givenCreatedContainerId(temporaryContainerId);
         givenExceptionWhenExtractingArchive(extractException);
 
@@ -310,7 +304,6 @@ public class CopyMojoTest extends BaseMojoTest {
         givenProjectWithResolvedImage(image);
         givenCreateContainersIsTrue();
         givenContainerNamePattern(containerNamePattern);
-        givenImageExists(image);
         givenCreatedContainerId(temporaryContainerId);
 
         try {
@@ -468,21 +461,6 @@ public class CopyMojoTest extends BaseMojoTest {
 
     private void givenContainerNamePattern(String containerNamePattern) {
         Deencapsulation.setField(copyMojo, "containerNamePattern", containerNamePattern);
-    }
-
-    private void givenImageExists(ImageConfiguration image) throws DockerAccessException {
-        givenImageExistence(image, true);
-    }
-
-    private void givenImageDoesntExist(ImageConfiguration image) throws DockerAccessException {
-        givenImageExistence(image, false);
-    }
-
-    private void givenImageExistence(ImageConfiguration image, boolean imageExists) throws DockerAccessException {
-        new Expectations() {{
-            queryService.hasImage(image.getName());
-            result = imageExists;
-        }};
     }
 
     private void givenCreatedContainerId(String containerId) throws DockerAccessException {
@@ -686,7 +664,7 @@ public class CopyMojoTest extends BaseMojoTest {
             final String imageName;
             final RegistryConfig registryConfig;
             registryService.pullImageWithPolicy(imageName = withCapture(), (ImagePullManager) any,
-                    registryConfig = withCapture(), imageExists);
+                    registryConfig = withCapture(), image.getBuildConfiguration());
             times = 1;
             assertEquals(image.getName(), imageName);
             assertNotNull(registryConfig);
