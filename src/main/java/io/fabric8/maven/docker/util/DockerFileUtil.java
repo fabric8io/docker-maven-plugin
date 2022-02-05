@@ -64,9 +64,10 @@ public class DockerFileUtil {
         Set<String> fromAlias = new HashSet<>();
         for (String[] fromLine :  fromLines) {
             if (fromLine.length > 1) {
-                if (!fromAlias.contains(fromLine[1])) {
+                String from = extractValidFromLine(fromLine);
+                if (!fromAlias.contains(from)) {
                     // Image is NOT referring to an already declared alias
-                    result.add(resolveImageTagFromArgs(fromLine[1], args));
+                    result.add(resolveImageTagFromArgs(from, args));
                 }
                 if (fromLine.length == 4) { // FROM image:tag AS alias use case
                     // Image alias is declared - track it
@@ -75,6 +76,17 @@ public class DockerFileUtil {
             }
         }
         return new ArrayList<>(result);
+    }
+
+    private static String extractValidFromLine(String[] fromLine) {
+        String validFrom = fromLine[1];
+        for (int i = 1; i < fromLine.length; i++) {
+            if (!fromLine[i].startsWith("--")) {
+                validFrom = fromLine[i];
+                break;
+            }
+        }
+        return validFrom;
     }
 
     /**
