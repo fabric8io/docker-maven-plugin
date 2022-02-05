@@ -1,0 +1,2 @@
+# Dockerfile with a simple FROM clause containing platform statement
+FROM --platform=linux/amd64 fabric8/s2i-java:11 as packager

@@ -150,6 +150,13 @@ public class DockerFileUtilTest {
         assertEquals(Collections.emptySet(), DockerFileUtil.findAllArgs("${invalidArg"));
     }
 
+    @Test
+    public void testDockerfileContainingFromPlatformFlag() throws IOException {
+        File toTest = copyToTempDir("Dockerfile_from_contains_platform");
+        assertEquals("fabric8/s2i-java:11", DockerFileUtil.extractBaseImages(
+            toTest, FixedStringSearchInterpolator.create(), Collections.emptyMap()).get(0));
+    }
+
     private File copyToTempDir(String resource) throws IOException {
         File dir = Files.createTempDirectory("d-m-p").toFile();
         File ret = new File(dir, "Dockerfile");
