@@ -523,8 +523,8 @@ table.CodeRay td.code>pre{padding:0}
 <h1>fabric8io/docker-maven-plugin</h1>
 <div class="details">
 <span id="author" class="author">Roland Huß</span><br>
-<span id="revnumber">version 0.38.1,</span>
-<span id="revdate">2021-12-18</span>
+<span id="revnumber">version 0.39.0,</span>
+<span id="revdate">2022-02-06</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">docker-maven-plugin</div>
@@ -879,7 +879,7 @@ available goals are described below.</p>
 <pre class="CodeRay highlight"><code data-lang="xml"><span class="tag">&lt;plugin&gt;</span>
   <span class="tag">&lt;groupId&gt;</span>io.fabric8<span class="tag">&lt;/groupId&gt;</span>
   <span class="tag">&lt;artifactId&gt;</span>docker-maven-plugin<span class="tag">&lt;/artifactId&gt;</span>
-  <span class="tag">&lt;version&gt;</span>0.38.1<span class="tag">&lt;/version&gt;</span>
+  <span class="tag">&lt;version&gt;</span>0.39.0<span class="tag">&lt;/version&gt;</span>
 
   <span class="tag">&lt;configuration&gt;</span>
      ....
@@ -2141,8 +2141,16 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 (e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. <code>squash</code>, <code>noCache</code>, <code>cleanup=remove</code> for buildoption <code>forcerm=1</code> and <code>args</code> for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <a href="#misc-env">Setting Environment Variables and Labels</a>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>createImageOptions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Map specifying the create image options to provide to the docker daemon when pulling or
+importing an image.
+These options map to the ones listed as query parameters in the
+<a href="https://docs.docker.com/engine/api/v1.41/#operation/ImageCreate">Docker Remote API</a> and are
+restricted to simple options (e.g.: fromImage, fromSrc, platform).</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cleanup</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible because e.g. the image is still used by a running container. Use <code>remove</code> if you want to fail the build and <code>none</code> if no cleanup is requested.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build, including any stopped containers created from them. Also cleanup dangling images as a result of image tagging, auto-pulling a base image, or auto-pulling a cacheFrom image. Default is <code>try</code>, which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible (e.g. because the image is still used by a running container). Other possible values are <code>remove</code>, if you want to fail the build, or <code>none</code>, to skip cleanup altogether.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="context-dir"></a><strong>contextDir</strong></p></td>
@@ -2221,6 +2229,10 @@ described in <a href="#build-buildargs">Build Args</a></p></td>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>maintainer</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The author (<code>MAINTAINER</code>) field for the generated image</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>network</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the networking mode for the RUN instructions during build</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>noCache</strong></p></td>
@@ -5091,7 +5103,7 @@ when a <code>docker.from</code> or a <code>docker.fromExt</code> is set.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cleanup</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build (including any containers created from them). Default is <code>try</code> (which wont fail the build if removing fails), other possible values are <code>none</code> (no cleanup) or <code>remove</code> (remove but fail if unsuccessful)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cleanup dangling (untagged) images after each build, including any stopped containers created from them. Also cleanup dangling images as a result of image tagging, auto-pulling a base image, or auto-pulling a cacheFrom image. Default is <code>try</code>, which tries to remove the old image, but doesn&#8217;t fail the build if this is not possible (e.g. because the image is still used by a running container). Other possible values are <code>remove</code>, if you want to fail the build, or <code>none</code>, to skip cleanup altogether.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>docker.cmd</strong></p></td>
@@ -6330,8 +6342,8 @@ explains how you can contribute to this project. Pull requests are highly apprec
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.38.1<br>
-Last updated 2021-12-18 16:26:48 UTC
+Version 0.39.0<br>
+Last updated 2022-02-06 16:53:09 UTC
 </div>
 </div>
 </body>
