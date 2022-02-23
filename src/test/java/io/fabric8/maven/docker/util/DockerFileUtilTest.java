@@ -107,6 +107,12 @@ public class DockerFileUtilTest {
         assertEquals("{busyboxVersion=latest}", DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "busyboxVersion=latest"}), null).toString());
     }
 
+    @Test
+    public void testExtractArgsFromDockerFile_parameterMapWithNullValues() {
+        assertEquals("{VERSION=latest, FULL_IMAGE=busybox:latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "VERSION:latest"}, new String[] {"ARG", "FULL_IMAGE=busybox:latest"}), Collections.singletonMap("VERSION", null)).toString());
+        assertEquals("{VERSION=latest, FULL_IMAGE=busybox:latest}", DockerFileUtil.extractArgsFromLines(Arrays.asList(new String[]{"ARG", "VERSION=latest"}, new String[] {"ARG", "FULL_IMAGE=busybox:latest"}), Collections.singletonMap("VERSION", null)).toString());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidArgWithSpacesFromDockerfile() {
         DockerFileUtil.extractArgsFromLines(Collections.singletonList(new String[]{"ARG", "MY_IMAGE image with spaces"}), Collections.emptyMap());

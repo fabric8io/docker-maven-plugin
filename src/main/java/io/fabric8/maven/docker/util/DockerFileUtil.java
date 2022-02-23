@@ -280,7 +280,7 @@ public class DockerFileUtil {
 
     private static String determineFinalArgValue(String argString, String[] argStringParts, Map<String, String> args) {
         String argStringValue = argString.substring(argStringParts[0].length() + 1);
-        if(args == null){
+        if(args == null || args.get(argStringParts[0]) == null){
             return argStringValue;
         }
         return args.getOrDefault(argStringParts[0], argStringValue);

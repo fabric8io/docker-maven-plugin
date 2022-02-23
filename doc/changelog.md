@@ -1,6 +1,7 @@
 # ChangeLog
 
 * **0.40-SNAPSHOT** :
+  - determineFinalArgValue respect default value if key exists but value is null ([1528](https://github.com/fabric8io/docker-maven-plugin/issues/1528)) @twendelmuth
 
 * **0.39.0** (2022-02-06):
   - `skipPom` is ignored by "push" goal ([1482](https://github.com/fabric8io/docker-maven-plugin/issues/1482)) @rohanKanojia
