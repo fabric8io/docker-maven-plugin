@@ -14,6 +14,8 @@ services:
       - CAP
     cap_drop:
       - CAP
+    sysctls:
+      key: value
     command: command.sh
     cgroup_parent: cgroup_parent
     isolation: default

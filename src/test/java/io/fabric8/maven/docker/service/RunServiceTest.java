@@ -455,6 +455,7 @@ public class RunServiceTest {
                         .privileged(true)
                         .capAdd(capAdd())
                         .capDrop(capDrop())
+                        .sysctls(sysctls())
                         .securityOpts(securityOpts())
                         .restartPolicy(restartPolicy())
                         .net("custom_network")
@@ -496,6 +497,10 @@ public class RunServiceTest {
 
     private List<String> capDrop() {
         return Collections.singletonList("MKNOD");
+    }
+
+    private Map<String, String> sysctls() {
+        return Collections.singletonMap("key", "value");
     }
 
     private List<String> securityOpts() {

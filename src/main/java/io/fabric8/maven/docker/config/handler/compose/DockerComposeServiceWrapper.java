@@ -104,6 +104,10 @@ class DockerComposeServiceWrapper {
         return asList("cap_drop");
     }
 
+    Map<String, String> getSysctls() {
+        return asMap("sysctls");
+    }
+
     Arguments getCommand() {
         Object command = asObject("command");
         return command != null ? asArguments(command, "command") : null;

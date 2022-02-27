@@ -28,6 +28,9 @@
   "CapDrop":[
     "MKNOD"
   ],
+  "Sysctls": {
+    "key":"value"
+  },
   "SecurityOpt":[
     "seccomp=unconfined"
   ],
