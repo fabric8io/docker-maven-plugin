@@ -7,14 +7,14 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.40-SNAPSHOT</version>
+    <version>0.39.1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.fabric8.dmp.itests</groupId>
   <artifactId>dmp-it-run-java</artifactId>
   <packaging>jar</packaging>
-  <version>0.40-SNAPSHOT</version>
+  <version>0.39.1</version>
 
   <build>
 

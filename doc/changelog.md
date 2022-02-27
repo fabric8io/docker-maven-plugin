@@ -1,6 +1,8 @@
 # ChangeLog
 
 * **0.40-SNAPSHOT** :
+
+* **0.39.1** (2022-02-27):
   - determineFinalArgValue respect default value if key exists but value is null ([1528](https://github.com/fabric8io/docker-maven-plugin/issues/1528)) @twendelmuth
 
 * **0.39.0** (2022-02-06):
