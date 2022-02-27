@@ -35,6 +35,9 @@ The `<run>` configuration element knows the following sub elements:
 | *capDrop*
 | List of `drop` elements to specify kernel parameters to remove from the container.
 
+| *sysctls*
+| Map of namespaced kernel parameters (https://docs.docker.com/engine/reference/commandline/run/#configure-namespaced-kernel-parameters-sysctls-at-runtime[sysctls]) to set in the container.
+
 | <<misc-startup, *cmd*>>
 | Command which should be executed at the end of the container's startup. If not given, the image's default command is used. See <<misc-startup, Startup Arguments>> for details.
 
