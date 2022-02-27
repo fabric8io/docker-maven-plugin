@@ -10,12 +10,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.39.1</version>
+    <version>0.40-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-it-dockerignore</artifactId>
-  <version>0.39.1</version>
+  <version>0.40-SNAPSHOT</version>
   <packaging>docker-build</packaging>
 
   <build>
