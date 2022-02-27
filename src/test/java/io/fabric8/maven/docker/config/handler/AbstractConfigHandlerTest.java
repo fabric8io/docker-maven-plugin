@@ -4,6 +4,7 @@ import io.fabric8.maven.docker.config.RestartPolicy;
 import io.fabric8.maven.docker.config.RunImageConfiguration;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ public abstract class AbstractConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
+        assertEquals(Collections.singletonMap("key", "value"), runConfig.getSysctls());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
         assertEquals(a("example.com"), runConfig.getDnsSearch());

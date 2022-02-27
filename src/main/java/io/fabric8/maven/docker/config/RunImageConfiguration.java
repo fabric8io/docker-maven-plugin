@@ -106,6 +106,9 @@ public class RunImageConfiguration implements Serializable {
     private List<String> capDrop;
 
     @Parameter
+    private Map<String, String> sysctls;
+
+    @Parameter
     private List<String> securityOpts;
 
     @Parameter
@@ -317,6 +320,10 @@ public class RunImageConfiguration implements Serializable {
 
     public List<String> getCapDrop() {
         return capDrop;
+    }
+
+    public Map<String, String> getSysctls() {
+        return sysctls;
     }
 
     public List<String> getSecurityOpts() {
@@ -537,6 +544,11 @@ public class RunImageConfiguration implements Serializable {
 
         public Builder capDrop(List<String> capDrop) {
             config.capDrop = capDrop;
+            return this;
+        }
+
+        public Builder sysctls(Map<String, String> sysctls) {
+            config.sysctls = sysctls;
             return this;
         }
 

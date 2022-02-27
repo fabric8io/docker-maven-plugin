@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,6 +153,7 @@ public class DockerComposeConfigHandlerTest {
 
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
+        assertEquals(Collections.singletonMap("key", "value"), runConfig.getSysctls());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
         assertEquals(a("example.com"), runConfig.getDnsSearch());

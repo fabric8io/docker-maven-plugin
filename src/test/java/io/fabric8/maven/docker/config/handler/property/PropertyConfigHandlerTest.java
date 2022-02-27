@@ -1072,6 +1072,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
         assertEquals(a("/foo", "/tmp:/tmp"), runConfig.getVolumeConfiguration().getBind());
         assertEquals(a("CAP"), runConfig.getCapAdd());
         assertEquals(a("CAP"), runConfig.getCapDrop());
+        assertEquals(Collections.singletonMap("key", "value"), runConfig.getSysctls());
         assertEquals(a("seccomp=unconfined"), runConfig.getSecurityOpts());
         assertEquals("command.sh", runConfig.getCmd().getShell());
         assertEquals(a("8.8.8.8"), runConfig.getDns());
@@ -1185,6 +1186,7 @@ public class PropertyConfigHandlerTest extends AbstractConfigHandlerTest {
             k(ConfigKey.BIND) + ".2", "/tmp:/tmp",
             k(ConfigKey.CAP_ADD) + ".1", "CAP",
             k(ConfigKey.CAP_DROP) + ".1", "CAP",
+            k(ConfigKey.SYSCTLS) + ".key", "value",
             k(ConfigKey.SECURITY_OPTS) + ".1", "seccomp=unconfined",
             k(ConfigKey.CPUS), "1000000000",
             k(ConfigKey.CPUSET), "0,1",

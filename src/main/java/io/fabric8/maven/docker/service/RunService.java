@@ -426,6 +426,7 @@ public class RunService {
                 .dnsSearch(runConfig.getDnsSearch())
                 .capAdd(runConfig.getCapAdd())
                 .capDrop(runConfig.getCapDrop())
+                .sysctls(runConfig.getSysctls())
                 .securityOpts(runConfig.getSecurityOpts())
                 .memory(runConfig.getMemory())
                 .memorySwap(runConfig.getMemorySwap())

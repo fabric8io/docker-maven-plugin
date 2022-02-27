@@ -42,6 +42,7 @@ public enum ConfigKey {
     BUILD_OPTIONS,
     CAP_ADD,
     CAP_DROP,
+    SYSCTLS,
     CLEANUP,
     CPUS,
     CPUSET,

@@ -44,6 +44,13 @@ public class ContainerHostConfig {
         return addAsArray("CapDrop", capDrop);
     }
 
+    public ContainerHostConfig sysctls(Map<String, String> sysctls) {
+        if (sysctls != null && sysctls.size() > 0) {
+            startConfig.add("Sysctls", JsonFactory.newJsonObject(sysctls));
+        }
+        return this;
+    }
+
     public ContainerHostConfig securityOpts(List<String> securityOpt) {
         return addAsArray("SecurityOpt", securityOpt);
     }

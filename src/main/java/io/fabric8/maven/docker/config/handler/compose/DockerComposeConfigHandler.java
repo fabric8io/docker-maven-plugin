@@ -168,6 +168,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
         return builder
                 .capAdd(wrapper.getCapAdd())
                 .capDrop(wrapper.getCapDrop())
+                .sysctls(wrapper.getSysctls())
                 .cmd(wrapper.getCommand())
                 // cgroup_parent not supported
                 // container_name is taken as an alias and ignored here for run config

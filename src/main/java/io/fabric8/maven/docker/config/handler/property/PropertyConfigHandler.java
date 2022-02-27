@@ -189,6 +189,7 @@ public class PropertyConfigHandler implements ExternalConfigHandler {
         return new RunImageConfiguration.Builder()
                 .capAdd(valueProvider.getList(CAP_ADD, config == null ? null : config.getCapAdd()))
                 .capDrop(valueProvider.getList(CAP_DROP, config == null ? null : config.getCapDrop()))
+                .sysctls(valueProvider.getMap(SYSCTLS, config == null ? null : config.getSysctls()))
                 .securityOpts(valueProvider.getList(SECURITY_OPTS, config == null ? null : config.getSecurityOpts()))
                 .cmd(extractArguments(valueProvider, CMD, config == null ? null : config.getCmd()))
                 .dns(valueProvider.getList(DNS, config == null ? null : config.getDns()))
