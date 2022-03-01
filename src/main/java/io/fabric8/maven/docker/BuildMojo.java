@@ -30,7 +30,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author roland
  * @since 28.07.14
  */
-@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL)
+@Mojo(name = "build", defaultPhase = LifecyclePhase.INSTALL, threadSafe = true)
 public class BuildMojo extends AbstractBuildSupportMojo {
 
     public static final String DMP_PLUGIN_DESCRIPTOR = "META-INF/maven/io.fabric8/dmp-plugin";
