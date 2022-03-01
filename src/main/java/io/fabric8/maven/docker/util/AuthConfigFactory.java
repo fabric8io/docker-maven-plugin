@@ -650,7 +650,9 @@ public class AuthConfigFactory {
             // Done by reflection since I have classloader issues otherwise
             Object secDispatcher = container.lookup(SecDispatcher.ROLE, "maven");
             Method method = secDispatcher.getClass().getMethod("decrypt",String.class);
-            return (String) method.invoke(secDispatcher,password);
+            synchronized(secDispatcher) {
+                return (String) method.invoke(secDispatcher, password);
+            }
         } catch (ComponentLookupException e) {
             throw new MojoExecutionException("Error looking security dispatcher",e);
         } catch (ReflectiveOperationException e) {
