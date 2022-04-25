@@ -40,6 +40,8 @@ public enum ConfigKey {
     AUTO_REMOVE,
     BIND,
     BUILD_OPTIONS,
+    BUILDX_PLATFORMS("buildx.platforms", ValueCombinePolicy.Merge),
+    BUILDX_CACHE("buildx.cache"),
     CAP_ADD,
     CAP_DROP,
     SYSCTLS,

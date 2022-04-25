@@ -12,7 +12,7 @@ of an image configuration. The following configuration options are supported:
 | Specifies multiple assembly configurations as described in <<build-assembly,Build Assembly>>
 
 | <<config-image-build-assembly, *assembly*>>
-| specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
+| Specifies the assembly configuration as described in <<build-assembly,Build Assembly>>
 
 | <<build-buildargs, *args*>>
 | Map specifying the value of https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables-build-arg[Docker build args]
@@ -24,6 +24,9 @@ described in <<build-buildargs,Build Args>>
 | Map specifying the build options to provide to the docker daemon when building the image. These options map to the ones listed as query parameters in the
 https://docs.docker.com/engine/reference/api/docker_remote_api_v1.24/#build-image-from-a-dockerfile[Docker Remote API] and are restricted to simple options
 (e.g.: memory, shmsize). If you use the respective configuration options for build options natively supported by the build configuration (i.e. `squash`, `noCache`, `cleanup=remove` for buildoption `forcerm=1` and `args` for build args) then these will override any corresponding options given here. The key-value syntax is the same as when defining environment variables or labels as described in <<misc-env,Setting Environment Variables and Labels>>.
+
+| *buildx*
+| Specifies the buildx configuration for multi-architecture images. See  <<build-buildx,Buildx Options>>
 
 | *createImageOptions*
 | Map specifying the create image options to provide to the docker daemon when pulling or

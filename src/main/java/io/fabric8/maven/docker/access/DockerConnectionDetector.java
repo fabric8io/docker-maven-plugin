@@ -6,6 +6,8 @@ import java.util.*;
 import io.fabric8.maven.docker.access.util.LocalSocketUtil;
 import io.fabric8.maven.docker.util.*;
 
+import javax.annotation.Nonnull;
+
 import static io.fabric8.maven.docker.util.EnvUtil.getUserHome;
 
 /**
@@ -143,8 +145,8 @@ public class DockerConnectionDetector {
         private final String url;
         private String certPath;
 
-        public ConnectionParameter(String url, String certPath) throws IOException {
-            this.url = url != null ? EnvUtil.convertTcpToHttpUrl(url) : null;
+        public ConnectionParameter(@Nonnull String url, String certPath) throws IOException {
+            this.url = EnvUtil.convertTcpToHttpUrl(url);
             initCertPath(certPath);
         }
 

@@ -107,7 +107,7 @@ public class DockerAssemblyManagerTest {
 
         new Expectations() {{
             mojoParams.getOutputDirectory();
-            result = "target/"; times = 3;
+            result = "target/";
 
             mojoParams.getProject();
             project.getBasedir();
@@ -133,7 +133,7 @@ public class DockerAssemblyManagerTest {
 
         new Expectations() {{
             mojoParams.getOutputDirectory();
-            result = "target/"; times = 6;
+            result = "target/"; times = 2;
 
             mojoParams.getProject();
             project.getBasedir();
@@ -343,13 +343,13 @@ public class DockerAssemblyManagerTest {
             assertArrayEquals(new String[]{"target/**", "Dockerfile.test"}, fileSets.get(0).getExcludes());
             assertNull(fileSets.get(0).getIncludes());
 
-            tarArchiver.addFile(new File("target/test_image/build/Dockerfile.test"), "Dockerfile.test");
+            tarArchiver.addFile(new File("target/test_image/build/Dockerfile.test").getAbsoluteFile(), "Dockerfile.test");
 
             List<ArchivedFileSet> archivedFileSets = new ArrayList<>();
             tarArchiver.addArchivedFileSet(withCapture(archivedFileSets));
 
             assertEquals(1, archivedFileSets.size());
-            assertEquals(new File("target/test_image/build/maven.tar"), archivedFileSets.get(0).getArchive());
+            assertEquals(new File("target/test_image/build/maven.tar").getAbsoluteFile(), archivedFileSets.get(0).getArchive());
             assertEquals("maven/", archivedFileSets.get(0).getPrefix());
         }};
     }
@@ -391,15 +391,15 @@ public class DockerAssemblyManagerTest {
             assertArrayEquals(new String[]{"target/**", "Dockerfile.test"}, fileSets.get(0).getExcludes());
             assertNull(fileSets.get(0).getIncludes());
 
-            tarArchiver.addFile(new File("target/test_image/build/Dockerfile.test"), "Dockerfile.test");
+            tarArchiver.addFile(new File("target/test_image/build/Dockerfile.test").getAbsoluteFile(), "Dockerfile.test");
 
             List<ArchivedFileSet> archivedFileSets = new ArrayList<>();
             tarArchiver.addArchivedFileSet(withCapture(archivedFileSets));
 
             assertEquals(2, archivedFileSets.size());
-            assertEquals(new File("target/test_image/build/first.tar"), archivedFileSets.get(0).getArchive());
+            assertEquals(new File("target/test_image/build/first.tar").getAbsoluteFile(), archivedFileSets.get(0).getArchive());
             assertEquals("first/", archivedFileSets.get(0).getPrefix());
-            assertEquals(new File("target/test_image/build/second.tar"), archivedFileSets.get(1).getArchive());
+            assertEquals(new File("target/test_image/build/second.tar").getAbsoluteFile(), archivedFileSets.get(1).getArchive());
             assertEquals("second/", archivedFileSets.get(1).getPrefix());
         }};
     }
@@ -433,15 +433,15 @@ public class DockerAssemblyManagerTest {
             archiverManager.getArchiver("tar");
             times = 1;
 
-            tarArchiver.addFile(new File("target/test_image/build/Dockerfile"), "Dockerfile");
+            tarArchiver.addFile(new File("target/test_image/build/Dockerfile").getAbsoluteFile(), "Dockerfile");
 
             List<ArchivedFileSet> archivedFileSets = new ArrayList<>();
             tarArchiver.addArchivedFileSet(withCapture(archivedFileSets));
 
             assertEquals(2, archivedFileSets.size());
-            assertEquals(new File("target/test_image/build/first.tar"), archivedFileSets.get(0).getArchive());
+            assertEquals(new File("target/test_image/build/first.tar").getAbsoluteFile(), archivedFileSets.get(0).getArchive());
             assertEquals("first/", archivedFileSets.get(0).getPrefix());
-            assertEquals(new File("target/test_image/build/second.tar"), archivedFileSets.get(1).getArchive());
+            assertEquals(new File("target/test_image/build/second.tar").getAbsoluteFile(), archivedFileSets.get(1).getArchive());
             assertEquals("second/", archivedFileSets.get(1).getPrefix());
         }};
     }
@@ -508,13 +508,13 @@ public class DockerAssemblyManagerTest {
             archiverManager.getArchiver("tar");
             times = 1;
 
-            tarArchiver.addFile(new File("target/test_image/build/Dockerfile"), "Dockerfile");
+            tarArchiver.addFile(new File("target/test_image/build/Dockerfile").getAbsoluteFile(), "Dockerfile");
 
             List<ArchivedFileSet> archivedFileSets = new ArrayList<>();
             tarArchiver.addArchivedFileSet(withCapture(archivedFileSets));
 
             assertEquals(1, archivedFileSets.size());
-            assertEquals(new File("target/test_image/build/first.tar"), archivedFileSets.get(0).getArchive());
+            assertEquals(new File("target/test_image/build/first.tar").getAbsoluteFile(), archivedFileSets.get(0).getArchive());
             assertEquals("first/", archivedFileSets.get(0).getPrefix());
 
             tarArchiver.addResource((PlexusIoResource) any, "test", 0755);
@@ -554,6 +554,7 @@ public class DockerAssemblyManagerTest {
     private MavenProject mockMavenProject() {
         MavenProject project = new MavenProject();
         project.setArtifactId("docker-maven-plugin");
+        project.setFile(new File(".").getAbsoluteFile());
         return project;
     }
 

@@ -11,6 +11,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 
 public class PushMojoTest extends BaseMojoTest {
@@ -81,14 +82,14 @@ public class PushMojoTest extends BaseMojoTest {
 
   private void thenImagePushed() throws MojoExecutionException, DockerAccessException {
     new Verifications() {{
-      registryService.pushImages((Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
+      registryService.pushImages((Path) any, (Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
       times = 1;
     }};
   }
 
   private void thenImageNotPushed() throws DockerAccessException, MojoExecutionException {
     new Verifications() {{
-      registryService.pushImages((Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
+      registryService.pushImages((Path) any, (Collection<ImageConfiguration>) any, anyInt, (RegistryService.RegistryConfig)any, anyBoolean);
       times = 0;
     }};
   }

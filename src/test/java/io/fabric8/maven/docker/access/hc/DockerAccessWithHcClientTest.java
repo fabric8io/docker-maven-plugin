@@ -69,6 +69,11 @@ public class DockerAccessWithHcClientTest {
 
     @Before
     public void setup() throws IOException {
+        new Expectations() {{
+            mockDelegate.get(BASE_URL + "/version", HTTP_OK);
+            result = "{\"ApiVersion\":\"1.40\",\"Os\":\"linux\",\"Arch\":\"amd64\"}";
+        }};
+
         client = new DockerAccessWithHcClient(BASE_URL, null, 1, mockLogger) {
             @Override
             ApacheHttpClientDelegate createHttpClient(ClientBuilder builder) throws IOException {
@@ -224,6 +229,17 @@ public class DockerAccessWithHcClientTest {
         assertTrue(dae.getMessage().contains("Problem with images/create"));
     }
 
+    @Test
+    public void stripTrailing() {
+        assertEquals("x", DockerAccessWithHcClient.stripTrailingSlash("x/"));
+        assertEquals("y", DockerAccessWithHcClient.stripTrailingSlash("y"));
+    }
+
+    @Test
+    public void serverApiVersion() {
+        assertEquals("1.40", client.getServerApiVersion());
+    }
+
     private void givenAnImageName(String imageName) {
         this.imageName = imageName;
     }
@@ -361,7 +377,7 @@ public class DockerAccessWithHcClientTest {
             mockDelegate.post(url = withCapture(), null, (Map<String, String>) any, (ResponseHandler<Object>) any,
                 HTTP_OK);
 
-            String expectedUrl = String.format("%s/vnull/images/%s%%2F%s/push?force=1&tag=%s", BASE_URL, registry,
+            String expectedUrl = String.format("%s/v1.40/images/%s%%2F%s/push?force=1&tag=%s", BASE_URL, registry,
                 imageNameWithoutTag, tag);
             assertEquals(expectedUrl, url);
         }};
@@ -379,7 +395,7 @@ public class DockerAccessWithHcClientTest {
             String url;
             mockDelegate.post(url = withCapture(), HTTP_CREATED);
 
-            String expectedUrl = String.format("%s/vnull/images/%s%%3A%s/tag?force=0&repo=%s%%2F%s&tag=%s", BASE_URL,
+            String expectedUrl = String.format("%s/v1.40/images/%s%%3A%s/tag?force=0&repo=%s%%2F%s&tag=%s", BASE_URL,
                 imageNameWithoutTag, tag, registry, imageNameWithoutTag, tag);
             assertEquals(expectedUrl, url);
         }};
@@ -410,6 +426,7 @@ public class DockerAccessWithHcClientTest {
             thrownException = e;
         }
     }
+
     private void whenLoadImage() {
         try {
             client.loadImage(imageName, new File(archiveFile));
@@ -481,12 +498,11 @@ public class DockerAccessWithHcClientTest {
             mockDelegate.post(postUrl = withCapture(), withNull(), (Map) any, (HcChunkedResponseHandlerWrapper) any, 200);
             times = 1;
 
-            assertNotNull(postUrl);
-            assertTrue(postUrl.endsWith("/images/create"));
+            assertEquals("tcp://1.2.3.4:2375/v1.40/images/create?tag=1.1", postUrl);
         }};
     }
 
     private void whenPullImage() throws DockerAccessException {
-        client.pullImage("test", null, "registry", new CreateImageOptions());
+        client.pullImage("test", null, "registry", new CreateImageOptions().tag("1.1"));
     }
 }

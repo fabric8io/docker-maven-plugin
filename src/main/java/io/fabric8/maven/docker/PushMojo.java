@@ -1,8 +1,6 @@
 package io.fabric8.maven.docker;
 
 import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.service.BuildService;
 import io.fabric8.maven.docker.service.JibBuildService;
 import io.fabric8.maven.docker.service.ServiceHub;
 
@@ -53,7 +51,7 @@ public class PushMojo extends AbstractDockerMojo {
     }
 
     private void executeDockerPush(ServiceHub hub) throws MojoExecutionException, DockerAccessException {
-        hub.getRegistryService().pushImages(getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
+        hub.getRegistryService().pushImages(getOutputPath(), getResolvedImages(), retries, getRegistryConfig(pushRegistry), skipTag);
     }
 
     private void executeJibPush(ServiceHub hub) throws MojoExecutionException {

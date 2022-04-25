@@ -32,3 +32,8 @@ include::build/_buildargs.adoc[]
 === Healthcheck
 
 include::build/_healthcheck.adoc[]
+
+[[build-healthcheck]]
+=== Multi-Architecture Build
+
+include::build/_buildx.adoc[]

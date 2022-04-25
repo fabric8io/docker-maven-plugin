@@ -146,6 +146,9 @@ public class BuildImageConfiguration implements Serializable {
     private List<String> tags;
 
     @Parameter
+    private BuildXConfiguration buildx;
+
+    @Parameter
     private Map<String, String> env;
 
     @Parameter
@@ -445,6 +448,14 @@ public class BuildImageConfiguration implements Serializable {
         return args;
     }
 
+    public BuildXConfiguration getBuildX() {
+        return buildx;
+    }
+
+    public boolean isBuildX() {
+        return buildx!=null && buildx.isBuildX();
+    }
+
     public File getAbsoluteContextDirPath(MojoParameters mojoParams) {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getContextDir().getPath());
     }
@@ -455,6 +466,14 @@ public class BuildImageConfiguration implements Serializable {
 
     public File getAbsoluteDockerTarPath(MojoParameters mojoParams) {
         return EnvUtil.prepareAbsoluteSourceDirPath(mojoParams, getDockerArchive().getPath());
+    }
+
+    public String getDockerfileName() {
+        if (isDockerFileMode()) {
+            return getDockerFile().getName();
+        } else {
+            return null;
+        }
     }
 
     public void initTags(ConfigHelper.NameFormatter nameFormatter) {
@@ -598,6 +617,11 @@ public class BuildImageConfiguration implements Serializable {
 
         public Builder tags(List<String> tags) {
             config.tags = tags;
+            return this;
+        }
+
+        public Builder buildx(BuildXConfiguration buildx) {
+            config.buildx = buildx;
             return this;
         }
 

@@ -1,6 +1,7 @@
 package io.fabric8.maven.docker.service;
 
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -20,8 +21,6 @@ import io.fabric8.maven.docker.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.settings.Settings;
 
-import javax.management.Query;
-
 /**
  * Allows to interact with registries, eg. to push/pull images.
  */
@@ -29,11 +28,13 @@ public class RegistryService {
 
     private final DockerAccess docker;
     private final QueryService queryService;
+    private final BuildXService buildXService;
     private final Logger log;
 
-    RegistryService(DockerAccess docker, QueryService queryService, Logger log) {
+    RegistryService(DockerAccess docker, QueryService queryService, BuildXService buildXService, Logger log) {
         this.docker = docker;
         this.queryService = queryService;
+        this.buildXService = buildXService;
         this.log = log;
     }
 
@@ -47,34 +48,43 @@ public class RegistryService {
      * @throws DockerAccessException
      * @throws MojoExecutionException
      */
-    public void pushImages(Collection<ImageConfiguration> imageConfigs,
-                           int retries, RegistryConfig registryConfig, boolean skipTag) throws DockerAccessException, MojoExecutionException {
+    public void pushImages(Path outputPath, Collection<ImageConfiguration> imageConfigs,
+                            int retries, RegistryConfig registryConfig, boolean skipTag) throws DockerAccessException, MojoExecutionException {
         for (ImageConfiguration imageConfig : imageConfigs) {
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
+            if (buildConfig == null || buildConfig.skipPush()) {
+                log.info("%s : Skipped pushing", imageConfig.getDescription());
+                continue;
+            }
+
             String name = imageConfig.getName();
-            if (buildConfig != null) {
-                if (buildConfig.skipPush()) {
-                    log.info("%s : Skipped pushing", imageConfig.getDescription());
-                    continue;
-                }
-                String configuredRegistry = EnvUtil.firstRegistryOf(
-                    new ImageName(imageConfig.getName()).getRegistry(),
-                    imageConfig.getRegistry(),
-                    registryConfig.getRegistry());
+
+            ImageName imageName = new ImageName(name);
+            String configuredRegistry = EnvUtil.firstRegistryOf(
+                imageName.getRegistry(),
+                imageConfig.getRegistry(),
+                registryConfig.getRegistry());
 
 
-                AuthConfig authConfig = createAuthConfig(true, new ImageName(name).getUser(), configuredRegistry, registryConfig);
+            AuthConfig authConfig = createAuthConfig(true, imageName.getUser(), configuredRegistry, registryConfig);
+            if (imageConfig.isBuildX()) {
+                buildXService.push(outputPath, imageConfig, authConfig);
+            } else {
+                dockerPush(retries, skipTag, buildConfig, name, configuredRegistry, authConfig);
+            }
+        }
+    }
 
-                long start = System.currentTimeMillis();
-                docker.pushImage(name, authConfig, configuredRegistry, retries);
-                log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
+    private void dockerPush(int retries, boolean skipTag, BuildImageConfiguration buildConfig, String name, String configuredRegistry, AuthConfig authConfig)
+        throws DockerAccessException {
+        long start = System.currentTimeMillis();
+        docker.pushImage(name, authConfig, configuredRegistry, retries);
+        log.info("Pushed %s in %s", name, EnvUtil.formatDurationTill(start));
 
-                if (!skipTag) {
-                    for (String tag : imageConfig.getBuildConfiguration().getTags()) {
-                        if (tag != null) {
-                            docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
-                        }
-                    }
+        if (!skipTag) {
+            for (String tag : buildConfig.getTags()) {
+                if (tag != null) {
+                    docker.pushImage(new ImageName(name, tag).getFullName(), authConfig, configuredRegistry, retries);
                 }
             }
         }
@@ -155,9 +165,7 @@ public class RegistryService {
     private AuthConfig createAuthConfig(boolean isPush, String user, String registry, RegistryConfig config)
             throws MojoExecutionException {
 
-        return config.getAuthConfigFactory().createAuthConfig(
-            isPush, config.isSkipExtendedAuth(), config.getAuthConfig(),
-            config.getSettings(), user, registry);
+        return config.createAuthConfig(isPush, user, registry);
     }
 
     // ===========================================
@@ -198,9 +206,13 @@ public class RegistryService {
             return authConfig;
         }
 
+        public AuthConfig createAuthConfig(boolean isPush, String user, String registry) throws MojoExecutionException {
+            return authConfigFactory.createAuthConfig(isPush, skipExtendedAuth, authConfig, settings, user, registry);
+        }
+
         public static class Builder {
 
-            private RegistryConfig context = new RegistryConfig();
+            private RegistryConfig context;
 
             public Builder() {
                 this.context = new RegistryConfig();

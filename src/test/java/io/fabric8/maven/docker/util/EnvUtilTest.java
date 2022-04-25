@@ -1,5 +1,6 @@
 package io.fabric8.maven.docker.util;
 
+import java.nio.file.Paths;
 import java.util.*;
 
 import com.google.common.collect.ImmutableList;
@@ -232,5 +233,15 @@ public class EnvUtilTest {
         for (int i = 0; i < data.length; i +=2) {
             assertEquals(">> " + data[i], data[i+1], EnvUtil.ensureRegistryHttpUrl(data[i]));
         }
+    }
+
+    @Test
+    public void resolveHomeReferenceNoHome() {
+        assertEquals(Paths.get("~chas/relative").toAbsolutePath(), EnvUtil.resolveHomeReference("~chas/relative"));
+    }
+
+    @Test
+    public void resolveHomeReference() {
+        assertEquals(Paths.get(EnvUtil.getUserHome(), "relative"), EnvUtil.resolveHomeReference("~/relative"));
     }
 }
