@@ -27,7 +27,6 @@
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
-          <autoPull>always</autoPull>
           <images>
             <image>
               <alias>healthybox1</alias>
@@ -43,7 +42,8 @@
               </build>
               <run>
                 <wait>
-                  <healthy>true</healthy>
+                  <!-- https://github.com/fabric8io/docker-maven-plugin/issues/1101 -->
+                  <!-- healthy>true</healthy -->
                 </wait>
               </run>
             </image>
@@ -75,7 +75,8 @@
               </build>
               <run>
                 <wait>
-                  <healthy>true</healthy>
+                  <!-- https://github.com/fabric8io/docker-maven-plugin/issues/1101 -->
+                  <!-- healthy>true</healthy -->
                 </wait>
               </run>
             </image>
@@ -115,7 +116,7 @@
             </image>
             <image>
               <alias>unhealthybox6</alias>
-              <name>busybox5</name>
+              <name>busybox6</name>
               <build>
                 <from>busybox</from>
                 <healthCheck>
@@ -126,6 +127,13 @@
           </images>
         </configuration>
         <executions>
+          <execution>
+            <id>build</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
           <execution>
             <id>start</id>
             <goals>

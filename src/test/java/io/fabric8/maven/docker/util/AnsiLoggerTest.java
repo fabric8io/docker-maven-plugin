@@ -46,15 +46,15 @@ class AnsiLoggerTest {
         // code may have already initialized or manipulated the AnsiConsole.
         // Hence we just reset the stdout/stderr references to those captured by AnsiConsole
         // during its static initialization and restore them after tests.
-        System.setOut(AnsiConsole.system_out);
-        System.setErr(AnsiConsole.system_err);
+        System.setOut(AnsiConsole.sysOut());
+        System.setErr(AnsiConsole.sysErr());
     }
 
     @AfterAll
     public static void restoreAnsiPassthrough() {
         AnsiConsole.systemUninstall();
-        System.setOut(AnsiConsole.out);
-        System.setErr(AnsiConsole.err);
+        System.setOut(AnsiConsole.out());
+        System.setErr(AnsiConsole.err());
     }
 
     @Test
@@ -222,12 +222,11 @@ class AnsiLoggerTest {
                      testLog.getMessage());
     }
 
-
     private class TestLog extends DefaultLog {
         private String message;
 
         public TestLog() {
-            super(new ConsoleLogger());
+            super(new ConsoleLogger(org.codehaus.plexus.logging.Logger.LEVEL_DISABLED, "unit-test"));
         }
 
         @Override
@@ -252,10 +251,6 @@ class AnsiLoggerTest {
         public void error(CharSequence content) {
             this.message = content.toString();
             super.error(content);
-        }
-
-        void reset() {
-            message = null;
         }
 
         public String getMessage() {

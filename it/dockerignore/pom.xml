@@ -15,7 +15,6 @@
   </parent>
 
   <artifactId>dmp-it-dockerignore</artifactId>
-  <version>0.41.0-SNAPSHOT</version>
   <packaging>docker-build</packaging>
 
   <build>

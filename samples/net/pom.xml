@@ -27,16 +27,18 @@
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <configuration>
+          <autoCreateCustomNetworks>true</autoCreateCustomNetworks>
+          <containerNamePattern>%a</containerNamePattern>
           <watchInterval>500</watchInterval>
           <logDate>default</logDate>
           <verbose>true</verbose>
           <autoPull>always</autoPull>
+          <startParallel>true</startParallel>
           <images>
             <image>
               <alias>box1</alias>
               <name>busybox</name>
               <run>
-                <namingStrategy>alias</namingStrategy>
                 <net>${box1.net}</net>
                 <cmd>
                   <exec>
@@ -51,6 +53,7 @@
                 </log>
                 <wait>
                   <log>finish</log>
+                  <time>30</time>
                 </wait>
               </run>
             </image>
@@ -59,7 +62,6 @@
               <name>busybox</name>
               <run>
                 <net>${box2.net}</net>
-                <namingStrategy>alias</namingStrategy>
                 <cmd>
                   <exec>
                     <args>sh</args>
@@ -73,6 +75,7 @@
                 </log>
                 <wait>
                   <log>finish</log>
+                  <time>30</time>
                 </wait>
               </run>
             </image>

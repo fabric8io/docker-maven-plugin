@@ -41,7 +41,7 @@ public class AnsiLogger implements Logger, Closeable {
     private PrintWriter pw;
 
     // ANSI escapes for various colors (or empty strings if no coloring is used)
-    static Ansi.Color
+    static final Ansi.Color
             COLOR_ERROR = RED,
             COLOR_INFO = GREEN,
             COLOR_WARNING = YELLOW,
@@ -52,8 +52,8 @@ public class AnsiLogger implements Logger, Closeable {
 
 
     // Map remembering lines
-    private ThreadLocal<Map<String, Integer>> imageLines = new ThreadLocal<>();
-    private ThreadLocal<AtomicInteger> updateCount = new ThreadLocal<>();
+    private final ThreadLocal<Map<String, Integer>> imageLines = new ThreadLocal<>();
+    private final ThreadLocal<AtomicInteger> updateCount = new ThreadLocal<>();
 
     // Whether to use ANSI codes
     private boolean useAnsi;
@@ -71,10 +71,10 @@ public class AnsiLogger implements Logger, Closeable {
         this(log, useColor, verbose, batchMode, prefix, null);
     }
 
-    public AnsiLogger(Log log, boolean useColor, String verbose, boolean batchMode, String prefix, File outpufFile) {
+    public AnsiLogger(Log log, boolean useColor, String verbose, boolean batchMode, String prefix, File outputFile) {
         this.log = log;
         this.prefix = prefix;
-        this.outputFile = outpufFile;
+        this.outputFile = outputFile;
         if (this.outputFile == null) {
             this.batchMode = batchMode;
         } else {
@@ -226,7 +226,7 @@ public class AnsiLogger implements Logger, Closeable {
     }
 
     /**
-     * Finis progress meter. Must be always called if {@link #progressStart()} has been used.
+     * Finish progress meter. Must be always called if {@link #progressStart()} has been used.
      */
     public void progressFinished() {
         if (!batchMode && log.isInfoEnabled()) {
@@ -280,7 +280,7 @@ public class AnsiLogger implements Logger, Closeable {
         } else if (params.length == 1 && params[0] instanceof Throwable) {
             // We print only the message here since breaking exception will bubble up
             // anyway
-            return message + ": " + params[0].toString();
+            return message + ": " + params[0];
         } else {
             return String.format(message, params);
         }
@@ -365,16 +365,6 @@ public class AnsiLogger implements Logger, Closeable {
 
         this.verboseModes = getVerboseModesFromString(verbose);
         this.isVerbose = true;
-    }
-
-    private Boolean checkBackwardVersionValues(String verbose) {
-        if (verbose.isEmpty()) {
-            return Boolean.TRUE;
-        }
-        if (verbose.equalsIgnoreCase("true") || verbose.equalsIgnoreCase("false")) {
-            return Boolean.parseBoolean(verbose.toLowerCase());
-        }
-        return null;
     }
 
     private List<LogVerboseCategory> getVerboseModesFromString(String groups) {
