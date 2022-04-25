@@ -66,7 +66,7 @@ public class DockerAssemblyConfigurationSourceTest {
 
     private MojoParameters buildParameters(String projectDir, String sourceDir, String outputDir) {
         MavenProject mavenProject = new MavenProject();
-        mavenProject.setFile(new File(projectDir));
+        mavenProject.setFile(new File(projectDir).getAbsoluteFile());
         return new MojoParameters(null, mavenProject, null, null, null, null, sourceDir, outputDir, null);
     }
 
@@ -94,7 +94,7 @@ public class DockerAssemblyConfigurationSourceTest {
 
         assertFalse("we must not ignore permissions when creating the archive", source.isIgnorePermissions());
 
-        String outputDir = params.getOutputDirectory();
+        String outputDir = new File(params.getOutputDirectory()).getAbsolutePath();
 
         assertStartsWithDir(outputDir, source.getOutputDirectory());
         assertStartsWithDir(outputDir, source.getWorkingDirectory());

@@ -1,0 +1,18 @@
+
+[[build-buildx]]
+
+The `<buildx>` element within `<build>` defines how to build multi-architecture images.
+
+[[config-image-build-assembly]]
+.BuildX Options
+[cols="1,5"]
+|===
+| Element | Description
+
+| *cache*
+| Cache directory name, which is `cache` by default. This directory is used to cache image layers. If the directory name is relative,
+the cache directory is resolved relative to `outputDirectory`.  If the cache name starts with `~/`, the cache directory is relative
+to the user's home directory.
+
+| *platforms*
+| A list of `<platform>` elements specifying platform to build.  A platform has syntax of `OS/architecture` (e.g. linux/amd64, linux/arm64, darwin/amd64).

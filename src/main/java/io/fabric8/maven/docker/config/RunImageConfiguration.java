@@ -18,10 +18,6 @@ public class RunImageConfiguration implements Serializable {
 
     static final RunImageConfiguration DEFAULT = new RunImageConfiguration();
 
-    public boolean isDefault() {
-        return this == RunImageConfiguration.DEFAULT;
-    }
-
     /**
      * Environment variables to set when starting the container. key: variable name, value: env value
      */
@@ -29,7 +25,7 @@ public class RunImageConfiguration implements Serializable {
     private Map<String, String> env;
 
     @Parameter
-    private Map<String,String> labels;
+    private Map<String, String> labels;
 
     // Path to a property file holding environment variables
     @Parameter
@@ -49,6 +45,7 @@ public class RunImageConfiguration implements Serializable {
 
     /**
      * container entry point
+     *
      * @deprecated This field would be removed in upcoming releases. Use <code>entryPoint</code> instead.
      */
     @Parameter
@@ -71,7 +68,9 @@ public class RunImageConfiguration implements Serializable {
     private String workingDir;
 
     // Size of /dev/shm in bytes
-    /** @parameter */
+    /**
+     * @parameter
+     */
     private Long shmSize;
 
     // memory in bytes
@@ -143,12 +142,11 @@ public class RunImageConfiguration implements Serializable {
 
     /**
      * A pattern to define the naming of the container where
-     *
+     * <p>
      * - %a for the "alias" mode
      * - %n for the image name
      * - %t for a timestamp
      * - %i for an increasing index of container names
-     *
      */
     @Parameter
     private String containerNamePattern;
@@ -186,7 +184,7 @@ public class RunImageConfiguration implements Serializable {
 
     @Parameter
     private Boolean skip;
-    
+
     /**
      * Policy for pulling the image to start
      */
@@ -205,7 +203,8 @@ public class RunImageConfiguration implements Serializable {
     @Parameter
     private StopMode stopMode;
 
-    public RunImageConfiguration() { }
+    public RunImageConfiguration() {
+    }
 
     public String initAndValidate() {
         if (entrypoint != null) {
@@ -275,7 +274,9 @@ public class RunImageConfiguration implements Serializable {
         return memorySwap;
     }
 
-    public String getIsolation() { return isolation; }
+    public String getIsolation() {
+        return isolation;
+    }
 
     public Long getCpuShares() {
         return cpuShares;
@@ -473,7 +474,6 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-
         public Builder envPropertyFile(String envPropertyFile) {
             config.envPropertyFile = envPropertyFile;
             return this;
@@ -622,22 +622,22 @@ public class RunImageConfiguration implements Serializable {
             return this;
         }
 
-        public Builder isolation (String isolation) {
+        public Builder isolation(String isolation) {
             config.isolation = isolation;
             return this;
         }
 
-        public Builder cpuShares(Long cpuShares){
+        public Builder cpuShares(Long cpuShares) {
             config.cpuShares = cpuShares;
             return this;
         }
 
-        public Builder cpus(Long cpus){
+        public Builder cpus(Long cpus) {
             config.cpus = cpus;
             return this;
         }
 
-        public Builder cpuSet(String cpuSet){
+        public Builder cpuSet(String cpuSet) {
             config.cpuSet = cpuSet;
             return this;
         }
@@ -653,8 +653,8 @@ public class RunImageConfiguration implements Serializable {
         @Deprecated
         public Builder namingStrategy(String namingStrategy) {
             config.namingStrategy = namingStrategy == null ?
-                    NamingStrategy.none :
-                    NamingStrategy.valueOf(namingStrategy.toLowerCase());
+                NamingStrategy.none :
+                NamingStrategy.valueOf(namingStrategy.toLowerCase());
             return this;
         }
 

@@ -47,6 +47,8 @@ import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Tool for creating a docker image tar ball including a Dockerfile for building
  * a docker image.
@@ -168,7 +170,7 @@ public class DockerAssemblyManager {
                         // directly to docker.tar (as the output builddir is not picked up in archive mode)
                         if (isArchive(assemblyConfigurations)) {
                             String name = dockerFile.getName();
-                            archiver.addFile(new File(buildDirs.getOutputDirectory(), name), name);
+                            archiver.addFile(new File(buildDirs.getOutputDirectory(), name).getAbsoluteFile(), name);
                         }
 
                         archiver.addFileSet(fileSet);
@@ -273,7 +275,7 @@ public class DockerAssemblyManager {
      * Extract all files with a tracking archiver. These can be used to track changes in the filesystem and triggering
      * a rebuild of the image if needed ('docker:watch')
      */
-    public AssemblyFiles getAssemblyFiles(String name, AssemblyConfiguration assemblyConfig, MojoParameters mojoParams, Logger log)
+    public AssemblyFiles getAssemblyFiles(@Nonnull String name, AssemblyConfiguration assemblyConfig, MojoParameters mojoParams, Logger log)
             throws InvalidAssemblerConfigurationException, ArchiveCreationException, AssemblyFormattingException, MojoExecutionException {
 
         BuildDirs buildDirs = createBuildDirs(name, mojoParams);
@@ -293,7 +295,7 @@ public class DockerAssemblyManager {
         }
     }
 
-    private BuildDirs createBuildDirs(String imageName, MojoParameters params) {
+    private BuildDirs createBuildDirs(@Nonnull String imageName, MojoParameters params) {
         BuildDirs buildDirs = new BuildDirs(imageName, params);
         buildDirs.createDirs();
         return buildDirs;

@@ -2,10 +2,18 @@ package io.fabric8.maven.docker.service;
 
 import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.BuildXConfiguration;
 import io.fabric8.maven.docker.config.ImageConfiguration;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import io.fabric8.maven.docker.access.AuthConfig;
 import io.fabric8.maven.docker.access.DockerAccess;
@@ -15,8 +23,12 @@ import io.fabric8.maven.docker.util.AuthConfigFactory;
 import io.fabric8.maven.docker.util.AutoPullMode;
 import io.fabric8.maven.docker.util.ImageName;
 import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
+import mockit.VerificationsInOrder;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.settings.Settings;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +53,9 @@ public class RegistryServiceTest {
     private RegistryService registryService;
     private boolean hasImage;
     private String registry;
-    private Map authConfig;
+    private Map<String, String> authConfig;
+
+    private Path tempPath = Paths.get(System.getProperty("java.io.tmpdir"));
 
     // push
     private ImageConfiguration imageConfiguration;
@@ -58,15 +72,19 @@ public class RegistryServiceTest {
     @Mocked
     private QueryService queryService;
 
+    @Mocked
+    private BuildXService.Exec exec;
+
     @Before
     public void setup() {
         reset();
     }
 
     private void reset() {
-        registryService = new RegistryService(docker, queryService, logger);
+        BuildXService buildXService = new BuildXService(docker, logger, exec);
+        registryService = new RegistryService(docker, queryService, buildXService, logger);
         cacheStore = new TestCacheStore();
-        authConfig = new HashMap();
+        authConfig = new HashMap<>();
 
         imageName = null;
         imagePullPolicy = null;
@@ -251,6 +269,17 @@ public class RegistryServiceTest {
     }
 
     @Test
+    public void pushBuildXImage() throws MojoExecutionException {
+        givenBuildxImageConfiguration("user/test:1.0.1");
+        givenCredentials("skroob", "12345");
+
+        whenPushImage();
+
+        thenBuildxImageHasBeenPushed();
+        thenNoExceptionThrown();
+    }
+
+    @Test
     public void pushImageWithoutBuildConfig() throws DockerAccessException {
         givenAnImageConfigurationWithoutBuildConfig("user/test:1.0.1");
 
@@ -278,20 +307,47 @@ public class RegistryServiceTest {
     }
     private void thenImageHasNotBeenPulled() throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(anyString, (AuthConfig) withNotNull(), anyString, (CreateImageOptions) any); times = 0;
+            docker.pullImage(anyString, withNotNull(), anyString, (CreateImageOptions) any); times = 0;
         }};
     }
 
     private void thenImageHasNotBeenPushed() throws DockerAccessException {
         new Verifications() {{
-            docker.pushImage(anyString, (AuthConfig) withNotNull(), anyString, anyInt); times = 0;
+            docker.pushImage(anyString, withNotNull(), anyString, anyInt); times = 0;
         }};
     }
 
     private void thenImageHasBeenPushed() throws DockerAccessException {
         new Verifications() {{
-            docker.pushImage(anyString, (AuthConfig) withNotNull(), anyString, anyInt);
+            docker.pushImage(anyString, withNotNull(), anyString, anyInt);
         }};
+    }
+
+    private void thenBuildxImageHasBeenPushed() throws MojoExecutionException {
+        Path buildPath = tempPath.resolve("user/test/1.0.1");
+        String config = getOsDependentBuild(buildPath, "docker");
+        String cacheDir = getOsDependentBuild(buildPath, "cache");
+        String buildDir = getOsDependentBuild(buildPath, "build");
+        String builderName = "dmp_user_test_1.0.1";
+
+        new VerificationsInOrder() {{
+            exec.process(Arrays.asList("docker", "--config", config, "buildx"),
+                "create", "--driver", "docker-container", "--name", builderName);
+
+            exec.process(Arrays.asList("docker", "--config", config, "buildx",
+                "build", "--progress=plain", "--builder", builderName,
+                "--platform", "linux/amd64,linux/arm64",
+                "--tag", "user/test:1.0.1", "--push",
+                "--cache-to=type=local,dest=" + cacheDir, "--cache-from=type=local,src=" + cacheDir,
+                buildDir));
+
+            exec.process(Arrays.asList("docker", "--config", config, "buildx"),
+                "rm", builderName);
+        }};
+    }
+
+    private static String getOsDependentBuild(Path buildPath, String docker) {
+        return buildPath.resolve(docker).toString().replace('/', File.separatorChar);
     }
 
     private void thenImageHasBeenTagged() throws DockerAccessException {
@@ -313,9 +369,9 @@ public class RegistryServiceTest {
 
     private void thenImageHasBeenPulledWithRegistry(final String registry) throws DockerAccessException {
         new Verifications() {{
-            docker.pullImage(imageName, (AuthConfig) withNotNull(), registry, (CreateImageOptions) any);
+            docker.pullImage(imageName, withNotNull(), registry, (CreateImageOptions) any);
         }};
-        assertTrue(cacheStore.get(imageName) != null);
+        assertNotNull(cacheStore.get(imageName));
     }
 
     private void whenAutoPullImage() {
@@ -334,18 +390,17 @@ public class RegistryServiceTest {
             registryService.pullImageWithPolicy(imageName, pullManager, registryConfigBuilder.build(), imageConfiguration.getBuildConfiguration());
 
         } catch (Exception e) {
-            //e.printStackTrace();
             this.actualException = e;
         }
     }
 
     private void whenPushImage() {
         try {
-            RegistryService.RegistryConfig.Builder registryConfigBuilder =
+            RegistryService.RegistryConfig registryConfig =
                     new RegistryService.RegistryConfig.Builder()
                             .authConfigFactory(authConfigFactory)
-                            .authConfig(authConfig);
-            registryService.pushImages(Collections.singleton(imageConfiguration), 1, registryConfigBuilder.build(), false);
+                            .authConfig(authConfig).build();
+            registryService.pushImages(tempPath, Collections.singleton(imageConfiguration), 1, registryConfig, false);
         } catch (Exception e) {
             this.actualException = e;
         }
@@ -361,10 +416,6 @@ public class RegistryServiceTest {
 
     private void givenHasImage(boolean hasImage) {
         this.hasImage = hasImage;
-    }
-
-    private void givenAuthConfig(Map authConfig) {
-        this.authConfig = authConfig;
     }
 
     private void givenPreviousPulled(boolean pulled) {
@@ -384,8 +435,27 @@ public class RegistryServiceTest {
     }
 
     private void givenAnImageConfiguration(String imageName) {
-        final BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().build();
+        givenImageNameAndBuildX(imageName, null);
+    }
+
+    private void givenBuildxImageConfiguration(String imageName) {
+        BuildXConfiguration buildx = new BuildXConfiguration.Builder().platforms(Arrays.asList("linux/amd64", "linux/arm64")).build();
+        givenImageNameAndBuildX(imageName, buildx);
+    }
+
+    private void givenImageNameAndBuildX(String imageName, BuildXConfiguration buildx) {
+        BuildImageConfiguration buildImageConfiguration = new BuildImageConfiguration.Builder().buildx(buildx).build();
         imageConfiguration = new ImageConfiguration.Builder().name(imageName).buildConfig(buildImageConfiguration).build();
+    }
+
+    private void givenCredentials(String username, String password) throws MojoExecutionException {
+        authConfig.put(AuthConfig.AUTH_USERNAME, username);
+        authConfig.put(AuthConfig.AUTH_PASSWORD, password);
+
+        new Expectations() {{
+            authConfigFactory.createAuthConfig(true, false, authConfig, (Settings) any, "user", null);
+            result = new AuthConfig(authConfig);
+        }};
     }
 
     private void givenAnImageConfigurationWithoutBuildConfig(String imageName) {
@@ -397,7 +467,7 @@ public class RegistryServiceTest {
         imageConfiguration = new ImageConfiguration.Builder(imageConfiguration).buildConfig(buildImageConfiguration).build();
     }
 
-    private class TestCacheStore implements ImagePullManager.CacheStore {
+    private static class TestCacheStore implements ImagePullManager.CacheStore {
 
         String cache;
 

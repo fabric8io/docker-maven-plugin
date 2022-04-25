@@ -24,12 +24,29 @@ import io.fabric8.maven.docker.model.Network;
 public interface DockerAccess {
 
     /**
+     * Lifecycle method for this access class which must be called before any other method is called.
+     */
+    void start() throws DockerAccessException;
+
+    /**
+     * Lifecycle method which must be called when this object is not needed anymore. This hook might be used for
+     * cleaning up things.
+     */
+    void shutdown();
+
+    /**
      * Get the API version of the running server
      *
      * @return api version in the form "1.24"
      * @throws DockerAccessException if the api version could not be obtained
      */
     String getServerApiVersion() throws DockerAccessException;
+
+    /**
+     * Get the native platform
+     * @return The platform os/arch
+     */
+    String getNativePlatform();
 
     /**
      * Get a container
@@ -227,7 +244,7 @@ public interface DockerAccess {
     void pullImage(String image, AuthConfig authConfig, String registry, CreateImageOptions options) throws DockerAccessException;
 
     /**
-     * Push an image to a registry. An registry can be specified which is used as target
+     * Push an image to a registry. A registry can be specified which is used as target
      * if the image name the image does not contain a registry.
      *
      * If an optional registry is used, the image is also tagged with the full name containing the registry as
@@ -266,11 +283,11 @@ public interface DockerAccess {
      * Remove an image from this docker installation
      *
      * @param image image to remove
-     * @param force if set to true remove containers as well (only the first vararg is evaluated)
+     * @param force if set to true remove containers as well
      * @return true if an image was removed, false if none was removed
      * @throws DockerAccessException if an image cannot be removed
      */
-    boolean removeImage(String image, boolean ... force) throws DockerAccessException;
+    boolean removeImage(String image, boolean force) throws DockerAccessException;
 
     /**
      * Save an image to a tar file
@@ -309,29 +326,19 @@ public interface DockerAccess {
     boolean removeNetwork(String networkId) throws DockerAccessException;
 
     /**
-     * Lifecycle method for this access class which must be called before any other method is called.
+     * Create a volume
+     *
+     * @param configuration volume configuration
+     * @return the name of the Volume
+     * @throws DockerAccessException if the volume could not be created.
      */
-    void start() throws DockerAccessException;
+    String createVolume(VolumeCreateConfig configuration) throws DockerAccessException;
 
     /**
-     * Lifecycle method which must be called when this object is not needed anymore. This hook might be used for
-     * cleaning up things.
+     * Removes a volume. It is a no-op if the volume does not exist.
+     *
+     * @param name volume name to remove
+     * @throws DockerAccessException if the volume could not be removed
      */
-    void shutdown();
-
-   /**
-    *  Create a volume
-    *
-    *  @param configuration volume configuration
-    *  @return the name of the Volume
-    *  @throws DockerAccessException if the volume could not be created.
-    */
-   String createVolume(VolumeCreateConfig configuration) throws DockerAccessException;
-
-   /**
-    * Removes a volume. It is a no-op if the volume does not exist.
-    * @param name volume name to remove
-    * @throws DockerAccessException if the volume could not be removed
-    */
-   void removeVolume(String name) throws DockerAccessException;
+    void removeVolume(String name) throws DockerAccessException;
 }

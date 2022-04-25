@@ -117,7 +117,7 @@ public class BuildService {
         List<String> tags = imageConfig.getBuildConfiguration().getTags();
         if (!tags.isEmpty()) {
             String imageName = imageConfig.getName();
-            log.info("%s: Tag with %s", imageConfig.getDescription(), EnvUtil.stringJoin(tags, ","));
+            log.info("%s: Tag with %s", imageConfig.getDescription(), String.join(",", tags));
 
             BuildImageConfiguration buildConfig = imageConfig.getBuildConfiguration();
 
@@ -173,7 +173,7 @@ public class BuildService {
         // auto is now supported by docker, consider switching?
         BuildOptions opts =
                 new BuildOptions(buildConfig.getBuildOptions())
-                        .dockerfile(getDockerfileName(buildConfig))
+                        .dockerfile(buildConfig.getDockerfileName())
                         .forceRemove(cleanupMode.isRemove())
                         .noCache(noCache)
                         .squash(squash)
@@ -286,14 +286,6 @@ public class BuildService {
         }
 
         return null;
-    }
-
-    private String getDockerfileName(BuildImageConfiguration buildConfig) {
-        if (buildConfig.isDockerFileMode()) {
-            return buildConfig.getDockerFile().getName();
-        } else {
-            return null;
-        }
     }
 
     private String doBuildImage(String imageName, File dockerArchive, BuildOptions options)
