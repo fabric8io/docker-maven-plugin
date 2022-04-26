@@ -3,13 +3,18 @@ package io.fabric8.maven.docker.service;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-import io.fabric8.maven.docker.access.ExecException;
-import io.fabric8.maven.docker.config.StopMode;
-import io.fabric8.maven.docker.config.VolumeConfiguration;
+import io.fabric8.maven.docker.access.*;
+import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.log.LogOutputSpec;
+import io.fabric8.maven.docker.log.LogOutputSpecFactory;
 import io.fabric8.maven.docker.model.Container;
 import io.fabric8.maven.docker.model.PortBindingException;
 import io.fabric8.maven.docker.util.GavLabel;
+import io.fabric8.maven.docker.util.JsonFactory;
+import io.fabric8.maven.docker.util.Logger;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.Verifications;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
@@ -20,38 +25,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
-import io.fabric8.maven.docker.access.ContainerCreateConfig;
-import io.fabric8.maven.docker.access.ContainerHostConfig;
-import io.fabric8.maven.docker.access.DockerAccess;
-import io.fabric8.maven.docker.access.DockerAccessException;
-import io.fabric8.maven.docker.access.PortMapping;
-import io.fabric8.maven.docker.config.Arguments;
-import io.fabric8.maven.docker.config.ImageConfiguration;
-import io.fabric8.maven.docker.config.NetworkConfig;
-import io.fabric8.maven.docker.config.RestartPolicy;
-import io.fabric8.maven.docker.config.RunImageConfiguration;
-import io.fabric8.maven.docker.config.RunVolumeConfiguration;
-import io.fabric8.maven.docker.config.UlimitConfig;
-import io.fabric8.maven.docker.config.WaitConfiguration;
-import io.fabric8.maven.docker.log.LogOutputSpec;
-import io.fabric8.maven.docker.log.LogOutputSpecFactory;
-import io.fabric8.maven.docker.util.JsonFactory;
-import io.fabric8.maven.docker.util.Logger;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * This test need to be refactored. In fact, testing Mojos must be setup correctly at all. Blame on me that there are so
@@ -437,6 +413,7 @@ public class RunServiceTest {
                         .shmSize(1024L)
                         .memory(1L)
                         .memorySwap(1L)
+                        .memorySwappiness(1L)
                         .cpus(1000000000L)
                         .cpuSet("0,1")
                         .isolation("default")

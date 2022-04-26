@@ -16,15 +16,18 @@ package io.fabric8.maven.docker;
  * limitations under the License.
  */
 
-import java.io.UnsupportedEncodingException;
-import java.net.*;
-import java.util.HashMap;
-
 import io.fabric8.maven.docker.access.BuildOptions;
 import io.fabric8.maven.docker.access.CreateImageOptions;
 import io.fabric8.maven.docker.access.UrlBuilder;
 import io.fabric8.maven.docker.util.ImageName;
 import org.junit.Test;
+
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.HashMap;
 
 import static org.junit.Assert.*;
 
@@ -49,14 +52,15 @@ public class UrlBuilderTest {
         HashMap<String, String> options = new HashMap<>();
         options.put("cpusetcpus", "1");
         options.put("memswap", "-1");
-        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&cpusetcpus=1&memswap=-1&t=image1",
+        options.put("memswappiness", "-1"); // TODO is this right?
+        assertEquals("/1.0/build?buildargs=%7B%22k1%22%3A%22v1%22%2C%22k2%22%3A%22v2%22%7D&cpusetcpus=1&memswap=-1&memswappiness=-1&t=image1",
                      builder.buildImage("image1", new BuildOptions(options).buildArgs(m)));
         options.put("dockerfile","blub");
-        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=bla&memswap=-1&t=image1",
+        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=bla&memswap=-1&memswappiness=-1&t=image1",
                      builder.buildImage("image1", new BuildOptions(options).dockerfile("bla")));
-        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=holla&memswap=-1&t=image1",
+        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=holla&memswap=-1&memswappiness=-1&t=image1",
                      builder.buildImage("image1", new BuildOptions(options).dockerfile("bla").addOption("dockerfile","holla")));
-        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=bla&memswap=-1&squash=1&t=image1",
+        assertEquals("/1.0/build?cpusetcpus=1&dockerfile=bla&memswap=-1&memswappiness=-1&squash=1&t=image1",
             builder.buildImage("image1", new BuildOptions(options).dockerfile("bla").squash(true)));
 
     }

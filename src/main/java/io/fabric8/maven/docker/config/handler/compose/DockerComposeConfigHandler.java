@@ -1,9 +1,8 @@
 package io.fabric8.maven.docker.config.handler.compose;
 
-import java.io.*;
-import java.util.*;
-
-import io.fabric8.maven.docker.config.*;
+import io.fabric8.maven.docker.config.BuildImageConfiguration;
+import io.fabric8.maven.docker.config.ImageConfiguration;
+import io.fabric8.maven.docker.config.RunImageConfiguration;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandler;
 import io.fabric8.maven.docker.config.handler.ExternalConfigHandlerException;
 import io.fabric8.maven.docker.util.DeepCopy;
@@ -13,6 +12,15 @@ import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.MavenReaderFilter;
 import org.apache.maven.shared.filtering.MavenReaderFilterRequest;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveAbsolutely;
 import static io.fabric8.maven.docker.config.handler.compose.ComposeUtils.resolveComposeFileAbsolutely;
@@ -205,6 +213,7 @@ public class DockerComposeConfigHandler implements ExternalConfigHandler {
                 // mac_address n.s.
                 .memory(wrapper.getMemory())
                 .memorySwap(wrapper.getMemorySwap())
+                .memorySwappiness(wrapper.getMemorySwappiness())
                 .privileged(wrapper.getPrivileged())
                 // read_only n.s.
                 .restartPolicy(wrapper.getRestartPolicy())

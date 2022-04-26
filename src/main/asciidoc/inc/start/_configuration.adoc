@@ -92,6 +92,9 @@ The `<run>` configuration element knows the following sub elements:
 | *memorySwap*
 | Total memory limit (memory + swap) in bytes. Set `memorySwap` equal to `memory` to disable swap. Set to `-1` to allow unlimited swap.
 
+| *memorySwappiness*
+| Tune a container's memory swappiness behavior. Accepts an integer between 0 and 100.
+
 | *namingStrategy*
 a| *This option is deprecated, please use a `containerNamePattern` instead* Naming strategy for how the container name is created:
 
