@@ -1,142 +1,142 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>io.fabric8.dmp.itests</groupId>
-        <artifactId>dmp-it-parent</artifactId>
-        <version>0.40-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.fabric8.dmp.itests</groupId>
+    <artifactId>dmp-it-parent</artifactId>
+    <version>0.40.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-    <artifactId>dmp-it-spring-boot-jib</artifactId>
-    <version>0.40-SNAPSHOT</version>
-    <packaging>jar</packaging>
+  <artifactId>dmp-it-spring-boot-jib</artifactId>
+  <version>0.40.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
-    <description>Docker Maven Plugin Integration test with Spring Boot With Build Mode JIB</description>
+  <description>Docker Maven Plugin Integration test with Spring Boot With Build Mode JIB</description>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <docker.build.jib>true</docker.build.jib>
-        <docker.user>fabric8</docker.user>
-        <spring.version>2.3.3.RELEASE</spring.version>
-    </properties>
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Release Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
 
-    <dependencies>
+  <properties>
+    <docker.build.jib>true</docker.build.jib>
+    <docker.user>fabric8</docker.user>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <spring.version>2.3.3.RELEASE</spring.version>
+  </properties>
 
-        <!-- Boot generator  -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
+  <dependencies>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
+    <!-- API, java.xml.bind module -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>2.3.2</version>
+    </dependency>
 
-        <!-- API, java.xml.bind module -->
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>2.3.2</version>
-        </dependency>
+    <!-- Runtime, com.sun.xml.bind module -->
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>2.3.2</version>
+    </dependency>
 
-        <!-- Runtime, com.sun.xml.bind module -->
-        <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>2.3.2</version>
-        </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
 
-    </dependencies>
+    <!-- Boot generator  -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-              <groupId>io.fabric8</groupId>
-              <artifactId>docker-maven-plugin</artifactId>
-              <version>${project.version}</version>
-              <configuration>
-                <jib>true</jib>
-                <images>
-                  <image>
-                    <name>${docker.user}/spring-boot-dmp-it-jib</name>
-                    <build>
-                      <from>fabric8/java-centos-openjdk8-jdk:1.5.6</from>
-                      <assembly>
-                        <descriptorRef>artifact</descriptorRef>
-                      </assembly>
-                      <cmd>java -jar /maven/${project.artifactId}-${project.version}.jar</cmd>
-                      <ports>
-                        <port>8080</port>
-                      </ports>
-                    </build>
-                  </image>
-                </images>
-              </configuration>
-              <executions>
-                <execution>
-                  <id>build</id>
-                  <phase>install</phase>
-                  <goals>
-                    <goal>build</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-antrun-plugin</artifactId>
-              <version>1.8</version>
-              <executions>
-                <execution>
-                  <id>generateSources</id>
-                  <phase>install</phase>
-                  <configuration>
-                    <tasks>
-                      <exec executable="/usr/bin/docker" failonerror="true">
-                          <arg value="load" />
-                          <arg value="-i" />
-                          <arg value="./target/docker/fabric8/spring-boot-dmp-it-jib/tmp/docker-build.tar" />
-                      </exec>
-                    </tasks>
-                  </configuration>
-                  <goals>
-                    <goal>run</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-        </plugins>
-    </build>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <configuration>
+          <jib>true</jib>
+          <images>
+            <image>
+              <name>${docker.user}/spring-boot-dmp-it-jib</name>
+              <build>
+                <from>fabric8/java-centos-openjdk8-jdk:1.5.6</from>
+                <assembly>
+                  <descriptorRef>artifact</descriptorRef>
+                </assembly>
+                <cmd>java -jar /maven/${project.artifactId}-${project.version}.jar</cmd>
+                <ports>
+                  <port>8080</port>
+                </ports>
+              </build>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+          <execution>
+            <id>build</id>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>generateSources</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>install</phase>
+            <configuration>
+              <tasks>
+                <exec executable="docker" failonerror="true">
+                  <arg value="load"></arg>
+                  <arg value="-i"></arg>
+                  <arg value="./target/docker/fabric8/spring-boot-dmp-it-jib/tmp/docker-build.tar"></arg>
+                </exec>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

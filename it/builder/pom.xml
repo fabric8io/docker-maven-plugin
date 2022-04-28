@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -28,41 +28,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.40-SNAPSHOT</version>
+    <version>0.40.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-it-builder-parent</artifactId>
   <packaging>pom</packaging>
-
-  <properties>
-    <project.build.outputTimestamp>1970-01-01T00:00:00Z</project.build.outputTimestamp>
-    <resource.delimiter>@</resource.delimiter>
-    <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
-    <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
-    <docker.verbose>true</docker.verbose>
-    <builder.output.fileName>dmp-it-builder-app.tar.gz</builder.output.fileName>
-    <builder.output.file>/${builder.output.fileName}</builder.output.file>
-    <builder.image>${project.groupId}-dmp-it-builder:${project.version}-builder</builder.image>
-    <app.image>${project.groupId}-dmp-it-builder:${project.version}</app.image>
-  </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.fabric8.dmp.itests</groupId>
-        <artifactId>dmp-it-builder-builder-image</artifactId>
-        <version>${project.version}</version>
-        <type>pom</type>
-      </dependency>
-      <dependency>
-        <groupId>io.fabric8.dmp.itests</groupId>
-        <artifactId>dmp-it-builder-app</artifactId>
-        <version>${project.version}</version>
-        <type>tar.gz</type>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <modules>
     <module>app-image</module>
@@ -70,14 +41,38 @@
     <module>builder-image</module>
   </modules>
 
+  <properties>
+    <app.image>${project.groupId}-dmp-it-builder:${project.version}</app.image>
+    <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
+    <builder.image>${project.groupId}-dmp-it-builder:${project.version}-builder</builder.image>
+    <builder.output.file>/${builder.output.fileName}</builder.output.file>
+    <builder.output.fileName>dmp-it-builder-app.tar.gz</builder.output.fileName>
+    <docker.verbose>true</docker.verbose>
+    <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+    <project.build.outputTimestamp>1970-01-01T00:00:00Z</project.build.outputTimestamp>
+    <resource.delimiter>@</resource.delimiter>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.fabric8.dmp.itests</groupId>
+        <artifactId>dmp-it-builder-app</artifactId>
+        <version>${project.version}</version>
+        <type>tar.gz</type>
+      </dependency>
+      <dependency>
+        <groupId>io.fabric8.dmp.itests</groupId>
+        <artifactId>dmp-it-builder-builder-image</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>${build-helper-maven-plugin.version}</version>
-        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
@@ -91,6 +86,11 @@
             <overrideGid>0</overrideGid>
             <overrideGroupName>root</overrideGroupName>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>

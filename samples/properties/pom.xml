@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -10,13 +10,23 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.39.1</version>
+    <version>0.40.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-sample-properties</artifactId>
-  <version>0.39.1</version>
   <packaging>docker-build</packaging>
+
+  <properties>
+    <postgres.docker.env.POSTGRES_DB>localhost</postgres.docker.env.POSTGRES_DB>
+    <postgres.docker.envRun.POSTGRES_PASSWORD>superuser-password</postgres.docker.envRun.POSTGRES_PASSWORD>
+    <postgres.docker.envRun.POSTGRES_USER>superuser</postgres.docker.envRun.POSTGRES_USER>
+    <postgres.docker.log.prefix>postgres</postgres.docker.log.prefix>
+    <postgres.docker.name>postgres:9.5.2</postgres.docker.name>
+    <postgres.docker.ports.1>${itest.postgres.port}:5432</postgres.docker.ports.1>
+    <postgres.docker.wait.log>PostgreSQL init process complete</postgres.docker.wait.log>
+    <postgres.docker.wait.time>10000</postgres.docker.wait.time>
+  </properties>
 
   <build>
     <plugins>
@@ -37,15 +47,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <properties>
-    <postgres.docker.name>postgres:9.5.2</postgres.docker.name>
-    <postgres.docker.log.prefix>postgres</postgres.docker.log.prefix>
-    <postgres.docker.ports.1>${itest.postgres.port}:5432</postgres.docker.ports.1>
-    <postgres.docker.env.POSTGRES_DB>localhost</postgres.docker.env.POSTGRES_DB>
-    <postgres.docker.envRun.POSTGRES_USER>superuser</postgres.docker.envRun.POSTGRES_USER>
-    <postgres.docker.envRun.POSTGRES_PASSWORD>superuser-password</postgres.docker.envRun.POSTGRES_PASSWORD>
-    <postgres.docker.wait.time>10000</postgres.docker.wait.time>
-    <postgres.docker.wait.log>PostgreSQL init process complete</postgres.docker.wait.log>
-  </properties>
 </project>
