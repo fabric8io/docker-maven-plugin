@@ -16,16 +16,8 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>dmp-sample-helloworld</artifactId>
+  <artifactId>dmp-sample-multi-architecture</artifactId>
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
   <build>
     <plugins>
 
@@ -35,18 +27,30 @@
         <configuration>
           <images>
             <image>
-              <name>hello/sub/project/java:${project.version}</name>
+              <name>hello/multiarch:${project.version}</name>
               <alias>hello-world</alias>
               <build>
-                <from>openjdk:latest</from>
+                <from>azul/zulu-openjdk-alpine:17-jre</from>
                 <assembly>
                   <descriptorRef>artifact</descriptorRef>
                 </assembly>
                 <cmd>java -jar maven/${project.name}-${project.version}.jar</cmd>
+                <buildx>
+                  <platforms>
+                    <platform>linux/amd64</platform>
+                    <platform>linux/arm64</platform>
+                  </platforms>
+                </buildx>
               </build>
               <run>
+                <log>
+                  <file>${project.build.directory}/docker.log</file>
+                </log>
                 <wait>
-                  <log>Hello World!</log>
+                  <log>Hello World</log>
+                  <kill>5000</kill>
+                  <shutdown>1000</shutdown>
+                  <time>5000</time>
                 </wait>
               </run>
             </image>
@@ -54,43 +58,33 @@
         </configuration>
         <executions>
           <execution>
-            <id>docker:start</id>
+            <id>docker-build</id>
             <goals>
-              <goal>run</goal>
+              <goal>build</goal>
             </goals>
-            <phase>install</phase>
+            <phase>package</phase>
+          </execution>
+          <execution>
+            <id>integration-test</id>
+            <goals>
+              <goal>start</goal>
+              <goal>stop</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
+
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.1</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
         <configuration>
           <archive>
             <manifest>
-              <mainClass>io.fabric8.dmp.sample.helloworld.App</mainClass>
+              <mainClass>io.fabric8.dmp.sample.multiarch.helloworld.App</mainClass>
             </manifest>
           </archive>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.5.0</version>
-        <configuration>
-          <mainClass>io.fabric8.dmp.sample.helloworld.App</mainClass>
-        </configuration>
-      </plugin>
+
     </plugins>
   </build>
 </project>

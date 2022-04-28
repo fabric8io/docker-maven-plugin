@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -10,12 +10,12 @@
   <parent>
     <groupId>io.fabric8.dmp.itests</groupId>
     <artifactId>dmp-it-parent</artifactId>
-    <version>0.40-SNAPSHOT</version>
+    <version>0.40.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dmp-it-dockerignore</artifactId>
-  <version>0.40-SNAPSHOT</version>
+  <version>0.40.0-SNAPSHOT</version>
   <packaging>docker-build</packaging>
 
   <build>
@@ -24,22 +24,6 @@
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <extensions>true</extensions>
-        <executions>
-          <execution>
-            <id>start</id>
-            <phase>install</phase>
-            <goals>
-              <goal>start</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>stop</id>
-            <phase>install</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-          </execution>
-        </executions>
         <configuration>
           <images>
             <image>
@@ -52,6 +36,22 @@
             </image>
           </images>
         </configuration>
+        <executions>
+          <execution>
+            <id>start</id>
+            <goals>
+              <goal>start</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

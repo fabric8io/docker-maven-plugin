@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <!--
@@ -13,14 +13,12 @@
   <parent>
     <groupId>io.fabric8.dmp.samples</groupId>
     <artifactId>dmp-sample-parent</artifactId>
-    <version>0.39.1</version>
+    <version>0.40.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-
   <groupId>io.fabric8</groupId>
   <artifactId>dmp-sample-log</artifactId>
-  <version>0.39.1</version>
 
   <build>
     <plugins>
@@ -40,7 +38,9 @@
                   <log>.*Server:main: Started @\d+ms.*</log>
                   <time>60000</time>
                 </wait>
-              <log><enabled>true</enabled></log>
+                <log>
+                  <enabled>true</enabled>
+                </log>
               </run>
             </image>
             <image>
@@ -51,7 +51,9 @@
                   <log>.*Server:main: Started @\d+ms.*</log>
                   <time>60000</time>
                 </wait>
-              <log><enabled>true</enabled></log>
+                <log>
+                  <enabled>true</enabled>
+                </log>
               </run>
             </image>
           </images>

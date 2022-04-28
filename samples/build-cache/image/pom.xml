@@ -1,27 +1,26 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.fabric8.dmp.samples.build-cache</groupId>
     <artifactId>parent</artifactId>
-    <version>0.39.1</version>
+    <version>0.40.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>image</artifactId>
   <packaging>pom</packaging>
 
   <properties>
-    <!-- Avoid docker build cache invalidation due to new commits -->
-    <project.build.outputTimestamp>1970-01-01T00:00:00Z</project.build.outputTimestamp>
-
-    <tini.version>0.19.0</tini.version>
-    <tini.sha512>8053cc21a3a9bdd6042a495349d1856ae8d3b3e7664c9654198de0087af031f5d41139ec85a2f5d7d2febd22ec3f280767ff23b9d5f63d490584e2b7ad3c218c</tini.sha512>
-
-    <app-layers.dir>${project.build.directory}/app</app-layers.dir>
     <app-classes.output.dir>app</app-classes.output.dir>
 
+    <app-layers.dir>${project.build.directory}/app</app-layers.dir>
+
     <image>fabric8/dmp-sample-build-cache-app:${project.version}</image>
+    <!-- Avoid docker build cache invalidation due to new commits -->
+    <project.build.outputTimestamp>1970-01-01T00:00:00Z</project.build.outputTimestamp>
+    <tini.sha512>8053cc21a3a9bdd6042a495349d1856ae8d3b3e7664c9654198de0087af031f5d41139ec85a2f5d7d2febd22ec3f280767ff23b9d5f63d490584e2b7ad3c218c</tini.sha512>
+
+    <tini.version>0.19.0</tini.version>
   </properties>
 
   <dependencies>
@@ -41,34 +40,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <!-- Extracting layers from Spring Boot Layered JAR -->
-            <id>extract-app-layers</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>java</goal>
-            </goals>
-            <configuration>
-              <mainClass>org.springframework.boot.loader.JarLauncher</mainClass>
-              <arguments>
-                <argument>extract</argument>
-                <argument>--destination</argument>
-                <argument>${app-layers.dir}</argument>
-              </arguments>
-              <systemProperties>
-                <property>
-                  <key>jarmode</key>
-                  <value>layertools</value>
-                </property>
-              </systemProperties>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>com.googlecode.maven-download-plugin</groupId>
         <artifactId>download-maven-plugin</artifactId>
         <executions>
@@ -78,96 +49,14 @@
                 because JVM returns non-zero exit code when stopped with SIGINT, SIGTERM or any other signal.
              -->
             <id>download-tini</id>
-            <phase>generate-resources</phase>
             <goals>
               <goal>wget</goal>
             </goals>
+            <phase>generate-resources</phase>
             <configuration>
               <url>https://github.com/krallin/tini/releases/download/v${tini.version}/tini</url>
               <outputFileName>tini</outputFileName>
               <sha512>${tini.sha512}</sha512>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>build-dependencies-tar</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>dependencies</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <attach>false</attach>
-              <descriptors>
-                <descriptor>src/assembly/dependencies.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-          <execution>
-            <id>build-spring-boot-loader-tar</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>spring-boot-loader</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <attach>false</attach>
-              <descriptors>
-                <descriptor>src/assembly/spring-boot-loader.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-          <execution>
-            <id>build-snapshot-dependencies-tar</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>snapshot-dependencies</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <attach>false</attach>
-              <descriptors>
-                <descriptor>src/assembly/snapshot-dependencies.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-          <execution>
-            <id>build-application-tar</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>application</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <attach>false</attach>
-              <descriptors>
-                <descriptor>src/assembly/application.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-          <execution>
-            <!-- Prepare docker build context with Dockerfile and all archives used by it -->
-            <id>build-docker-context</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <finalName>context</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-              <attach>false</attach>
-              <descriptors>
-                <descriptor>src/assembly/docker-context.xml</descriptor>
-              </descriptors>
             </configuration>
           </execution>
         </executions>
@@ -202,6 +91,116 @@
               <goal>build</goal>
             </goals>
             <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>build-dependencies-tar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <finalName>dependencies</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/dependencies.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <id>build-spring-boot-loader-tar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <finalName>spring-boot-loader</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/spring-boot-loader.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <id>build-snapshot-dependencies-tar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <finalName>snapshot-dependencies</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/snapshot-dependencies.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <id>build-application-tar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <finalName>application</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/application.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Prepare docker build context with Dockerfile and all archives used by it -->
+            <id>build-docker-context</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <finalName>context</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/docker-context.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Extracting layers from Spring Boot Layered JAR -->
+            <id>extract-app-layers</id>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <mainClass>org.springframework.boot.loader.JarLauncher</mainClass>
+              <arguments>
+                <argument>extract</argument>
+                <argument>--destination</argument>
+                <argument>${app-layers.dir}</argument>
+              </arguments>
+              <systemProperties>
+                <property>
+                  <key>jarmode</key>
+                  <value>layertools</value>
+                </property>
+              </systemProperties>
+            </configuration>
           </execution>
         </executions>
       </plugin>
